@@ -86,6 +86,11 @@ struct FunctionTranslationCtx
 	std::vector<ReturnWireElem> returnWirePlan;
 	// Live-calldata-pointer set (see FunctionContext::seededCalldataPointers).
 	std::set<std::string>* seededCalldataPointers = nullptr;
+	/// --evm-storage-layout: storage-ref params + named storage returns,
+	/// carried as biguint slot handles; `buildBlock` registers each as a
+	/// slot-storage ref. Appended at struct end (aggregate init) — assigned
+	/// explicitly, never positional.
+	std::vector<solidity::frontend::VariableDeclaration const*> slotRefParams;
 };
 
 /// Make an `awst::SourceLocation` from a Solidity `SourceLocation`.
@@ -180,6 +185,7 @@ private:
 	std::vector<solidity::frontend::VariableDeclaration const*> m_currentNamedReturns;
 	std::vector<solidity::frontend::VariableDeclaration const*> m_currentMappingKeyParams;
 	std::vector<solidity::frontend::VariableDeclaration const*> m_currentBlobAggParams;
+	std::vector<solidity::frontend::VariableDeclaration const*> m_currentSlotRefParams;
 	// Build-time ABI return encoding (D2): plan + flags flow into FunctionContext so
 	// SolReturnStatement encodes each return value as it builds it.
 	bool m_currentEncodeReturnsAtBuildTime = false;
@@ -238,6 +244,15 @@ private:
 	)
 	{
 		m_currentMappingKeyParams = _params;
+	}
+
+	/// --evm-storage-layout: storage-ref params/named-returns of the current
+	/// function (biguint slot handles); registered in `buildBlock`.
+	void setSlotRefParams(
+		std::vector<solidity::frontend::VariableDeclaration const*> const& _params
+	)
+	{
+		m_currentSlotRefParams = _params;
 	}
 
 	/// Set the blob-backed (>4KB) memory aggregate param decls for the current

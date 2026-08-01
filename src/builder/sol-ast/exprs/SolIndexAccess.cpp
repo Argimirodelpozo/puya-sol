@@ -132,6 +132,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 			return low.readValue(*addr);
 		if (EvmSlotLowering::isBytesLike(resType))
 			return low.readBytesValue(*addr);
+		if (dynamic_cast<StructType const*>(resType))
+			return low.readStructValue(*addr);
 		Logger::instance().error(
 			"--evm-storage-layout: aggregate storage element used as a value "
 			"is not yet supported", m_loc);

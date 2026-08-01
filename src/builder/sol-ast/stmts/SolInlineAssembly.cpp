@@ -198,6 +198,21 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	// a biguint slot handle (see SolInternalCall: storage-return + inline-asm →
 	// biguint). `ptr.slot` is that handle — resolve to the local, not the struct.
 	std::map<std::string, std::string> structRefSlotLocals;
+	// --evm-storage-layout: EVERY storage-located local/param is a biguint slot
+	// variable — `x.slot` reads it, `x.slot := e` (StatementOps) writes it.
+	// `.offset` on storage refs is 0 (packed sub-word refs unsupported here).
+	if (builder::evmStorageLayout())
+		for (auto const& [yulId, extInfo]: annotation.externalReferences)
+		{
+			if (!extInfo.declaration) continue;
+			auto const* vd = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
+			if (!vd || vd->isStateVariable()) continue;
+			if (vd->referenceLocation() != VariableDeclaration::Location::Storage) continue;
+			if (extInfo.suffix == "slot")
+				structRefSlotLocals[yulId->name.str()] = vd->name();
+			else if (extInfo.suffix == "offset")
+				constants[yulId->name.str()] = "0";
+		}
 	for (auto const& [yulId, extInfo]: annotation.externalReferences)
 	{
 		if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
@@ -358,6 +373,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				if (!varDecl->isStateVariable())
 				{
 					if (!varDecl->isLocalVariable()) continue;
+					// Slot mode: the local IS a biguint slot var (registered above);
+					// resolving through the alias to a CONSTANT would go stale on
+					// pointer rebinds.
+					if (builder::evmStorageLayout()) continue;
 					// Local storage references: `uint256[] storage x = a;`
 					// The initialiser lives in the parent VariableDeclarationStatement,
 					// not in VariableDeclaration::value(). We must look it up from the

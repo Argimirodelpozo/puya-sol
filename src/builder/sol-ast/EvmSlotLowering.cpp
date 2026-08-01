@@ -62,6 +62,31 @@ std::shared_ptr<awst::Expression> slot32Bytes(
 
 } // namespace
 
+namespace
+{
+/// A storage-located local/param — in this mode the variable IS a biguint
+/// slot handle (assigned at declaration / by the call convention).
+bool isSlotHandleLocal(VariableDeclaration const* _vd)
+{
+	return _vd && !_vd->isStateVariable()
+		&& (_vd->isLocalVariable() || _vd->isCallableOrCatchParameter())
+		&& _vd->referenceLocation() == VariableDeclaration::Location::Storage;
+}
+
+/// A non-identifier root (library call returning `T storage`, etc.) whose
+/// TYPE designates storage — its built value is the biguint slot.
+bool isStorageTypedRoot(Expression const& _e)
+{
+	auto const* t = _e.annotation().type;
+	if (!t)
+		return false;
+	if (dynamic_cast<MappingType const*>(t))
+		return true;
+	auto const* rt = dynamic_cast<ReferenceType const*>(t);
+	return rt && rt->dataStoredIn(DataLocation::Storage);
+}
+} // namespace
+
 bool EvmSlotLowering::isStorageStateRef(Expression const& _e)
 {
 	Expression const* cur = &_e;
@@ -85,7 +110,11 @@ bool EvmSlotLowering::isStorageStateRef(Expression const& _e)
 		}
 		break;
 	}
-	return isPersistentStateVar(referencedVar(*cur));
+	if (auto const* vd = referencedVar(*cur))
+		return isPersistentStateVar(vd) || isSlotHandleLocal(vd);
+	// Non-identifier root: a storage-typed expression (e.g. a library call
+	// returning `T storage`) builds to a biguint slot handle in this mode.
+	return isStorageTypedRoot(*cur);
 }
 
 std::shared_ptr<awst::Expression> EvmSlotLowering::biguintConst(std::string const& _v)
@@ -180,6 +209,29 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolve(Expression const& 
 		return resolveIndexAccess(*ia);
 	if (auto const* ma = dynamic_cast<MemberAccess const*>(&_e))
 		return resolveMemberAccess(*ma);
+	// Type conversion over a storage ref (`bytes(a)` on a storage string):
+	// same location, different label — peel it.
+	if (auto const* fc = dynamic_cast<FunctionCall const*>(&_e))
+		if (fc->annotation().kind.set()
+			&& *fc->annotation().kind == FunctionCallKind::TypeConversion
+			&& !fc->arguments().empty() && isStorageTypedRoot(_e))
+			return resolve(*fc->arguments()[0]);
+	// Any other storage-typed root (library call returning `T storage`, a
+	// parenthesized/tuple-wrapped ref, ...): its built value IS the slot.
+	if (isStorageTypedRoot(_e))
+	{
+		auto built = m_ctx.buildExpr(_e);
+		if (built && built->wtype == awst::WType::biguintType())
+		{
+			auto const* t = _e.annotation().type;
+			return makeLeafAddr(std::move(built), nullptr,
+				t ? t->storageBytes() : 32, /*alone*/ true, t);
+		}
+		Logger::instance().error(
+			"--evm-storage-layout: storage-typed expression did not lower to a "
+			"slot handle", m_loc);
+		return std::nullopt;
+	}
 	Logger::instance().error(
 		"unsupported storage expression shape in --evm-storage-layout", m_loc);
 	return std::nullopt;
@@ -224,6 +276,16 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveIdentifier(
 	Identifier const& _id)
 {
 	auto const* vd = referencedVar(_id);
+	if (isSlotHandleLocal(vd))
+	{
+		// Storage-located local/param: the variable holds the biguint slot
+		// (bound at declaration / by the call convention / asm `.slot :=`).
+		auto slot = awst::makeVarExpression(
+			vd->name(), awst::WType::biguintType(), m_loc);
+		return makeLeafAddr(std::move(slot), nullptr,
+			vd->type() ? vd->type()->storageBytes() : 32, /*alone*/ true,
+			vd->type());
+	}
 	if (!isPersistentStateVar(vd))
 	{
 		Logger::instance().error(
@@ -283,8 +345,9 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveIndexAccess(
 			{
 				std::string nm = "__evm_idx_"
 					+ std::to_string(awst::NameGen::next("EvmSlotLowering.idx"));
+				auto const* idxWt = idx->wtype;   // read BEFORE the move (arg eval order)
 				m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
-					awst::makeVarExpression(nm, idx->wtype, m_loc), std::move(idx), m_loc));
+					awst::makeVarExpression(nm, idxWt, m_loc), std::move(idx), m_loc));
 				idx = awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc);
 			}
 			auto len = readSlotWord(base->slot, m_loc);
@@ -439,6 +502,22 @@ void EvmSlotLowering::writeBytesValue(
 	awst::pushCallArg(call->args, "__slot", _a.slot);
 	awst::pushCallArg(call->args, "__val", std::move(_value));
 	_out.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
+}
+
+std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _a)
+{
+	auto const* st = dynamic_cast<StructType const*>(_a.solType);
+	auto const* structW = st
+		? dynamic_cast<awst::ARC4Struct const*>(m_ctx.typeMapper.map(st)) : nullptr;
+	if (!st || !structW)
+	{
+		Logger::instance().error(
+			"--evm-storage-layout: cannot materialise non-struct storage "
+			"aggregate as a value", m_loc);
+		return nullptr;
+	}
+	return SlotHandleAccess::readStructElem(
+		m_ctx.prePendingStatements, _a.slot, st, structW, m_loc);
 }
 
 std::shared_ptr<awst::Expression> EvmSlotLowering::readValue(Addr const& _a)

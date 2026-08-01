@@ -1,4 +1,5 @@
 #include "builder/AWSTBuilder.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-types/SolIntType.h"
 #include "awst/Termination.h"
 #include "builder/FunctionIdRegistry.h"
@@ -375,6 +376,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// Parameters — mapping storage refs become bytes (runtime key prefix).
 	std::set<size_t> mappingStorageParams;
 	std::set<size_t> blobAggParams;
+	std::set<size_t> evmSlotRefParams;
 	// Struct storage-ref params used via `.slot` in asm (solady storage libs):
 	// travel as a box-key handle so `s.slot` resolves (see SolInlineAssembly).
 	auto slotParams = structRefParamsUsedAsAsmSlot(_func);
@@ -394,7 +396,15 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		// caller's storage var, not the param name. Without widening,
 		// array-of-mapping params encode as their own "state var" and box
 		// keys diverge from the auto-getter's reads.
-		if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+		if (builder::evmStorageLayout()
+			&& param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
+		{
+			// --evm-storage-layout: every storage ref IS a biguint slot handle;
+			// writes go straight to the slot space (no box keys, no write-back).
+			arg.wtype = awst::WType::biguintType();
+			evmSlotRefParams.insert(pi);
+		}
+		else if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 			&& (isBoxKeyedStorageRef(param->type()) || slotParams.count(pi))) // widened: plain structs + asm .slot refs
 		{
 			arg.wtype = awst::WType::bytesType();
@@ -419,7 +429,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	bool isMutating = _func.stateMutability() != solidity::frontend::StateMutability::View
 		&& _func.stateMutability() != solidity::frontend::StateMutability::Pure;
 	bool isPrivate = _func.visibility() == solidity::frontend::Visibility::Private;
-	if (isMutating && !isPrivate)
+	// --evm-storage-layout: slot handles write straight through — no write-back.
+	if (isMutating && !isPrivate && !builder::evmStorageLayout())
 	{
 		storageParamIndices = collectParamIndices(_func, [&](size_t pi) {
 			return _func.parameters()[pi]->referenceLocation()
@@ -463,7 +474,10 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		{
 			// >4KB memory return → blob-backed, returns uint64 base offset (pointer model).
 			auto const* rpW = m_typeMapper.map(rp->type());
-			if (!rp->name().empty()
+			if (builder::evmStorageLayout()
+				&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
+				types.push_back(awst::WType::biguintType());   // slot handle
+			else if (!rp->name().empty()
 				&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
 				&& memoryUsesBlob(rpW))
 				types.push_back(awst::WType::uint64Type());
@@ -506,6 +520,16 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		fnCtx.setMappingKeyParam(param->id(), param->name());
 	}
 
+	// --evm-storage-layout: storage params are biguint slot handles.
+	for (size_t idx: evmSlotRefParams)
+	{
+		auto const& param = _func.parameters()[idx];
+		if (param->name().empty())
+			continue;
+		fnCtx.setSlotStorageRef(param->id(), awst::makeVarExpression(
+			param->name(), awst::WType::biguintType(), awst::SourceLocation{}));
+	}
+
 	// Param/return context for inline assembly and sub-word integer truncation.
 	{
 		std::vector<std::pair<std::string, awst::WType const*>> paramContext;
@@ -517,14 +541,16 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			std::string pname = param->name();
 			if (pname.empty())
 				pname = "_param" + std::to_string(pi);
-			auto* ptype = mappingStorageParams.count(pi) ? awst::WType::bytesType()
+			auto* ptype = evmSlotRefParams.count(pi) ? awst::WType::biguintType()
+				: mappingStorageParams.count(pi) ? awst::WType::bytesType()
 				: blobAggParams.count(pi) ? awst::WType::uint64Type()
 				: m_typeMapper.map(param->type());
 			paramContext.emplace_back(pname, ptype);
 			// Struct storage-ref param used via `.slot` in asm: record the ARC4
 			// struct wtype so `param.slot` resolves to a BoxValueExpression over
-			// the box-key handle (the bytes param value).
-			if (slotParams.count(pi))
+			// the box-key handle (the bytes param value). Slot mode: the param
+			// IS the biguint slot — no sentinel.
+			if (slotParams.count(pi) && !builder::evmStorageLayout())
 				boxKeyStructParams[pname] = m_typeMapper.map(param->type());
 			if (auto it = builder::SolIntType::fromSol(param->annotation().type); it && it->bits < 64)
 				bitWidths[pname] = it->bits;
@@ -546,15 +572,18 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 
 	// Register mapping storage-ref return params (e.g. `returns (mapping(K=>V) storage r)`):
 	// r[k] box-accesses using r's runtime bytes value as the holder prefix.
+	// Slot mode: named storage returns are biguint slot handles instead.
 	for (auto const& rp: returnParams)
 	{
-		if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-			&& (dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
-				|| storageRefReturnIsBytesKeyed(&_func)) // + box-keyed struct named returns
-			&& !rp->name().empty())
-		{
+		if (rp->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Storage
+			|| rp->name().empty())
+			continue;
+		if (builder::evmStorageLayout())
+			fnCtx.setSlotStorageRef(rp->id(), awst::makeVarExpression(
+				rp->name(), awst::WType::biguintType(), awst::SourceLocation{}));
+		else if (dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
+			|| storageRefReturnIsBytesKeyed(&_func)) // + box-keyed struct named returns
 			fnCtx.setMappingKeyParam(rp->id(), rp->name());
-		}
 	}
 
 	// Register named memory return params >4KB as blob-backed (pointer model).
@@ -631,6 +660,15 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 				&& storageRefReturnIsBytesKeyed(&_func))
 				continue;
+			// --evm-storage-layout: named storage return = biguint slot handle.
+			if (builder::evmStorageLayout()
+				&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
+			{
+				inits.push_back(awst::makeAssignmentStatement(
+					awst::makeVarExpression(rp->name(), awst::WType::biguintType(), loc),
+					awst::makeZero(loc, awst::WType::biguintType()), loc));
+				continue;
+			}
 			auto* rpType = m_typeMapper.map(rp->type());
 
 			// Blob-backed (>4KB) returns: pre-zeroed via FMP bump; skip bzero init.
@@ -824,6 +862,10 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			if (returnParams.size() == 1 && totalAugmented2 == 0)
 			{
 				auto const* rp0W = m_typeMapper.map(returnParams[0]->type());
+				if (builder::evmStorageLayout()
+					&& returnParams[0]->referenceLocation()
+						== solidity::frontend::VariableDeclaration::Location::Storage)
+					rp0W = awst::WType::biguintType();   // slot handle
 				// Blob-backed >4KB → return uint64 base offset.
 				if (returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
 					&& memoryUsesBlob(rp0W))
@@ -840,6 +882,10 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				for (auto const& rp: returnParams)
 				{
 					auto const* rpW = m_typeMapper.map(rp->type());
+					if (builder::evmStorageLayout()
+						&& rp->referenceLocation()
+							== solidity::frontend::VariableDeclaration::Location::Storage)
+						rpW = awst::WType::biguintType();   // slot handle
 					// Same blob-backed >4KB handling as the single-return case:
 					// use the __blobagg_off_ uint64 offset var, not the aggregate
 					// name/wtype (which was a nameless/mistyped tuple slot).

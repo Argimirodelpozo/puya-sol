@@ -32,6 +32,8 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 			return low.readValue(*addr);
 		if (EvmSlotLowering::isBytesLike(resType))
 			return low.readBytesValue(*addr);
+		if (dynamic_cast<solidity::frontend::StructType const*>(resType))
+			return low.readStructValue(*addr);
 		Logger::instance().error(
 			"--evm-storage-layout: aggregate struct member used as a value "
 			"is not yet supported", m_loc);

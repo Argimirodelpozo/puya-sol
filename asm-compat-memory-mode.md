@@ -35,11 +35,45 @@ Implemented behind `--evm-storage-layout`, exactly the hybrid design below:
   (6 green on localnet) + fixture `contracts/evm_storage_layout.sol`; harness
   gained `extra_args` pass-through (cache-keyed).
 
-**Not yet (stage 2)**: storage-ref params/locals as biguint slots (the OZ
-library shape — `getStringSlot(string storage store)`, Checkpoints
-`Checkpoint[] storage self`), whole-aggregate reads/copies, bytes/string
-element access & push/pop, public auto-getters, `layout at` bases ≥ 2^16
-(dense/sparse split assumes declared slots < 2^16).
+**STAGE 2 LANDED** (same day): storage-ref params, locals, and returns are
+uniformly **biguint slot handles** in-mode:
+
+- Contract methods, libraries and free functions type storage params/returns
+  as biguint (FunctionBuilder / AWSTBuilder); call sites pass
+  `EvmSlotLowering::resolve(arg).slot` (SolInternalCall); the write-back
+  augmentation machinery is bypassed entirely — slot handles write straight
+  through. `return <storage expr>` returns the slot; named storage returns
+  zero-init to biguint and synthesize as biguint.
+- Storage LOCALS bind as `name = slot` biguint vars (SolVariableDeclaration),
+  registered as slot-storage refs; pointer REBINDS (`p = poss[k2]`) are
+  runtime slot assignments — safe in conditionals, unlike the named-cell
+  model's compile-time alias rebinding.
+- Asm: every storage local/param's `.slot` resolves to its biguint var
+  (`.offset` → 0); `r.slot := e` was already a biguint var assignment. The
+  StorageSlot alias interception and the contract-method storage-param guard
+  are bypassed in-mode (slots make both unnecessary).
+- Whole-STRUCT materialisation (storage → memory copies, incl.
+  `Checkpoint memory last = _unsafeAccess(self, pos-1)`), struct-element
+  push/pop (EVM zero-on-pop), type-conversion peeling (`bytes(a).length`).
+
+**Real-contract score** (the blockers in §1): **kaito ✓, usde ✓ (OZ
+StorageSlot/ShortStrings path), degen ✓ (OZ Checkpoints/ERC20Votes) — all
+compile end-to-end to TEAL under the mode.** builder remains blocked on the
+MEMORY half (stage 3: asm arithmetic on memory string/array values) plus
+`codesize()`/`extcodesize()`, which are unfixable AVM gaps regardless of mode.
+
+Verified on localnet: `test_evm_layout_storage_ref_params` — StorageSlot
+write-through (direct + through a `string storage` library param),
+`getUint256Slot(bytes32(4))` aliasing a declared var, Checkpoints
+using-for push/latest via asm keccak+add, library array params, storage
+locals with runtime rebind.
+
+**Not yet (stage 3)**: universal blob memory (asm pointer arithmetic on
+memory strings/arrays — what builder needs), bytes/string element access &
+push/pop, whole-ARRAY materialisation, public auto-getters, `layout at`
+bases ≥ 2^16, chainwide-differ integration (its `read_avm_maps` storage
+comparison still assumes ARC-56 box-map declarations; in-mode it should
+switch to direct slot-map comparison — §5).
 
 Force puya-sol's *internal* storage (and optionally memory) layout to emulate
 Solidity's, backed by AVM boxes, so that inline assembly which does real slot

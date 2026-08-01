@@ -3822,3 +3822,50 @@ def test_evm_layout_strings(harness):
     harness.call(app, "setNote(uint256,string)", 2, "y" * 40, **opts)
     assert harness.call(app, "getNote(uint256)", 1, **opts).abi_return == "alpha"
     assert harness.call(app, "getNote(uint256)", 2, **opts).abi_return == "y" * 40
+
+
+def test_evm_layout_storage_ref_params(harness):
+    """Stage 2 of --evm-storage-layout: storage-ref params/locals/returns are
+    biguint slot handles. The OZ StorageSlot write-through (asm `r.slot :=
+    store.slot` in a library, incl. through a `string storage` library param)
+    and the OZ Checkpoints `add(keccak256(...), pos)` idiom run end-to-end."""
+    arts = harness.compile(
+        "puyasolRegression/contracts/evm_storage_layout_refs.sol",
+        extra_args=_EVM_LAYOUT)
+    app = harness.deploy(arts, contract_name="EvmRefs",
+                         extra_funding_microalgos=30_000_000)
+    opts = {"extra_fee": 10_000}
+
+    # StorageSlot write-through: getStringSlot(a).value = v
+    harness.call(app, "setA(string)", "hello", **opts)
+    assert harness.call(app, "getA()", **opts).abi_return == "hello"
+    assert harness.call(app, "readA()", **opts).abi_return == "hello"
+    assert as_int(harness.call(app, "lenA()", **opts).abi_return) == 5
+    # the REAL OZ shape: through a `string storage` LIBRARY param
+    long_s = "z" * 40
+    harness.call(app, "setDViaLib(string)", long_s, **opts)
+    assert harness.call(app, "getA()", **opts).abi_return == long_s
+    # getUint256Slot(bytes32(4)).value = v hits declared var `tail` (slot 4)
+    harness.call(app, "setTailViaSlot(uint256)", 4242, **opts)
+    assert as_int(harness.call(app, "getTail()", **opts).abi_return) == 4242
+
+    # array storage params through a library
+    harness.call(app, "pushNum(uint256)", 5, **opts)
+    harness.call(app, "pushNum(uint256)", 6, **opts)
+    harness.call(app, "bumpNum(uint256,uint256)", 1, 10, **opts)
+    assert as_int(harness.call(app, "numAt(uint256)", 1, **opts).abi_return) == 16
+    assert as_int(harness.call(app, "totalNums()", **opts).abi_return) == 21
+
+    # Checkpoints: struct push through using-for + asm keccak+add read
+    harness.call(app, "ck(uint32,uint224)", 100, 111, **opts)
+    harness.call(app, "ck(uint32,uint224)", 200, 222, **opts)
+    assert as_int(harness.call(app, "ckLen()", **opts).abi_return) == 2
+    assert as_int(harness.call(app, "ckLatest()", **opts).abi_return) == 222
+
+    # storage locals: bind, packed struct fields, REBIND (runtime slot value)
+    harness.call(app, "viaLocal(uint256,uint128,uint128)", 7, 11, 22, **opts)
+    r = harness.call(app, "getPos(uint256)", 7, **opts).abi_return
+    assert as_int(r[0]) == 11 and as_int(r[1]) == 22
+    harness.call(app, "rebind(uint256,uint256,uint128)", 1, 2, 50, **opts)
+    assert as_int(harness.call(app, "getPos(uint256)", 1, **opts).abi_return[0]) == 50
+    assert as_int(harness.call(app, "getPos(uint256)", 2, **opts).abi_return[0]) == 51

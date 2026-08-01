@@ -49,7 +49,11 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				return nullptr;
 			}
 			auto const* elemType = arrT->baseType();
-			if (!elemType->isValueType())
+			auto const* structElem = dynamic_cast<StructType const*>(elemType);
+			auto const* structW = structElem
+				? dynamic_cast<awst::ARC4Struct const*>(m_ctx.typeMapper.map(structElem))
+				: nullptr;
+			if (!elemType->isValueType() && !structW)
 			{
 				Logger::instance().error(
 					"--evm-storage-layout: push/pop of aggregate elements not "
@@ -85,7 +89,16 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				else if (m_ctx.pendingArrayPushValue)
 					value = std::move(m_ctx.pendingArrayPushValue);
 				auto addr = low.elemAddr(dataBase, len, elemType);
-				if (value)
+				if (value && structW)
+				{
+					// struct element: split into per-slot words at the element base
+					std::vector<std::shared_ptr<awst::Statement>> writes;
+					builder::SlotHandleAccess::writeStructElem(
+						writes, addr.slot, structElem, structW, std::move(value), m_loc);
+					for (auto& st: writes)
+						m_ctx.queuePrePending(std::move(st));
+				}
+				else if (value)
 				{
 					value = low.coerceToNative(std::move(value), addr);
 					if (!value)
@@ -117,6 +130,29 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType()),
 				m_loc), "last");
 			auto addr = low.elemAddr(dataBase, lastIdx, elemType);
+			if (structW)
+			{
+				// zero every slot of the vacated element (EVM pop clears)
+				unsigned stride = static_cast<unsigned>(structElem->storageSize());
+				std::vector<std::shared_ptr<awst::Statement>> writes;
+				for (unsigned st = 0; st < stride; ++st)
+				{
+					auto slotJ = st == 0 ? addr.slot
+						: awst::makeBigUIntBinOp(addr.slot,
+							awst::BigUIntBinaryOperator::Add,
+							awst::makeIntegerConstant(st, m_loc,
+								awst::WType::biguintType()), m_loc);
+					writes.push_back(builder::SlotHandleAccess::writeSlot(
+						std::move(slotJ),
+						awst::makeIntegerConstant("0", m_loc,
+							awst::WType::biguintType()), m_loc));
+				}
+				for (auto& st2: writes)
+					m_ctx.queuePrePending(std::move(st2));
+				m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+					rootSlot, lastIdx, m_loc));
+				return awst::makeZero(m_loc, awst::WType::biguintType());
+			}
 			std::shared_ptr<awst::Expression> zero;
 			if (addr.wtype == awst::WType::accountType())
 				zero = awst::makeAddressConstant(

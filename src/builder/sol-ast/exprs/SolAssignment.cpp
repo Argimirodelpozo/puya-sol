@@ -271,6 +271,37 @@ SolAssignment::tryHandleEvmStorageWrite()
 	if (!EvmSlotLowering::isStorageStateRef(lhsExpr))
 		return std::nullopt;
 
+	// Storage POINTER rebind: `ptr = <storage ref>` on a storage local
+	// re-points the biguint slot handle (runtime value — safe in conditionals,
+	// unlike the compile-time alias rebinding of the named-cell model).
+	if (m_assignment.assignmentOperator() == Token::Assign)
+		if (auto const* lid = dynamic_cast<Identifier const*>(&lhsExpr))
+			if (auto const* lvd = dynamic_cast<VariableDeclaration const*>(
+					lid->annotation().referencedDeclaration))
+				if (!lvd->isStateVariable() && lvd->isLocalVariable()
+					&& lvd->referenceLocation() == VariableDeclaration::Location::Storage)
+				{
+					auto const* rhsT = m_assignment.rightHandSide().annotation().type;
+					bool rhsStorage = rhsT
+						&& (dynamic_cast<MappingType const*>(rhsT)
+							|| (dynamic_cast<ReferenceType const*>(rhsT)
+								&& rhsT->dataStoredIn(DataLocation::Storage)));
+					if (rhsStorage)
+					{
+						EvmSlotLowering low(m_ctx, m_scope, m_loc);
+						auto r = low.resolve(m_assignment.rightHandSide());
+						if (!r)
+							return std::shared_ptr<awst::Expression>{
+								awst::makeZero(m_loc, awst::WType::biguintType())};
+						m_ctx.queuePending(awst::makeAssignmentStatement(
+							awst::makeVarExpression(lvd->name(),
+								awst::WType::biguintType(), m_loc),
+							r->slot, m_loc));
+						return std::shared_ptr<awst::Expression>{
+							awst::makeZero(m_loc, awst::WType::biguintType())};
+					}
+				}
+
 	auto const* lhsType = lhsExpr.annotation().type;
 	if (lhsType && !lhsType->isValueType()
 		&& EvmSlotLowering::isBytesLike(lhsType)

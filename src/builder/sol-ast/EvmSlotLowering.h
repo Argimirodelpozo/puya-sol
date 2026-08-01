@@ -83,6 +83,11 @@ public:
 		std::shared_ptr<awst::Expression> _value,
 		std::vector<std::shared_ptr<awst::Statement>>& _out);
 
+	/// Materialise a whole STRUCT at `_a.slot` as a NewStruct value (per-slot
+	/// word reads via SlotHandleAccess::readStructElem; temps go to
+	/// ctx.prePendingStatements). Null + loud error when `_a` isn't a struct.
+	std::shared_ptr<awst::Expression> readStructValue(Addr const& _a);
+
 	/// Leaf read: storage word → native value (Addr::wtype).
 	std::shared_ptr<awst::Expression> readValue(Addr const& _a);
 

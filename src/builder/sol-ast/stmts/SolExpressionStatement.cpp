@@ -2,6 +2,8 @@
 /// ExpressionStatement, RevertStatement, ReturnStatement.
 
 #include "builder/sol-ast/stmts/SolExpressionStatement.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/AWSTBuilder.h" // containsMappingType
 #include "builder/sol-ast/calls/RevertBlob.h"
 #include "builder/abi/AbiEncoderBuilder.h"
@@ -151,6 +153,30 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 	}
 	else if (m_node.expression())
 	{
+		// --evm-storage-layout: `return <storage expr>` in a function declared
+		// `returns (T storage)` returns the biguint slot.
+		if (builder::evmStorageLayout())
+			if (auto const* retAnn =
+					dynamic_cast<ReturnAnnotation const*>(&m_node.annotation()))
+				if (retAnn->functionReturnParameters)
+				{
+					auto const& rps = retAnn->functionReturnParameters->parameters();
+					if (rps.size() == 1
+						&& rps[0]->referenceLocation()
+							== solidity::frontend::VariableDeclaration::Location::Storage)
+					{
+						EvmSlotLowering low(
+							m_blk.builderCtx(), m_blk, m_loc);
+						auto addr = low.resolve(*m_node.expression());
+						if (!addr)
+							return result;   // error already logged
+						stmt->value = addr->slot;
+						m_blk.builderCtx().appendPendingTo(result);
+						result.push_back(std::move(stmt));
+						return result;
+					}
+				}
+
 		// Box-keyed mapping-of-struct storage-ref RETURN, e.g.
 		// `_getPool(id) -> Pool.State storage { return _pools[id]; }`. Return the
 		// bytes box-key prefix of the indexed element (not its struct value); the

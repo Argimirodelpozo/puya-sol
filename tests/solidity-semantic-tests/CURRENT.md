@@ -1,3 +1,24 @@
+# Semantic Test Status — v475
+
+> **feat: --evm-storage-layout STAGE 2 — storage refs as slot handles, 2026-08-01:**
+> **12 failed / 1393 passed / 107 xf / 30 xp** (zero regressions; the 12 = the known
+> baseline set). Storage-ref params, locals and returns are now uniform biguint SLOT
+> HANDLES in-mode: signatures type them biguint (contract methods + libraries + free
+> fns), call sites pass resolve(arg).slot, `return <storage expr>` returns the slot,
+> locals bind AND REBIND as runtime slot vars (sound in conditionals, unlike the
+> named-cell compile-time alias rebinding), the library write-back augmentation is
+> bypassed (slots write straight through), asm `x.slot` on any storage local/param
+> reads its biguint var, and the StorageSlot alias interception + contract-method
+> storage-param guard are unnecessary in-mode. Whole-STRUCT storage→memory
+> materialisation (readStructElem), struct-element push/pop (EVM zero-on-pop),
+> type-conversion peeling (`bytes(a).length`). REAL-CONTRACT UNLOCK (the
+> asm-compat-memory-mode.md §1 blockers): **kaito ✓ usde ✓ (OZ StorageSlot/
+> ShortStrings), degen ✓ (OZ Checkpoints/ERC20Votes) all compile end-to-end to TEAL
+> in-mode**; builder still needs the stage-3 MEMORY mode and uses codesize/
+> extcodesize (unfixable on AVM). New runtime test test_evm_layout_storage_ref_params
+> (7 evm_layout tests green on localnet). Fixed a second `e->wtype`+`std::move(e)`
+> same-call segfault (degen-exposed, in the resolver bounds pin).
+
 # Semantic Test Status — v474
 
 > **feat: --evm-storage-layout Stage-1 prototype (asm-compat-memory-mode.md), 2026-08-01:**

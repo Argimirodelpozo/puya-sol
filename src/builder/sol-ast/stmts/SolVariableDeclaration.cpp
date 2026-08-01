@@ -2,6 +2,8 @@
 /// Migrated from VariableDeclarationBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolVariableDeclaration.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/AWSTBuilder.h" // containsMappingType
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/storage/StorageMapper.h"
@@ -85,6 +87,31 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 								return result;
 							}
 
+		// --evm-storage-layout: a storage-pointer local IS a biguint slot.
+		// Resolve the initializer's slot on the AST (building the aggregate
+		// value would be wrong/rejected) and bind `name = slot`.
+		if (builder::evmStorageLayout()
+			&& decl.referenceLocation() == VariableDeclaration::Location::Storage
+			&& initialValue)
+		{
+			auto loc = m_blk.makeLoc(decl.location());
+			EvmSlotLowering low(m_blk.builderCtx(), m_blk, loc);
+			auto addr = low.resolve(*initialValue);
+			if (!addr)
+				return result;   // error already logged
+			m_blk.setSlotStorageRef(decl.id(), awst::makeVarExpression(
+				decl.name(), awst::WType::biguintType(), loc));
+			// pre-statements (bounds asserts, key pins) BEFORE the binding
+			for (auto& st: m_blk.builderCtx().takePrePending())
+				result.push_back(std::move(st));
+			result.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(decl.name(), awst::WType::biguintType(), loc),
+				addr->slot, loc));
+			for (auto& st: m_blk.builderCtx().takePending())
+				result.push_back(std::move(st));
+			return result;
+		}
+
 		std::shared_ptr<awst::Expression> value;
 		if (initialValue)
 		{
@@ -112,6 +139,27 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			}
 
 			value = m_blk.builderCtx().build(*initialValue);
+
+			// --evm-storage-layout: a storage-typed initializer builds to its
+			// biguint slot handle; a MEMORY struct local needs the VALUE —
+			// materialise it from the slots (storage → memory copy).
+			if (builder::evmStorageLayout() && value
+				&& value->wtype == awst::WType::biguintType()
+				&& decl.referenceLocation() != VariableDeclaration::Location::Storage)
+				if (auto const* ist = dynamic_cast<solidity::frontend::StructType const*>(
+						initialValue->annotation().type);
+					ist && ist->dataStoredIn(solidity::frontend::DataLocation::Storage))
+				{
+					auto loc = m_blk.makeLoc(decl.location());
+					EvmSlotLowering low(m_blk.builderCtx(), m_blk, loc);
+					EvmSlotLowering::Addr a;
+					a.slot = std::move(value);
+					a.solType = ist;
+					a.wtype = m_blk.typeMapper().map(ist);
+					value = low.readStructValue(a);
+					if (!value)
+						return result;
+				}
 
 			// Upgrade dynamic array to fixed-size when N is known
 			if (auto* newArr = dynamic_cast<awst::NewArray*>(value.get()))

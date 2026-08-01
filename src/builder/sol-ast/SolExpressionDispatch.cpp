@@ -7,6 +7,7 @@
 /// (SolASTVisitor.h) handles the dynamic_cast cascade.
 
 #include "builder/sol-ast/AsmScan.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-ast/SolExpressionDispatch.h"
 #include "builder/sol-ast/SolASTVisitor.h"
 #include "builder/sol-ast/SolExpressionFactory.h"
@@ -110,6 +111,10 @@ public:
 		// pointer, which is exactly why OZ routes writes through this wrapper —
 		// so this must produce an LVALUE, not a copy. See
 		// AsmScan.h::storagePointerAliasParam for the exact shape required.
+		// --evm-storage-layout: NOT needed — the call returns a real biguint
+		// slot handle and member access/writes resolve through it (and
+		// contract-method storage params work: slots write straight through).
+		if (!builder::evmStorageLayout())
 		if (auto const* call = dynamic_cast<FunctionCall const*>(&_n.expression()))
 		{
 			Declaration const* refDecl = nullptr;

@@ -257,6 +257,13 @@ std::shared_ptr<awst::Block> buildBlock(
 		if (mp && !mp->name().empty())
 			fn.setMappingKeyParam(mp->id(), mp->name());
 
+	// --evm-storage-layout: storage-ref params / named storage returns are
+	// biguint slot handles — register so slot-handle machinery resolves them.
+	for (auto const* sp: _ctx.slotRefParams)
+		if (sp && !sp->name().empty())
+			fn.setSlotStorageRef(sp->id(), awst::makeVarExpression(
+				sp->name(), awst::WType::biguintType(), awst::SourceLocation{}));
+
 	// Offset-convention struct-ref params (handle-model dual handle): register the companion
 	// uint64 offset var so the body's `s.field` writes hit the element slice via
 	// box_replace(key, offset+fieldOff). The offset param itself is in the subroutine signature
@@ -325,6 +332,7 @@ FunctionTranslationCtx ContractBuilder::makeFunctionCtx()
 	ctx.returnWirePlan = m_currentReturnWirePlan;
 	ctx.seededCalldataPointers = &m_currentSeededCalldataPointers;
 	ctx.paramSolTypes = m_currentParamSolTypes;
+	ctx.slotRefParams = m_currentSlotRefParams;
 	return ctx;
 }
 
@@ -496,6 +504,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_currentNamedReturns.clear();
 	m_currentMappingKeyParams.clear();
 	m_currentBlobAggParams.clear();
+	m_currentSlotRefParams.clear();
 
 	m_exprBuilder->transientStorage =
 		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr;

@@ -1,4 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "awst/Termination.h"
 #include "awst/StatementWalk.h"
 #include "builder/AWSTBuilder.h"
@@ -313,6 +314,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			arg.name = param->name();
 		arg.sourceLocation = makeLoc(param->location());
 		arg.wtype = m_typeMapper.map(param->type());
+		// --evm-storage-layout: a storage ref IS a biguint slot number.
+		if (evmStorageLayout()
+			&& param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
+			arg.wtype = awst::WType::biguintType();
 		// Memory aggregate >4KB: pass as uint64 base offset (blob pointer model).
 		// Callee re-registers via setBlobAggParams so p.field[i] hits blob word access.
 		if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
@@ -327,7 +332,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	// after all regular params. The caller appends matching offset args in the same order; the
 	// body's `s.field` writes target the element slice via box_replace(key, offset+fieldOff).
 	for (auto const& param: _func.parameters())
-		if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+		if (!evmStorageLayout()   // slot handles carry the element position directly
+			&& param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 			&& !param->name().empty()
 			&& structRefOffsetParamsRegistry().count(param->id()))
 		{
@@ -348,8 +354,12 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	else if (returnParams.size() == 1)
 	{
 		method.returnType = m_typeMapper.map(returnParams[0]->type());
+		// --evm-storage-layout: ANY storage ref return is a biguint slot.
+		if (evmStorageLayout()
+			&& returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
+			method.returnType = awst::WType::biguintType();
 		// .slot assembly storage ref: return biguint (slot number).
-		if (returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+		else if (returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 			&& _func.isImplemented()
 			&& containsInlineAssembly(_func.body()))
 			method.returnType = awst::WType::biguintType();
@@ -388,6 +398,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		{
 			auto const& rp = returnParams[ri];
 			auto* mappedType = m_typeMapper.map(rp->type());
+			if (evmStorageLayout()
+				&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
+				mappedType = awst::WType::biguintType();
 			auto intInfo = builder::SolIntType::fromSolOrEnum(rp->type());
 			bool isAbiBoundary = _func.isPartOfExternalInterface();
 			if (intInfo)
@@ -569,7 +582,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Covers both input params (storage m) and named returns (storage r assigned r=m1).
 		std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParamDecls;
 		auto isMappingStorageRef = [&](solidity::frontend::VariableDeclaration const* p) {
-			return p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+			return !evmStorageLayout()   // slot handles replace box-key prefixes
+				&& p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 				&& isBoxKeyedStorageRef(p->type()) // widened: plain structs too
 				&& !p->name().empty();
 		};
@@ -586,6 +600,22 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					&& !rp->name().empty() && storageRefReturnIsBytesKeyed(&_func)))
 				mappingKeyParamDecls.push_back(rp.get());
 		setMappingKeyParams(mappingKeyParamDecls);
+
+		// --evm-storage-layout: storage params + named storage returns are
+		// biguint slot handles; register so body access resolves through them.
+		std::vector<solidity::frontend::VariableDeclaration const*> slotRefParamDecls;
+		if (evmStorageLayout())
+		{
+			for (auto const& p: _func.parameters())
+				if (p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+					&& !p->name().empty())
+					slotRefParamDecls.push_back(p.get());
+			for (auto const& rp: returnParams)
+				if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+					&& !rp->name().empty())
+					slotRefParamDecls.push_back(rp.get());
+		}
+		setSlotRefParams(slotRefParamDecls);
 
 		// Blob-backed (>4KB) memory params: stash so body's p.field[i] routes to the blob.
 		std::vector<solidity::frontend::VariableDeclaration const*> blobAggParamDecls;
@@ -623,6 +653,17 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 					&& storageRefReturnIsBytesKeyed(&_func))
 					continue;
+				// --evm-storage-layout: the named return holds a biguint slot.
+				if (evmStorageLayout()
+					&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
+				{
+					inits.push_back(awst::makeAssignmentStatement(
+						awst::makeVarExpression(rp->name(), awst::WType::biguintType(),
+							method.sourceLocation),
+						awst::makeZero(method.sourceLocation, awst::WType::biguintType()),
+						method.sourceLocation));
+					continue;
+				}
 				auto* rpType = m_typeMapper.map(rp->type());
 
 				// >4KB memory returns: pre-zeroed in preamble; skip bzero (pointer model).
@@ -723,6 +764,11 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					if (m_currentSeededCalldataPointers.count(retParams[0]->name()))
 						retStmt->value = TypeCoercion::calldataPointerValueRead(
 							retParams[0]->name(), method.sourceLocation);
+					else if (evmStorageLayout()
+						&& retParams[0]->referenceLocation()
+							== solidity::frontend::VariableDeclaration::Location::Storage)
+						retStmt->value = awst::makeVarExpression(
+							retParams[0]->name(), awst::WType::biguintType(), method.sourceLocation);
 					else
 						retStmt->value = awst::makeVarExpression(
 							retParams[0]->name(), m_typeMapper.map(retParams[0]->type()), method.sourceLocation);
@@ -732,7 +778,12 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					auto tuple = awst::makeTupleExpression(nullptr, method.sourceLocation);
 					for (auto const& rp: retParams)
 					{
-						auto var = awst::makeVarExpression(rp->name(), m_typeMapper.map(rp->type()), method.sourceLocation);
+						auto* vt = (evmStorageLayout()
+							&& rp->referenceLocation()
+								== solidity::frontend::VariableDeclaration::Location::Storage)
+							? awst::WType::biguintType()
+							: m_typeMapper.map(rp->type());
+						auto var = awst::makeVarExpression(rp->name(), vt, method.sourceLocation);
 						tuple->items.push_back(std::move(var));
 					}
 					tuple->wtype = method.returnType;

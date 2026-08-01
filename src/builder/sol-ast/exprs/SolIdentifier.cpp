@@ -68,6 +68,15 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	// Variable references
 	if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(decl))
 	{
+		// --evm-storage-layout: a storage-located local/param IS its biguint
+		// slot handle (bound at declaration / by the call convention).
+		if (builder::evmStorageLayout()
+			&& !varDecl->isStateVariable()
+			&& (varDecl->isLocalVariable() || varDecl->isCallableOrCatchParameter())
+			&& varDecl->referenceLocation() == VariableDeclaration::Location::Storage)
+			return awst::makeVarExpression(
+				varDecl->name(), awst::WType::biguintType(), m_loc);
+
 		// Blob-backed aggregate: variable travels as a uint64 base offset into the
 		// memory blob. A bare reference of an ARRAY/STRUCT resolves to that offset
 		// (field/index access go through SolIndexAccess). But a bytes/string blob
@@ -237,6 +246,13 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 					EvmSlotLowering low(m_ctx, m_scope, m_loc);
 					if (auto addr = low.resolve(m_ident))
 						return low.readBytesValue(*addr);
+					return nullptr;
+				}
+				if (dynamic_cast<StructType const*>(varDecl->type()))
+				{
+					EvmSlotLowering low(m_ctx, m_scope, m_loc);
+					if (auto addr = low.resolve(m_ident))
+						return low.readStructValue(*addr);
 					return nullptr;
 				}
 				Logger::instance().error(
