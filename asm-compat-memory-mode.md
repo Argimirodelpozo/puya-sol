@@ -141,6 +141,33 @@ future sub-mode: `--evm-storage-layout-hash=sha256` for the
 hashed slots in asm) — must stay explicit opt-in; wrong auto-detection
 would be silent storage aliasing.
 
+**DeFi frontier (2026-08-02)**: probing the non-proxy ^0.8 singleton space
+(everything else is architecturally out: Aave/Lido/Compound are EIP-1967
+proxies ⇒ delegatecall; Curve/Yearn are Vyper; UniV2/V3, Balancer, Safe are
+0.6/0.7):
+- **Permit2 (0x0000…78BA3) — COMPILES AT 6218 B, UNDER the 8192 B cap, and
+  REPLAYS ITS MAINNET HISTORY CLEAN** (66/200 txns after closed-world
+  filtering; the rest need real tokens). First deployable DeFi-infrastructure
+  singleton.
+- **Morpho Blue (0xBBBB…FFCb)** — compiles, 13741 B ⇒ needs the uros splitter.
+- **UniV4 PoolManager (0x0000…8A90)** — compiles, 30751 B ⇒ splitter.
+- **Seaport 1.6** — 648 errors (near-total assembly over structs) — not viable.
+- **sUSDe (StakedUSDeV2)** — one `.delegatecall` blocks it.
+
+Differ gains from that run: solc settings now fall back to the contract's OWN
+VERIFIED settings (viaIR + optimizer) when a default compile fails — Permit2
+is stack-too-deep otherwise, and the existing corpus keeps its exact oracle
+because the fallback only fires on failure. Storage readers (both legs) grew
+**depth-3 address mappings** (Permit2 `allowance`) and
+**`mapping(address => mapping(uint => V))`** (`nonceBitmap`) — candidate keys
+stay O(txns), derived from each call's sender + address args + uint args'
+word index. That immediately turned a vacuous "clean" into 3 real findings,
+which proved to be Permit2's `expiration` field (set to `block.timestamp`)
+differing by ~50 s: the EVM leg time-travels to historical timestamps, the AVM leg runs
+at LocalNet wall clock — now classified element-wise as timestamp noise.
+Pinning AVM block time (algod dev-mode) is the real fix and would also
+convert a chunk of the closed-world skips into coverage.
+
 **Not yet**: bytes/string element access & push/pop, whole dynamic-ARRAY
 materialisation, struct-typed top-level vars in the differ readers (OZ
 Trace208 — honest uncompared-coverage warning), `layout at` bases ≥ 2^16,

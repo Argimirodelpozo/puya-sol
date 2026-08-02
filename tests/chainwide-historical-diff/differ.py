@@ -22,6 +22,31 @@ KNOWN_NOISE_GETTERS = {
 _NOISE_SIG_RE = re.compile(r"(DOMAIN_SEPARATOR|chainid|CHAIN_ID)", re.I)
 
 
+def _timestamp_noise_elems(ev_, av_):
+    """Element-wise twin of `_timestamp_noise` for STRUCT/ARRAY map values.
+
+    A struct field set from `block.timestamp` (Permit2's PackedAllowance
+    `expiration`, which `_updateApproval` fills with `now` when the caller
+    passes 0) differs between legs because the EVM leg time-travels to each
+    txn's historical timestamp while the AVM leg runs at LocalNet wall clock.
+    Two lists that match except at positions holding plausible unix
+    timestamps within 2h of each other are that skew, not a miscompile."""
+    if not (isinstance(ev_, list) and isinstance(av_, list)
+            and len(ev_) == len(av_) and ev_):
+        return False
+    saw_ts = False
+    for a, b in zip(ev_, av_):
+        if a == b:
+            continue
+        if (isinstance(a, int) and isinstance(b, int)
+                and a > 1_500_000_000 and b > 1_500_000_000
+                and abs(a - b) < 7200):
+            saw_ts = True
+            continue
+        return False
+    return saw_ts
+
+
 def _timestamp_noise(ev_, av_):
     """Deploy-time wall-clock skew: a ctor storing block.timestamp lands a few
     minutes apart on the two legs (EVM leg runs, then the AVM leg deploys).
@@ -260,13 +285,21 @@ def diff_case(case_dir: Path) -> dict:
         keys = [k for k in sorted(set(ee) | set(aa))
                 if not _same_word(ee.get(k), aa.get(k))]
         off = _uniform_offset([(ee.get(k), aa.get(k)) for k in keys])
-        bucket = "storage_noise" if off is not None else "storage_map_div"
         for k in keys:
-            f = {"map": m, "key": k, "evm": ee.get(k), "avm": aa.get(k),
+            ev_k, av_k = ee.get(k), aa.get(k)
+            ts_only = (_timestamp_noise(ev_k, av_k)
+                       or _timestamp_noise_elems(ev_k, av_k))
+            bucket = ("storage_noise"
+                      if (off is not None or ts_only) else "storage_map_div")
+            f = {"map": m, "key": k, "evm": ev_k, "avm": av_k,
                  "last_write_txn": _last_write(m)}
             if off is not None:
                 f["note"] = (f"uniform +{off} on every entry — EVM/AVM block or "
                              "timestamp base, not a value divergence")
+            elif ts_only:
+                f["note"] = ("differs only in plausible-timestamp field(s) — the "
+                             "EVM leg time-travels to each txn's historical "
+                             "timestamp, the AVM leg runs at LocalNet wall clock")
             findings.setdefault(bucket, []).append(f)
 
     skips = {}

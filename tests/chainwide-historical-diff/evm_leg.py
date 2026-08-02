@@ -261,6 +261,33 @@ def main():
             for t in [s_sym] + seen_args:
                 partners.add(t)
 
+    # Candidate TRIPLES (owner -> token -> spender) for 3-deep mappings
+    # (Permit2's `allowance`): each call's sender paired with ordered pairs of
+    # its address args. O(txns) like pair_partners, never a cartesian product.
+    addr_triples: list = []
+    for c in calls:
+        if not c.get("sender") or not c.get("args"):
+            continue
+        s_sym = symbol(c["sender"]["__addr__"])
+        seen_args = [t for a in c["args"] for t in _syms_in(a)]
+        for i2 in range(len(seen_args)):
+            for j2 in range(len(seen_args)):
+                if i2 == j2:
+                    continue
+                tri = (s_sym, seen_args[i2], seen_args[j2])
+                if tri not in addr_triples:
+                    addr_triples.append(tri)
+    # Candidate UINT inner keys for mapping(address => mapping(uint => V))
+    # (Permit2's nonceBitmap word positions): small words plus each uint arg's
+    # word index (nonce >> 8), which is how such maps are indexed.
+    uint_inner_keys: list = [0, 1, 2, 3]
+    for c in calls:
+        for a in (c.get("args") or []):
+            if isinstance(a, int) and 0 <= a < (1 << 256):
+                for cand in (a >> 8, a):
+                    if 0 <= cand < 4096 and cand not in uint_inner_keys:
+                        uint_inner_keys.append(cand)
+
     # ── compile once with solcx ───────────────────────────────────────────
     solcx.set_solc_version("0.8.26")
     mf = case.get("multifile")
@@ -276,8 +303,28 @@ def main():
             settings["remappings"] = mf["remappings"]
     else:
         sources = {"prepared.sol": {"content": (case_dir / "prepared.sol").read_text()}}
-    out = solcx.compile_standard({"language": "Solidity", "sources": sources,
-                                  "settings": settings})
+    def _compile(extra=None):
+        st = dict(settings)
+        if extra:
+            st.update(extra)
+        return solcx.compile_standard({"language": "Solidity", "sources": sources,
+                                       "settings": st})
+    try:
+        out = _compile()
+    except Exception as _e:
+        # Modern stack-heavy contracts (Permit2) only compile with the settings
+        # they were VERIFIED with — viaIR + optimizer. Retry with those rather
+        # than applying them everywhere: the existing corpus keeps the exact
+        # oracle it was validated against.
+        _ss = case.get("solc_settings") or {}
+        _fallback = {
+            "optimizer": _ss.get("optimizer") or {"enabled": True, "runs": 200},
+            "viaIR": True if _ss.get("viaIR") is not False else False,
+        }
+        print(f"[evm] default solc compile failed ({str(_e)[:70]}) — retrying "
+              f"with the contract's verified settings "
+              f"(viaIR={_fallback['viaIR']}, optimizer on)")
+        out = _compile(_fallback)
     target = None
     for by_name in out["contracts"].values():
         for cname, cdata in by_name.items():
@@ -402,11 +449,21 @@ def main():
             continue
         if not _is_addr_mapping(t.get("label", "")):
             continue
+        _inner = _TY.get(t.get("value"), {}) or {}
+        if re.match(r"^mapping\(uint", _inner.get("label", "") or ""):
+            k2u, vt2u = _value_shape(_inner.get("value"))
+            if k2u in ("scalar", "struct"):
+                maps.append((e["label"], int(e["slot"]), "2u", (k2u, vt2u)))
+            continue
         kind, vt = _value_shape(t.get("value"))
         if kind == "mapping":
             k2, vt2 = _value_shape(vt.get("value"))
-            if k2 == "scalar":
-                maps.append((e["label"], int(e["slot"]), 2, ("scalar", vt2)))
+            if k2 == "mapping":                 # depth 3 (Permit2 allowance)
+                k3, vt3 = _value_shape(vt2.get("value"))
+                if k3 in ("scalar", "struct"):
+                    maps.append((e["label"], int(e["slot"]), 3, (k3, vt3)))
+            elif k2 in ("scalar", "struct"):
+                maps.append((e["label"], int(e["slot"]), 2, (k2, vt2)))
         elif kind in ("scalar", "struct", "array"):
             maps.append((e["label"], int(e["slot"]), 1, (kind, vt)))
 
@@ -612,6 +669,35 @@ def main():
                         v = read_at(int.from_bytes(s1, "big"), vshape)
                         if v is not None:
                             got["0x" + kh] = v
+                    out[name] = got
+                    continue
+                if depth == 3:
+                    def _kb(x):
+                        return bytes.fromhex(
+                            str(x)[2:].lower().rjust(40, "0")).rjust(32, b"\0")
+                    for (t1, t2, t3) in addr_triples:
+                        a1, a2, a3 = (sym_addr.get(t1), sym_addr.get(t2),
+                                      sym_addr.get(t3))
+                        if a1 is None or a2 is None or a3 is None:
+                            continue
+                        s1 = keccak(_kb(a1) + slot.to_bytes(32, "big"))
+                        s2 = keccak(_kb(a2) + s1)
+                        s3 = keccak(_kb(a3) + s2)
+                        v = read_at(int.from_bytes(s3, "big"), vshape)
+                        if v is not None:
+                            got[f"{t1}->{t2}->{t3}"] = v
+                    out[name] = got
+                    continue
+                if depth == "2u":
+                    for sym_, addr_ in syms:
+                        k1b = bytes.fromhex(
+                            str(addr_)[2:].lower().rjust(40, "0")).rjust(32, b"\0")
+                        s1 = keccak(k1b + slot.to_bytes(32, "big"))
+                        for w in uint_inner_keys:
+                            s2 = keccak(w.to_bytes(32, "big") + s1)
+                            v = read_at(int.from_bytes(s2, "big"), vshape)
+                            if v is not None:
+                                got[f"{sym_}->#{w}"] = v
                     out[name] = got
                     continue
                 for sym, addr in syms:

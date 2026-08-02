@@ -166,11 +166,21 @@ def read_slot_storage(slotmap: dict, layout: dict, syms: dict, fold, calls):
             continue
         if not _is_addr_mapping(label):
             continue
+        _inner = types.get(t.get("value"), {}) or {}
+        if re.match(r"^mapping\(uint", _inner.get("label", "") or ""):
+            k2u, vt2u = _value_shape(_inner.get("value"))
+            if k2u in ("scalar", "struct"):
+                maps.append((e["label"], int(e["slot"]), "2u", (k2u, vt2u)))
+            continue
         kind, vt = _value_shape(t.get("value"))
         if kind == "mapping":
             k2, vt2 = _value_shape(vt.get("value"))
-            if k2 == "scalar":
-                maps.append((e["label"], int(e["slot"]), 2, ("scalar", vt2)))
+            if k2 == "mapping":                 # depth 3 (Permit2 allowance)
+                k3, vt3 = _value_shape(vt2.get("value"))
+                if k3 in ("scalar", "struct"):
+                    maps.append((e["label"], int(e["slot"]), 3, (k3, vt3)))
+            elif k2 in ("scalar", "struct"):
+                maps.append((e["label"], int(e["slot"]), 2, (k2, vt2)))
         elif kind in ("scalar", "struct", "array"):
             maps.append((e["label"], int(e["slot"]), 1, (kind, vt)))
 
@@ -219,6 +229,7 @@ def read_slot_storage(slotmap: dict, layout: dict, syms: dict, fold, calls):
                 yield from _syms_in(x)
 
     pair_partners: dict = {}
+    addr_triples: list = []
     for c in calls:
         if not c.get("sender") or not c.get("args"):
             continue
@@ -229,6 +240,20 @@ def read_slot_storage(slotmap: dict, layout: dict, syms: dict, fold, calls):
             partners.add(a_sym)
             for t2 in [s_sym] + seen_args:
                 partners.add(t2)
+        for i2 in range(len(seen_args)):
+            for j2 in range(len(seen_args)):
+                if i2 == j2:
+                    continue
+                tri = (s_sym, seen_args[i2], seen_args[j2])
+                if tri not in addr_triples:
+                    addr_triples.append(tri)
+    uint_inner_keys: list = [0, 1, 2, 3]
+    for c in calls:
+        for a in (c.get("args") or []):
+            if isinstance(a, int) and 0 <= a < (1 << 256):
+                for cand in (a >> 8, a):
+                    if 0 <= cand < 4096 and cand not in uint_inner_keys:
+                        uint_inner_keys.append(cand)
 
     maps_out = {"__declared__": sorted(declared)}
     for name, slot, depth, vshape in maps:
@@ -239,6 +264,32 @@ def read_slot_storage(slotmap: dict, layout: dict, syms: dict, fold, calls):
                 v = read_at(int.from_bytes(s1, "big"), vshape)
                 if v is not None:
                     got["0x" + kh] = v
+            maps_out[name] = got
+            continue
+        if depth == 3:
+            for (t1, t2, t3) in addr_triples:
+                k1, k2b, k3 = syms.get(t1), syms.get(t2), syms.get(t3)
+                if not all(isinstance(x, (bytes, bytearray)) and len(x) == 32
+                           for x in (k1, k2b, k3)):
+                    continue
+                s1 = _kec(bytes(k1) + slot.to_bytes(32, "big"))
+                s2 = _kec(bytes(k2b) + s1)
+                s3 = _kec(bytes(k3) + s2)
+                v = read_at(int.from_bytes(s3, "big"), vshape)
+                if v is not None:
+                    got[f"{t1}->{t2}->{t3}"] = v
+            maps_out[name] = got
+            continue
+        if depth == "2u":
+            for sym_, k1 in syms.items():
+                if not isinstance(k1, (bytes, bytearray)) or len(k1) != 32:
+                    continue
+                s1 = _kec(bytes(k1) + slot.to_bytes(32, "big"))
+                for w in uint_inner_keys:
+                    s2 = _kec(w.to_bytes(32, "big") + s1)
+                    v = read_at(int.from_bytes(s2, "big"), vshape)
+                    if v is not None:
+                        got[f"{sym_}->#{w}"] = v
             maps_out[name] = got
             continue
         for sym, k in syms.items():

@@ -151,8 +151,14 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300) -> dict:
         creation = {"creator": (ai.get("creator_address_hash") or "").lower() or None,
                     "hash": ai.get("creation_tx_hash"), "ts": 0, "block": 0}
 
+    _cs = sc.get("compiler_settings") or {}
     case = {
         "tag": tag, "host": host, "address": addr,
+        # the contract's OWN verified settings — the oracle leg falls back to
+        # these when a default (unoptimized, no-viaIR) compile fails, which is
+        # what modern stack-heavy contracts (Permit2) require.
+        "solc_settings": {"optimizer": _cs.get("optimizer"),
+                          "viaIR": _cs.get("viaIR")},
         "name": sc.get("name"),
         "compiler_version": comp,
         "creation": creation,
