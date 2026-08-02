@@ -168,6 +168,31 @@ at LocalNet wall clock — now classified element-wise as timestamp noise.
 Pinning AVM block time (algod dev-mode) is the real fix and would also
 convert a chunk of the closed-world skips into coverage.
 
+**INTERNAL (contract-to-contract) CALLS — replayable after all** (`fetch.py
+--internal`). Two wrong turns worth recording, because each looked like a
+dead end: (1) the address-level internal-txn APIs return `input: "0x"`, which
+reads as "explorers don't expose calldata" — but the PER-TRANSACTION
+`/api/v2/transactions/{hash}/raw-trace` does, in Parity form
+(`action:{from,to,input,value,callType}`, `traceAddress`, `type`);
+(2) `txlistinternal` then finds no calldata-bearing calls at all — because
+explorers index "internal transactions" as VALUE-MOVING traces only (496/496
+of PEPE's are plain ETH transfers). Contract-to-contract CALLS are not in
+that index at any depth. The right index for tokens is the TOKEN-TRANSFER
+log: every internal `transfer`/`transferFrom` emits a Transfer event carrying
+its parent tx hash. So: token-transfer index (windowed, minus known direct
+txns) → per-parent raw trace → lift non-root `call` entries targeting us →
+merge ordered by (block, txIndex, trace position). Paced 0.6 s with 3
+retries (public Blockscout 500s a burst), and it REPORTS parent traces it
+could not get — partial coverage must never read as complete.
+**Result on PEPE: +158 internal calls (153 `transfer`, 5 `transferFrom`, from
+the V2 pair/router) ⇒ 200/200 replayed, ZERO skips, zero divergences** —
+versus 188/200 with 12 closed-world skips without them. The skips were an
+ARTIFACT of the missing calls: their balance preconditions came from router
+traffic the replay never saw. Caveat: the window is now denser but shorter
+(internal calls consume the max-txns budget), and contracts whose internal
+traffic starts later than their first N txns (ena) gain nothing without a
+deeper window.
+
 **Not yet**: bytes/string element access & push/pop, whole dynamic-ARRAY
 materialisation, struct-typed top-level vars in the differ readers (OZ
 Trace208 — honest uncompared-coverage warning), `layout at` bases ≥ 2^16,

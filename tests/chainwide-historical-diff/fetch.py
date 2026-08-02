@@ -53,6 +53,118 @@ def _decode_ctor_addresses(abi, ctor_hex):
         return []
 
 
+def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
+                         direct_hashes: set, max_parents: int = 200,
+                         max_calls: int = 400) -> list:
+    """Calls INTO `address` made by other CONTRACTS (internal transactions).
+
+    The address-level internal-txn APIs strip calldata (`input: "0x"` on the
+    Etherscan-compat endpoint, absent entirely from v2), which is why this
+    class of traffic was long considered unreplayable. The PER-TRANSACTION
+    raw trace does carry it: Parity-format entries of
+    `{action:{from,to,input,value,callType}, result, traceAddress, type}`.
+    So: list the internal txns to get their PARENT hashes, then pull each
+    parent's trace once and lift every non-root call whose `to` is us.
+
+    Root entries (empty traceAddress) are skipped — those are the direct
+    txns already in `txlist`.
+    """
+    addr = address.lower()
+    # PARENT DISCOVERY via the TOKEN-TRANSFER index, not `txlistinternal`.
+    # Explorers index "internal transactions" as VALUE-MOVING traces only —
+    # 496/496 of PEPE's are plain ETH transfers with no calldata — so that
+    # endpoint cannot find contract-to-contract CALLS. Every internal
+    # `transfer`/`transferFrom` does emit a Transfer event though, and those
+    # ARE indexed with their parent tx: take the parents in our block window
+    # that aren't already direct txns, and read their traces.
+    parents, seen_p = [], set()
+    page = 1
+    while len(parents) < max_parents:
+        try:
+            d = http_json(f"https://{host}/api?module=account&action=tokentx"
+                          f"&contractaddress={address}"
+                          f"&startblock={block_lo}&endblock={block_hi}"
+                          f"&sort=asc&page={page}&offset=1000")
+        except Exception:
+            break
+        rows = d.get("result") or []
+        if not isinstance(rows, list) or not rows:
+            break
+        for r in rows:
+            h = r.get("hash")
+            if not h or h in seen_p or h.lower() in direct_hashes:
+                continue
+            seen_p.add(h)
+            parents.append((h, int(r.get("blockNumber") or 0),
+                            int(r.get("transactionIndex") or 0),
+                            int(r.get("timeStamp") or 0)))
+            if len(parents) >= max_parents:
+                break
+        if len(rows) < 1000:
+            break
+        page += 1
+        time.sleep(0.4)
+    parents.sort(key=lambda p: (p[1], p[2]))
+
+    out = []
+    dropped = 0
+    for h, blk, txi, ts in parents:
+        if len(out) >= max_calls:
+            break
+        # Public Blockscout rate-limits hard: a burst of raw-trace requests
+        # comes back as 500s. Pace + retry with backoff, and COUNT what we
+        # still lose — a silently-partial internal-call set would overstate
+        # replay coverage.
+        tr = None
+        for attempt in range(3):
+            try:
+                tr = http_json(f"https://{host}/api/v2/transactions/{h}/raw-trace")
+                break
+            except Exception:
+                time.sleep(1.0 * (2 ** attempt))
+        if tr is None:
+            dropped += 1
+            continue
+        if not isinstance(tr, list):
+            continue
+        for i, e in enumerate(tr):
+            if not isinstance(e, dict) or e.get("type") != "call":
+                continue
+            if not e.get("traceAddress"):
+                continue                  # root call == the direct txn
+            act = e.get("action") or {}
+            if (act.get("to") or "").lower() != addr:
+                continue
+            if (act.get("callType") or "call") != "call":
+                continue                  # staticcall = view; delegatecall N/A
+            inp = act.get("input") or "0x"
+            if len(inp) < 10:
+                continue                  # plain value transfer, no selector
+            val = act.get("value") or "0x0"
+            try:
+                val = int(val, 16) if isinstance(val, str) else int(val)
+            except Exception:
+                val = 0
+            res = e.get("result")
+            out.append({
+                "hash": f"{h}#{'.'.join(str(x) for x in e['traceAddress'])}",
+                "from": (act.get("from") or "").lower(),
+                "input": inp,
+                "value": val,
+                "hist_ok": bool(res) and not e.get("error"),
+                "ts": ts, "block": blk,
+                "internal": True,
+                "trace_pos": i, "txindex": txi,
+            })
+            if len(out) >= max_calls:
+                break
+        time.sleep(0.6)
+    if dropped:
+        print(f"[fetch] internal calls: {dropped}/{len(parents)} parent trace(s) "
+              f"unavailable after retries — those calls are NOT in the replay")
+    return out
+
+
 def fetch_dep(host: str, address: str, dep_dir, depth: int, seen: set) -> dict | None:
     """LIGHT dependency fetch: verified source + ABI + its own ctor args — no
     txn history (deps are only deployed, never replayed directly). Returns the
@@ -89,7 +201,8 @@ def fetch_dep(host: str, address: str, dep_dir, depth: int, seen: set) -> dict |
     return dep
 
 
-def fetch_case(host: str, address: str, tag: str, max_txns: int = 300) -> dict:
+def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
+               internal: bool = False) -> dict:
     case_dir = CASES / tag
     addr = address.lower()
 
@@ -150,6 +263,23 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300) -> dict:
             ai = {}
         creation = {"creator": (ai.get("creator_address_hash") or "").lower() or None,
                     "hash": ai.get("creation_tx_hash"), "ts": 0, "block": 0}
+
+    # INTERNAL CALLS (contract-to-contract traffic): merged into the same
+    # ordered stream as the direct txns. For router-driven tokens this is most
+    # of the real state evolution — without it the closed-world filter eats
+    # every downstream txn (ena replayed 34/200, sqd 1/200).
+    if internal and txns:
+        ic = fetch_internal_calls(
+            host, address, txns[0]["block"], txns[-1]["block"],
+            {t["hash"].lower() for t in txns})
+        if ic:
+            txns.extend(ic)
+            txns.sort(key=lambda t: (t["block"], t.get("txindex", 0),
+                                     t.get("trace_pos", -1)))
+            txns = txns[:max_txns]
+            n_ic = sum(1 for t in txns if t.get("internal"))
+            print(f"[fetch] {tag}: +{n_ic} internal call(s) merged "
+                  f"(router-driven traffic that txlist alone can't see)")
 
     _cs = sc.get("compiler_settings") or {}
     case = {
@@ -229,9 +359,12 @@ def main():
     if "--max-txns" in argv:
         i = argv.index("--max-txns")
         max_txns = int(argv[i + 1]); del argv[i:i + 2]
+    internal = "--internal" in argv
+    if internal:
+        argv.remove("--internal")
     if len(argv) != 3:
         sys.exit(__doc__)
-    fetch_case(argv[0], argv[1], argv[2], max_txns)
+    fetch_case(argv[0], argv[1], argv[2], max_txns, internal)
 
 
 if __name__ == "__main__":
