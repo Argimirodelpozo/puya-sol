@@ -480,6 +480,9 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::coerceToNative(
 {
 	if (!_value || !_a.wtype || _value->wtype == _a.wtype)
 		return _value;
+	if (_value->wtype == awst::WType::arc4BoolType()
+		&& _a.wtype == awst::WType::boolType())
+		return awst::makeARC4Decode(std::move(_value), awst::WType::boolType(), m_loc);
 	if (_value->wtype && _value->wtype->kind() == awst::WTypeKind::ARC4UIntN)
 		_value = awst::makeARC4Decode(std::move(_value), awst::WType::biguintType(), m_loc);
 	bool valueNum = _value->wtype == awst::WType::uint64Type()

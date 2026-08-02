@@ -300,6 +300,13 @@ void ContractBuilder::buildPublicStateVariableGetters(
 							if (!m)
 								continue;
 							auto const* mtOfM = m->type();
+							if (dynamic_cast<solidity::frontend::StructType const*>(mtOfM))
+							{
+								// nested-struct member: solc's getter returns a
+								// nested tuple — not modelled yet; skip loudly.
+								supported = false;
+								break;
+							}
 							if (dynamic_cast<solidity::frontend::MappingType const*>(mtOfM))
 								continue;
 							if (auto const* ma2 = dynamic_cast<
