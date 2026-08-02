@@ -13,6 +13,9 @@
 #include "awst/NameGen.h"
 #include "Logger.h"
 
+#include <libsolutil/Keccak256.h>
+#include <libsolutil/CommonData.h>
+
 namespace puyasol::builder::sol_ast
 {
 
@@ -131,6 +134,16 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readSlotWord(
 std::shared_ptr<awst::Expression> EvmSlotLowering::dynDataBase(
 	std::shared_ptr<awst::Expression> _slot, awst::SourceLocation const& _loc)
 {
+	// CONSTANT slot (every declared dynamic array): fold keccak256(slot32) in
+	// the compiler — the on-chain hash (130 budget units) never runs. Mirrors
+	// the default model's compile-time ArrayData SlotRoutes.
+	if (auto const* ic = dynamic_cast<awst::IntegerConstant const*>(_slot.get()))
+	{
+		solidity::u256 slotVal{ic->value};
+		auto k = solidity::u256(solidity::util::keccak256(
+			solidity::toBigEndian(slotVal)));
+		return awst::makeIntegerConstant(k.str(), _loc, awst::WType::biguintType());
+	}
 	return awst::makeAsBiguint(
 		awst::makeKeccak256(slot32Bytes(std::move(_slot), _loc), _loc), _loc);
 }

@@ -128,6 +128,19 @@ message, and pays off as harvests hit modern single-file deps. Widening
 levers: multifile deps; internal-txn replay (`txlistinternal`); dev-mode
 localnet timestamps.
 
+**Hash-cost note** (keccak 130 vs sha256 35 budget units): the default
+model's sha256 translation is the right call everywhere translation is
+POSSIBLE; in-mode keccak is forced only because the contract's own Yul
+computes it (`add(keccak256(0,0x20), pos)`) and asm `keccak256` cannot be
+substituted (content hashes — role constants, EIP-712 — share the opcode).
+Mitigation LANDED: constant-slot `keccak256(slot32)` (every declared
+dynamic array's data base) folds at COMPILE time, so runtime keccak
+remains only for runtime mapping keys and asm-computed hashes. Possible
+future sub-mode: `--evm-storage-layout-hash=sha256` for the
+`.slot`-constants-only family (StorageSlot-class contracts never re-derive
+hashed slots in asm) — must stay explicit opt-in; wrong auto-detection
+would be silent storage aliasing.
+
 **Not yet**: bytes/string element access & push/pop, whole dynamic-ARRAY
 materialisation, struct-typed top-level vars in the differ readers (OZ
 Trace208 — honest uncompared-coverage warning), `layout at` bases ≥ 2^16,
