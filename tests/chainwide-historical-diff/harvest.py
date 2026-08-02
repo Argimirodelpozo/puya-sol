@@ -29,8 +29,45 @@ def ctype(inp):
     return t
 
 
+def tvl_candidates(limit: int = 40) -> list:
+    """Protocol tokens ranked by TVL (DefiLlama, keyless) instead of holders.
+
+    Holder-ranked harvesting surfaces memecoins and bridged tokens; TVL ranks
+    by economic weight, which pulls in staking / restaking / lending protocol
+    tokens — governance-heavy, permit-bearing, checkpoint-carrying contracts.
+    Each protocol's `address` is its token, i.e. a directly replayable
+    contract. Measured funnel over the top 40: 13 viable, 10 proxies (any
+    delegatecall is out on AVM), 11 pre-0.8, 6 already in the corpus.
+    """
+    import json as _json
+    import urllib.request as _u
+    req = _u.Request("https://api.llama.fi/protocols",
+                     headers={"User-Agent": "chd-harvest/1.0"})
+    data = _json.loads(_u.urlopen(req, timeout=90).read())
+    rows = []
+    for p in data:
+        a = p.get("address") or ""
+        if not isinstance(a, str):
+            continue
+        if a.startswith("ethereum:"):
+            a = a.split(":", 1)[1]
+        if not a.startswith("0x") or len(a) != 42:
+            continue
+        if (p.get("tvl") or 0) and "Ethereum" in (p.get("chains") or []):
+            rows.append((p["tvl"], p.get("name"), a.lower(), p.get("category")))
+    rows.sort(reverse=True)
+    return rows[:limit]
+
+
 def main():
     argv = sys.argv[1:]
+    if "--tvl" in argv:
+        n = int(argv[argv.index("--tvl") + 1]) if len(argv) > argv.index("--tvl") + 1 \
+            and not argv[argv.index("--tvl") + 1].startswith("--") else 40
+        for tvl, name, addr, cat in tvl_candidates(n):
+            print(f'    ("eth.blockscout.com", "{addr}", "{(name or "?").lower().replace(" ", "_")[:14]}"),'
+                  f'   # ${tvl/1e9:.2f}B {cat}')
+        return
     host = argv[0] if argv and not argv[0].startswith("--") else "eth.blockscout.com"
 
     def opt(flag, d, cast=int):

@@ -68,7 +68,12 @@ def is_platform_limit(reason: str) -> bool:
             # app-account min-balance grows with box count on long replays;
             # a resource shortfall, never a miscompile (avm_leg tops up, this
             # is the backstop so it can never masquerade as a finding)
-            or "below min" in m or "min balance" in m or "overspend" in m)
+            or "below min" in m or "min balance" in m or "overspend" in m
+            # 256 inner txns per top-level txn (AVM hard cap). A Solidity loop
+            # making external calls (batch airdrop, multicall, sweep) hits a
+            # ceiling the EVM doesn't have — a platform limit, never a
+            # miscompile, so it must not be able to masquerade as a finding.
+            or "too many inner transactions" in m)
 
 
 # ── Address registry (pure data; each leg derives its concrete forms) ──────
