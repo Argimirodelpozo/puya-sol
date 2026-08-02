@@ -133,6 +133,30 @@ CANDIDATES = [
     ("polygon.blockscout.com",  "0x37C5eBfaE4E4dA225e9D8042B05063c4A2C94bb6", "staup"),
     ("polygon.blockscout.com",  "0xbFc70507384047Aa74c29Cdc8c5Cb88D0f7213AC", "polyalierc20"),
     ("arbitrum.blockscout.com", "0x1337420dED5ADb9980CFc35f8f2B054ea86f8aB1", "sqd"),
+    # ── batch 6: TVL-RANKED (harvest.py --tvl, DefiLlama). Selecting by
+    # protocol TVL instead of holder count swaps memecoins/bridged tokens for
+    # staking / restaking / lending governance tokens — far heavier users of
+    # checkpoints, permits and role machinery. Funnel over the top 40: 13
+    # viable, 10 proxies (delegatecall — architecturally out), 11 pre-0.8, 6
+    # already held. Every one attempted COMPILES in slot+memory mode; sizes
+    # below are the slot-mode approval program against the 8192 B cap.
+    ("eth.blockscout.com", "0x9d65ff81a3c488d585bbfb0bfe3c7707c7917f54", "ssv"),      # $9.2B  4198B — replays clean 196/200
+    ("eth.blockscout.com", "0xc20059e0317de91738d13af027dfc4a50781b066", "sdao"),     # $3.7B  5059B
+    ("eth.blockscout.com", "0xfe0c30065b384f05761f15d0cc899d4f9f9cc0eb", "etherfi"),  # $3.2B  7196B
+    ("eth.blockscout.com", "0xfa1c09fc8b491b6a4d3ff53a10cad29381b3f949", "falcon"),   # $1.3B  3998B
+    ("eth.blockscout.com", "0x3f80b1c54ae920be41a77f8b902259d48cf24ccf", "kelp"),     # $0.9B  5372B
+    ("eth.blockscout.com", "0xb113c6cf239f60d380359b762e95c13817275277", "bmex"),     # $0.8B  7269B
+    ("eth.blockscout.com", "0xf0db65d17e30a966c2ae6a21f6bba71cea6e9754", "lombard"),  # $0.6B  7944B
+    ("eth.blockscout.com", "0x232ce3bd40fcd6f80f3d55a522d03f25df784ee2", "lighter"),  # $0.5B  3843B
+    # over the 8192 B cap (need the uros splitter to deploy):
+    ("eth.blockscout.com", "0x64d0f55cd8c7133a9d7102b13987235f486f2224", "swissborg"),# $0.8B  9603B
+    ("eth.blockscout.com", "0x0b010000b7624eb9b3dfbc279673c76e9d29d5f7", "obol"),     # $0.5B  9576B
+    # DeFi singletons (non-proxy ^0.8): Permit2 FITS and replays clean;
+    # Morpho Blue (13741 B) and UniV4 PoolManager (30751 B) compile but need
+    # the splitter. Seaport is not viable (near-total assembly over structs).
+    ("eth.blockscout.com", "0x000000000022D473030F116dDEE9F6B43aC78BA3", "permit2"),  #        6218B — replays clean
+    ("eth.blockscout.com", "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb", "morpho"),   #       13741B
+    ("eth.blockscout.com", "0x000000000004444c5dc75cB358380D2e3dE08A90", "univ4"),    #       30751B
 ]
 
 
