@@ -164,6 +164,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				zero = awst::makeBytesConstant(
 					std::vector<uint8_t>(static_cast<size_t>(*bw->length()), 0), m_loc,
 					awst::BytesEncoding::Base16, addr.wtype);
+			else if (addr.wtype == awst::WType::boolType())
+				zero = awst::makeBoolConstant(false, m_loc, awst::WType::boolType());
 			else
 				zero = awst::makeZero(m_loc);
 			std::vector<std::shared_ptr<awst::Statement>> writes;

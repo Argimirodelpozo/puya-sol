@@ -822,8 +822,9 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 				"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ", m_loc);
 		else if (addr->wtype == awst::WType::biguintType())
 			zero = awst::makeZero(m_loc, awst::WType::biguintType());
-		else if (addr->wtype == awst::WType::boolType()
-			|| addr->wtype == awst::WType::uint64Type())
+		else if (addr->wtype == awst::WType::boolType())
+			zero = awst::makeBoolConstant(false, m_loc, awst::WType::boolType());
+		else if (addr->wtype == awst::WType::uint64Type())
 			zero = awst::makeZero(m_loc);
 		else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(addr->wtype);
 			bw && bw->length().has_value())

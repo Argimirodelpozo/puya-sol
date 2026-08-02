@@ -496,6 +496,17 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::coerceToNative(
 	if (_value->wtype == awst::WType::arc4BoolType()
 		&& _a.wtype == awst::WType::boolType())
 		return awst::makeARC4Decode(std::move(_value), awst::WType::boolType(), m_loc);
+	if (_a.wtype == awst::WType::boolType()
+		&& (_value->wtype == awst::WType::uint64Type()
+			|| _value->wtype == awst::WType::biguintType()))
+		// bool carried numerically (0/1): the word codec's ternary needs a
+		// REAL bool condition (frxeth/erc6160 backend rejection).
+		return awst::makeNumericCompare(std::move(_value),
+			awst::NumericComparison::Ne,
+			awst::makeIntegerConstant("0", m_loc,
+				_value->wtype == awst::WType::biguintType()
+					? awst::WType::biguintType() : awst::WType::uint64Type()),
+			m_loc);
 	if (_value->wtype && _value->wtype->kind() == awst::WTypeKind::ARC4UIntN)
 		_value = awst::makeARC4Decode(std::move(_value), awst::WType::biguintType(), m_loc);
 	bool valueNum = _value->wtype == awst::WType::uint64Type()
@@ -565,6 +576,8 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _
 			continue;
 		if (dynamic_cast<StructType const*>(m->type()))
 			anyNested = true;
+		else if (isBytesLike(m->type()))
+			anyNested = true;   // string/bytes member → recursive path below
 		else if (!m->type()->isValueType())
 		{
 			Logger::instance().error(
@@ -604,6 +617,21 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _
 		{
 			fa.wtype = m_ctx.typeMapper.map(nst);
 			auto v = readStructValue(fa);
+			if (!v)
+				return nullptr;
+			ns->values[m->name()] = std::move(v);
+			continue;
+		}
+		if (isBytesLike(m->type()))
+		{
+			// string/bytes member: EVM short/long format at the member slot
+			fa.wtype = m_ctx.typeMapper.map(m->type());
+			auto v = readBytesValue(fa);
+			awst::WType const* fieldW2 = nullptr;
+			for (auto const& [fname, ftype]: structW->fields())
+				if (fname == m->name()) { fieldW2 = ftype; break; }
+			if (v && fieldW2 && v->wtype != fieldW2)
+				v = awst::makeARC4Encode(std::move(v), fieldW2, m_loc);
 			if (!v)
 				return nullptr;
 			ns->values[m->name()] = std::move(v);
@@ -687,6 +715,17 @@ bool EvmSlotLowering::writeStructValue(
 			fa.wtype = m_ctx.typeMapper.map(nst);
 			if (!writeStructValue(fa, std::move(field), _out))
 				return false;
+			continue;
+		}
+		if (isBytesLike(m->type()))
+		{
+			fa.wtype = m_ctx.typeMapper.map(m->type());
+			std::shared_ptr<awst::Expression> fv = std::move(field);
+			if (fv->wtype && fv->wtype->kind() != awst::WTypeKind::Bytes
+				&& fv->wtype != awst::WType::stringType())
+				fv = awst::makeARC4Decode(std::move(fv),
+					awst::WType::bytesType(), m_loc);
+			writeBytesValue(fa, std::move(fv), _out);
 			continue;
 		}
 		if (!m->type()->isValueType())
