@@ -3,6 +3,7 @@
 #include "builder/sol-ast/exprs/SolIdentifier.h"
 #include "Logger.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/contract/ContractBuilder.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/storage/StorageBackend.h"
@@ -146,6 +147,14 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 				auto val = awst::makeConcat(std::move(hdr), std::move(data), m_loc);
 				return awst::makeReinterpretCast(std::move(val), vt, m_loc);
 			}
+			// blob-backed STRUCT used as a VALUE: materialise from the blob
+			// (leaking the uint64 offset is a puya type mismatch — Morpho's
+			// `idToMarketParams[id] = marketParams`).
+			if (vt && vt->kind() == awst::WTypeKind::ARC4Struct)
+				if (auto const* solSt = dynamic_cast<StructType const*>(varDecl->type()))
+					if (auto mv = builder::materializeBlobStructValue(
+							m_ctx.typeMapper, solSt, vt, off, m_loc))
+						return mv;
 			if (vt != awst::WType::bytesType() && vt != awst::WType::stringType())
 				return awst::makeVarExpression(off, awst::WType::uint64Type(), m_loc);
 			auto offRead = [&]() {
@@ -256,7 +265,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 					return nullptr;
 				}
 				if (auto const* at0 = dynamic_cast<ArrayType const*>(varDecl->type());
-					at0 && !at0->isDynamicallySized() && !at0->isByteArrayOrString())
+					at0 && !at0->isByteArrayOrString())
 				{
 					EvmSlotLowering low(m_ctx, m_scope, m_loc);
 					if (auto addr = low.resolve(m_ident))

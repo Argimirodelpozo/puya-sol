@@ -61,16 +61,25 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 
 		if (!appId)
 		{
-			// Arbitrary address → HARD ERROR: can't reliably map address→app id
-			// across network configs. `address(this).code` and `address(N).code`
-			// literals are handled above; stub appId so AWST building completes
-			// (error aborts before TEAL is emitted).
-			Logger::instance().error(
-				"`address(addr).code` for a non-`this` address is not supported "
-				"on AVM — an arbitrary address can't be reliably dereferenced to "
-				"its application program. `address(this).code` is supported.", m_loc);
-			auto idCall = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), m_loc);
-			appId = awst::makeAsApplication(std::move(idCall), m_loc);
+			// Arbitrary address: derive the app id from the address's last 8
+			// bytes — THIS CODEBASE'S contract-value convention
+			// (bzero(24) ++ itob(appId)), the same one external calls use to
+			// recover a call target (TypeCoercion account→application). Then
+			// app_params_get yields (approvalProgram, exists), so
+			// `addr.code.length > 0` — the SafeTransferLib / OZ Address.isContract
+			// guard, and Morpho's NO_CODE check — answers correctly: a real
+			// program length for a deployed app, 0 for anything else.
+			// NOT a fabricated constant (contrast the old extcodesize stub that
+			// returned 1 for everything): a genuine lookup whose only
+			// assumption is the address form this compiler itself produces.
+			Logger::instance().warning(
+				"`address(addr).code` on a non-`this` address resolves the app id "
+				"from the address's last 8 bytes (this compiler's contract-value "
+				"convention) and returns that application's approval program. "
+				"An address NOT in that form reads as 'no code'.", m_loc);
+			auto toBytes = awst::makeAsBytes(addrExpr, m_loc);
+			auto idU64 = awst::makeWord32ToUInt64(std::move(toBytes), m_loc);
+			appId = awst::makeAsApplication(std::move(idU64), m_loc);
 		}
 
 		auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(

@@ -135,7 +135,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 		if (dynamic_cast<StructType const*>(resType))
 			return low.readStructValue(*addr);
 		if (auto const* rat = dynamic_cast<ArrayType const*>(resType);
-			rat && !rat->isDynamicallySized() && !rat->isByteArrayOrString())
+			rat && !rat->isByteArrayOrString())
 			return low.readArrayValue(*addr, rat);
 		Logger::instance().error(
 			"--evm-storage-layout: aggregate storage element used as a value "

@@ -517,12 +517,64 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		_contractNode->methods.push_back(std::move(sub));
 	}
 
+	// ── __evm_dynarr_read(slot: biguint) -> bytes ──
+	// Materialise a dynamic array of 32-byte-encoded elements as its ARC4
+	// form [u16 count][elems]: count word at the slot, elements at
+	// keccak256(slot32)+i. Callers cap/validate element width.
+	{
+		awst::ContractMethod sub;
+		sub.sourceLocation = loc;
+		sub.cref = cref;
+		sub.memberName = "__evm_dynarr_read";
+		sub.returnType = awst::WType::bytesType();
+		sub.arc4MethodConfig = std::nullopt;
+		sub.pure = false;
+		awst::SubroutineArgument slotArg2;
+		slotArg2.name = "__slot";
+		slotArg2.wtype = awst::WType::biguintType();
+		slotArg2.sourceLocation = loc;
+		sub.args.push_back(slotArg2);
+
+		auto body = awst::makeBlock(loc);
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__n"), biguintToU64(readWordCall(slotVar())), loc));
+		body->body.push_back(awst::makeAssignmentStatement(
+			biguintVar("__chunk"), chunkBase(), loc));
+		// header: u16 count
+		body->body.push_back(awst::makeAssignmentStatement(
+			bytesVar("__data"),
+			awst::makeExtract(awst::makeItob(u64Var("__n"), loc), 6, 2, loc), loc));
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__i"), u64c(0), loc));
+		auto cond = awst::makeNumericCompare(u64Var("__i"),
+			awst::NumericComparison::Lt, u64Var("__n"), loc);
+		auto loop = awst::makeBlock(loc);
+		auto elemWord = readWordCall(awst::makeBigUIntBinOp(
+			biguintVar("__chunk"), awst::BigUIntBinaryOperator::Add,
+			u64ToBiguint(u64Var("__i")), loc));
+		loop->body.push_back(awst::makeAssignmentStatement(
+			bytesVar("__data"),
+			awst::makeConcat(bytesVar("__data"),
+				awst::makeLeftPadToN(
+					awst::makeAsBytes(std::move(elemWord), loc), 32, loc), loc),
+			loc));
+		loop->body.push_back(awst::makeAssignmentStatement(u64Var("__i"),
+			awst::makeUInt64BinOp(u64Var("__i"),
+				awst::UInt64BinaryOperator::Add, u64c(1), loc), loc));
+		body->body.push_back(awst::makeWhileLoop(std::move(cond), std::move(loop), loc));
+		body->body.push_back(awst::makeReturnStatement(bytesVar("__data"), loc));
+
+		sub.body = body;
+		_contractNode->methods.push_back(std::move(sub));
+	}
+
 	// Promote to root-level Subroutines (see buildStorageDispatch's tail).
 	std::vector<awst::ContractMethod> remainingMethods;
 	for (auto& m: _contractNode->methods)
 	{
 		if (m.memberName == "__storage_read" || m.memberName == "__storage_write"
-			|| m.memberName == "__evm_bytes_read" || m.memberName == "__evm_bytes_write")
+			|| m.memberName == "__evm_bytes_read" || m.memberName == "__evm_bytes_write"
+			|| m.memberName == "__evm_dynarr_read")
 		{
 			auto sub = awst::makeSubroutine(
 				std::string("__puyasol_") + m.memberName, m.memberName,

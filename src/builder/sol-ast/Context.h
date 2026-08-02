@@ -511,9 +511,21 @@ struct BlockContext: Context
 
 	/// Derive a context for the body of a modifier-inlined function:
 	/// `_;` placeholders splice in `_body`.
-	BlockContext withPlaceholder(std::shared_ptr<awst::Block> _body)
+	/// Same block context, carrying a modifier placeholder body.
+	///
+	/// Deliberately a COPY, not `nest()`: the only call site is
+	/// `BlockContext::top(fn).withPlaceholder(body)`, where nesting would set
+	/// the child's parent to that TEMPORARY — which dies at the end of the
+	/// full expression, leaving `m_parent` dangling. `isUnchecked()` then
+	/// walks freed stack memory, and when the reused slot happens to hold a
+	/// pointer back into the chain it recurses forever (stack-overflow SIGSEGV
+	/// in multi_modifiers, latent for as long as this existed — whether it
+	/// fires depends on unrelated code layout). A copy keeps the intended
+	/// meaning (a top-level block that has a placeholder) with the parent the
+	/// caller already owns.
+	BlockContext withPlaceholder(std::shared_ptr<awst::Block> _body) const
 	{
-		BlockContext c = nest();
+		BlockContext c = *this;
 		c.placeholderBody = std::move(_body);
 		return c;
 	}

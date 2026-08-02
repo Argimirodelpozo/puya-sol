@@ -108,6 +108,29 @@ std::shared_ptr<awst::Block> buildBlock(
 	solidity::frontend::Block const& block,
 	std::shared_ptr<awst::Block> placeholder = nullptr);
 
+/// --evm-memory-layout: spill MEMORY PARAMS that inline assembly treats as
+/// pointers (`keccak256(marketParams, 128)` on a struct param) into blob
+/// regions at function entry, registering each as a blob aggregate on `_fn`.
+/// Statements are appended to `_out` (caller prepends them to the body).
+/// Shared by the contract-method path and the library/free-function path.
+void emitAsmParamSpills(
+	TypeMapper& _typeMapper,
+	sol_ast::FunctionContext& _fn,
+	solidity::frontend::Block const& _block,
+	std::string const& _sourceFile,
+	std::vector<std::shared_ptr<awst::Statement>>& _out);
+
+/// Inverse of `emitBlobBackValue` for STRUCTS: read one EVM word per value
+/// field at `_offVar` and rebuild the ARC4Struct value (blob-backed struct
+/// used as a VALUE — `idToMarketParams[id] = marketParams`). Null + loud
+/// error for non-value members.
+std::shared_ptr<awst::Expression> materializeBlobStructValue(
+	TypeMapper& _typeMapper,
+	solidity::frontend::StructType const* _structType,
+	awst::WType const* _wtype,
+	std::string const& _offVar,
+	awst::SourceLocation const& _loc);
+
 /// True iff any inline-assembly block in `_block` references declaration
 /// `_declId` (used to decide blob-backed named-return materialisation).
 bool blockUsesDeclInAsm(

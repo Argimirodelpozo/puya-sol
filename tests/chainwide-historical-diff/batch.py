@@ -150,6 +150,9 @@ def main():
     evm_layout = "--evm-layout" in argv  # slot-mode AVM leg (--evm-storage-layout)
     if evm_layout:
         argv.remove("--evm-layout")
+    evm_memory = "--evm-memory" in argv   # + stage-3 universal blob memory
+    if evm_memory:
+        argv.remove("--evm-memory")
 
     summary = []
     for host, addr, tag in CANDIDATES:
@@ -160,7 +163,8 @@ def main():
         try:
             if refetch or not (CASES / tag / "case.json").exists():
                 fetch_case(host, addr, tag, max_txns)
-            rep = replay(tag, max_txns, evm_layout=evm_layout)
+            rep = replay(tag, max_txns, evm_layout=evm_layout,
+                         evm_memory=evm_memory)
             print_report(rep)
             c = rep["counts"]
             entry.update({

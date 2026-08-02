@@ -222,6 +222,138 @@ public:
 
 } // namespace
 
+std::shared_ptr<awst::Expression> materializeBlobStructValue(
+	TypeMapper& _typeMapper,
+	solidity::frontend::StructType const* _structType,
+	awst::WType const* _wtype,
+	std::string const& _offVar,
+	awst::SourceLocation const& _loc)
+{
+	using AB = AssemblyBuilder;
+	auto const* structW = dynamic_cast<awst::ARC4Struct const*>(_wtype);
+	if (!_structType || !structW)
+		return nullptr;
+	auto ns = awst::makeNewStruct(structW, _loc);
+	unsigned mi = 0;
+	for (auto const& m: _structType->structDefinition().members())
+	{
+		if (!m || !m->type())
+			return nullptr;
+		if (!m->type()->isValueType())
+		{
+			Logger::instance().error(
+				"--evm-memory-layout: blob-backed struct with non-value member '"
+				+ m->name() + "' cannot be used as a value", _loc);
+			return nullptr;
+		}
+		awst::WType const* fieldW = nullptr;
+		for (auto const& [fname, ftype]: structW->fields())
+			if (fname == m->name()) { fieldW = ftype; break; }
+		if (!fieldW)
+			return nullptr;
+		// one EVM word per field (the layout emitBlobBackValue wrote)
+		auto word = AB::readMemWordDirect(
+			awst::makeUInt64BinOp(
+				awst::makeVarExpression(_offVar, awst::WType::uint64Type(), _loc),
+				awst::UInt64BinaryOperator::Add,
+				awst::makeIntegerConstant(static_cast<uint64_t>(mi * 32), _loc),
+				_loc),
+			_loc);
+		std::shared_ptr<awst::Expression> v;
+		if (auto const* un = dynamic_cast<awst::ARC4UIntN const*>(fieldW))
+		{
+			unsigned nb = static_cast<unsigned>(un->n()) / 8;
+			v = awst::makeReinterpretCast(
+				awst::makeExtract(std::move(word),
+					static_cast<int>(32 - nb), static_cast<int>(nb), _loc),
+				fieldW, _loc);
+		}
+		else if (fieldW == awst::WType::arc4BoolType())
+			v = awst::makeARC4Encode(
+				awst::makeNumericCompare(
+					awst::makeAsBiguint(std::move(word), _loc),
+					awst::NumericComparison::Ne,
+					awst::makeIntegerConstant("0", _loc, awst::WType::biguintType()),
+					_loc), fieldW, _loc);
+		else if (fieldW == awst::WType::boolType())
+			v = awst::makeNumericCompare(
+				awst::makeAsBiguint(std::move(word), _loc),
+				awst::NumericComparison::Ne,
+				awst::makeIntegerConstant("0", _loc, awst::WType::biguintType()), _loc);
+		else if (fieldW == awst::WType::accountType())
+			v = awst::makeAsAccount(std::move(word), _loc);
+		else if (fieldW == awst::WType::biguintType())
+			v = awst::makeAsBiguint(std::move(word), _loc);
+		else if (fieldW == awst::WType::uint64Type())
+			v = awst::makeBtoi(awst::makeExtract(std::move(word), 24, 8, _loc), _loc);
+		else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(fieldW);
+			bw && bw->length().has_value())
+			v = awst::makeReinterpretCast(
+				awst::makeExtract(std::move(word),
+					static_cast<int>(32 - *bw->length()),
+					static_cast<int>(*bw->length()), _loc), fieldW, _loc);
+		else
+		{
+			Logger::instance().error(
+				"--evm-memory-layout: cannot materialise blob struct member '"
+				+ m->name() + "' of type '" + std::string(fieldW->name()) + "'",
+				_loc);
+			return nullptr;
+		}
+		ns->values[m->name()] = std::move(v);
+		mi++;
+	}
+	return ns;
+}
+
+void emitAsmParamSpills(
+	TypeMapper& _typeMapper,
+	sol_ast::FunctionContext& _fn,
+	solidity::frontend::Block const& _block,
+	std::string const& _sourceFile,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	if (!evmMemoryLayout())
+		return;
+	// collect the DECLS asm references (the aggregate scanner only keeps ids)
+	struct DeclScan: solidity::frontend::ASTConstVisitor
+	{
+		std::map<int64_t, solidity::frontend::VariableDeclaration const*> decls;
+		bool visit(solidity::frontend::InlineAssembly const& _asm) override
+		{
+			for (auto const& ref: _asm.annotation().externalReferences)
+				if (auto const* vd = dynamic_cast<
+						solidity::frontend::VariableDeclaration const*>(
+						ref.second.declaration))
+					decls[vd->id()] = vd;
+			return true;
+		}
+	} scan;
+	_block.accept(scan);
+	for (auto const& [id, vd]: scan.decls)
+	{
+		if (!vd->isCallableOrCatchParameter()
+			|| vd->referenceLocation()
+				!= solidity::frontend::VariableDeclaration::Location::Memory
+			|| vd->name().empty())
+			continue;
+		auto const* t = vd->type();
+		bool aggregate = dynamic_cast<solidity::frontend::ArrayType const*>(t)
+			|| dynamic_cast<solidity::frontend::StructType const*>(t);
+		if (!aggregate)
+			continue;
+		if (!_fn.findBlobAggregate(id).empty())
+			continue;   // already pointer-modeled (>4KB path)
+		auto const* wt = _typeMapper.map(t);
+		std::string offN = "__blobagg_off_" + std::to_string(id);
+		awst::SourceLocation loc0 = makeLoc(_sourceFile, vd->location());
+		if (emitBlobBackValue(_typeMapper, t, wt,
+				awst::makeVarExpression(vd->name(), wt, loc0),
+				offN, static_cast<int>(id), loc0, _out))
+			_fn.setBlobAggregate(id, offN);
+	}
+}
+
 bool blockUsesDeclInAsm(
 	solidity::frontend::Block const& _block, int64_t _declId)
 {
@@ -472,46 +604,8 @@ std::shared_ptr<awst::Block> buildBlock(
 	// VALUE into a blob region at function entry and register the param as
 	// blob-backed, so asm gets a real offset and value uses read it back.
 	std::vector<std::shared_ptr<awst::Statement>> paramSpills;
-	if (evmMemoryLayout() && !_placeholder)
-	{
-		// collect the DECLS asm references (the aggregate scanner only keeps ids)
-		struct DeclScan: solidity::frontend::ASTConstVisitor
-		{
-			std::map<int64_t, solidity::frontend::VariableDeclaration const*> decls;
-			bool visit(solidity::frontend::InlineAssembly const& _asm) override
-			{
-				for (auto const& ref: _asm.annotation().externalReferences)
-					if (auto const* vd = dynamic_cast<
-							solidity::frontend::VariableDeclaration const*>(
-							ref.second.declaration))
-						decls[vd->id()] = vd;
-				return true;
-			}
-		} scan;
-		_block.accept(scan);
-		for (auto const& [id, vd]: scan.decls)
-		{
-			if (!vd->isCallableOrCatchParameter()
-				|| vd->referenceLocation()
-					!= solidity::frontend::VariableDeclaration::Location::Memory
-				|| vd->name().empty())
-				continue;
-			auto const* t = vd->type();
-			bool aggregate = dynamic_cast<solidity::frontend::ArrayType const*>(t)
-				|| dynamic_cast<solidity::frontend::StructType const*>(t);
-			if (!aggregate)
-				continue;
-			if (!fn.findBlobAggregate(id).empty())
-				continue;   // already pointer-modeled (>4KB path)
-			auto const* wt = _ctx.typeMapper.map(t);
-			std::string offN = "__blobagg_off_" + std::to_string(id);
-			awst::SourceLocation loc0 = makeLoc(_ctx.sourceFile, vd->location());
-			if (emitBlobBackValue(_ctx.typeMapper, t, wt,
-					awst::makeVarExpression(vd->name(), wt, loc0),
-					offN, static_cast<int>(id), loc0, paramSpills))
-				fn.setBlobAggregate(id, offN);
-		}
-	}
+	if (!_placeholder)
+		emitAsmParamSpills(_ctx.typeMapper, fn, _block, _ctx.sourceFile, paramSpills);
 
 	auto body = sol_ast::buildBlock(blk, _block);
 	if (!paramSpills.empty())

@@ -496,6 +496,12 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::coerceToNative(
 	if (_value->wtype == awst::WType::arc4BoolType()
 		&& _a.wtype == awst::WType::boolType())
 		return awst::makeARC4Decode(std::move(_value), awst::WType::boolType(), m_loc);
+	// ARC4 `address` (byte[32] alias) → native account: the backing bytes ARE
+	// the address (struct address fields, Morpho's MarketParams).
+	if (_a.wtype == awst::WType::accountType())
+		if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_value->wtype);
+			sa && sa->arraySize() == 32)
+			return awst::makeAsAccount(awst::makeAsBytes(std::move(_value), m_loc), m_loc);
 	if (_a.wtype == awst::WType::boolType()
 		&& (_value->wtype == awst::WType::uint64Type()
 			|| _value->wtype == awst::WType::biguintType()))
@@ -751,12 +757,31 @@ bool EvmSlotLowering::writeStructValue(
 std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 	Addr const& _a, ArrayType const* _at)
 {
-	if (!_at || _at->isDynamicallySized())
-	{
-		Logger::instance().error(
-			"--evm-storage-layout: cannot materialise a dynamic storage array "
-			"as a value", m_loc);
+	if (!_at)
 		return nullptr;
+	if (_at->isDynamicallySized())
+	{
+		// runtime-length: [u16 count][32B elems] via __evm_dynarr_read
+		auto const* arrW = m_ctx.typeMapper.map(_at);
+		auto const* elemArc4 = m_ctx.typeMapper.mapSolTypeToARC4(_at->baseType());
+		bool ok32 = false;
+		if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(arrW))
+			ok32 = SlotHandleAccess::layoutFor(_at->baseType()).size == 32
+				&& da->elementType() && !dynamic_cast<awst::ARC4Struct const*>(
+					da->elementType());
+		(void)elemArc4;
+		if (!ok32)
+		{
+			Logger::instance().error(
+				"--evm-storage-layout: cannot materialise dynamic storage array "
+				"with non-32-byte / aggregate elements as a value", m_loc);
+			return nullptr;
+		}
+		auto call = awst::makeSubroutineCall(
+			awst::SubroutineID{"__puyasol___evm_dynarr_read"},
+			awst::WType::bytesType(), m_loc);
+		awst::pushCallArg(call->args, "__slot", _a.slot);
+		return awst::makeReinterpretCast(std::move(call), arrW, m_loc);
 	}
 	auto lenU = _at->length();
 	if (lenU == 0 || lenU > 64)
@@ -895,11 +920,12 @@ void EvmSlotLowering::writeValue(
 	{
 		std::string nm = "__evm_addr_"
 			+ std::to_string(awst::NameGen::next("EvmSlotLowering.addrPin"));
+		auto const* pinW = _value->wtype ? _value->wtype : _a.wtype;
 		_out.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(nm, _a.wtype, m_loc), std::move(_value), m_loc));
-		_value = awst::makeVarExpression(nm, _a.wtype, m_loc);
+			awst::makeVarExpression(nm, pinW, m_loc), std::move(_value), m_loc));
+		_value = awst::makeVarExpression(nm, pinW, m_loc);
 		auto hi = awst::makeExtract(
-			awst::makeAsBytes(awst::makeVarExpression(nm, _a.wtype, m_loc), m_loc),
+			awst::makeAsBytes(awst::makeVarExpression(nm, pinW, m_loc), m_loc),
 			0, 12, m_loc);
 		_out.push_back(SlotHandleAccess::writeSlot(
 			packedAddrAuxSlot(slotOnce, _a.byteOffset, m_loc),

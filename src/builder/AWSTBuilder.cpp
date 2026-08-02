@@ -611,7 +611,17 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// buildBlock; the free/library path builds the body directly, so mark here too.
 	markAssemblyAggregates(fnCtx, _func.body());
 
+	// --evm-memory-layout: spill asm-pointer memory params (the LIBRARY path —
+	// Morpho's MarketParamsLib.id(), Solady's LibString helpers, ...).
+	std::vector<std::shared_ptr<awst::Statement>> asmParamSpills;
+	emitAsmParamSpills(m_typeMapper, fnCtx, _func.body(), _sourceFile,
+		asmParamSpills);
+
 	sub->body = sol_ast::buildBlock(blk, _func.body());
+	if (!asmParamSpills.empty())
+		sub->body->body.insert(sub->body->body.begin(),
+			std::make_move_iterator(asmParamSpills.begin()),
+			std::make_move_iterator(asmParamSpills.end()));
 
 	// Inline modifier bodies. currentContract=null (no virtual-override resolution).
 	if (!_func.modifiers().empty())

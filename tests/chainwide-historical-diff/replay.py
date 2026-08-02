@@ -39,7 +39,7 @@ def _run(cmd, tag) -> str:
 
 
 def replay(tag: str, max_txns: int = 300, snapshot_every: int = 25,
-           evm_layout: bool = False) -> dict:
+           evm_layout: bool = False, evm_memory: bool = False) -> dict:
     case_dir = CASES / tag
     skips: dict[int, str] = {}
     for attempt in range(1, 4):
@@ -49,7 +49,8 @@ def replay(tag: str, max_txns: int = 300, snapshot_every: int = 25,
                           "skips": {str(k): v for k, v in skips.items()}})], "evm")
         _run(["python3", str(HERE / "avm_leg.py"), str(case_dir),
               json.dumps({"skips": [str(k) for k in skips],
-                          "evm_layout": evm_layout})], "avm")
+                          "evm_layout": evm_layout,
+                          "evm_memory": evm_memory})], "avm")
         pl = load_json(case_dir / "avm_results.json").get("platform_limits") or {}
         new = {int(k): f"avm-platform-limit:{v[:40]}" for k, v in pl.items()
                if int(k) not in skips}
@@ -80,6 +81,9 @@ def main():
     evm_layout = "--evm-layout" in argv
     if evm_layout:
         argv.remove("--evm-layout")
+    evm_memory = "--evm-memory" in argv
+    if evm_memory:
+        argv.remove("--evm-memory")
     if not argv:
         sys.exit(__doc__)
     tag = argv[0]
@@ -92,7 +96,7 @@ def main():
 
     print(f"[replay] {tag}: max_txns={max_txns}"
           + (" [--evm-storage-layout]" if evm_layout else ""))
-    print_report(replay(tag, max_txns, snap, evm_layout))
+    print_report(replay(tag, max_txns, snap, evm_layout, evm_memory))
 
 
 if __name__ == "__main__":

@@ -1,3 +1,39 @@
+# Semantic Test Status — v478
+
+> **fix: latent use-after-free in BlockContext::withPlaceholder + Morpho Blue compiles,
+> 2026-08-02:** **12 failed / 1399 passed / 105 xf / 32 xp** (baseline; the 2 new xpasses
+> are the `.code` capability below). **THE BUG:** `withPlaceholder()` did `nest()`, which
+> parents the new context to `*this` — but its only call site is
+> `BlockContext::top(fn).withPlaceholder(body)`, where `*this` is a TEMPORARY that dies at
+> the end of the full expression. `m_parent` then dangles into freed stack memory;
+> `isUnchecked()` walks that chain and, when the reused slot happens to hold a pointer back
+> into the chain, recurses forever → stack-overflow SIGSEGV. Latent for as long as it
+> existed; whether it fires depends on unrelated CODE LAYOUT (an unrelated 134-line addition
+> to ContractBuilder.cpp flipped it on for multi_modifiers). Fix: return a COPY with the
+> caller-owned parent — the intended meaning. On the modifier-inlining path, so it affects
+> the DEFAULT model too. Diagnostic note: a stack-overflow SIGSEGV names the frame that
+> exhausted the stack, not the culprit; `ulimit -s` (crashes either way ⇒ true cycle, not
+> depth) turned guessing into a directed bisect.
+> **MORPHO BLUE (deployed mainnet 0xBBBB…FFCb) COMPILES** under
+> `--evm-storage-layout --evm-memory-layout`: 13741B approval / 7375 TEAL lines / 29 ABI
+> methods (supply/withdraw/borrow/repay/liquidate/flashLoan/createMarket + governance).
+> ~1.7x over the 4-page 8192B cap → needs the uros splitter to deploy/replay. Four fixes it
+> drove, all general: (1) asm-pointer PARAM SPILLS in the LIBRARY path (was contract-methods
+> only — MarketParamsLib.id()'s `keccak256(marketParams,128)`); (2) `address(x).code` now
+> resolves the app id from the address's last 8 bytes — THIS compiler's own contract-value
+> convention, the same one external calls use — and returns that app's approval program via
+> app_params_get, so `.code.length > 0` (SafeTransferLib NO_CODE, OZ isContract) answers
+> correctly instead of hard-erroring; a genuine lookup, not the old fabricated extcodesize
+> stub (also unblocks berries/heronft/fbtc/sky/sdai/gbp); (3) blob-backed STRUCT used as a
+> VALUE materialises instead of leaking its uint64 offset; (4) ARC4 `address` → account
+> coercion in the struct-write path. Plus dynamic-array materialisation via a new
+> __evm_dynarr_read dispatch subroutine (OZ EnumerableSet.values shape) — vanry/gho/xtoken/
+> systemcoin now compile; gho replays 165 txns clean.
+> Campaign: 39 real contracts replay their histories with zero divergences.
+> ⛔ Internal-txn replay ruled OUT: 495 internal call rows scanned, ZERO carry calldata
+> (Blockscout compat API returns input "0x"; v2 has no input field) — needs a traced
+> archive RPC, not codeable around.
+
 # Semantic Test Status — v477
 
 > **feat: --evm-memory-layout (stage 3) + respill + differ ctor-deps, 2026-08-01:**

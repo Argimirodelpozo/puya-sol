@@ -346,13 +346,15 @@ def main():
     # form (bzero(24) ++ itob(app_id)) — the puya-sol cross-contract calling
     # convention, so the main ctor's inner txns reach the local dep.
     evm_layout = bool(opts.get("evm_layout"))
+    evm_memory = bool(opts.get("evm_memory"))
+    _mode_args = ([] + (["--evm-storage-layout"] if evm_layout else [])
+                     + (["--evm-memory-layout"] if evm_memory else [])) or None
     dep_apps = []
     for dspec in meta.get("dep_ctors") or []:
         dep_sol = case_dir / dspec["dir"] / "prepared.sol"
         try:
             darts = h.compile(dep_sol,
-                              extra_args=(["--evm-storage-layout"] if evm_layout
-                                          else None))
+                              extra_args=_mode_args)
             dapp = h.deploy(darts, dspec.get("name"),
                             ctor_args=[resolve(m) for m in dspec["args"]] or None)
         except Exception as e:
@@ -377,10 +379,9 @@ def main():
                               extra_sources=[tmp_root / r for r in mf["files"]],
                               extra_import_dir=tmp_root,
                               extra_remappings=mf["remappings"],
-                              extra_args=(["--evm-storage-layout"] if evm_layout else None))
+                              extra_args=_mode_args)
     else:
-        artifacts = h.compile(case_dir / "prepared.sol",
-                              extra_args=(["--evm-storage-layout"] if evm_layout else None))
+        artifacts = h.compile(case_dir / "prepared.sol", extra_args=_mode_args)
 
     app = h.deploy(artifacts, case["name"],
                    ctor_args=[resolve(m) for m in meta["ctor_args"]] or None,
