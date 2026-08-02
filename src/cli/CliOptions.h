@@ -32,6 +32,9 @@ struct Options
 	// --evm-memory-slots <N>: sets MEMORY_SLOT_LAST=N-1. 0=default (5 slots=20KB).
 	// UltraHonk needs 32.
 	int evmMemorySlots = 0;
+	// --evm-memory-layout: universal blob memory — every asm-touched memory
+	// aggregate is pointer-modeled (EVM layout) regardless of allocation shape.
+	bool evmMemoryLayout = false;
 	// --evm-storage-layout: back ALL contract storage with EVM-numbered slots
 	// (hybrid paged/sparse boxes) instead of per-variable named cells. Makes
 	// assembly slot arithmetic faithful; disables ARC-56 state declarations.

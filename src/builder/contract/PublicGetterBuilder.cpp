@@ -213,7 +213,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			auto body = awst::makeBlock(loc);
 
 			std::shared_ptr<awst::Expression> readExpr;
-			if (!var->isConstant() && evmStorageLayout())
+			if (!var->isConstant() && !var->immutable() && evmStorageLayout())
 			{
 				// --evm-storage-layout: walk the declared type over the getter
 				// args (mapping keys / array indices) to the leaf's slot address

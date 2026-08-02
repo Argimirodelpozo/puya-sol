@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import shutil
+import shlex
 import subprocess
 import tempfile
 from dataclasses import dataclass, field
@@ -410,6 +411,14 @@ def compile_sol(
     interpret a compile failure as the test's terminal outcome.
     """
     from multisource_splitter import split_multisource
+
+    # PUYA_SOL_EXTRA_ARGS: extra compiler flags for experiment sweeps (e.g.
+    # "--evm-storage-layout" to run a category in slot mode). Folded into
+    # extra_args BEFORE cache-key computation, so cached artifacts stay
+    # correctly keyed per flag set.
+    _env_extra = shlex.split(os.environ.get("PUYA_SOL_EXTRA_ARGS", ""))
+    if _env_extra:
+        extra_args = list(extra_args or []) + _env_extra
 
     out_dir.mkdir(parents=True, exist_ok=True)
     if extra_sources is not None:

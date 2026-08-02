@@ -3869,3 +3869,108 @@ def test_evm_layout_storage_ref_params(harness):
     harness.call(app, "rebind(uint256,uint256,uint128)", 1, 2, 50, **opts)
     assert as_int(harness.call(app, "getPos(uint256)", 1, **opts).abi_return[0]) == 50
     assert as_int(harness.call(app, "getPos(uint256)", 2, **opts).abi_return[0]) == 51
+
+
+def test_evm_layout_unlocks_slot_access(harness):
+    """inlineAssembly/contracts/slot_access.sol — xfailed in the default model
+    (asm writes a computed slot the named-cell model can't mirror back), GREEN
+    under --evm-storage-layout: sload/sstore and codegen share the slot space."""
+    arts = harness.compile("inlineAssembly/contracts/slot_access.sol",
+                           extra_args=_EVM_LAYOUT)
+    app = harness.deploy(arts, extra_funding_microalgos=30_000_000)
+    assert as_int(harness.call(app, "get()").abi_return) == 0
+    r = harness.call(app, "mappingAccess(uint256)", 1)
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0)
+    harness.call(app, "set(uint256)", 4)
+    assert as_int(harness.call(app, "get()").abi_return) == 4
+    r = harness.call(app, "mappingAccess(uint256)", 1)
+    assert tuple(as_int(x) for x in r.abi_return) == (4, 0)
+
+
+def test_evm_layout_unlocks_storage_ref_returned(harness):
+    """storage/contracts/storage_ref_returned.sol — xfailed in the default
+    model, GREEN in slot mode: the returned `T storage` ref IS a biguint slot,
+    so mutations through it hit the same words the direct path reads."""
+    arts = harness.compile("storage/contracts/storage_ref_returned.sol",
+                           extra_args=_EVM_LAYOUT)
+    app = harness.deploy(arts, extra_funding_microalgos=30_000_000)
+    harness.call(app, "bumpViaRef(uint256,uint256,uint256)", 1, 7, 100,
+                 extra_fee=10_000)
+    r = harness.call(app, "rdDirect(uint256,uint256)", 1, 7, extra_fee=10_000)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 100)
+    r = harness.call(app, "rdViaRef(uint256,uint256)", 1, 7, extra_fee=10_000)
+    assert tuple(as_int(x) for x in r.abi_return) == (1, 100)
+    harness.call(app, "bumpViaRef(uint256,uint256,uint256)", 1, 7, 200,
+                 extra_fee=10_000)
+    r = harness.call(app, "rdDirect(uint256,uint256)", 1, 7, extra_fee=10_000)
+    assert tuple(as_int(x) for x in r.abi_return) == (2, 200)
+
+
+def test_evm_layout_unlocks_packed_array_copy(harness):
+    """storage/contracts/storage_packed_array_copy.sol — one of the known
+    baseline FAILS in the default model, GREEN in slot mode (chained
+    assignment value + cross-width bytesN[] convert-copy)."""
+    arts = harness.compile("storage/contracts/storage_packed_array_copy.sol",
+                           extra_args=_EVM_LAYOUT)
+    app = harness.deploy(arts, extra_funding_microalgos=30_000_000)
+    opts = {"extra_fee": 10_000}
+    r = harness.call(app, "getXAsUint()", **opts)
+    assert tuple(as_int(x) for x in r.abi_return) == tuple(range(9))
+    r = harness.call(app, "getYAsUint()", **opts)
+    assert tuple(as_int(x) for x in r.abi_return) == (0,)*8 + (2, 2)
+    harness.call(app, "copy()", **opts)
+    r = harness.call(app, "getXAsUint()", **opts)
+    assert tuple(as_int(x) for x in r.abi_return) == tuple(range(9))
+    r = harness.call(app, "getYAsUint()", **opts)
+    assert tuple(as_int(x) for x in r.abi_return) == tuple(range(9)) + (0,)
+
+
+# ── stage 3: --evm-memory-layout (universal blob memory) guards ─────────────
+
+_EVM_MEM = ["--evm-memory-layout"]
+_EVM_BOTH = ["--evm-storage-layout", "--evm-memory-layout"]
+
+
+def test_evm_layout_unlocks_storage_layout_struct(harness):
+    """userDefinedValueType/contracts/storage_layout_struct.sol — a known
+    baseline FAIL: `HalfSlot memory x = b; mload(x)` needs the memory struct
+    blob-backed. Green with both modes: slot storage + universal blob memory."""
+    arts = harness.compile(
+        "userDefinedValueType/contracts/storage_layout_struct.sol",
+        extra_args=_EVM_BOTH)
+    app = harness.deploy(arts, extra_funding_microalgos=30_000_000)
+    opts = {"extra_fee": 10_000}
+    r = harness.call(app, "storage_a()", **opts)
+    assert tuple(as_int(x) for x in r.abi_return) == (0, 0)
+    harness.call(app, "set_a(int64,int64)", 100, 200, **opts)
+    assert as_int(harness.call(app, "read_slot(uint256)", 0, **opts).abi_return) \
+        == 0xc80000000000000064
+
+
+def test_evm_layout_unlocks_mcopy(harness):
+    """inlineAssembly/contracts/mcopy.sol — a known baseline FAIL: asm mcopy
+    over memory bytes PARAMS needs them pointer-modeled. Green in memory mode
+    (param spill + blob mcopy)."""
+    arts = harness.compile("inlineAssembly/contracts/mcopy.sol",
+                           extra_args=_EVM_MEM)
+    app = harness.deploy(arts, extra_funding_microalgos=10_000_000)
+    src = bytes.fromhex(
+        "ffeeddccbbaa9988776655443322110000112233445566778899aabbccddeeff")
+    r = harness.call(app, "f(bytes)", src, extra_fee=10_000)
+    assert as_bytes(r.abi_return) == bytes.fromhex(
+        "0000000000000000776655443322110000112233445566770000000000000000")
+
+
+def test_evm_layout_unlocks_keccak_string(harness):
+    """inlineAssembly/contracts/keccak_optimization_bug_string.sol — a known
+    baseline FAIL: `keccak256(s, 32)` on a string PARAM needs a real pointer.
+    Green in memory mode."""
+    arts = harness.compile(
+        "inlineAssembly/contracts/keccak_optimization_bug_string.sol",
+        extra_args=_EVM_MEM)
+    app = harness.deploy(arts, extra_funding_microalgos=10_000_000)
+    r = harness.call(app, "f(string)", 0x20, 0x2e,
+        29457663690442756349866640336617293820574110049925353194191585327958485180523,
+        45859201465615193776739262511799714667061496775486067316261261194408342061056,
+        extra_fee=10_000)
+    assert r.abi_return is False

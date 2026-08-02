@@ -2,6 +2,7 @@
 /// Migrated from VariableDeclarationBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolVariableDeclaration.h"
+#include "Logger.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/AWSTBuilder.h" // containsMappingType
@@ -457,6 +458,23 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			if (auto const* fc = dynamic_cast<FunctionCall const*>(initialValue))
 				if (dynamic_cast<NewExpression const*>(&fc->expression()))
 					newCall = fc;
+			// stage 3 (--evm-memory-layout): ANY initializer — build the VALUE,
+			// allocate its EVM-layout region in the blob, store it, bind the
+			// offset (shared emitBlobBackValue; also used for param spills).
+			if (!newCall && builder::evmMemoryLayout())
+			{
+				auto loc2 = m_blk.makeLoc(decl.location());
+				auto v0 = m_blk.builderCtx().build(*initialValue);
+				if (!v0)
+					return result;
+				m_blk.builderCtx().appendPendingTo(result);
+				std::string offN = "__blobagg_off_" + std::to_string(decl.id());
+				if (builder::emitBlobBackValue(m_blk.typeMapper(), decl.type(),
+						type, std::move(v0), offN,
+						static_cast<int>(decl.id()), loc2, result))
+					m_blk.setBlobAggregate(decl.id(), offN);
+				return result;
+			}
 			if (newCall)
 			{
 				using AB = builder::AssemblyBuilder;

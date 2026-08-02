@@ -282,7 +282,6 @@ def main():
     cj = load_json(case_dir / "calls.json")
     meta, calls = cj["meta"], cj["calls"]
     ext_skips = set(int(k) for k in (opts.get("skips") or []))
-    evm_layout = bool(opts.get("evm_layout"))
 
     mut = {}
     for e in case["abi"]:
@@ -317,6 +316,8 @@ def main():
         wait_for_confirmation(algod, last, 8)
     print(f"[avm] funded {len(used)} sender account(s)")
 
+    dep_local = {}                # hist addr → AVM app-id address form
+
     # ── marker → AVM concrete value ───────────────────────────────────────
     def concrete_addr(m):
         if m == "Z":
@@ -330,6 +331,8 @@ def main():
         return encoding.encode_address(bytes(32))
 
     def resolve(v):
+        if isinstance(v, dict) and set(v) == {"__dep__"}:
+            return dep_local[v["__dep__"]]
         if isinstance(v, dict) and set(v) == {"__addr__"}:
             return concrete_addr(v["__addr__"])
         if isinstance(v, dict) and set(v) == {"__b__"}:
@@ -337,6 +340,30 @@ def main():
         if isinstance(v, list):
             return [resolve(x) for x in v]
         return v
+
+    # ── constructor DEPENDENCIES: deploy each (children-first order from the
+    # EVM leg's meta) and map its historical address to the app-id address
+    # form (bzero(24) ++ itob(app_id)) — the puya-sol cross-contract calling
+    # convention, so the main ctor's inner txns reach the local dep.
+    evm_layout = bool(opts.get("evm_layout"))
+    dep_apps = []
+    for dspec in meta.get("dep_ctors") or []:
+        dep_sol = case_dir / dspec["dir"] / "prepared.sol"
+        try:
+            darts = h.compile(dep_sol,
+                              extra_args=(["--evm-storage-layout"] if evm_layout
+                                          else None))
+            dapp = h.deploy(darts, dspec.get("name"),
+                            ctor_args=[resolve(m) for m in dspec["args"]] or None)
+        except Exception as e:
+            print(f"[avm] dep {dspec.get('name')}: {str(e)[:120]} — "
+                  f"main ctor will fail as before")
+            continue
+        dep_local[dspec["addr"]] = encoding.encode_address(
+            bytes(24) + dapp.app_id.to_bytes(8, "big"))
+        dep_apps.append(dapp)
+        ensure_app_funded(algod, dispenser, dapp.app_addr)
+        print(f"[avm] dep {dspec.get('name')} app_id={dapp.app_id}")
 
     # ── compile + deploy ──────────────────────────────────────────────────
     mf = case.get("multifile")
@@ -354,8 +381,10 @@ def main():
     else:
         artifacts = h.compile(case_dir / "prepared.sol",
                               extra_args=(["--evm-storage-layout"] if evm_layout else None))
+
     app = h.deploy(artifacts, case["name"],
-                   ctor_args=[resolve(m) for m in meta["ctor_args"]] or None)
+                   ctor_args=[resolve(m) for m in meta["ctor_args"]] or None,
+                   postinit_inner_txns=4 * len(dep_apps))
     print(f"[avm] deployed {case['name']} app_id={app.app_id}")
     ensure_app_funded(algod, dispenser, app.app_addr)     # headroom for box MBR
     topups = 0
@@ -368,6 +397,9 @@ def main():
         inv[encoding.decode_address(a.address).hex()] = symbol(i)
     for _a, i in reg["args"].items():
         inv[(bytes(12) + arg_content20(i)).hex()] = symbol(i)
+    for _a, i in (reg.get("deps") or {}).items():
+        if _a in dep_local:
+            inv[encoding.decode_address(dep_local[_a]).hex()] = symbol(f"D{i}")
 
     def fold(v):
         if v is None:
@@ -438,8 +470,9 @@ def main():
             ln.account = accts.get(c["sender"]["__addr__"], dispenser) \
                 if isinstance(c["sender"]["__addr__"], int) else dispenser
             try:
+                dep_fee = {"extra_fee": 20_000} if dep_apps else {}
                 if is_view:
-                    r = h.call(app, sig, *args, expect_revert=True)
+                    r = h.call(app, sig, *args, expect_revert=True, **dep_fee)
                     if r.reverted:
                         results[i] = {"ok": False,
                                       "revert": str(getattr(r, "fail_message", ""))[:160]}
@@ -447,7 +480,7 @@ def main():
                         results[i] = {"ok": True, "ret": _ret(r, meta, sig, fold),
                                       "logs": []}
                 else:
-                    r = h.call(app, sig, *args)
+                    r = h.call(app, sig, *args, **dep_fee)
                     if getattr(r, "reverted", False):
                         reason = str(getattr(r, "fail_message", "")
                                      or getattr(r, "raw_response", ""))[:200]

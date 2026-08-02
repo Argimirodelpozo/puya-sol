@@ -181,6 +181,30 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::mappingEntrySlot(
 	return awst::makeAsBiguint(awst::makeKeccak256(std::move(preimage), m_loc), m_loc);
 }
 
+namespace
+{
+/// Shadow slot carrying the HIGH 12 bytes of a PACKED address (a 20-byte
+/// window cannot hold a 32-byte AVM address; the word keeps the EVM-shaped
+/// trailing-20 so asm sees EVM layout, and Solidity reads recombine).
+/// keccak-derived, so it can never collide with declared or mapping slots.
+std::shared_ptr<awst::Expression> packedAddrAuxSlot(
+	std::shared_ptr<awst::Expression> _slot,
+	std::shared_ptr<awst::Expression> const& _byteOffset,
+	awst::SourceLocation const& _loc)
+{
+	auto pre = awst::makeConcat(
+		awst::makeLeftPadToN(awst::makeAsBytes(std::move(_slot), _loc), 32, _loc),
+		_byteOffset
+			? std::shared_ptr<awst::Expression>(awst::makeItob(_byteOffset, _loc))
+			: std::shared_ptr<awst::Expression>(
+				awst::makeBytesConstant(std::vector<uint8_t>(8, 0), _loc)),
+		_loc);
+	pre = awst::makeConcat(std::move(pre),
+		awst::makeUtf8BytesConstant("addraux", _loc), _loc);
+	return awst::makeAsBiguint(awst::makeKeccak256(std::move(pre), _loc), _loc);
+}
+} // namespace
+
 EvmSlotLowering::Addr EvmSlotLowering::makeLeafAddr(
 	std::shared_ptr<awst::Expression> _slot,
 	std::shared_ptr<awst::Expression> _byteOffset,
@@ -516,8 +540,234 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _
 			"aggregate as a value", m_loc);
 		return nullptr;
 	}
-	return SlotHandleAccess::readStructElem(
-		m_ctx.prePendingStatements, _a.slot, st, structW, m_loc);
+	// NESTED struct members recurse (their slots are member-offset bases);
+	// arrays/mappings/strings inside a materialised struct stay unsupported.
+	bool anyNested = false;
+	for (auto const& m: st->structDefinition().members())
+	{
+		if (!m || !m->type())
+			continue;
+		if (dynamic_cast<StructType const*>(m->type()))
+			anyNested = true;
+		else if (!m->type()->isValueType())
+		{
+			Logger::instance().error(
+				"--evm-storage-layout: cannot materialise struct '"
+				+ st->structDefinition().name() + "' as a value — member '"
+				+ m->name() + "' is not a value type", m_loc);
+			return nullptr;
+		}
+	}
+	if (!anyNested)
+		return SlotHandleAccess::readStructElem(
+			m_ctx.prePendingStatements, _a.slot, st, structW, m_loc);
+
+	// pin the base once — members read in separate sub-expressions
+	std::string nm = "__evm_stv_"
+		+ std::to_string(awst::NameGen::next("EvmSlotLowering.structVal"));
+	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc),
+		_a.slot, m_loc));
+	auto baseVar = [&]() {
+		return awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc);
+	};
+	auto ns = awst::makeNewStruct(structW, m_loc);
+	for (auto const& m: st->structDefinition().members())
+	{
+		if (!m)
+			continue;
+		auto const& off = st->storageOffsetsOfMember(m->name());
+		Addr fa;
+		fa.slot = off.first == 0
+			? std::shared_ptr<awst::Expression>(baseVar())
+			: std::shared_ptr<awst::Expression>(awst::makeBigUIntBinOp(
+				baseVar(), awst::BigUIntBinaryOperator::Add,
+				biguintConst(off.first.str()), m_loc));
+		fa.solType = m->type();
+		if (auto const* nst = dynamic_cast<StructType const*>(m->type()))
+		{
+			fa.wtype = m_ctx.typeMapper.map(nst);
+			auto v = readStructValue(fa);
+			if (!v)
+				return nullptr;
+			ns->values[m->name()] = std::move(v);
+			continue;
+		}
+		fa.byteOffset = off.second
+			? awst::makeIntegerConstant(static_cast<uint64_t>(off.second), m_loc)
+			: nullptr;
+		fa.size = m->type()->storageBytes();
+		fa.wtype = m_ctx.typeMapper.map(m->type());
+		if (fa.wtype == awst::WType::accountType() && !fa.byteOffset)
+			fa.size = fa.size;   // keep declared width inside structs
+		// ARC4 struct fields carry ARC4 wtypes — convert the native read.
+		awst::WType const* fieldW = nullptr;
+		for (auto const& [fname, ftype]: structW->fields())
+			if (fname == m->name()) { fieldW = ftype; break; }
+		auto v = readValue(fa);
+		if (v && fieldW && v->wtype != fieldW)
+		{
+			if (fieldW->kind() == awst::WTypeKind::ARC4UIntN
+				|| fieldW == awst::WType::arc4BoolType())
+				v = awst::makeARC4Encode(std::move(v), fieldW, m_loc);
+		}
+		if (!v)
+			return nullptr;
+		ns->values[m->name()] = std::move(v);
+	}
+	return ns;
+}
+
+bool EvmSlotLowering::writeStructValue(
+	Addr const& _a,
+	std::shared_ptr<awst::Expression> _value,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	auto const* st = dynamic_cast<StructType const*>(_a.solType);
+	auto const* structW = st
+		? dynamic_cast<awst::ARC4Struct const*>(m_ctx.typeMapper.map(st)) : nullptr;
+	if (!st || !structW || !_value)
+	{
+		Logger::instance().error(
+			"--evm-storage-layout: unsupported whole-struct storage write", m_loc);
+		return false;
+	}
+	// pin base slot + struct value: members write in separate statements
+	std::string bs = "__evm_stw_"
+		+ std::to_string(awst::NameGen::next("EvmSlotLowering.structW"));
+	_out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc),
+		_a.slot, m_loc));
+	std::string vs = bs + "_v";
+	auto const* valW = _value->wtype ? _value->wtype
+		: static_cast<awst::WType const*>(structW);
+	_out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(vs, valW, m_loc), std::move(_value), m_loc));
+	auto baseVar = [&]() {
+		return awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc);
+	};
+	auto valVar = [&]() {
+		return awst::makeVarExpression(vs, valW, m_loc);
+	};
+	for (auto const& m: st->structDefinition().members())
+	{
+		if (!m)
+			continue;
+		auto const& off = st->storageOffsetsOfMember(m->name());
+		Addr fa;
+		fa.slot = off.first == 0
+			? std::shared_ptr<awst::Expression>(baseVar())
+			: std::shared_ptr<awst::Expression>(awst::makeBigUIntBinOp(
+				baseVar(), awst::BigUIntBinaryOperator::Add,
+				biguintConst(off.first.str()), m_loc));
+		fa.solType = m->type();
+		awst::WType const* fieldW = nullptr;
+		for (auto const& [fname, ftype]: structW->fields())
+			if (fname == m->name()) { fieldW = ftype; break; }
+		auto field = awst::makeFieldExpression(valVar(), m->name(),
+			fieldW ? fieldW : m_ctx.typeMapper.map(m->type()), m_loc);
+		if (auto const* nst = dynamic_cast<StructType const*>(m->type()))
+		{
+			fa.wtype = m_ctx.typeMapper.map(nst);
+			if (!writeStructValue(fa, std::move(field), _out))
+				return false;
+			continue;
+		}
+		if (!m->type()->isValueType())
+		{
+			Logger::instance().error(
+				"--evm-storage-layout: whole-struct write with non-value member '"
+				+ m->name() + "' is not yet supported", m_loc);
+			return false;
+		}
+		fa.byteOffset = off.second
+			? awst::makeIntegerConstant(static_cast<uint64_t>(off.second), m_loc)
+			: nullptr;
+		fa.size = m->type()->storageBytes();
+		fa.wtype = m_ctx.typeMapper.map(m->type());
+		auto v = coerceToNative(std::move(field), fa);
+		if (!v)
+			return false;
+		writeValue(fa, std::move(v), _out);
+	}
+	return true;
+}
+
+std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
+	Addr const& _a, ArrayType const* _at)
+{
+	if (!_at || _at->isDynamicallySized())
+	{
+		Logger::instance().error(
+			"--evm-storage-layout: cannot materialise a dynamic storage array "
+			"as a value", m_loc);
+		return nullptr;
+	}
+	auto lenU = _at->length();
+	if (lenU == 0 || lenU > 64)
+	{
+		Logger::instance().error(
+			"--evm-storage-layout: cannot materialise storage array of length "
+			+ lenU.str() + " (unrolled reads capped at 64)", m_loc);
+		return nullptr;
+	}
+	unsigned len = static_cast<unsigned>(lenU);
+	auto const* elemType = _at->baseType();
+	auto const* arrW = m_ctx.typeMapper.map(_at);
+	auto arr = awst::makeNewArray(arrW, m_loc);
+
+	std::string tmp = "__evmarr_"
+		+ std::to_string(awst::NameGen::next("EvmSlotLowering.arr"));
+	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(tmp, awst::WType::biguintType(), m_loc),
+		_a.slot, m_loc));
+	auto baseVar = [&]() {
+		return awst::makeVarExpression(tmp, awst::WType::biguintType(), m_loc);
+	};
+
+	if (auto const* structElem = dynamic_cast<StructType const*>(elemType))
+	{
+		auto const* structW = dynamic_cast<awst::ARC4Struct const*>(
+			m_ctx.typeMapper.map(structElem));
+		if (!structW)
+			return nullptr;
+		auto stride = structElem->storageSize();
+		for (unsigned j = 0; j < len; ++j)
+		{
+			auto elemBase = awst::makeBigUIntBinOp(baseVar(),
+				awst::BigUIntBinaryOperator::Add,
+				awst::makeIntegerConstant((stride * j).str(), m_loc,
+					awst::WType::biguintType()), m_loc);
+			arr->values.push_back(SlotHandleAccess::readStructElem(
+				m_ctx.prePendingStatements, std::move(elemBase), structElem,
+				structW, m_loc));
+		}
+		return arr;
+	}
+
+	awst::WType const* elemW = nullptr;
+	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(arrW))
+		elemW = sa->elementType();
+	if (!elemW)
+		elemW = m_ctx.typeMapper.map(elemType);
+	auto l = SlotHandleAccess::layoutFor(elemType);
+	for (unsigned j = 0; j < len; ++j)
+	{
+		auto v = SlotHandleAccess::readScalarElem(
+			baseVar(), awst::makeIntegerConstant(j, m_loc, awst::WType::biguintType()),
+			l, elemType, m_loc);
+		if (elemW == awst::WType::arc4BoolType())
+		{
+			auto b = awst::makeNumericCompare(std::move(v),
+				awst::NumericComparison::Ne,
+				awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()),
+				m_loc);
+			arr->values.push_back(awst::makeARC4Encode(std::move(b), elemW, m_loc));
+		}
+		else
+			arr->values.push_back(awst::makeARC4Encode(std::move(v), elemW, m_loc));
+	}
+	return arr;
 }
 
 std::shared_ptr<awst::Expression> EvmSlotLowering::readValue(Addr const& _a)
@@ -543,6 +793,19 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readValue(Addr const& _a)
 			awst::UInt64BinaryOperator::Sub, _a.byteOffset, m_loc);
 	auto raw = awst::makeExtract3(std::move(wordB), std::move(start),
 		awst::makeIntegerConstant(static_cast<uint64_t>(_a.size), m_loc), m_loc);
+	// PACKED address: the word window holds the EVM-shaped trailing 20 bytes;
+	// the high 12 live in the shadow aux slot (zeros when never written —
+	// EVM-equivalent). Recombine to the full AVM address.
+	if (_a.wtype == awst::WType::accountType() && _a.size == 20)
+	{
+		auto aux = readSlotWord(
+			packedAddrAuxSlot(_a.slot, _a.byteOffset, m_loc), m_loc);
+		auto hi = awst::makeExtract(
+			awst::makeLeftPadToN(awst::makeAsBytes(std::move(aux), m_loc), 32, m_loc),
+			20, 12, m_loc);
+		return awst::makeAsAccount(
+			awst::makeConcat(std::move(hi), std::move(raw), m_loc), m_loc);
+	}
 	return SlotWordCodec::packedBytesToNative(
 		std::move(raw), _a.wtype, _a.solType, _a.size, m_loc);
 }
@@ -570,6 +833,23 @@ void EvmSlotLowering::writeValue(
 	// Sub-word: read-modify-write the word. Both slot uses live in ONE
 	// statement (the write call), so EvalOnce is safe.
 	auto slotOnce = awst::makeEvalOnce(_a.slot, m_loc);
+	// PACKED address: stash the high 12 bytes in the shadow aux slot (the
+	// word window keeps the EVM-shaped trailing 20 for asm fidelity). The
+	// value feeds TWO statements — pin it to a named temp first.
+	if (_a.wtype == awst::WType::accountType() && _a.size == 20)
+	{
+		std::string nm = "__evm_addr_"
+			+ std::to_string(awst::NameGen::next("EvmSlotLowering.addrPin"));
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(nm, _a.wtype, m_loc), std::move(_value), m_loc));
+		_value = awst::makeVarExpression(nm, _a.wtype, m_loc);
+		auto hi = awst::makeExtract(
+			awst::makeAsBytes(awst::makeVarExpression(nm, _a.wtype, m_loc), m_loc),
+			0, 12, m_loc);
+		_out.push_back(SlotHandleAccess::writeSlot(
+			packedAddrAuxSlot(slotOnce, _a.byteOffset, m_loc),
+			awst::makeAsBiguint(std::move(hi), m_loc), m_loc));
+	}
 	auto packed = SlotWordCodec::nativeToPackedBytes(
 		std::move(_value), _a.wtype, _a.size, m_loc);
 	auto wordB = awst::makeLeftPadToN(

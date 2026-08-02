@@ -210,6 +210,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 		}
 
 		stmt->value = m_blk.builderCtx().build(*m_node.expression());
+		if (!stmt->value)
+			return result;   // build errored (already logged) — don't deref
 
 		// `return foo();` where foo is void: Solidity allows this when the
 		// surrounding function is also void. The call must run for side effects;

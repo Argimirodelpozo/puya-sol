@@ -764,6 +764,22 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					if (m_currentSeededCalldataPointers.count(retParams[0]->name()))
 						retStmt->value = TypeCoercion::calldataPointerValueRead(
 							retParams[0]->name(), method.sourceLocation);
+					else if (evmMemoryLayout()
+						&& retParams[0]->referenceLocation()
+							== solidity::frontend::VariableDeclaration::Location::Memory
+						&& [&]{ auto const* at3 = dynamic_cast<
+								solidity::frontend::ArrayType const*>(
+								retParams[0]->type());
+							return at3 && at3->isByteArrayOrString(); }()
+						&& blockUsesDeclInAsm(_func.body(), retParams[0]->id()))
+						// blob-backed named bytes/string return: the asm may
+						// have REPOINTED it (solady toHexString) — materialise
+						// from the (possibly moved) offset var.
+						retStmt->value = AssemblyBuilder::materializeBlobBytesValue(
+							"__blobagg_off_" + std::to_string(retParams[0]->id()),
+							dynamic_cast<solidity::frontend::ArrayType const*>(
+								retParams[0]->type())->isString(),
+							method.sourceLocation);
 					else if (evmStorageLayout()
 						&& retParams[0]->referenceLocation()
 							== solidity::frontend::VariableDeclaration::Location::Storage)

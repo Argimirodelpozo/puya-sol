@@ -233,6 +233,25 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
+	/// Materialise a blob-backed bytes/string VALUE from its offset var:
+	/// length = low 8 bytes of the word at `off`, data = blob[off+32 .. +len].
+	static std::shared_ptr<awst::Expression> materializeBlobBytesValue(
+		std::string const& _offVar,
+		bool _isString,
+		awst::SourceLocation const& _loc
+	);
+
+	/// Write a RUNTIME-LENGTH byte string into the blob starting at `_offU64`
+	/// (a word-loop over writeMemWordDirect; the value is zero-padded to a
+	/// whole word at the tail). `_uniqueId` namespaces the loop temps.
+	static void writeMemBytesDirect(
+		std::shared_ptr<awst::Expression> _offU64,
+		std::shared_ptr<awst::Expression> _bytesValue,
+		int _uniqueId,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
 	/// Write a 32-byte word at a DYNAMIC offset via direct scratch
 	/// (`stores(slot, replace3(loads(slot), sub, value))`).
 	static void writeMemWordDirect(

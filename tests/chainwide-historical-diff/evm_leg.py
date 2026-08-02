@@ -87,6 +87,24 @@ def main():
 
     case = load_json(case_dir / "case.json")
     abi = case["abi"]
+
+    # ── constructor dependencies (fetched by fetch.py): topo order, children
+    # first, deduped by address. Each entry carries its own abi/ctor blob.
+    def load_deps():
+        out = []
+        def rec(dir_, spec):
+            dep = load_json(dir_ / "case.json")
+            for sub in dep.get("ctor_deps") or []:
+                rec(dir_ / sub["dir"], sub)
+            out.append({"addr": spec["addr"].lower(), "dir": dir_, "case": dep})
+        for spec in case.get("ctor_deps") or []:
+            rec(case_dir / spec["dir"], spec)
+        seen, topo = set(), []
+        for d in out:
+            if d["addr"] not in seen:
+                topo.append(d); seen.add(d["addr"])
+        return topo
+    deps = load_deps()
     txns = case["txns"][:max_txns]
     creator = case["creation"]["creator"]
 
@@ -136,7 +154,23 @@ def main():
                 walk_addresses(v, inp, arg_addrs)
     for v, inp in zip(ctor_vals, ctor_inputs):
         walk_addresses(v, inp, arg_addrs)
+    # dep ctor args join the registry too (their owner/admin addresses etc.)
+    for d in deps:
+        dctor = next((e for e in d["case"]["abi"]
+                      if e.get("type") == "constructor"), None)
+        d["ctor_inputs"] = (dctor or {}).get("inputs", [])
+        d["ctor_vals"] = []
+        if d["ctor_inputs"] and d["case"].get("ctor_args_hex"):
+            try:
+                d["ctor_vals"] = list(abi_decode(
+                    [canonical_type(i) for i in d["ctor_inputs"]],
+                    bytes.fromhex(d["case"]["ctor_args_hex"])))
+            except Exception:
+                d["ctor_inputs"], d["ctor_vals"] = [], []
+        for v, inp in zip(d["ctor_vals"], d["ctor_inputs"]):
+            walk_addresses(v, inp, arg_addrs)
     reg = build_registry(creator, senders, arg_addrs)
+    reg["deps"] = {d["addr"]: i for i, d in enumerate(deps)}
     dump_json(case_dir / "registry.json", reg)
 
     # ── concrete EVM forms + inverse fold ─────────────────────────────────
@@ -159,7 +193,11 @@ def main():
             return Web3.to_checksum_address("0x" + arg_content20(m).hex())
         return Web3.to_checksum_address(ZERO)         # '?…' unmapped — shouldn't occur
 
+    _dep_local = {}                                   # hist addr → local addr
+
     def resolve(v):
+        if isinstance(v, dict) and set(v) == {"__dep__"}:
+            return Web3.to_checksum_address(_dep_local[v["__dep__"]])
         if isinstance(v, dict) and set(v) == {"__addr__"}:
             c = concrete(v)
             return c if c is not None else _deployer[0]
@@ -187,6 +225,12 @@ def main():
     snapshot_at = sorted({i for i in range(len(txns)) if (i + 1) % snap_every == 0}
                          | ({len(txns) - 1} if txns else set()))
     meta = {"ctor_args": [markerize(v, inp, reg) for v, inp in zip(ctor_vals, ctor_inputs)],
+            "dep_ctors": [{"addr": d["addr"],
+                           "dir": str(d["dir"].relative_to(case_dir)),
+                           "name": d["case"].get("name"),
+                           "args": [markerize(v, inp, reg) for v, inp in
+                                    zip(d["ctor_vals"], d["ctor_inputs"])]}
+                          for d in deps],
             "ctor_inputs": ctor_inputs,
             "getters": getters, "snapshot_at": snapshot_at,
             "fns": {s: {"inputs": e["inputs"], "outputs": e["outputs"]} for s, e in fns.items()},
@@ -251,6 +295,27 @@ def main():
                 topic_map["0x" + event_abi_to_log_topic(e).hex()] = e
             except Exception:
                 pass
+
+    # dependency bytecodes (single-file, same relaxed settings)
+    for d in deps:
+        try:
+            dout = solcx.compile_standard({
+                "language": "Solidity",
+                "sources": {"dep.sol": {"content":
+                    (d["dir"] / "prepared.sol").read_text()}},
+                "settings": {"evmVersion": "paris",
+                             "outputSelection": {"*": {"*":
+                                 ["evm.bytecode.object"]}}}})
+            dtarget = None
+            for by_name in dout["contracts"].values():
+                for cname, cdata in by_name.items():
+                    if cname == d["case"].get("name"):
+                        dtarget = cdata
+            d["bytecode"] = dtarget["evm"]["bytecode"]["object"] if dtarget else None
+        except Exception as e:
+            d["bytecode"] = None
+            print(f"[evm] dep {d['case'].get('name')}: compile failed "
+                  f"({str(e)[:80]}) — ctor will revert as before")
 
     layout = target.get("storageLayout") or {"storage": [], "types": {}}
     # Slot-mode AVM replays read storage through the SAME layout (see
@@ -401,6 +466,21 @@ def main():
             w3.eth.send_transaction({"from": a0, "to": addr,
                                      "value": 10**18, "gas": 21000})
 
+        _dep_local.clear()
+        for d in deps:
+            if not d.get("bytecode"):
+                continue
+            Cd = w3.eth.contract(abi=d["case"]["abi"], bytecode=d["bytecode"])
+            dargs = [resolve(markerize(v, inp, reg)) for v, inp in
+                     zip(d["ctor_vals"], d["ctor_inputs"])]
+            dtx = Cd.constructor(*dargs).transact({"from": a0, "gas": 12_000_000})
+            drc = w3.eth.get_transaction_receipt(dtx)
+            if not drc.get("contractAddress"):
+                raise SystemExit(f"dependency {d['case'].get('name')} failed to "
+                                 f"deploy (status={drc.get('status')})")
+            _dep_local[d["addr"]] = drc["contractAddress"]
+            print(f"[evm] dep {d['case'].get('name')} @ {drc['contractAddress'][:10]}…")
+
         C = w3.eth.contract(abi=abi, bytecode=bytecode)
         txh = C.constructor(*[resolve(m) for m in meta["ctor_args"]]).transact(
             {"from": a0, "gas": 12_000_000})
@@ -426,6 +506,9 @@ def main():
             inv[sender_acct[i][0].lower()] = symbol(i)
         for a, i in reg["args"].items():
             inv[("0x" + arg_content20(i).hex()).lower()] = symbol(i)
+        for a, i in (reg.get("deps") or {}).items():
+            if a in _dep_local:
+                inv[_dep_local[a].lower()] = symbol(f"D{i}")
 
         def fold(addr):
             if addr is None:

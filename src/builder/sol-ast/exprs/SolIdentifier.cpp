@@ -255,6 +255,14 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 						return low.readStructValue(*addr);
 					return nullptr;
 				}
+				if (auto const* at0 = dynamic_cast<ArrayType const*>(varDecl->type());
+					at0 && !at0->isDynamicallySized() && !at0->isByteArrayOrString())
+				{
+					EvmSlotLowering low(m_ctx, m_scope, m_loc);
+					if (auto addr = low.resolve(m_ident))
+						return low.readArrayValue(*addr, at0);
+					return nullptr;
+				}
 				Logger::instance().error(
 					"--evm-storage-layout: aggregate state variable '" + name
 					+ "' used as a value is not yet supported", m_loc);

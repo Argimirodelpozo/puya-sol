@@ -108,9 +108,17 @@ main_ternary_merge@28:
     bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000003
     concat
     keccak256
+    intc_1 // 1
+    itob
+    uncover 3
+    b+
     dup
+    pushbytes 0xffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
     callsub __storage_read
-    dig 2
+    dig 3
     swap
     concat
     dup
@@ -119,15 +127,8 @@ main_ternary_merge@28:
     -
     intc_0 // 32
     extract3
-    intc_1 // 1
-    itob
-    uncover 4
-    b+
-    dup
-    pushbytes 0xffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
     uncover 3
+    uncover 2
     b|
     extract 16 16
     replace2 16

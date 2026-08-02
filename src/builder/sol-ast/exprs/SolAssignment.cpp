@@ -16,6 +16,7 @@
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-ast/EffectScan.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/contract/ContractBuilder.h"
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/SlotHandleAccess.h"
@@ -46,6 +47,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	// (1) Pre-buildExpr early-outs.
 	if (auto r = tryHandleTransientStateWrite())     return std::move(*r);
 	if (auto r = tryHandleEvmStorageWrite())         return std::move(*r);
+	if (auto r = tryHandleBlobRespill())             return std::move(*r);
 	if (auto r = tryHandleStoragePointerReassign())  return std::move(*r);
 	if (auto r = tryHandleMultiBoxArrayWrite())      return std::move(*r);
 	if (auto r = tryHandleBoxedArrayElemWrite())     return std::move(*r);
@@ -263,6 +265,36 @@ bool rootsInSlotHandle(
 } // namespace
 
 std::optional<std::shared_ptr<awst::Expression>>
+SolAssignment::tryHandleBlobRespill()
+{
+	if (!builder::evmMemoryLayout()
+		|| m_assignment.assignmentOperator() != Token::Assign)
+		return std::nullopt;
+	auto const* lid = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide());
+	if (!lid)
+		return std::nullopt;
+	auto const* lvd = dynamic_cast<VariableDeclaration const*>(
+		lid->annotation().referencedDeclaration);
+	if (!lvd
+		|| lvd->referenceLocation() != VariableDeclaration::Location::Memory
+		|| m_scope.findBlobAggregate(lvd->id()).empty())
+		return std::nullopt;
+	auto value = buildExpr(m_assignment.rightHandSide());
+	if (!value)
+		return std::nullopt;
+	std::string offN = m_scope.findBlobAggregate(lvd->id());
+	std::vector<std::shared_ptr<awst::Statement>> out;
+	if (builder::emitBlobBackValue(m_ctx.typeMapper, lvd->type(),
+			m_ctx.typeMapper.map(lvd->type()), std::move(value), offN,
+			static_cast<int>(awst::NameGen::next("SolAssignment.respill")),
+			m_loc, out))
+		for (auto& st: out)
+			m_ctx.queuePending(std::move(st));
+	return std::shared_ptr<awst::Expression>{
+		awst::makeZero(m_loc, awst::WType::biguintType())};
+}
+
+std::optional<std::shared_ptr<awst::Expression>>
 SolAssignment::tryHandleEvmStorageWrite()
 {
 	if (!builder::evmStorageLayout())
@@ -303,6 +335,153 @@ SolAssignment::tryHandleEvmStorageWrite()
 				}
 
 	auto const* lhsType = lhsExpr.annotation().type;
+	// Whole FIXED-array assignment: resolve the LHS slot and delegate to the
+	// slot-handle array writer (handles storage→storage slot copies, value
+	// RHS with EVM zero-fill, struct elements).
+	if (m_assignment.assignmentOperator() == Token::Assign)
+		if (auto const* lat = dynamic_cast<ArrayType const*>(lhsType);
+			lat && !lat->isDynamicallySized() && !lat->isByteArrayOrString())
+		{
+			EvmSlotLowering low(m_ctx, m_scope, m_loc);
+			auto laddr = low.resolve(lhsExpr);
+			if (!laddr)
+				return std::shared_ptr<awst::Expression>{
+					awst::makeZero(m_loc, awst::WType::biguintType())};
+			std::shared_ptr<awst::Expression> value;
+			auto const& rhsExpr = m_assignment.rightHandSide();
+			auto const* rat = dynamic_cast<ArrayType const*>(rhsExpr.annotation().type);
+			if (EvmSlotLowering::isStorageStateRef(rhsExpr))
+			{
+				auto raddr = low.resolve(rhsExpr);
+				if (!raddr)
+					return std::shared_ptr<awst::Expression>{
+						awst::makeZero(m_loc, awst::WType::biguintType())};
+				// Same element type + length → raw slot copy. DIFFERENT shapes
+				// (bytes8[9] = bytes17[10], packed vs full-slot) need a
+				// per-element read/convert/write loop — a raw copy would smear
+				// the source packing into the target's layout.
+				if (rat && !rat->isDynamicallySized()
+					&& lat->baseType()->identifier() != rat->baseType()->identifier())
+				{
+					unsigned lhsLen = static_cast<unsigned>(lat->length());
+					unsigned rhsLen = static_cast<unsigned>(rat->length());
+					if (lhsLen > 64)
+					{
+						Logger::instance().error(
+							"--evm-storage-layout: converting array copy of length "
+							+ std::to_string(lhsLen) + " exceeds the unroll cap (64)",
+							m_loc);
+						return std::shared_ptr<awst::Expression>{
+							awst::makeZero(m_loc, awst::WType::biguintType())};
+					}
+					auto pinB = [&](std::shared_ptr<awst::Expression> e, char const* tag) {
+						std::string nm = std::string("__evm_cpy") + tag + "_"
+							+ std::to_string(awst::NameGen::next("SolAssignment.evmCpy"));
+						m_ctx.queuePending(awst::makeAssignmentStatement(
+							awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc),
+							std::move(e), m_loc));
+						return nm;
+					};
+					std::string lNm = pinB(laddr->slot, "l");
+					std::string rNm = pinB(raddr->slot, "r");
+					auto lBase = [&]() { return awst::makeVarExpression(
+						lNm, awst::WType::biguintType(), m_loc); };
+					auto rBase = [&]() { return awst::makeVarExpression(
+						rNm, awst::WType::biguintType(), m_loc); };
+					auto const* lbw = dynamic_cast<awst::BytesWType const*>(
+						m_ctx.typeMapper.map(lat->baseType()));
+					for (unsigned j = 0; j < lhsLen; ++j)
+					{
+						auto jc = [&]() { return awst::makeIntegerConstant(
+							j, m_loc, awst::WType::biguintType()); };
+						auto la = low.elemAddr(lBase(), jc(), lat->baseType());
+						std::vector<std::shared_ptr<awst::Statement>> ws;
+						if (j < rhsLen)
+						{
+							auto ra = low.elemAddr(rBase(), jc(), rat->baseType());
+							auto v = low.readValue(ra);
+							// bytesN -> bytesM: LEFT-aligned (right-pad / truncate)
+							if (lbw && lbw->length().has_value())
+							{
+								unsigned toN = static_cast<unsigned>(*lbw->length());
+								unsigned fromN = ra.size;
+								if (toN > fromN)
+									v = awst::makeConcat(awst::makeAsBytes(std::move(v), m_loc),
+										awst::makeBzero(static_cast<int>(toN - fromN), m_loc),
+										m_loc);
+								else if (toN < fromN)
+									v = awst::makeExtract(awst::makeAsBytes(std::move(v), m_loc),
+										0, static_cast<int>(toN), m_loc);
+								v = awst::makeReinterpretCast(std::move(v), la.wtype, m_loc);
+							}
+							else
+								v = low.coerceToNative(std::move(v), la);
+							low.writeValue(la, std::move(v), ws);
+						}
+						else if (lbw && lbw->length().has_value())
+							low.writeValue(la, awst::makeBytesConstant(
+								std::vector<uint8_t>(static_cast<size_t>(*lbw->length()), 0),
+								m_loc, awst::BytesEncoding::Base16, la.wtype), ws);
+						else
+							low.writeValue(la, awst::makeIntegerConstant(
+								"0", m_loc, awst::WType::biguintType()), ws);
+						for (auto& st: ws)
+							m_ctx.queuePending(std::move(st));
+					}
+					return std::shared_ptr<awst::Expression>{
+						awst::makeZero(m_loc, awst::WType::biguintType())};
+				}
+				value = raddr->slot;   // biguint -> slot-level copy
+			}
+			else
+				value = buildExpr(rhsExpr);
+			if (!value)
+				return std::nullopt;
+			if (auto r = trySlotBasedArrayWrite(Token::Assign, laddr->slot, value))
+				return std::move(*r);
+			return std::shared_ptr<awst::Expression>{
+				awst::makeZero(m_loc, awst::WType::biguintType())};
+		}
+	// Whole-STRUCT assignment (`st = S(...)`, `bridges[b].minterParams = p`):
+	// split into per-member slot writes, recursing into nested members.
+	if (m_assignment.assignmentOperator() == Token::Assign)
+		if (auto const* lst = dynamic_cast<StructType const*>(lhsType))
+		{
+			EvmSlotLowering low(m_ctx, m_scope, m_loc);
+			auto laddr = low.resolve(lhsExpr);
+			if (!laddr)
+				return std::shared_ptr<awst::Expression>{
+					awst::makeZero(m_loc, awst::WType::biguintType())};
+			std::shared_ptr<awst::Expression> value;
+			auto const& rhsExpr2 = m_assignment.rightHandSide();
+			if (EvmSlotLowering::isStorageStateRef(rhsExpr2)
+				&& dynamic_cast<StructType const*>(rhsExpr2.annotation().type))
+			{
+				// storage → storage: materialise then re-split (correct, if
+				// not minimal; slot-copy would need identical layouts anyway)
+				auto raddr = low.resolve(rhsExpr2);
+				if (raddr)
+				{
+					EvmSlotLowering::Addr ra = *raddr;
+					ra.solType = rhsExpr2.annotation().type;
+					ra.wtype = m_ctx.typeMapper.map(ra.solType);
+					value = low.readStructValue(ra);
+				}
+			}
+			else
+				value = buildExpr(rhsExpr2);
+			if (!value)
+				return std::shared_ptr<awst::Expression>{
+					awst::makeZero(m_loc, awst::WType::biguintType())};
+			laddr->solType = lhsType;
+			laddr->wtype = m_ctx.typeMapper.map(lhsType);
+			std::vector<std::shared_ptr<awst::Statement>> out;
+			if (low.writeStructValue(*laddr, std::move(value), out))
+				for (auto& st2: out)
+					m_ctx.queuePending(std::move(st2));
+			return std::shared_ptr<awst::Expression>{
+				awst::makeZero(m_loc, awst::WType::biguintType())};
+		}
 	if (lhsType && !lhsType->isValueType()
 		&& EvmSlotLowering::isBytesLike(lhsType)
 		&& m_assignment.assignmentOperator() == Token::Assign)
@@ -315,12 +494,18 @@ SolAssignment::tryHandleEvmStorageWrite()
 		auto value = buildExpr(m_assignment.rightHandSide());
 		if (!value)
 			return std::nullopt;
+		std::string valNm = "__evm_aval_"
+			+ std::to_string(awst::NameGen::next("SolAssignment.evmAssignVal"));
+		auto const* valW = value->wtype;
+		m_ctx.queuePending(awst::makeAssignmentStatement(
+			awst::makeVarExpression(valNm, valW, m_loc), std::move(value), m_loc));
 		std::vector<std::shared_ptr<awst::Statement>> out;
-		low.writeBytesValue(*addr, std::move(value), out);
+		low.writeBytesValue(*addr,
+			awst::makeVarExpression(valNm, valW, m_loc), out);
 		for (auto& st: out)
 			m_ctx.queuePending(std::move(st));
 		return std::shared_ptr<awst::Expression>{
-			awst::makeZero(m_loc, awst::WType::biguintType())};
+			awst::makeVarExpression(valNm, valW, m_loc)};
 	}
 	if (!lhsType || !lhsType->isValueType())
 	{
@@ -355,12 +540,22 @@ SolAssignment::tryHandleEvmStorageWrite()
 	if (!value)
 		return std::nullopt;
 
+	// Pin the value to a temp: the write reads it AND the assignment
+	// EXPRESSION evaluates to it (chained `a = b = v` — returning a zero
+	// sentinel here wrote 0 through the outer link; storage_packed_array_copy
+	// ctor's `_y[8] = _y[9] = ...`). Single-use pins are copy-propagated by
+	// the backend.
+	std::string valNm = "__evm_aval_"
+		+ std::to_string(awst::NameGen::next("SolAssignment.evmAssignVal"));
+	auto const* valW = value->wtype;
+	m_ctx.queuePending(awst::makeAssignmentStatement(
+		awst::makeVarExpression(valNm, valW, m_loc), std::move(value), m_loc));
 	std::vector<std::shared_ptr<awst::Statement>> out;
-	low.writeValue(*addr, std::move(value), out);
+	low.writeValue(*addr, awst::makeVarExpression(valNm, valW, m_loc), out);
 	for (auto& st: out)
 		m_ctx.queuePending(std::move(st));
 	return std::shared_ptr<awst::Expression>{
-		awst::makeZero(m_loc, awst::WType::biguintType())};
+		awst::makeVarExpression(valNm, valW, m_loc)};
 }
 
 std::optional<std::shared_ptr<awst::Expression>>

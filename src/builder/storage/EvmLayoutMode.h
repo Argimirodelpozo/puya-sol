@@ -18,6 +18,20 @@ inline bool& evmStorageLayoutFlag()
 inline void setEvmStorageLayout(bool _on) { evmStorageLayoutFlag() = _on; }
 inline bool evmStorageLayout() { return evmStorageLayoutFlag(); }
 
+/// --evm-memory-layout (stage 3): UNIVERSAL blob memory — every memory
+/// aggregate an assembly block touches is pointer-modeled in the flat blob
+/// (EVM layout), including plain locals with arbitrary initializers. The
+/// selective default keeps the faster value model where asm never needs a
+/// real pointer.
+inline bool& evmMemoryLayoutFlag()
+{
+	static bool enabled = false;
+	return enabled;
+}
+
+inline void setEvmMemoryLayout(bool _on) { evmMemoryLayoutFlag() = _on; }
+inline bool evmMemoryLayout() { return evmMemoryLayoutFlag(); }
+
 /// Slots below this are the DENSE region (sequential declared vars → paged
 /// boxes, 64 slots per 2048-byte page = one box-ref budget). Keccak-derived
 /// slots are astronomically larger, so a single runtime comparison splits the

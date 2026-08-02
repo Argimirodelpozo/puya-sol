@@ -22,6 +22,21 @@ KNOWN_NOISE_GETTERS = {
 _NOISE_SIG_RE = re.compile(r"(DOMAIN_SEPARATOR|chainid|CHAIN_ID)", re.I)
 
 
+def _timestamp_noise(ev_, av_):
+    """Deploy-time wall-clock skew: a ctor storing block.timestamp lands a few
+    minutes apart on the two legs (EVM leg runs, then the AVM leg deploys).
+    Two plausible-unix-timestamp values within 2h of each other are the run
+    itself, not a compilation divergence (ena/lastMintTimestamp)."""
+    def flat(v):
+        if isinstance(v, list) and len(v) == 1:
+            return v[0]
+        return v
+    a, b = flat(ev_), flat(av_)
+    return (isinstance(a, int) and isinstance(b, int)
+            and a > 1_500_000_000 and b > 1_500_000_000
+            and abs(a - b) < 7200)
+
+
 def _dynamic(t: str) -> bool:
     return t in ("string", "bytes") or t.endswith("]")
 
@@ -102,6 +117,7 @@ def diff_case(case_dir: Path) -> dict:
             bucket = ("snapshot_noise"
                       if both_revert or sig in KNOWN_NOISE_GETTERS
                       or _NOISE_SIG_RE.search(sig)
+                      or _timestamp_noise(ev_, av_)
                       else "snapshot_div")
             findings[bucket].append({"after_txn": int(k), "getter": sig,
                                      "evm": ev_, "avm": av_})
@@ -148,6 +164,8 @@ def diff_case(case_dir: Path) -> dict:
         # choice (e.g. immutables/constants not materialised as app state), not
         # a value divergence — flag separately from a genuine value mismatch.
         bucket = "storage_div" if (var in e_sc and var in a_sc) else "storage_noise"
+        if _timestamp_noise(ev_, av_):
+            bucket = "storage_noise"
         findings.setdefault(bucket, []).append(
             {"var": var, "evm": ev_, "avm": av_, "last_changed_txn": _last_change(var)})
 

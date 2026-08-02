@@ -209,6 +209,7 @@ public:
 				// + `return buffer`). Only then do the value handlers lose the writes,
 				// so blob-back it (memory-pointer model).
 				if (!at->isByteArrayOrString()
+					|| evmMemoryLayout()   // stage 3: universal pointer model
 					|| (_isNewAllocatedLocal(vd) && _bufferPointerEscapes(_asm, vd)))
 					ids.insert(vd->id());
 			}
@@ -220,6 +221,174 @@ public:
 };
 
 } // namespace
+
+bool blockUsesDeclInAsm(
+	solidity::frontend::Block const& _block, int64_t _declId)
+{
+	struct Scan: solidity::frontend::ASTConstVisitor
+	{
+		int64_t id;
+		bool found = false;
+		bool visit(solidity::frontend::InlineAssembly const& _asm) override
+		{
+			for (auto const& ref: _asm.annotation().externalReferences)
+				if (ref.second.declaration && ref.second.declaration->id() == id)
+					found = true;
+			return !found;
+		}
+	} scan;
+	scan.id = _declId;
+	_block.accept(scan);
+	return scan.found;
+}
+
+bool emitBlobBackValue(
+	TypeMapper& typeMapper,
+	solidity::frontend::Type const* declType,
+	awst::WType const* wtype,
+	std::shared_ptr<awst::Expression> value,
+	std::string const& offVar,
+	int uniqueId,
+	awst::SourceLocation const& loc,
+	std::vector<std::shared_ptr<awst::Statement>>& out)
+{
+	using AB = AssemblyBuilder;
+	using namespace solidity::frontend;
+	auto const* at2 = dynamic_cast<ArrayType const*>(declType);
+	auto const* st2 = dynamic_cast<StructType const*>(declType);
+	std::string vn = "__blobinit_" + std::to_string(uniqueId);
+	if (at2 && at2->isByteArrayOrString())
+	{
+		out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(vn, awst::WType::bytesType(), loc),
+			awst::makeAsBytes(std::move(value), loc), loc));
+		auto vRef = [&]() { return awst::makeVarExpression(
+			vn, awst::WType::bytesType(), loc); };
+		for (auto& s2: AB::emitBytesBlobAlloc(
+				awst::makeLen(vRef(), loc), offVar, uniqueId, loc))
+			out.push_back(std::move(s2));
+		AB::writeMemBytesDirect(
+			awst::makeUInt64BinOp(
+				awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
+				awst::UInt64BinaryOperator::Add,
+				awst::makeIntegerConstant("32", loc), loc),
+			vRef(), uniqueId, loc, out);
+		return true;
+	}
+	if (st2)
+	{
+		auto const* structW = dynamic_cast<awst::ARC4Struct const*>(wtype);
+		out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(vn, wtype, loc), std::move(value), loc));
+		auto vRef = [&]() { return awst::makeVarExpression(vn, wtype, loc); };
+		auto const& members = st2->structDefinition().members();
+		int sz2 = static_cast<int>(members.size()) * 32;
+		out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
+			awst::makeExtractUInt64(
+				awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, loc),
+				awst::makeIntegerConstant("88", loc), loc), loc));
+		for (auto& s2: AB::emitFreeMemoryBump(sz2, loc, uniqueId))
+			out.push_back(std::move(s2));
+		unsigned mi = 0;
+		for (auto const& m2: members)
+		{
+			if (!m2 || !m2->type() || !m2->type()->isValueType())
+			{
+				Logger::instance().error(
+					"--evm-memory-layout: blob-backing struct with non-value "
+					"member '" + (m2 ? m2->name() : "?") + "' is not yet "
+					"supported", loc);
+				return false;
+			}
+			awst::WType const* fieldW = nullptr;
+			if (structW)
+				for (auto const& [fname, ftype]: structW->fields())
+					if (fname == m2->name()) { fieldW = ftype; break; }
+			auto field = awst::makeFieldExpression(vRef(), m2->name(),
+				fieldW ? fieldW : typeMapper.map(m2->type()), loc);
+			std::shared_ptr<awst::Expression> w32;
+			if (field->wtype == awst::WType::arc4BoolType())
+			{
+				auto b2 = awst::makeARC4Decode(std::move(field),
+					awst::WType::boolType(), loc);
+				auto u2 = awst::makeConditional(std::move(b2),
+					awst::makeIntegerConstant("1", loc),
+					awst::makeIntegerConstant("0", loc),
+					awst::WType::uint64Type(), loc);
+				w32 = awst::makeLeftPadToN(awst::makeItob(std::move(u2), loc), 32, loc);
+			}
+			else
+				w32 = awst::makeLeftPadToN(
+					awst::makeAsBytes(std::move(field), loc), 32, loc);
+			std::vector<std::shared_ptr<awst::Statement>> ws2;
+			AB::writeMemWordDirect(
+				awst::makeUInt64BinOp(
+					awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
+					awst::UInt64BinaryOperator::Add,
+					awst::makeIntegerConstant(static_cast<uint64_t>(mi * 32), loc),
+					loc),
+				std::move(w32), loc, ws2);
+			for (auto& st3: ws2)
+				out.push_back(std::move(st3));
+			mi++;
+		}
+		return true;
+	}
+	if (at2 && computeEncodedElementSize(
+			typeMapper.mapSolTypeToARC4(at2->baseType())) == 32)
+	{
+		out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(vn, awst::WType::bytesType(), loc),
+			awst::makeAsBytes(std::move(value), loc), loc));
+		auto vRef = [&]() { return awst::makeVarExpression(
+			vn, awst::WType::bytesType(), loc); };
+		if (at2->isDynamicallySized())
+		{
+			auto count = awst::makeExtractUInt16(vRef(),
+				awst::makeIntegerConstant("0", loc), loc);
+			for (auto& s2: AB::emitBytesBlobAlloc(
+					awst::makeUInt64BinOp(std::move(count),
+						awst::UInt64BinaryOperator::Mult,
+						awst::makeIntegerConstant("32", loc), loc),
+					offVar, uniqueId, loc))
+				out.push_back(std::move(s2));
+			std::vector<std::shared_ptr<awst::Statement>> ws2;
+			AB::writeMemWordDirect(
+				awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
+				awst::makeLeftPadToN(awst::makeItob(
+					awst::makeExtractUInt16(vRef(),
+						awst::makeIntegerConstant("0", loc), loc), loc), 32, loc),
+				loc, ws2);
+			for (auto& st3: ws2)
+				out.push_back(std::move(st3));
+			AB::writeMemBytesDirect(
+				awst::makeUInt64BinOp(
+					awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
+					awst::UInt64BinaryOperator::Add,
+					awst::makeIntegerConstant("32", loc), loc),
+				awst::makeExtract(vRef(), 2, 0, loc), uniqueId, loc, out);
+		}
+		else
+		{
+			out.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
+				awst::makeExtractUInt64(
+					awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, loc),
+					awst::makeIntegerConstant("88", loc), loc), loc));
+			int sz3 = computeEncodedElementSize(wtype);
+			for (auto& s2: AB::emitFreeMemoryBump(sz3 > 0 ? sz3 : 32, loc, uniqueId))
+				out.push_back(std::move(s2));
+			AB::writeMemBytesDirect(
+				awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
+				vRef(), uniqueId, loc, out);
+		}
+		return true;
+	}
+	Logger::instance().error(
+		"--evm-memory-layout: cannot blob-back this value shape", loc);
+	return false;
+}
 
 void markAssemblyAggregates(
 	sol_ast::FunctionContext& _fn,
@@ -298,7 +467,58 @@ std::shared_ptr<awst::Block> buildBlock(
 	if (!_placeholder)
 		markAssemblyAggregates(fn, _block);
 
-	return sol_ast::buildBlock(blk, _block);
+	// --evm-memory-layout: MEMORY PARAMS the assembly treats as pointers
+	// (`keccak256(s, 32)` on a `string memory s` param) — spill the incoming
+	// VALUE into a blob region at function entry and register the param as
+	// blob-backed, so asm gets a real offset and value uses read it back.
+	std::vector<std::shared_ptr<awst::Statement>> paramSpills;
+	if (evmMemoryLayout() && !_placeholder)
+	{
+		// collect the DECLS asm references (the aggregate scanner only keeps ids)
+		struct DeclScan: solidity::frontend::ASTConstVisitor
+		{
+			std::map<int64_t, solidity::frontend::VariableDeclaration const*> decls;
+			bool visit(solidity::frontend::InlineAssembly const& _asm) override
+			{
+				for (auto const& ref: _asm.annotation().externalReferences)
+					if (auto const* vd = dynamic_cast<
+							solidity::frontend::VariableDeclaration const*>(
+							ref.second.declaration))
+						decls[vd->id()] = vd;
+				return true;
+			}
+		} scan;
+		_block.accept(scan);
+		for (auto const& [id, vd]: scan.decls)
+		{
+			if (!vd->isCallableOrCatchParameter()
+				|| vd->referenceLocation()
+					!= solidity::frontend::VariableDeclaration::Location::Memory
+				|| vd->name().empty())
+				continue;
+			auto const* t = vd->type();
+			bool aggregate = dynamic_cast<solidity::frontend::ArrayType const*>(t)
+				|| dynamic_cast<solidity::frontend::StructType const*>(t);
+			if (!aggregate)
+				continue;
+			if (!fn.findBlobAggregate(id).empty())
+				continue;   // already pointer-modeled (>4KB path)
+			auto const* wt = _ctx.typeMapper.map(t);
+			std::string offN = "__blobagg_off_" + std::to_string(id);
+			awst::SourceLocation loc0 = makeLoc(_ctx.sourceFile, vd->location());
+			if (emitBlobBackValue(_ctx.typeMapper, t, wt,
+					awst::makeVarExpression(vd->name(), wt, loc0),
+					offN, static_cast<int>(id), loc0, paramSpills))
+				fn.setBlobAggregate(id, offN);
+		}
+	}
+
+	auto body = sol_ast::buildBlock(blk, _block);
+	if (!paramSpills.empty())
+		body->body.insert(body->body.begin(),
+			std::make_move_iterator(paramSpills.begin()),
+			std::make_move_iterator(paramSpills.end()));
+	return body;
 }
 
 // ContractBuilder wrappers — route through free-function API.

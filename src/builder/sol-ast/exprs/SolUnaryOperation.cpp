@@ -11,6 +11,7 @@
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
+#include "builder/storage/SlotHandleAccess.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -719,6 +720,56 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 {
 	auto const& sub = m_unaryOp.subExpression();
 	auto const* solType = sub.annotation().type;
+	// delete on a fixed array / struct: zero the whole slot footprint.
+	if (m_unaryOp.getOperator() == Token::Delete && solType)
+	{
+		auto const* dat = dynamic_cast<ArrayType const*>(solType);
+		bool fixedArr = dat && !dat->isDynamicallySized()
+			&& !dat->isByteArrayOrString();
+		bool isStruct = dynamic_cast<StructType const*>(solType) != nullptr;
+		if (fixedArr || isStruct)
+		{
+			auto slots = solType->storageSize();
+			if (slots > 256)
+			{
+				Logger::instance().error(
+					"--evm-storage-layout: delete of " + slots.str()
+					+ " slots exceeds the unroll cap (256)", m_loc);
+				return nullptr;
+			}
+			EvmSlotLowering low(m_ctx, m_scope, m_loc);
+			auto addr = low.resolve(sub);
+			if (!addr)
+				return nullptr;
+			unsigned n = static_cast<unsigned>(slots);
+			// The zero-writes are separate statements — pin the base slot to a
+			// NAMED temp (cross-statement idiom; SingleEvaluation is unsound).
+			std::string nm = "__evm_del_"
+				+ std::to_string(awst::NameGen::next("SolUnaryOperation.evmDel"));
+			m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc),
+				addr->slot, m_loc));
+			std::vector<std::shared_ptr<awst::Statement>> writes;
+			for (unsigned j = 0; j < n; ++j)
+			{
+				auto slotJ = j == 0
+					? std::shared_ptr<awst::Expression>(
+						awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc))
+					: awst::makeBigUIntBinOp(
+						awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc),
+						awst::BigUIntBinaryOperator::Add,
+						awst::makeIntegerConstant(j, m_loc,
+							awst::WType::biguintType()), m_loc);
+				writes.push_back(builder::SlotHandleAccess::writeSlot(
+					std::move(slotJ),
+					awst::makeIntegerConstant("0", m_loc,
+						awst::WType::biguintType()), m_loc));
+			}
+			for (auto& st: writes)
+				m_ctx.queuePending(std::move(st));
+			return awst::makeZero(m_loc, awst::WType::biguintType());
+		}
+	}
 	if (m_unaryOp.getOperator() == Token::Delete
 		&& EvmSlotLowering::isBytesLike(solType))
 	{

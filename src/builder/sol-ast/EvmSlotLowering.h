@@ -88,6 +88,19 @@ public:
 	/// ctx.prePendingStatements). Null + loud error when `_a` isn't a struct.
 	std::shared_ptr<awst::Expression> readStructValue(Addr const& _a);
 
+	/// Materialise a FIXED array at `_a.slot` as a NewArray value (unrolled
+	/// per-element reads, capped at 64). Null + loud error otherwise.
+	std::shared_ptr<awst::Expression> readArrayValue(
+		Addr const& _a, solidity::frontend::ArrayType const* _at);
+
+	/// Whole-struct WRITE: split `_value` (struct-typed) into per-member slot
+	/// writes at `_a.slot`, recursing into NESTED struct members. Statements
+	/// appended to `_out`; loud error + false for unsupported member types.
+	bool writeStructValue(
+		Addr const& _a,
+		std::shared_ptr<awst::Expression> _value,
+		std::vector<std::shared_ptr<awst::Statement>>& _out);
+
 	/// Leaf read: storage word → native value (Addr::wtype).
 	std::shared_ptr<awst::Expression> readValue(Addr const& _a);
 

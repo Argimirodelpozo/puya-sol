@@ -1,3 +1,26 @@
+# Semantic Test Status — v477
+
+> **feat: --evm-memory-layout (stage 3) + respill + differ ctor-deps, 2026-08-01:**
+> **12 failed / 1399 passed / 107 xf / 30 xp** (zero regressions; same 12 baseline
+> fails). STAGE 3 universal blob memory behind its own composable flag: asm-aggregate
+> scanner universal for bytes/string; emitBlobBackValue allocates+stores EVM-layout
+> regions for locals with ARBITRARY initializers (bytes/string [len32][data], struct
+> word-per-field, 32B-elem arrays; new runtime-length writeMemBytesDirect word-loop);
+> memory PARAMS asm treats as pointers spill at function entry; RESPILL on
+> whole-variable assignment re-allocates and re-points; blob-backed named
+> bytes/string returns MATERIALISE from the (possibly asm-repointed) offset — the
+> Solady `str := sub(str,2)` idiom — in both implicit-return paths.
+> **4 of the 11 real baseline FAILS are now runtime-green under the modes**
+> (packed_array_copy [stage 2]; storage_layout_struct, mcopy,
+> keccak_optimization_bug_string [stage 3]) plus xfailed slot_access +
+> storage_ref_returned — 13 test_evm_layout_* guards. Slot-mode campaign: ~33 real
+> contracts replay their histories clean (incl. higher/venice/opmint9 via the
+> immutable-getter fix and xvs via the packed-address shadow-aux slots).
+> Differ gained constructor-DEPENDENCY fetching (ctor-arg addrs + hardcoded
+> literals → recursive light fetch → both-legs deploy-first with __dep__ address
+> remapping); v1 single-file-^0.8 scope rarely fires on today's 22 ctor skips
+> (0.6 routers / multifile LZ / proxies) — degrades to explicit skip.
+
 # Semantic Test Status — v476
 
 > **feat: --evm-storage-layout differ integration — REAL HISTORIES REPLAY CLEAN, 2026-08-01:**

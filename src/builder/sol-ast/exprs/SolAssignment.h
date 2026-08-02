@@ -57,6 +57,11 @@ private:
 	/// var lowers to __storage_write at its EVM word address (EvmSlotLowering).
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleEvmStorageWrite();
 
+	/// --evm-memory-layout: whole-variable assignment to a blob-backed memory
+	/// local/param/named-return RE-SPILLS the value into a fresh blob region
+	/// and re-points the offset var (EVM allocates fresh memory per result).
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleBlobRespill();
+
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleTransientStateWrite();
 
 	/// `m = m2` for a local storage-pointer: updates compile-time alias (state-var)

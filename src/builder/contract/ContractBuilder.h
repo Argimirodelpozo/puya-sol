@@ -108,6 +108,26 @@ std::shared_ptr<awst::Block> buildBlock(
 	solidity::frontend::Block const& block,
 	std::shared_ptr<awst::Block> placeholder = nullptr);
 
+/// True iff any inline-assembly block in `_block` references declaration
+/// `_declId` (used to decide blob-backed named-return materialisation).
+bool blockUsesDeclInAsm(
+	solidity::frontend::Block const& _block, int64_t _declId);
+
+/// --evm-memory-layout: emit statements that ALLOCATE a blob region in EVM
+/// layout for `_value` (bytes/string → [len32][data]; struct → one word per
+/// value field; arrays of 32-byte-encoded elements → [count32]?[elems]) and
+/// bind `_offVar` (uint64) to its base offset. Returns false (+ loud error)
+/// for unsupported shapes.
+bool emitBlobBackValue(
+	TypeMapper& typeMapper,
+	solidity::frontend::Type const* declType,
+	awst::WType const* wtype,
+	std::shared_ptr<awst::Expression> value,
+	std::string const& offVar,
+	int uniqueId,
+	awst::SourceLocation const& loc,
+	std::vector<std::shared_ptr<awst::Statement>>& out);
+
 /// Promote memory aggregates used as VALUES in inline assembly (their Yul memory
 /// pointer) to blob-backed (pointer model) on `fn`. Must run before body
 /// translation so SolVariableDeclaration blob-backs them at declaration. Shared

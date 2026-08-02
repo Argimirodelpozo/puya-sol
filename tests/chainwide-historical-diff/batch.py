@@ -147,6 +147,9 @@ def main():
     refetch = "--refetch" in argv        # re-pull history (e.g. for a deeper window)
     if refetch:
         argv.remove("--refetch")
+    evm_layout = "--evm-layout" in argv  # slot-mode AVM leg (--evm-storage-layout)
+    if evm_layout:
+        argv.remove("--evm-layout")
 
     summary = []
     for host, addr, tag in CANDIDATES:
@@ -157,7 +160,7 @@ def main():
         try:
             if refetch or not (CASES / tag / "case.json").exists():
                 fetch_case(host, addr, tag, max_txns)
-            rep = replay(tag, max_txns)
+            rep = replay(tag, max_txns, evm_layout=evm_layout)
             print_report(rep)
             c = rep["counts"]
             entry.update({
@@ -176,7 +179,8 @@ def main():
             print(f"[batch] {tag}: ERROR — {type(e).__name__}: {e}", flush=True)
             traceback.print_exc()
         summary.append(entry)
-        dump_json(CASES / "_batch_summary.json", summary)
+        dump_json(CASES / ("_batch_summary_evmlayout.json" if evm_layout
+                           else "_batch_summary.json"), summary)
 
     print(f"\n{'='*70}\n[batch] SUMMARY\n{'='*70}")
     for e in summary:

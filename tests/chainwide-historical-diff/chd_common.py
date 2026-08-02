@@ -103,6 +103,8 @@ def build_registry(creator: str, sender_addrs: list[str], arg_addrs: list[str]) 
 def marker_for(reg: dict, addr: str):
     """Historical 0x-address → transportable marker."""
     a = addr.lower()
+    if a in (reg.get("deps") or {}):
+        return {"__dep__": a}            # ctor dependency → local deployment
     if a == ZERO:
         return {"__addr__": "Z"}
     if a == reg["creator"]:

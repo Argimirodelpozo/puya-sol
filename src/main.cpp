@@ -43,6 +43,7 @@ int main(int _argc, char* _argv[])
 		puyasol::builder::AssemblyBuilder::MEMORY_SLOT_LAST = opts.evmMemorySlots - 1;
 
 	puyasol::builder::setEvmStorageLayout(opts.evmStorageLayout);
+	puyasol::builder::setEvmMemoryLayout(opts.evmMemoryLayout);
 
 	if (opts.sourceFiles.empty())
 	{

@@ -859,7 +859,23 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			auto implicitReturn = awst::makeReturnStatement(nullptr, loc);
 
 			// Include augmented args after named-return values to match sub->returnType.
-			if (returnParams.size() == 1 && totalAugmented2 == 0)
+			if (returnParams.size() == 1 && totalAugmented2 == 0
+				&& builder::evmMemoryLayout()
+				&& returnParams[0]->referenceLocation()
+					== solidity::frontend::VariableDeclaration::Location::Memory
+				&& [&]{ auto const* at3 = dynamic_cast<
+						solidity::frontend::ArrayType const*>(
+						returnParams[0]->type());
+					return at3 && at3->isByteArrayOrString(); }()
+				&& builder::blockUsesDeclInAsm(_func.body(), returnParams[0]->id()))
+			{
+				implicitReturn->value =
+					builder::AssemblyBuilder::materializeBlobBytesValue(
+						"__blobagg_off_" + std::to_string(returnParams[0]->id()),
+						dynamic_cast<solidity::frontend::ArrayType const*>(
+							returnParams[0]->type())->isString(), loc);
+			}
+			else if (returnParams.size() == 1 && totalAugmented2 == 0)
 			{
 				auto const* rp0W = m_typeMapper.map(returnParams[0]->type());
 				if (builder::evmStorageLayout()

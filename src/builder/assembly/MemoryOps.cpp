@@ -197,6 +197,74 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDirect(
 	return acc;
 }
 
+std::shared_ptr<awst::Expression> AssemblyBuilder::materializeBlobBytesValue(
+	std::string const& _offVar,
+	bool _isString,
+	awst::SourceLocation const& _loc)
+{
+	auto offRead = [&]() {
+		return awst::makeVarExpression(_offVar, awst::WType::uint64Type(), _loc);
+	};
+	auto length = awst::makeExtractUInt64(
+		readMemWordDirect(offRead(), _loc),
+		awst::makeIntegerConstant("24", _loc), _loc);
+	auto dataStart = awst::makeUInt64BinOp(offRead(),
+		awst::UInt64BinaryOperator::Add,
+		awst::makeIntegerConstant("32", _loc), _loc);
+	auto data = awst::makeExtract3(
+		awst::makeLoadSlot(MEMORY_SLOT_FIRST, _loc),
+		std::move(dataStart), std::move(length), _loc);
+	if (_isString)
+		return awst::makeReinterpretCast(std::move(data),
+			awst::WType::stringType(), _loc);
+	return data;
+}
+
+void AssemblyBuilder::writeMemBytesDirect(
+	std::shared_ptr<awst::Expression> _offU64,
+	std::shared_ptr<awst::Expression> _bytesValue,
+	int _uniqueId,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	std::string pfx = "__blobw_" + std::to_string(_uniqueId) + "_";
+	auto u64v = [&](std::string const& n) {
+		return awst::makeVarExpression(pfx + n, awst::WType::uint64Type(), _loc);
+	};
+	auto bytesv = [&]() {
+		return awst::makeVarExpression(pfx + "v", awst::WType::bytesType(), _loc);
+	};
+	// pin value + base offset + length; pad value to a whole word so the last
+	// extract3 never runs off the end
+	_out.push_back(awst::makeAssignmentStatement(
+		bytesv(), awst::makeConcat(std::move(_bytesValue),
+			awst::makeBzero(32, _loc), _loc), _loc));
+	_out.push_back(awst::makeAssignmentStatement(
+		u64v("off"), std::move(_offU64), _loc));
+	auto lenExpr = awst::makeUInt64BinOp(
+		awst::makeLen(bytesv(), _loc), awst::UInt64BinaryOperator::Sub,
+		awst::makeIntegerConstant("32", _loc), _loc);
+	_out.push_back(awst::makeAssignmentStatement(u64v("len"), std::move(lenExpr), _loc));
+	_out.push_back(awst::makeAssignmentStatement(
+		u64v("i"), awst::makeIntegerConstant("0", _loc), _loc));
+	auto cond = awst::makeNumericCompare(u64v("i"),
+		awst::NumericComparison::Lt, u64v("len"), _loc);
+	auto body = awst::makeBlock(_loc);
+	auto word = awst::makeExtract3(bytesv(), u64v("i"),
+		awst::makeIntegerConstant("32", _loc), _loc);
+	std::vector<std::shared_ptr<awst::Statement>> ws;
+	writeMemWordDirect(
+		awst::makeUInt64BinOp(u64v("off"), awst::UInt64BinaryOperator::Add,
+			u64v("i"), _loc),
+		std::move(word), _loc, ws);
+	for (auto& st: ws)
+		body->body.push_back(std::move(st));
+	body->body.push_back(awst::makeAssignmentStatement(u64v("i"),
+		awst::makeUInt64BinOp(u64v("i"), awst::UInt64BinaryOperator::Add,
+			awst::makeIntegerConstant("32", _loc), _loc), _loc));
+	_out.push_back(awst::makeWhileLoop(std::move(cond), std::move(body), _loc));
+}
+
 void AssemblyBuilder::writeMemWordDirect(
 	std::shared_ptr<awst::Expression> _offset, std::shared_ptr<awst::Expression> _value32,
 	awst::SourceLocation const& _loc, std::vector<std::shared_ptr<awst::Statement>>& _out)

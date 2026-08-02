@@ -89,12 +89,49 @@ zero divergences.** Environment-only getter noise is classified
 block.number). Slot-mode `selftest.py --evm-layout` green on every mapping
 shape (scalar/nested/struct/array values).
 
-**Not yet (stage 3)**: universal blob memory (asm pointer arithmetic on
-memory strings/arrays — what builder needs; builder also uses
-codesize/extcodesize, unfixable on AVM), bytes/string element access &
-push/pop, whole-ARRAY materialisation, struct-typed top-level vars in the
-differ readers (OZ Trace208 `_totalCheckpoints` — reported as uncompared
-coverage on both legs, not silent), `layout at` bases ≥ 2^16.
+**STAGE 3 LANDED — `--evm-memory-layout` (universal blob memory)** (same
+day): a second flag (composable with the storage one) making every memory
+aggregate assembly touches pointer-modeled in the flat blob:
+
+- The asm-aggregate scanner goes universal for bytes/string (drops the
+  new-alloc+escape gate); arrays and structs were already marked.
+- Blob-backing for locals with ARBITRARY initializers (`HalfSlot memory x =
+  b;`, `string memory s = <expr>`): `emitBlobBackValue` allocates the EVM
+  layout ([len32][data] / word-per-field / [count32][elems]) and stores the
+  value via the new runtime-length `writeMemBytesDirect` word-loop.
+- MEMORY PARAMS asm treats as pointers (`keccak256(s, 32)` on a
+  `string memory s` param) are SPILLED into the blob at function entry.
+- RESPILL: whole-variable assignment to a blob-backed local/param/named
+  return re-allocates from the value and re-points the offset var (EVM's
+  fresh-object semantics); blob-backed named bytes/string returns
+  MATERIALISE from the (possibly asm-repointed) offset — the Solady
+  `toHexString` idiom (`str := sub(str, 2)`), both contract-method and
+  library implicit-return paths.
+
+**Semantic-test unlocks (runtime-green, guarded in
+`test_evm_layout_unlocks_*`): 4 of the baseline's 11 real FAILS pass under
+the modes — `storage_packed_array_copy` (stage 2), `storage_layout_struct`,
+`mcopy`, `keccak_optimization_bug_string` (stage 3) — plus the xfailed
+`slot_access` and `storage_ref_returned`.** builder remains the one memory
+target that cannot ship: 6× `codesize()` (no AVM equivalent).
+
+**Constructor-dependency fetching landed in the differ** (`fetch.py`):
+ctor-arg addresses AND hardcoded source literals are probed for verified
+single-file ^0.8 contracts, fetched recursively (depth 2, light — no
+history), deployed FIRST on both legs (`__dep__` markers remap historical
+addresses to the local instances; EVM leg solcx, AVM leg puya-sol app with
+the `bzero(24)‖itob(appId)` address form; «D<i>» fold symbols). Probing the
+22 closed-world ctor skips shows the v1 scope rarely fires today (deps are
+0.6-era routers, multifile LayerZero endpoints, proxies, 0.5-era Maker) —
+the feature degrades to the previous skip with an explicit dep-failure
+message, and pays off as harvests hit modern single-file deps. Widening
+levers: multifile deps; internal-txn replay (`txlistinternal`); dev-mode
+localnet timestamps.
+
+**Not yet**: bytes/string element access & push/pop, whole dynamic-ARRAY
+materialisation, struct-typed top-level vars in the differ readers (OZ
+Trace208 — honest uncompared-coverage warning), `layout at` bases ≥ 2^16,
+multifile dependency fetching.
 
 Force puya-sol's *internal* storage (and optionally memory) layout to emulate
 Solidity's, backed by AVM boxes, so that inline assembly which does real slot
