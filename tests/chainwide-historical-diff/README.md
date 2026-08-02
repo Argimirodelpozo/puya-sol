@@ -271,8 +271,10 @@ whitelisted away wholesale:
 - **timestamps** — a value set from `block.timestamp` differs because the EVM
   leg time-travels while the AVM leg runs at wall clock. Applied to scalars,
   getter snapshots, *and element-wise inside struct/array map values* (Permit2
-  fills `PackedAllowance.expiration` with `now`), with a plausible-unix-time +
-  2 h-window test so it can only absorb clock skew.
+  fills `PackedAllowance.expiration` with `now`), gated on both values being
+  plausible unix times within a 7-day window — LocalNet's clock advances with
+  block production, so an idle chain trails wall clock (2.5 h observed), while
+  a genuinely wrong field (0, a counter, a hash) is never absorbed.
 - **uniform offsets** — every entry of a map differing by the same delta.
 
 Coverage warnings (⚠️) matter as much as divergences here: a comparison that

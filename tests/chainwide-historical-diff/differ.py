@@ -22,6 +22,17 @@ KNOWN_NOISE_GETTERS = {
 _NOISE_SIG_RE = re.compile(r"(DOMAIN_SEPARATOR|chainid|CHAIN_ID)", re.I)
 
 
+# How far apart two legs' clocks can plausibly be. Not just run-to-run skew:
+# LocalNet's block time advances with BLOCK PRODUCTION, so an idle chain's
+# `LatestTimestamp` trails wall clock by however long it sat unused — measured
+# at 2.5 h on a working session, and unbounded in principle. Both values must
+# still be plausible unix timestamps, so a genuinely wrong field (0, a small
+# counter, a hash) is never absorbed. The real fix is pinning AVM block time
+# via algod dev-mode, which would also convert some closed-world skips into
+# coverage.
+_TS_SKEW_MAX = 7 * 24 * 3600
+
+
 def _timestamp_noise_elems(ev_, av_):
     """Element-wise twin of `_timestamp_noise` for STRUCT/ARRAY map values.
 
@@ -40,7 +51,7 @@ def _timestamp_noise_elems(ev_, av_):
             continue
         if (isinstance(a, int) and isinstance(b, int)
                 and a > 1_500_000_000 and b > 1_500_000_000
-                and abs(a - b) < 7200):
+                and abs(a - b) < _TS_SKEW_MAX):
             saw_ts = True
             continue
         return False
@@ -59,7 +70,7 @@ def _timestamp_noise(ev_, av_):
     a, b = flat(ev_), flat(av_)
     return (isinstance(a, int) and isinstance(b, int)
             and a > 1_500_000_000 and b > 1_500_000_000
-            and abs(a - b) < 7200)
+            and abs(a - b) < _TS_SKEW_MAX)
 
 
 def _dynamic(t: str) -> bool:

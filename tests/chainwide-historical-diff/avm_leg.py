@@ -468,8 +468,8 @@ def main():
             sig, args = c["sig"], [resolve(a) for a in c["args"]]
             is_view = mut.get(sig, "") in ("view", "pure")
             prev = ln.account
-            ln.account = accts.get(c["sender"]["__addr__"], dispenser) \
-                if isinstance(c["sender"]["__addr__"], int) else dispenser
+            _sm = (c.get("sender") or {}).get("__addr__")
+            ln.account = accts.get(_sm, dispenser) if isinstance(_sm, int) else dispenser
             try:
                 dep_fee = {"extra_fee": 20_000} if dep_apps else {}
                 if is_view:

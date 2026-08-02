@@ -202,7 +202,7 @@ def fetch_dep(host: str, address: str, dep_dir, depth: int, seen: set) -> dict |
 
 
 def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
-               internal: bool = False) -> dict:
+               internal: bool = False, internal_parents: int = 200) -> dict:
     case_dir = CASES / tag
     addr = address.lower()
 
@@ -269,9 +269,12 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
     # of the real state evolution — without it the closed-world filter eats
     # every downstream txn (ena replayed 34/200, sqd 1/200).
     if internal and txns:
+        # `internal_parents` bounds the dominant cost: one rate-limited
+        # raw-trace request per parent txn (~1 h at 200 on public Blockscout,
+        # ~5 min at 60). Lower it to trade internal-call density for wall clock.
         ic = fetch_internal_calls(
             host, address, txns[0]["block"], txns[-1]["block"],
-            {t["hash"].lower() for t in txns})
+            {t["hash"].lower() for t in txns}, max_parents=internal_parents)
         if ic:
             txns.extend(ic)
             txns.sort(key=lambda t: (t["block"], t.get("txindex", 0),
