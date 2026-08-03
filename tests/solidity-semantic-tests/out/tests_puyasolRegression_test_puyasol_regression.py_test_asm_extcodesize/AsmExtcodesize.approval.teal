@@ -1,0 +1,364 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_extcodesize.sol.AsmExtcodesize.approval_program() -> uint64:
+main:
+    intcblock 0 1 24 32
+    bytecblock "probe" 0x151f7c75 "__ctor_pending" 0x00 TMPL_APPROVAL_Probe TMPL_CLEAR_Probe
+    intc_0 // 0
+    dupn 7
+    pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x1909c5a8 0xf0b00318 0xc007b70c 0x69257996 0xa7e95f22 // method "__postInit()void", method "contractHasCode()bool", method "eoaHasNoCode(address)bool", method "agreesWithDotCode()bool", method "twoReads()uint256", method "probe()address"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_contractHasCode_route@6 main_eoaHasNoCode_route@7 main_agreesWithDotCode_route@8 main_twoReads_route@9 main_probe_route@10
+    err
+
+main_probe_route@10:
+    txn GroupIndex
+    bz main_ternary_false@16
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@17:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "probe"
+    app_global_get_ex
+    assert // check probe exists
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@16:
+    intc_0 // 0
+    b main_ternary_merge@17
+
+main_twoReads_route@9:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "probe"
+    app_global_get_ex
+    assert // check probe exists
+    global CurrentApplicationAddress
+    bury 5
+    load 0
+    store 0
+    intc_2 // 24
+    extract_uint64
+    app_params_get AppApprovalProgram
+    swap
+    bury 8
+    bz main_ternary_false@24
+    dig 6
+    len
+
+main_ternary_merge@25:
+    itob
+    bury 3
+    dig 3
+    intc_2 // 24
+    extract_uint64
+    app_params_get AppApprovalProgram
+    swap
+    bury 7
+    bz main_ternary_false@27
+    dig 5
+    len
+
+main_ternary_merge@28:
+    itob
+    load 0
+    store 0
+    dig 3
+    b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    intc_3 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@27:
+    intc_0 // 0
+    b main_ternary_merge@28
+
+main_ternary_false@24:
+    intc_0 // 0
+    b main_ternary_merge@25
+
+main_ternary_false@21:
+    intc_0 // 0
+    b main_ternary_merge@22
+
+main_agreesWithDotCode_route@8:
+    txn GroupIndex
+    bz main_ternary_false@32
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@33:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "probe"
+    app_global_get_ex
+    assert // check probe exists
+    load 0
+    store 0
+    intc_2 // 24
+    extract_uint64
+    dup
+    bury 2
+    app_params_get AppApprovalProgram
+    swap
+    bury 9
+    bz main_ternary_false@35
+    dig 7
+    len
+
+main_ternary_merge@36:
+    itob
+    bury 2
+    load 0
+    store 0
+    dup
+    app_params_get AppApprovalProgram
+    swap
+    bury 10
+    bz main_ternary_false@38
+    dig 8
+
+main_ternary_merge@39:
+    len
+    itob
+    dig 2
+    b==
+    bytec_3 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@38:
+    pushbytes 0x
+    b main_ternary_merge@39
+
+main_ternary_false@35:
+    intc_0 // 0
+    b main_ternary_merge@36
+
+main_ternary_false@32:
+    intc_0 // 0
+    b main_ternary_merge@33
+
+main_eoaHasNoCode_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@43
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@44:
+    !
+    assert // not payable
+    dig 4
+    callsub isContract
+    bytec_3 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@43:
+    intc_0 // 0
+    b main_ternary_merge@44
+
+main_contractHasCode_route@6:
+    txn GroupIndex
+    bz main_ternary_false@48
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@49:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "probe"
+    app_global_get_ex
+    assert // check probe exists
+    callsub isContract
+    bytec_3 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@48:
+    intc_0 // 0
+    b main_ternary_merge@49
+
+main___postInit_route@5:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_2 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    itxn_begin
+    bytec 4 // TMPL_APPROVAL_Probe
+    bytec 5 // TMPL_CLEAR_Probe
+    pushint 6
+    itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 1000000
+    itxn_field Amount
+    itxn_submit
+    intc_2 // 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_0 // "probe"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_extcodesize.sol.AsmExtcodesize.isContract(account: bytes) -> uint64:
+isContract:
+    proto 1 1
+    load 0
+    store 0
+    frame_dig -1
+    intc_2 // 24
+    extract_uint64
+    app_params_get AppApprovalProgram
+    bz isContract_ternary_false@2
+    frame_dig 0
+    len
+
+isContract_ternary_merge@3:
+    itob
+    load 0
+    store 0
+    intc_0 // 0
+    itob
+    b>
+    swap
+    retsub
+
+isContract_ternary_false@2:
+    intc_0 // 0
+    b isContract_ternary_merge@3

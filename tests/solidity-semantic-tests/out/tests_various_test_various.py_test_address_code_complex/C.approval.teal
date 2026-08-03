@@ -5,6 +5,8 @@
 main:
     intcblock 0 1 6 16 1000000
     bytecblock TMPL_APPROVAL_A TMPL_CLEAR_A 0xbacc49e3 0x151f7c75
+    intc_0 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -160,7 +162,12 @@ main_ternary_merge@13:
     pushint 24
     extract_uint64
     app_params_get AppApprovalProgram
-    pop
+    swap
+    bury 2
+    bz main_ternary_false@15
+    dup
+
+main_ternary_merge@16:
     len
     itob
     pushint 32
@@ -173,19 +180,23 @@ main_ternary_merge@13:
     intc_1 // 1
     return
 
+main_ternary_false@15:
+    pushbytes 0x
+    b main_ternary_merge@16
+
 main_ternary_false@12:
     intc_0 // 0
     b main_ternary_merge@13
 
 main_f_route@5:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@20
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@21:
     !
     assert // not payable
     itxn_begin
@@ -299,7 +310,12 @@ main_ternary_merge@18:
     pushint 24
     extract_uint64
     app_params_get AppApprovalProgram
-    pop
+    swap
+    bury 3
+    bz main_ternary_false@23
+    dig 1
+
+main_ternary_merge@24:
     dup
     len
     itob
@@ -313,6 +329,10 @@ main_ternary_merge@18:
     intc_1 // 1
     return
 
-main_ternary_false@17:
+main_ternary_false@23:
+    pushbytes 0x
+    b main_ternary_merge@24
+
+main_ternary_false@20:
     intc_0 // 0
-    b main_ternary_merge@18
+    b main_ternary_merge@21

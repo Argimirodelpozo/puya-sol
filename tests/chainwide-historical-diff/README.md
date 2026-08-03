@@ -222,11 +222,13 @@ validated against.
   AVM — Aave (all of it), Lido, Compound III, most vaults. Measured over the
   top 40 protocols by TVL: 10 proxies, 11 pre-0.8, 13 viable.
 - **Pre-0.8 Solidity**, and Vyper (Curve, Yearn).
-- **Unmodellable opcodes** — `codesize`/`extcodesize` (no program-length
-  introspection), `tx.origin`. (`address(x).code` *is* supported: the app id is
-  resolved from the address's last 8 bytes, this compiler's contract-value
-  convention, and `app_params_get` returns the real approval program — so
-  `.code.length > 0` guards answer correctly.)
+- **Unmodellable opcodes** — `codesize`, `extcodehash`/`.codehash` for a
+  non-`this` address (its EVM value is a hash of EVM bytecode, meaningless
+  across VMs), `tx.origin`. `extcodesize` is NOT among them: both it and
+  `address(x).code` resolve the app id from the address's last 8 bytes — this
+  compiler's contract-value convention — and read the real approval program via
+  `app_params_get`, so `.code.length > 0` and OZ's assembly `Address.isContract`
+  both answer correctly.
 - **8 KB program cap** (1 base + 3 extra pages × 2048 B). Morpho Blue compiles
   at 13741 B and UniV4 PoolManager at 30751 B — both need the uros splitter to
   deploy. Permit2 (6218 B) fits and replays.

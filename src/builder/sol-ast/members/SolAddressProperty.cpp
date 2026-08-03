@@ -100,10 +100,23 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 		auto assign = awst::makeAssignmentStatement(tmpTarget, std::move(appParamsGet), m_loc);
 		m_ctx.prePendingStatements.push_back(std::move(assign));
 
-		auto tupleRead = awst::makeVarExpression(tmpName, tupleType, m_loc);
-
-		auto item = awst::makeTupleItem(std::move(tupleRead), 0, awst::WType::bytesType(), m_loc);
-		return item;
+		// Branch on the exists flag rather than reading element 0 blind. For a
+		// non-existent app the AVM pushes a uint64 zero as the VALUE whatever
+		// the field's declared type, so a downstream `len` fails at runtime
+		// ("wanted []byte but got uint64"). That made `eoa.code.length` — the
+		// OZ Address.isContract guard this lowering exists to serve — revert
+		// instead of answering 0. The literal-address case above is folded at
+		// compile time; this is the runtime-address twin.
+		auto exists = awst::makeTupleItem(
+			awst::makeVarExpression(tmpName, tupleType, m_loc), 1,
+			awst::WType::boolType(), m_loc);
+		auto item = awst::makeTupleItem(
+			awst::makeVarExpression(tmpName, tupleType, m_loc), 0,
+			awst::WType::bytesType(), m_loc);
+		return awst::makeConditional(
+			std::move(exists), std::move(item),
+			awst::makeBytesConstant({}, m_loc),
+			awst::WType::bytesType(), m_loc);
 	}
 
 	if (member == "balance")

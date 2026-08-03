@@ -3,6 +3,7 @@
 
 #include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
+#include "awst/NameGen.h"
 
 #include <libevmasm/Instruction.h>
 #include <libevmasm/SemanticInformation.h>
@@ -456,21 +457,62 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	};
 	if (auto it = kNullaryBuiltins.find(funcName); it != kNullaryBuiltins.end())
 		return (this->*(it->second))(loc);
-	if (funcName == "extcodesize")
+	if (funcName == "extcodesize" && args.size() == 1)
 	{
-		// extcodesize(addr) → HARD ERROR. AVM cannot dereference an arbitrary
-		// address to ask whether it has code; the old stub returned 1
-		// ("everything is a contract"), which silently makes EOA-vs-contract
-		// guards like `extcodesize(a) > 0` always true. Refuse rather than
-		// emit a vacuous guard. (EVM code-introspection family — see also
-		// extcodehash/extcodecopy and high-level address.code/.codehash.)
-		Logger::instance().error(
-			"`extcodesize(addr)` is not supported on AVM — there is no way to "
-			"query whether an arbitrary address has code, so the old stub "
-			"returned 1 ('everything is a contract'), silently making "
-			"`extcodesize(a) > 0` EOA-vs-contract guards always true.", loc);
-		auto one = awst::makeOne(loc, awst::WType::biguintType());
-		return one;
+		// extcodesize(addr) → the target app's approval-program length, which
+		// is exactly the lowering `address(addr).code.length` already uses
+		// (SolAddressProperty): resolve the app id from the address's last 8
+		// bytes — this compiler's contract-value convention — and read
+		// AppApprovalProgram. A real lookup, NOT the old stub that returned 1
+		// ("everything is a contract") and silently made `extcodesize(a) > 0`
+		// guards always true.
+		//
+		// This was a hard error, justified as "no way to query whether an
+		// arbitrary address has code". `.code.length` disproves that, and the
+		// two spellings ask the same question — so refusing this one only
+		// decided the answer by how the user wrote it. The assembly spelling
+		// is the one OZ's `Address.isContract` compiles to, vendored into a
+		// large share of real contracts (it is what blocks BMEX's `Vesting`).
+		auto addrBytes = awst::makeAsBytes(ensureBiguint(args[0], loc), loc);
+		auto appId = awst::makeAsApplication(
+			awst::makeWord32ToUInt64(std::move(addrBytes), loc), loc);
+		auto* tupleType = m_typeMapper.createType<awst::WTuple>(
+			std::vector<awst::WType const*>{
+				awst::WType::bytesType(), awst::WType::boolType()});
+		auto appParamsGet = awst::makeAppParamsGet(
+			"AppApprovalProgram", std::move(appId), tupleType, loc);
+
+		// Stash the (bytes, bool) pair in a temp before reading element 0:
+		// puya miscompiles TupleItemExpression pop ordering over a raw
+		// IntrinsicCall. Same dance as SolAddressProperty, counter-named so two
+		// extcodesize reads in one expression don't share a temp.
+		std::string tmpName = "__asm_extcodesize_" + std::to_string(
+			awst::NameGen::next("AssemblyBuilder.s_extcodesizeTmpCounter") + 1);
+		auto tmpTarget = awst::makeVarExpression(tmpName, tupleType, loc);
+		m_pendingStatements.push_back(
+			awst::makeAssignmentStatement(tmpTarget, std::move(appParamsGet), loc));
+
+		Logger::instance().warning(
+			"`extcodesize(addr)` resolves the app id from the address's last 8 "
+			"bytes (this compiler's contract-value convention) and returns that "
+			"application's approval-program length, matching "
+			"`address(addr).code.length`. An address NOT in that form reads as "
+			"size 0.", loc);
+
+		// MUST branch on the exists flag. For a non-existent app the AVM pushes
+		// a uint64 zero as the value REGARDLESS of the field's type, so `len`
+		// on it fails at runtime with "wanted []byte but got uint64" — which is
+		// every EOA, i.e. exactly the case an isContract guard asks about.
+		auto exists = awst::makeTupleItem(
+			awst::makeVarExpression(tmpName, tupleType, loc), 1,
+			awst::WType::boolType(), loc);
+		auto program = awst::makeTupleItem(
+			awst::makeVarExpression(tmpName, tupleType, loc), 0,
+			awst::WType::bytesType(), loc);
+		return awst::makeConditional(
+			std::move(exists), awst::makeLen(std::move(program), loc),
+			awst::makeZero(loc, awst::WType::uint64Type()),
+			awst::WType::uint64Type(), loc);
 	}
 	if (funcName == "extcodehash")
 	{

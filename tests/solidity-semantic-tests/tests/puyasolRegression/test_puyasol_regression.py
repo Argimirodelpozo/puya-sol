@@ -3974,3 +3974,25 @@ def test_evm_layout_unlocks_keccak_string(harness):
         45859201465615193776739262511799714667061496775486067316261261194408342061056,
         extra_fee=10_000)
     assert r.abi_return is False
+
+
+def test_asm_extcodesize(harness):
+    """puyasolRegression/contracts/asm_extcodesize.sol — NOT an o.g. test.
+
+    `extcodesize(a)` in assembly — how OZ's Address.isContract is written, so
+    it is vendored into a large share of real contracts (it is what blocks
+    BMEX's Vesting dependency in the chainwide differ). Was a hard error
+    justified as "no way to query whether an address has code", while
+    `address(a).code.length` answered the same question via app_params_get.
+    Both spellings now share that lowering.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_extcodesize.sol",
+        contract_name="AsmExtcodesize", postinit_inner_txns=2)
+    assert harness.call(app, "contractHasCode()").abi_return is True
+    # A real account, not in this compiler's contract-value form, reads as
+    # "no code" — the same caveat `.code.length` carries.
+    assert harness.call(app, "eoaHasNoCode(address)",
+                        harness.localnet.account.address).abi_return is False
+    assert harness.call(app, "agreesWithDotCode()").abi_return is True
+    assert as_int(harness.call(app, "twoReads()").abi_return) > 0

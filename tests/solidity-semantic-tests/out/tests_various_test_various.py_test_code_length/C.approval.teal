@@ -6,7 +6,7 @@ main:
     intcblock 0 1
     bytecblock 0x "__ctor_pending" 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 "len1" "len2"
     intc_0 // 0
-    dup
+    dupn 5
     bytec_0 // ""
     dupn 2
     pushint 4096
@@ -60,40 +60,54 @@ main_ternary_merge@13:
     store 0
     load 0
     extract 64 32
+    bury 7
     load 0
     store 0
     global CurrentApplicationID
     app_params_get AppApprovalProgram
-    pop
+    swap
+    bury 10
+    bz main_ternary_false@15
+    dig 8
+
+main_ternary_merge@16:
     len
     itob
     pushint 50
     itob
     b>
-    bury 2
+    bury 1
     load 0
     store 0
     load 0
     extract 64 32
     load 0
     store 0
+    dig 7
     b==
     dup
     bury 4
-    bnz main_after_if_else@15
+    bnz main_after_if_else@18
     bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@15:
+main_after_if_else@18:
     dig 2
     assert
     intc_0 // 0
     itob
+    bury 5
     intc_0 // 0
     app_params_get AppApprovalProgram
-    pop
+    swap
+    bury 9
+    bz main_ternary_false@20
+    dig 7
+
+main_ternary_merge@21:
     len
     itob
+    dig 5
     b==
     load 0
     store 0
@@ -112,6 +126,14 @@ main_after_if_else@15:
     log
     intc_1 // 1
     return
+
+main_ternary_false@20:
+    bytec_0 // 0x
+    b main_ternary_merge@21
+
+main_ternary_false@15:
+    bytec_0 // 0x
+    b main_ternary_merge@16
 
 main_ternary_false@12:
     intc_0 // 0
@@ -139,7 +161,7 @@ main___postInit_route@5:
     load 0
     extract 64 32
     dup
-    bury 6
+    bury 7
     load 0
     store 0
     intc_0 // 0
@@ -158,11 +180,11 @@ main___postInit_route@5:
     b==
     dup
     bury 4
-    bnz main_after_if_else@19
+    bnz main_after_if_else@25
     bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@19:
+main_after_if_else@25:
     dig 2
     assert
     bytec 4 // "len2"
@@ -174,14 +196,14 @@ main_after_if_else@19:
     extract 64 32
     load 0
     store 0
-    dig 5
+    dig 6
     b==
     dup
     bury 3
-    bnz main_after_if_else@21
+    bnz main_after_if_else@27
     bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@21:
+main_after_if_else@27:
     dig 1
     return

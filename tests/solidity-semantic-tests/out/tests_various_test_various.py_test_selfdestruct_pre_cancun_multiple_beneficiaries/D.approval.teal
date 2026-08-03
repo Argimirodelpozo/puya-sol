@@ -5,6 +5,7 @@
 main:
     intcblock 0 1 24 6
     bytecblock "c" "account1" "account2" 0xb30e2ea6 0x151f7c75 TMPL_APPROVAL_C TMPL_CLEAR_C
+    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -93,7 +94,12 @@ main_ternary_merge@21:
     intc_2 // 24
     extract_uint64
     app_params_get AppApprovalProgram
-    pop
+    swap
+    bury 2
+    bz main_ternary_false@23
+    dup
+
+main_ternary_merge@24:
     len
     itob
     intc_0 // 0
@@ -110,19 +116,23 @@ main_ternary_merge@21:
     intc_1 // 1
     return
 
+main_ternary_false@23:
+    pushbytes 0x
+    b main_ternary_merge@24
+
 main_ternary_false@20:
     intc_0 // 0
     b main_ternary_merge@21
 
 main_test_deploy_and_terminate_twice_route@7:
     txn GroupIndex
-    bz main_ternary_false@25
+    bz main_ternary_false@28
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@26:
+main_ternary_merge@29:
     !
     assert // not payable
     callsub deploy
@@ -139,9 +149,9 @@ main_ternary_merge@26:
     intc_1 // 1
     return
 
-main_ternary_false@25:
+main_ternary_false@28:
     intc_0 // 0
-    b main_ternary_merge@26
+    b main_ternary_merge@29
 
 main_terminate_route@6:
     txna ApplicationArgs 1

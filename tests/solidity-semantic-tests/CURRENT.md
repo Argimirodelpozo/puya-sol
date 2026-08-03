@@ -1,4 +1,23 @@
-# Semantic Test Status — v478
+# Semantic Test Status — v479
+
+> **fix: `extcodesize` in assembly + `.code` on an EOA reverted instead of answering 0,
+> 2026-08-02:** **12 failed / 1400 passed / 105 xf / 32 xp** (baseline + the new
+> asm_extcodesize guard). Two bugs, one root cause, found by triaging why the chainwide
+> differ could not compile BMEX's `Vesting` dependency.
+> **(1) `extcodesize(addr)` in inline assembly was a HARD ERROR** while
+> `address(addr).code.length` — the same question — was supported, so the answer depended
+> on how the user spelled it. The error's own justification ("no way to query whether an
+> arbitrary address has code") is disproved by the `.code` lowering sitting next to it.
+> The assembly spelling is what OZ's `Address.isContract` compiles to, so it is vendored
+> into a large share of real contracts. Both now share the app_params_get lowering.
+> **(2) THE REAL BUG, in the already-shipped `.code` path:** `app_params_get` on a
+> NON-EXISTENT app pushes a **uint64 zero as the value regardless of the field's declared
+> type**, so the downstream `len` failed at runtime with "wanted []byte but got uint64".
+> That made `eoa.code.length` REVERT — exactly the case an isContract guard asks about,
+> and precisely what v478 claimed answered "0 for anything else". The literal-address case
+> was folded at compile time, which hid it; a runtime address had no such guard. Fix: both
+> paths branch on the exists flag (`exists ? len(program) : 0`, `exists ? program : ""`).
+> Verified directly: EOA `.code.length` returned REVERT before, returns 0 after.
 
 > **fix: latent use-after-free in BlockContext::withPlaceholder + Morpho Blue compiles,
 > 2026-08-02:** **12 failed / 1399 passed / 105 xf / 32 xp** (baseline; the 2 new xpasses
