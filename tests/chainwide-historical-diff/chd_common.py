@@ -77,10 +77,22 @@ def _json_default(o):
 
 
 def relax_pragma(src: str) -> str:
-    """Exact-pinned `pragma solidity 0.8.N;` → `^0.8.N` so solc 0.8.26 (EVM leg)
-    accepts it. Both legs compile the SAME prepared source."""
-    return re.sub(r"pragma solidity\s+(=)?0\.8\.(\d+)\s*;",
-                  r"pragma solidity ^0.8.\2;", src)
+    """Normalise pragmas so BOTH legs' compilers accept the same source.
+
+    Two forms need rewriting, for opposite reasons:
+
+    * exact-pinned `pragma solidity 0.8.N;` → `^0.8.N`, so the EVM leg's solc
+      (a different 0.8.x) accepts it.
+    * upper-bound-only `pragma solidity <0.9.0;` → `^0.8.0`. puya-sol's bundled
+      solc is a PRERELEASE build (0.8.35-develop.…), and semver excludes
+      prereleases from a plain `<` range, so these are rejected there while the
+      EVM leg's release solc accepts them — 27 of Polymarket CTFExchange's 46
+      files are written this way.
+    """
+    src = re.sub(r"pragma solidity\s+(=)?0\.8\.(\d+)\s*;",
+                 r"pragma solidity ^0.8.\2;", src)
+    return re.sub(r"pragma solidity\s*<\s*0\.9\.0\s*;",
+                  "pragma solidity ^0.8.0;", src)
 
 
 # AVM platform limits (opcode budget, box-reference packing, program size):

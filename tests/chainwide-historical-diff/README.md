@@ -397,6 +397,32 @@ this table twice (see below).
 | `tig` TIGToken | base | 2/200 | ✅ | closed-world 198 |
 | `sqd` SQD | arbitrum | 1/200 | ✅ | closed-world 199 |
 
+### Polymarket (Polygon)
+
+Attempted end-to-end; the constraints bind in three different places, which is
+why it is worth writing down rather than summarising as "not supported".
+
+| contract | oracle (py-evm) | AVM |
+|---|---|---|
+| `CTFExchange` | ✅ deploys, replays 3/200 | ✅ **compiles at 11244 B** — over the 8 KB cap (needs 5 extra pages, max 3), so it needs the uros splitter to deploy |
+| `NegRiskAdapter` | ✅ deploys, replays 62/200 | ❌ puya backend: `itxn_group_idx cannot be mapped to AVM stack type` (both storage modes; not reproduced by a small case yet) |
+| `UmaCtfAdapter` | ❌ ctor reverts | — |
+| `ProxyWalletFactory`, `ConditionalTokens` | — | pre-0.8 (0.5.10), out of scope |
+
+Getting this far took three harness fixes, each a case of the harness being
+wrong rather than the compiler: the viaIR-fidelity bug above, constructor
+stand-ins, and `relax_pragma` learning `pragma solidity <0.9.0;` (27 of
+CTFExchange's 46 files — a plain upper-bound range excludes puya-sol's
+*prerelease* bundled solc under semver, while the EVM leg's release solc
+accepts it).
+
+The low replay counts are the dependency-state boundary, not a compiler
+result: Polymarket's contracts talk to ConditionalTokens, and a stand-in has
+none of the positions real history created, so the closed-world filter drops
+those transactions. `UmaCtfAdapter` shows the same thing at construction time —
+its UMA `Finder` dependency IS verified and ^0.8 and deploys cleanly, but a
+fresh Finder has no registered implementations, so the ctor's lookup reverts.
+
 ### What these numbers do not cover
 
 The corpus is what the constraints above admit, and the selection is visibly
