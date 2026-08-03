@@ -327,13 +327,22 @@ this table twice (see below).
 
 ### Open
 
-- `systemcoin` — **8 real divergences, unexplained**: `authorizedAccounts()`
-  returns two addresses on the EVM leg and an empty array on the AVM, at every
-  snapshot. An address-array getter coming back empty is a compiler-side lead,
-  not a known noise class.
 - `vanry` — the ❌3 in the table is a **stale report**. Its AVM leg now fails to
   deploy (`__postInit failed`), so there is no current comparison; the row is
   the last successful run's storage diff, kept visible rather than deleted.
+- **Dirty ABI padding blocks whole cases** (`pol`, `susde`, and any contract
+  whose history carries an `address` word with non-zero upper bits). The EVM
+  MASKS those bits, so the call executed fine on chain, but `eth_abi` raises
+  `NonEmptyPaddingBytes` — and, measured on eth_abi 5.2, **`strict=False` does
+  NOT relax this check**, so the obvious one-line fix does nothing. Unblocking
+  it needs the decode to substitute `address`/`boolN` with `uintN` in the type
+  tree and mask afterwards, which is equivalent for encoding and matches what
+  the EVM does. Not yet implemented.
+- `fbtc`, `gbp` — `puya-sol exited 1`, untriaged.
+
+`systemcoin`'s 8 divergences (an address-array getter returning empty) were
+**real compiler bugs and are fixed** — see the OZ EnumerableSet entry in the
+semantic-test status. It replays 186/200 clean.
 
 ### Per contract
 
