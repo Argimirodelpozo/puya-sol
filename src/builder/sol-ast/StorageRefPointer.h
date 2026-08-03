@@ -22,16 +22,26 @@ namespace puyasol::builder
 /// SolInternalCall, FunctionBuilder, PublicGetterBuilder, and
 /// storageRefPointerReturn, or callee writes land under the wrong key.
 /// Defined here (lowest storage-ref header); AWSTBuilder.h re-exports it.
-inline bool containsMappingType(solidity::frontend::Type const* _t)
+inline bool containsMappingType(
+	solidity::frontend::Type const* _t,
+	std::set<int64_t>* _visiting = nullptr)
 {
 	if (!_t) return false;
 	if (dynamic_cast<solidity::frontend::MappingType const*>(_t)) return true;
 	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
-		return containsMappingType(arr->baseType());
+		return containsMappingType(arr->baseType(), _visiting);
 	if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(_t))
 	{
+		// A RECURSIVE struct (`struct Node { Node[] kids; }`) would otherwise
+		// recurse forever. Callers that only ever see storage-ref types never hit
+		// one, so this was latent until the predicate started running over every
+		// struct state var (StorageMapper::shouldUseBoxStorage).
+		std::set<int64_t> owned;
+		if (!_visiting) _visiting = &owned;
+		if (!_visiting->insert(st->structDefinition().id()).second)
+			return false;                       // already on the current path
 		for (auto const& member: st->members(nullptr))
-			if (containsMappingType(member.type))
+			if (containsMappingType(member.type, _visiting))
 				return true;
 		return false;
 	}

@@ -3996,3 +3996,29 @@ def test_asm_extcodesize(harness):
                         harness.localnet.account.address).abi_return is False
     assert harness.call(app, "agreesWithDotCode()").abi_return is True
     assert as_int(harness.call(app, "twoReads()").abi_return) > 0
+
+
+def test_enumerable_set_values(harness):
+    """puyasolRegression/contracts/enumerable_set_values.sol — NOT an o.g. test.
+
+    OZ EnumerableSet.values() returned [] for a NON-EMPTY set while length(),
+    at(i) and contains() were all correct — a silent wrong value, found by the
+    chainwide differ on SystemCoin's authorizedAccounts(). Two independent bugs:
+
+      * a struct containing a MAPPING was left in app-global state while every
+        storage ref to it reads a runtime box-key PREFIX, so the read found a
+        box that was never written (StorageMapper::shouldUseBoxStorage);
+      * `address[] memory result; assembly { result := store }` blob-backed the
+        UNINITIALISED local, allocating an empty region that the later value-use
+        materialised instead of the assigned array. The named-return spelling of
+        the same pun always worked.
+    """
+    arts = harness.compile("puyasolRegression/contracts/enumerable_set_values.sol")
+    app = harness.deploy(arts, "EnumerableSetValues",
+                         extra_funding_microalgos=5_000_000)
+    a = harness.localnet.account.address
+    assert harness.call(app, "add(address)", a, extra_fee=20_000).abi_return is True
+    assert as_int(harness.call(app, "length()", extra_fee=10_000).abi_return) == 1
+    at0 = harness.call(app, "at(uint256)", 0, extra_fee=10_000).abi_return
+    vals = harness.call(app, "values()", extra_fee=10_000).abi_return
+    assert vals == [at0], f"values() lost the set (got {vals}, at(0)={at0})"

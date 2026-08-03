@@ -1,4 +1,28 @@
-# Semantic Test Status — v479
+# Semantic Test Status — v480
+
+> **fix: OZ `EnumerableSet.values()` returned [] for a NON-EMPTY set, 2026-08-03:**
+> **12 failed / 1401 passed / 105 xf / 32 xp** (baseline + the new enumerable_set_values
+> guard). Found by the chainwide differ on SystemCoin's `authorizedAccounts()` — the EVM
+> leg returned two addresses, the AVM an empty array, at every snapshot, while
+> `length()`, `at(i)` and `contains()` all answered correctly. A SILENT WRONG VALUE, and
+> two independent bugs stacked:
+> **(1) storage placement.** `isBoxKeyedStorageRef` routes every storage ref to a
+> mapping-containing struct through a runtime box-key PREFIX, and its own comment promises
+> that predicate "AGREES with the var-level boxing decision — no mismatch". It did not:
+> `shouldUseBoxStorage` never checked for a mapping, so a SMALL mapping-containing struct
+> ref-passed only to a LIBRARY (refPassedStructRegistry deliberately skips libraries)
+> passed the size heuristic and lived in app-global state, while every ref to it read a box
+> that was never written. Such a struct is now boxed unconditionally.
+> **(2) the pointer pun.** `address[] memory result; assembly { result := store }`
+> blob-backed the UNINITIALISED local, allocating an empty region at the declaration; the
+> assignment wrote a plain local, so the later value-use materialised the EMPTY region. A
+> variable assembly only ever WRITES AS A WHOLE needs no pointer model — the named-return
+> spelling of the identical pun always worked, which is the inconsistency removed here.
+> ⚠️ **`containsMappingType` had no recursion guard** and now runs over every struct state
+> var, so `struct Node { Node[] kids; }` recursed forever — 7 tests regressed on the first
+> attempt (abi_decode×3, erc7201, send_zero_ether, recursive_structs, recursive_struct_array).
+> Guarded with a visiting-set; a latent trap for any future caller.
+> Chainwide: **systemcoin 186/200 → ✅ no divergences** (was 8).
 
 > **fix: `extcodesize` in assembly + `.code` on an EOA reverted instead of answering 0,
 > 2026-08-02:** **12 failed / 1400 passed / 105 xf / 32 xp** (baseline + the new

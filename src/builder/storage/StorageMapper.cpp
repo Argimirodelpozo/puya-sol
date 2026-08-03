@@ -275,6 +275,23 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 		}
 	}
 
+	// A struct containing a MAPPING → box, unconditionally. `isBoxKeyedStorageRef`
+	// already routes every storage ref to such a struct through a runtime box-key
+	// PREFIX (it short-circuits on containsMappingType), and its own comment
+	// promises that predicate "AGREES with the var-level boxing decision — no
+	// mismatch". It did not: a SMALL mapping-containing struct ref-passed only to
+	// a LIBRARY is absent from refPassedStructRegistry (which skips libraries by
+	// design) and passes the size heuristic, so it lived in app-global state while
+	// every ref to it read a box that was never written. That read does not fail —
+	// it yields an EMPTY value, so `EnumerableSet.values()` returned `[]` for a
+	// non-empty set (OZ AddressSet is exactly this shape: `bytes32[] _values` next
+	// to `mapping(bytes32 => uint256) _indexes`). `.length()`/`at(i)`/`add()` all
+	// use the global-state path and answered correctly, which is what made it look
+	// like an assembly-pun bug rather than a storage-placement one.
+	if (dynamic_cast<solidity::frontend::StructType const*>(type)
+		&& containsMappingType(type))
+		return true;
+
 	// Structs passed by reference somewhere → box (handle-model Stage 1b): boxing makes the
 	// ref a box-key handle that writes through into contract methods. Targeted to ref-passed
 	// types (refPassedStructRegistry) so never-ref-passed structs keep their app-global layout.

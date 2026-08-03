@@ -182,6 +182,59 @@ static bool _bufferPointerEscapes(
 	return _yulBlockEscapes(_asm.operations().root(), targets);
 }
 
+// Collect the Identifiers that are ASSIGNMENT TARGETS (`x := …`) anywhere in a
+// Yul block, including nested control flow.
+static void _yulAssignTargets(
+	solidity::yul::Block const& _b,
+	std::set<solidity::yul::Identifier const*>& _out)
+{
+	using namespace solidity::yul;
+	for (auto const& stmt: _b.statements)
+		std::visit([&](auto const& s) {
+			using T = std::decay_t<decltype(s)>;
+			if constexpr (std::is_same_v<T, Assignment>)
+				for (auto const& n: s.variableNames)
+					_out.insert(&n);
+			else if constexpr (std::is_same_v<T, Block>)
+				_yulAssignTargets(s, _out);
+			else if constexpr (std::is_same_v<T, If>)
+				_yulAssignTargets(s.body, _out);
+			else if constexpr (std::is_same_v<T, Switch>)
+				for (auto const& c: s.cases)
+					_yulAssignTargets(c.body, _out);
+			else if constexpr (std::is_same_v<T, ForLoop>)
+			{
+				_yulAssignTargets(s.pre, _out);
+				_yulAssignTargets(s.post, _out);
+				_yulAssignTargets(s.body, _out);
+			}
+			else if constexpr (std::is_same_v<T, FunctionDefinition>)
+				_yulAssignTargets(s.body, _out);
+		}, stmt);
+}
+
+// True iff EVERY reference to `_vd` in `_asm` is an assignment TARGET — the
+// variable only ever receives a whole aggregate (`result := store`) and is
+// never read, indexed, or used as a store address. Such a variable needs no
+// pointer model: the assignment is a plain aggregate copy.
+static bool _onlyWholeAssignTarget(
+	solidity::frontend::InlineAssembly const& _asm,
+	solidity::frontend::VariableDeclaration const* _vd)
+{
+	std::set<solidity::yul::Identifier const*> refs;
+	for (auto const& ref: _asm.annotation().externalReferences)
+		if (ref.second.declaration == _vd)
+			refs.insert(ref.first);
+	if (refs.empty())
+		return false;
+	std::set<solidity::yul::Identifier const*> targets;
+	_yulAssignTargets(_asm.operations().root(), targets);
+	for (auto const* r: refs)
+		if (!targets.count(r))
+			return false;
+	return true;
+}
+
 class AssemblyAggregateScanner: public solidity::frontend::ASTConstVisitor
 {
 public:
@@ -208,6 +261,18 @@ public:
 				// Strings.toString idiom (`ptr := add(buffer, k)` + `mstore8(ptr,…)`
 				// + `return buffer`). Only then do the value handlers lose the writes,
 				// so blob-back it (memory-pointer model).
+				// A pure PUN TARGET (`address[] memory result; result := store`)
+				// only ever RECEIVES an aggregate — never read, indexed, or used
+				// as a store address — so it needs no pointer model. Blob-backing
+				// it allocated an EMPTY region at the declaration, and since the
+				// assignment writes the plain local rather than that region, the
+				// later value-use materialised the empty region: OZ
+				// `EnumerableSet.values()` returned [] for a non-empty set. The
+				// named-return spelling of the same idiom was always fine, which
+				// is exactly the inconsistency this removes. Stage 3 keeps the
+				// universal pointer model.
+				if (!evmMemoryLayout() && _onlyWholeAssignTarget(_asm, vd))
+					continue;
 				if (!at->isByteArrayOrString()
 					|| evmMemoryLayout()   // stage 3: universal pointer model
 					|| (_isNewAllocatedLocal(vd) && _bufferPointerEscapes(_asm, vd)))
