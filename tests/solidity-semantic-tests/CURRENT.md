@@ -1,6 +1,11 @@
 # Semantic Test Status — v481
 
 > **fix: `return <void external call>;` was a hard compile failure, 2026-08-03:**
+> **12 failed / 1402 passed / 105 xf / 32 xp** — baseline plus the new
+> return_void_external_call guard. (The confirming run reported 14/1400; both extras,
+> test_send_zero_ether and test_call_value_with_data_invokes_target, PASS standalone in
+> 9 s — the known -n2 localnet races. Every "regression" chased today resolved to a
+> socket TimeoutError, never an assertion; see the algod-timeout note below.)
 > Legal Solidity in a function with no return values, and how forwarding wrappers are
 > written — Polymarket NegRiskAdapter's `return ctf.safeTransferFrom(...)`. The call
 > became the return VALUE, handing puya an inner-txn result handle where a stack value
@@ -12,6 +17,12 @@
 > Polymarket contracts are now SIZE-limited (uros splitter) rather than compiler-blocked.
 > Chainwide re-verification of the v480 storage change over the 21 corpus cases that touch
 > mapping-containing structs: 11 ran, **all clean, zero divergences, no regressions**.
+> The chainwide corpus is now **57/57 with zero divergences** (vanry unblocked: its
+> `__postInit failed` was an OPCODE BUDGET — ctor costs 6292, a txn carries 700).
+> ⚠️ **algosdk hardcodes a 30 s per-request timeout**, which algod exceeds while
+> assembling/simulating the largest programs (VANRY is 65 KB of TEAL) and which ordinary
+> requests exceed on a loaded machine — it surfaces as a bare socket TimeoutError inside
+> deploy, indistinguishable from a flaky test. Raised to 300 s in framework/localnet.
 
 > **fix: OZ `EnumerableSet.values()` returned [] for a NON-EMPTY set, 2026-08-03:**
 > **12 failed / 1401 passed / 105 xf / 32 xp** (baseline + the new enumerable_set_values
