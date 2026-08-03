@@ -247,7 +247,24 @@ validated against.
 
 **Replay-model limits:**
 
-- `msg.value == 0` txns only (wei↔microAlgo is unit-incompatible).
+- **`msg.value` is replayed, SCALED identically on both legs** (default 1e12:
+  1 ETH → 1 ALGO; `chd_common.VALUE_SCALE`, set 1 for a literal replay). A
+  literal 1:1 is a supply impossibility, not a tuning choice: ETH carries 18
+  decimals and ALGO 6, so the whole LocalNet supply (1.0e16 microAlgos) covers
+  **5.8 median ETH transfers**, and only 3 of the corpus's 1580 value-bearing
+  amounts are fundable literally.
+
+  Applying the scale on BOTH legs is what keeps it sound. A *pass-through*
+  contract behaves the same at any scale and replays for real; a
+  *price-comparing* one (`require(msg.value >= price)`) sees a scaled
+  msg.value against an unscaled price and reverts — **on both legs**, so the
+  pair still agrees and the closed-world filter drops it. Scaling cannot
+  manufacture a finding, only fail to gain coverage. Verified on friend.tech:
+  342 value skips become real attempts that revert identically, case stays at
+  zero divergences.
+
+  Amounts exceeding uint64 after scaling are skipped as `value-too-wide`
+  (24 of 1580) — an AVM amount field cannot express them.
 - Outgoing external calls are not mocked; the closed-world filter skips any txn
   whose local result disagrees with its historical receipt, symmetrically.
 - Constructors that call external contracts are only replayable when the
