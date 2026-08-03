@@ -23,8 +23,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from chd_common import (ZERO, arg_content20, build_registry, canon_value,
-                        dump_json, evm_sender_privkey, load_json, marker_for,
-                        symbol)
+                        clock_target, dump_json, evm_sender_privkey, load_json,
+                        marker_for, replay_epoch, symbol)
 
 import solcx
 from eth_abi import decode as abi_decode
@@ -84,6 +84,7 @@ def main():
     ext_skips = {int(k): v for k, v in (opts.get("skips") or {}).items()}
     snap_every = int(opts.get("snapshot_every", 25))
     pin_time = bool(opts.get("pin_time", True))
+    time_base = int(opts.get("time_base") or 0)
 
     case = load_json(case_dir / "case.json")
     abi = case["abi"]
@@ -502,12 +503,13 @@ def main():
     # ── one replay run ────────────────────────────────────────────────────
     def run_once(skips):
         from eth_tester import EthereumTester, PyEVMBackend
+        epoch = replay_epoch(calls)
         genesis = None
         if pin_time and txns:
             try:
                 from eth_tester.backends.pyevm.main import get_default_genesis_params
-                genesis = get_default_genesis_params(
-                    {"timestamp": max(1, case["creation"]["ts"] or txns[0]["ts"]) - 60})
+                start = time_base or (case["creation"]["ts"] or txns[0]["ts"])
+                genesis = get_default_genesis_params({"timestamp": max(61, start) - 60})
             except Exception:
                 genesis = None
         tester = EthereumTester(PyEVMBackend(genesis_parameters=genesis)
@@ -730,7 +732,7 @@ def main():
                 out[name] = got
             return out
 
-        results, snapshots, mismatches = {}, {}, []
+        results, snapshots, mismatches, block_ts = {}, {}, [], {}
         storage_delta, prev_scalars = {}, read_scalars()
         for c in calls:
             i = c["i"]
@@ -741,8 +743,18 @@ def main():
                 if pin_time:
                     try:
                         head = w3.eth.get_block("latest")["timestamp"]
-                        if c["ts"] > head:
-                            tester.time_travel(c["ts"])
+                        want = (clock_target(c["ts"], epoch, time_base)
+                                if time_base else c["ts"])
+                        if want and want > head:
+                            tester.time_travel(want)
+                    except Exception:
+                        pass
+                    # Record what the contract will actually see. The AVM leg
+                    # drives LocalNet's clock to the same historical instants,
+                    # so a disagreement here is a real bug, not leg skew — but
+                    # only if pinning genuinely took effect, hence the record.
+                    try:
+                        block_ts[str(i)] = w3.eth.get_block("latest")["timestamp"]
                     except Exception:
                         pass
                 fn_abi = fns[c["sig"]]
@@ -810,7 +822,7 @@ def main():
         storage["writes"] = writes
         storage["blind_slots"] = {k: v[:5] for k, v in list(blind.items())[:40]}
         storage["blind_slot_count"] = len(blind)
-        return (results, snapshots, mismatches, storage_delta, storage)
+        return (results, snapshots, mismatches, storage_delta, storage, block_ts)
 
     # ── closed-world convergence ──────────────────────────────────────────
     # BATCH convergence: one pass collects every mismatch, all get skipped at
@@ -821,7 +833,7 @@ def main():
     iterations = 0
     while True:
         iterations += 1
-        results, snapshots, mismatches, sdelta, smaps = run_once(skips)
+        results, snapshots, mismatches, sdelta, smaps, block_ts = run_once(skips)
         if not mismatches or iterations >= 8:
             break
         for idx, why, detail in mismatches:
@@ -840,7 +852,8 @@ def main():
                "results": {str(k): v for k, v in results.items()},
                "snapshots": snapshots,
                "storage_delta": sdelta,
-               "storage": smaps})
+               "storage": smaps,
+               "block_ts": block_ts})
     n_exec = len(results)
     n_ok = sum(1 for r in results.values() if r["ok"])
     print(f"[evm] replayed {n_exec}/{len(calls)} txns "

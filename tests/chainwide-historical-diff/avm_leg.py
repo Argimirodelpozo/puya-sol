@@ -22,6 +22,7 @@ import re
 import shutil
 import sys
 import tempfile
+import urllib.request
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -30,7 +31,8 @@ sys.path.insert(0, str(HERE.parents[0] / "solidity-semantic-tests"))
 sys.path.insert(0, str(HERE.parents[0] / "WIP" / "tiny-fuzzing-oracle"))
 
 from chd_common import (ZERO, algo_sender_seed, arg_content20, canon_value,
-                        dump_json, is_platform_limit, load_json, symbol)
+                        clock_target, dump_json, is_platform_limit, load_json,
+                        replay_epoch, symbol)
 
 from algosdk import encoding
 from algosdk.transaction import PaymentTxn, wait_for_confirmation
@@ -71,6 +73,72 @@ def ensure_app_funded(algod, dispenser, app_addr, min_spare=20_000_000,
         PaymentTxn(dispenser.address, sp, app_addr, add).sign(dispenser.private_key))
     wait_for_confirmation(algod, txid, 6)
     return True
+
+
+class BlockClock:
+    """Drives LocalNet's block clock so this leg sees the same block.timestamp
+    the EVM leg replayed at.
+
+    Two algod dev-mode behaviours make this work; both were measured, and both
+    are the opposite of the obvious guess:
+
+      * `global LatestTimestamp` reports the PREVIOUS block's timestamp, not
+        the one carrying the call — so reaching a target means sealing a block
+        AT that instant and then calling.
+      * once a timestamp offset has been set, dev mode stops consulting the
+        real clock and computes each block as `previous + offset`. The clock
+        is therefore RELATIVE, which is the only reason 2022 is reachable at
+        all: the offset endpoint is uint64 and cannot express a jump backwards.
+
+    Holding the offset at 0 between jumps is what keeps deploy, funding and
+    top-up txns from drifting time underneath the replay.
+    """
+
+    def __init__(self, algod, dispenser, enabled=True):
+        self.algod, self.dispenser, self.enabled = algod, dispenser, enabled
+        self.cur, self.jumps = None, 0
+
+    def _set_offset(self, n):
+        # Raw urllib, not algod_request: algosdk decorates the URL and algod
+        # answers 404 for the dev-mode route.
+        url = f"{self.algod.algod_address.rstrip('/')}/v2/devmode/blocks/offset/{int(n)}"
+        req = urllib.request.Request(
+            url, method="POST", headers={"X-Algo-API-Token": self.algod.algod_token})
+        urllib.request.urlopen(req, timeout=10).read()
+
+    def _seal(self):
+        sp = self.algod.suggested_params()
+        txid = self.algod.send_transaction(
+            PaymentTxn(self.dispenser.address, sp, self.dispenser.address, 0)
+            .sign(self.dispenser.private_key))
+        wait_for_confirmation(self.algod, txid, 6)
+
+    def _read(self):
+        st = self.algod.status()
+        return int(self.algod.block_info(st["last-round"])["block"]["ts"])
+
+    def advance_to(self, ts):
+        """Make the next call observe exactly `ts`. Never moves time backwards
+        (the historical window is in chain order, so deltas are non-negative;
+        two txns in one block legitimately want the same instant)."""
+        if not self.enabled or not ts:
+            return
+        if self.cur is None:
+            self.cur = self._read()
+        delta = int(ts) - self.cur
+        if delta <= 0:
+            return
+        self._set_offset(delta)
+        self._seal()
+        self._set_offset(0)
+        self.cur = int(ts)
+        self.jumps += 1
+
+    # NB: deliberately no restore-to-wall-clock. Jumping the chain forward at
+    # the end of a case would ratchet it past the next case's window, forcing
+    # every later replay onto a shifted epoch — which is what makes time-gated
+    # constructors fail. The chain is left at this window's end instead, and
+    # `algokit localnet reset` rewinds it to 0 when the drift stops paying.
 
 
 def _dec_avm(raw, vtype, fold):
@@ -368,6 +436,13 @@ def main():
         print(f"[avm] dep {dspec.get('name')} app_id={dapp.app_id}")
 
     # ── compile + deploy ──────────────────────────────────────────────────
+    # Put the chain at the replay epoch BEFORE deploying: the EVM leg's genesis
+    # is that instant, and a constructor that records block.timestamp would
+    # otherwise store 0 here against a real date there.
+    clock = BlockClock(algod, dispenser, enabled=bool(opts.get("pin_time", True)))
+    epoch, time_base = replay_epoch(calls), int(opts.get("time_base") or 0)
+    clock.advance_to(time_base)
+
     mf = case.get("multifile")
     if mf:
         # compile_sol REMOVES import_dir when it finishes (normally a temp dir
@@ -460,11 +535,16 @@ def main():
     # ── replay ────────────────────────────────────────────────────────────
     results, snapshots, platform_limits = {}, {}, {}
     snapshot_at = set(meta["snapshot_at"])
+    block_ts = {}
     for c in calls:
         i = c["i"]
         if i % 25 == 0 and ensure_app_funded(algod, dispenser, app.app_addr):
             topups += 1
         if not c.get("skip") and i not in ext_skips:
+            clock.advance_to(clock_target(c.get("ts"), epoch, time_base)
+                             if time_base else c.get("ts"))
+            if clock.cur is not None:
+                block_ts[str(i)] = clock.cur
             sig, args = c["sig"], [resolve(a) for a in c["args"]]
             is_view = mut.get(sig, "") in ("view", "pure")
             prev = ln.account
@@ -546,11 +626,13 @@ def main():
                "snapshots": snapshots,
                "storage": storage,
                "platform_limits": {str(k): v for k, v in platform_limits.items()},
+               "block_ts": block_ts,
                "app_id": app.app_id})
     n = len(results)
     n_ok = sum(1 for r in results.values() if r["ok"])
     print(f"[avm] replayed {n} txns ({n_ok} ok, {n-n_ok} reverted, "
-          f"{len(platform_limits)} platform-limit, {topups} app top-up(s))")
+          f"{len(platform_limits)} platform-limit, {topups} app top-up(s), "
+          f"{clock.jumps} clock jump(s))")
 
 
 def _ctype(inp):

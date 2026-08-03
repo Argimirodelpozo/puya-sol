@@ -14,7 +14,8 @@ import shutil
 import sys
 import time
 
-from chd_common import CASES, EVM_PY, dump_json, http_json, relax_pragma
+from chd_common import (CASES, EVM_PY, ZERO, dump_json, http_json,
+                        relax_pragma)
 
 
 def _decode_ctor_addresses(abi, ctor_hex):
@@ -53,9 +54,39 @@ def _decode_ctor_addresses(abi, ctor_hex):
         return []
 
 
+def harvest_callees(host: str, address: str, hashes: list, sink: dict,
+                    max_traces: int = 12) -> None:
+    """Sample DIRECT txns' traces for the contract's outgoing calls.
+
+    Internal-call parents only cover router-driven traffic; most windows are
+    dominated by direct txns, and their callees are what the closed-world
+    filter trips over. Sampled, not exhaustive — one rate-limited request per
+    trace, and a handful is enough to surface a contract's fixed collaborators
+    (a factory, a token, an oracle).
+    """
+    addr = address.lower()
+    for h in hashes[:max_traces]:
+        try:
+            tr = http_json(f"https://{host}/api/v2/transactions/{h}/raw-trace")
+        except Exception:
+            continue
+        if not isinstance(tr, list):
+            continue
+        for e in tr:
+            if not isinstance(e, dict) or e.get("type") != "call":
+                continue
+            act = e.get("action") or {}
+            if (act.get("from") or "").lower() != addr:
+                continue
+            tgt = (act.get("to") or "").lower()
+            if tgt and tgt != addr and tgt != ZERO:
+                sink[tgt] = sink.get(tgt, 0) + 1
+        time.sleep(0.6)
+
+
 def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
                          direct_hashes: set, max_parents: int = 200,
-                         max_calls: int = 400) -> list:
+                         max_calls: int = 400, callee_sink: dict | None = None) -> list:
     """Calls INTO `address` made by other CONTRACTS (internal transactions).
 
     The address-level internal-txn APIs strip calldata (`input: "0x"` on the
@@ -130,9 +161,19 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
         for i, e in enumerate(tr):
             if not isinstance(e, dict) or e.get("type") != "call":
                 continue
+            act = e.get("action") or {}
+            # Calls OUT of the contract, harvested from traces we already
+            # fetched. These are the external contracts it genuinely depends
+            # on — the ones whose absence makes a txn revert locally and get
+            # dropped by the closed-world filter. Far better targeted than
+            # "every address that appears in an argument", which is mostly
+            # transfer recipients.
+            if callee_sink is not None and (act.get("from") or "").lower() == addr:
+                tgt = (act.get("to") or "").lower()
+                if tgt and tgt != addr and tgt != ZERO:
+                    callee_sink[tgt] = callee_sink.get(tgt, 0) + 1
             if not e.get("traceAddress"):
                 continue                  # root call == the direct txn
-            act = e.get("action") or {}
             if (act.get("to") or "").lower() != addr:
                 continue
             if (act.get("callType") or "call") != "call":
@@ -268,13 +309,15 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
     # ordered stream as the direct txns. For router-driven tokens this is most
     # of the real state evolution — without it the closed-world filter eats
     # every downstream txn (ena replayed 34/200, sqd 1/200).
+    callees: dict[str, int] = {}
     if internal and txns:
         # `internal_parents` bounds the dominant cost: one rate-limited
         # raw-trace request per parent txn (~1 h at 200 on public Blockscout,
         # ~5 min at 60). Lower it to trade internal-call density for wall clock.
         ic = fetch_internal_calls(
             host, address, txns[0]["block"], txns[-1]["block"],
-            {t["hash"].lower() for t in txns}, max_parents=internal_parents)
+            {t["hash"].lower() for t in txns}, max_parents=internal_parents,
+            callee_sink=callees)
         if ic:
             txns.extend(ic)
             txns.sort(key=lambda t: (t["block"], t.get("txindex", 0),
@@ -334,12 +377,28 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
     # the fix for the "ctor calls an external contract" closed-world skips.
     ctor_deps = []
     seen = {addr}
+    # The contract's own outgoing calls, sampled from direct txns. Skipped when
+    # internal-call fetching is off — both share the same rate-limited API.
+    if internal and txns:
+        try:
+            harvest_callees(host, address,
+                            [t["hash"] for t in txns if not t.get("internal")],
+                            callees)
+        except Exception as e:
+            print(f"[fetch] {tag}: callee harvest failed ({str(e)[:60]}) — "
+                  f"dependencies limited to ctor args + source literals")
     # hardcoded address literals in the source join the candidate set (the
     # memecoin pattern: UniswapV2Factory/Router baked in, zero ctor args)
     import re as _re
     literals = {("0x" + m.lower()) for m in
                 _re.findall(r"0x([0-9a-fA-F]{40})\b", sc["source_code"])}
-    for a in list(_decode_ctor_addresses(abi, ctor_hex)) + sorted(literals):
+    # Callees first, most-called first: they are the evidenced dependencies,
+    # while literals are merely addresses that appear in the text.
+    ranked = [a for a, _ in sorted(callees.items(), key=lambda kv: -kv[1])][:8]
+    if ranked:
+        print(f"[fetch] {tag}: {len(callees)} callee(s) observed in traces, "
+              f"trying top {len(ranked)} as dependencies")
+    for a in ranked + list(_decode_ctor_addresses(abi, ctor_hex)) + sorted(literals):
         depdir = case_dir / "deps" / f"dep_{a[2:10]}"
         d = fetch_dep(host, a, depdir, depth=2, seen=seen)
         if d:

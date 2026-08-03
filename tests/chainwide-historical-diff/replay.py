@@ -12,10 +12,11 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from chd_common import CASES, EVM_PY, HERE, load_json
+from chd_common import CASES, EVM_PY, HERE, load_json, replay_epoch
 from differ import diff_case, print_report
 
 
@@ -38,17 +39,63 @@ def _run(cmd, tag) -> str:
     return out
 
 
+# Replaying a case advances LocalNet's clock by that case's whole historical
+# span, and the clock is a RATCHET — it survives algod restarts and only a
+# chain wipe rewinds it. So the shared base creeps into the future across a
+# batch, and a far-future epoch silently costs coverage: DEGEN's constructor
+# deploys at 2026 and fails at 2028, dropping the case from the corpus with a
+# message that reads like an unrelated harness error.
+#
+# Set from measurement, not taste: DEGEN replays clean at +938 d and fails at
+# roughly +1500 d. Warning at a month would fire on nearly every case after the
+# first and train the reader to ignore it.
+_DRIFT_WARN = 365 * 24 * 3600
+
+
+def _chain_now() -> int:
+    """Current LocalNet block time — the floor for the shared replay base,
+    since the clock can only move forward from here."""
+    try:
+        sys.path.insert(0, str(HERE.parents[0] / "solidity-semantic-tests"))
+        from framework.localnet import LocalNet
+        a = LocalNet().algod
+        now = int(a.block_info(a.status()["last-round"])["block"]["ts"])
+    except Exception:
+        return 0
+    drift = now - int(time.time())
+    if drift > _DRIFT_WARN:
+        print(f"  ⚠️  LocalNet clock is {drift // 86400}d ahead of wall clock — "
+              f"time-gated constructors start failing. Run `algokit localnet "
+              f"reset` to rewind it (nothing in this suite persists there).")
+    return now
+
+
 def replay(tag: str, max_txns: int = 300, snapshot_every: int = 25,
            evm_layout: bool = False, evm_memory: bool = False) -> dict:
     case_dir = CASES / tag
+    case = load_json(case_dir / "case.json")
     skips: dict[int, str] = {}
     for attempt in range(1, 4):
+        # Re-derived per attempt: the previous attempt's AVM run pushed the
+        # chain clock forward, and both legs of THIS attempt must share a base
+        # at or above it. Fixing it once outside the loop silently disabled
+        # pinning on every re-run after a platform-limit skip.
+        # Prefer TRUE historical time: a freshly reset LocalNet sits at ts=0,
+        # so the window's own epoch is reachable and both legs replay at the
+        # real historical instants. Only once the chain has ratcheted past it
+        # does the base become "just ahead of the chain" and the epoch shift.
+        epoch = replay_epoch(case.get("txns") or [])
+        base = max(_chain_now() + 1, epoch)
+        if attempt == 1:
+            print(f"  [clock] {'historical' if base == epoch else 'shifted +%dd' % ((base - epoch) // 86400)}"
+                  f" — both legs pinned to the same instants")
         _run([str(EVM_PY), str(HERE / "evm_leg.py"), str(case_dir),
               json.dumps({"max_txns": max_txns, "snapshot_every": snapshot_every,
-                          "pin_time": True,
+                          "pin_time": True, "time_base": base,
                           "skips": {str(k): v for k, v in skips.items()}})], "evm")
         _run(["python3", str(HERE / "avm_leg.py"), str(case_dir),
               json.dumps({"skips": [str(k) for k in skips],
+                          "pin_time": True, "time_base": base,
                           "evm_layout": evm_layout,
                           "evm_memory": evm_memory})], "avm")
         pl = load_json(case_dir / "avm_results.json").get("platform_limits") or {}

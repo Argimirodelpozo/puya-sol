@@ -22,15 +22,18 @@ KNOWN_NOISE_GETTERS = {
 _NOISE_SIG_RE = re.compile(r"(DOMAIN_SEPARATOR|chainid|CHAIN_ID)", re.I)
 
 
-# How far apart two legs' clocks can plausibly be. Not just run-to-run skew:
-# LocalNet's block time advances with BLOCK PRODUCTION, so an idle chain's
-# `LatestTimestamp` trails wall clock by however long it sat unused — measured
-# at 2.5 h on a working session, and unbounded in principle. Both values must
-# still be plausible unix timestamps, so a genuinely wrong field (0, a small
-# counter, a hash) is never absorbed. The real fix is pinning AVM block time
-# via algod dev-mode, which would also convert some closed-world skips into
-# coverage.
-_TS_SKEW_MAX = 7 * 24 * 3600
+# How far apart two legs' clocks can plausibly be. Both legs now drive their
+# block time to the same replayed instants (avm_leg.BlockClock / evm_leg's
+# time_travel), so this covers only the residual: py-evm advances its own clock
+# a second per mined block, which drifts against the AVM whenever several calls
+# share one historical second. Measured across permit2's window the legs agreed
+# to [-5, +1] s; the margin here is for denser windows.
+#
+# It was 7 DAYS before pinning, when the AVM leg ran at LocalNet wall clock and
+# the EVM leg at historical time — wide enough to absorb a genuinely wrong
+# timestamp. Keep it tight: a false positive here is visible and diagnosable, a
+# false negative is not.
+_TS_SKEW_MAX = 300
 
 
 def _timestamp_noise_elems(ev_, av_):
@@ -38,10 +41,9 @@ def _timestamp_noise_elems(ev_, av_):
 
     A struct field set from `block.timestamp` (Permit2's PackedAllowance
     `expiration`, which `_updateApproval` fills with `now` when the caller
-    passes 0) differs between legs because the EVM leg time-travels to each
-    txn's historical timestamp while the AVM leg runs at LocalNet wall clock.
-    Two lists that match except at positions holding plausible unix
-    timestamps within 2h of each other are that skew, not a miscompile."""
+    passes 0) can still differ by the residual per-block drift described at
+    `_TS_SKEW_MAX`. Two lists that match except at positions holding plausible
+    unix timestamps within that drift are skew, not a miscompile."""
     if not (isinstance(ev_, list) and isinstance(av_, list)
             and len(ev_) == len(av_) and ev_):
         return False

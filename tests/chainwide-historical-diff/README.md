@@ -48,6 +48,12 @@ python3 replay.py usde --evm-layout                 # storage mode
 python3 replay.py morpho --evm-layout --evm-memory  # + memory mode
 python3 batch.py --evm-layout --max-txns 200 --only usde,degen
 
+# Before a batch: rewind LocalNet's clock so cases replay at TRUE historical
+# time. Each replay ratchets it forward by that window's span and it never
+# comes back, so a long batch drifts years into the future (see the clock note
+# under "Scope & constraints"). Nothing in this suite persists on LocalNet.
+algokit localnet reset
+
 # INTERNAL (contract-to-contract) CALLS merged into the stream — for a
 # router-traded token this is most of the real traffic (see below).
 python3 fetch.py eth.blockscout.com 0x6982...1933 pepe --max-txns 200 --internal
@@ -164,9 +170,36 @@ Two properties worth knowing:
 - **Callers are NOT deployed.** An internal call is replayed as a direct call
   with the caller's address registry-mapped like any other sender. The thing
   under test is our contract's response to given inputs, and both legs get
-  byte-identical calldata and the same `msg.sender` symbol. (Constructor
-  *dependencies* are different — those are fetched, compiled and deployed on
-  both legs, because the contract really does call out during construction.)
+  byte-identical calldata and the same `msg.sender` symbol. Contracts the
+  target *calls out to* are different — see below.
+
+**Dependency discovery.** Contracts our target calls are fetched, compiled and
+deployed on both legs, so the call really happens (an inner txn on the AVM
+side). Candidates come from three places, in confidence order:
+
+1. **Observed callees** — `to` addresses of trace entries whose `from` is our
+   contract. This is evidence the contract genuinely calls them, and it costs
+   nothing extra for internal-call parents (same traces) plus a small sample of
+   direct txns. Deliberately *not* "every address appearing in an argument":
+   those are overwhelmingly transfer recipients, and fetching them would burn
+   the rate limit on EOAs.
+2. Constructor arguments that are verified contracts.
+3. Hardcoded address literals in the source (the memecoin pattern: factory and
+   router baked in, zero constructor args).
+
+Only verified, single-file, ^0.8 dependencies are usable — otherwise the EVM
+*oracle* cannot deploy them either — and the AVM leg additionally needs the
+dependency to compile with puya-sol (it reports and continues when it doesn't).
+
+**A deployed dependency supplies code, not history.** This is the real boundary
+of the closed-world filter, and it limits how much discovery can ever buy.
+BMEX's trace harvest finds its `Vesting` contract and the oracle deploys it
+cleanly — and BMEX still replays 4/200, because a *fresh* `Vesting` holds none
+of the schedules that years of real transactions put there, so the calls revert
+exactly as before. Discovery converts skips into coverage only when the
+dependency is effectively stateless (a library, a router, an oracle read) or
+when its state is built by the same replayed window. A dependency whose state
+predates the window cannot be recovered by deploying it.
 
 Effect on PEPE: **+158 internal calls (153 `transfer`, 5 `transferFrom`, from
 the Uniswap V2 pair and router) ⇒ 200/200 replayed, ZERO skips, zero
@@ -219,10 +252,38 @@ validated against.
   txns gains nothing without a deeper window.
 - Reverted historical txns are replayed and must revert on both legs (payload
   compared) — signal, not noise.
-- **AVM block time is not pinned.** The EVM leg time-travels to each txn's
-  historical timestamp; the AVM leg runs at LocalNet wall clock. Time-derived
-  values are classified as noise (below); algod dev-mode offset pinning is the
-  real fix and would convert some closed-world skips into coverage.
+- **Block time is pinned on both legs, but the epoch may shift.** Both legs
+  drive their clock to the same replayed instants, so `block.timestamp` agrees
+  and every observable duration (cooldowns, vesting, permit expiry) is exact.
+  The *absolute* epoch is only historical when LocalNet's clock still sits
+  before the window; otherwise both legs replay the same deltas from a shared
+  base just ahead of it. Two algod dev-mode facts force this, and both are the
+  opposite of the obvious guess:
+
+  - `global LatestTimestamp` reports the **previous** block's timestamp, so
+    reaching an instant means sealing a block at it and *then* calling.
+  - once a timestamp offset is set, dev mode computes each block as
+    `previous + offset` and never consults the real clock again. The clock is
+    therefore **strictly monotonic**: the offset endpoint is `uint64`, and
+    setting 0 freezes time rather than re-zeroing it, so the AVM leg can never
+    rewind to 2022 once it has been to 2026. Only restarting algod resets it.
+
+  So the clock is a **ratchet**: each replay advances it by that window's whole
+  historical span and it never comes back. `algokit localnet reset` rewinds it
+  to 0 (verified) — and from 0 every historical epoch is reachable, so a reset
+  before a batch is what buys true historical replay. The AVM leg deliberately
+  does *not* restore the clock to wall clock afterwards: that would ratchet
+  past the next case's window and force every later replay onto a shifted
+  epoch. Drift beyond 30 days prints a warning, because a far-future epoch
+  fails time-gated constructors — DEGEN deploys at 2026 and fails at 2028, and
+  the case then drops out looking like an unrelated harness error.
+
+  The shared base is re-derived per convergence attempt — the previous
+  attempt's AVM run pushed the clock forward, and a base fixed once would
+  silently disable pinning on every re-run after a platform-limit skip.
+
+  Cost: one extra sealing block per distinct timestamp (58 for permit2's 66
+  calls), since a call observes the *previous* block's time.
 
 ## Corpus status
 
@@ -268,13 +329,15 @@ whitelisted away wholesale:
   field 3 is the chain id (compared **masked**: the other six fields still have
   to match exactly, so a real divergence there is still reported).
 - **block height** — `clock()` (ERC-6372).
-- **timestamps** — a value set from `block.timestamp` differs because the EVM
-  leg time-travels while the AVM leg runs at wall clock. Applied to scalars,
-  getter snapshots, *and element-wise inside struct/array map values* (Permit2
-  fills `PackedAllowance.expiration` with `now`), gated on both values being
-  plausible unix times within a 7-day window — LocalNet's clock advances with
-  block production, so an idle chain trails wall clock (2.5 h observed), while
-  a genuinely wrong field (0, a counter, a hash) is never absorbed.
+- **timestamps** — largely eliminated by clock pinning (below). What remains is
+  py-evm advancing its own clock one second per mined block, which drifts
+  against the AVM whenever several calls share a historical second. Applied to
+  scalars, getter snapshots, *and element-wise inside struct/array map values*
+  (Permit2 fills `PackedAllowance.expiration` with `now`), gated on both values
+  being plausible unix times within 300 s — measured agreement across permit2's
+  window was `[-5, +1]` s. A genuinely wrong field (0, a counter, a hash) is
+  never absorbed. This window was **7 days** before pinning, wide enough to
+  swallow a real bug.
 - **uniform offsets** — every entry of a map differing by the same delta.
 
 Coverage warnings (⚠️) matter as much as divergences here: a comparison that

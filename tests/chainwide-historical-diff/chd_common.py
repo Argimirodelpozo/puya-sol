@@ -31,6 +31,34 @@ def http_json(url: str, timeout: int = 40):
         return json.load(r)
 
 
+def replay_epoch(calls) -> int:
+    """The historical instant both legs treat as t=0 for the replay clock.
+
+    Must be computed identically on both legs, so it is derived from
+    calls.json alone — never from a leg's own chain state."""
+    ts = [int(c["ts"]) for c in (calls or []) if c.get("ts")]
+    return min(ts) if ts else 0
+
+
+def clock_target(ts, epoch, base):
+    """Map a historical instant onto the clock both legs actually run at.
+
+    Both legs must observe the same block.timestamp, and LocalNet's dev-mode
+    clock is strictly MONOTONIC: the offset endpoint is uint64, and once offset
+    mode is on, setting 0 freezes the clock rather than re-zeroing it — so the
+    AVM leg can never rewind to 2022. Instead both legs replay the historical
+    DELTAS from a shared `base` at or ahead of the AVM chain's current time.
+
+    Absolute epoch may shift; every duration a contract can observe (cooldowns,
+    vesting, permit expiry) is preserved exactly. When the chain's clock still
+    sits before the window, `base` IS the historical epoch and the replay runs
+    at true historical time.
+    """
+    if not ts or not base:
+        return None
+    return int(base) + max(0, int(ts) - int(epoch or 0))
+
+
 def load_json(p: Path):
     with open(p) as fh:
         return json.load(fh)
