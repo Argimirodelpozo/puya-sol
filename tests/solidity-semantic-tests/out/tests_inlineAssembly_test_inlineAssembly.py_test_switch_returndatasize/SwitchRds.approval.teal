@@ -1,0 +1,310 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/switch_returndatasize.sol.SwitchRds.approval_program() -> uint64:
+main:
+    intcblock 0 1 32 4
+    bytecblock 0x151f7c75 "__ctor_pending" "c" TMPL_APPROVAL_Callee TMPL_CLEAR_Callee
+    intc_0 // 0
+    dupn 3
+    pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x97b9766f 0xd7fc866d // method "__postInit()void", method "probe()uint256", method "c()address"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_probe_route@6 main_c_route@7
+    err
+
+main_c_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "c"
+    app_global_get_ex
+    assert // check c exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@13:
+    intc_0 // 0
+    b main_ternary_merge@14
+
+main_probe_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "c"
+    app_global_get_ex
+    assert // check c exists
+    load 0
+    store 0
+    load 0
+    intc_2 // 32
+    bzero
+    bury 4
+    pushbytes 0xbea484fd00000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 0
+    itxn_begin
+    load 0
+    extract 0 4
+    load 0
+    intc_3 // 4
+    intc_0 // 0
+    extract3
+    uncover 2
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    bury 6
+    len
+    intc_3 // 4
+    >=
+    bz main_ternary_false@22
+    dig 4
+    extract 0 4
+    bytec_0 // 0x151f7c75
+    ==
+
+main_ternary_merge@23:
+    bz main_ternary_false@25
+    dig 4
+    extract 4 0
+
+main_ternary_merge@26:
+    dig 2
+    dup
+    cover 2
+    concat
+    extract 0 32
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    load 0
+    swap
+    replace2 32
+    store 0
+    itxn LastLog
+    dup
+    bury 5
+    len
+    intc_3 // 4
+    >=
+    dup
+    bury 2
+    bz main_ternary_false@28
+    dig 3
+    extract 0 4
+    bytec_0 // 0x151f7c75
+    ==
+
+main_ternary_merge@29:
+    bz main_ternary_false@31
+    dig 3
+    extract 4 0
+
+main_ternary_merge@32:
+    len
+    itob
+    dig 2
+    b|
+    bury 3
+    dup
+    bz main_ternary_false@34
+    dig 3
+    extract 0 4
+    bytec_0 // 0x151f7c75
+    ==
+
+main_ternary_merge@35:
+    bz main_ternary_false@37
+    dig 3
+    extract 4 0
+
+main_ternary_merge@38:
+    len
+    itob
+    dig 2
+    b|
+    len
+    intc_2 // 32
+    -
+    dig 3
+    swap
+    intc_2 // 32
+    extract3
+    pushbytess 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000020
+    uncover 2
+    match main_switch_case_0@39 main_switch_case_1@40
+    pushbytes 0x03
+
+main_switch_case_next@42:
+    load 0
+    store 0
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@40:
+    pushbytes 0x02
+    b main_switch_case_next@42
+
+main_switch_case_0@39:
+    pushbytes 0x01
+    b main_switch_case_next@42
+
+main_ternary_false@37:
+    dig 3
+    b main_ternary_merge@38
+
+main_ternary_false@34:
+    intc_0 // 0
+    b main_ternary_merge@35
+
+main_ternary_false@31:
+    dig 3
+    b main_ternary_merge@32
+
+main_ternary_false@28:
+    intc_0 // 0
+    b main_ternary_merge@29
+
+main_ternary_false@25:
+    dig 4
+    b main_ternary_merge@26
+
+main_ternary_false@22:
+    intc_0 // 0
+    b main_ternary_merge@23
+
+main_ternary_false@18:
+    intc_0 // 0
+    b main_ternary_merge@19
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    itxn_begin
+    bytec_3 // TMPL_APPROVAL_Callee
+    bytec 4 // TMPL_CLEAR_Callee
+    pushint 6
+    itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    pushint 1000000
+    itxn_field Amount
+    itxn_submit
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_2 // "c"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

@@ -1,4 +1,21 @@
-# Semantic Test Status — v481
+# Semantic Test Status — v482
+
+> **fix: `switch returndatasize()` was a hard compile failure, 2026-08-03:**
+> **12 failed / 1403 passed / 105 xf / 32 xp** (run showed 13/1402; the extra,
+> test_call_value_with_data_invokes_target, passes standalone in 8 s — known -n2 race).
+> Several Yul builtins return uint64 by this codebase's "returns uint64; consumer
+> coerces" convention (returndatasize, gas, timestamp), but a Yul `switch`'s case labels
+> are built as 256-bit values, so puya rejected the pair outright: **"Switch cases types
+> mismatch with value to match"**. The switch IS the consumer, so it now widens the
+> scrutinee and takes the same normalised 32-byte match path every other scrutinee uses.
+> The shape is Gnosis `GPv2SafeERC20`'s non-standard-ERC20 probe — vendored by **Aave and
+> CoW** — so this blocked a whole library family. Guard `switch_returndatasize` asserts
+> the case actually SELECTED (callee returns uint256 ⇒ `case 32` must win), not merely
+> that it compiles.
+> **AAVE NOW RUNS ON THE AVM**: `WrappedTokenGatewayV3` deploys and replays with zero
+> divergences. Correcting an earlier claim of mine — "Aave is all proxies" was WRONG:
+> only its CORE is proxied; the periphery (gateway, AaveOracle, PoolAddressesProvider,
+> ACLManager, AaveProtocolDataProvider) is plain non-proxy ^0.8.10.
 
 > **fix: `return <void external call>;` was a hard compile failure, 2026-08-03:**
 > **12 failed / 1402 passed / 105 xf / 32 xp** — baseline plus the new

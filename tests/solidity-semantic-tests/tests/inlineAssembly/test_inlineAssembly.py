@@ -913,3 +913,22 @@ def test_recursive_multireturn(harness):
     # same return-var-name reuse bug; sum 0..n
     assert as_int(harness.call(app, "f2(uint256)", 3).abi_return) == 6
     assert as_int(harness.call(app, "f2(uint256)", 5).abi_return) == 15
+
+
+def test_switch_returndatasize(harness):
+    """inlineAssembly/contracts/switch_returndatasize.sol — NOT an o.g. test.
+
+    `switch returndatasize()` — Gnosis GPv2SafeERC20's non-standard-ERC20
+    probe, vendored by Aave and CoW. Several builtins return uint64 by this
+    codebase's "consumer coerces" convention, but Yul case labels are 256-bit,
+    and puya rejected the pair with "Switch cases types mismatch with value to
+    match". The switch is the consumer, so it now widens the scrutinee.
+
+    Asserts the case actually SELECTED, not just that it compiles: the callee
+    returns a uint256, so `case 32` must win.
+    """
+    app = harness.compile_and_deploy(
+        "inlineAssembly/contracts/switch_returndatasize.sol",
+        contract_name="SwitchRds", postinit_inner_txns=2)
+    assert as_int(harness.call(app, "probe()", extra_fee=20_000).abi_return) == 2, \
+        "switch on returndatasize() picked the wrong case"

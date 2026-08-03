@@ -219,8 +219,16 @@ validated against.
 **Architecturally out of reach** (no compiler work changes these):
 
 - **Proxies.** Any EIP-1967 proxy is delegatecall, which cannot exist on the
-  AVM — Aave (all of it), Lido, Compound III, most vaults. Measured over the
-  top 40 protocols by TVL: 10 proxies, 11 pre-0.8, 13 viable.
+  AVM — Lido, Compound III, most vaults. Measured over the top 40 protocols by
+  TVL: 10 proxies, 11 pre-0.8, 13 viable.
+
+  "Aave (all of it)" used to be on that list and was **wrong**: only its CORE
+  is proxied (the Pool address resolves to
+  `InitializableImmutableAdminUpgradeabilityProxy`). Its PERIPHERY is plain
+  ^0.8.10 — `WrappedTokenGatewayV3`, `AaveOracle`, `PoolAddressesProvider`,
+  `ACLManager`, `AaveProtocolDataProvider` are all non-proxy and verified, and
+  the gateway replays. Worth re-probing a protocol per contract rather than
+  writing off the whole name.
 - **Pre-0.8 Solidity**, and Vyper (Curve, Yearn).
 - **Unmodellable opcodes** — `codesize`, `extcodehash`/`.codehash` for a
   non-`this` address (its EVM value is a hash of EVM bytecode, meaningless
@@ -305,11 +313,11 @@ this table twice (see below).
 
 | | |
 |---|---|
-| contracts replayed | **57** |
-| zero divergences | **57** |
+| contracts replayed | **58** |
+| zero divergences | **58** |
 | with divergences | 0 |
-| transactions replayed on both legs | **9,233** of 13,210 in-window (70%) |
-| skipped, by cause | closed-world 3,127, avm-platform-limit 445, value 381, no-calldata 12, unknown-selector 12 |
+| transactions replayed on both legs | **9,234** of 13,410 in-window (69%) |
+| skipped, by cause | closed-world 3,173, value 534, avm-platform-limit 445, no-calldata 12, unknown-selector 12 |
 
 ### Headline runs
 
@@ -400,7 +408,23 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 | `vanry` VANRY | polygon | 9/200 | ✅ | closed-world 191 |
 | `bmex` BMEX | ethereum | 4/200 | ✅ | closed-world 195, avm-platform-limit 1 |
 | `tig` TIGToken | base | 2/200 | ✅ | closed-world 198 |
+| `aave_gateway` WrappedTokenGatewayV3 | ethereum | 1/200 | ✅ | value 153, closed-world 46 |
 | `sqd` SQD | arbitrum | 1/200 | ✅ | closed-world 199 |
+
+### Aave (Ethereum)
+
+| contract | oracle | AVM |
+|---|---|---|
+| `WrappedTokenGatewayV3` | ✅ | ✅ **replays 1/200, zero divergences** |
+| `PoolAddressesProvider` | ✅ replays | ❌ architectural — it deploys proxies via `new`, so `delegatecall` + `extcodehash` |
+| `ACLManager` | ❌ ctor calls the provider (a stand-in ERC-20 has no `getACLAdmin()`) | — |
+| Pool, aTokens, debt tokens | — | EIP-1967 proxies, out of reach |
+
+The gateway's 1/200 is not a compiler result: **153 of its transactions carry
+ETH value** and the replay model skips those (`msg.value == 0` only), which is
+inherent to a contract whose whole job is wrapping ETH. It found a real
+compiler bug on the way in — `switch returndatasize()` in Gnosis
+`GPv2SafeERC20` (vendored by Aave *and* CoW) hit a Yul-switch type mismatch.
 
 ### What these numbers do not cover
 

@@ -177,6 +177,17 @@ void AssemblyBuilder::buildSwitchStatement(
 	auto switchExpr = buildExpression(*_node.expression);
 	drainPendingStatements(_out, pendingBefore);
 
+	// Widen a uint64-natured scrutinee. Several builtins return uint64 by this
+	// codebase's "returns uint64; consumer coerces" convention (returndatasize,
+	// gas, timestamp) — but the case labels below are built as 256-bit Yul
+	// values, and puya rejects the pair outright with "Switch cases types
+	// mismatch with value to match". The switch IS the consumer, so it coerces
+	// here; biguint then takes the normalised 32-byte match path used by every
+	// other scrutinee. `switch returndatasize()` is Gnosis GPv2SafeERC20's
+	// non-standard-ERC20 probe, vendored by Aave and CoW.
+	if (switchExpr && switchExpr->wtype && switchExpr->wtype->name() != "bool")
+		switchExpr = ensureBiguint(std::move(switchExpr), loc);
+
 	// AVM `match` does exact byte comparison; ARC4 uint256 decodes to 32-byte biguint.
 	// Normalize both scrutinee and case constants to 32-byte big-endian BytesConstants.
 	bool useBytesMatch = switchExpr->wtype
