@@ -27,10 +27,49 @@ from chd_common import (ZERO, arg_content20, build_registry, canon_value,
                         marker_for, replay_epoch, symbol)
 
 import solcx
-from eth_abi import decode as abi_decode
+from eth_abi import decode as _abi_decode_strict
+from eth_abi import decoding as _eth_abi_decoding
+from eth_abi.exceptions import NonEmptyPaddingBytes
 from eth_account import Account
 from eth_utils import event_abi_to_log_topic, function_abi_to_4byte_selector
 from web3 import Web3
+
+
+# Decoder classes that police padding bytes. eth_abi's `strict=False` does NOT
+# relax this check (measured on 5.2) — only silencing these does.
+_PADDING_VALIDATORS = tuple(
+    c for c in (
+        getattr(_eth_abi_decoding, n, None) for n in (
+            "SingleDecoder", "FixedByteSizeDecoder", "SignedIntegerDecoder",
+            "SignedFixedDecoder", "ByteStringDecoder")
+    ) if c is not None and "validate_padding_bytes" in vars(c)
+)
+
+
+def abi_decode(types, data):
+    """Decode ABI data the way the CHAIN did, not the way eth_abi prefers.
+
+    An `address` occupies 20 bytes of a 32-byte word and the EVM MASKS the
+    upper bits, so calldata carrying dirty padding executes fine on chain —
+    eth_abi rejects it with NonEmptyPaddingBytes. That was killing whole cases
+    (pol, susde die before their first txn) and silently downgrading real
+    transactions to `decode-error` skips.
+
+    Strict FIRST, lenient only as a fallback, so ordinary calldata keeps every
+    check; a dirty word costs one retry. The masking is what the EVM itself
+    does, so the replayed argument is the value the contract actually saw.
+    """
+    try:
+        return _abi_decode_strict(types, data)
+    except NonEmptyPaddingBytes:
+        saved = [(c, c.validate_padding_bytes) for c in _PADDING_VALIDATORS]
+        for cls, _ in saved:
+            cls.validate_padding_bytes = lambda self, value, padding_bytes: None
+        try:
+            return _abi_decode_strict(types, data)
+        finally:
+            for cls, fn in saved:
+                cls.validate_padding_bytes = fn
 
 
 # ── ABI helpers ────────────────────────────────────────────────────────────

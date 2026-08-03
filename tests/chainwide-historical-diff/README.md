@@ -330,15 +330,15 @@ this table twice (see below).
 - `vanry` — the ❌3 in the table is a **stale report**. Its AVM leg now fails to
   deploy (`__postInit failed`), so there is no current comparison; the row is
   the last successful run's storage diff, kept visible rather than deleted.
-- **Dirty ABI padding blocks whole cases** (`pol`, `susde`, and any contract
-  whose history carries an `address` word with non-zero upper bits). The EVM
-  MASKS those bits, so the call executed fine on chain, but `eth_abi` raises
-  `NonEmptyPaddingBytes` — and, measured on eth_abi 5.2, **`strict=False` does
-  NOT relax this check**, so the obvious one-line fix does nothing. Unblocking
-  it needs the decode to substitute `address`/`boolN` with `uintN` in the type
-  tree and mask afterwards, which is equivalent for encoding and matches what
-  the EVM does. Not yet implemented.
-- `fbtc`, `gbp` — `puya-sol exited 1`, untriaged.
+- `susde` — its constructor exhausts the oracle's whole 12 M gas budget
+  (`gasUsed=12000000`), so this is an out-of-gas, not a missing dependency;
+  `--stub-deps` finds nothing to stand in for.
+- `fbtc`, `gbp` — **architectural, not bugs**: both use `delegatecall`
+  (no AVM equivalent — shared-storage/caller-preservation semantics), and fbtc
+  also uses `try`/`catch` (AVM has no in-transaction revert recovery). Worth
+  re-checking only if dead-path elimination ever runs before the hard errors —
+  in fbtc's case the `delegatecall` sits in a vendored library, as it does in
+  BMEX's `Vesting`.
 
 `systemcoin`'s 8 divergences (an address-array getter returning empty) were
 **real compiler bugs and are fixed** — see the OZ EnumerableSet entry in the
