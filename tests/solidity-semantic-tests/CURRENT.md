@@ -1,4 +1,17 @@
-# Semantic Test Status — v480
+# Semantic Test Status — v481
+
+> **fix: `return <void external call>;` was a hard compile failure, 2026-08-03:**
+> Legal Solidity in a function with no return values, and how forwarding wrappers are
+> written — Polymarket NegRiskAdapter's `return ctf.safeTransferFrom(...)`. The call
+> became the return VALUE, handing puya an inner-txn result handle where a stack value
+> belongs: **"itxn_group_idx cannot be mapped to AVM stack type"**, which reads as an
+> unsupported feature and is really a misplaced expression. Now executed as a statement
+> followed by a bare return. Guard `return_void_external_call` asserts the SIDE EFFECT,
+> not just that it compiles — a fix that dropped the call would otherwise look like a pass.
+> **NegRiskAdapter now COMPILES** (13848 B) and joins CTFExchange (11244 B): both
+> Polymarket contracts are now SIZE-limited (uros splitter) rather than compiler-blocked.
+> Chainwide re-verification of the v480 storage change over the 21 corpus cases that touch
+> mapping-containing structs: 11 ran, **all clean, zero divergences, no regressions**.
 
 > **fix: OZ `EnumerableSet.values()` returned [] for a NON-EMPTY set, 2026-08-03:**
 > **12 failed / 1401 passed / 105 xf / 32 xp** (baseline + the new enumerable_set_values

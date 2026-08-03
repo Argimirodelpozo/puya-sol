@@ -153,6 +153,29 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 	}
 	else if (m_node.expression())
 	{
+		// `return <void expression>;` in a function with NO return values —
+		// legal Solidity, and the shape forwarding wrappers use
+		// (`return ctf.safeTransferFrom(…)` in Polymarket's NegRiskAdapter).
+		// The expression must be EXECUTED as a statement: carrying it as the
+		// return VALUE hands puya an inner-txn result handle where a stack
+		// value belongs — "itxn_group_idx cannot be mapped to AVM stack type",
+		// which reads as an unsupported feature and is really just a
+		// misplaced expression.
+		if (auto const* voidRet = dynamic_cast<ReturnAnnotation const*>(&m_node.annotation());
+			voidRet && voidRet->functionReturnParameters
+			&& voidRet->functionReturnParameters->parameters().empty())
+		{
+			auto call = m_blk.builderCtx().build(*m_node.expression());
+			for (auto& p: m_blk.builderCtx().takePrePending())
+				result.push_back(std::move(p));
+			if (call)
+				result.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
+			for (auto& p: m_blk.builderCtx().takePending())
+				result.push_back(std::move(p));
+			result.push_back(awst::makeReturnStatement(nullptr, m_loc));
+			return result;
+		}
+
 		// --evm-storage-layout: `return <storage expr>` in a function declared
 		// `returns (T storage)` returns the biguint slot.
 		if (builder::evmStorageLayout())

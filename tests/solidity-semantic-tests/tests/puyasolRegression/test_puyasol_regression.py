@@ -4022,3 +4022,24 @@ def test_enumerable_set_values(harness):
     at0 = harness.call(app, "at(uint256)", 0, extra_fee=10_000).abi_return
     vals = harness.call(app, "values()", extra_fee=10_000).abi_return
     assert vals == [at0], f"values() lost the set (got {vals}, at(0)={at0})"
+
+
+def test_return_void_external_call(harness):
+    """puyasolRegression/contracts/return_void_external_call.sol — NOT an o.g. test.
+
+    `return <void external call>;` was a hard failure: the call became the
+    return VALUE, handing puya an inner-txn result handle where a stack value
+    belongs ("itxn_group_idx cannot be mapped to AVM stack type"). It is now
+    executed as a statement followed by a bare return. Asserting the SIDE
+    EFFECT, not just that it compiles — the call must still happen.
+
+    Blocked Polymarket's NegRiskAdapter (`return ctf.safeTransferFrom(...)`).
+    """
+    arts = harness.compile("puyasolRegression/contracts/return_void_external_call.sol")
+    app = harness.deploy(arts, "Forwarder", postinit_inner_txns=2,
+                         extra_funding_microalgos=5_000_000)
+    harness.call(app, "fwd(uint256)", 42, extra_fee=10_000)
+    assert as_int(harness.call(app, "read()", extra_fee=10_000).abi_return) == 42, \
+        "returned void call was dropped instead of executed"
+    harness.call(app, "plain(uint256)", 7, extra_fee=10_000)
+    assert as_int(harness.call(app, "read()", extra_fee=10_000).abi_return) == 7
