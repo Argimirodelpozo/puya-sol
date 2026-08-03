@@ -31,6 +31,38 @@ def http_json(url: str, timeout: int = 40):
         return json.load(r)
 
 
+# wei → the unit each leg actually moves. ETH carries 18 decimals and ALGO 6,
+# so a literal 1:1 replay is not a tuning question but a SUPPLY one: the whole
+# AVM LocalNet holds 1.0e16 microAlgos, which covers 5.8 median ETH transfers
+# (measured). At 1e12 a 1-ETH transfer becomes 1 ALGO and everything fits.
+#
+# The scale is applied IDENTICALLY ON BOTH LEGS, which is what keeps it sound:
+#   * a PASS-THROUGH contract (Aave's gateway does `WETH.deposit{value:
+#     msg.value}`) behaves the same at any scale, so it replays for real;
+#   * a PRICE-COMPARING contract (`require(msg.value >= price)`, friend.tech)
+#     sees a scaled msg.value against an unscaled price and reverts — but it
+#     reverts on BOTH legs, so the pair still agrees and the closed-world
+#     filter drops it. No false divergence either way; the coverage is simply
+#     not gained for that shape.
+# Set 1 for a literal replay when a contract's values are small enough to fund.
+VALUE_SCALE = 10 ** 12
+
+# AVM amount fields are uint64. Anything wider cannot be expressed at all.
+_AVM_AMOUNT_MAX = 2 ** 64 - 1
+
+
+def scale_value(wei: int) -> int | None:
+    """wei → this leg's amount, or None when it cannot be represented.
+
+    Rounds UP so a nonzero payment never becomes a free one: a contract
+    gating on `msg.value > 0` must still see a payment."""
+    wei = int(wei or 0)
+    if wei <= 0:
+        return 0
+    scaled = -(-wei // VALUE_SCALE)          # ceil
+    return None if scaled > _AVM_AMOUNT_MAX else scaled
+
+
 def replay_epoch(calls) -> int:
     """The historical instant both legs treat as t=0 for the replay clock.
 

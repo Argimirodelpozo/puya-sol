@@ -370,6 +370,15 @@ def main():
     # LocalNet mines a block PER TXN, so a once-fetched suggested_params goes
     # stale after ~1000 payments ("txn dead: round X outside of Y--Z") — which
     # broke every deep replay with >1000 senders. Refresh periodically.
+    # Fee float PLUS the scaled value this sender pays out across the window.
+    # calls.json carries the amount already scaled (chd_common.scale_value), so
+    # both legs move the same number.
+    owed = {}
+    for c in calls:
+        v = int(c.get("value") or 0)
+        m = (c.get("sender") or {}).get("__addr__")
+        if v and isinstance(m, int):
+            owed[m] = owed.get(m, 0) + v
     sp = algod.suggested_params()
     last, sent = None, 0
     for i, a in accts.items():
@@ -377,7 +386,8 @@ def main():
             continue
         if sent and sent % 200 == 0:
             sp = algod.suggested_params()
-        txn = PaymentTxn(dispenser.address, sp, a.address, 5_000_000)
+        txn = PaymentTxn(dispenser.address, sp, a.address,
+                         5_000_000 + owed.get(i, 0))
         last = algod.send_transaction(txn.sign(dispenser.private_key))
         sent += 1
     if last:
@@ -567,6 +577,10 @@ def main():
             ln.account = accts.get(_sm, dispenser) if isinstance(_sm, int) else dispenser
             try:
                 dep_fee = {"extra_fee": 20_000} if dep_apps else {}
+                # msg.value: framework prepends a payment to the app address.
+                _v = int(c.get("value") or 0)
+                if _v:
+                    dep_fee["payment_wei"] = _v
                 if is_view:
                     r = h.call(app, sig, *args, expect_revert=True, **dep_fee)
                     if r.reverted:

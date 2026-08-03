@@ -24,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from chd_common import (ZERO, arg_content20, build_registry, canon_value,
                         clock_target, dump_json, evm_sender_privkey, load_json,
-                        marker_for, replay_epoch, symbol)
+                        marker_for, replay_epoch, scale_value, symbol)
 
 import solcx
 from eth_abi import decode as _abi_decode_strict
@@ -166,8 +166,10 @@ def main():
     decoded = []                          # idx-aligned: (sig, entry, values) | None
     base_skip = {}
     for i, t in enumerate(txns):
-        if t["value"] > 0:
-            base_skip[i] = "value"; decoded.append(None); continue
+        if t["value"] > 0 and scale_value(t["value"]) is None:
+            # Only unrepresentable amounts are dropped now (> uint64 after
+            # scaling); the rest are replayed with value on both legs.
+            base_skip[i] = "value-too-wide"; decoded.append(None); continue
         inp = (t["input"] or "0x").removeprefix("0x")
         if len(inp) < 8:
             base_skip[i] = "no-calldata"; decoded.append(None); continue
@@ -253,6 +255,9 @@ def main():
         d = decoded[i]
         calls.append({
             "i": i, "hash": t["hash"], "ts": t["ts"], "hist_ok": t["hist_ok"],
+            # SCALED once, here, so both legs move the same number and neither
+            # can drift from the other's idea of msg.value (chd_common).
+            "value": scale_value(t.get("value") or 0) or 0,
             "sender": marker_for(reg, t["from"]) if d else None,
             "sig": d[0] if d else None,
             "args": [markerize(v, inp, reg) for v, inp in zip(d[2], d[1]["inputs"])] if d else None,
@@ -573,13 +578,23 @@ def main():
         w3 = Web3(Web3.EthereumTesterProvider(tester))
         a0 = w3.eth.accounts[0]
         _deployer[0] = a0
-        # 1 ETH per sender: they only ever pay gas (value-bearing txns are
-        # skipped). At 1000 ETH each the deployer's ~1M ETH ran dry past ~1000
-        # distinct senders, which killed every deep (>1500 txn) replay.
+        # Gas float plus whatever SCALED value this sender actually pays out.
+        # At a flat 1000 ETH each the deployer's ~1M ETH ran dry past ~1000
+        # distinct senders, which killed every deep (>1500 txn) replay, so the
+        # float stays small and the value part is computed per sender.
+        owed = {}
+        for c2 in calls:
+            if c2.get("skip"):
+                continue
+            sv = scale_value(c2.get("value") or 0)
+            m = (c2.get("sender") or {}).get("__addr__")
+            if sv and isinstance(m, int):
+                owed[m] = owed.get(m, 0) + sv
         for i, (addr, priv) in sender_acct.items():
             tester.add_account(priv)
             w3.eth.send_transaction({"from": a0, "to": addr,
-                                     "value": 10**18, "gas": 21000})
+                                     "value": 10**18 + owed.get(i, 0),
+                                     "gas": 21000})
 
         _dep_local.clear()
         for d in deps:
@@ -817,7 +832,8 @@ def main():
                 fn = inst.get_function_by_signature(c["sig"])
                 args = [resolve(a) for a in c["args"]]
                 try:
-                    ret = fn(*args).call({"from": sender, "gas": 8_000_000})
+                    ret = fn(*args).call({"from": sender, "gas": 8_000_000,
+                                          "value": c.get("value") or 0})
                 except Exception as e:
                     results[i] = {"ok": False, "revert": str(e)[:160]}
                     if c["hist_ok"]:
@@ -831,7 +847,8 @@ def main():
                     continue
                 _trace["txn"] = i
                 try:
-                    txh2 = fn(*args).transact({"from": sender, "gas": 8_000_000})
+                    txh2 = fn(*args).transact({"from": sender, "gas": 8_000_000,
+                                               "value": c.get("value") or 0})
                 finally:
                     _trace["txn"] = None
                 rcpt = w3.eth.get_transaction_receipt(txh2)
