@@ -476,6 +476,14 @@ def main():
     for _a, i in (reg.get("deps") or {}).items():
         if _a in dep_local:
             inv[encoding.decode_address(dep_local[_a]).hex()] = symbol(f"D{i}")
+    # A Solidity `address` occupies 20 bytes of an EVM slot, so under
+    # --evm-storage-layout a 32-byte AVM account is stored TRUNCATED to its low
+    # 20 bytes. Without these entries such a slot folds to a raw "?0x…" while
+    # the EVM leg folds its own to a symbol, and the differ reports two
+    # renderings of the SAME account as a divergence (staup `_owner`).
+    for _k in list(inv):
+        _trunc = (bytes(12) + bytes.fromhex(_k)[-20:]).hex()
+        inv.setdefault(_trunc, inv[_k])
 
     def fold(v):
         if v is None:

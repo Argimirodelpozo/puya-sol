@@ -195,8 +195,14 @@ def main():
                 "status": "done", "name": rep["name"],
                 "replayed": rep["replayed"], "window": rep["txns_in_window"],
                 "skips": rep["skips"],
+                # storage_div/storage_map_div MUST be counted: leaving them
+                # out printed "divergences=0" for cases whose report held a
+                # storage divergence — a false clean in the one line a sweep
+                # is actually read by.
                 "real_divergences": c["status_div"] + c["value_div"]
-                                    + c["event_div"] + c["snapshot_div"],
+                                    + c["event_div"] + c["snapshot_div"]
+                                    + c.get("storage_div", 0)
+                                    + c.get("storage_map_div", 0),
                 "counts": c,
             })
         except SystemExit as e:

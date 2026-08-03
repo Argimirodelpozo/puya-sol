@@ -204,6 +204,13 @@ def diff_case(case_dir: Path) -> dict:
         bucket = "storage_div" if (var in e_sc and var in a_sc) else "storage_noise"
         if _timestamp_noise(ev_, av_):
             bucket = "storage_noise"
+        # An EIP-712 domain separator CACHED IN STORAGE is the same chain-id
+        # noise the getter rule already covers — it hashes chainid in, so the
+        # two legs must differ. Only the getter spelling was classified, so a
+        # contract that caches it in a state var (wallettok) reported it as a
+        # real divergence.
+        if _NOISE_SIG_RE.search(var):
+            bucket = "storage_noise"
         findings.setdefault(bucket, []).append(
             {"var": var, "evm": ev_, "avm": av_, "last_changed_txn": _last_change(var)})
 

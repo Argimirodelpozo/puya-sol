@@ -318,14 +318,31 @@ def main():
         # than applying them everywhere: the existing corpus keeps the exact
         # oracle it was validated against.
         _ss = case.get("solc_settings") or {}
+        # viaIR as VERIFIED. This used to read `True if viaIR is not False`,
+        # which turned a verified-without-viaIR contract (the field is null,
+        # not false) into a viaIR build — the opposite of "the settings it was
+        # verified with". Polymarket's CTFExchange compiles cleanly at
+        # viaIR=False and dies with a YulException at viaIR=True, so the
+        # oracle rejected a contract the real chain compiles fine.
         _fallback = {
             "optimizer": _ss.get("optimizer") or {"enabled": True, "runs": 200},
-            "viaIR": True if _ss.get("viaIR") is not False else False,
+            "viaIR": bool(_ss.get("viaIR")),
         }
+        if _ss.get("evmVersion"):
+            _fallback["evmVersion"] = _ss["evmVersion"]
         print(f"[evm] default solc compile failed ({str(_e)[:70]}) — retrying "
               f"with the contract's verified settings "
               f"(viaIR={_fallback['viaIR']}, optimizer on)")
-        out = _compile(_fallback)
+        try:
+            out = _compile(_fallback)
+        except Exception as _e2:
+            # Last resort for a contract whose verification records no viaIR
+            # flag but which needs it anyway (older/partial metadata).
+            if _fallback["viaIR"]:
+                raise
+            print(f"[evm] verified settings also failed ({str(_e2)[:70]}) — "
+                  f"retrying with viaIR forced on")
+            out = _compile({**_fallback, "viaIR": True})
     target = None
     for by_name in out["contracts"].values():
         for cname, cdata in by_name.items():

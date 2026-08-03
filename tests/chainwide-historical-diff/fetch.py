@@ -206,6 +206,135 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
     return out
 
 
+# A constructor that calls a dependency we cannot compile (a proxy, or pre-0.8
+# like Polymarket's ConditionalTokens / USDC) fails to deploy on BOTH legs, so
+# the case is unreachable — the single biggest cause of "not replayable
+# standalone". For a dependency that is only used through a standard token
+# interface, a minimal ^0.8 stand-in deployed IDENTICALLY on both legs restores
+# the case: the differ compares puya-sol against solc, and both see the same
+# stand-in, so its verdict stays sound. Fidelity to the real chain is NOT
+# claimed — any txn whose result then disagrees with history is dropped by the
+# closed-world filter exactly as before.
+_STUB_ERC20 = """// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract StubERC20 {
+    // name/symbol as PURE functions, not initialised state: an aggregate state
+    // initializer is not supported under --evm-storage-layout, and the dep is
+    // compiled with whatever mode the case runs in.
+    function name() external pure returns (string memory) { return "%(name)s"; }
+    function symbol() external pure returns (string memory) { return "%(sym)s"; }
+    uint8 public constant decimals = %(dec)d;
+    uint256 public totalSupply;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+    mapping(address => mapping(address => bool)) public isApprovedForAll;
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+
+    function approve(address s, uint256 v) external returns (bool) {
+        allowance[msg.sender][s] = v;
+        emit Approval(msg.sender, s, v);
+        return true;
+    }
+
+    function transfer(address t, uint256 v) external returns (bool) {
+        balanceOf[msg.sender] -= v;
+        balanceOf[t] += v;
+        emit Transfer(msg.sender, t, v);
+        return true;
+    }
+
+    function transferFrom(address f, address t, uint256 v) external returns (bool) {
+        uint256 a = allowance[f][msg.sender];
+        if (a != type(uint256).max) allowance[f][msg.sender] = a - v;
+        balanceOf[f] -= v;
+        balanceOf[t] += v;
+        emit Transfer(f, t, v);
+        return true;
+    }
+
+    function mint(address t, uint256 v) external {
+        balanceOf[t] += v;
+        totalSupply += v;
+        emit Transfer(address(0), t, v);
+    }
+
+    function setApprovalForAll(address op, bool ok) external {
+        isApprovedForAll[msg.sender][op] = ok;
+    }
+}
+"""
+
+_STUB_ABI = [
+    {"type": "constructor", "inputs": []},
+    {"type": "function", "name": "decimals", "inputs": [],
+     "outputs": [{"type": "uint8", "name": ""}], "stateMutability": "view"},
+    {"type": "function", "name": "approve",
+     "inputs": [{"type": "address", "name": "s"}, {"type": "uint256", "name": "v"}],
+     "outputs": [{"type": "bool", "name": ""}], "stateMutability": "nonpayable"},
+    {"type": "function", "name": "setApprovalForAll",
+     "inputs": [{"type": "address", "name": "op"}, {"type": "bool", "name": "ok"}],
+     "outputs": [], "stateMutability": "nonpayable"},
+]
+
+
+def write_stub_dep(host: str, address: str, dep_dir) -> dict | None:
+    """Stand-in ERC-20 for a ctor dependency we cannot compile.
+
+    Only for addresses that really HAVE code — a plain EOA passed as an
+    `owner`/`admin` argument must stay an EOA, or deploying an app at its
+    address would change what the contract under test sees.
+    """
+    addr = address.lower()
+    # Retry: public Blockscout times out under load, and a dropped probe here
+    # silently skips the stand-in — the ctor then fails for what looks like a
+    # modelling reason (this ate Polymarket's USDC on the first run).
+    # Two ways to ask "is there code here", because neither alone is enough:
+    # the address summary times out on heavily-used accounts (Polygon USDC,
+    # reliably) and this Blockscout has no eth_getCode module, while the
+    # smart-contracts endpoint answers only for VERIFIED contracts — but a 200
+    # from it is itself proof of code. A dropped probe silently skips the
+    # stand-in, and the ctor then fails for what looks like a modelling reason.
+    has_code = None
+    for attempt in range(2):
+        try:
+            has_code = bool(http_json(
+                f"https://{host}/api/v2/addresses/{address}").get("is_contract"))
+            break
+        except Exception:
+            time.sleep(1.0 * (2 ** attempt))
+    if has_code is None:
+        try:
+            sc = http_json(f"https://{host}/api/v2/smart-contracts/{address}")
+            has_code = bool(sc.get("source_code") or sc.get("name"))
+        except Exception:
+            has_code = None
+    if has_code is None:
+        print(f"[fetch] stand-in probe for {address[:10]}… failed after retries "
+              f"— no stub, ctor may not deploy")
+        return None
+    if not has_code:
+        return None
+    name, sym, dec = "Stub", "STUB", 18
+    try:                                   # real decimals when it is a token:
+        tok = http_json(f"https://{host}/api/v2/tokens/{address}")
+        name = (tok.get("name") or name)[:32]
+        sym = (tok.get("symbol") or sym)[:16]
+        dec = int(tok.get("decimals") or 18)
+    except Exception:
+        pass
+    dep_dir.mkdir(parents=True, exist_ok=True)
+    (dep_dir / "prepared.sol").write_text(
+        _STUB_ERC20 % {"name": name, "sym": sym, "dec": dec})
+    dep = {"address": addr, "name": "StubERC20", "compiler_version": "0.8.x",
+           "abi": _STUB_ABI, "ctor_args_hex": "", "ctor_deps": [], "stub": True,
+           "stub_for": {"name": name, "symbol": sym, "decimals": dec}}
+    dump_json(dep_dir / "case.json", dep)
+    return dep
+
+
 def fetch_dep(host: str, address: str, dep_dir, depth: int, seen: set) -> dict | None:
     """LIGHT dependency fetch: verified source + ABI + its own ctor args — no
     txn history (deps are only deployed, never replayed directly). Returns the
@@ -243,7 +372,8 @@ def fetch_dep(host: str, address: str, dep_dir, depth: int, seen: set) -> dict |
 
 
 def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
-               internal: bool = False, internal_parents: int = 200) -> dict:
+               internal: bool = False, internal_parents: int = 200,
+               stub_deps: bool = False) -> dict:
     case_dir = CASES / tag
     addr = address.lower()
 
@@ -334,7 +464,8 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
         # these when a default (unoptimized, no-viaIR) compile fails, which is
         # what modern stack-heavy contracts (Permit2) require.
         "solc_settings": {"optimizer": _cs.get("optimizer"),
-                          "viaIR": _cs.get("viaIR")},
+                          "viaIR": _cs.get("viaIR"),
+                          "evmVersion": _cs.get("evmVersion")},
         "name": sc.get("name"),
         "compiler_version": comp,
         "creation": creation,
@@ -398,12 +529,24 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
     if ranked:
         print(f"[fetch] {tag}: {len(callees)} callee(s) observed in traces, "
               f"trying top {len(ranked)} as dependencies")
-    for a in ranked + list(_decode_ctor_addresses(abi, ctor_hex)) + sorted(literals):
+    _ctor_addrs = set(_decode_ctor_addresses(abi, ctor_hex))
+    for a in ranked + list(_ctor_addrs) + sorted(literals):
         depdir = case_dir / "deps" / f"dep_{a[2:10]}"
         d = fetch_dep(host, a, depdir, depth=2, seen=seen)
         if d:
             ctor_deps.append({"addr": a, "dir": f"deps/dep_{a[2:10]}"})
             print(f"[fetch] {tag}: dep {d['name']} @ {a[:10]}… fetched")
+        elif stub_deps and a in _ctor_addrs:
+            # CONSTRUCTOR args only: those are what a failing ctor calls. A
+            # stand-in for a random call-arg address would put an app where the
+            # contract expects an account.
+            d = write_stub_dep(host, a, depdir)
+            if d:
+                ctor_deps.append({"addr": a, "dir": f"deps/dep_{a[2:10]}"})
+                sf = d["stub_for"]
+                print(f"[fetch] {tag}: dep @ {a[:10]}… NOT compilable — "
+                      f"ERC-20 stand-in ({sf['symbol']}, {sf['decimals']} dec); "
+                      f"identical on both legs, fidelity to chain NOT claimed")
     if ctor_deps:
         case["ctor_deps"] = ctor_deps
     dump_json(case_dir / "case.json", case)
@@ -424,9 +567,13 @@ def main():
     internal = "--internal" in argv
     if internal:
         argv.remove("--internal")
+    stub_deps = "--stub-deps" in argv
+    if stub_deps:
+        argv.remove("--stub-deps")
     if len(argv) != 3:
         sys.exit(__doc__)
-    fetch_case(argv[0], argv[1], argv[2], max_txns, internal)
+    fetch_case(argv[0], argv[1], argv[2], max_txns, internal,
+               stub_deps=stub_deps)
 
 
 if __name__ == "__main__":

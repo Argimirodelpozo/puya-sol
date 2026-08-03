@@ -287,6 +287,125 @@ validated against.
   Cost: one extra sealing block per distinct timestamp (58 for permit2's 66
   calls), since a call observes the *previous* block's time.
 
+## Results
+
+Every number below is a **two-leg** result: the same historical calldata, in
+order, against py-evm (oracle) and the AVM, with state compared after each
+snapshot. "Zero divergences" means no status, return-value, event, getter or
+storage difference survived classification — it does NOT mean the whole window
+executed: the closed-world filter drops transactions whose local result
+disagrees with the historical receipt, and that count is reported per case.
+
+Regenerate with `python3 results_table.py`. Each `cases/<tag>/report.json` is
+that case's LAST run, so re-run a case in the mode you want to quote before
+regenerating — a stale report reads exactly like a fresh one, which has bitten
+this table twice (see below).
+
+### Summary
+
+| | |
+|---|---|
+| contracts replayed | **57** |
+| zero divergences | **55** |
+| with divergences | 2 |
+| transactions replayed on both legs | **9,235** of 13,410 in-window (69%) |
+| skipped, by cause | closed-world 3,325, avm-platform-limit 445, value 381, no-calldata 12, unknown-selector 12 |
+
+### Headline runs
+
+- **Deepest window** — `pepe_deep` replayed **1441/1500** transactions with zero
+  divergences (1288 clock jumps), 7.2x the standard 200-transaction window.
+- **Internal calls** — merging router-driven traffic took PEPE from 188/200 with
+  12 closed-world skips to **200/200 with none**: the skips were an artifact of
+  the missing calls, not of the compiler.
+- **TVL-ranked slice** — SSV ($9.2B) 196/200, SDAO ($3.7B) 79/200, ether.fi
+  ($3.2B) 33/200, Falcon ($1.3B) 70/200, Kelp ($0.9B) 58/200, Lighter ($0.5B)
+  195/200, BMEX ($0.8B) 4/200 — all zero divergences. Selected by TVL, not by
+  compiler-friendliness.
+- **Permit2** — the first DeFi-infrastructure singleton under the program cap,
+  66/200 clean and now with **no** timestamp values absorbed as noise.
+
+### Open
+
+- `systemcoin` — **8 real divergences, unexplained**: `authorizedAccounts()`
+  returns two addresses on the EVM leg and an empty array on the AVM, at every
+  snapshot. An address-array getter coming back empty is a compiler-side lead,
+  not a known noise class.
+- `vanry` — the ❌3 in the table is a **stale report**. Its AVM leg now fails to
+  deploy (`__postInit failed`), so there is no current comparison; the row is
+  the last successful run's storage diff, kept visible rather than deleted.
+
+### Per contract
+
+| contract | chain | replayed | divergences | skips |
+|---|---|---|---|---|
+| `pepe_deep` PepeToken | ethereum | 1441/1500 | ✅ | closed-world 59 |
+| `opmint` OptimismMintableERC20 | base | 285/300 | ✅ | closed-world 15 |
+| `op_gov` GovernanceToken | optimism | 247/400 | ✅ | closed-world 100, avm-platform-limit 41, no-calldata 7, value 5 |
+| `l2custom` L2CustomERC20 | optimism | 200/200 | ✅ | — |
+| `pepe_ic` PepeToken | ethereum | 200/200 | ✅ | — |
+| `wbt` WBT | ethereum | 200/200 | ✅ | — |
+| `bobo` Bobo | ethereum | 199/200 | ✅ | closed-world 1 |
+| `opmint9` OptimismMintableERC20 | base | 199/200 | ✅ | closed-world 1 |
+| `aero` Aero | base | 197/200 | ✅ | closed-world 2, avm-platform-limit 1 |
+| `burnminterc20` BurnMintERC20 | arbitrum | 197/200 | ✅ | closed-world 3 |
+| `turbo` Turbo | ethereum | 197/200 | ✅ | closed-world 3 |
+| `frxeth` frxETH | ethereum | 196/200 | ✅ | closed-world 4 |
+| `kizuna` WojakCoin | ethereum | 196/200 | ✅ | closed-world 4 |
+| `ssv` SSVToken | ethereum | 196/200 | ✅ | closed-world 4 |
+| `ladys` LadysToken | ethereum | 195/200 | ✅ | closed-world 5 |
+| `lighter` Lighter | ethereum | 195/200 | ✅ | closed-world 2, no-calldata 1, avm-platform-limit 1, value 1 |
+| `venice` Venice | base | 195/200 | ✅ | closed-world 5 |
+| `velo` Velo | optimism | 193/200 | ✅ | closed-world 7 |
+| `xvs` XVS | optimism | 192/200 | ✅ | closed-world 8 |
+| `higher` Token | base | 191/200 | ✅ | closed-world 8, value 1 |
+| `shfl` SHFL | ethereum | 191/200 | ✅ | closed-world 9 |
+| `degen` DegenToken | base | 189/200 | ✅ | closed-world 11 |
+| `temple` TempleERC20Token | ethereum | 189/200 | ✅ | closed-world 10, value 1 |
+| `doginme` doginme | base | 188/200 | ✅ | closed-world 12 |
+| `floki` FLOKI | ethereum | 188/200 | ✅ | closed-world 12 |
+| `pepe` PepeToken | ethereum | 188/200 | ✅ | closed-world 12 |
+| `staup` StauProject | polygon | 188/200 | ✅ | avm-platform-limit 12 |
+| `wallettok` WALLETToken | polygon | 188/200 | ✅ | closed-world 12 |
+| `systemcoin` SystemCoin | optimism | 186/200 | ❌ 8 | closed-world 14 |
+| `extra` EXTRA | optimism | 182/200 | ✅ | closed-world 16, avm-platform-limit 2 |
+| `gho` GhoToken | ethereum | 165/200 | ✅ | closed-world 35 |
+| `usde` USDe | ethereum | 162/200 | ✅ | closed-world 38 |
+| `babydoge` BabyDogeToken | base | 154/200 | ✅ | closed-world 45, avm-platform-limit 1 |
+| `kaito` Kaito | base | 153/200 | ✅ | closed-world 42, avm-platform-limit 3, value 2 |
+| `erc6160` ERC6160Ext20 | ethereum | 150/200 | ✅ | closed-world 50 |
+| `ape` Astgik | ethereum | 131/200 | ✅ | closed-world 66, value 3 |
+| `bgb` BitgetToken | ethereum | 115/200 | ✅ | closed-world 84, avm-platform-limit 1 |
+| `pika` Pika | optimism | 100/200 | ✅ | closed-world 83, avm-platform-limit 17 |
+| `apepe` APEPE | polygon | 98/200 | ✅ | closed-world 102 |
+| `imx` IMXToken | ethereum | 85/200 | ✅ | closed-world 112, value 2, avm-platform-limit 1 |
+| `pbnj` PBNJ | gnosis | 85/200 | ✅ | closed-world 114, avm-platform-limit 1 |
+| `zen` ZenToken | base | 84/200 | ✅ | closed-world 115, avm-platform-limit 1 |
+| `sdao` SDAO | ethereum | 79/200 | ✅ | closed-world 120, value 1 |
+| `sand` PolygonSand | polygon | 78/200 | ✅ | closed-world 122 |
+| `falcon` FF | ethereum | 70/200 | ✅ | closed-world 130 |
+| `permit2` Permit2 | ethereum | 66/200 | ✅ | closed-world 101, unknown-selector 12, value 11, avm-platform-limit 8, no-calldata 2 |
+| `kelp` KERNEL | ethereum | 58/200 | ✅ | closed-world 141, avm-platform-limit 1 |
+| `xerc20` XERC20 | gnosis | 44/200 | ✅ | closed-world 156 |
+| `strk` StarkNetToken | ethereum | 42/400 | ✅ | avm-platform-limit 349, value 7, no-calldata 2 |
+| `ena` ENA | ethereum | 34/200 | ✅ | closed-world 161, value 3, avm-platform-limit 2 |
+| `etherfi` EtherFiGovernanceToken | ethereum | 33/200 | ✅ | closed-world 163, value 2, avm-platform-limit 2 |
+| `friendtech` FriendtechSharesV1 | base | 33/400 | ✅ | value 342, closed-world 25 |
+| `vanry` VANRY | polygon | 11/400 | ❌ 3 | closed-world 389 |
+| `selftest` StorageShapes | synthetic | 10/10 | ✅ | — |
+| `bmex` BMEX | ethereum | 4/200 | ✅ | closed-world 195, avm-platform-limit 1 |
+| `tig` TIGToken | base | 2/200 | ✅ | closed-world 198 |
+| `sqd` SQD | arbitrum | 1/200 | ✅ | closed-world 199 |
+
+### What these numbers do not cover
+
+The corpus is what the constraints above admit, and the selection is visibly
+biased by them: no proxies (so no Aave/Lido/Compound), no pre-0.8, nothing over
+the 8 KB program cap without the splitter. Coverage per case varies by two
+orders of magnitude (1/200 to 1441/1500) and is dominated by how much of a
+contract's traffic depends on external state we cannot reconstruct — deploying
+a dependency supplies its code, not its history.
+
 ## Corpus status
 
 ~40 real contracts replay their on-chain history with **zero divergences** in
