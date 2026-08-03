@@ -20,6 +20,21 @@ class LocalNet:
         kmd = au.ClientManager.get_kmd_client(
             au.ClientManager.get_default_localnet_config("kmd")
         )
+        # algosdk hardcodes a 30 s per-request timeout. algod needs longer than
+        # that to assemble and simulate the largest programs (VANRY is 65 KB of
+        # TEAL), and on a loaded machine ordinary requests exceed it too. The
+        # failure surfaces as a bare socket TimeoutError deep inside deploy,
+        # which reads as a flaky test rather than "this request needed longer" —
+        # it cost a full afternoon of chasing phantom regressions.
+        _algod_request = algod.algod_request
+
+        def _patient_request(method, requrl, params=None, data=None,
+                             headers=None, response_format="json", timeout=300):
+            return _algod_request(method, requrl, params, data, headers,
+                                  response_format, timeout)
+
+        algod.algod_request = _patient_request
+
         self.client = au.AlgorandClient(au.AlgoSdkClients(algod=algod, kmd=kmd))
         # Cache suggested params for 60s: every fee field is overridden manually
         # (flat_fee + explicit fee at all call/deploy sites) and the validity

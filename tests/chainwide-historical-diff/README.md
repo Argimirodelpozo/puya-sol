@@ -306,10 +306,10 @@ this table twice (see below).
 | | |
 |---|---|
 | contracts replayed | **57** |
-| zero divergences | **55** |
-| with divergences | 2 |
-| transactions replayed on both legs | **9,235** of 13,410 in-window (69%) |
-| skipped, by cause | closed-world 3,325, avm-platform-limit 445, value 381, no-calldata 12, unknown-selector 12 |
+| zero divergences | **57** |
+| with divergences | 0 |
+| transactions replayed on both legs | **9,233** of 13,210 in-window (70%) |
+| skipped, by cause | closed-world 3,127, avm-platform-limit 445, value 381, no-calldata 12, unknown-selector 12 |
 
 ### Headline runs
 
@@ -327,22 +327,18 @@ this table twice (see below).
 
 ### Open
 
-- `vanry` — the ❌3 in the table is a **stale report**. Its AVM leg now fails to
-  deploy (`__postInit failed`), so there is no current comparison; the row is
-  the last successful run's storage diff, kept visible rather than deleted.
-- `susde` — its constructor exhausts the oracle's whole 12 M gas budget
-  (`gasUsed=12000000`), so this is an out-of-gas, not a missing dependency;
-  `--stub-deps` finds nothing to stand in for.
-- `fbtc`, `gbp` — **architectural, not bugs**: both use `delegatecall`
-  (no AVM equivalent — shared-storage/caller-preservation semantics), and fbtc
-  also uses `try`/`catch` (AVM has no in-transaction revert recovery). Worth
-  re-checking only if dead-path elimination ever runs before the hard errors —
-  in fbtc's case the `delegatecall` sits in a vendored library, as it does in
-  BMEX's `Vesting`.
+Nothing in the corpus currently shows a divergence. What remains is structural:
 
-`systemcoin`'s 8 divergences (an address-array getter returning empty) were
-**real compiler bugs and are fixed** — see the OZ EnumerableSet entry in the
-semantic-test status. It replays 186/200 clean.
+- **8 KB program cap** — `pol` (8322 B, 130 B over), `strk`, `ens_tok`, `ondo`,
+  `xtoken`, and both Polymarket contracts. Splitter territory, not compiler bugs.
+- `susde` — its constructor exhausts the oracle's whole 12 M gas budget
+  (`gasUsed=12000000`): an out-of-gas, not a missing dependency, so
+  `--stub-deps` has nothing to stand in for.
+- `fbtc`, `gbp` — **architectural, not bugs**: both use `delegatecall` (no AVM
+  equivalent — shared-storage/caller-preservation semantics), and fbtc also
+  uses `try`/`catch` (AVM has no in-transaction revert recovery). Both sit in
+  vendored libraries, so they would only come back into reach if dead-path
+  elimination ran before the hard errors.
 
 ### Per contract
 
@@ -376,7 +372,7 @@ semantic-test status. It replays 186/200 clean.
 | `pepe` PepeToken | ethereum | 188/200 | ✅ | closed-world 12 |
 | `staup` StauProject | polygon | 188/200 | ✅ | avm-platform-limit 12 |
 | `wallettok` WALLETToken | polygon | 188/200 | ✅ | closed-world 12 |
-| `systemcoin` SystemCoin | optimism | 186/200 | ❌ 8 | closed-world 14 |
+| `systemcoin` SystemCoin | optimism | 186/200 | ✅ | closed-world 14 |
 | `extra` EXTRA | optimism | 182/200 | ✅ | closed-world 16, avm-platform-limit 2 |
 | `gho` GhoToken | ethereum | 165/200 | ✅ | closed-world 35 |
 | `usde` USDe | ethereum | 162/200 | ✅ | closed-world 38 |
@@ -400,37 +396,11 @@ semantic-test status. It replays 186/200 clean.
 | `ena` ENA | ethereum | 34/200 | ✅ | closed-world 161, value 3, avm-platform-limit 2 |
 | `etherfi` EtherFiGovernanceToken | ethereum | 33/200 | ✅ | closed-world 163, value 2, avm-platform-limit 2 |
 | `friendtech` FriendtechSharesV1 | base | 33/400 | ✅ | value 342, closed-world 25 |
-| `vanry` VANRY | polygon | 11/400 | ❌ 3 | closed-world 389 |
 | `selftest` StorageShapes | synthetic | 10/10 | ✅ | — |
+| `vanry` VANRY | polygon | 9/200 | ✅ | closed-world 191 |
 | `bmex` BMEX | ethereum | 4/200 | ✅ | closed-world 195, avm-platform-limit 1 |
 | `tig` TIGToken | base | 2/200 | ✅ | closed-world 198 |
 | `sqd` SQD | arbitrum | 1/200 | ✅ | closed-world 199 |
-
-### Polymarket (Polygon)
-
-Attempted end-to-end; the constraints bind in three different places, which is
-why it is worth writing down rather than summarising as "not supported".
-
-| contract | oracle (py-evm) | AVM |
-|---|---|---|
-| `CTFExchange` | ✅ deploys, replays 3/200 | ✅ **compiles at 11244 B** — over the 8 KB cap (needs 5 extra pages, max 3), so it needs the uros splitter to deploy |
-| `NegRiskAdapter` | ✅ deploys, replays 62/200 | ❌ puya backend: `itxn_group_idx cannot be mapped to AVM stack type` (both storage modes; not reproduced by a small case yet) |
-| `UmaCtfAdapter` | ❌ ctor reverts | — |
-| `ProxyWalletFactory`, `ConditionalTokens` | — | pre-0.8 (0.5.10), out of scope |
-
-Getting this far took three harness fixes, each a case of the harness being
-wrong rather than the compiler: the viaIR-fidelity bug above, constructor
-stand-ins, and `relax_pragma` learning `pragma solidity <0.9.0;` (27 of
-CTFExchange's 46 files — a plain upper-bound range excludes puya-sol's
-*prerelease* bundled solc under semver, while the EVM leg's release solc
-accepts it).
-
-The low replay counts are the dependency-state boundary, not a compiler
-result: Polymarket's contracts talk to ConditionalTokens, and a stand-in has
-none of the positions real history created, so the closed-world filter drops
-those transactions. `UmaCtfAdapter` shows the same thing at construction time —
-its UMA `Finder` dependency IS verified and ^0.8 and deploys cleanly, but a
-fresh Finder has no registered implementations, so the ctor's lookup reverts.
 
 ### What these numbers do not cover
 

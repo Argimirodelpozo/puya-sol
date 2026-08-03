@@ -458,8 +458,15 @@ def main():
     else:
         artifacts = h.compile(case_dir / "prepared.sol", extra_args=_mode_args)
 
+    # Opcode-budget pool for __postInit. A real contract's constructor can be
+    # far heavier than one txn's 700 opcodes — VANRY's costs 6292 and failed
+    # with "dynamic cost budget exceeded", which surfaces as a deploy error and
+    # reads like a miscompile. Each pooled txn adds 700; the pool shares the
+    # 16-txn GROUP with the postInit call itself, so this cannot go much
+    # higher (at 16 the composer rejects the group outright).
     app = h.deploy(artifacts, case["name"],
                    ctor_args=[resolve(m) for m in meta["ctor_args"]] or None,
+                   postinit_budget_pool=12,
                    postinit_inner_txns=4 * len(dep_apps))
     print(f"[avm] deployed {case['name']} app_id={app.app_id}")
     ensure_app_funded(algod, dispenser, app.app_addr)     # headroom for box MBR
