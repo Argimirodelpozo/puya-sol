@@ -359,6 +359,12 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 - `susde` — its constructor exhausts the oracle's whole 12 M gas budget
   (`gasUsed=12000000`): an out-of-gas, not a missing dependency, so
   `--stub-deps` has nothing to stand in for.
+- `friendtech` in **slot mode** does not converge: it uncovers ~5 new platform
+  limits per pass indefinitely (its `buyShares` sits at the edge of the AVM
+  group/opcode budget once every access is a box), so the legs never reach
+  lockstep. Genuinely platform-limited there; clean in the default model
+  (33/400). Its ctor bug — inherited constructors were not deferred to
+  `__postInit`, so a box was touched in the create txn — is fixed.
 - `fbtc`, `gbp` — **architectural, not bugs**: both use `delegatecall` (no AVM
   equivalent — shared-storage/caller-preservation semantics), and fbtc also
   uses `try`/`catch` (AVM has no in-transaction revert recovery). Both sit in
