@@ -153,6 +153,16 @@ both cost a wrong conclusion before the working recipe emerged:
    (496/496 of PEPE's are plain ETH transfers). Contract-to-contract CALLS are
    not in that index at any depth.
 
+Two parent indexes are used, covering complementary traffic:
+
+- **token-transfer log** (`tokentx`) — for tokens; every internal
+  `transfer`/`transferFrom` emits a Transfer event carrying its parent hash.
+- **event log** (`getLogs`) — for everything else: a NON-token contract
+  (oracle, registry, governance target) never appears in tokentx, but every
+  state-changing call it receives tends to emit, and the log index carries the
+  parent hash. AaveOracle: 0 direct txns, 0 tokentx parents, 118 logs across
+  72 parents.
+
 The working parent index for tokens is the **token-transfer log**: every
 internal `transfer`/`transferFrom` emits a Transfer event carrying its parent
 tx hash. So: `tokentx` parents in the window, minus known direct txns → pull

@@ -135,6 +135,43 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
             break
         page += 1
         time.sleep(0.4)
+    # NON-TOKEN contracts (oracles, registries, governance) never appear in
+    # tokentx, but every state-changing call they receive tends to EMIT — and
+    # the log index carries the parent tx hash. Same trick, different index;
+    # together they cover token and non-token traffic. AaveOracle: 0 direct
+    # txns, 0 tokentx parents, 118 logs across 72 parents.
+    if len(parents) < max_parents:
+        page = 1
+        while len(parents) < max_parents:
+            try:
+                d = http_json(f"https://{host}/api?module=logs&action=getLogs"
+                              f"&address={address}"
+                              f"&fromBlock={block_lo}&toBlock={block_hi}"
+                              f"&page={page}&offset=1000")
+            except Exception:
+                break
+            rows = d.get("result") or []
+            if not isinstance(rows, list) or not rows:
+                break
+            for r in rows:
+                h = r.get("transactionHash")
+                if not h or h in seen_p or h.lower() in direct_hashes:
+                    continue
+                def _i(x):
+                    try:
+                        x = r.get(x) or "0"
+                        return int(x, 16) if isinstance(x, str) and x.startswith("0x") else int(x)
+                    except Exception:
+                        return 0
+                seen_p.add(h)
+                parents.append((h, _i("blockNumber"), _i("transactionIndex"),
+                                _i("timeStamp")))
+                if len(parents) >= max_parents:
+                    break
+            if len(rows) < 1000:
+                break
+            page += 1
+            time.sleep(0.4)
     parents.sort(key=lambda p: (p[1], p[2]))
 
     out = []

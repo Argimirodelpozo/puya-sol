@@ -570,7 +570,11 @@ def main():
             try:
                 from eth_tester.backends.pyevm.main import get_default_genesis_params
                 start = time_base or (case["creation"]["ts"] or txns[0]["ts"])
-                genesis = get_default_genesis_params({"timestamp": max(61, start) - 60})
+                genesis = get_default_genesis_params(
+                    {"timestamp": max(61, start) - 60,
+                     # susde's ctor burns >12M gas legitimately; mainnet's block
+                     # limit is 30M+, ours was the binding constraint.
+                     "gas_limit": 60_000_000})
             except Exception:
                 genesis = None
         tester = EthereumTester(PyEVMBackend(genesis_parameters=genesis)
@@ -603,7 +607,7 @@ def main():
             Cd = w3.eth.contract(abi=d["case"]["abi"], bytecode=d["bytecode"])
             dargs = [resolve(markerize(v, inp, reg)) for v, inp in
                      zip(d["ctor_vals"], d["ctor_inputs"])]
-            dtx = Cd.constructor(*dargs).transact({"from": a0, "gas": 12_000_000})
+            dtx = Cd.constructor(*dargs).transact({"from": a0, "gas": 30_000_000})
             drc = w3.eth.get_transaction_receipt(dtx)
             if not drc.get("contractAddress"):
                 raise SystemExit(f"dependency {d['case'].get('name')} failed to "
@@ -613,7 +617,7 @@ def main():
 
         C = w3.eth.contract(abi=abi, bytecode=bytecode)
         txh = C.constructor(*[resolve(m) for m in meta["ctor_args"]]).transact(
-            {"from": a0, "gas": 12_000_000})
+            {"from": a0, "gas": 30_000_000})
         rc = w3.eth.get_transaction_receipt(txh)
         caddr = rc["contractAddress"]
         if not caddr:
