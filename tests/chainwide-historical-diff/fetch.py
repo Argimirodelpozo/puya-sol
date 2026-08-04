@@ -477,12 +477,18 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
     # of the real state evolution — without it the closed-world filter eats
     # every downstream txn (ena replayed 34/200, sqd 1/200).
     callees: dict[str, int] = {}
-    if internal and txns:
+    if internal:
         # `internal_parents` bounds the dominant cost: one rate-limited
         # raw-trace request per parent txn (~1 h at 200 on public Blockscout,
         # ~5 min at 60). Lower it to trade internal-call density for wall clock.
+        # A contract with ZERO direct txns (AaveOracle: all its traffic is
+        # governance-driven, so txlist is empty) still has internal history —
+        # gating the merge on `txns` silently produced an empty case that
+        # looked fetched. Window falls back to creation block → open-ended.
+        _lo = txns[0]["block"] if txns else int((creation or {}).get("block") or 0)
+        _hi = txns[-1]["block"] if txns else 99_999_999
         ic = fetch_internal_calls(
-            host, address, txns[0]["block"], txns[-1]["block"],
+            host, address, _lo, _hi,
             {t["hash"].lower() for t in txns}, max_parents=internal_parents,
             callee_sink=callees)
         if ic:
