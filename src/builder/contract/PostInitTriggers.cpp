@@ -266,7 +266,23 @@ bool computeNeedsPostInit(solidity::frontend::ContractDefinition const& _contrac
 	// state initializer / constructor body to __postInit.
 	if (evmStorageLayout())
 	{
+		// INHERITED constructors count too. A contract with no ctor of its own
+		// but an `Ownable` base still runs `_transferOwnership` during create,
+		// and OZ reads `_owner` before writing it — a box READ in this mode.
+		// A box cannot be referenced in the create txn at all: the app account
+		// does not exist yet to hold the box's minimum balance, so even a
+		// resource-populated create fails ("balance 0 below min"). Checking
+		// only the contract's OWN constructor left friend.tech without a
+		// __postInit, so it deployed in the default model (owner is app-global
+		// there) and died in slot mode on `invalid Box reference "p:"++itob(0)`.
 		bool anyStateWork = _contract.constructor() != nullptr;
+		if (!anyStateWork)
+			for (auto const* base: _contract.annotation().linearizedBaseContracts)
+				if (base && base->constructor())
+				{
+					anyStateWork = true;
+					break;
+				}
 		if (!anyStateWork)
 			for (auto const* base: _contract.annotation().linearizedBaseContracts)
 				for (auto const* var: base->stateVariables())

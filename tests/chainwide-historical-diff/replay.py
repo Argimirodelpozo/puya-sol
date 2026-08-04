@@ -75,7 +75,13 @@ def replay(tag: str, max_txns: int = 300, snapshot_every: int = 25,
     case_dir = CASES / tag
     case = load_json(case_dir / "case.json")
     skips: dict[int, str] = {}
-    for attempt in range(1, 4):
+    # Each pass can UNCOVER new platform limits: skipping one txn changes the
+    # group composition and opcode budget of the others, so 3 attempts was not
+    # always enough. Leftovers are worse than slow — an unskipped platform-limit
+    # txn runs on the EVM leg only, forking the state and reporting the
+    # divergence as a storage difference (friend.tech: 10 stragglers ⇒ 20 bogus
+    # sharesBalance entries).
+    for attempt in range(1, 8):
         # Re-derived per attempt: the previous attempt's AVM run pushed the
         # chain clock forward, and both legs of THIS attempt must share a base
         # at or above it. Fixing it once outside the loop silently disabled

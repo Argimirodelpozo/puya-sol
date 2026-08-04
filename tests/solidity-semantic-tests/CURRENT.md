@@ -1,4 +1,17 @@
-# Semantic Test Status — v482
+# Semantic Test Status — v483
+
+> **fix: slot-mode ctor deferral ignored INHERITED constructors, 2026-08-03:**
+> **12 failed / 1403 passed / 105 xf / 32 xp** (baseline, zero new failures).
+> Under `--evm-storage-layout` every state access is a box, and **a box cannot be
+> touched in the CREATE txn at all** — the app account does not exist yet to hold the
+> box's minimum balance, so even a resource-populated create fails with "balance 0 below
+> min". `computeNeedsPostInit` therefore forces `__postInit`… but it only looked at the
+> contract's OWN constructor. A contract with no ctor of its own but an `Ownable` base
+> still runs `_transferOwnership` during create, and OZ READS `_owner` before writing it.
+> friend.tech deployed fine in the default model (owner is app-global there) and died in
+> slot mode on `invalid Box reference "p:"++itob(0)`. Inherited ctors now count.
+> Traced end-to-end rather than guessed: the create branch in TEAL is literally
+> `txn ApplicationID; bnz …; txn Sender; callsub _transferOwnership`.
 
 > **fix: `switch returndatasize()` was a hard compile failure, 2026-08-03:**
 > **12 failed / 1403 passed / 105 xf / 32 xp** (run showed 13/1402; the extra,

@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from chd_common import dump_json, load_json
+from chd_common import dump_json, is_platform_limit, load_json
 
 # Divergences that are DOCUMENTED EVM-vs-AVM differences, not miscompiles.
 KNOWN_NOISE_GETTERS = {
@@ -106,7 +106,16 @@ def diff_case(case_dir: Path) -> dict:
                                                      f"(evm={e is not None}, avm={a is not None})"})
             continue
         if e["ok"] != a["ok"]:
-            findings["status_div"].append({
+            # An AVM-side PLATFORM LIMIT (opcode/box/group budget) is a
+            # documented constraint, never a miscompile. The orchestrator
+            # normally re-skips these symmetrically, but its convergence loop is
+            # capped at 3 attempts and each pass can uncover new ones — the
+            # stragglers were landing in status_div, exactly the masquerade the
+            # platform-limit class exists to prevent.
+            bucket = ("platform_limit_noise"
+                      if not a["ok"] and is_platform_limit(a.get("revert", ""))
+                      else "status_div")
+            findings.setdefault(bucket, []).append({
                 **where, "evm": "ok" if e["ok"] else f"REVERT {e.get('revert','')[:90]}",
                 "avm": "ok" if a["ok"] else f"REVERT {a.get('revert','')[:90]}"})
             continue
