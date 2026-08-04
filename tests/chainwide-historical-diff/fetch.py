@@ -302,15 +302,19 @@ contract StubERC20 {
         isApprovedForAll[msg.sender][op] = ok;
     }
 
-    // Catch-all: any UNKNOWN selector answers a single ZERO word instead of
-    // reverting. A dependent constructor that READS its dependency —
-    // CoWSwapEthFlow calls settlement.vaultRelayer(), ENS's ReverseRegistrar
-    // calls ens.owner(node) — then sees 0 / address(0) and completes, on BOTH
-    // legs identically. Zero-guards in the caller still fire (and fire
-    // symmetrically), so the differ's verdict is unaffected; fidelity to the
-    // real chain remains explicitly NOT claimed.
+    // Catch-all: any UNKNOWN selector answers ONE WORD holding THIS stub's
+    // own address. Returning zero was a dead end: ENS's ReverseClaimer does
+    // `ens.owner(node)` and then CALLS the answer — address(0) "succeeds"
+    // with empty returndata and the bytes32 decode reverts. Answering
+    // ourselves closes the chain: every address-valued view resolves back to
+    // the stub, which keeps answering. Word-decoded as a number this is a
+    // large value; either way both legs see the SAME thing, so the differ's
+    // verdict is unaffected. Fidelity to the real chain stays NOT claimed.
     fallback() external payable {
-        assembly { return(0, 0x20) }
+        assembly {
+            mstore(0x00, address())
+            return(0x00, 0x20)
+        }
     }
     receive() external payable {}
 }
@@ -625,10 +629,14 @@ def main():
     stub_deps = "--stub-deps" in argv
     if stub_deps:
         argv.remove("--stub-deps")
+    internal_parents = 200
+    if "--internal-parents" in argv:
+        i = argv.index("--internal-parents")
+        internal_parents = int(argv[i + 1]); del argv[i:i + 2]
     if len(argv) != 3:
         sys.exit(__doc__)
     fetch_case(argv[0], argv[1], argv[2], max_txns, internal,
-               stub_deps=stub_deps)
+               internal_parents=internal_parents, stub_deps=stub_deps)
 
 
 if __name__ == "__main__":

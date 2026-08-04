@@ -327,8 +327,29 @@ void ContractBuilder::buildPublicStateVariableGetters(
 							fa.size = mtOfM->storageBytes();
 							fa.solType = mtOfM;
 							fa.wtype = m_typeMapper.map(mtOfM);
+							// Full-32 account widening matches the write side
+							// ONLY when the field is ALONE in its slot; a
+							// PACKED account is stored as its trailing 20
+							// bytes, and a widened read swallows the
+							// neighbours (returned rescale's low byte inside
+							// the address on the Comet/CoW RewardConfig
+							// shape). Same aloneness test as
+							// EvmSlotLowering::resolve.
+							bool aloneInSlot = true;
+							for (auto const& m2: st->structDefinition().members())
+							{
+								if (!m2 || m2->name() == m->name())
+									continue;
+								auto const& mo2 =
+									st->storageOffsetsOfMember(m2->name());
+								if (mo2.first == off.first)
+								{
+									aloneInSlot = false;
+									break;
+								}
+							}
 							if (fa.wtype == awst::WType::accountType()
-								&& !fa.byteOffset)
+								&& !fa.byteOffset && aloneInSlot)
 								fa.size = 32;   // matches the write side's widening
 							std::shared_ptr<awst::Expression> item;
 							if (sol_ast::EvmSlotLowering::isBytesLike(mtOfM))

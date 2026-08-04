@@ -1,4 +1,24 @@
-# Semantic Test Status — v484
+# Semantic Test Status — v485
+
+> **fix: `address` in a PACKED storage slot (slot mode), 2026-08-04:**
+> **12 failed / 1405 passed / 105 xf / 32 xp** (baseline + the new
+> evm_layout_packed_address guard). Two halves, found via CoW's EthFlowOrder and
+> Compound's RewardConfig — both pack `{address, small ints}` into one word:
+> **(1) codec gap.** SlotWordCodec had no arm for the arc4 address alias (byte[32]) at
+> packed size 20 and hard-errored "unsupported type 'address' in packed storage slot".
+> Both arms added; convention = trailing 20 bytes, the truncation the slot readers
+> already fold. **comet_rewards now replays clean IN SLOT MODE** (was a compile error).
+> **(2) getter over-widening.** PublicGetterBuilder widened an offset-0 account field to
+> full 32 bytes unconditionally ("matches the write side") — valid only when the field is
+> ALONE in its slot. Packed with neighbours, the write stores 20 and the widened read
+> SWALLOWED the neighbour bytes (rescale's low byte appeared inside the returned
+> address). Byte-level probe against the on-disk page box showed the stored word was
+> perfect and the reader off — widening now requires the same aloneness test
+> EvmSlotLowering::resolve uses. Guard asserts round-trip through BOTH a mapping value
+> and a plain state var, plus neighbour survival.
+> 📌 Documented on purpose: only the EVM-form (12 zero bytes + 20 content) round-trips
+> bit-exactly through a packed slot — a Solidity `address` is 20 bytes and EVM layout
+> cannot hold more; a full 32-byte AVM account does not fit BY CONSTRUCTION.
 
 > **fix: a PAYABLE function calling a NON-PAYABLE public one reverted on its own
 > payment, 2026-08-03:** **12 failed / 1404 passed / 105 xf / 32 xp** (baseline + the

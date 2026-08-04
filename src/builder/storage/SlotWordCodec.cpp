@@ -84,6 +84,18 @@ std::shared_ptr<awst::Expression> SlotWordCodec::nativeToPackedBytes(
 		return awst::makeAsBytes(std::move(_value), _loc);   // bytes[N]: raw N bytes
 	if (isByteArray(_wtype, _size))
 		return awst::makeAsBytes(std::move(_value), _loc);   // arc4 byte[N]: raw N bytes
+	if (_wtype && _wtype->name() == "address"
+		&& dynamic_cast<awst::ARC4StaticArray const*>(_wtype) && _size <= 32)
+	{
+		// arc4.address (byte[32] alias) in a PACKED slot: the EVM packs an
+		// address as its 20 bytes, and this mode's convention stores the
+		// TRAILING 20 of the 32-byte AVM form (same truncation the slot
+		// readers already fold — staup `_owner`). Blocked CoW's EthFlowOrder
+		// and Compound's RewardConfig, both of which pack {address, small
+		// ints} into one word.
+		return awst::makeExtract(awst::makeAsBytes(std::move(_value), _loc),
+			static_cast<int>(32 - _size), static_cast<int>(_size), _loc);
+	}
 
 	Logger::instance().error(
 		"unsupported type '" + std::string(_wtype ? _wtype->name() : "<null>")
@@ -155,6 +167,10 @@ std::shared_ptr<awst::Expression> SlotWordCodec::packedBytesToNative(
 		return awst::makeReinterpretCast(std::move(_raw), _wtype, _loc);
 	if (isByteArray(_wtype, _size))
 		return awst::makeReinterpretCast(std::move(_raw), _wtype, _loc);
+	if (_wtype && _wtype->name() == "address"
+		&& dynamic_cast<awst::ARC4StaticArray const*>(_wtype) && _size <= 32)
+		return awst::makeReinterpretCast(
+			awst::makeLeftPad(std::move(_raw), 32 - _size, _loc), _wtype, _loc);
 
 	Logger::instance().error(
 		"unsupported type '" + std::string(_wtype ? _wtype->name() : "<null>")

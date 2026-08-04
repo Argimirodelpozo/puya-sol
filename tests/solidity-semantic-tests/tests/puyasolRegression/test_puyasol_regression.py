@@ -4070,3 +4070,35 @@ def test_payable_calls_nonpayable(harness):
     assert harness.call(app, "setLast(uint256)", 7, payment_wei=1000,
                         extra_fee=10_000, expect_revert=True).reverted, \
         "non-payable method accepted value"
+
+
+def test_evm_layout_packed_address(harness):
+    """puyasolRegression/contracts/evm_layout_packed_address.sol — NOT an o.g. test.
+
+    An `address` PACKED into one slot with small ints (Compound RewardConfig,
+    CoW EthFlowOrder) hard-errored in --evm-storage-layout: the packed-slot
+    codec had no arm for the arc4 address alias at packed size 20. Round-trips
+    the full struct through both a mapping value and a plain state var, and
+    checks the neighbours survive — a wrong-width write would clobber them.
+    """
+    from algosdk import encoding as _enc
+    arts = harness.compile(
+        "puyasolRegression/contracts/evm_layout_packed_address.sol",
+        extra_args=["--evm-storage-layout"])
+    app = harness.deploy(arts, "EvmLayoutPackedAddress",
+                         extra_funding_microalgos=5_000_000)
+    # The packed slot stores an address as its TRAILING 20 bytes — a Solidity
+    # `address` is 20 bytes and EVM layout cannot hold more, so only the
+    # EVM-form (12 zero bytes + 20 content) round-trips bit-exactly. That is
+    # the mode's documented convention, asserted here on purpose.
+    a = _enc.encode_address(bytes(12) + b"\x11" * 20)
+    harness.call(app, "set(address,address,uint64,bool)", a, a, 12345, True,
+                 extra_fee=10_000)
+    got = harness.call(app, "roundTrip(address)", a, extra_fee=10_000).abi_return
+    assert got[0] == a, f"packed address lost: {got[0]!r}"
+    assert as_int(got[1]) == 12345, "neighbouring uint64 clobbered"
+    assert got[2] is True, "neighbouring bool clobbered"
+    harness.call(app, "setSingle(address,uint64,bool)", a, 7, False,
+                 extra_fee=10_000)
+    s = harness.call(app, "single()", extra_fee=10_000).abi_return
+    assert s[0] == a and as_int(s[1]) == 7 and s[2] is False
