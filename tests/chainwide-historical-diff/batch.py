@@ -154,7 +154,8 @@ CANDIDATES = [
     # DeFi singletons (non-proxy ^0.8): Permit2 FITS and replays clean;
     # Morpho Blue (13741 B) and UniV4 PoolManager (30751 B) compile but need
     # the splitter. Seaport is not viable (near-total assembly over structs).
-    ("eth.blockscout.com", "0x000000000022D473030F116dDEE9F6B43aC78BA3", "permit2"),  #        6218B — replays clean
+    ("eth.blockscout.com", "0x000000000022D473030F116dDEE9F6B43aC78BA3", "permit2"),
+    ("eth.blockscout.com", "0xD322A49006FC828F9B5B37Ab215F99B4E5caB19C", "aave_gateway"),  # Aave v3 periphery — replays clean (1/200; 153 value txns forward to the proxied Pool)  #        6218B — replays clean
     ("eth.blockscout.com", "0xBBBBBbbBBb9cC5e90e3b3Af64bdAF62C37EEFFCb", "morpho"),   #       13741B
     ("eth.blockscout.com", "0x000000000004444c5dc75cB358380D2e3dE08A90", "univ4"),    #       30751B
 ]

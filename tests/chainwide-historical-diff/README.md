@@ -359,13 +359,16 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 - `susde` — its constructor exhausts the oracle's whole 12 M gas budget
   (`gasUsed=12000000`): an out-of-gas, not a missing dependency, so
   `--stub-deps` has nothing to stand in for.
-- `friendtech` in **slot mode**: **39 divergences on `buyShares`, open**. It now
-  converges (the non-convergence was two harness bugs, both fixed below), and
-  the surviving signal is real: the EVM leg succeeds while the AVM reverts on an
-  assert over `gtxns Amount`. This is the first case where `msg.value` actually
-  flows, so the payable path had never been exercised — it is either a genuine
-  compiler bug in payment handling or a harness mismatch in how `msg.value` is
-  delivered, and it has NOT been triaged. Clean in the default model (33/400).
+- `friendtech` in **slot mode**: **RESOLVED — zero divergences**, 43/400
+  replayed, matching its default-model coverage exactly. The 39→10→0 chain was
+  one real compiler bug (a payable function calling a non-payable public one
+  reverted on its own payment — the guard lived in the shared method body, not
+  the route) plus three harness bugs (a platform-limit classifier that matched
+  algod's `opcodes=` disassembly field, a budget-pool group that overflowed
+  MAX_GROUP_SIZE when a payment was attached, and inner-txn fee headroom that
+  was only granted when constructor deps existed — friendtech's `buyShares`
+  makes two fee payments via `.call{value}`, and the pool group came up exactly
+  those two fees short).
 - `fbtc`, `gbp` — **architectural, not bugs**: both use `delegatecall` (no AVM
   equivalent — shared-storage/caller-preservation semantics), and fbtc also
   uses `try`/`catch` (AVM has no in-transaction revert recovery). Both sit in

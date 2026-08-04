@@ -576,7 +576,14 @@ def main():
             _sm = (c.get("sender") or {}).get("__addr__")
             ln.account = accts.get(_sm, dispenser) if isinstance(_sm, int) else dispenser
             try:
-                dep_fee = {"extra_fee": 20_000} if dep_apps else {}
+                # Fee headroom ALWAYS, not just when ctor deps exist: any
+                # contract may issue inner txns (friendtech's buyShares sends
+                # protocol+subject fees via .call{value} = 2 inner payments),
+                # and without pooled fee the budget-pool retry group comes up
+                # exactly the inner-txn fees short — the call then dies and the
+                # recorded reason is whatever the FIRST unpopulated submit said
+                # ("invalid Box reference"), which reads as a resource bug.
+                dep_fee = {"extra_fee": 20_000}
                 # msg.value: framework prepends a payment to the app address.
                 _v = int(c.get("value") or 0)
                 if _v:
