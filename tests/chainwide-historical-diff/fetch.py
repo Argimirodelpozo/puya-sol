@@ -301,6 +301,18 @@ contract StubERC20 {
     function setApprovalForAll(address op, bool ok) external {
         isApprovedForAll[msg.sender][op] = ok;
     }
+
+    // Catch-all: any UNKNOWN selector answers a single ZERO word instead of
+    // reverting. A dependent constructor that READS its dependency —
+    // CoWSwapEthFlow calls settlement.vaultRelayer(), ENS's ReverseRegistrar
+    // calls ens.owner(node) — then sees 0 / address(0) and completes, on BOTH
+    // legs identically. Zero-guards in the caller still fire (and fire
+    // symmetrically), so the differ's verdict is unaffected; fidelity to the
+    // real chain remains explicitly NOT claimed.
+    fallback() external payable {
+        assembly { return(0, 0x20) }
+    }
+    receive() external payable {}
 }
 """
 

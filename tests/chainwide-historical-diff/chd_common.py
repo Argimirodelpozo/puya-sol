@@ -123,7 +123,13 @@ def relax_pragma(src: str) -> str:
     """
     src = re.sub(r"pragma solidity\s+(=)?0\.8\.(\d+)\s*;",
                  r"pragma solidity ^0.8.\2;", src)
-    return re.sub(r"pragma solidity\s*<\s*0\.9\.0\s*;",
+    # ANY range with an explicit <0.9.0 upper bound (bare, or `>=0.8.x <0.9.0`)
+    # excludes a prerelease compiler under semver — and so does the
+    # TWO-component caret `^0.8;` (CoW's house style), while the ordinary
+    # three-component `^0.8.N` is accepted. Normalise all three spellings.
+    src = re.sub(r"pragma solidity\s*(>=\s*0\.[0-9.]+\s*)?<\s*0\.9\.0\s*;",
+                 "pragma solidity ^0.8.0;", src)
+    return re.sub(r"pragma solidity\s*\^\s*0\.8\s*;",
                   "pragma solidity ^0.8.0;", src)
 
 
