@@ -157,6 +157,13 @@ bool emitBlobBackValue(
 /// by the contract-method path (`buildBlock`) and the free/library-function path
 /// (AWSTBuilder) so internal/library asm buffers (OZ Strings.toString) are marked
 /// in both.
+/// True iff `_func` is called INTERNALLY (plain `f(...)`) anywhere in
+/// `_contract`. Gates the selector-checked non-payable guard, which is only
+/// needed for methods reachable by callsub.
+bool _isCalledInternally(
+	solidity::frontend::ContractDefinition const& _contract,
+	solidity::frontend::FunctionDefinition const& _func);
+
 void markAssemblyAggregates(
 	sol_ast::FunctionContext& fn,
 	solidity::frontend::Block const& block);
@@ -309,7 +316,8 @@ private:
 	}
 
 	/// Prepend assert(incoming_amount==0,"not payable") to externally-callable non-payable methods.
-	void prependNonPayableCheck(awst::ContractMethod& _method);
+	void prependNonPayableCheck(awst::ContractMethod& _method,
+		std::string const& _arc4Selector = {});
 	OverloadedNamesSet m_overloadedNames;
 
 	/// Box-stored dynamic array variable names that need box_create in __postInit

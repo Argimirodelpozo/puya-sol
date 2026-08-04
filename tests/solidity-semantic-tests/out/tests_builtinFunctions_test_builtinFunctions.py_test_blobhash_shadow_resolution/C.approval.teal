@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/blobhash_shadow_resolution.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock 0x151f7c75
+    bytecblock 0x922961d1 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -33,7 +33,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x922961d1 0x4494bd16 // method "blobhash(uint256)byte[32]", method "f()byte[32]"
+    bytec_0 // method "blobhash(uint256)byte[32]"
+    pushbytes 0x4494bd16 // method "f()byte[32]"
     txna ApplicationArgs 0
     match main_blobhash_route@5 main_f_route@6
     err
@@ -52,7 +53,7 @@ main_ternary_merge@13:
     pushint 3
     itob
     callsub blobhash
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -71,7 +72,7 @@ main_blobhash_route@5:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub blobhash
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -82,16 +83,24 @@ main_blobhash_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/blobhash_shadow_resolution.sol.C.blobhash(__arc4_index: bytes) -> bytes:
 blobhash:
     proto 1 1
+    txn NumAppArgs
+    bz blobhash_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_0 // method "blobhash(uint256)byte[32]"
+    ==
+    bz blobhash_after_if_else@6
     txn GroupIndex
-    bz blobhash_ternary_false@2
+    bz blobhash_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-blobhash_ternary_merge@3:
+blobhash_ternary_merge@5:
     !
     assert // not payable
+
+blobhash_after_if_else@6:
     intc_1 // 32
     bzero
     frame_dig -1
@@ -104,6 +113,6 @@ blobhash_ternary_merge@3:
     extract3
     retsub
 
-blobhash_ternary_false@2:
+blobhash_ternary_false@4:
     intc_2 // 0
-    b blobhash_ternary_merge@3
+    b blobhash_ternary_merge@5

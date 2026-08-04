@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/transient_storage_state_variable_abstract_contract.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock 0x "y" "w" 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0x02 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock 0x "y" "w" 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0x02 0xf2b65f27 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_0 // 0
     dup
     bytec_0 // ""
@@ -48,7 +48,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xf2b65f27 0xa46062d6 // method "g()void", method "f()(uint256,uint256,uint256,uint256)"
+    bytec 7 // method "g()void"
+    pushbytes 0xa46062d6 // method "f()(uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
     match main_g_route@5 main_f_route@6
     err
@@ -69,7 +70,7 @@ main_ternary_merge@13:
     bytec 5 // 0x01
     b+
     dup
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     load 5
@@ -197,16 +198,24 @@ g:
     proto 0 0
     intc_0 // 0
     bytec_0 // ""
+    txn NumAppArgs
+    bz g_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 7 // method "g()void"
+    ==
+    bz g_after_if_else@6
     txn GroupIndex
-    bz g_ternary_false@2
+    bz g_ternary_false@4
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-g_ternary_merge@3:
+g_ternary_merge@5:
     !
     assert // not payable
+
+g_after_if_else@6:
     intc_0 // 0
     bytec_2 // "w"
     app_global_get_ex
@@ -214,7 +223,7 @@ g_ternary_merge@3:
     bytec 6 // 0x02
     b+
     dup
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_2 // "w"
@@ -229,7 +238,7 @@ g_ternary_merge@3:
     dup
     !
     frame_bury 1
-    bz g_bool_true@5
+    bz g_bool_true@8
     frame_dig 0
     bytec 6 // 0x02
     b+
@@ -240,12 +249,12 @@ g_ternary_merge@3:
     !
     frame_dig 1
     ==
-    bz g_bool_false@6
+    bz g_bool_false@9
 
-g_bool_true@5:
+g_bool_true@8:
     intc_1 // 1
 
-g_bool_merge@7:
+g_bool_merge@10:
     assert // signed arithmetic overflow
     frame_dig 0
     bytec 6 // 0x02
@@ -262,10 +271,10 @@ g_bool_merge@7:
     store 5
     retsub
 
-g_bool_false@6:
+g_bool_false@9:
     intc_0 // 0
-    b g_bool_merge@7
+    b g_bool_merge@10
 
-g_ternary_false@2:
+g_ternary_false@4:
     intc_0 // 0
-    b g_ternary_merge@3
+    b g_ternary_merge@5

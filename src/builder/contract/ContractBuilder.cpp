@@ -182,6 +182,33 @@ static bool _bufferPointerEscapes(
 	return _yulBlockEscapes(_asm.operations().root(), targets);
 }
 
+// True iff `_func` is called INTERNALLY (plain `f(...)`, not `this.f(...)` and
+// not a cross-contract member call) anywhere in `_contract`. Only such methods
+// need the selector-gated non-payable guard; every other externally-callable
+// method keeps the cheap unconditional one, which matters because the gated
+// form costs ~6 extra opcodes on EVERY method and pushed a contract over the
+// 8 KB cap when applied blanket.
+class InternalCallScanner: public solidity::frontend::ASTConstVisitor
+{
+public:
+	int64_t targetId;
+	bool found = false;
+	explicit InternalCallScanner(int64_t _id): targetId(_id) {}
+
+	bool visit(solidity::frontend::FunctionCall const& _call) override
+	{
+		using namespace solidity::frontend;
+		// An Identifier callee is an internal call; a MemberAccess is
+		// `this.f()` or `other.f()`, which really does re-enter the router.
+		if (auto const* id = dynamic_cast<Identifier const*>(&_call.expression()))
+			if (id->annotation().referencedDeclaration
+				&& id->annotation().referencedDeclaration->id() == targetId)
+				found = true;
+		return true;
+	}
+};
+
+
 // Collect the Identifiers that are ASSIGNMENT TARGETS (`x := …`) anywhere in a
 // Yul block, including nested control flow.
 static void _yulAssignTargets(
@@ -286,6 +313,21 @@ public:
 };
 
 } // namespace
+
+bool _isCalledInternally(
+	solidity::frontend::ContractDefinition const& _contract,
+	solidity::frontend::FunctionDefinition const& _func)
+{
+	InternalCallScanner sc{_func.id()};
+	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+	{
+		if (!base) continue;
+		base->accept(sc);
+		if (sc.found) return true;
+	}
+	return false;
+}
+
 
 std::shared_ptr<awst::Expression> materializeBlobStructValue(
 	TypeMapper& _typeMapper,
@@ -746,7 +788,8 @@ void ContractBuilder::setPlaceholderBody(std::shared_ptr<awst::Block> _body)
 	m_currentPlaceholder = std::move(_body);
 }
 
-void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method)
+void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method,
+	std::string const& _arc4Selector)
 {
 	// Only ARC4-dispatched methods are externally callable.
 	if (!_method.arc4MethodConfig.has_value())
@@ -782,6 +825,43 @@ void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method)
 
 	auto assertStmt = awst::makeExpressionStatement(
 		awst::makeAssert(std::move(isZero), loc, "not payable"), loc);
+
+	// Gate on the ROUTER having dispatched THIS method. The guard reads a
+	// TRANSACTION-level fact (the preceding payment), but it lives in the
+	// method BODY — which an internal `callsub` from another method shares. So
+	// a PAYABLE function that internally calls a non-payable public one
+	// re-evaluated this against the same group and reverted on its own,
+	// legitimate payment: friend.tech's payable `buyShares` calls
+	// `getPrice(uint256,uint256)`, and every buy with value died on
+	// `assert // not payable` inside getPrice. Extremely common shape
+	// (buy/sell calling a public price view), invisible until msg.value
+	// actually started flowing.
+	//
+	// ApplicationArgs[0] carries the dispatched method's selector, so it tells
+	// entry-from-router apart from entry-from-callsub. Without a selector to
+	// compare (empty), keep the unconditional guard — same behaviour as before.
+	if (!_arc4Selector.empty())
+	{
+		auto numArgs = awst::makeTxn(
+			std::string("NumAppArgs"), awst::WType::uint64Type(), loc);
+		auto hasArgs = awst::makeNumericCompare(
+			std::move(numArgs), awst::NumericComparison::Gt,
+			awst::makeIntegerConstant("0", loc), loc);
+		auto selMatches = awst::makeBytesComparison(
+			awst::makeAppArg(0, loc),
+			awst::EqualityComparison::Eq,
+			awst::makeMethodConstant(_arc4Selector, awst::WType::bytesType(), loc),
+			loc);
+		auto dispatched = awst::makeBoolBinOp(
+			std::move(hasArgs), awst::BinaryBooleanOperator::And,
+			std::move(selMatches), loc);
+		auto thenBlock = awst::makeBlock(loc);
+		thenBlock->body.push_back(std::move(assertStmt));
+		_method.body->body.insert(
+			_method.body->body.begin(),
+			awst::makeIfElse(std::move(dispatched), std::move(thenBlock), nullptr, loc));
+		return;
+	}
 	_method.body->body.insert(_method.body->body.begin(), std::move(assertStmt));
 }
 

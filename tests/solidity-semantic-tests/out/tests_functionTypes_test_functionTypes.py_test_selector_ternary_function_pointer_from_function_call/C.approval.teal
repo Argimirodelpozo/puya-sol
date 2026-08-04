@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/selector_ternary_function_pointer_from_function_call.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 16
-    bytecblock "__ctor_pending" 0x151f7c75 "a" TMPL_APPROVAL_A TMPL_CLEAR_A
+    bytecblock "__ctor_pending" 0x3cd4690e 0x151f7c75 "a" TMPL_APPROVAL_A TMPL_CLEAR_A
     pushbytes ""
     pushint 4096
     bzero
@@ -37,7 +37,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x3cd4690e 0x5f67db17 // method "__postInit()void", method "getContract()address", method "test(bool)byte[4]"
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    bytec_1 // method "getContract()address"
+    pushbytes 0x5f67db17 // method "test(bool)byte[4]"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_getContract_route@6 main_test_route@7
     err
@@ -69,7 +71,7 @@ main_ternary_merge@14:
     pushbytess 0xf2b65f27 0x2d4970c7 // method "g()void", method "f()void"
     uncover 2
     select
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -81,30 +83,38 @@ main_ternary_false@13:
     b main_ternary_merge@14
 
 main_getContract_route@6:
+    txn NumAppArgs
+    bz main_after_if_else@22
+    txna ApplicationArgs 0
+    bytec_1 // method "getContract()address"
+    ==
+    bz main_after_if_else@22
     txn GroupIndex
-    bz main_ternary_false@18
+    bz main_ternary_false@20
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+main_ternary_merge@21:
     !
     assert // not payable
+
+main_after_if_else@22:
     intc_1 // 0
-    bytec_2 // "a"
+    bytec_3 // "a"
     app_global_get_ex
     assert // check a exists
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@18:
+main_ternary_false@20:
     intc_1 // 0
-    b main_ternary_merge@19
+    b main_ternary_merge@21
 
 main___postInit_route@5:
     bytec_0 // "__ctor_pending"
@@ -118,8 +128,8 @@ main___postInit_route@5:
     intc_1 // 0
     app_global_put
     itxn_begin
-    bytec_3 // TMPL_APPROVAL_A
-    bytec 4 // TMPL_CLEAR_A
+    bytec 4 // TMPL_APPROVAL_A
+    bytec 5 // TMPL_CLEAR_A
     pushint 6
     itxn_field TypeEnum
     intc_2 // 16
@@ -151,7 +161,7 @@ main___postInit_route@5:
     swap
     itob
     concat
-    bytec_2 // "a"
+    bytec_3 // "a"
     swap
     app_global_put
     intc_0 // 1

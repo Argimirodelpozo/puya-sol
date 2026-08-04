@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/delete_transient_storage.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0xf2b65f27 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     bytec_1 // ""
     dup
     pushint 4096
@@ -41,7 +41,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x2d4970c7 0xf2b65f27 // method "f()void", method "g()void"
+    pushbytes 0x2d4970c7 // method "f()void"
+    bytec_2 // method "g()void"
     txna ApplicationArgs 0
     match main_f_route@5 main_g_route@6
     err
@@ -79,7 +80,7 @@ main_ternary_merge@15:
     dup
     bury 3
     bnz main_after_if_else@17
-    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec_3 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@17:
@@ -92,7 +93,7 @@ main_after_if_else@17:
     dup
     bury 2
     bnz main_after_if_else@19
-    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec_3 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@19:
@@ -105,16 +106,24 @@ main_ternary_false@14:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/delete_transient_storage.sol.C.g() -> void:
 g:
+    txn NumAppArgs
+    bz g_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_2 // method "g()void"
+    ==
+    bz g_after_if_else@6
     txn GroupIndex
-    bz g_ternary_false@2
+    bz g_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-g_ternary_merge@3:
+g_ternary_merge@5:
     !
     assert // not payable
+
+g_after_if_else@6:
     load 5
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000063
     replace2 0
@@ -125,6 +134,6 @@ g_ternary_merge@3:
     store 5
     retsub
 
-g_ternary_false@2:
+g_ternary_false@4:
     intc_1 // 0
-    b g_ternary_merge@3
+    b g_ternary_merge@5

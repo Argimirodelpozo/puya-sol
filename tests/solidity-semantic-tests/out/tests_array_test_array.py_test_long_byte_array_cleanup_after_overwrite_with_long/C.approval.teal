@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock "testArray" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x010000000000000000 0x01 "s:" 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "testArray" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x010000000000000000 0x01 0xc67bf355 0x6773290f 0xa57f2c18 "s:" 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_2 // 0
     dupn 9
     pushint 4096
@@ -38,7 +38,11 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x2bbf0199 0x5990fed5 0xc67bf355 0x6773290f 0xa57f2c18 0xb84ebf4d 0xbb389e16 0x40f5d5e4 // method "__postInit()void", method "fillArray()void", method "shrinkArray()uint256", method "canaryValue()uint256", method "arrayLength()uint256", method "getDataSlotContent(uint256)byte[32]", method "checkSlots()(byte[32],byte[32],byte[32],uint256,uint256)", method "getSlot1LastBytes()byte[14]", method "getArrayBytes(uint256,uint256)byte[]"
+    pushbytess 0xbacc49e3 0x2bbf0199 0x5990fed5 // method "__postInit()void", method "fillArray()void", method "shrinkArray()uint256"
+    bytec 7 // method "canaryValue()uint256"
+    bytec 8 // method "arrayLength()uint256"
+    bytec 9 // method "getDataSlotContent(uint256)byte[32]"
+    pushbytess 0xb84ebf4d 0xbb389e16 0x40f5d5e4 // method "checkSlots()(byte[32],byte[32],byte[32],uint256,uint256)", method "getSlot1LastBytes()byte[14]", method "getArrayBytes(uint256,uint256)byte[]"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_fillArray_route@6 main_shrinkArray_route@7 main_canaryValue_route@8 main_arrayLength_route@9 main_getDataSlotContent_route@10 main_checkSlots_route@11 main_getSlot1LastBytes_route@12 main_getArrayBytes_route@13
     err
@@ -515,7 +519,7 @@ main_else_body@60:
     -
     intc_0 // 32
     extract3
-    bytec 7 // "s:"
+    bytec 10 // "s:"
     swap
     concat
     dup
@@ -563,7 +567,7 @@ __storage_read_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec 7 // "s:"
+    bytec 10 // "s:"
     swap
     concat
     dup
@@ -581,7 +585,7 @@ getCanary:
     load 0
     store 0
     load 0
-    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     store 0
     load 0
@@ -592,16 +596,24 @@ getCanary:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue() -> bytes:
 canaryValue:
+    txn NumAppArgs
+    bz canaryValue_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 7 // method "canaryValue()uint256"
+    ==
+    bz canaryValue_after_if_else@6
     txn GroupIndex
-    bz canaryValue_ternary_false@2
+    bz canaryValue_ternary_false@4
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-canaryValue_ternary_merge@3:
+canaryValue_ternary_merge@5:
     !
     assert // not payable
+
+canaryValue_after_if_else@6:
     callsub getCanary
     callsub __storage_read
     dup
@@ -614,23 +626,31 @@ canaryValue_ternary_merge@3:
     b|
     retsub
 
-canaryValue_ternary_false@2:
+canaryValue_ternary_false@4:
     intc_2 // 0
-    b canaryValue_ternary_merge@3
+    b canaryValue_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength() -> bytes:
 arrayLength:
+    txn NumAppArgs
+    bz arrayLength_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 8 // method "arrayLength()uint256"
+    ==
+    bz arrayLength_after_if_else@6
     txn GroupIndex
-    bz arrayLength_ternary_false@2
+    bz arrayLength_ternary_false@4
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-arrayLength_ternary_merge@3:
+arrayLength_ternary_merge@5:
     !
     assert // not payable
+
+arrayLength_after_if_else@6:
     bytec_0 // "testArray"
     box_len
     pop
@@ -640,31 +660,39 @@ arrayLength_ternary_merge@3:
     b|
     retsub
 
-arrayLength_ternary_false@2:
+arrayLength_ternary_false@4:
     intc_2 // 0
-    b arrayLength_ternary_merge@3
+    b arrayLength_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent(__arc4_index: bytes) -> bytes:
 getDataSlotContent:
     proto 1 1
+    txn NumAppArgs
+    bz getDataSlotContent_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 9 // method "getDataSlotContent(uint256)byte[32]"
+    ==
+    bz getDataSlotContent_after_if_else@6
     txn GroupIndex
-    bz getDataSlotContent_ternary_false@2
+    bz getDataSlotContent_ternary_false@4
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-getDataSlotContent_ternary_merge@3:
+getDataSlotContent_ternary_merge@5:
     !
     assert // not payable
+
+getDataSlotContent_after_if_else@6:
     load 0
     store 0
     load 0
     intc_0 // 32
     bzero
     swap
-    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     store 0
     pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
@@ -685,6 +713,6 @@ getDataSlotContent_ternary_merge@3:
     store 0
     retsub
 
-getDataSlotContent_ternary_false@2:
+getDataSlotContent_ternary_false@4:
     intc_2 // 0
-    b getDataSlotContent_ternary_merge@3
+    b getDataSlotContent_ternary_merge@5

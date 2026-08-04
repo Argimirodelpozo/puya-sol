@@ -1,4 +1,22 @@
-# Semantic Test Status — v483
+# Semantic Test Status — v484
+
+> **fix: a PAYABLE function calling a NON-PAYABLE public one reverted on its own
+> payment, 2026-08-03:** **12 failed / 1404 passed / 105 xf / 32 xp** (baseline + the
+> new payable_calls_nonpayable guard). The "not payable" guard tests a
+> TRANSACTION-level fact — the preceding payment txn — but is emitted into the method
+> BODY, which an internal `callsub` shares. So a payable caller's own legitimate payment
+> tripped the callee's guard: friend.tech's `buyShares` calls `getPrice(uint256,uint256)`
+> and **every buy carrying value died on `assert // not payable` inside getPrice**.
+> Extremely common shape (buy/sell calling a public price view) and invisible until the
+> chainwide differ began replaying msg.value this session.
+> Fix: the guard now fires only when the ROUTER dispatched that method, which
+> `ApplicationArgs[0]` identifies. ⚠️ Applied blanket it cost ~6 opcodes on EVERY
+> non-payable method and pushed external_call_signed_narrow_return over the 8 KB cap
+> (8692 B), so it is emitted ONLY for methods actually reachable by internal callsub;
+> every other method keeps the cheap unconditional guard. Both halves are asserted: the
+> payable path works AND a real external non-payable call still rejects value.
+> Traced by sourcemap (pc 2865 → the `getPrice:` subroutine body), not by guesswork.
+> Chainwide: friendtech slot-mode 39 → 10 divergences.
 
 > **fix: slot-mode ctor deferral ignored INHERITED constructors, 2026-08-03:**
 > **12 failed / 1403 passed / 105 xf / 32 xp** (baseline, zero new failures).

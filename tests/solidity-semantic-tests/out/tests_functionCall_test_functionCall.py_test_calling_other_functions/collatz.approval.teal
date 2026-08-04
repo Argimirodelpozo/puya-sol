@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_other_functions.sol.collatz.approval_program() -> uint64:
 main:
     intcblock 1 32 0 2
-    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock 0x151f7c75 0xf26572ae 0x12977eed 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_2 // 0
     dup
     pushint 4096
@@ -35,7 +35,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xc87eb40b 0xf26572ae 0x12977eed // method "run(uint256)uint256", method "evenStep(uint256)uint256", method "oddStep(uint256)uint256"
+    pushbytes 0xc87eb40b // method "run(uint256)uint256"
+    bytec_1 // method "evenStep(uint256)uint256"
+    bytec_2 // method "oddStep(uint256)uint256"
     txna ApplicationArgs 0
     match main_run_route@5 main_evenStep_route@6 main_oddStep_route@7
     err
@@ -141,16 +143,24 @@ main_ternary_false@17:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_other_functions.sol.collatz.evenStep(__arc4_x: bytes) -> bytes:
 evenStep:
     proto 1 1
+    txn NumAppArgs
+    bz evenStep_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_1 // method "evenStep(uint256)uint256"
+    ==
+    bz evenStep_after_if_else@6
     txn GroupIndex
-    bz evenStep_ternary_false@2
+    bz evenStep_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-evenStep_ternary_merge@3:
+evenStep_ternary_merge@5:
     !
     assert // not payable
+
+evenStep_after_if_else@6:
     intc_3 // 2
     itob
     frame_dig -1
@@ -166,37 +176,45 @@ evenStep_ternary_merge@3:
     b|
     retsub
 
-evenStep_ternary_false@2:
+evenStep_ternary_false@4:
     intc_2 // 0
-    b evenStep_ternary_merge@3
+    b evenStep_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/calling_other_functions.sol.collatz.oddStep(__arc4_x: bytes) -> bytes:
 oddStep:
     proto 1 1
+    txn NumAppArgs
+    bz oddStep_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_2 // method "oddStep(uint256)uint256"
+    ==
+    bz oddStep_after_if_else@6
     txn GroupIndex
-    bz oddStep_ternary_false@2
+    bz oddStep_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-oddStep_ternary_merge@3:
+oddStep_ternary_merge@5:
     !
     assert // not payable
+
+oddStep_after_if_else@6:
     pushint 3
     itob
     frame_dig -1
     b*
     dup
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     intc_0 // 1
     itob
     b+
     dup
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dup
@@ -209,6 +227,6 @@ oddStep_ternary_merge@3:
     b|
     retsub
 
-oddStep_ternary_false@2:
+oddStep_ternary_false@4:
     intc_2 // 0
-    b oddStep_ternary_merge@3
+    b oddStep_ternary_merge@5

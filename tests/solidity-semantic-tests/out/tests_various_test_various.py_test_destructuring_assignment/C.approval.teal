@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/destructuring_assignment.sol.C.approval_program() -> uint64:
 main:
     intcblock 2 1 0 32
-    bytecblock "arrayData" "y" "data" "__ctor_pending" "x" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000004 0x0000000000000000000000000000000000000000000000000000000000000005
+    bytecblock "arrayData" "y" "data" "__ctor_pending" "x" 0x34d579df 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000004 0x0000000000000000000000000000000000000000000000000000000000000005
     intc_2 // 0
     dupn 4
     pushint 4096
@@ -38,7 +38,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x34d579df 0x4e631e90 // method "__postInit()void", method "returnsArray()uint256[]", method "f(byte[])uint256"
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    bytec 5 // method "returnsArray()uint256[]"
+    pushbytes 0x4e631e90 // method "f(byte[])uint256"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_returnsArray_route@6 main_f_route@7
     err
@@ -118,7 +120,7 @@ main_ternary_merge@19:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
 
 main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/destructuring_assignment.sol.C.f@41:
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -134,7 +136,7 @@ main_after_if_else@21:
     itob
     b!=
     bz main_after_if_else@23
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000004
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/destructuring_assignment.sol.C.f@41
 
 main_after_if_else@23:
@@ -145,7 +147,7 @@ main_after_if_else@23:
     dig 1
     b!=
     bz main_after_if_else@25
-    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000005
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000005
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/destructuring_assignment.sol.C.f@41
 
 main_after_if_else@25:
@@ -253,7 +255,7 @@ main_ternary_false@13:
 
 main_returnsArray_route@6:
     callsub returnsArray
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -294,16 +296,24 @@ main___postInit_route@5:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/destructuring_assignment.sol.C.returnsArray() -> bytes:
 returnsArray:
+    txn NumAppArgs
+    bz returnsArray_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 5 // method "returnsArray()uint256[]"
+    ==
+    bz returnsArray_after_if_else@6
     txn GroupIndex
-    bz returnsArray_ternary_false@2
+    bz returnsArray_ternary_false@4
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-returnsArray_ternary_merge@3:
+returnsArray_ternary_merge@5:
     !
     assert // not payable
+
+returnsArray_after_if_else@6:
     bytec_0 // "arrayData"
     box_del
     pop
@@ -312,27 +322,27 @@ returnsArray_ternary_merge@3:
     box_put
     bytec_0 // "arrayData"
     pushint 66
-    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000005
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000005
     box_replace // on error: index out of bounds
     bytec_0 // "arrayData"
     box_len
     bury 1
-    bnz returnsArray_after_if_else@7
+    bnz returnsArray_after_if_else@10
     bytec_0 // "arrayData"
     intc_0 // 2
     box_create
     pop
 
-returnsArray_after_if_else@7:
+returnsArray_after_if_else@10:
     bytec_0 // "arrayData"
     pushint 226
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000004
     box_replace // on error: index out of bounds
     bytec_0 // "arrayData"
     box_get
     pop
     retsub
 
-returnsArray_ternary_false@2:
+returnsArray_ternary_false@4:
     intc_2 // 0
-    b returnsArray_ternary_merge@3
+    b returnsArray_ternary_merge@5

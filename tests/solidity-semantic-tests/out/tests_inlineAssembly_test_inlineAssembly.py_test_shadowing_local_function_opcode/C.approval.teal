@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/shadowing_local_function_opcode.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock 0x151f7c75
+    bytecblock 0xac976e02 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -33,7 +33,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xac976e02 0x595e23e2 // method "add(uint256,uint256)uint256", method "g()(uint256,uint256)"
+    bytec_0 // method "add(uint256,uint256)uint256"
+    pushbytes 0x595e23e2 // method "g()(uint256,uint256)"
     txna ApplicationArgs 0
     match main_add_route@5 main_g_route@6
     err
@@ -70,7 +71,7 @@ main_ternary_merge@13:
     b|
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -95,7 +96,7 @@ main_add_route@5:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub add
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -106,19 +107,27 @@ main_add_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/shadowing_local_function_opcode.sol.C.add(__arc4__param0: bytes, __arc4__param1: bytes) -> bytes:
 add:
     proto 2 1
+    txn NumAppArgs
+    bz add_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_0 // method "add(uint256,uint256)uint256"
+    ==
+    bz add_after_if_else@6
     txn GroupIndex
-    bz add_ternary_false@2
+    bz add_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-add_ternary_merge@3:
+add_ternary_merge@5:
     !
     assert // not payable
+
+add_after_if_else@6:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     retsub
 
-add_ternary_false@2:
+add_ternary_false@4:
     intc_2 // 0
-    b add_ternary_merge@3
+    b add_ternary_merge@5

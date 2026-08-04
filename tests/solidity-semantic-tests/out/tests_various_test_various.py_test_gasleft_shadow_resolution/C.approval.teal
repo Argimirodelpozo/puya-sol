@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/gasleft_shadow_resolution.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock 0x151f7c75
+    bytecblock 0x7cee671a 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -33,7 +33,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x7cee671a 0xcd78b354 // method "gasleft()uint256", method "f()uint256"
+    bytec_0 // method "gasleft()uint256"
+    pushbytes 0xcd78b354 // method "f()uint256"
     txna ApplicationArgs 0
     match main_gasleft_route@5 main_f_route@6
     err
@@ -58,7 +59,7 @@ main_ternary_merge@13:
     intc_1 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -71,7 +72,7 @@ main_ternary_false@12:
 
 main_gasleft_route@5:
     callsub gasleft
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -81,19 +82,27 @@ main_gasleft_route@5:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/gasleft_shadow_resolution.sol.C.gasleft() -> bytes:
 gasleft:
+    txn NumAppArgs
+    bz gasleft_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_0 // method "gasleft()uint256"
+    ==
+    bz gasleft_after_if_else@6
     txn GroupIndex
-    bz gasleft_ternary_false@2
+    bz gasleft_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-gasleft_ternary_merge@3:
+gasleft_ternary_merge@5:
     !
     assert // not payable
+
+gasleft_after_if_else@6:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     retsub
 
-gasleft_ternary_false@2:
+gasleft_ternary_false@4:
     intc_2 // 0
-    b gasleft_ternary_merge@3
+    b gasleft_ternary_merge@5

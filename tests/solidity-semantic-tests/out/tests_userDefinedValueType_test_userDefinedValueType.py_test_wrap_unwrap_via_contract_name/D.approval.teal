@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/wrap_unwrap_via_contract_name.sol.D.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock 0x151f7c75
+    bytecblock 0x151f7c75 0x1928cd24 0xc14ad39f
     intc_2 // 0
     pushint 4096
     bzero
@@ -34,7 +34,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x1928cd24 0xc14ad39f 0xb9f9b1ca 0xd735f408 // method "f(uint256)uint256", method "g(uint256)uint256", method "h(uint256)uint256", method "i(uint256)uint256"
+    bytec_1 // method "f(uint256)uint256"
+    bytec_2 // method "g(uint256)uint256"
+    pushbytess 0xb9f9b1ca 0xd735f408 // method "h(uint256)uint256", method "i(uint256)uint256"
     txna ApplicationArgs 0
     match main_f_route@5 main_g_route@6 main_h_route@7 main_i_route@8
     err
@@ -153,40 +155,56 @@ main_f_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/wrap_unwrap_via_contract_name.sol.D.f(__arc4_x: bytes) -> bytes:
 f:
     proto 1 1
+    txn NumAppArgs
+    bz f_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_1 // method "f(uint256)uint256"
+    ==
+    bz f_after_if_else@6
     txn GroupIndex
-    bz f_ternary_false@2
+    bz f_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@3:
+f_ternary_merge@5:
     !
     assert // not payable
+
+f_after_if_else@6:
     frame_dig -1
     retsub
 
-f_ternary_false@2:
+f_ternary_false@4:
     intc_2 // 0
-    b f_ternary_merge@3
+    b f_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/wrap_unwrap_via_contract_name.sol.D.g(__arc4_x: bytes) -> bytes:
 g:
     proto 1 1
+    txn NumAppArgs
+    bz g_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_2 // method "g(uint256)uint256"
+    ==
+    bz g_after_if_else@6
     txn GroupIndex
-    bz g_ternary_false@2
+    bz g_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-g_ternary_merge@3:
+g_ternary_merge@5:
     !
     assert // not payable
+
+g_after_if_else@6:
     frame_dig -1
     retsub
 
-g_ternary_false@2:
+g_ternary_false@4:
     intc_2 // 0
-    b g_ternary_merge@3
+    b g_ternary_merge@5

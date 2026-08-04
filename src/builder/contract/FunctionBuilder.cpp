@@ -1,4 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
+#include "builder/itxn/InnerCallHandlers.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "awst/Termination.h"
 #include "awst/StatementWalk.h"
@@ -1024,7 +1025,20 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Non-payable check: assert no preceding PaymentTxn has non-zero amount.
 		// Skipped for internal/private and receive() (implicitly payable).
 		if (!_func.isPayable() && !_func.isReceive())
-			prependNonPayableCheck(method);
+		{
+			// Selector lets the guard tell router dispatch from an internal
+			// callsub — see prependNonPayableCheck.
+			// Only pay for the selector-gated guard where it is needed: a
+			// method reachable by internal callsub. Blanket use cost ~6
+			// opcodes on every method and blew the 8 KB cap.
+			std::string sel;
+			if (m_currentContract && _isCalledInternally(*m_currentContract, _func))
+			{
+				try { sel = eb::InnerCallHandlers::buildMethodSelector(*m_exprBuilder, &_func); }
+				catch (...) { sel.clear(); }
+			}
+			prependNonPayableCheck(method, sel);
+		}
 	}
 	else
 	{

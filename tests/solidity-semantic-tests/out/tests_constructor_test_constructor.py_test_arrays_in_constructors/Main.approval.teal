@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/arrays_in_constructors.sol.Main.approval_program() -> uint64:
 main:
     intcblock 1 0 32 2
-    bytecblock "m_s" "__ctor_pending" 0x151f7c75 "m_x"
+    bytecblock "m_s" "__ctor_pending" 0x151f7c75 "m_x" 0x7d6c0313
     intc_1 // 0
     pushint 4096
     bzero
@@ -37,7 +37,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x37f604ff 0x7d6c0313 0xce7531ad 0xc8283ac6 // method "__postInit(address[],uint256)void", method "f(address[])address[]", method "m_x()uint256", method "part(uint256)address"
+    pushbytes 0x37f604ff // method "__postInit(address[],uint256)void"
+    bytec 4 // method "f(address[])address[]"
+    pushbytess 0xce7531ad 0xc8283ac6 // method "m_x()uint256", method "part(uint256)address"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_f_route@6 main_m_x_route@7 main_part_route@8
     err
@@ -203,20 +205,28 @@ main___postInit_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/arrays_in_constructors.sol.Main.f(s: bytes) -> bytes, bytes:
 f:
     proto 1 2
+    txn NumAppArgs
+    bz f_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 4 // method "f(address[])address[]"
+    ==
+    bz f_after_if_else@6
     txn GroupIndex
-    bz f_ternary_false@2
+    bz f_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@3:
+f_ternary_merge@5:
     !
     assert // not payable
+
+f_after_if_else@6:
     frame_dig -1
     dup
     retsub
 
-f_ternary_false@2:
+f_ternary_false@4:
     intc_1 // 0
-    b f_ternary_merge@3
+    b f_ternary_merge@5

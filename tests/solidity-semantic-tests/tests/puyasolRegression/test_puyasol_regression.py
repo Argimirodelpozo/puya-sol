@@ -4043,3 +4043,30 @@ def test_return_void_external_call(harness):
         "returned void call was dropped instead of executed"
     harness.call(app, "plain(uint256)", 7, extra_fee=10_000)
     assert as_int(harness.call(app, "read()", extra_fee=10_000).abi_return) == 7
+
+
+def test_payable_calls_nonpayable(harness):
+    """puyasolRegression/contracts/payable_calls_nonpayable.sol — NOT an o.g. test.
+
+    A PAYABLE function that internally calls a NON-PAYABLE public one used to
+    revert on its own legitimate payment: the "not payable" guard reads a
+    TRANSACTION-level fact (the preceding payment txn) but is emitted into the
+    method BODY, which an internal `callsub` shares. friend.tech's `buyShares`
+    calls `getPrice` and died on every buy carrying value — invisible until the
+    chainwide differ started replaying msg.value.
+
+    The guard now fires only when the ROUTER dispatched that method
+    (ApplicationArgs[0] holds its selector), so BOTH halves are asserted here:
+    the payable path works, and a genuine external non-payable call still
+    rejects value.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/payable_calls_nonpayable.sol",
+        contract_name="PayableCallsNonPayable")
+    r = harness.call(app, "buy(uint256)", 5, payment_wei=1000, extra_fee=10_000)
+    assert as_int(r.abi_return) == 15, "payable caller tripped the callee's guard"
+    assert as_int(harness.call(app, "last()", extra_fee=10_000).abi_return) == 15
+    # the guard must still reject value sent to a real non-payable entry point
+    assert harness.call(app, "setLast(uint256)", 7, payment_wei=1000,
+                        extra_fee=10_000, expect_revert=True).reverted, \
+        "non-payable method accepted value"

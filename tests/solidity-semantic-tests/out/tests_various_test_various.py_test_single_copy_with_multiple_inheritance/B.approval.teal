@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/single_copy_with_multiple_inheritance.sol.B.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "data" 0x151f7c75
+    bytecblock "data" 0xc9bcbbdf 0x151f7c75
     intc_1 // 0
     pushint 4096
     bzero
@@ -37,14 +37,15 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x0640f355 0x6fe076ab 0xc9bcbbdf // method "getViaB()uint256", method "setData(uint256)void", method "getViaBase()uint256"
+    pushbytess 0x0640f355 0x6fe076ab // method "getViaB()uint256", method "setData(uint256)void"
+    bytec_1 // method "getViaBase()uint256"
     txna ApplicationArgs 0
     match main_getViaB_route@5 main_setData_route@6 main_getViaBase_route@7
     err
 
 main_getViaBase_route@7:
     callsub getViaBase
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -99,7 +100,7 @@ main_ternary_merge@21:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -113,16 +114,24 @@ main_ternary_false@20:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/single_copy_with_multiple_inheritance.sol.B.getViaBase() -> bytes:
 getViaBase:
+    txn NumAppArgs
+    bz getViaBase_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_1 // method "getViaBase()uint256"
+    ==
+    bz getViaBase_after_if_else@6
     txn GroupIndex
-    bz getViaBase_ternary_false@2
+    bz getViaBase_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-getViaBase_ternary_merge@3:
+getViaBase_ternary_merge@5:
     !
     assert // not payable
+
+getViaBase_after_if_else@6:
     intc_1 // 0
     bytec_0 // "data"
     app_global_get_ex
@@ -137,6 +146,6 @@ getViaBase_ternary_merge@3:
     b|
     retsub
 
-getViaBase_ternary_false@2:
+getViaBase_ternary_false@4:
     intc_1 // 0
-    b getViaBase_ternary_merge@3
+    b getViaBase_ternary_merge@5

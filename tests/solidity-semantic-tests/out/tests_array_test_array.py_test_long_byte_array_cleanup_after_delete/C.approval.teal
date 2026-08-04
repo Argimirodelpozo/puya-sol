@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "testArray" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 "__ctor_pending" "s:" 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "testArray" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 "__ctor_pending" 0x4fa0465e "s:" 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_2 // 0
     dup
     pushint 4096
@@ -38,7 +38,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x4fa0465e 0xa3e4ca32 0xc81142a1 0x2bbf0199 0x58d0419e 0xc67bf355 // method "__postInit()void", method "getArrayDataAreaSlot()uint256", method "getCanarySlot()uint256", method "checkSlots()(uint256,uint256,uint256,uint256,uint256)", method "fillArray()void", method "deleteArray()void", method "canaryValue()uint256"
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    bytec 5 // method "getArrayDataAreaSlot()uint256"
+    pushbytess 0xa3e4ca32 0xc81142a1 0x2bbf0199 0x58d0419e 0xc67bf355 // method "getCanarySlot()uint256", method "checkSlots()(uint256,uint256,uint256,uint256,uint256)", method "fillArray()void", method "deleteArray()void", method "canaryValue()uint256"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_getArrayDataAreaSlot_route@6 main_getCanarySlot_route@7 main_checkSlots_route@8 main_fillArray_route@9 main_deleteArray_route@10 main_canaryValue_route@11
     err
@@ -367,7 +369,7 @@ main_else_body@44:
     -
     intc_0 // 32
     extract3
-    bytec 5 // "s:"
+    bytec 6 // "s:"
     swap
     concat
     dup
@@ -415,7 +417,7 @@ __storage_read_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec 5 // "s:"
+    bytec 6 // "s:"
     swap
     concat
     dup
@@ -433,7 +435,7 @@ getCanary:
     load 0
     store 0
     load 0
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     store 0
     load 0
@@ -444,20 +446,28 @@ getCanary:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot() -> bytes:
 getArrayDataAreaSlot:
+    txn NumAppArgs
+    bz getArrayDataAreaSlot_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 5 // method "getArrayDataAreaSlot()uint256"
+    ==
+    bz getArrayDataAreaSlot_after_if_else@6
     txn GroupIndex
-    bz getArrayDataAreaSlot_ternary_false@2
+    bz getArrayDataAreaSlot_ternary_false@4
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-getArrayDataAreaSlot_ternary_merge@3:
+getArrayDataAreaSlot_ternary_merge@5:
     !
     assert // not payable
+
+getArrayDataAreaSlot_after_if_else@6:
     load 0
     store 0
     load 0
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     store 0
     load 0
@@ -465,6 +475,6 @@ getArrayDataAreaSlot_ternary_merge@3:
     pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
     retsub
 
-getArrayDataAreaSlot_ternary_false@2:
+getArrayDataAreaSlot_ternary_false@4:
     intc_2 // 0
-    b getArrayDataAreaSlot_ternary_merge@3
+    b getArrayDataAreaSlot_ternary_merge@5

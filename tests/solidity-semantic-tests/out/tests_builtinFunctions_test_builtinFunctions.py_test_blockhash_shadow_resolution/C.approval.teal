@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/blockhash_shadow_resolution.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c75
+    bytecblock 0x54b2ad6e 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -33,7 +33,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x54b2ad6e 0x4494bd16 // method "blockhash(uint256)byte[32]", method "f()byte[32]"
+    bytec_0 // method "blockhash(uint256)byte[32]"
+    pushbytes 0x4494bd16 // method "f()byte[32]"
     txna ApplicationArgs 0
     match main_blockhash_route@5 main_f_route@6
     err
@@ -52,7 +53,7 @@ main_ternary_merge@13:
     pushint 3
     itob
     callsub blockhash
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -71,7 +72,7 @@ main_blockhash_route@5:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub blockhash
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -82,19 +83,27 @@ main_blockhash_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/blockhash_shadow_resolution.sol.C.blockhash(__arc4_blockNumber: bytes) -> bytes:
 blockhash:
     proto 1 1
+    txn NumAppArgs
+    bz blockhash_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_0 // method "blockhash(uint256)byte[32]"
+    ==
+    bz blockhash_after_if_else@6
     txn GroupIndex
-    bz blockhash_ternary_false@2
+    bz blockhash_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-blockhash_ternary_merge@3:
+blockhash_ternary_merge@5:
     !
     assert // not payable
+
+blockhash_after_if_else@6:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     retsub
 
-blockhash_ternary_false@2:
+blockhash_ternary_false@4:
     intc_1 // 0
-    b blockhash_ternary_merge@3
+    b blockhash_ternary_merge@5

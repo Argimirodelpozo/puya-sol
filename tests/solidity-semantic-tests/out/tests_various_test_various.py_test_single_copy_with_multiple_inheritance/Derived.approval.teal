@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/single_copy_with_multiple_inheritance.sol.Derived.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "data" 0x151f7c75
+    bytecblock "data" 0x6fe076ab 0xc9bcbbdf 0x151f7c75
     intc_1 // 0
     pushint 4096
     bzero
@@ -37,14 +37,16 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x30c26d19 0x0640f355 0x6fe076ab 0xc9bcbbdf // method "setViaA(uint256)void", method "getViaB()uint256", method "setData(uint256)void", method "getViaBase()uint256"
+    pushbytess 0x30c26d19 0x0640f355 // method "setViaA(uint256)void", method "getViaB()uint256"
+    bytec_1 // method "setData(uint256)void"
+    bytec_2 // method "getViaBase()uint256"
     txna ApplicationArgs 0
     match main_setViaA_route@5 main_getViaB_route@6 main_setData_route@7 main_getViaBase_route@8
     err
 
 main_getViaBase_route@8:
     callsub getViaBase
-    bytec_1 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -82,7 +84,7 @@ main_ternary_merge@19:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -124,38 +126,54 @@ main_ternary_false@23:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/single_copy_with_multiple_inheritance.sol.Derived.setData(__arc4_i: bytes) -> void:
 setData:
     proto 1 0
+    txn NumAppArgs
+    bz setData_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_1 // method "setData(uint256)void"
+    ==
+    bz setData_after_if_else@6
     txn GroupIndex
-    bz setData_ternary_false@2
+    bz setData_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-setData_ternary_merge@3:
+setData_ternary_merge@5:
     !
     assert // not payable
+
+setData_after_if_else@6:
     bytec_0 // "data"
     frame_dig -1
     app_global_put
     retsub
 
-setData_ternary_false@2:
+setData_ternary_false@4:
     intc_1 // 0
-    b setData_ternary_merge@3
+    b setData_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/single_copy_with_multiple_inheritance.sol.Derived.getViaBase() -> bytes:
 getViaBase:
+    txn NumAppArgs
+    bz getViaBase_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_2 // method "getViaBase()uint256"
+    ==
+    bz getViaBase_after_if_else@6
     txn GroupIndex
-    bz getViaBase_ternary_false@2
+    bz getViaBase_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-getViaBase_ternary_merge@3:
+getViaBase_ternary_merge@5:
     !
     assert // not payable
+
+getViaBase_after_if_else@6:
     intc_1 // 0
     bytec_0 // "data"
     app_global_get_ex
@@ -170,6 +188,6 @@ getViaBase_ternary_merge@3:
     b|
     retsub
 
-getViaBase_ternary_false@2:
+getViaBase_ternary_false@4:
     intc_1 // 0
-    b getViaBase_ternary_merge@3
+    b getViaBase_ternary_merge@5

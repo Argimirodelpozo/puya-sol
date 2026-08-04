@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/multiple_inheritance.sol.B.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "x" "y" 0x 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock "x" "y" 0x 0x8a37d29b 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_1 // 0
     pushint 4096
     bzero
@@ -40,7 +40,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x88035e71 0x5c5e3bbc 0x7c1072af 0x8a37d29b // method "g(uint256)void", method "y()uint256", method "x()uint256", method "f(uint256)void"
+    pushbytess 0x88035e71 0x5c5e3bbc 0x7c1072af // method "g(uint256)void", method "y()uint256", method "x()uint256"
+    bytec_3 // method "f(uint256)void"
     txna ApplicationArgs 0
     match main_g_route@5 main_y_route@6 main_x_route@7 main_f_route@8
     err
@@ -79,7 +80,7 @@ main_ternary_merge@17:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -113,7 +114,7 @@ main_ternary_merge@22:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -149,7 +150,7 @@ main_ternary_merge@27:
     dig 1
     b+
     dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     callsub f
@@ -161,7 +162,7 @@ main_ternary_merge@27:
     itob
     b+
     dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_1 // "y"
@@ -178,21 +179,29 @@ main_ternary_false@26:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/multiple_inheritance.sol.B.f(__arc4_a: bytes) -> void:
 f:
     proto 1 0
+    txn NumAppArgs
+    bz f_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_3 // method "f(uint256)void"
+    ==
+    bz f_after_if_else@6
     txn GroupIndex
-    bz f_ternary_false@2
+    bz f_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-f_ternary_merge@3:
+f_ternary_merge@5:
     !
     assert // not payable
+
+f_after_if_else@6:
     bytec_0 // "x"
     frame_dig -1
     app_global_put
     retsub
 
-f_ternary_false@2:
+f_ternary_false@4:
     intc_1 // 0
-    b f_ternary_merge@3
+    b f_ternary_merge@5

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x22b2fda0
+    bytecblock 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x22b2fda0 0x10da340f 0xa0a2a599 0x88ce8eb6 0x795d221f 0x2e346852 0x7f9c7280
     pushbytes ""
     dupn 2
     pushint 4096
@@ -39,7 +39,14 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     bytec_2 // method "fNoArgs()void"
-    pushbytess 0xb6e08150 0x2e5fdc8c 0x10da340f 0xa0a2a599 0x88ce8eb6 0x795d221f 0x2e346852 0x7f9c7280 0xb2fd8e38 // method "fArray(uint256[])void", method "fUint(uint256,uint256)(uint256,uint256)", method "fSignatureFromLiteralNoArgs()byte[]", method "fPointerNoArgs()byte[]", method "fSignatureFromLiteralArray()byte[]", method "fPointerArray()byte[]", method "fSignatureFromLiteralUint()byte[]", method "fPointerUint()byte[]", method "assertConsistentSelectors()void"
+    pushbytess 0xb6e08150 0x2e5fdc8c // method "fArray(uint256[])void", method "fUint(uint256,uint256)(uint256,uint256)"
+    bytec_3 // method "fSignatureFromLiteralNoArgs()byte[]"
+    bytec 4 // method "fPointerNoArgs()byte[]"
+    bytec 5 // method "fSignatureFromLiteralArray()byte[]"
+    bytec 6 // method "fPointerArray()byte[]"
+    bytec 7 // method "fSignatureFromLiteralUint()byte[]"
+    bytec 8 // method "fPointerUint()byte[]"
+    pushbytes 0xb2fd8e38 // method "assertConsistentSelectors()void"
     txna ApplicationArgs 0
     match main_fNoArgs_route@5 main_fArray_route@6 main_fUint_route@7 main_fSignatureFromLiteralNoArgs_route@8 main_fPointerNoArgs_route@9 main_fSignatureFromLiteralArray_route@10 main_fPointerArray_route@11 main_fSignatureFromLiteralUint_route@12 main_fPointerUint_route@13 main_assertConsistentSelectors_route@14
     err
@@ -267,119 +274,167 @@ main_ternary_false@53:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.fSignatureFromLiteralNoArgs() -> bytes:
 fSignatureFromLiteralNoArgs:
+    txn NumAppArgs
+    bz fSignatureFromLiteralNoArgs_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_3 // method "fSignatureFromLiteralNoArgs()byte[]"
+    ==
+    bz fSignatureFromLiteralNoArgs_after_if_else@6
     txn GroupIndex
-    bz fSignatureFromLiteralNoArgs_ternary_false@2
+    bz fSignatureFromLiteralNoArgs_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-fSignatureFromLiteralNoArgs_ternary_merge@3:
+fSignatureFromLiteralNoArgs_ternary_merge@5:
     !
     assert // not payable
+
+fSignatureFromLiteralNoArgs_after_if_else@6:
     pushbytes 0x5fd2f459 // method "fNoArgs()"
     retsub
 
-fSignatureFromLiteralNoArgs_ternary_false@2:
+fSignatureFromLiteralNoArgs_ternary_false@4:
     intc_1 // 0
-    b fSignatureFromLiteralNoArgs_ternary_merge@3
+    b fSignatureFromLiteralNoArgs_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.fPointerNoArgs() -> bytes:
 fPointerNoArgs:
+    txn NumAppArgs
+    bz fPointerNoArgs_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 4 // method "fPointerNoArgs()byte[]"
+    ==
+    bz fPointerNoArgs_after_if_else@6
     txn GroupIndex
-    bz fPointerNoArgs_ternary_false@2
+    bz fPointerNoArgs_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-fPointerNoArgs_ternary_merge@3:
+fPointerNoArgs_ternary_merge@5:
     !
     assert // not payable
+
+fPointerNoArgs_after_if_else@6:
     bytec_2 // 0x22b2fda0
     retsub
 
-fPointerNoArgs_ternary_false@2:
+fPointerNoArgs_ternary_false@4:
     intc_1 // 0
-    b fPointerNoArgs_ternary_merge@3
+    b fPointerNoArgs_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.fSignatureFromLiteralArray() -> bytes:
 fSignatureFromLiteralArray:
+    txn NumAppArgs
+    bz fSignatureFromLiteralArray_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 5 // method "fSignatureFromLiteralArray()byte[]"
+    ==
+    bz fSignatureFromLiteralArray_after_if_else@6
     txn GroupIndex
-    bz fSignatureFromLiteralArray_ternary_false@2
+    bz fSignatureFromLiteralArray_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-fSignatureFromLiteralArray_ternary_merge@3:
+fSignatureFromLiteralArray_ternary_merge@5:
     !
     assert // not payable
+
+fSignatureFromLiteralArray_after_if_else@6:
     pushbytes 0xcb5a77640000
     retsub
 
-fSignatureFromLiteralArray_ternary_false@2:
+fSignatureFromLiteralArray_ternary_false@4:
     intc_1 // 0
-    b fSignatureFromLiteralArray_ternary_merge@3
+    b fSignatureFromLiteralArray_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.fPointerArray() -> bytes:
 fPointerArray:
+    txn NumAppArgs
+    bz fPointerArray_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 6 // method "fPointerArray()byte[]"
+    ==
+    bz fPointerArray_after_if_else@6
     txn GroupIndex
-    bz fPointerArray_ternary_false@2
+    bz fPointerArray_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-fPointerArray_ternary_merge@3:
+fPointerArray_ternary_merge@5:
     !
     assert // not payable
+
+fPointerArray_after_if_else@6:
     pushbytes 0xb6e081500000
     retsub
 
-fPointerArray_ternary_false@2:
+fPointerArray_ternary_false@4:
     intc_1 // 0
-    b fPointerArray_ternary_merge@3
+    b fPointerArray_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.fSignatureFromLiteralUint() -> bytes:
 fSignatureFromLiteralUint:
+    txn NumAppArgs
+    bz fSignatureFromLiteralUint_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 7 // method "fSignatureFromLiteralUint()byte[]"
+    ==
+    bz fSignatureFromLiteralUint_after_if_else@6
     txn GroupIndex
-    bz fSignatureFromLiteralUint_ternary_false@2
+    bz fSignatureFromLiteralUint_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-fSignatureFromLiteralUint_ternary_merge@3:
+fSignatureFromLiteralUint_ternary_merge@5:
     !
     assert // not payable
+
+fSignatureFromLiteralUint_after_if_else@6:
     pushbytes 0x6052c2fd000000000000000c000000000000000d
     retsub
 
-fSignatureFromLiteralUint_ternary_false@2:
+fSignatureFromLiteralUint_ternary_false@4:
     intc_1 // 0
-    b fSignatureFromLiteralUint_ternary_merge@3
+    b fSignatureFromLiteralUint_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.fPointerUint() -> bytes:
 fPointerUint:
+    txn NumAppArgs
+    bz fPointerUint_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 8 // method "fPointerUint()byte[]"
+    ==
+    bz fPointerUint_after_if_else@6
     txn GroupIndex
-    bz fPointerUint_ternary_false@2
+    bz fPointerUint_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-fPointerUint_ternary_merge@3:
+fPointerUint_ternary_merge@5:
     !
     assert // not payable
+
+fPointerUint_after_if_else@6:
     pushbytes 0x2e5fdc8c000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
     retsub
 
-fPointerUint_ternary_false@2:
+fPointerUint_ternary_false@4:
     intc_1 // 0
-    b fPointerUint_ternary_merge@3
+    b fPointerUint_ternary_merge@5
