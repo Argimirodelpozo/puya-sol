@@ -340,11 +340,11 @@ this table twice (see below).
 
 | | |
 |---|---|
-| contracts replayed | **58** |
-| zero divergences | **58** |
+| contracts replayed | **64** |
+| zero divergences | **64** |
 | with divergences | 0 |
-| transactions replayed on both legs | **9,234** of 13,410 in-window (69%) |
-| skipped, by cause | closed-world 3,173, value 534, avm-platform-limit 445, no-calldata 12, unknown-selector 12 |
+| transactions replayed on both legs | **11,901** of 16,883 in-window (70%) |
+| skipped, by cause | closed-world 4,495, avm-platform-limit 424, value 28, no-calldata 23, unknown-selector 12 |
 
 ### Headline runs
 
@@ -390,10 +390,14 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 | contract | chain | replayed | divergences | skips |
 |---|---|---|---|---|
 | `pepe_deep` PepeToken | ethereum | 1441/1500 | ✅ | closed-world 59 |
+| `usde_deep` USDe | ethereum | 865/1000 | ✅ | closed-world 135 |
+| `wbt_deep` WBT | ethereum | 850/1000 | ✅ | closed-world 150 |
+| `staup_deep` StauProject | polygon | 772/1000 | ✅ | closed-world 228 |
 | `opmint` OptimismMintableERC20 | base | 285/300 | ✅ | closed-world 15 |
 | `op_gov` GovernanceToken | optimism | 247/400 | ✅ | closed-world 100, avm-platform-limit 41, no-calldata 7, value 5 |
 | `l2custom` L2CustomERC20 | optimism | 200/200 | ✅ | — |
 | `pepe_ic` PepeToken | ethereum | 200/200 | ✅ | — |
+| `staup` StauProject | polygon | 200/200 | ✅ | — |
 | `wbt` WBT | ethereum | 200/200 | ✅ | — |
 | `bobo` Bobo | ethereum | 199/200 | ✅ | closed-world 1 |
 | `opmint9` OptimismMintableERC20 | base | 199/200 | ✅ | closed-world 1 |
@@ -415,7 +419,6 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 | `doginme` doginme | base | 188/200 | ✅ | closed-world 12 |
 | `floki` FLOKI | ethereum | 188/200 | ✅ | closed-world 12 |
 | `pepe` PepeToken | ethereum | 188/200 | ✅ | closed-world 12 |
-| `staup` StauProject | polygon | 188/200 | ✅ | avm-platform-limit 12 |
 | `wallettok` WALLETToken | polygon | 188/200 | ✅ | closed-world 12 |
 | `systemcoin` SystemCoin | optimism | 186/200 | ✅ | closed-world 14 |
 | `extra` EXTRA | optimism | 182/200 | ✅ | closed-world 16, avm-platform-limit 2 |
@@ -424,6 +427,7 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 | `babydoge` BabyDogeToken | base | 154/200 | ✅ | closed-world 45, avm-platform-limit 1 |
 | `kaito` Kaito | base | 153/200 | ✅ | closed-world 42, avm-platform-limit 3, value 2 |
 | `erc6160` ERC6160Ext20 | ethereum | 150/200 | ✅ | closed-world 50 |
+| `aave_gateway` WrappedTokenGatewayV3 | ethereum | 148/200 | ✅ | closed-world 52 |
 | `ape` Astgik | ethereum | 131/200 | ✅ | closed-world 66, value 3 |
 | `bgb` BitgetToken | ethereum | 115/200 | ✅ | closed-world 84, avm-platform-limit 1 |
 | `pika` Pika | optimism | 100/200 | ✅ | closed-world 83, avm-platform-limit 17 |
@@ -433,26 +437,28 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 | `zen` ZenToken | base | 84/200 | ✅ | closed-world 115, avm-platform-limit 1 |
 | `sdao` SDAO | ethereum | 79/200 | ✅ | closed-world 120, value 1 |
 | `sand` PolygonSand | polygon | 78/200 | ✅ | closed-world 122 |
+| `permit2` Permit2 | ethereum | 74/200 | ✅ | closed-world 101, no-calldata 13, unknown-selector 12 |
 | `falcon` FF | ethereum | 70/200 | ✅ | closed-world 130 |
-| `permit2` Permit2 | ethereum | 66/200 | ✅ | closed-world 101, unknown-selector 12, value 11, avm-platform-limit 8, no-calldata 2 |
 | `kelp` KERNEL | ethereum | 58/200 | ✅ | closed-world 141, avm-platform-limit 1 |
 | `xerc20` XERC20 | gnosis | 44/200 | ✅ | closed-world 156 |
+| `friendtech` FriendtechSharesV1 | base | 43/400 | ✅ | closed-world 357 |
 | `strk` StarkNetToken | ethereum | 42/400 | ✅ | avm-platform-limit 349, value 7, no-calldata 2 |
 | `ena` ENA | ethereum | 34/200 | ✅ | closed-world 161, value 3, avm-platform-limit 2 |
 | `etherfi` EtherFiGovernanceToken | ethereum | 33/200 | ✅ | closed-world 163, value 2, avm-platform-limit 2 |
-| `friendtech` FriendtechSharesV1 | base | 33/400 | ✅ | value 342, closed-world 25 |
 | `selftest` StorageShapes | synthetic | 10/10 | ✅ | — |
 | `vanry` VANRY | polygon | 9/200 | ✅ | closed-world 191 |
-| `bmex` BMEX | ethereum | 4/200 | ✅ | closed-world 195, avm-platform-limit 1 |
+| `bmex` BMEX | ethereum | 5/200 | ✅ | closed-world 195 |
 | `tig` TIGToken | base | 2/200 | ✅ | closed-world 198 |
-| `aave_gateway` WrappedTokenGatewayV3 | ethereum | 1/200 | ✅ | value 153, closed-world 46 |
+| `comet_rewards` CometRewards | ethereum | 1/200 | ✅ | closed-world 199 |
+| `morpho_alloc` PublicAllocator | ethereum | 1/200 | ✅ | closed-world 199 |
 | `sqd` SQD | arbitrum | 1/200 | ✅ | closed-world 199 |
+| `aave_oracle` AaveOracle | ethereum | 0/73 | ✅ | closed-world 73 |
 
 ### Aave (Ethereum)
 
 | contract | oracle | AVM |
 |---|---|---|
-| `WrappedTokenGatewayV3` | ✅ | ✅ **replays 1/200, zero divergences** |
+| `WrappedTokenGatewayV3` | ✅ | ✅ **replays 148/200, zero divergences** — the self-address stub lets its Pool calls answer, so the ETH-wrapping (msg.value) path replays end-to-end |
 | `PoolAddressesProvider` | ✅ replays | ❌ architectural — it deploys proxies via `new`, so `delegatecall` + `extcodehash` |
 | `ACLManager` | ❌ ctor calls the provider (a stand-in ERC-20 has no `getACLAdmin()`) | — |
 | Pool, aTokens, debt tokens | — | EIP-1967 proxies, out of reach |
