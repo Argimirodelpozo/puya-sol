@@ -132,7 +132,12 @@ def relax_pragma(src: str) -> str:
 # orchestrator re-skips the txn symmetrically. (Cribbed from fuzz_state.)
 def is_platform_limit(reason: str) -> bool:
     m = (reason or "").lower()
-    return ("budget" in m or "opcode" in m or "dynamic cost" in m
+    # "opcode BUDGET", not bare "opcode": algod appends a disassembly field
+    # (`opcodes=gtxns Amount; !; assert`) to EVERY logic-eval error, so the bare
+    # substring matched genuine contract reverts and silently skipped them as
+    # platform limits — hiding real divergences, the exact inverse of the
+    # masquerade this predicate exists to prevent.
+    return ("budget" in m or "opcode budget" in m or "dynamic cost" in m
             or "invalid box reference" in m or "unavailable box" in m
             or "unavailable resource" in m or "max_group_size" in m
             or ("exceed" in m and "group" in m)

@@ -445,6 +445,16 @@ def _retry_with_budget_pool(
     except Exception:
         return None
 
+    # The group holds the call, the optional payment, and the helpers, and
+    # MAX_GROUP_SIZE is 16. At the default 15 the no-payment case sits exactly
+    # on the ceiling, so a `msg.value` payment made it 17 and the composer
+    # rejected the whole group — surfacing as "cannot exceed MAX_GROUP_SIZE"
+    # and, because the txn then ran on the EVM leg only, as phantom storage
+    # divergences downstream. Costs 700 opcodes of headroom on payable calls.
+    _MAX_GROUP = 16
+    pool_size = min(pool_size,
+                    _MAX_GROUP - 1 - (1 if payment_wei > 0 else 0))
+
     sp_call = algod.suggested_params()
     sp_call.flat_fee = True
     sp_call.fee = 1000 * (pool_size + 2) + extra_fee  # +2: header + helper-call fee accounting
