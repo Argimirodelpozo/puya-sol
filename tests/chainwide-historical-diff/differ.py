@@ -75,6 +75,61 @@ def _timestamp_noise(ev_, av_):
             and abs(a - b) < _TS_SKEW_MAX)
 
 
+def _height_skew_noise(ev_, av_, wtxn, evm_no, avm_no):
+    """Block-HEIGHT skew: a contract storing `block.number` (staup's `_locked`
+    = block.number + lockPeriod) writes each leg's own local chain height —
+    py-evm restarts fresh per run while LocalNet's round count accumulates
+    across the whole session, so the pair can never match and the gap varies
+    by session. Absorb ONLY when the numeric delta equals the two legs'
+    RECORDED height skew at the writing txn (±2 for the lands-next-round
+    convention), and the values are height-sized — a tiny counter can never be
+    absorbed, so a real off-by-one stays a finding.
+    """
+    if wtxn is None or evm_no is None or avm_no is None:
+        return False
+    # `last_write_txn` is MAP-level; an individual key may have been written a
+    # few txns earlier, when the skew was smaller (the AVM gains ~2 rounds per
+    # call — seal + call — against the EVM's 1, so the gap drifts per txn).
+    # Accept a delta that equals the skew at ANY txn up to the map's last
+    # write: the pair must still coincide with a historically OBSERVED skew
+    # value, so an arbitrary wrong number is still a finding.
+    skews = []
+    for k, e_no in evm_no.items():
+        a_no = avm_no.get(k)
+        if a_no is None:
+            continue
+        try:
+            if int(k) <= int(wtxn) + 1:
+                skews.append(int(a_no) - int(e_no))
+        except (TypeError, ValueError):
+            continue
+    if not skews:
+        return False
+
+    def _pair_ok(e, a):
+        if e == a:
+            return True
+        return (isinstance(e, int) and isinstance(a, int)
+                and not isinstance(e, bool) and not isinstance(a, bool)
+                and min(e, a) > 1000
+                and any(abs((a - e) - sk) <= 2 for sk in skews))
+
+    def flat(v):
+        return v[0] if isinstance(v, list) and len(v) == 1 else v
+    e, a = flat(ev_), flat(av_)
+    if isinstance(e, list) and isinstance(a, list) and len(e) == len(a) and e:
+        saw = False
+        for x, y in zip(e, a):
+            if x == y:
+                continue
+            if _pair_ok(x, y):
+                saw = True
+                continue
+            return False
+        return saw
+    return e != a and _pair_ok(e, a)
+
+
 def _dynamic(t: str) -> bool:
     return t in ("string", "bytes") or t.endswith("]")
 
@@ -91,6 +146,8 @@ def diff_case(case_dir: Path) -> dict:
               for e in case["abi"] if e.get("type") == "event"}
 
     er, ar = evm["results"], avm["results"]
+    evm_block_no = evm.get("block_no") or {}
+    avm_block_no = avm.get("block_no") or {}
     findings = {"status_div": [], "value_div": [], "event_div": [],
                 "event_noise": [], "snapshot_div": [], "snapshot_noise": [],
                 "storage_noise": []}
@@ -220,6 +277,9 @@ def diff_case(case_dir: Path) -> dict:
         # real divergence.
         if _NOISE_SIG_RE.search(var):
             bucket = "storage_noise"
+        if _height_skew_noise(ev_, av_, _last_change(var),
+                              evm_block_no, avm_block_no):
+            bucket = "storage_noise"
         findings.setdefault(bucket, []).append(
             {"var": var, "evm": ev_, "avm": av_, "last_changed_txn": _last_change(var)})
 
@@ -317,7 +377,9 @@ def diff_case(case_dir: Path) -> dict:
         for k in keys:
             ev_k, av_k = ee.get(k), aa.get(k)
             ts_only = (_timestamp_noise(ev_k, av_k)
-                       or _timestamp_noise_elems(ev_k, av_k))
+                       or _timestamp_noise_elems(ev_k, av_k)
+                       or _height_skew_noise(ev_k, av_k, _last_write(m),
+                                             evm_block_no, avm_block_no))
             bucket = ("storage_noise"
                       if (off is not None or ts_only) else "storage_map_div")
             f = {"map": m, "key": k, "evm": ev_k, "avm": av_k,

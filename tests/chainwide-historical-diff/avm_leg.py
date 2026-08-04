@@ -560,7 +560,7 @@ def main():
     # ── replay ────────────────────────────────────────────────────────────
     results, snapshots, platform_limits = {}, {}, {}
     snapshot_at = set(meta["snapshot_at"])
-    block_ts = {}
+    block_ts, block_no = {}, {}
     for c in calls:
         i = c["i"]
         if i % 25 == 0 and ensure_app_funded(algod, dispenser, app.app_addr):
@@ -570,6 +570,14 @@ def main():
                              if time_base else c.get("ts"))
             if clock.cur is not None:
                 block_ts[str(i)] = clock.cur
+            # Round (chain height) at this txn: a contract storing block.number
+            # writes each leg's own height; the differ absorbs that skew only
+            # with the height at the writing txn on record. +1: the call lands
+            # in the NEXT round after this status read.
+            try:
+                block_no[str(i)] = int(algod.status()["last-round"]) + 1
+            except Exception:
+                pass
             sig, args = c["sig"], [resolve(a) for a in c["args"]]
             is_view = mut.get(sig, "") in ("view", "pure")
             prev = ln.account
@@ -663,6 +671,7 @@ def main():
                "storage": storage,
                "platform_limits": {str(k): v for k, v in platform_limits.items()},
                "block_ts": block_ts,
+               "block_no": block_no,
                "app_id": app.app_id})
     n = len(results)
     n_ok = sum(1 for r in results.values() if r["ok"])

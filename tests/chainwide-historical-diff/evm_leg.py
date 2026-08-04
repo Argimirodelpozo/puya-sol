@@ -807,7 +807,7 @@ def main():
                 out[name] = got
             return out
 
-        results, snapshots, mismatches, block_ts = {}, {}, [], {}
+        results, snapshots, mismatches, block_ts, block_no = {}, {}, [], {}, {}
         storage_delta, prev_scalars = {}, read_scalars()
         for c in calls:
             i = c["i"]
@@ -829,7 +829,13 @@ def main():
                     # so a disagreement here is a real bug, not leg skew — but
                     # only if pinning genuinely took effect, hence the record.
                     try:
-                        block_ts[str(i)] = w3.eth.get_block("latest")["timestamp"]
+                        blk = w3.eth.get_block("latest")
+                        block_ts[str(i)] = blk["timestamp"]
+                        # Local HEIGHT too: a contract storing block.number
+                        # writes each leg's own chain height, and the differ
+                        # can only absorb that skew if it knows the height at
+                        # the writing txn (staup `_locked` = block.number + K).
+                        block_no[str(i)] = blk["number"]
                     except Exception:
                         pass
                 fn_abi = fns[c["sig"]]
@@ -899,7 +905,8 @@ def main():
         storage["writes"] = writes
         storage["blind_slots"] = {k: v[:5] for k, v in list(blind.items())[:40]}
         storage["blind_slot_count"] = len(blind)
-        return (results, snapshots, mismatches, storage_delta, storage, block_ts)
+        return (results, snapshots, mismatches, storage_delta, storage,
+                block_ts, block_no)
 
     # ── closed-world convergence ──────────────────────────────────────────
     # BATCH convergence: one pass collects every mismatch, all get skipped at
@@ -910,7 +917,8 @@ def main():
     iterations = 0
     while True:
         iterations += 1
-        results, snapshots, mismatches, sdelta, smaps, block_ts = run_once(skips)
+        (results, snapshots, mismatches, sdelta, smaps,
+         block_ts, block_no) = run_once(skips)
         if not mismatches or iterations >= 8:
             break
         for idx, why, detail in mismatches:
@@ -930,7 +938,8 @@ def main():
                "snapshots": snapshots,
                "storage_delta": sdelta,
                "storage": smaps,
-               "block_ts": block_ts})
+               "block_ts": block_ts,
+               "block_no": block_no})
     n_exec = len(results)
     n_ok = sum(1 for r in results.values() if r["ok"])
     print(f"[evm] replayed {n_exec}/{len(calls)} txns "
