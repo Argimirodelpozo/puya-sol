@@ -340,11 +340,11 @@ this table twice (see below).
 
 | | |
 |---|---|
-| contracts replayed | **64** |
-| zero divergences | **64** |
+| contracts replayed | **65** |
+| zero divergences | **65** |
 | with divergences | 0 |
-| transactions replayed on both legs | **11,901** of 16,883 in-window (70%) |
-| skipped, by cause | closed-world 4,495, avm-platform-limit 424, value 28, no-calldata 23, unknown-selector 12 |
+| transactions replayed on both legs | **11,903** of 17,083 in-window (70%) |
+| skipped, by cause | closed-world 4,693, avm-platform-limit 424, value 28, no-calldata 23, unknown-selector 12 |
 
 ### Headline runs
 
@@ -448,6 +448,7 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 | `selftest` StorageShapes | synthetic | 10/10 | ✅ | — |
 | `vanry` VANRY | polygon | 9/200 | ✅ | closed-world 191 |
 | `bmex` BMEX | ethereum | 5/200 | ✅ | closed-world 195 |
+| `cow_ethflow` CoWSwapEthFlow | ethereum | 2/200 | ✅ | closed-world 198 |
 | `tig` TIGToken | base | 2/200 | ✅ | closed-world 198 |
 | `comet_rewards` CometRewards | ethereum | 1/200 | ✅ | closed-world 199 |
 | `morpho_alloc` PublicAllocator | ethereum | 1/200 | ✅ | closed-world 199 |
