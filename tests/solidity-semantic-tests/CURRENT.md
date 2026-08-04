@@ -1,4 +1,19 @@
-# Semantic Test Status — v485
+# Semantic Test Status — v486
+
+> **fix: Yul `return()` in a void function was invisible across contracts,
+> 2026-08-04:** **12 failed / 1406 passed / 105 xf / 32 xp** (baseline + the new
+> asm_return_cross_contract guard). `return(ptr, len)` in a void function (a raw
+> `fallback`) emitted a BARE log — but every consumer of a call's result reads the last
+> log in the ARC4 return convention (`0x151f7c75 ++ payload`): the typed caller-decode
+> (extract 4,N past the prefix), low-level returndata capture, and algosdk's ATC. On EVM
+> the return() payload IS the caller's returndata, so the bare log dropped the value on
+> the floor for every cross-contract reader. Distilled seam: a fallback answering
+> `address(this)`, a caller doing `x = I(a).view(); I2(b).typed(x)` — the caller's decode
+> wanted 36 bytes, got 32; in CoWSwapEthFlow's ctor the surviving wrong-width address
+> then died in the callee's 32-byte arg assert. The log now carries the prefix.
+> **cow_ethflow deploys and replays with zero divergences** (2/200, rest closed-world).
+> Existing raw-return tests (`return(0,0x80)` idioms) only assert non-revert and still
+> pass — a void method's log was never surfaced as abi_return either way.
 
 > **fix: `address` in a PACKED storage slot (slot mode), 2026-08-04:**
 > **12 failed / 1405 passed / 105 xf / 32 xp** (baseline + the new

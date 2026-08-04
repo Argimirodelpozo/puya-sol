@@ -786,9 +786,19 @@ void AssemblyBuilder::handleReturn(
 		auto sizeU64 = awst::makeIntegerConstant(*returnSize, _loc);
 
 		auto extract = awst::makeExtract3(memoryVar(_loc), std::move(offsetU64), std::move(sizeU64), _loc);
-		// log(data) — emit the raw bytes as a transaction log
+		// log(0x151f7c75 ++ data): on EVM the return() payload IS the
+		// returndata the caller sees, and on AVM every consumer of a call's
+		// result — the typed caller-decode (extract 4,N past the prefix), the
+		// low-level returndata capture, algosdk's ATC — reads the LAST LOG in
+		// the ARC4 return convention. A bare log made the payload invisible to
+		// all of them: the stand-in's `fallback { return(0,0x20) }` answered
+		// 32 raw bytes, the caller's decode wanted 36, and CoWSwapEthFlow's
+		// ctor died on the resulting wrong-width address.
+		auto prefixed = awst::makeConcat(
+			awst::makeBytesConstant({0x15, 0x1f, 0x7c, 0x75}, _loc),
+			std::move(extract), _loc);
 		auto logCall = awst::makeIntrinsicCall("log", awst::WType::voidType(), _loc);
-		logCall->stackArgs.push_back(std::move(extract));
+		logCall->stackArgs.push_back(std::move(prefixed));
 
 		auto logStmt = awst::makeExpressionStatement(std::move(logCall), _loc);
 		_out.push_back(std::move(logStmt));

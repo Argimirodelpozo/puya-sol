@@ -1,0 +1,171 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Seam.approval_program() -> uint64:
+main:
+    intcblock 0 32 1 24
+    bytecblock 0x703a0000000000000000 "__ctor_pending"
+    intc_0 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x37afbc9f 0x87123374 // method "__postInit(address,address)void", method "got()address"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_got_route@6
+    err
+
+main_got_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    bury 1
+    bytec_0 // 0x703a0000000000000000
+    box_len
+    bury 1
+    bz main_after_if_else@17
+    bytec_0 // 0x703a0000000000000000
+    intc_0 // 0
+    intc_1 // 32
+    box_extract
+
+main_after_inlined___puyasol___storage_read@21:
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_after_if_else@17:
+    pushbytes 0x
+    b main_after_inlined___puyasol___storage_read@21
+
+main_ternary_false@12:
+    intc_0 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    itxn_begin
+    swap
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x41c7565e // method "vaultRelayer()address"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 0
+    swap
+    extract 4 32
+    bytec_0 // 0x703a0000000000000000
+    pushint 2048
+    box_create
+    pop
+    intc_1 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x703a0000000000000000
+    intc_0 // 0
+    uncover 2
+    box_replace
+    itxn_begin
+    swap
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xfafb6a08 // method "approve(address,uint256)bool"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 1
+    return

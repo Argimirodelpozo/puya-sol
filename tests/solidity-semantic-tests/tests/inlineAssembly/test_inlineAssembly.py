@@ -932,3 +932,33 @@ def test_switch_returndatasize(harness):
         contract_name="SwitchRds", postinit_inner_txns=2)
     assert as_int(harness.call(app, "probe()", extra_fee=20_000).abi_return) == 2, \
         "switch on returndatasize() picked the wrong case"
+
+
+def test_asm_return_cross_contract(harness):
+    """inlineAssembly/contracts/asm_return_cross_contract.sol — NOT an o.g. test.
+
+    Yul `return(ptr, len)` in a void function (a raw fallback) used to emit a
+    BARE log, while every consumer of a call's result — the typed
+    caller-decode, low-level returndata capture, algosdk's ATC — reads the last
+    log in the ARC4 return convention (0x151f7c75 ++ payload). The payload was
+    therefore invisible across contracts: CoWSwapEthFlow's ctor chain
+    (`settlement.vaultRelayer()` answered by a stand-in's fallback, fed into
+    `approve`) died on the wrong-width result. The log now carries the prefix,
+    matching EVM semantics where return()'s payload IS the caller's returndata.
+
+    Asserts the VALUE round-trips: Seam's ctor stores what the fallback
+    answered, and it must equal the answering contract's own app address.
+    """
+    from algosdk import encoding
+    arts = harness.compile("inlineAssembly/contracts/asm_return_cross_contract.sol",
+                           extra_args=["--evm-storage-layout"])
+    stub1 = harness.deploy(arts, "Stub", extra_funding_microalgos=3_000_000)
+    stub2 = harness.deploy(arts, "Stub", extra_funding_microalgos=3_000_000)
+    a1 = encoding.encode_address(bytes(24) + stub1.app_id.to_bytes(8, "big"))
+    a2 = encoding.encode_address(bytes(24) + stub2.app_id.to_bytes(8, "big"))
+    seam = harness.deploy(arts, "Seam", ctor_args=[a1, a2],
+                          postinit_inner_txns=6, postinit_budget_pool=4,
+                          extra_funding_microalgos=5_000_000)
+    got = harness.call(seam, "got()", extra_fee=10_000).abi_return
+    want = encoding.encode_address(encoding.checksum(b"appID" + stub1.app_id.to_bytes(8, "big")))
+    assert got == want, f"fallback return lost across contracts: {got} != {want}"
