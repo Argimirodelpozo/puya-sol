@@ -471,7 +471,9 @@ def main():
             dispenser.address)
     for _a, _loc in dep_local.items():
         _m20[bytes.fromhex(_a[2:])] = encoding.decode_address(_loc)
-    dep_tapes = build_dep_tapes(case_dir, ext_skips, _m20)
+    dep_tapes, dep_pos = build_dep_tapes(case_dir, set(), _m20,
+                                         with_positions=True)
+    _dep_seek = {}
     for _a, _tape in dep_tapes.items():
         _dapp = dep_app_byaddr.get(_a)
         if not _dapp or not _tape:
@@ -480,6 +482,13 @@ def main():
             h.call(_dapp, "__load(bytes32[],uint256[])", _ws, _ls,
                    extra_fee=10_000)
         print(f"[avm] dep tape loaded: {len(_tape)} answer(s) @ {_a[:10]}…")
+        _pos = dep_pos.get(_a, {})
+        _sk, _carry = {}, 0
+        for _c in calls:
+            _i = _c["i"]
+            _carry = _pos.get(_i, _carry)
+            _sk[_i] = _carry
+        _dep_seek[_a] = (_dapp, _sk)
 
     # ── compile + deploy ──────────────────────────────────────────────────
     # Put the chain at the replay epoch BEFORE deploying: the EVM leg's genesis
@@ -616,6 +625,14 @@ def main():
                 pass
             sig, args = c["sig"], [resolve(a) for a in c["args"]]
             is_view = mut.get(sig, "") in ("view", "pure")
+            # absolute tape position for THIS txn on every scripted stand-in
+            for _dapp2, _sk2 in _dep_seek.values():
+                if i in _sk2:
+                    try:
+                        h.call(_dapp2, "__seek(uint256)", _sk2[i],
+                               extra_fee=10_000)
+                    except Exception:
+                        pass
             prev = ln.account
             _sm = (c.get("sender") or {}).get("__addr__")
             ln.account = accts.get(_sm, dispenser) if isinstance(_sm, int) else dispenser

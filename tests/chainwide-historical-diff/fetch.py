@@ -415,6 +415,13 @@ contract StubERC20 {
     uint256[] public __lens;
     uint256[] public __wstart;
     uint256 public __idx;
+    // Absolute tape addressing: the legs seek before every replayed txn, so
+    // a locally-reverted txn (whose __idx bump rolls back with it) can never
+    // shift the answers the NEXT txn reads. Without this, one bad txn
+    // desynchronised the whole suffix.
+    function __seek(uint256 k) external {
+        __idx = k;
+    }
     function __load(bytes32[] calldata w, uint256[] calldata lens) external {
         uint256 wi = 0;
         for (uint256 i = 0; i < lens.length; i++) {
@@ -467,6 +474,9 @@ _STUB_ABI = [
     {"type": "function", "name": "__load",
      "inputs": [{"type": "bytes32[]", "name": "w"},
                 {"type": "uint256[]", "name": "lens"}],
+     "outputs": [], "stateMutability": "nonpayable"},
+    {"type": "function", "name": "__seek",
+     "inputs": [{"type": "uint256", "name": "k"}],
      "outputs": [], "stateMutability": "nonpayable"},
     {"type": "function", "name": "decimals", "inputs": [],
      "outputs": [{"type": "uint8", "name": ""}], "stateMutability": "view"},

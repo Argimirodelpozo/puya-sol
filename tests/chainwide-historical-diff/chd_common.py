@@ -92,7 +92,7 @@ def clock_target(ts, epoch, base):
 
 
 def build_dep_tapes(case_dir: Path, skipped: set, mapping20: dict | None = None,
-                    calls: list | None = None) -> dict:
+                    calls: list | None = None, with_positions: bool = False):
     """dep addr → ordered 32-byte answer words for THIS attempt's replay.
 
     Derived identically on both legs from dep_tape.json + calls.json minus the
@@ -122,15 +122,20 @@ def build_dep_tapes(case_dir: Path, skipped: set, mapping20: dict | None = None,
         h = (c.get("hash") or "").split("#")[0].lower()
         hash_to_i.setdefault(h, c["i"])
     out = {}
+    positions = {}
     for addr, entries in tapes.items():
         words, stalled_txn = [], None
+        pos = {}
         for e in entries:
             if own and e.get("sel") in own:
                 continue
             h = (e.get("hash") or "").lower()
             i = hash_to_i.get(h)
-            if i is None or i in skipped:
+            if i is None:
                 continue
+            if not with_positions and i in skipped:
+                continue
+            pos.setdefault(i, len(words))
             if stalled_txn == h:
                 continue
             w = e.get("out")
@@ -142,7 +147,8 @@ def build_dep_tapes(case_dir: Path, skipped: set, mapping20: dict | None = None,
             words.append(map_answer_words(b, mapping20 or {}))
         if words:
             out[addr.lower()] = words
-    return out
+            positions[addr.lower()] = pos
+    return (out, positions) if with_positions else out
 
 
 def map_answer_words(answer: bytes, mapping20: dict) -> bytes:

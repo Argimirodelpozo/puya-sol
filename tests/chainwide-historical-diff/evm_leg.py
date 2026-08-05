@@ -603,6 +603,47 @@ def main():
         tester = EthereumTester(PyEVMBackend(genesis_parameters=genesis)
                                 if genesis else PyEVMBackend())
         w3 = Web3(Web3.EthereumTesterProvider(tester))
+
+        # ── VM-level tape interception ────────────────────────────────────
+        # Solidity calls view functions via STATICCALL; a stub whose fallback
+        # WRITES (__idx++) reverts there with EMPTY data — which silently
+        # killed every tape answer served to a view (morpho: owner()/market()
+        # is the FIRST sub-call of nearly every txn → 197 skips). The oracle
+        # leg therefore serves recorded answers at the VM: a python-side
+        # counter picks the next answer per stub address — no EVM state, so
+        # static context is irrelevant. The AVM leg keeps the on-chain stub
+        # tape (no staticcall there; writes are legal).
+        _vm_tape = {}      # code_address bytes20 -> list[bytes] answers
+        _vm_cursor = {}    # code_address bytes20 -> int
+        _backend = tester.backend
+        _vmclass = _backend.chain.get_vm().__class__
+        _compclass = _vmclass._state_class.computation_class
+        # dicts live ON the class so convergence re-runs (fresh backend,
+        # already-patched class) rebind cleanly instead of serving the first
+        # run's closures
+        _compclass._chd_tape_dicts = (_vm_tape, _vm_cursor)
+        if not getattr(_compclass, "_chd_tape_patched", False):
+            _orig_apply = _compclass.apply_computation.__func__
+            def _tape_apply(cls, state, message, tc, **kw):
+                _t, _k = getattr(cls, "_chd_tape_dicts", ({}, {}))
+                ca = bytes(getattr(message, "code_address", b"") or b"")
+                tape = _t.get(ca)
+                if tape is not None:
+                    k = _k.get(ca, 0)
+                    ans = tape[k] if k < len(tape) else bytes(12) + ca
+                    _k[ca] = k + 1
+                    import os as _os
+                    if _os.environ.get("CHD_TAPE_DEBUG"):
+                        print(f"[tape] {ca.hex()[:8]} k={k} sel="
+                              f"{bytes(message.data[:4]).hex()} -> {ans.hex()[:80]}",
+                              file=__import__('sys').stderr)
+                    message.code = b""            # execute nothing, succeed
+                    comp = _orig_apply(cls, state, message, tc, **kw)
+                    comp.output = ans
+                    return comp
+                return _orig_apply(cls, state, message, tc, **kw)
+            _compclass.apply_computation = classmethod(_tape_apply)
+            _compclass._chd_tape_patched = True
         a0 = w3.eth.accounts[0]
         _deployer[0] = a0
         # Gas float plus whatever SCALED value this sender actually pays out.
@@ -680,19 +721,29 @@ def main():
             _m20[bytes.fromhex(reg["creator"][2:])] = bytes(12) + bytes.fromhex(a0[2:])
         for _a, _loc in _dep_local.items():
             _m20[bytes.fromhex(_a[2:])] = bytes(12) + bytes.fromhex(_loc[2:])
-        dep_tapes = build_dep_tapes(case_dir, set(skips) | set(ext_skips), _m20,
-                                    calls=calls)
+        # FULL tape + absolute per-txn positions: a locally-reverted txn rolls
+        # its __idx bump back, so without seeking, the NEXT txn reads the
+        # reverted one's answers and one bad txn desyncs the whole suffix.
+        dep_tapes, dep_pos = build_dep_tapes(case_dir, set(), _m20,
+                                             calls=calls, with_positions=True)
+        _dep_seek = {}
         for d in deps:
             _tape = dep_tapes.get(d["addr"].lower())
             if not _tape or d["addr"] not in _dep_local:
                 continue
-            dep_inst = w3.eth.contract(address=_dep_local[d["addr"]],
-                                       abi=d["case"]["abi"])
-            for _ws, _ls in tape_chunks(_tape):
-                dep_inst.functions.__load(_ws, _ls).transact(
-                    {"from": a0, "gas": 12_000_000})
-            print(f"[evm] dep tape loaded: {len(_tape)} answer(s) "
+            _ca = bytes.fromhex(_dep_local[d["addr"]][2:].lower())
+            _vm_tape[_ca] = _tape
+            print(f"[evm] dep tape ARMED at VM: {len(_tape)} answer(s) "
                   f"@ {d['addr'][:10]}…")
+            # per-txn seek value: the txn's own first position, else carry
+            # (where the previous txn's answers ended)
+            _pos = dep_pos.get(d["addr"].lower(), {})
+            _sk, _carry = {}, 0
+            for _c in calls:
+                _i = _c["i"]
+                _carry = _pos.get(_i, _carry)
+                _sk[_i] = _carry
+            _dep_seek[d["addr"].lower()] = (_ca, _sk)
 
         C = w3.eth.contract(abi=abi, bytecode=bytecode)
         txh = C.constructor(*[resolve(m) for m in meta["ctor_args"]]).transact(
@@ -936,6 +987,9 @@ def main():
                         block_no[str(i)] = blk["number"]
                     except Exception:
                         pass
+                for _ca2, _sk in _dep_seek.values():
+                    if i in _sk:
+                        _vm_cursor[_ca2] = _sk[i]
                 fn_abi = fns[c["sig"]]
                 fn = inst.get_function_by_signature(c["sig"])
                 args = [resolve(a) for a in c["args"]]
@@ -943,12 +997,21 @@ def main():
                     ret = fn(*args).call({"from": sender, "gas": 8_000_000,
                                           "value": c.get("value") or 0})
                 except Exception as e:
+                    # Custom errors hide in e.data / e.args — surface the raw
+                    # selector+payload hex, or triage stops at "reverted:".
+                    _rd = getattr(e, "data", None)
+                    if _rd is None and e.args:
+                        _rd = next((a for a in e.args
+                                    if isinstance(a, (bytes, str))
+                                    and str(a).startswith(("0x", "b'"))), None)
+                    _rds = (_rd.hex() if isinstance(_rd, bytes) else str(_rd or ""))[:80]
+                    _rds += " raw=" + repr(getattr(e, "args", ""))[:140]
                     results[i] = {"ok": False, "revert": str(e)[:160]}
                     if c["hist_ok"]:
                         # Historically succeeded but reverts locally => it read
                         # state we don't have (external contract / balance).
                         mismatches.append((i, "local-revert-but-hist-ok",
-                                           f"{c['sig']} {str(e)[:110]}"))
+                                           f"{c['sig']} {str(e)[:80]} data={_rds}"))
                     _take_snap(i)
                     continue
                 if not c["hist_ok"]:
@@ -1024,7 +1087,7 @@ def main():
             break
         for idx, why, detail in mismatches:
             skips[idx] = f"closed-world:{why}"
-        shown = "; ".join(f"#{i}:{w}:{d[:70]}" for i, w, d in mismatches[:3])
+        shown = "; ".join(f"#{i}:{w}:{d[:340]}" for i, w, d in mismatches[:3])
         print(f"[evm] converge pass {iterations}: +{len(mismatches)} skip(s)  {shown}",
               file=sys.stderr)
 
