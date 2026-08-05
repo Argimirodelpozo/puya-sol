@@ -91,6 +91,67 @@ def clock_target(ts, epoch, base):
     return int(base) + max(0, int(ts) - int(epoch or 0))
 
 
+def build_dep_tapes(case_dir: Path, skipped: set) -> dict:
+    """dep addr → ordered 32-byte answer words for THIS attempt's replay.
+
+    Derived identically on both legs from dep_tape.json + calls.json minus the
+    current skip set, so the two stand-ins consume byte-identical tapes. A
+    tape entry belongs to exactly one DIRECT txn (the harvest guarantees it);
+    entries of skipped txns are dropped, because a skipped txn makes none of
+    its sub-calls. None-valued answers (wider than a word) become tape stalls:
+    everything AFTER one in the same txn is dropped too, since consumption
+    counts would desynchronise.
+    """
+    tp = case_dir / "dep_tape.json"
+    if not tp.exists():
+        return {}
+    tapes = (load_json(tp) or {}).get("tapes") or {}
+    calls = (load_json(case_dir / "calls.json") or {}).get("calls") or []
+    hash_to_i = {}
+    for c in calls:
+        h = (c.get("hash") or "").split("#")[0].lower()
+        hash_to_i.setdefault(h, c["i"])
+    out = {}
+    for addr, entries in tapes.items():
+        words, stalled_txn = [], None
+        for e in entries:
+            h = (e.get("hash") or "").lower()
+            i = hash_to_i.get(h)
+            if i is None or i in skipped:
+                continue
+            if stalled_txn == h:
+                continue
+            w = e.get("out")
+            if w is None:
+                stalled_txn = h
+                continue
+            stalled_txn = None
+            words.append(bytes.fromhex(w))   # any length; "" = void answer
+        if words:
+            out[addr.lower()] = words
+    return out
+
+
+def tape_chunks(words):
+    """Answers (bytes, any length) → __load(bytes32[],uint256[]) call chunks.
+
+    Shared by both legs so grouping is identical. Each answer occupies
+    ceil(len/32) zero-padded words; chunks stay under ~40 words to respect the
+    AVM's 2 KB app-args ceiling."""
+    out, cw, cl = [], [], []
+    for a in words:
+        nw = (len(a) + 31) // 32 if a else 0
+        ws = [a[i * 32:(i + 1) * 32].ljust(32, b"\0") for i in range(nw)]
+        if cw and len(cw) + nw > 40:
+            out.append((cw, cl))
+            cw, cl = [], []
+        cw.extend(ws)
+        cl.append(len(a))
+    if cl:
+        out.append((cw, cl))
+    return out
+
+
 def load_json(p: Path):
     with open(p) as fh:
         return json.load(fh)

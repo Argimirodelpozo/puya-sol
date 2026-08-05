@@ -22,9 +22,9 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from chd_common import (ZERO, arg_content20, build_registry, canon_value,
-                        clock_target, dump_json, evm_sender_privkey, load_json,
-                        marker_for, replay_epoch, scale_value, symbol)
+from chd_common import (ZERO, arg_content20, build_dep_tapes, build_registry, tape_chunks,
+                        canon_value, clock_target, dump_json, evm_sender_privkey,
+                        load_json, marker_for, replay_epoch, scale_value, symbol)
 
 import solcx
 from eth_abi import decode as _abi_decode_strict
@@ -565,6 +565,7 @@ def main():
     def run_once(skips):
         from eth_tester import EthereumTester, PyEVMBackend
         epoch = replay_epoch(calls)
+        dep_tapes = build_dep_tapes(case_dir, set(skips) | set(ext_skips))
         genesis = None
         if pin_time and txns:
             try:
@@ -614,6 +615,15 @@ def main():
                                  f"deploy (status={drc.get('status')})")
             _dep_local[d["addr"]] = drc["contractAddress"]
             print(f"[evm] dep {d['case'].get('name')} @ {drc['contractAddress'][:10]}…")
+            # Scripted answers: same tape, same order as the AVM leg.
+            _tape = dep_tapes.get(d["addr"].lower())
+            if _tape:
+                dep_inst = w3.eth.contract(address=drc["contractAddress"],
+                                           abi=d["case"]["abi"])
+                for _ws, _ls in tape_chunks(_tape):
+                    dep_inst.functions.__load(_ws, _ls).transact(
+                        {"from": a0, "gas": 12_000_000})
+                print(f"[evm] dep tape loaded: {len(_tape)} answer(s)")
 
         C = w3.eth.contract(abi=abi, bytecode=bytecode)
         txh = C.constructor(*[resolve(m) for m in meta["ctor_args"]]).transact(

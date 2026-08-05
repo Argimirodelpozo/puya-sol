@@ -763,7 +763,7 @@ void AssemblyBuilder::handleReturn(
 		auto returnOffset = resolveConstantOffset(_args[0]);
 		auto returnSize = resolveConstantOffset(_args[1]);
 
-		if (!returnOffset || !returnSize || *returnSize == 0)
+		if (returnSize && *returnSize == 0)
 		{
 			// return(_, 0) → unconditional program-exit via AVM `return 1`.
 			// Needed for Yul helpers using EVM `return` as a hard exit inside a nested call.
@@ -775,15 +775,25 @@ void AssemblyBuilder::handleReturn(
 			return;
 		}
 
+		// RUNTIME offset/size are as good as constants here: the payload is
+		// extract3(blob, off, len) either way. This used to fall into the
+		// bare-exit arm above, which SILENTLY DROPPED a runtime-sized payload —
+		// exactly the shape of a tape-playing fallback
+		// (`return(add(b, 32), mload(b))`), whose answers are variable-width.
 		Logger::instance().warning(
-			"assembly return() in void function — emitting " +
-			std::to_string(*returnSize) + " bytes as structured log", _loc
+			"assembly return() in void function — emitting "
+			+ (returnSize ? std::to_string(*returnSize) + " bytes" : std::string("runtime-sized payload"))
+			+ " as structured log", _loc
 		);
 
 		// Read the return region from the memory blob: extract3(blob, offset, size)
-		auto offsetU64 = awst::makeIntegerConstant(*returnOffset, _loc);
+		auto offsetU64 = returnOffset
+			? std::shared_ptr<awst::Expression>(awst::makeIntegerConstant(*returnOffset, _loc))
+			: offsetToUint64(_args[0], _loc);
 
-		auto sizeU64 = awst::makeIntegerConstant(*returnSize, _loc);
+		auto sizeU64 = returnSize
+			? std::shared_ptr<awst::Expression>(awst::makeIntegerConstant(*returnSize, _loc))
+			: offsetToUint64(_args[1], _loc);
 
 		auto extract = awst::makeExtract3(memoryVar(_loc), std::move(offsetU64), std::move(sizeU64), _loc);
 		// log(0x151f7c75 ++ data): on EVM the return() payload IS the

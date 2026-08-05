@@ -84,6 +84,67 @@ def harvest_callees(host: str, address: str, hashes: list, sink: dict,
         time.sleep(0.6)
 
 
+
+def harvest_dep_answers(host: str, address: str, case_dir, txns, dep_addrs,
+                        max_traces: int = 200) -> None:
+    """Record what each STUBBED dependency historically ANSWERED, in call order.
+
+    The raw trace of every replayed txn carries each sub-call's input AND
+    output. A dependency's STATE is unreachable, but its ANSWERS are not —
+    scripting them into the stand-in (a tape its fallback consumes in order)
+    replays the interaction faithfully on BOTH legs. One-word outputs only in
+    v1 (prices, balances, decimals, bools, addresses — the read class that
+    dominates closed-world skips); wider or absent outputs record as null and
+    the fallback falls through to the self-address answer.
+
+    DIRECT txns only: a tape entry must map to exactly one replay index so the
+    per-attempt skip set can drop its entries unambiguously.
+    """
+    addr = address.lower()
+    deps = {d.lower() for d in dep_addrs}
+    if not deps:
+        return
+    tapes: dict = {}
+    n = 0
+    for t in txns:
+        if t.get("internal") or n >= max_traces:
+            continue
+        h = t["hash"]
+        tr = None
+        for attempt in range(3):
+            try:
+                tr = http_json(f"https://{host}/api/v2/transactions/{h}/raw-trace",
+                               timeout=25)
+                break
+            except Exception:
+                time.sleep(1.0 * (2 ** attempt))
+        n += 1
+        if n % 25 == 0:
+            print(f"[fetch] dep-answer harvest: {n} trace(s) read, "
+                  f"{sum(len(v) for v in tapes.values())} answer(s) so far",
+                  flush=True)
+        if not isinstance(tr, list):
+            continue
+        for e in tr:
+            if not isinstance(e, dict) or e.get("type") != "call":
+                continue
+            act = e.get("action") or {}
+            if (act.get("from") or "").lower() != addr:
+                continue
+            to = (act.get("to") or "").lower()
+            if to not in deps:
+                continue
+            out = ((e.get("result") or {}).get("output") or "0x").removeprefix("0x")
+            # Any length up to 1 KB (empty = a void answer, itself meaningful);
+            # wider than that records as null and stalls that txn's tape.
+            word = out if len(out) <= 2048 and len(out) % 2 == 0 else None
+            tapes.setdefault(to, []).append({"hash": h, "out": word})
+        time.sleep(0.5)
+    if tapes:
+        dump_json(case_dir / "dep_tape.json", {"tapes": tapes})
+        print(f"[fetch] dep answers scripted: "
+              + ", ".join(f"{a[:10]}…×{len(v)}" for a, v in tapes.items()))
+
 def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
                          direct_hashes: set, max_parents: int = 200,
                          max_calls: int = 400, callee_sink: dict | None = None) -> list:
@@ -123,7 +184,10 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
             break
         for r in rows:
             h = r.get("hash")
-            if not h or h in seen_p or h.lower() in direct_hashes:
+            # NOT excluded when h is a direct txn: a parent that also calls us
+            # directly still carries internal sub-calls; the ROOT entry is
+            # already dropped by the traceAddress check downstream.
+            if not h or h in seen_p:
                 continue
             seen_p.add(h)
             parents.append((h, int(r.get("blockNumber") or 0),
@@ -302,6 +366,33 @@ contract StubERC20 {
         isApprovedForAll[msg.sender][op] = ok;
     }
 
+    // Scripted ANSWER TAPE: the fetcher records what this dependency
+    // historically returned to the contract under test, sub-call by sub-call,
+    // and both legs load the same tape. The fallback consumes it in order, so
+    // a read-dependent txn replays against the dependency's REAL answers
+    // instead of a guess; when the tape runs dry (or an answer was not a
+    // single word) it falls through to the self-address answer below.
+    // Tape storage from slot-mode-safe primitives only: scalar pushes into a
+    // word store plus per-answer (byteLen, wordStart) — `bytes[]` push is not
+    // supported there. Answers are reassembled at fallback time into a fresh
+    // buffer (the supported new-bytes + mstore pointer idiom).
+    bytes32[] public __words;
+    uint256[] public __lens;
+    uint256[] public __wstart;
+    uint256 public __idx;
+    function __load(bytes32[] calldata w, uint256[] calldata lens) external {
+        uint256 wi = 0;
+        for (uint256 i = 0; i < lens.length; i++) {
+            __wstart.push(__words.length);
+            __lens.push(lens[i]);
+            uint256 nw = (lens[i] + 31) / 32;
+            for (uint256 j = 0; j < nw; j++) {
+                __words.push(w[wi + j]);
+            }
+            wi += nw;
+        }
+    }
+
     // Catch-all: any UNKNOWN selector answers ONE WORD holding THIS stub's
     // own address. Returning zero was a dead end: ENS's ReverseClaimer does
     // `ens.owner(node)` and then CALLS the answer — address(0) "succeeds"
@@ -311,6 +402,22 @@ contract StubERC20 {
     // large value; either way both legs see the SAME thing, so the differ's
     // verdict is unaffected. Fidelity to the real chain stays NOT claimed.
     fallback() external payable {
+        if (__idx < __lens.length) {
+            uint256 len = __lens[__idx];
+            uint256 base = __wstart[__idx];
+            __idx++;
+            uint256 nw = (len + 31) / 32;
+            bytes memory w = new bytes(nw * 32);
+            for (uint256 j = 0; j < nw; j++) {
+                bytes32 x = __words[base + j];
+                assembly {
+                    mstore(add(w, add(32, mul(j, 32))), x)
+                }
+            }
+            assembly {
+                return(add(w, 32), len)
+            }
+        }
         assembly {
             mstore(0x00, address())
             return(0x00, 0x20)
@@ -322,6 +429,10 @@ contract StubERC20 {
 
 _STUB_ABI = [
     {"type": "constructor", "inputs": []},
+    {"type": "function", "name": "__load",
+     "inputs": [{"type": "bytes32[]", "name": "w"},
+                {"type": "uint256[]", "name": "lens"}],
+     "outputs": [], "stateMutability": "nonpayable"},
     {"type": "function", "name": "decimals", "inputs": [],
      "outputs": [{"type": "uint8", "name": ""}], "stateMutability": "view"},
     {"type": "function", "name": "approve",
@@ -426,7 +537,7 @@ def fetch_dep(host: str, address: str, dep_dir, depth: int, seen: set) -> dict |
 
 def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                internal: bool = False, internal_parents: int = 200,
-               stub_deps: bool = False) -> dict:
+               stub_deps: bool = False, script_deps: bool = False) -> dict:
     case_dir = CASES / tag
     addr = address.lower()
 
@@ -608,6 +719,13 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                       f"identical on both legs, fidelity to chain NOT claimed")
     if ctor_deps:
         case["ctor_deps"] = ctor_deps
+    if script_deps and ctor_deps:
+        try:
+            harvest_dep_answers(host, address, case_dir, txns,
+                                [d["addr"] for d in ctor_deps])
+        except Exception as e:
+            print(f"[fetch] {tag}: dep-answer harvest failed ({str(e)[:60]}) — "
+                  f"stand-ins stay self-address-only")
     dump_json(case_dir / "case.json", case)
     mf = case.get("multifile")
     print(f"[fetch] {tag}: {sc.get('name')} solc={comp[:12]} "
@@ -629,6 +747,9 @@ def main():
     stub_deps = "--stub-deps" in argv
     if stub_deps:
         argv.remove("--stub-deps")
+    script_deps = "--script-deps" in argv
+    if script_deps:
+        argv.remove("--script-deps")
     internal_parents = 200
     if "--internal-parents" in argv:
         i = argv.index("--internal-parents")
@@ -636,7 +757,8 @@ def main():
     if len(argv) != 3:
         sys.exit(__doc__)
     fetch_case(argv[0], argv[1], argv[2], max_txns, internal,
-               internal_parents=internal_parents, stub_deps=stub_deps)
+               internal_parents=internal_parents, stub_deps=stub_deps,
+               script_deps=script_deps)
 
 
 if __name__ == "__main__":

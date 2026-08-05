@@ -30,9 +30,9 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[0] / "solidity-semantic-tests"))
 sys.path.insert(0, str(HERE.parents[0] / "WIP" / "tiny-fuzzing-oracle"))
 
-from chd_common import (ZERO, algo_sender_seed, arg_content20, canon_value,
-                        clock_target, dump_json, is_platform_limit, load_json,
-                        replay_epoch, symbol)
+from chd_common import (ZERO, algo_sender_seed, arg_content20, build_dep_tapes, tape_chunks,
+                        canon_value, clock_target, dump_json, is_platform_limit,
+                        load_json, replay_epoch, symbol)
 
 from algosdk import encoding
 from algosdk.transaction import PaymentTxn, wait_for_confirmation
@@ -350,6 +350,7 @@ def main():
     cj = load_json(case_dir / "calls.json")
     meta, calls = cj["meta"], cj["calls"]
     ext_skips = set(int(k) for k in (opts.get("skips") or []))
+    dep_tapes = build_dep_tapes(case_dir, ext_skips)
 
     mut = {}
     for e in case["abi"]:
@@ -444,6 +445,14 @@ def main():
         dep_apps.append(dapp)
         ensure_app_funded(algod, dispenser, dapp.app_addr)
         print(f"[avm] dep {dspec.get('name')} app_id={dapp.app_id}")
+        # Scripted answers: load THIS attempt's tape (derived minus skips,
+        # identically on both legs) into the stand-in before any replay call.
+        _tape = dep_tapes.get(dspec["addr"].lower())
+        if _tape:
+            for _ws, _ls in tape_chunks(_tape):
+                h.call(dapp, "__load(bytes32[],uint256[])", _ws, _ls,
+                       extra_fee=10_000)
+            print(f"[avm] dep tape loaded: {len(_tape)} answer(s)")
 
     # ── compile + deploy ──────────────────────────────────────────────────
     # Put the chain at the replay epoch BEFORE deploying: the EVM leg's genesis
