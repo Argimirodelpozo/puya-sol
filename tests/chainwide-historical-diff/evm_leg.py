@@ -627,7 +627,17 @@ def main():
         for d in deps:
             if not d.get("bytecode"):
                 continue
-            Cd = w3.eth.contract(abi=d["case"]["abi"], bytecode=d["bytecode"])
+            # Some verified ABIs omit their constructor while the creation
+            # txn clearly passed args (raft_pm's 5th dep: 3 decoded args,
+            # "Expected '0', got '3'") — synthesize the entry from the decoded
+            # input types so web3 encodes what the chain actually did.
+            _dabi = d["case"]["abi"]
+            if d["ctor_vals"] and not any(e.get("type") == "constructor"
+                                          and e.get("inputs") for e in _dabi):
+                _dabi = ([e for e in _dabi if e.get("type") != "constructor"]
+                         + [{"type": "constructor", "stateMutability": "nonpayable",
+                             "inputs": d["ctor_inputs"]}])
+            Cd = w3.eth.contract(abi=_dabi, bytecode=d["bytecode"])
             dargs = [resolve(markerize(v, inp, reg)) for v, inp in
                      zip(d["ctor_vals"], d["ctor_inputs"])]
             dtx = Cd.constructor(*dargs).transact({"from": a0, "gas": 30_000_000})
