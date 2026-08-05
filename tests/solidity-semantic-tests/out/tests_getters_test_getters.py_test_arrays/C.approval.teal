@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 1 0 8
-    bytecblock "a" 0x0004000600000000 "__ctor_pending"
+    intcblock 32 8 0 1
+    bytecblock 0x20 "__ctor_pending" 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
     intc_2 // 0
     dup
     pushint 4096
@@ -26,10 +26,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
-    intc_1 // 1
+    bytec_1 // "__ctor_pending"
+    intc_3 // 1
     app_global_put
-    intc_1 // 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -48,76 +48,83 @@ main_a_route@6:
     dup
     bury 3
     len
-    pushint 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     bury 2
     len
-    pushint 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
-    intc_1 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
 main_ternary_merge@13:
     !
     assert // not payable
-    bytec_0 // "a"
-    box_get
-    bytec_1 // 0x0004000600000000
-    cover 2
-    select
-    intc_3 // 8
+    dig 1
+    dup
+    pushbytes 0x02
+    b<
+    assert // array out-of-bounds
+    dup
+    callsub __storage_read
+    dig 2
+    dup
+    cover 3
+    b>
+    assert // array out-of-bounds
+    intc_0 // 32
     bzero
     dup
-    dig 4
+    uncover 2
     concat
     dup
     len
-    intc_3 // 8
+    intc_0 // 32
     -
-    extract_uint64
-    swap
-    dig 3
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dig 1
-    intc_0 // 2
-    <
-    assert // index access is out of bounds
-    swap
-    intc_0 // 2
-    *
-    dig 2
-    swap
-    extract_uint16
-    dig 2
-    dig 1
-    extract_uint16
-    intc_0 // 2
-    +
-    uncover 3
-    cover 2
+    intc_0 // 32
     extract3
-    extract 2 0
+    keccak256
+    dig 2
+    bytec_0 // 0x20
+    b/
+    b+
+    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 8
+    bzero
+    uncover 2
+    bytec_0 // 0x20
+    b%
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushint 31
     swap
+    -
     getbyte
     itob
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_3 // 1
     return
 
 main_ternary_false@12:
@@ -125,179 +132,267 @@ main_ternary_false@12:
     b main_ternary_merge@13
 
 main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_0 // "a"
-    bytec_1 // 0x0004000600000000
-    box_put
-    bytec_0 // "a"
-    intc_0 // 2
-    dup
-    box_extract
-    btoi
-    bytec_0 // "a"
-    dig 1
-    intc_0 // 2
-    box_extract
-    btoi
-    intc_0 // 2
-    +
-    bytec_0 // "a"
-    cover 2
-    box_extract
-    dup
-    intc_2 // 0
-    extract_uint16
-    intc_1 // 1
-    +
+    intc_3 // 1
     itob
-    extract 6 0
-    replace2 0
+    dup
+    callsub __storage_read
+    intc_0 // 32
+    bzero
+    dig 1
+    bytec_0 // 0x20
+    b/
+    bytec_2 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
+    b+
+    dup
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 8
+    bzero
+    dig 4
+    bytec_0 // 0x20
+    b%
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushint 31
+    swap
+    -
+    uncover 2
+    swap
     pushbytes 0x03
+    replace3
+    uncover 2
+    swap
+    callsub __storage_write
+    uncover 2
+    bytec_3 // 0x01
+    b+
+    dig 3
+    swap
+    callsub __storage_write
+    dig 2
+    callsub __storage_read
+    dup
+    bytec_0 // 0x20
+    b/
+    bytec_2 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
+    b+
+    dup
+    callsub __storage_read
+    uncover 4
+    swap
     concat
-    bytec_1 // 0x0004000600000000
-    swap
-    intc_1 // 1
-    intc_0 // 2
-    callsub static_array_replace_byte_length_head
-    bytec_0 // "a"
-    box_del
-    pop
-    bytec_0 // "a"
-    swap
-    box_put
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bnz main_after_if_else@19
-    bytec_0 // "a"
-    bytec_1 // 0x0004000600000000
-    box_put
-
-main_after_if_else@19:
-    bytec_0 // "a"
-    box_get
-    assert // box exists
-    bytec_0 // "a"
-    intc_0 // 2
     dup
-    box_extract
-    btoi
-    bytec_0 // "a"
-    dig 1
-    intc_0 // 2
-    box_extract
-    btoi
-    intc_0 // 2
-    +
-    bytec_0 // "a"
-    cover 2
-    box_extract
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_0 // 0x20
+    b%
+    uncover 4
+    swap
+    concat
     dup
-    intc_2 // 0
-    extract_uint16
-    intc_1 // 1
-    +
-    itob
-    extract 6 0
-    replace2 0
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushint 31
+    swap
+    -
     pushbytes 0x04
-    concat
-    intc_1 // 1
-    intc_0 // 2
-    callsub static_array_replace_byte_length_head
-    bytec_0 // "a"
-    box_del
-    pop
-    bytec_0 // "a"
-    swap
-    box_put
-    intc_1 // 1
+    replace3
+    callsub __storage_write
+    bytec_3 // 0x01
+    b+
+    callsub __storage_write
+    intc_3 // 1
     return
 
 
-// _puya_lib.arc4.static_array_replace_byte_length_head(array_head_and_tail: bytes, new_item: bytes, index: uint64, array_length: uint64) -> bytes:
-static_array_replace_byte_length_head:
-    proto 4 1
-    frame_dig -2
-    intc_0 // 2
-    *
-    frame_dig -4
-    dig 1
-    extract_uint16
-    frame_dig -4
-    dig 1
-    extract_uint16
-    dig 1
-    +
-    intc_0 // 2
-    +
-    frame_dig -4
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
     intc_2 // 0
-    uncover 3
-    substring3
-    frame_dig -3
-    concat
-    frame_dig -4
-    len
-    frame_dig -4
-    uncover 3
-    uncover 2
-    substring3
-    concat
+    dup
+    pushbytes ""
     frame_dig -1
-    intc_0 // 2
-    *
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
-    cover 2
-    cover 3
+    frame_bury -1
+    bytec 5 // 0x010000
+    b<
+    bz __storage_read_else_body@4
+    intc_1 // 8
+    bzero
+    frame_dig -1
+    concat
     dup
-    dig 3
-    extract_uint16
-    uncover 2
-    swap
-    frame_dig -2
-    select
-    cover 2
-    frame_bury -4
-
-static_array_replace_byte_length_head_for_header@2:
-    frame_dig 2
-    frame_dig 0
-    <
-    bz static_array_replace_byte_length_head_after_for@4
-    frame_dig 1
+    len
+    intc_1 // 8
+    -
+    extract_uint64
     dup
-    itob
-    extract 6 0
-    frame_dig -4
-    frame_dig 2
-    dup
-    cover 4
-    uncover 2
-    replace3
-    dup
-    frame_bury -4
-    dig 1
-    extract_uint16
-    intc_0 // 2
-    +
-    +
-    frame_bury 1
-    intc_0 // 2
-    +
     frame_bury 2
-    b static_array_replace_byte_length_head_for_header@2
-
-static_array_replace_byte_length_head_after_for@4:
-    frame_dig -4
+    pushint 64
+    /
+    itob
+    bytec 6 // "p:"
+    swap
+    concat
+    dup
+    frame_bury 1
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 2
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    frame_dig 1
+    swap
+    intc_0 // 32
+    box_extract
     frame_bury 0
+    retsub
+
+__storage_read_after_if_else@3:
+    pushbytes 0x
+    frame_bury 0
+    retsub
+
+__storage_read_else_body@4:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 7 // "s:"
+    swap
+    concat
+    dup
+    frame_bury 0
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 0
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    frame_dig -2
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    bytec 5 // 0x010000
+    b<
+    bz __storage_write_else_body@2
+    intc_1 // 8
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    pushint 64
+    /
+    itob
+    bytec 6 // "p:"
+    swap
+    concat
+    dup
+    pushint 2048
+    box_create
+    pop
+    swap
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    box_replace
+    retsub
+
+__storage_write_else_body@2:
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 7 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_2 // 0
+    swap
+    box_replace
     retsub

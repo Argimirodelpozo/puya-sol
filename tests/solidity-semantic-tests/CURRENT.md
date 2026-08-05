@@ -1,3 +1,22 @@
+# Semantic Test Status — v487 (mode-matrix lane)
+
+> **First full-suite slot-mode sweep (`PUYA_SOL_EXTRA_ARGS=--evm-storage-layout`),
+> 2026-08-06:** **173 failed / 1245 passed / 106 xf / 31 xp** vs the default-mode
+> baseline of 12f — the mode chainwide ships on had never faced the corpus. The 161
+> mode-only failures cluster into a NAMED taxonomy (direct-recompile clustering,
+> dedup by fixture): **aggregate storage assignment ×17, aggregate state initializer
+> ×14, delete/++/-- on aggregate ×13, aggregate push/pop ×10, state var missing from
+> layout ×8, struct-as-value w/ non-value member ×6, bytes/string push/pop ×6,
+> bytes/string element access ×4, whole-struct write ×3, aggregate-as-value ×3,
+> no-slot-handle ×3, packed-slot type ×2** — one family: EvmSlotLowering's v1
+> isValueType scope, hard-erroring on aggregate OPERATIONS. Plus 21 backend crashes
+> ("puya exited 1", incl. asm_extcodesize — undug), 4 exit-2, ~19 runtime
+> NoneType-decode fails, CREATE2 ×1 (legit), asm-biguint ×4 (known base64 class).
+> CompileError messages now embed the compiler's first error line
+> (framework/compile.py _first_error_line) — the sweep initially produced 110
+> indistinguishable "puya-sol exited 1" rows.
+> Lane recipe: `PUYA_SOL_EXTRA_ARGS="--evm-storage-layout" pytest tests -n2`.
+
 # Semantic Test Status — v486
 
 > **fix: Yul `return()` in a void function was invisible across contracts,

@@ -3,6 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/balance.sol.test.approval_program() -> uint64:
 main:
+    intcblock 1 0
+    bytecblock "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -22,29 +24,32 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
     return
 
 main_after_if_else@2:
-    pushbytes 0xad7db34f // method "getBalance()uint256"
-    txna ApplicationArgs 0
-    match main_getBalance_route@4
-    err
-
-main_getBalance_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xad7db34f // method "__postInit()void", method "getBalance()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_getBalance_route@6
+    err
+
+main_getBalance_route@6:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@12
     txn GroupIndex
-    pushint 1
+    intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@13:
     !
     assert // not payable
     global CurrentApplicationAddress
@@ -58,9 +63,23 @@ main_ternary_merge@9:
     swap
     concat
     log
-    pushint 1
+    intc_0 // 1
     return
 
-main_ternary_false@8:
-    pushint 0
-    b main_ternary_merge@9
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    intc_0 // 1
+    return

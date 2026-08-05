@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/memoryManagement/contracts/memory_types_initialisation.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 0 24 88
-    bytecblock "__ctor_pending" 0x0e824f33 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
+    bytecblock 0x0e824f33 0x733aabbb5caa7dda850e60932de0934eb1f9d0f59695050f761dc64e443e5030a569
     pushint 4096
     bzero
     dup
@@ -24,9 +24,6 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
-    intc_0 // 1
-    app_global_put
     intc_0 // 1
     return
 
@@ -36,22 +33,21 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytes 0xbacc49e3 // method "__postInit()void"
-    bytec_1 // method "stat()uint256[5]"
+    bytec_0 // method "stat()uint256[5]"
     pushbytess 0xd2a687cf 0x5f4972d3 0x4cc359fa // method "dyn()uint256[]", method "nested()uint256[3][]", method "nestedStat()uint256[3][7]"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_stat_route@6 main_dyn_route@7 main_nested_route@8 main_nestedStat_route@9
+    match main_stat_route@5 main_dyn_route@6 main_nested_route@7 main_nestedStat_route@8
     err
 
-main_nestedStat_route@9:
+main_nestedStat_route@8:
     txn GroupIndex
-    bz main_ternary_false@15
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@16:
+main_ternary_merge@15:
     !
     assert // not payable
     load 0
@@ -73,19 +69,19 @@ main_ternary_merge@16:
     intc_0 // 1
     return
 
-main_ternary_false@15:
+main_ternary_false@14:
     intc_1 // 0
-    b main_ternary_merge@16
+    b main_ternary_merge@15
 
-main_nested_route@8:
+main_nested_route@7:
     txn GroupIndex
-    bz main_ternary_false@20
+    bz main_ternary_false@19
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@26:
+main_ternary_merge@25:
     !
     assert // not payable
     callsub stat
@@ -95,47 +91,29 @@ main_ternary_merge@26:
     intc_0 // 1
     return
 
-main_ternary_false@20:
+main_ternary_false@19:
     intc_1 // 0
-    b main_ternary_merge@26
+    b main_ternary_merge@25
 
-main_dyn_route@7:
+main_dyn_route@6:
     txn GroupIndex
-    bz main_ternary_false@25
+    bz main_ternary_false@24
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@26
+    b main_ternary_merge@25
 
-main_ternary_false@25:
+main_ternary_false@24:
     intc_1 // 0
-    b main_ternary_merge@26
+    b main_ternary_merge@25
 
-main_stat_route@6:
+main_stat_route@5:
     callsub stat
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
-    return
-
-main___postInit_route@5:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_0 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    pushbytes "data"
-    pushint 2
-    box_create
-    pop
     intc_0 // 1
     return
 
@@ -145,7 +123,7 @@ stat:
     txn NumAppArgs
     bz stat_after_if_else@6
     txna ApplicationArgs 0
-    bytec_1 // method "stat()uint256[5]"
+    bytec_0 // method "stat()uint256[5]"
     ==
     bz stat_after_if_else@6
     txn GroupIndex
@@ -172,14 +150,14 @@ stat_after_if_else@6:
     concat
     replace2 64
     store 0
-    pushint 3
-    itob
-    bytec_2 // 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
-    box_del
+    bytec_1 // 0x733aabbb5caa7dda850e60932de0934eb1f9d0f59695050f761dc64e443e5030a569
+    pushint 32
+    box_create
     pop
-    bytec_2 // 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
-    swap
-    box_put
+    bytec_1 // 0x733aabbb5caa7dda850e60932de0934eb1f9d0f59695050f761dc64e443e5030a569
+    intc_1 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    box_replace
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     retsub
 

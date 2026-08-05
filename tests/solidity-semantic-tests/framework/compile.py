@@ -392,6 +392,18 @@ class CompileError(Exception):
         self.stderr = stderr
 
 
+def _first_error_line(stderr: str, stdout: str = "") -> str:
+    """': <first compiler error>' — triage lives in the message, not buried in
+    an attribute nobody prints (the slot-mode sweep produced 110
+    indistinguishable 'puya-sol exited 1' failures)."""
+    for text in (stderr or "", stdout or ""):
+        for ln in text.splitlines():
+            if "error:" in ln.lower():
+                return ": " + ln.strip()[:160]
+    tail = (stderr or stdout or "").strip().splitlines()
+    return (": " + tail[-1][:160]) if tail else ""
+
+
 def compile_sol(
     sol_path: Path,
     out_dir: Path,
@@ -493,7 +505,8 @@ def compile_sol(
         front = _run(_NOOP_PUYA)
         if front.returncode != 0:
             raise CompileError(
-                f"puya-sol exited {front.returncode}",
+                f"puya-sol exited {front.returncode}"
+                + _first_error_line(front.stderr, front.stdout),
                 stdout=front.stdout, stderr=front.stderr,
             )
 
@@ -518,7 +531,8 @@ def compile_sol(
                 full = _run(str(PUYA))
                 if full.returncode != 0:
                     raise CompileError(
-                        f"puya-sol exited {full.returncode}",
+                        f"puya-sol exited {full.returncode}"
+                        + _first_error_line(full.stderr, full.stdout),
                         stdout=full.stdout, stderr=full.stderr,
                     )
             if bkey:

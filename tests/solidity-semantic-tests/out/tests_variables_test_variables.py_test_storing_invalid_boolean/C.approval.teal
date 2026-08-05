@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/storing_invalid_boolean.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "perm" 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    intcblock 32 1 0 8
+    bytecblock 0x 0x151f7c750000000000000000000000000000000000000000000000000000000000000001 0x703a0000000000000000
     pushint 4096
     bzero
     dup
@@ -24,10 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "perm"
-    intc_1 // 0
-    app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -45,37 +42,48 @@ main_perm_route@8:
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 main_ternary_merge@15:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "perm"
-    app_global_get_ex
-    assert // check perm exists
+    intc_0 // 32
+    bzero
+    bytec_0 // 0x
+    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 31
+    getbyte
+    intc_2 // 0
+    !=
     pushbytes 0x00
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@14:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@15
 
 main_ev_route@7:
     txn GroupIndex
     bz main_ternary_false@19
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -90,18 +98,18 @@ main_ternary_merge@20:
     log
     bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@19:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@20
 
 main_ret_route@6:
     txn GroupIndex
     bz main_ternary_false@24
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -114,18 +122,18 @@ main_ternary_merge@25:
     store 0
     pushbytes 0x151f7c7580
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@24:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@25
 
 main_set_route@5:
     txn GroupIndex
     bz main_ternary_false@29
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -136,14 +144,121 @@ main_ternary_merge@30:
     store 0
     load 0
     store 0
-    bytec_0 // "perm"
-    intc_0 // 1
-    app_global_put
+    intc_0 // 32
+    bzero
+    bytec_0 // 0x
+    callsub __storage_read
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x01
+    replace2 31
+    bytec_2 // 0x703a0000000000000000
+    pushint 2048
+    box_create
+    pop
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x703a0000000000000000
+    intc_2 // 0
+    uncover 2
+    box_replace
     bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@29:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@30
+
+
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    intc_2 // 0
+    dup
+    bytec_0 // ""
+    frame_dig -1
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    pushbytes 0x010000
+    b<
+    bz __storage_read_else_body@4
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    frame_bury 2
+    pushint 64
+    /
+    itob
+    pushbytes "p:"
+    swap
+    concat
+    dup
+    frame_bury 1
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 2
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    frame_dig 1
+    swap
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+__storage_read_after_if_else@3:
+    bytec_0 // 0x
+    frame_bury 0
+    retsub
+
+__storage_read_else_body@4:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes "s:"
+    swap
+    concat
+    dup
+    frame_bury 0
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 0
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/assign_from_immutables.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x 0x151f7c75 "a" "b" "c" "d"
+    bytecblock 0x151f7c75 0x "__ctor_pending" "d" "c" "b" "a"
     pushint 4096
     bzero
     dup
@@ -24,31 +24,8 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "a"
-    bytec_0 // 0x
-    app_global_put
-    bytec_3 // "b"
-    bytec_0 // 0x
-    app_global_put
-    bytec 4 // "c"
-    bytec_0 // 0x
-    app_global_put
-    bytec 5 // "d"
-    bytec_0 // 0x
-    app_global_put
+    bytec_2 // "__ctor_pending"
     intc_0 // 1
-    itob
-    bytec_2 // "a"
-    dig 1
-    app_global_put
-    bytec_3 // "b"
-    dig 1
-    app_global_put
-    bytec 4 // "c"
-    dig 1
-    app_global_put
-    bytec 5 // "d"
-    swap
     app_global_put
     intc_0 // 1
     return
@@ -59,24 +36,24 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xb5251388 0xddb04781 0x311e3db1 0x4075f398 // method "a()uint256", method "b()uint256", method "c()uint256", method "d()uint256"
+    pushbytess 0xbacc49e3 0xb5251388 0xddb04781 0x311e3db1 0x4075f398 // method "__postInit()void", method "a()uint256", method "b()uint256", method "c()uint256", method "d()uint256"
     txna ApplicationArgs 0
-    match main_a_route@5 main_b_route@6 main_c_route@7 main_d_route@8
+    match main___postInit_route@5 main_a_route@6 main_b_route@7 main_c_route@8 main_d_route@9
     err
 
-main_d_route@8:
+main_d_route@9:
     txn GroupIndex
-    bz main_ternary_false@14
+    bz main_ternary_false@15
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@15:
+main_ternary_merge@16:
     !
     assert // not payable
     intc_1 // 0
-    bytec 5 // "d"
+    bytec_3 // "d"
     app_global_get_ex
     assert // check d exists
     dup
@@ -87,26 +64,26 @@ main_ternary_merge@15:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@14:
+main_ternary_false@15:
     intc_1 // 0
-    b main_ternary_merge@15
+    b main_ternary_merge@16
 
-main_c_route@7:
+main_c_route@8:
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@20
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@21:
     !
     assert // not payable
     intc_1 // 0
@@ -121,30 +98,30 @@ main_ternary_merge@20:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@19:
+main_ternary_false@20:
     intc_1 // 0
-    b main_ternary_merge@20
+    b main_ternary_merge@21
 
-main_b_route@6:
+main_b_route@7:
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@25
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@26:
     !
     assert // not payable
     intc_1 // 0
-    bytec_3 // "b"
+    bytec 5 // "b"
     app_global_get_ex
     assert // check b exists
     dup
@@ -155,30 +132,30 @@ main_ternary_merge@25:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@24:
+main_ternary_false@25:
     intc_1 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@26
 
-main_a_route@5:
+main_a_route@6:
     txn GroupIndex
-    bz main_ternary_false@29
+    bz main_ternary_false@30
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+main_ternary_merge@31:
     !
     assert // not payable
     intc_1 // 0
-    bytec_2 // "a"
+    bytec 6 // "a"
     app_global_get_ex
     assert // check a exists
     dup
@@ -189,13 +166,53 @@ main_ternary_merge@30:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@29:
+main_ternary_false@30:
     intc_1 // 0
-    b main_ternary_merge@30
+    b main_ternary_merge@31
+
+main___postInit_route@5:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_2 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec 6 // "a"
+    bytec_1 // 0x
+    app_global_put
+    bytec 5 // "b"
+    bytec_1 // 0x
+    app_global_put
+    bytec 4 // "c"
+    bytec_1 // 0x
+    app_global_put
+    bytec_3 // "d"
+    bytec_1 // 0x
+    app_global_put
+    intc_0 // 1
+    itob
+    bytec 6 // "a"
+    dig 1
+    app_global_put
+    bytec 5 // "b"
+    dig 1
+    app_global_put
+    bytec 4 // "c"
+    dig 1
+    app_global_put
+    bytec_3 // "d"
+    swap
+    app_global_put
+    intc_0 // 1
+    return

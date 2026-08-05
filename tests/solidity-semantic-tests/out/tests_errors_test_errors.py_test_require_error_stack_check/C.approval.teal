@@ -4,9 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_stack_check.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "x" 0x 0xc7619fcb 0x151f7c75
+    bytecblock 0x703a0000000000000000 0x 0xc7619fcb 0x151f7c75
     intc_2 // 0
-    dupn 4
+    dupn 5
     bytec_1 // ""
     dupn 3
     pushint 4096
@@ -28,9 +28,6 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    bytec_1 // 0x
-    app_global_put
     intc_1 // 1
     return
 
@@ -57,10 +54,16 @@ main_x_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
+    bytec_0 // 0x703a0000000000000000
+    box_len
+    bury 1
+    bz main_after_if_else@30
+    bytec_0 // 0x703a0000000000000000
     intc_2 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    assert // check x exists
+    intc_0 // 32
+    box_extract
+
+main_after_inlined___puyasol___storage_read@34:
     dup
     len
     intc_0 // 32
@@ -75,6 +78,10 @@ main_ternary_merge@14:
     log
     intc_1 // 1
     return
+
+main_after_if_else@30:
+    bytec_1 // 0x
+    b main_after_inlined___puyasol___storage_read@34
 
 main_ternary_false@13:
     intc_2 // 0
@@ -92,7 +99,7 @@ main_f_route@6:
     bury 4
     txna ApplicationArgs 2
     dup
-    bury 10
+    bury 11
     len
     dup
     bury 4
@@ -101,7 +108,7 @@ main_f_route@6:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 9
+    bury 10
     len
     dup
     bury 3
@@ -110,7 +117,7 @@ main_f_route@6:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
-    bury 8
+    bury 9
     len
     dup
     bury 2
@@ -142,14 +149,16 @@ main_ternary_merge@19:
     assert // overflow
     intc_0 // 32
     bzero
-    dig 11
+    dup
+    bury 8
+    dig 12
     dig 1
     b|
     dig 5
     intc_0 // 32
     <=
     assert // overflow
-    dig 11
+    dig 12
     dig 2
     b|
     concat
@@ -157,7 +166,7 @@ main_ternary_merge@19:
     intc_0 // 32
     <=
     assert // overflow
-    dig 10
+    dig 11
     uncover 2
     b|
     concat
@@ -166,17 +175,31 @@ main_ternary_merge@19:
     pushbytes 0x8138227e // method "E(uint256,uint256,uint256,function)"
     swap
     concat
-    bury 6
+    bury 7
     bnz main_after_if_else@21
-    dig 4
+    dig 5
     log
 
 main_after_if_else@21:
     dig 3
     assert // E
-    bytec_0 // "x"
-    dig 8
-    app_global_put
+    bytec_0 // 0x703a0000000000000000
+    pushint 2048
+    box_create
+    pop
+    dig 4
+    dig 9
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x703a0000000000000000
+    intc_2 // 0
+    uncover 2
+    box_replace
     intc_1 // 1
     return
 
@@ -187,7 +210,7 @@ main_ternary_false@18:
 main_e_route@5:
     txna ApplicationArgs 1
     dup
-    bury 7
+    bury 8
     len
     intc_0 // 32
     ==
@@ -203,7 +226,7 @@ main_ternary_merge@26:
     !
     assert // not payable
     bytec_3 // 0x151f7c75
-    dig 6
+    dig 7
     concat
     log
     intc_1 // 1

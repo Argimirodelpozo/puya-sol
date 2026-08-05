@@ -3,8 +3,6 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/literals/contracts/denominations_in_array_sizes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "__ctor_pending" "a" "d" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -24,73 +22,36 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
-    intc_0 // 1
-    app_global_put
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0xffda74e6 // method "__postInit()void", method "lengths()(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)"
+    pushbytes 0xffda74e6 // method "lengths()(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_lengths_route@6
+    match main_lengths_route@4
     err
 
-main_lengths_route@6:
+main_lengths_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@8
     txn GroupIndex
-    intc_0 // 1
+    pushint 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@9:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_1 // "a"
-    app_global_get_ex
-    bury 1
-    assert // check a exists
-    intc_1 // 0
-    bytec_2 // "d"
-    app_global_get_ex
-    bury 1
-    assert // check d exists
     pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000773594000000000000000000000000000000000000000000000000001bc16d674ec80000000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000780000000000000000000000000000000000000000000000000000000000001c20000000000000000000000000000000000000000000000000000000000002a3000000000000000000000000000000000000000000000000000000000000127500
     log
-    intc_0 // 1
+    pushint 1
     return
 
-main_ternary_false@12:
-    intc_1 // 0
-    b main_ternary_merge@13
-
-main___postInit_route@5:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_0 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    pushbytes "e"
-    pushint 3840
-    box_create
-    pop
-    bytec_1 // "a"
-    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
-    bytec_2 // "d"
-    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
-    intc_0 // 1
-    return
+main_ternary_false@8:
+    pushint 0
+    b main_ternary_merge@9

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_mappings_return.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock 0x "m" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000002
+    intcblock 32 0 1 8
+    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000002 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
     pushint 4096
     bzero
     dup
@@ -24,112 +24,126 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
-    intc_1 // 1
-    app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x8fb5753f // method "__postInit()void", method "f()(uint256,uint256,uint256,uint256,uint256,uint256)"
+    pushbytes 0x8fb5753f // method "f()(uint256,uint256,uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_f_route@6
+    match main_f_route@4
     err
 
-main_f_route@6:
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@8
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@9:
     !
     assert // not payable
-    intc_1 // 1
+    intc_2 // 1
     itob
-    intc_2 // 0
-    itob
-    bytec_1 // "m"
-    dig 1
-    callsub Lib.choose
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    swap
-    concat
-    sha256
-    dup
-    box_del
-    pop
-    dig 2
-    box_put
-    pushint 42
-    itob
-    bytec_1 // "m"
-    uncover 2
-    callsub Lib.choose
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
-    swap
-    concat
-    sha256
-    dup
-    box_del
-    pop
-    swap
-    box_put
-    pushint 23
-    itob
-    bytec_1 // "m"
-    dig 2
-    callsub Lib.choose
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    swap
-    concat
-    sha256
-    dup
-    box_del
-    pop
-    swap
-    box_put
-    pushint 99
-    itob
-    bytec_1 // "m"
-    uncover 2
-    callsub Lib.choose
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
-    swap
-    concat
-    sha256
-    dup
-    box_del
-    pop
-    swap
-    box_put
-    pushbytes 0xb22411f528e8db1b50a73bdb98c151fb6edb9af77ab4b8b04043f45160f3d78d
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
     intc_0 // 32
     bzero
+    intc_1 // 0
+    itob
+    bytec_0 // 0x
+    dig 1
+    callsub Lib.choose
+    dig 2
     swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    keccak256
+    dig 3
+    callsub __storage_write
+    pushint 42
+    itob
+    bytec_0 // 0x
+    uncover 2
+    callsub Lib.choose
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    swap
+    concat
+    keccak256
+    swap
+    callsub __storage_write
+    pushint 23
+    itob
+    bytec_0 // 0x
+    dig 3
+    callsub Lib.choose
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    swap
+    concat
+    keccak256
+    swap
+    callsub __storage_write
+    pushint 99
+    itob
+    bytec_0 // 0x
+    uncover 3
+    callsub Lib.choose
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    swap
+    concat
+    keccak256
+    swap
+    callsub __storage_write
+    pushbytes 0xed428e1c45e1d9561b62834e1a2d3015a0caae3bfdc16b4da059ac885b01a145
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
     dig 1
     b|
-    pushbytes 0x0f72605a55c2c7f986587e09655e0bb00814b6aea30c0ab99b3a3b8b3319abb1
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
+    pushbytes 0x009316a6b27b778fc9c4cd520e332fce845aa0089877f87cfe8c1d77fa4cc110
+    callsub __storage_read
     dup
     len
     intc_0 // 32
@@ -137,11 +151,8 @@ main_ternary_merge@13:
     assert // overflow
     dig 2
     b|
-    pushbytes 0xd581c3e8a5023d7cb830eef355670f56272bb533cde681c12dd9271a58b522be
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
+    pushbytes 0x09f922a082099d8bb3cef76f214b97d4ea18be3ab11deb731e4676110a885b48
+    callsub __storage_read
     dup
     len
     intc_0 // 32
@@ -149,11 +160,8 @@ main_ternary_merge@13:
     assert // overflow
     dig 3
     b|
-    pushbytes 0x3d651a4c701ff25dfbc8efcd6a9e0381ad827f976f3c0d5ffa477c5013f6b589
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
+    pushbytes 0x871b3b0713ea5d7fd1f75a811c349209996193f3a2535cdfd79d35416bf80123
+    callsub __storage_read
     dup
     len
     intc_0 // 32
@@ -161,11 +169,8 @@ main_ternary_merge@13:
     assert // overflow
     dig 4
     b|
-    pushbytes 0x2a13a288136fed93283388ac84b5f52d89e1c34634b72bc41e0497a3d4795ea7
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
+    pushbytes 0xe3be84349242383ed4b31bbb7ede08a8080ac9d5e828342f449d34bf731539e9
+    callsub __storage_read
     dup
     len
     intc_0 // 32
@@ -173,11 +178,8 @@ main_ternary_merge@13:
     assert // overflow
     dig 5
     b|
-    pushbytes 0x16e8f9bcea0464008505990c4152766d99127720a26b32f7e614a949bc128c87
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
+    pushbytes 0xb37150ceb7e138645bfe4dfcef9a75073e1d7aa14c524dfdd20d3f751fad1084
+    callsub __storage_read
     dup
     len
     intc_0 // 32
@@ -200,35 +202,91 @@ main_ternary_merge@13:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
-main_ternary_false@12:
-    intc_2 // 0
-    b main_ternary_merge@13
-
-main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_1 // "m"
-    pushint 2
-    box_create
-    pop
-    intc_1 // 1
-    return
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_mappings_return.sol.Lib.choose(m: bytes, key: bytes) -> bytes:
 Lib.choose:
     proto 2 1
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    b|
+    extract 0 32
+    swap
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    retsub
+
+
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    intc_1 // 0
+    dup
+    bytec_0 // ""
+    frame_dig -1
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    bytec 4 // 0x010000
+    b<
+    bz __storage_read_else_body@4
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    frame_bury 2
+    pushint 64
+    /
+    itob
+    bytec 5 // "p:"
+    swap
+    concat
+    dup
+    frame_bury 1
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 2
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    frame_dig 1
+    swap
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+__storage_read_after_if_else@3:
+    bytec_0 // 0x
+    frame_bury 0
+    retsub
+
+__storage_read_else_body@4:
     intc_0 // 32
     bzero
     frame_dig -1
@@ -239,7 +297,100 @@ Lib.choose:
     -
     intc_0 // 32
     extract3
+    bytec 6 // "s:"
+    swap
+    concat
+    dup
+    frame_bury 0
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 0
+    intc_1 // 0
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    frame_dig -2
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    bytec 4 // 0x010000
+    b<
+    bz __storage_write_else_body@2
+    intc_3 // 8
+    bzero
     frame_dig -2
     concat
-    sha256
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    pushint 64
+    /
+    itob
+    bytec 5 // "p:"
+    swap
+    concat
+    dup
+    pushint 2048
+    box_create
+    pop
+    swap
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    box_replace
+    retsub
+
+__storage_write_else_body@2:
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 6 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    swap
+    box_replace
     retsub

@@ -23,14 +23,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "y" 0x
-    app_global_put
     pushbytess "x" 0x
     app_global_put
     pushbytes "w"
     intc_1 // 0
-    app_global_put
-    pushbytess "z" 0x
     app_global_put
     pushbytess "a" base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // "a", addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put

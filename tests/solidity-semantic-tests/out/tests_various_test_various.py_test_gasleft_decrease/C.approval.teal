@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/gasleft_decrease.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "v" 0x 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    bytec_1 // ""
+    intcblock 32 0 1 8
+    bytecblock 0x 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x703a0000000000000000
+    bytec_0 // ""
     pushint 4096
     bzero
     dup
@@ -25,10 +25,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "v"
-    bytec_1 // 0x
-    app_global_put
-    intc_0 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -46,7 +43,7 @@ main_g_route@6:
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
-    intc_0 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -61,7 +58,7 @@ main_ternary_merge@13:
     dup
     bury 2
     bnz main_after_if_else@22
-    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@22:
@@ -69,7 +66,7 @@ main_after_if_else@22:
     assert
     pushbytes 0x151f7c7580
     log
-    intc_0 // 1
+    intc_2 // 1
     return
 
 main_ternary_false@12:
@@ -80,7 +77,7 @@ main_f_route@5:
     txn GroupIndex
     bz main_ternary_false@19
     txn GroupIndex
-    intc_0 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -89,29 +86,125 @@ main_ternary_merge@20:
     assert // not payable
     global OpcodeBudget
     itob
-    intc_1 // 0
-    bytec_0 // "v"
-    app_global_get_ex
-    assert // check v exists
+    bytec_0 // 0x
+    callsub __storage_read
+    pop
+    bytec_0 // 0x
+    callsub __storage_read
     pushbytes 0x01
     b+
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_0 // "v"
+    bytec_2 // 0x703a0000000000000000
+    pushint 2048
+    box_create
+    pop
+    intc_0 // 32
+    bzero
     swap
-    app_global_put
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x703a0000000000000000
+    intc_1 // 0
+    uncover 2
+    box_replace
     global OpcodeBudget
     itob
     b>
     dup
     bury 2
     bnz main_after_if_else@22
-    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
     b main_after_if_else@22
 
 main_ternary_false@19:
     intc_1 // 0
     b main_ternary_merge@20
+
+
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    intc_1 // 0
+    dup
+    bytec_0 // ""
+    frame_dig -1
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    pushbytes 0x010000
+    b<
+    bz __storage_read_else_body@4
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    frame_bury 2
+    pushint 64
+    /
+    itob
+    pushbytes "p:"
+    swap
+    concat
+    dup
+    frame_bury 1
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 2
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    frame_dig 1
+    swap
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+__storage_read_after_if_else@3:
+    bytec_0 // 0x
+    frame_bury 0
+    retsub
+
+__storage_read_else_body@4:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes "s:"
+    swap
+    concat
+    dup
+    frame_bury 0
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 0
+    intc_1 // 0
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub

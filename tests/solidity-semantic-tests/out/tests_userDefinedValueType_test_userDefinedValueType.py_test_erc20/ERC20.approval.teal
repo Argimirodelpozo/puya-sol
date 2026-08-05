@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
-    bytecblock 0x "_allowances" 0x151f7c7580 "_balances" 0x0000000000000000000000000000000000000000000000000000000000000000 "_totalSupply" "__ctor_pending" 0x151f7c75 0x28918861 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 1 0 8
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000001 0x151f7c7580 0x 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x151f7c75 0x02 0x28918861 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000 "p:" "s:"
     intc_2 // 0
     dupn 8
-    bytec_0 // ""
+    bytec_3 // ""
     pushint 4096
     bzero
     dup
@@ -27,7 +27,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 6 // "__ctor_pending"
+    bytec 5 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -70,21 +70,31 @@ main_ternary_merge@20:
     !
     assert // not payable
     txn Sender
+    dig 4
     dup
-    bytec_1 // "_allowances"
-    concat
-    sha256
-    dig 5
-    dup
-    uncover 2
-    concat
-    sha256
-    box_get
-    bytec_0 // 0x
     cover 2
-    select
+    extract 0 32
+    intc_0 // 32
+    bzero
+    txn Sender
+    extract 0 32
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000001
+    concat
+    keccak256
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    callsub __storage_read
     dig 11
     callsub FixedMath.sub
+    swap
+    cover 2
     callsub _approve
     bytec_2 // 0x151f7c7580
     log
@@ -121,21 +131,31 @@ main_ternary_merge@25:
     !
     assert // not payable
     txn Sender
+    dig 4
     dup
-    bytec_1 // "_allowances"
-    concat
-    sha256
-    dig 5
-    dup
-    uncover 2
-    concat
-    sha256
-    box_get
-    bytec_0 // 0x
     cover 2
-    select
+    extract 0 32
+    intc_0 // 32
+    bzero
+    txn Sender
+    extract 0 32
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000001
+    concat
+    keccak256
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    callsub __storage_read
     dig 12
     callsub FixedMath.add
+    swap
+    cover 2
     callsub _approve
     bytec_2 // 0x151f7c7580
     log
@@ -187,16 +207,24 @@ main_ternary_merge@30:
     callsub _transfer
     txn Sender
     dup
-    dig 2
-    bytec_1 // "_allowances"
+    extract 0 32
+    intc_0 // 32
+    bzero
+    dig 3
+    extract 0 32
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000001
     concat
-    sha256
+    keccak256
     concat
-    sha256
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
+    callsub __storage_read
     uncover 3
     callsub FixedMath.sub
     callsub _approve
@@ -310,27 +338,36 @@ main_allowance_route@8:
 main_ternary_merge@45:
     !
     assert // not payable
-    dig 4
-    bytec_1 // "_allowances"
+    dig 3
+    extract 0 32
+    intc_0 // 32
+    bzero
+    dig 6
+    extract 0 32
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000001
     concat
-    sha256
-    dig 4
+    keccak256
+    dig 1
     swap
     concat
-    sha256
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    keccak256
+    callsub __storage_read
     dup
     len
     intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 32
-    bzero
     b|
-    bytec 7 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -360,13 +397,11 @@ main_ternary_merge@50:
     !
     assert // not payable
     dig 4
-    bytec_3 // "_balances"
+    extract 0 32
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    sha256
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
+    keccak256
+    callsub __storage_read
     dup
     len
     intc_0 // 32
@@ -375,7 +410,7 @@ main_ternary_merge@50:
     intc_0 // 32
     bzero
     b|
-    bytec 7 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -397,10 +432,8 @@ main_totalSupply_route@6:
 main_ternary_merge@55:
     !
     assert // not payable
-    intc_2 // 0
-    bytec 5 // "_totalSupply"
-    app_global_get_ex
-    assert // check _totalSupply exists
+    bytec 7 // 0x02
+    callsub __storage_read
     dup
     len
     intc_0 // 32
@@ -409,7 +442,7 @@ main_ternary_merge@55:
     intc_0 // 32
     bzero
     b|
-    bytec 7 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -421,26 +454,15 @@ main_ternary_false@54:
     b main_ternary_merge@55
 
 main___postInit_route@5:
-    bytec 6 // "__ctor_pending"
+    bytec 5 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec 6 // "__ctor_pending"
+    bytec 5 // "__ctor_pending"
     intc_2 // 0
-    app_global_put
-    bytec_3 // "_balances"
-    intc_3 // 2
-    box_create
-    pop
-    bytec_1 // "_allowances"
-    intc_3 // 2
-    box_create
-    pop
-    bytec 5 // "_totalSupply"
-    bytec_0 // 0x
     app_global_put
     txn Sender
     dup
@@ -448,7 +470,7 @@ main___postInit_route@5:
     pushint 20
     itob
     bury 3
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     dup
     bury 2
@@ -459,35 +481,28 @@ main___postInit_route@5:
 main_after_if_else@58:
     dup
     assert // ERC20: mint to the zero address
-    intc_2 // 0
-    bytec 5 // "_totalSupply"
-    app_global_get_ex
-    assert // check _totalSupply exists
+    bytec 7 // 0x02
+    callsub __storage_read
     dig 2
     dup
     cover 2
     callsub FixedMath.add
-    bytec 5 // "_totalSupply"
+    bytec 7 // 0x02
     swap
-    app_global_put
+    callsub __storage_write
     dig 7
     dup
     cover 2
-    bytec_3 // "_balances"
+    extract 0 32
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    sha256
+    keccak256
     dup
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
+    callsub __storage_read
     uncover 2
     callsub FixedMath.add
-    dig 1
-    box_del
-    pop
-    box_put
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    callsub __storage_write
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     swap
     concat
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000014
@@ -521,11 +536,11 @@ FixedMath.sub:
     b>=
     assert // underflow
     frame_dig -2
-    bytec 10 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     frame_dig -1
     b-
-    bytec 10 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -534,11 +549,174 @@ FixedMath.sub:
     retsub
 
 
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    intc_2 // 0
+    dup
+    bytec_3 // ""
+    frame_dig -1
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    bytec 10 // 0x010000
+    b<
+    bz __storage_read_else_body@4
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    frame_bury 2
+    pushint 64
+    /
+    itob
+    bytec 11 // "p:"
+    swap
+    concat
+    dup
+    frame_bury 1
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 2
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    frame_dig 1
+    swap
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+__storage_read_after_if_else@3:
+    bytec_3 // 0x
+    frame_bury 0
+    retsub
+
+__storage_read_else_body@4:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 12 // "s:"
+    swap
+    concat
+    dup
+    frame_bury 0
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 0
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    frame_dig -2
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    bytec 10 // 0x010000
+    b<
+    bz __storage_write_else_body@2
+    intc_3 // 8
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    pushint 64
+    /
+    itob
+    bytec 11 // "p:"
+    swap
+    concat
+    dup
+    pushint 2048
+    box_create
+    pop
+    swap
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    box_replace
+    retsub
+
+__storage_write_else_body@2:
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 12 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_2 // 0
+    swap
+    box_replace
+    retsub
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20._transfer(from: bytes, to: bytes, value: bytes) -> void:
 _transfer:
     proto 3 0
     frame_dig -2
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     dup
     bnz _transfer_after_if_else@2
@@ -549,35 +727,25 @@ _transfer_after_if_else@2:
     frame_dig 0
     assert // ERC20: transfer to the zero address
     frame_dig -3
-    bytec_3 // "_balances"
+    extract 0 32
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    sha256
+    keccak256
     dup
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
+    callsub __storage_read
     frame_dig -1
     callsub FixedMath.sub
-    dig 1
-    box_del
-    pop
-    box_put
+    callsub __storage_write
     frame_dig -2
-    bytec_3 // "_balances"
+    extract 0 32
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    sha256
+    keccak256
     dup
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
+    callsub __storage_read
     frame_dig -1
     callsub FixedMath.add
-    dig 1
-    box_del
-    pop
-    box_put
+    callsub __storage_write
     frame_dig -1
     len
     intc_0 // 32
@@ -602,9 +770,11 @@ _transfer_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20._approve(owner: bytes, spender: bytes, value: bytes) -> void:
 _approve:
     proto 3 0
-    bytec_0 // ""
+    bytec_3 // ""
+    intc_0 // 32
+    bzero
     frame_dig -3
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     dup
     bnz _approve_after_if_else@2
@@ -612,10 +782,10 @@ _approve:
     log
 
 _approve_after_if_else@2:
-    frame_dig 1
+    frame_dig 2
     assert // ERC20: approve from the zero address
     frame_dig -2
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     dup
     frame_bury 0
@@ -626,26 +796,33 @@ _approve_after_if_else@2:
 _approve_after_if_else@4:
     frame_dig 0
     assert // ERC20: approve to the zero address
-    frame_dig -3
-    bytec_1 // "_allowances"
-    concat
-    sha256
     frame_dig -2
+    extract 0 32
+    frame_dig -3
+    extract 0 32
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000001
+    concat
+    keccak256
+    frame_dig 1
+    dup
+    cover 3
     swap
     concat
-    sha256
     dup
-    box_del
-    pop
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    keccak256
     frame_dig -1
-    box_put
+    callsub __storage_write
     frame_dig -1
     len
     intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 32
-    bzero
     frame_dig -1
     b|
     frame_dig -3

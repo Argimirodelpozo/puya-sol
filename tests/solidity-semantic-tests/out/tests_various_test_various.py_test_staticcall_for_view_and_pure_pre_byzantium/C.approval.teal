@@ -3,6 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/staticcall_for_view_and_pure_pre_byzantium.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 0
+    bytecblock 0x703a0000000000000000
     pushint 4096
     bzero
     dup
@@ -22,9 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "x" 0x
-    app_global_put
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -42,23 +42,26 @@ main_f_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    pushint 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@9:
     !
     assert // not payable
-    pushint 3
-    itob
-    pushbytes "x"
-    swap
-    app_global_put
+    bytec_0 // 0x703a0000000000000000
+    pushint 2048
+    box_create
+    pop
+    bytec_0 // 0x703a0000000000000000
+    intc_1 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    box_replace
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
-    pushint 1
+    intc_0 // 1
     return
 
 main_ternary_false@8:
-    pushint 0
+    intc_1 // 0
     b main_ternary_merge@9

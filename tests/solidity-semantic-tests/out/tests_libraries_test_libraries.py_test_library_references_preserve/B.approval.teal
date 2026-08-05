@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/library_references_preserve.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 2 0 32
-    bytecblock "sum" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intcblock 1 32 0 2
+    bytecblock 0x703a0000000000000000 "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -24,49 +24,50 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
-    itob
-    intc_1 // 2
-    itob
-    callsub L2.add
-    bytec_0 // "sum"
-    swap
     app_global_put
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    pushbytes 0x1b56b14c // method "getSum()uint256"
-    txna ApplicationArgs 0
-    match main_getSum_route@4
-    err
-
-main_getSum_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x1b56b14c // method "__postInit()void", method "getSum()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_getSum_route@6
+    err
+
+main_getSum_route@6:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@13:
     !
     assert // not payable
+    bytec_0 // 0x703a0000000000000000
+    box_len
+    bury 1
+    bz main_after_if_else@17
+    bytec_0 // 0x703a0000000000000000
     intc_2 // 0
-    bytec_0 // "sum"
-    app_global_get_ex
-    assert // check sum exists
+    intc_1 // 32
+    box_extract
+
+main_after_inlined___puyasol___storage_read@21:
     dup
     len
-    intc_3 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_3 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -76,9 +77,50 @@ main_ternary_merge@9:
     intc_0 // 1
     return
 
-main_ternary_false@8:
+main_after_if_else@17:
+    pushbytes 0x
+    b main_after_inlined___puyasol___storage_read@21
+
+main_ternary_false@12:
     intc_2 // 0
-    b main_ternary_merge@9
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    intc_0 // 1
+    itob
+    intc_3 // 2
+    itob
+    callsub L2.add
+    bytec_0 // 0x703a0000000000000000
+    pushint 2048
+    box_create
+    pop
+    intc_1 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x703a0000000000000000
+    intc_2 // 0
+    uncover 2
+    box_replace
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/library_references_preserve.sol.L2.add(a: bytes, b: bytes) -> bytes:
@@ -88,14 +130,14 @@ L2.add:
     frame_dig -1
     b+
     dup
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    intc_1 // 2
+    intc_3 // 2
     itob
     b+
     dup
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     retsub

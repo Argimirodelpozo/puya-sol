@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/stub.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "x" "y" 0x
+    bytecblock "__ctor_pending" "x" "y" 0x
     pushint 4096
     bzero
     dup
@@ -24,49 +24,36 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    bytec_2 // 0x
-    app_global_put
-    bytec_1 // "y"
-    bytec_2 // 0x
-    app_global_put
-    pushint 42
-    itob
-    bytec_0 // "x"
-    swap
-    app_global_put
-    pushint 23
-    itob
-    bytec_1 // "y"
-    swap
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    pushbytes 0x219b312e // method "f()(uint256,uint256)"
-    txna ApplicationArgs 0
-    match main_f_route@4
-    err
-
-main_f_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x219b312e // method "__postInit()void", method "f()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_f_route@6
+    err
+
+main_f_route@6:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@13:
     !
     assert // not payable
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
     dup
@@ -86,7 +73,7 @@ main_ternary_merge@9:
     dig 1
     b|
     intc_1 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
     assert // check y exists
     dup
@@ -104,6 +91,36 @@ main_ternary_merge@9:
     intc_0 // 1
     return
 
-main_ternary_false@8:
+main_ternary_false@12:
     intc_1 // 0
-    b main_ternary_merge@9
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "x"
+    bytec_3 // 0x
+    app_global_put
+    bytec_2 // "y"
+    bytec_3 // 0x
+    app_global_put
+    pushint 42
+    itob
+    bytec_1 // "x"
+    swap
+    app_global_put
+    pushint 23
+    itob
+    bytec_2 // "y"
+    swap
+    app_global_put
+    intc_0 // 1
+    return

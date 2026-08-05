@@ -3,10 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/return_storage_pointers.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2 32
-    bytecblock "__ctor_pending" "arr1" "arr2"
-    intc_0 // 0
-    dup
+    intcblock 32 1 0 8
     pushint 4096
     bzero
     dup
@@ -26,72 +23,52 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
-    intc_1 // 1
-    app_global_put
     intc_1 // 1
     return
 
 main_after_if_else@2:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x595e23e2 // method "__postInit()void", method "g()(uint256,uint256)"
+    pushbytes 0x595e23e2 // method "g()(uint256,uint256)"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_g_route@6
+    match main_g_route@4
     err
 
-main_g_route@6:
+main_g_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@8
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@9:
     !
     assert // not payable
-    bytec_1 // "arr1"
-    box_len
-    pop
-    intc_2 // 2
-    >=
-    bz main_ternary_false@15
-    bytec_1 // "arr1"
-    box_len
-    pop
-
-main_ternary_merge@16:
-    intc_2 // 2
-    -
-    intc_3 // 32
-    /
-    itob
-    intc_3 // 32
-    bzero
+    pushbytes 0x
+    callsub __storage_read
     dup
-    bury 3
-    b|
-    bury 2
-    bytec_2 // "arr2"
-    box_len
-    bury 1
-    bz main_ternary_false@18
-    bytec_2 // "arr2"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@19:
-    itob
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
     dig 1
     b|
-    dig 2
-    swap
+    pushbytes 0x01
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
     concat
     pushbytes 0x151f7c75
     swap
@@ -100,36 +77,86 @@ main_ternary_merge@19:
     intc_1 // 1
     return
 
-main_ternary_false@18:
-    intc_0 // 0
-    b main_ternary_merge@19
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9
 
-main_ternary_false@15:
-    intc_2 // 2
-    b main_ternary_merge@16
 
-main_ternary_false@12:
-    intc_0 // 0
-    b main_ternary_merge@13
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    intc_2 // 0
+    dup
+    pushbytes ""
+    frame_dig -1
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    pushbytes 0x010000
+    b<
+    bz __storage_read_else_body@4
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    frame_bury 2
+    pushint 64
+    /
+    itob
+    pushbytes "p:"
+    swap
+    concat
+    dup
+    frame_bury 1
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 2
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    frame_dig 1
+    swap
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
 
-main___postInit_route@5:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_0 // "__ctor_pending"
-    intc_0 // 0
-    app_global_put
-    bytec_1 // "arr1"
-    intc_2 // 2
-    box_create
-    pop
-    bytec_2 // "arr2"
-    intc_2 // 2
-    box_create
-    pop
-    intc_1 // 1
-    return
+__storage_read_after_if_else@3:
+    pushbytes 0x
+    frame_bury 0
+    retsub
+
+__storage_read_else_body@4:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes "s:"
+    swap
+    concat
+    dup
+    frame_bury 0
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 0
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_struct_array_mixed_types.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 31 1
-    bytecblock 0x 0x01 0x02 0x03 0x00 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x04 0x14 0x08 0x0c 0x10 0x18 0x1c 0x20 0x24 0x0a 0x15 0x05 0x06 0x07 0x09 0x0b 0x0d 0x0e 0x0f 0x11 0x12 0x13 0x16 0x17 0x19 0x1a 0x1b 0x1d 0x1e 0x1f 0x21 0x22 0x23 0x25 0x26 0x27 "__ctor_pending" 0x151f7c75 0x0100000000000000000000000000000000 0x0000000000000000 0x00000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
+    bytecblock 0x 0x01 0x02 0x03 0x00 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x04 0x14 0x08 0x0c 0x10 0x18 0x1c 0x20 0x24 0x0a 0x15 0x05 0x06 0x07 0x09 0x0b 0x0d 0x0e 0x0f 0x11 0x12 0x13 0x16 0x17 0x19 0x1a 0x1b 0x1d 0x1e 0x1f 0x21 0x22 0x23 0x25 0x26 0x27 "__ctor_pending" 0x151f7c75 0x0100000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
     intc_1 // 0
     dupn 3
     pushint 4096
@@ -1789,11 +1789,16 @@ main_while_top@36:
     bytec 15 // 0x0a
     b<
     assert // array index out of bounds
+    dup
+    bytec 6 // 0x04
+    b*
+    dig 4
+    b+
     pushint 51
     itob
     pushint 5
     itob
-    dig 2
+    dig 3
     b*
     dup
     bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -1853,6 +1858,8 @@ main_while_top@36:
     bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
+    dig 1
+    swap
     concat
     dup
     len
@@ -1862,12 +1869,40 @@ main_while_top@36:
     extract3
     pushint 54
     itob
-    uncover 5
+    uncover 6
     b+
     dup
     bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x80
+    concat
+    dup
+    extract 0 32
+    dig 4
+    swap
+    callsub __storage_write
+    dig 3
+    bytec_1 // 0x01
+    b+
+    dup
+    callsub __storage_read
     dig 4
     swap
     concat
@@ -1877,55 +1912,60 @@ main_while_top@36:
     -
     intc_0 // 32
     extract3
-    uncover 3
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    pushbytes 0x80
-    concat
     dig 2
-    bytec 6 // 0x04
-    b*
-    dig 6
-    b+
-    dig 1
-    extract 0 32
-    dig 3
-    b|
-    extract 0 32
-    dig 1
-    swap
-    callsub __storage_write
-    dup
-    bytec_1 // 0x01
-    b+
-    dig 2
-    extract 48 8
-    dig 4
-    b|
-    extract 24 8
-    bytec 45 // 0x0000000000000000
-    swap
-    concat
-    dig 3
     extract 32 16
-    uncover 5
+    dig 5
     b|
     extract 16 16
-    concat
+    replace2 16
+    dig 1
+    swap
     callsub __storage_write
     dup
+    callsub __storage_read
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    uncover 4
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    pushint 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 2
     bytec_2 // 0x02
     b+
-    dig 2
+    dig 1
     extract 56 32
     callsub __storage_write
+    uncover 2
     bytec_3 // 0x03
     b+
+    dup
+    callsub __storage_read
+    uncover 3
     swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
     pushint 704
     getbit
     bytec 4 // 0x00
@@ -1936,9 +1976,7 @@ main_while_top@36:
     getbit
     itob
     extract 7 1
-    bytec 46 // 0x00000000000000000000000000000000000000000000000000000000000000
-    swap
-    concat
+    replace2 31
     callsub __storage_write
     bytec_1 // 0x01
     b+
@@ -2872,11 +2910,16 @@ main_while_top@59:
     bytec 15 // 0x0a
     b<
     assert // array index out of bounds
+    dup
+    bytec 6 // 0x04
+    b*
+    dig 5
+    b+
     intc_3 // 1
     itob
     pushint 5
     itob
-    dig 2
+    dig 3
     b*
     dup
     bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -2936,6 +2979,8 @@ main_while_top@59:
     bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
+    dig 1
+    swap
     concat
     dup
     len
@@ -2945,12 +2990,40 @@ main_while_top@59:
     extract3
     pushint 4
     itob
-    uncover 5
+    uncover 6
     b+
     dup
     bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 4
+    uncover 4
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x80
+    concat
+    dup
+    extract 0 32
+    dig 4
+    swap
+    callsub __storage_write
+    dig 3
+    bytec_1 // 0x01
+    b+
+    dup
+    callsub __storage_read
     dig 4
     swap
     concat
@@ -2960,55 +3033,60 @@ main_while_top@59:
     -
     intc_0 // 32
     extract3
-    uncover 3
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    pushbytes 0x80
-    concat
     dig 2
-    bytec 6 // 0x04
-    b*
-    dig 7
-    b+
-    dig 1
-    extract 0 32
-    dig 3
-    b|
-    extract 0 32
-    dig 1
-    swap
-    callsub __storage_write
-    dup
-    bytec_1 // 0x01
-    b+
-    dig 2
-    extract 48 8
-    dig 4
-    b|
-    extract 24 8
-    bytec 45 // 0x0000000000000000
-    swap
-    concat
-    dig 3
     extract 32 16
-    uncover 5
+    dig 5
     b|
     extract 16 16
-    concat
+    replace2 16
+    dig 1
+    swap
     callsub __storage_write
     dup
+    callsub __storage_read
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    uncover 4
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    pushint 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 2
     bytec_2 // 0x02
     b+
-    dig 2
+    dig 1
     extract 56 32
     callsub __storage_write
+    uncover 2
     bytec_3 // 0x03
     b+
+    dup
+    callsub __storage_read
+    uncover 3
     swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
     pushint 704
     getbit
     bytec 4 // 0x00
@@ -3019,9 +3097,7 @@ main_while_top@59:
     getbit
     itob
     extract 7 1
-    bytec 46 // 0x00000000000000000000000000000000000000000000000000000000000000
-    swap
-    concat
+    replace2 31
     callsub __storage_write
     bytec_1 // 0x01
     b+
@@ -3057,10 +3133,57 @@ main___postInit_route@5:
 // __puyasol___storage_read(__slot: bytes) -> bytes:
 __storage_read:
     proto 1 1
+    intc_1 // 0
+    dup
+    bytec_0 // ""
     frame_dig -1
-    bytec 47 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 45 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
     frame_bury -1
+    bytec 46 // 0x010000
+    b<
+    bz __storage_read_else_body@4
+    pushint 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    frame_bury 2
+    pushint 64
+    /
+    itob
+    bytec 47 // "p:"
+    swap
+    concat
+    dup
+    frame_bury 1
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 2
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    frame_dig 1
+    swap
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+__storage_read_after_if_else@3:
+    bytec_0 // 0x
+    frame_bury 0
+    retsub
+
+__storage_read_else_body@4:
     intc_0 // 32
     bzero
     frame_dig -1
@@ -3075,12 +3198,15 @@ __storage_read:
     swap
     concat
     dup
-    intc_0 // 32
-    box_create
-    pop
+    frame_bury 0
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 0
     intc_1 // 0
     intc_0 // 32
     box_extract
+    frame_bury 0
     retsub
 
 
@@ -3088,9 +3214,52 @@ __storage_read:
 __storage_write:
     proto 2 0
     frame_dig -2
-    bytec 47 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 45 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dup
     frame_bury -2
+    bytec 46 // 0x010000
+    b<
+    bz __storage_write_else_body@2
+    pushint 8
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    pushint 64
+    /
+    itob
+    bytec 47 // "p:"
+    swap
+    concat
+    dup
+    pushint 2048
+    box_create
+    pop
+    swap
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    box_replace
+    retsub
+
+__storage_write_else_body@2:
     intc_0 // 32
     bzero
     dup

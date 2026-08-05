@@ -1,10 +1,10 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_67lw7si0/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_vihd525j/B.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 32
-    bytecblock "y" "x" 0x290efb48 TMPL_APPROVAL_A TMPL_CLEAR_A
+    intcblock 32 0 1 8
+    bytecblock 0x "__ctor_pending" 0x01 0x290efb48 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:" TMPL_APPROVAL_A TMPL_CLEAR_A
     pushint 4096
     bzero
     dup
@@ -24,49 +24,44 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 10
-    itob
-    bytec_1 // "x"
-    dig 1
+    bytec_1 // "__ctor_pending"
+    intc_2 // 1
     app_global_put
-    bytec_0 // "y"
-    swap
-    app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
-    pushbytes 0x619fed17 // method "test()(uint256,uint256)"
-    txna ApplicationArgs 0
-    match main_test_route@4
-    err
-
-main_test_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x619fed17 // method "__postInit()void", method "test()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_test_route@6
+    err
+
+main_test_route@6:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@12
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@13:
     !
     assert // not payable
     itxn_begin
-    bytec_3 // TMPL_APPROVAL_A
-    bytec 4 // TMPL_CLEAR_A
-    intc_2 // 6
+    bytec 8 // TMPL_APPROVAL_A
+    bytec 9 // TMPL_CLEAR_A
+    pushint 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
     pushint 16
     itxn_field GlobalNumByteSlice
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -78,10 +73,10 @@ main_ternary_merge@9:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_1 // 1
+    intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     pushint 1000000
     itxn_field Amount
@@ -94,56 +89,56 @@ main_ternary_merge@9:
     itxn_begin
     pushint 24
     extract_uint64
-    intc_2 // 6
+    pushint 6
     itxn_field TypeEnum
-    intc_0 // 0
+    intc_1 // 0
     itxn_field OnCompletion
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_2 // method "get()(uint256)"
+    bytec_3 // method "get()(uint256)"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 32
-    bytec_1 // "x"
-    dig 1
-    app_global_put
-    intc_0 // 0
-    bytec_0 // "y"
-    app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    swap
+    callsub __storage_write
+    bytec_0 // 0x
+    callsub __storage_read
+    bytec_2 // 0x01
+    callsub __storage_read
     itxn_begin
-    intc_2 // 6
+    pushint 6
     itxn_field TypeEnum
-    intc_0 // 0
+    intc_1 // 0
     itxn_field OnCompletion
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     uncover 2
     itxn_field ApplicationID
-    bytec_2 // method "get()(uint256)"
+    bytec_3 // method "get()(uint256)"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 32
-    bytec_0 // "y"
+    bytec_2 // 0x01
     swap
-    app_global_put
+    callsub __storage_write
     dig 1
     len
-    intc_3 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_3 // 32
+    intc_0 // 32
     bzero
     uncover 2
     dig 1
     b|
     dig 2
     len
-    intc_3 // 32
+    intc_0 // 32
     <=
     assert // overflow
     cover 2
@@ -153,9 +148,194 @@ main_ternary_merge@9:
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
-main_ternary_false@8:
-    intc_0 // 0
-    b main_ternary_merge@9
+main_ternary_false@12:
+    intc_1 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    pushint 10
+    itob
+    bytec_0 // 0x
+    dig 1
+    callsub __storage_write
+    bytec_2 // 0x01
+    swap
+    callsub __storage_write
+    intc_2 // 1
+    return
+
+
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    intc_1 // 0
+    dup
+    bytec_0 // ""
+    frame_dig -1
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    bytec 5 // 0x010000
+    b<
+    bz __storage_read_else_body@4
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    frame_bury 2
+    pushint 64
+    /
+    itob
+    bytec 6 // "p:"
+    swap
+    concat
+    dup
+    frame_bury 1
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 2
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    frame_dig 1
+    swap
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+__storage_read_after_if_else@3:
+    bytec_0 // 0x
+    frame_bury 0
+    retsub
+
+__storage_read_else_body@4:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 7 // "s:"
+    swap
+    concat
+    dup
+    frame_bury 0
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 0
+    intc_1 // 0
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    frame_dig -2
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    bytec 5 // 0x010000
+    b<
+    bz __storage_write_else_body@2
+    intc_3 // 8
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    pushint 64
+    /
+    itob
+    bytec 6 // "p:"
+    swap
+    concat
+    dup
+    pushint 2048
+    box_create
+    pop
+    swap
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    box_replace
+    retsub
+
+__storage_write_else_body@2:
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 7 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    swap
+    box_replace
+    retsub
