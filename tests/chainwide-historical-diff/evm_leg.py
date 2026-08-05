@@ -670,7 +670,8 @@ def main():
             _m20[bytes.fromhex(reg["creator"][2:])] = bytes(12) + bytes.fromhex(a0[2:])
         for _a, _loc in _dep_local.items():
             _m20[bytes.fromhex(_a[2:])] = bytes(12) + bytes.fromhex(_loc[2:])
-        dep_tapes = build_dep_tapes(case_dir, set(skips) | set(ext_skips), _m20)
+        dep_tapes = build_dep_tapes(case_dir, set(skips) | set(ext_skips), _m20,
+                                    calls=calls)
         for d in deps:
             _tape = dep_tapes.get(d["addr"].lower())
             if not _tape or d["addr"] not in _dep_local:
@@ -877,6 +878,25 @@ def main():
 
         results, snapshots, mismatches, block_ts, block_no = {}, {}, [], {}, {}
         storage_delta, prev_scalars = {}, read_scalars()
+        def _take_snap(i):
+            # Mirror of the post-txn snapshot. Mismatch paths call this before
+            # their `continue`, because a snapshot taken on ONE leg only reads
+            # as N fake divergences (FLOKI deep window: local-ok-but-hist-
+            # revert skipped the EVM snapshot at txn 399; the AVM leg took
+            # its own, and the differ compared value against absence).
+            if i not in meta["snapshot_at"]:
+                return
+            snap = {}
+            for g in meta["getters"]:
+                try:
+                    gv = inst.get_function_by_signature(g["sig"])().call({"from": a0})
+                    vs = list(gv) if len(g["outputs"]) > 1 else [gv]
+                    snap[g["sig"]] = [canon_value(v, o["type"], fold, o.get("components"))
+                                      for v, o in zip(vs, g["outputs"])]
+                except Exception as e:
+                    snap[g["sig"]] = f"REVERT:{str(e)[:60]}"
+            snapshots[str(i)] = snap
+
         for c in calls:
             i = c["i"]
             if c["skip"] or i in skips:
@@ -919,9 +939,11 @@ def main():
                         # state we don't have (external contract / balance).
                         mismatches.append((i, "local-revert-but-hist-ok",
                                            f"{c['sig']} {str(e)[:110]}"))
+                    _take_snap(i)
                     continue
                 if not c["hist_ok"]:
                     mismatches.append((i, "local-ok-but-hist-revert", c["sig"]))
+                    _take_snap(i)
                     continue
                 _trace["txn"] = i
                 try:
@@ -932,6 +954,7 @@ def main():
                 rcpt = w3.eth.get_transaction_receipt(txh2)
                 if rcpt["status"] != 1:
                     mismatches.append((i, "call-ok-transact-fail", c["sig"]))
+                    _take_snap(i)
                     continue
                 outs = fn_abi["outputs"]
                 rets = list(ret) if len(outs) > 1 else ([ret] if outs else [])

@@ -91,7 +91,8 @@ def clock_target(ts, epoch, base):
     return int(base) + max(0, int(ts) - int(epoch or 0))
 
 
-def build_dep_tapes(case_dir: Path, skipped: set, mapping20: dict | None = None) -> dict:
+def build_dep_tapes(case_dir: Path, skipped: set, mapping20: dict | None = None,
+                    calls: list | None = None) -> dict:
     """dep addr → ordered 32-byte answer words for THIS attempt's replay.
 
     Derived identically on both legs from dep_tape.json + calls.json minus the
@@ -111,7 +112,11 @@ def build_dep_tapes(case_dir: Path, skipped: set, mapping20: dict | None = None)
     # so their recorded answers must NOT occupy tape slots (they would shift
     # every later answer by one and desynchronise the whole tape).
     own = set(_tj.get("stub_selectors") or [])
-    calls = (load_json(case_dir / "calls.json") or {}).get("calls") or []
+    # calls.json does not exist on a case's FIRST EVM run (that leg writes it
+    # at the end) — the oracle passes its in-memory list instead (raft_pm
+    # crashed here fresh; morpho survived only via a stale file).
+    if calls is None:
+        calls = (load_json(case_dir / "calls.json") or {}).get("calls") or []
     hash_to_i = {}
     for c in calls:
         h = (c.get("hash") or "").split("#")[0].lower()

@@ -192,6 +192,15 @@ def diff_case(case_dir: Path) -> dict:
 
     for k in sorted(set(evm["snapshots"]) | set(avm["snapshots"]), key=int):
         es, as_ = evm["snapshots"].get(k, {}), avm["snapshots"].get(k, {})
+        # A snapshot present on ONE leg only is probe absence, not state
+        # divergence — comparing value against nothing manufactured 18 fake
+        # divergences at FLOKI's txn 399. The legs now snapshot symmetrically;
+        # this guard keeps any residual asymmetry honest (counted, not REAL).
+        if not es or not as_:
+            findings["snapshot_noise"].append(
+                {"after_txn": int(k), "getter": "*",
+                 "note": f"snapshot-absent on {'evm' if not es else 'avm'} leg"})
+            continue
         for sig in sorted(set(es) | set(as_)):
             ev_, av_ = es.get(sig), as_.get(sig)
             if ev_ == av_:
