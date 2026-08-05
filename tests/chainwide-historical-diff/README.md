@@ -366,6 +366,18 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 
 - **8 KB program cap** — `pol` (8322 B, 130 B over), `strk`, `ens_tok`, `ondo`,
   `xtoken`, and both Polymarket contracts. Splitter territory, not compiler bugs.
+- **Raft protocol** (RToken, PositionManager, ERC20Indexable, 0.8.19): the
+  harness ladder works end-to-end — PriceFeed dep falls back to a stand-in,
+  four tapes load, the missing-ctor ABI gets synthesized — and every contract
+  then dies on ONE compile error: OZ `Address.functionDelegateCall`, vendored
+  DEAD library code nothing ever calls (its only caller is its own overload).
+  Same class as fbtc/gbp. **The unlock is reachability-gated delegatecall
+  errors** (dead-function elimination before the hard error): five known
+  contracts free on that single compiler change. Designed, not built.
+- `wld` — constructor payload is 4276 B; the AVM caps create-txn app args at
+  2048 B. Platform class (fix = bake ctor args into the program), counted.
+- `blur` — 17-file multifile with `@openzeppelin` package imports; the EVM leg
+  compiles it, the AVM leg's compile step lacks import remapping. Harness gap.
 - `susde` — its constructor exhausts the oracle's whole 12 M gas budget
   (`gasUsed=12000000`): an out-of-gas, not a missing dependency, so
   `--stub-deps` has nothing to stand in for.
