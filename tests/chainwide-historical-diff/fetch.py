@@ -101,7 +101,8 @@ def _stub_selectors() -> list:
 
 
 def harvest_dep_answers(host: str, address: str, case_dir, txns, dep_addrs,
-                        max_traces: int = 200) -> None:
+                        max_traces: int = 200,
+                        extra_tapes: dict | None = None) -> None:
     """Record what dependencies historically ANSWERED, in call order — and
     discover which ARG-level callees deserve stand-ins of their own.
 
@@ -153,13 +154,28 @@ def harvest_dep_answers(host: str, address: str, case_dir, txns, dep_addrs,
                                                  "out": word})
         time.sleep(0.5)
 
+    # merge the internal-txn answers (lifted from parent traces) and order
+    # EVERY tape by the final window position — cursors are positional, so a
+    # tape whose entries sit in harvest order instead of replay order serves
+    # the wrong answers to every interleaved internal txn.
+    for a, v in (extra_tapes or {}).items():
+        per_callee.setdefault(a, []).extend(v)
+    _order = {}
+    for _i, _t in enumerate(txns):
+        _order.setdefault((_t.get("hash") or "").lower(), _i)
+    def _pos(e):
+        _h = (e.get("hash") or "").lower()
+        return _order.get(_h, _order.get(_h.split("#")[0], 10**9))
+    for a in per_callee:
+        per_callee[a].sort(key=_pos)
     tapes = {a: v for a, v in per_callee.items() if a in deps}
-    # ARG-level candidates: busiest non-dep callees that are contracts and
-    # never send. Capped — each costs a stub deploy + tape load per attempt.
+    # ARG-level candidates: EVERY non-sender callee with recorded answers.
+    # A top-N cut proved wrong twice — whichever vault falls below the line
+    # leaves its txns calling a codeless address (empty revert, closed-world).
     arg_deps = []
     cands = sorted(((a, v) for a, v in per_callee.items()
-                    if a not in deps and a not in senders and len(v) >= 3),
-                   key=lambda kv: -len(kv[1]))[:4]
+                    if a not in deps and a not in senders and len(v) >= 1),
+                   key=lambda kv: -len(kv[1]))[:12]
     for a, v in cands:
         depdir = case_dir / "deps" / f"argdep_{a[2:10]}"
         d = write_stub_dep(host, a, depdir)
@@ -182,7 +198,8 @@ def harvest_dep_answers(host: str, address: str, case_dir, txns, dep_addrs,
 
 def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
                          direct_hashes: set, max_parents: int = 200,
-                         max_calls: int = 400, callee_sink: dict | None = None) -> list:
+                         max_calls: int = 400, callee_sink: dict | None = None,
+                         tape_sink: dict | None = None) -> list:
     """Calls INTO `address` made by other CONTRACTS (internal transactions).
 
     The address-level internal-txn APIs strip calldata (`input: "0x"` on the
@@ -294,6 +311,7 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
             continue
         if not isinstance(tr, list):
             continue
+        _pend_in, _pend_out = [], []
         for i, e in enumerate(tr):
             if not isinstance(e, dict) or e.get("type") != "call":
                 continue
@@ -308,6 +326,19 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
                 tgt = (act.get("to") or "").lower()
                 if tgt and tgt != addr and tgt != ZERO:
                     callee_sink[tgt] = callee_sink.get(tgt, 0) + 1
+            # OUR outgoing sub-calls inside this parent — the answers internal
+            # txns will need (the whole setAdmin era makes owner() calls that
+            # only exist in parent traces). Attributed to their owning
+            # internal entry after the walk, once all traceAddresses are seen.
+            if tape_sink is not None and (act.get("from") or "").lower() == addr:
+                _to = (act.get("to") or "").lower()
+                if _to and _to != addr:
+                    _out = ((e.get("result") or {}).get("output")
+                            or "0x").removeprefix("0x")
+                    _pend_out.append((tuple(e.get("traceAddress") or []), _to,
+                                      (act.get("input") or "0x")[:10],
+                                      _out if len(_out) <= 2048
+                                      and len(_out) % 2 == 0 else None))
             if not e.get("traceAddress"):
                 continue                  # root call == the direct txn
             if (act.get("to") or "").lower() != addr:
@@ -323,6 +354,8 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
             except Exception:
                 val = 0
             res = e.get("result")
+            _pend_in.append((tuple(e["traceAddress"]),
+                             f"{h}#{'.'.join(str(x) for x in e['traceAddress'])}"))
             out.append({
                 "hash": f"{h}#{'.'.join(str(x) for x in e['traceAddress'])}",
                 "from": (act.get("from") or "").lower(),
@@ -335,6 +368,20 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
             })
             if len(out) >= max_calls:
                 break
+        # attribute: an outgoing call belongs to the deepest IN-entry whose
+        # traceAddress is a prefix of its own; root-owned (direct-txn) calls
+        # have no owning IN-entry and are already covered by the direct
+        # harvest.
+        if tape_sink is not None:
+            for _ta, _to, _sel, _outhex in _pend_out:
+                _best = None
+                for _ita, _iid in _pend_in:
+                    if len(_ita) <= len(_ta) and _ta[:len(_ita)] == _ita:
+                        if _best is None or len(_ita) > len(_best[0]):
+                            _best = (_ita, _iid)
+                if _best is not None:
+                    tape_sink.setdefault(_to, []).append(
+                        {"hash": _best[1], "sel": _sel, "out": _outhex})
         time.sleep(0.6)
     if dropped:
         print(f"[fetch] internal calls: {dropped}/{len(parents)} parent trace(s) "
@@ -657,12 +704,19 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
         # governance-driven, so txlist is empty) still has internal history —
         # gating the merge on `txns` silently produced an empty case that
         # looked fetched. Window falls back to creation block → open-ended.
-        _lo = txns[0]["block"] if txns else int((creation or {}).get("block") or 0)
+        # ALWAYS anchor at creation when known: morpho_alloc's entire admin
+        # era (setAdmin via internal txns) sat in the 159k-block gap between
+        # factory creation and its first EXTERNAL txn — starting the parent
+        # scan at txns[0].block silently skipped all of it.
+        _lo = (int((creation or {}).get("block") or 0)
+               or (txns[0]["block"] if txns else 0))
         _hi = txns[-1]["block"] if txns else 99_999_999
+        internal_tapes = {}
         ic = fetch_internal_calls(
             host, address, _lo, _hi,
             {t["hash"].lower() for t in txns}, max_parents=internal_parents,
-            callee_sink=callees)
+            callee_sink=callees,
+            tape_sink=internal_tapes if script_deps else None)
         if ic:
             txns.extend(ic)
             txns.sort(key=lambda t: (t["block"], t.get("txindex", 0),
@@ -778,7 +832,8 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
     if script_deps and ctor_deps:
         try:
             harvest_dep_answers(host, address, case_dir, txns,
-                                [d["addr"] for d in ctor_deps])
+                                [d["addr"] for d in ctor_deps],
+                                extra_tapes=locals().get("internal_tapes") or {})
             _adp = case_dir / "arg_deps.json"
             if _adp.exists():
                 case["arg_deps"] = (load_json(_adp) or {}).get("arg_deps") or []

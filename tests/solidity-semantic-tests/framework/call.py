@@ -890,6 +890,24 @@ def _simulate_for_revert(algod, atc) -> Result:
     raw = getattr(sim_resp, "simulate_response", None) or sim_resp
     if isinstance(raw, dict):
         groups = raw.get("txn-groups", [])
+        import os as _os
+        if _os.environ.get("CHD_TAPE_DEBUG"):
+            # dump EVERY log (outer + inner) of the failing group — the tape
+            # stub's served answer (151f7c75-prefixed) is only visible here
+            import base64 as _b64
+            def _walk(tr, depth=0):
+                for t in tr or []:
+                    txn = (t.get("txn-result") or t).get("txn-results") or None
+                    res = t.get("txn-result") or t
+                    for lg in (res.get("logs") or []):
+                        try:
+                            print(f"[sim-log d{depth}] "
+                                  + _b64.b64decode(lg).hex()[:100])
+                        except Exception:
+                            pass
+                    _walk(res.get("inner-txns") or [], depth + 1)
+            for g in groups:
+                _walk(g.get("txn-results") or [])
     else:
         groups = []
 

@@ -364,6 +364,16 @@ def main():
 
     # ── deterministic sender accounts, funded from the dispenser ──────────
     accts = {i: algo_account(i) for i in reg["senders"].values()}
+    # ARG-SYMBOL senders: a contract that only ever appears as an argument
+    # (the curator Safe behind morpho's internal setAdmin/setFlowCaps) still
+    # SENDS internal calls. accts.get(sym, dispenser) silently degraded those
+    # to the dispenser while the tape translation used the arg-content form —
+    # the owner()==msg.sender compare could never pass. Materialise a real
+    # account for every sender symbol, whatever registry class it came from.
+    for _c in calls:
+        _sm0 = (_c.get("sender") or {}).get("__addr__")
+        if isinstance(_sm0, int) and _sm0 not in accts:
+            accts[_sm0] = algo_account(_sm0)
     used = {c["sender"]["__addr__"] for c in calls
             if c.get("sender") and isinstance(c["sender"].get("__addr__"), int)}
     algod = ln.algod
@@ -461,8 +471,14 @@ def main():
     # local word: senders/creator become real accounts, args their content
     # form, deps the local stub address).
     _m20 = {}
+    _sender_syms = {(_c.get("sender") or {}).get("__addr__") for _c in calls}
     for _a, _i in (reg.get("args") or {}).items():
-        _m20[bytes.fromhex(_a[2:])] = bytes(12) + arg_content20(_i)
+        # symbols that SEND resolve to their real (signable) account — the
+        # translated answer must equal what msg.sender will actually be
+        _m20[bytes.fromhex(_a[2:])] = (
+            encoding.decode_address(accts[_i].address)
+            if _i in _sender_syms and _i in accts
+            else bytes(12) + arg_content20(_i))
     for _a, _i in (reg.get("senders") or {}).items():
         if _i in accts:
             _m20[bytes.fromhex(_a[2:])] = encoding.decode_address(accts[_i].address)
@@ -482,13 +498,17 @@ def main():
             h.call(_dapp, "__load(bytes32[],uint256[])", _ws, _ls,
                    extra_fee=10_000)
         print(f"[avm] dep tape loaded: {len(_tape)} answer(s) @ {_a[:10]}…")
+        import os as _os
+        if _os.environ.get("CHD_TAPE_DEBUG"):
+            print(f"[avm] tape-head {_a[:10]} app={_dapp.app_id} head="
+                  + " | ".join(a.hex()[:48] for a in _tape[:3]))
         _pos = dep_pos.get(_a, {})
         _sk, _carry = {}, 0
         for _c in calls:
             _i = _c["i"]
             _carry = _pos.get(_i, _carry)
             _sk[_i] = _carry
-        _dep_seek[_a] = (_dapp, _sk)
+        _dep_seek[_a] = (_dapp, _sk)  # keyed by hist addr
 
     # ── compile + deploy ──────────────────────────────────────────────────
     # Put the chain at the replay epoch BEFORE deploying: the EVM leg's genesis
@@ -626,13 +646,15 @@ def main():
             sig, args = c["sig"], [resolve(a) for a in c["args"]]
             is_view = mut.get(sig, "") in ("view", "pure")
             # absolute tape position for THIS txn on every scripted stand-in
-            for _dapp2, _sk2 in _dep_seek.values():
+            for _a3, (_dapp2, _sk2) in _dep_seek.items():
                 if i in _sk2:
                     try:
                         h.call(_dapp2, "__seek(uint256)", _sk2[i],
                                extra_fee=10_000)
-                    except Exception:
-                        pass
+                    except Exception as _se:
+                        # a silently-lost seek leaves a STALE cursor — loud now
+                        print(f"[avm] SEEK FAILED {_a3[:10]} i={i}: "
+                              f"{str(_se)[:90]}")
             prev = ln.account
             _sm = (c.get("sender") or {}).get("__addr__")
             ln.account = accts.get(_sm, dispenser) if isinstance(_sm, int) else dispenser
@@ -645,6 +667,15 @@ def main():
                 # recorded reason is whatever the FIRST unpopulated submit said
                 # ("invalid Box reference"), which reads as a resource bug.
                 dep_fee = {"extra_fee": 20_000}
+                # Tape-serving inner calls read the STUB's page boxes, and the
+                # 8-box-ref budget of a single txn is consumed by the target
+                # app's own pages first. A missing box FAILS SOFT to zero in
+                # slot mode: __lens.length reads 0, the fallback answers
+                # self-address, and morpho's guard reverts — the caps=[] probe
+                # passed while every real setFlowCaps failed. Pool txns widen
+                # the group's shared resource budget.
+                if dep_tapes:
+                    dep_fee["budget_pool"] = 2
                 # msg.value: framework prepends a payment to the app address.
                 _v = int(c.get("value") or 0)
                 if _v:
@@ -665,6 +696,24 @@ def main():
                         results[i] = {"ok": False, "revert": reason}
                         if is_platform_limit(reason):
                             platform_limits[i] = reason
+                        import os as _os
+                        if _os.environ.get("CHD_TAPE_DEBUG") and "err op" in reason:
+                            print(f"[avm] FAIL-PROBE i={i} sender={ln.account.address}")
+                            for _av in (c.get("args") or []):
+                                if isinstance(_av, dict) and set(_av) == {"__dep__"}:
+                                    _ad4 = _av["__dep__"].lower()
+                                    _pair = _dep_seek.get(_ad4)
+                                    if not _pair:
+                                        print(f"[avm] FAIL-PROBE   {_ad4[:10]}: NO TAPE/SEEK")
+                                        continue
+                                    _dapp4, _sk4 = _pair
+                                    try:
+                                        _rr = h.call(_dapp4, "__idx()", extra_fee=10_000)
+                                        print(f"[avm] FAIL-PROBE   {_ad4[:10]} app="
+                                              f"{_dapp4.app_id} idx={_rr.abi_return} "
+                                              f"want={_sk4.get(i)}")
+                                    except Exception as _pe:
+                                        print(f"[avm] FAIL-PROBE   probe err: {str(_pe)[:80]}")
                     else:
                         results[i] = {"ok": True, "ret": _ret(r, meta, sig, fold),
                                       "logs": fold_events(r.raw_response) or []}
@@ -673,6 +722,29 @@ def main():
                 results[i] = {"ok": False, "revert": reason}
                 if is_platform_limit(reason):
                     platform_limits[i] = reason
+                import os as _os
+                if _os.environ.get("CHD_TAPE_DEBUG") and "err op" in reason:
+                    # Catch the guard red-handed: the sender this txn ACTUALLY
+                    # used, and each __dep__-arg stub's answer at its seeked
+                    # cursor (the failed txn rolled its consumption back, so
+                    # re-serving reads the same entry the guard saw).
+                    print(f"[avm] FAIL-PROBE i={i} sender={ln.account.address}")
+                    for _av in (c.get("args") or []):
+                        if isinstance(_av, dict) and set(_av) == {"__dep__"}:
+                            _ad4 = _av["__dep__"].lower()
+                            _pair = _dep_seek.get(_ad4)
+                            if not _pair:
+                                print(f"[avm] FAIL-PROBE   {_ad4[:10]}: NO TAPE/SEEK")
+                                continue
+                            _dapp4, _sk4 = _pair
+                            try:
+                                _rr = h.call(_dapp4, "__idx()",
+                                             expect_revert=True, extra_fee=10_000)
+                                print(f"[avm] FAIL-PROBE   {_ad4[:10]} app="
+                                      f"{_dapp4.app_id} idx={_rr.abi_return} "
+                                      f"want={_sk4.get(i)}")
+                            except Exception as _pe:
+                                print(f"[avm] FAIL-PROBE   probe err: {str(_pe)[:80]}")
             finally:
                 ln.account = prev
         if i in snapshot_at:

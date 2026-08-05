@@ -119,8 +119,12 @@ def build_dep_tapes(case_dir: Path, skipped: set, mapping20: dict | None = None,
         calls = (load_json(case_dir / "calls.json") or {}).get("calls") or []
     hash_to_i = {}
     for c in calls:
-        h = (c.get("hash") or "").split("#")[0].lower()
-        hash_to_i.setdefault(h, c["i"])
+        _full = (c.get("hash") or "").lower()
+        # full id first: internal entries are 'parenthash#tracepath' and their
+        # tape entries carry the SAME full id — base-hash fallback covers
+        # direct txns only
+        hash_to_i.setdefault(_full, c["i"])
+        hash_to_i.setdefault(_full.split("#")[0], c["i"])
     out = {}
     positions = {}
     for addr, entries in tapes.items():
@@ -382,5 +386,11 @@ def canon_value(v, abi_type: str, fold_addr, components=None):
     if abi_type == "bool":
         return bool(v)
     if abi_type.startswith(("uint", "int")):
-        return int(v)
+        try:
+            return int(v)
+        except (ValueError, TypeError):
+            # a FOLDED address symbol ('C', '«7»') in a component whose ABI
+            # metadata lacks a type and defaulted to uint256 — the symbol IS
+            # the canonical value; both legs fold identically
+            return v
     return v

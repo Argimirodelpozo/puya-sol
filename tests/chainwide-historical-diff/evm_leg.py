@@ -634,7 +634,7 @@ def main():
                     _k[ca] = k + 1
                     import os as _os
                     if _os.environ.get("CHD_TAPE_DEBUG"):
-                        print(f"[tape] {ca.hex()[:8]} k={k} sel="
+                        print(f"[evm] tape-serve {ca.hex()[:8]} k={k} sel="
                               f"{bytes(message.data[:4]).hex()} -> {ans.hex()[:80]}",
                               file=__import__('sys').stderr)
                     message.code = b""            # execute nothing, succeed
@@ -735,6 +735,10 @@ def main():
             _vm_tape[_ca] = _tape
             print(f"[evm] dep tape ARMED at VM: {len(_tape)} answer(s) "
                   f"@ {d['addr'][:10]}…")
+            import os as _os
+            if _os.environ.get("CHD_TAPE_DEBUG"):
+                print(f"[evm] tape-head {d['addr'][:10]} head="
+                      + " | ".join(a.hex()[:48] for a in _tape[:3]))
             # per-txn seek value: the txn's own first position, else carry
             # (where the previous txn's answers ended)
             _pos = dep_pos.get(d["addr"].lower(), {})
