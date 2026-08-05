@@ -340,11 +340,11 @@ this table twice (see below).
 
 | | |
 |---|---|
-| contracts replayed | **65** |
-| zero divergences | **65** |
+| contracts replayed | **74** |
+| zero divergences | **74** |
 | with divergences | 0 |
-| transactions replayed on both legs | **11,903** of 17,083 in-window (70%) |
-| skipped, by cause | closed-world 4,693, avm-platform-limit 424, value 28, no-calldata 23, unknown-selector 12 |
+| transactions replayed on both legs | **20,190** of 28,483 in-window (71%) |
+| skipped, by cause | closed-world 7,101, avm-platform-limit 1,128, no-calldata 27, value 25, unknown-selector 12 |
 
 ### Headline runs
 
@@ -389,18 +389,27 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 
 | contract | chain | replayed | divergences | skips |
 |---|---|---|---|---|
+| `pepe_d3` PepeToken | ethereum | 2879/3000 | ✅ | closed-world 120, no-calldata 1 |
 | `pepe_deep` PepeToken | ethereum | 1441/1500 | ✅ | closed-world 59 |
+| `staup_d2` StauProject | polygon | 1014/2000 | ✅ | closed-world 734, avm-platform-limit 252 |
+| `shfl_d` SHIA | ethereum | 990/1000 | ✅ | closed-world 10 |
+| `floki_d` Bobo | ethereum | 945/1000 | ✅ | closed-world 55 |
 | `usde_deep` USDe | ethereum | 865/1000 | ✅ | closed-world 135 |
 | `wbt_deep` WBT | ethereum | 850/1000 | ✅ | closed-world 150 |
+| `babydoge_d` FLOKI | ethereum | 825/1000 | ✅ | closed-world 175 |
 | `staup_deep` StauProject | polygon | 772/1000 | ✅ | closed-world 228 |
+| `bgb_d` BitgetToken | ethereum | 613/1000 | ✅ | closed-world 387 |
+| `wbt_d2` WBT | ethereum | 590/2000 | ✅ | closed-world 956, avm-platform-limit 454 |
 | `opmint` OptimismMintableERC20 | base | 285/300 | ✅ | closed-world 15 |
 | `op_gov` GovernanceToken | optimism | 247/400 | ✅ | closed-world 100, avm-platform-limit 41, no-calldata 7, value 5 |
+| `apecoin` Astgik | ethereum | 200/200 | ✅ | — |
 | `l2custom` L2CustomERC20 | optimism | 200/200 | ✅ | — |
 | `pepe_ic` PepeToken | ethereum | 200/200 | ✅ | — |
 | `staup` StauProject | polygon | 200/200 | ✅ | — |
 | `wbt` WBT | ethereum | 200/200 | ✅ | — |
 | `bobo` Bobo | ethereum | 199/200 | ✅ | closed-world 1 |
 | `opmint9` OptimismMintableERC20 | base | 199/200 | ✅ | closed-world 1 |
+| `aero_base` Aero | base | 198/200 | ✅ | closed-world 2 |
 | `aero` Aero | base | 197/200 | ✅ | closed-world 2, avm-platform-limit 1 |
 | `burnminterc20` BurnMintERC20 | arbitrum | 197/200 | ✅ | closed-world 3 |
 | `turbo` Turbo | ethereum | 197/200 | ✅ | closed-world 3 |
@@ -422,14 +431,15 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 | `wallettok` WALLETToken | polygon | 188/200 | ✅ | closed-world 12 |
 | `systemcoin` SystemCoin | optimism | 186/200 | ✅ | closed-world 14 |
 | `extra` EXTRA | optimism | 182/200 | ✅ | closed-world 16, avm-platform-limit 2 |
-| `gho` GhoToken | ethereum | 165/200 | ✅ | closed-world 35 |
 | `usde` USDe | ethereum | 162/200 | ✅ | closed-world 38 |
 | `babydoge` BabyDogeToken | base | 154/200 | ✅ | closed-world 45, avm-platform-limit 1 |
 | `kaito` Kaito | base | 153/200 | ✅ | closed-world 42, avm-platform-limit 3, value 2 |
 | `erc6160` ERC6160Ext20 | ethereum | 150/200 | ✅ | closed-world 50 |
 | `aave_gateway` WrappedTokenGatewayV3 | ethereum | 148/200 | ✅ | closed-world 52 |
 | `ape` Astgik | ethereum | 131/200 | ✅ | closed-world 66, value 3 |
+| `gho` GhoToken | ethereum | 119/200 | ✅ | closed-world 81 |
 | `bgb` BitgetToken | ethereum | 115/200 | ✅ | closed-world 84, avm-platform-limit 1 |
+| `ena` ENA | ethereum | 111/200 | ✅ | closed-world 86, no-calldata 3 |
 | `pika` Pika | optimism | 100/200 | ✅ | closed-world 83, avm-platform-limit 17 |
 | `apepe` APEPE | polygon | 98/200 | ✅ | closed-world 102 |
 | `imx` IMXToken | ethereum | 85/200 | ✅ | closed-world 112, value 2, avm-platform-limit 1 |
@@ -443,15 +453,14 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 | `xerc20` XERC20 | gnosis | 44/200 | ✅ | closed-world 156 |
 | `friendtech` FriendtechSharesV1 | base | 43/400 | ✅ | closed-world 357 |
 | `strk` StarkNetToken | ethereum | 42/400 | ✅ | avm-platform-limit 349, value 7, no-calldata 2 |
-| `ena` ENA | ethereum | 34/200 | ✅ | closed-world 161, value 3, avm-platform-limit 2 |
 | `etherfi` EtherFiGovernanceToken | ethereum | 33/200 | ✅ | closed-world 163, value 2, avm-platform-limit 2 |
 | `selftest` StorageShapes | synthetic | 10/10 | ✅ | — |
 | `vanry` VANRY | polygon | 9/200 | ✅ | closed-world 191 |
 | `bmex` BMEX | ethereum | 5/200 | ✅ | closed-world 195 |
+| `morpho_alloc` PublicAllocator | ethereum | 3/200 | ✅ | closed-world 197 |
 | `cow_ethflow` CoWSwapEthFlow | ethereum | 2/200 | ✅ | closed-world 198 |
 | `tig` TIGToken | base | 2/200 | ✅ | closed-world 198 |
 | `comet_rewards` CometRewards | ethereum | 1/200 | ✅ | closed-world 199 |
-| `morpho_alloc` PublicAllocator | ethereum | 1/200 | ✅ | closed-world 199 |
 | `sqd` SQD | arbitrum | 1/200 | ✅ | closed-world 199 |
 | `aave_oracle` AaveOracle | ethereum | 0/73 | ✅ | closed-world 73 |
 

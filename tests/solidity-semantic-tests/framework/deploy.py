@@ -159,7 +159,9 @@ def deploy(
         txid = algod.send_transaction(signed)
         result = wait_for_confirmation(algod, txid, 4)
     except Exception as e:
-        raise DeployError(f"create txn failed: {str(e)[:300]}") from e
+        _m = str(e)
+        raise DeployError("create txn failed: "
+                          + (_m[:120] + " … " + _m[-260:] if len(_m) > 400 else _m)) from e
     app_id = result["application-index"]
 
     app_addr = encoding.encode_address(

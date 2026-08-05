@@ -745,13 +745,13 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
             # otherwise vanish silently (raft_r's PositionManager) or kill the
             # run (raft_pm's PriceFeed, ctor status=0). Ship a generic
             # stand-in alongside it as a last-resort, identical on both legs.
-            _fb = case_dir / d["dir"] / "stub_fallback.sol"
+            _fb = depdir / "stub_fallback.sol"
             if not _fb.exists():
-                _fb.write_text(_STUB_ERC20 % {"name": d["name"] or "Dep",
+                _fb.write_text(_STUB_ERC20 % {"name": d.get("name") or "Dep",
                                               "sym": "STUB", "dec": 18})
-                _dc = load_json(case_dir / d["dir"] / "case.json") or {}
+                _dc = load_json(depdir / "case.json") or {}
                 _dc["stub_abi"] = _STUB_ABI
-                dump_json(case_dir / d["dir"] / "case.json", _dc)
+                dump_json(depdir / "case.json", _dc)
         elif stub_deps and a in _ctor_addrs:
             # CONSTRUCTOR args only: those are what a failing ctor calls. A
             # stand-in for a random call-arg address would put an app where the
