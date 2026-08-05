@@ -91,7 +91,7 @@ def clock_target(ts, epoch, base):
     return int(base) + max(0, int(ts) - int(epoch or 0))
 
 
-def build_dep_tapes(case_dir: Path, skipped: set) -> dict:
+def build_dep_tapes(case_dir: Path, skipped: set, mapping20: dict | None = None) -> dict:
     """dep addr → ordered 32-byte answer words for THIS attempt's replay.
 
     Derived identically on both legs from dep_tape.json + calls.json minus the
@@ -105,7 +105,12 @@ def build_dep_tapes(case_dir: Path, skipped: set) -> dict:
     tp = case_dir / "dep_tape.json"
     if not tp.exists():
         return {}
-    tapes = (load_json(tp) or {}).get("tapes") or {}
+    _tj = load_json(tp) or {}
+    tapes = _tj.get("tapes") or {}
+    # Calls the stand-in answers itself never reach the tape-playing fallback,
+    # so their recorded answers must NOT occupy tape slots (they would shift
+    # every later answer by one and desynchronise the whole tape).
+    own = set(_tj.get("stub_selectors") or [])
     calls = (load_json(case_dir / "calls.json") or {}).get("calls") or []
     hash_to_i = {}
     for c in calls:
@@ -115,6 +120,8 @@ def build_dep_tapes(case_dir: Path, skipped: set) -> dict:
     for addr, entries in tapes.items():
         words, stalled_txn = [], None
         for e in entries:
+            if own and e.get("sel") in own:
+                continue
             h = (e.get("hash") or "").lower()
             i = hash_to_i.get(h)
             if i is None or i in skipped:
@@ -126,10 +133,37 @@ def build_dep_tapes(case_dir: Path, skipped: set) -> dict:
                 stalled_txn = h
                 continue
             stalled_txn = None
-            words.append(bytes.fromhex(w))   # any length; "" = void answer
+            b = bytes.fromhex(w)             # any length; "" = void answer
+            words.append(map_answer_words(b, mapping20 or {}))
         if words:
             out[addr.lower()] = words
     return out
+
+
+def map_answer_words(answer: bytes, mapping20: dict) -> bytes:
+    """Translate HISTORICAL addresses inside a dependency answer into this
+    leg's replay address space.
+
+    Answers are ABI-encoded, hence word-aligned: scan whole 32-byte words; a
+    word that has the EVM address shape (12 zero bytes + 20 content) whose
+    content matches a registry entry is replaced by that leg's full 32-byte
+    form (senders/creator become the leg's real account word — on the AVM that
+    is the whole 32-byte account, NOT zero-prefixed). Anything else passes
+    through untouched, including a trailing partial word. Word-aligned exact
+    matching, not a heuristic: small integers can never match (no registered
+    20-byte pattern), and offsets/lengths in dynamic payloads are small
+    integers.
+    """
+    if not mapping20 or len(answer) < 32:
+        return answer
+    out = bytearray(answer)
+    for i in range(0, len(answer) - 31, 32):
+        w = answer[i:i + 32]
+        if w[:12] == bytes(12):
+            rep = mapping20.get(w[12:])
+            if rep is not None:
+                out[i:i + 32] = rep
+    return bytes(out)
 
 
 def tape_chunks(words):
@@ -247,6 +281,28 @@ def build_registry(creator: str, sender_addrs: list[str], arg_addrs: list[str]) 
         reg["args"][a] = j
         j += 1
     return reg
+
+
+def sender_marker(reg: dict, addr: str):
+    """Marker for the SENDER role — never a `__dep__`.
+
+    A dependency can also SEND (Raft's RToken is created and called by the
+    PositionManager, which is simultaneously its ctor dep and the `from` of
+    every internal call). The target role wants the locally deployed instance,
+    but the sender role needs a SIGNABLE identity, so the sender view resolves
+    creator → 'C' and any other dep-sender to its own registry symbol.
+    """
+    a = (addr or "").lower()
+    if a == (reg.get("creator") or ""):
+        return {"__addr__": "C"}
+    if a in reg.get("senders", {}):
+        return {"__addr__": reg["senders"][a]}
+    m = marker_for(reg, a)
+    if set(m) == {"__dep__"}:
+        # Dep that sends but was never registered as one: fall back to the
+        # arg-content identity so both legs still derive the SAME account.
+        return {"__addr__": reg["args"].get(a, "?" + a[2:10])}
+    return m
 
 
 def marker_for(reg: dict, addr: str):

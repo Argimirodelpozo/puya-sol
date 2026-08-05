@@ -350,7 +350,6 @@ def main():
     cj = load_json(case_dir / "calls.json")
     meta, calls = cj["meta"], cj["calls"]
     ext_skips = set(int(k) for k in (opts.get("skips") or []))
-    dep_tapes = build_dep_tapes(case_dir, ext_skips)
 
     mut = {}
     for e in case["abi"]:
@@ -429,13 +428,23 @@ def main():
     _mode_args = ([] + (["--evm-storage-layout"] if evm_layout else [])
                      + (["--evm-memory-layout"] if evm_memory else [])) or None
     dep_apps = []
+    dep_app_byaddr = {}
     for dspec in meta.get("dep_ctors") or []:
         dep_sol = case_dir / dspec["dir"] / "prepared.sol"
         try:
-            darts = h.compile(dep_sol,
-                              extra_args=_mode_args)
-            dapp = h.deploy(darts, dspec.get("name"),
-                            ctor_args=[resolve(m) for m in dspec["args"]] or None)
+            try:
+                darts = h.compile(dep_sol,
+                                  extra_args=_mode_args)
+                dapp = h.deploy(darts, dspec.get("name"),
+                                ctor_args=[resolve(m) for m in dspec["args"]] or None)
+            except Exception:
+                _fb = case_dir / dspec["dir"] / "stub_fallback.sol"
+                if not _fb.exists():
+                    raise
+                darts = h.compile(_fb, extra_args=_mode_args)
+                dapp = h.deploy(darts, "StubERC20")
+                print(f"[avm] dep {dspec.get('name')}: generic stand-in "
+                      f"deployed instead (real dep failed on this leg)")
         except Exception as e:
             print(f"[avm] dep {dspec.get('name')}: {str(e)[:120]} — "
                   f"main ctor will fail as before")
@@ -445,14 +454,32 @@ def main():
         dep_apps.append(dapp)
         ensure_app_funded(algod, dispenser, dapp.app_addr)
         print(f"[avm] dep {dspec.get('name')} app_id={dapp.app_id}")
-        # Scripted answers: load THIS attempt's tape (derived minus skips,
-        # identically on both legs) into the stand-in before any replay call.
-        _tape = dep_tapes.get(dspec["addr"].lower())
-        if _tape:
-            for _ws, _ls in tape_chunks(_tape):
-                h.call(dapp, "__load(bytes32[],uint256[])", _ws, _ls,
-                       extra_fee=10_000)
-            print(f"[avm] dep tape loaded: {len(_tape)} answer(s)")
+        dep_app_byaddr[dspec["addr"].lower()] = dapp
+
+    # TWO-PHASE tape load: all stubs exist now, so answers can be translated
+    # into THIS leg's address space (historical 20-byte content → full 32-byte
+    # local word: senders/creator become real accounts, args their content
+    # form, deps the local stub address).
+    _m20 = {}
+    for _a, _i in (reg.get("args") or {}).items():
+        _m20[bytes.fromhex(_a[2:])] = bytes(12) + arg_content20(_i)
+    for _a, _i in (reg.get("senders") or {}).items():
+        if _i in accts:
+            _m20[bytes.fromhex(_a[2:])] = encoding.decode_address(accts[_i].address)
+    if reg.get("creator"):
+        _m20[bytes.fromhex(reg["creator"][2:])] = encoding.decode_address(
+            dispenser.address)
+    for _a, _loc in dep_local.items():
+        _m20[bytes.fromhex(_a[2:])] = encoding.decode_address(_loc)
+    dep_tapes = build_dep_tapes(case_dir, ext_skips, _m20)
+    for _a, _tape in dep_tapes.items():
+        _dapp = dep_app_byaddr.get(_a)
+        if not _dapp or not _tape:
+            continue
+        for _ws, _ls in tape_chunks(_tape):
+            h.call(_dapp, "__load(bytes32[],uint256[])", _ws, _ls,
+                   extra_fee=10_000)
+        print(f"[avm] dep tape loaded: {len(_tape)} answer(s) @ {_a[:10]}…")
 
     # ── compile + deploy ──────────────────────────────────────────────────
     # Put the chain at the replay epoch BEFORE deploying: the EVM leg's genesis

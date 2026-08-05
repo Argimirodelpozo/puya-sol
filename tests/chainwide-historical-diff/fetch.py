@@ -14,7 +14,7 @@ import shutil
 import sys
 import time
 
-from chd_common import (CASES, EVM_PY, ZERO, dump_json, http_json,
+from chd_common import (CASES, EVM_PY, ZERO, dump_json, http_json, load_json,
                         relax_pragma)
 
 
@@ -85,26 +85,38 @@ def harvest_callees(host: str, address: str, hashes: list, sink: dict,
 
 
 
+def _stub_selectors() -> list:
+    """4-byte selectors the stand-in handles itself (never reach the fallback)."""
+    sigs = ["name()", "symbol()", "decimals()", "totalSupply()",
+            "balanceOf(address)", "transfer(address,uint256)",
+            "transferFrom(address,address,uint256)",
+            "approve(address,uint256)", "allowance(address,address)",
+            "mint(address,uint256)", "burn(address,uint256)",
+            "__load(bytes32[],uint256[])"]
+    try:
+        from eth_utils import keccak
+    except Exception:
+        return []
+    return ["0x" + keccak(text=s).hex()[:8] for s in sigs]
+
+
 def harvest_dep_answers(host: str, address: str, case_dir, txns, dep_addrs,
                         max_traces: int = 200) -> None:
-    """Record what each STUBBED dependency historically ANSWERED, in call order.
+    """Record what dependencies historically ANSWERED, in call order — and
+    discover which ARG-level callees deserve stand-ins of their own.
 
-    The raw trace of every replayed txn carries each sub-call's input AND
-    output. A dependency's STATE is unreachable, but its ANSWERS are not —
-    scripting them into the stand-in (a tape its fallback consumes in order)
-    replays the interaction faithfully on BOTH legs. One-word outputs only in
-    v1 (prices, balances, decimals, bools, addresses — the read class that
-    dominates closed-world skips); wider or absent outputs record as null and
-    the fallback falls through to the self-address answer.
-
-    DIRECT txns only: a tape entry must map to exactly one replay index so the
-    per-attempt skip set can drop its entries unambiguously.
+    One pass over the replayed txns' raw traces records the output of EVERY
+    sub-call made by the contract under test. Ctor-dep answers become that
+    stub's tape as before. Callees OUTSIDE the ctor-dep set (a vault or oracle
+    passed as a call argument — morpho_alloc's `IMetaMorpho(vault).owner()`)
+    are code-probed; the busiest few become `arg_deps`: a stand-in plus tape,
+    deployed and loaded on both legs exactly like ctor deps. Addresses that
+    also SEND txns are excluded — the legs need a signable account for them.
     """
     addr = address.lower()
     deps = {d.lower() for d in dep_addrs}
-    if not deps:
-        return
-    tapes: dict = {}
+    senders = {(t.get("from") or "").lower() for t in txns}
+    per_callee: dict = {}
     n = 0
     for t in txns:
         if t.get("internal") or n >= max_traces:
@@ -120,9 +132,9 @@ def harvest_dep_answers(host: str, address: str, case_dir, txns, dep_addrs,
                 time.sleep(1.0 * (2 ** attempt))
         n += 1
         if n % 25 == 0:
-            print(f"[fetch] dep-answer harvest: {n} trace(s) read, "
-                  f"{sum(len(v) for v in tapes.values())} answer(s) so far",
-                  flush=True)
+            print(f"[fetch] dep-answer harvest: {n} trace(s), "
+                  f"{sum(len(v) for v in per_callee.values())} answer(s) across "
+                  f"{len(per_callee)} callee(s)", flush=True)
         if not isinstance(tr, list):
             continue
         for e in tr:
@@ -132,17 +144,40 @@ def harvest_dep_answers(host: str, address: str, case_dir, txns, dep_addrs,
             if (act.get("from") or "").lower() != addr:
                 continue
             to = (act.get("to") or "").lower()
-            if to not in deps:
+            if not to or to == addr:
                 continue
             out = ((e.get("result") or {}).get("output") or "0x").removeprefix("0x")
-            # Any length up to 1 KB (empty = a void answer, itself meaningful);
-            # wider than that records as null and stalls that txn's tape.
             word = out if len(out) <= 2048 and len(out) % 2 == 0 else None
-            tapes.setdefault(to, []).append({"hash": h, "out": word})
+            sel = (act.get("input") or "0x")[:10]
+            per_callee.setdefault(to, []).append({"hash": h, "sel": sel,
+                                                 "out": word})
         time.sleep(0.5)
+
+    tapes = {a: v for a, v in per_callee.items() if a in deps}
+    # ARG-level candidates: busiest non-dep callees that are contracts and
+    # never send. Capped — each costs a stub deploy + tape load per attempt.
+    arg_deps = []
+    cands = sorted(((a, v) for a, v in per_callee.items()
+                    if a not in deps and a not in senders and len(v) >= 3),
+                   key=lambda kv: -len(kv[1]))[:4]
+    for a, v in cands:
+        depdir = case_dir / "deps" / f"argdep_{a[2:10]}"
+        d = write_stub_dep(host, a, depdir)
+        if not d:
+            continue
+        arg_deps.append({"addr": a, "dir": f"deps/argdep_{a[2:10]}"})
+        tapes[a] = v
+        print(f"[fetch] arg-level stand-in @ {a[:10]}… ({len(v)} answer(s))")
+    if arg_deps:
+        dump_json(case_dir / "arg_deps.json", {"arg_deps": arg_deps})
     if tapes:
-        dump_json(case_dir / "dep_tape.json", {"tapes": tapes})
-        print(f"[fetch] dep answers scripted: "
+        # The stand-in answers these selectors from its OWN logic, so those
+        # calls never reach the tape-playing fallback. Recording them would
+        # shift every later answer by one — the tape must contain exactly the
+        # calls the fallback will see.
+        dump_json(case_dir / "dep_tape.json",
+                  {"tapes": tapes, "stub_selectors": _stub_selectors()})
+        print("[fetch] dep answers scripted: "
               + ", ".join(f"{a[:10]}…×{len(v)}" for a, v in tapes.items()))
 
 def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
@@ -706,6 +741,17 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
         if d:
             ctor_deps.append({"addr": a, "dir": f"deps/dep_{a[2:10]}"})
             print(f"[fetch] {tag}: dep {d['name']} @ {a[:10]}… fetched")
+            # A real dep that later fails to COMPILE or DEPLOY on a leg would
+            # otherwise vanish silently (raft_r's PositionManager) or kill the
+            # run (raft_pm's PriceFeed, ctor status=0). Ship a generic
+            # stand-in alongside it as a last-resort, identical on both legs.
+            _fb = case_dir / d["dir"] / "stub_fallback.sol"
+            if not _fb.exists():
+                _fb.write_text(_STUB_ERC20 % {"name": d["name"] or "Dep",
+                                              "sym": "STUB", "dec": 18})
+                _dc = load_json(case_dir / d["dir"] / "case.json") or {}
+                _dc["stub_abi"] = _STUB_ABI
+                dump_json(case_dir / d["dir"] / "case.json", _dc)
         elif stub_deps and a in _ctor_addrs:
             # CONSTRUCTOR args only: those are what a failing ctor calls. A
             # stand-in for a random call-arg address would put an app where the
@@ -723,6 +769,9 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
         try:
             harvest_dep_answers(host, address, case_dir, txns,
                                 [d["addr"] for d in ctor_deps])
+            _adp = case_dir / "arg_deps.json"
+            if _adp.exists():
+                case["arg_deps"] = (load_json(_adp) or {}).get("arg_deps") or []
         except Exception as e:
             print(f"[fetch] {tag}: dep-answer harvest failed ({str(e)[:60]}) — "
                   f"stand-ins stay self-address-only")

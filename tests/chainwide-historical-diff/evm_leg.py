@@ -24,7 +24,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from chd_common import (ZERO, arg_content20, build_dep_tapes, build_registry, tape_chunks,
                         canon_value, clock_target, dump_json, evm_sender_privkey,
-                        load_json, marker_for, replay_epoch, scale_value, symbol)
+                        load_json, marker_for, replay_epoch, scale_value, sender_marker,
+                        symbol)
 
 import solcx
 from eth_abi import decode as _abi_decode_strict
@@ -137,7 +138,8 @@ def main():
             for sub in dep.get("ctor_deps") or []:
                 rec(dir_ / sub["dir"], sub)
             out.append({"addr": spec["addr"].lower(), "dir": dir_, "case": dep})
-        for spec in case.get("ctor_deps") or []:
+        for spec in ((case.get("ctor_deps") or [])
+                     + (case.get("arg_deps") or [])):
             rec(case_dir / spec["dir"], spec)
         seen, topo = set(), []
         for d in out:
@@ -258,7 +260,7 @@ def main():
             # SCALED once, here, so both legs move the same number and neither
             # can drift from the other's idea of msg.value (chd_common).
             "value": scale_value(t.get("value") or 0) or 0,
-            "sender": marker_for(reg, t["from"]) if d else None,
+            "sender": sender_marker(reg, t["from"]) if d else None,
             "sig": d[0] if d else None,
             "args": [markerize(v, inp, reg) for v, inp in zip(d[2], d[1]["inputs"])] if d else None,
             "skip": base_skip.get(i),
@@ -421,10 +423,31 @@ def main():
                     if cname == d["case"].get("name"):
                         dtarget = cdata
             d["bytecode"] = dtarget["evm"]["bytecode"]["object"] if dtarget else None
+            if d["bytecode"] is None:
+                raise RuntimeError("target contract not in solc output")
         except Exception as e:
             d["bytecode"] = None
             print(f"[evm] dep {d['case'].get('name')}: compile failed "
-                  f"({str(e)[:80]}) — ctor will revert as before")
+                  f"({str(e)[:80]})")
+        if d["bytecode"] is None:
+            _fb = d["dir"] / "stub_fallback.sol"
+            if _fb.exists():
+                try:
+                    dout = solcx.compile_standard({
+                        "language": "Solidity",
+                        "sources": {"dep.sol": {"content": _fb.read_text()}},
+                        "settings": {"evmVersion": "paris",
+                                     "outputSelection": {"*": {"*":
+                                         ["evm.bytecode.object"]}}}})
+                    _sc = dout["contracts"]["dep.sol"]["StubERC20"]
+                    d["bytecode"] = _sc["evm"]["bytecode"]["object"]
+                    d["case"]["abi"] = d["case"].get("stub_abi") or d["case"]["abi"]
+                    d["ctor_vals"], d["ctor_inputs"] = [], []
+                    d["is_fallback_stub"] = True
+                    print(f"[evm] dep {d['case'].get('name')}: using generic "
+                          f"stand-in (real dep uncompilable on this leg)")
+                except Exception as e2:
+                    print(f"[evm] dep stub fallback also failed: {str(e2)[:80]}")
 
     layout = target.get("storageLayout") or {"storage": [], "types": {}}
     # Slot-mode AVM replays read storage through the SAME layout (see
@@ -565,7 +588,6 @@ def main():
     def run_once(skips):
         from eth_tester import EthereumTester, PyEVMBackend
         epoch = replay_epoch(calls)
-        dep_tapes = build_dep_tapes(case_dir, set(skips) | set(ext_skips))
         genesis = None
         if pin_time and txns:
             try:
@@ -610,20 +632,56 @@ def main():
                      zip(d["ctor_vals"], d["ctor_inputs"])]
             dtx = Cd.constructor(*dargs).transact({"from": a0, "gas": 30_000_000})
             drc = w3.eth.get_transaction_receipt(dtx)
+            if not drc.get("contractAddress") and not d.get("is_fallback_stub"):
+                # Real dep's ctor reverted locally (its own deps are absent) —
+                # fall back to the generic stand-in rather than dying.
+                _fb = d["dir"] / "stub_fallback.sol"
+                if _fb.exists():
+                    dout = solcx.compile_standard({
+                        "language": "Solidity",
+                        "sources": {"dep.sol": {"content": _fb.read_text()}},
+                        "settings": {"evmVersion": "paris",
+                                     "outputSelection": {"*": {"*":
+                                         ["evm.bytecode.object"]}}}})
+                    _sc = dout["contracts"]["dep.sol"]["StubERC20"]
+                    d["case"]["abi"] = d["case"].get("stub_abi") or d["case"]["abi"]
+                    Cd = w3.eth.contract(abi=d["case"]["abi"],
+                                         bytecode=_sc["evm"]["bytecode"]["object"])
+                    dtx = Cd.constructor().transact({"from": a0, "gas": 30_000_000})
+                    drc = w3.eth.get_transaction_receipt(dtx)
+                    print(f"[evm] dep {d['case'].get('name')}: ctor reverted — "
+                          f"generic stand-in deployed instead")
             if not drc.get("contractAddress"):
                 raise SystemExit(f"dependency {d['case'].get('name')} failed to "
                                  f"deploy (status={drc.get('status')})")
             _dep_local[d["addr"]] = drc["contractAddress"]
             print(f"[evm] dep {d['case'].get('name')} @ {drc['contractAddress'][:10]}…")
-            # Scripted answers: same tape, same order as the AVM leg.
+
+        # TWO-PHASE tape load: every stub (ctor- and arg-level) must exist
+        # before answers are translated, because answers can NAME other deps.
+        # mapping20: historical 20-byte content → this leg's full 32-byte word.
+        _m20 = {}
+        for _a, _i in reg["args"].items():
+            _m20[bytes.fromhex(_a[2:])] = bytes(12) + arg_content20(_i)
+        for _a, _i in reg["senders"].items():
+            _m20[bytes.fromhex(_a[2:])] = bytes(12) + bytes.fromhex(
+                sender_acct[_i][0][2:])
+        if reg.get("creator"):
+            _m20[bytes.fromhex(reg["creator"][2:])] = bytes(12) + bytes.fromhex(a0[2:])
+        for _a, _loc in _dep_local.items():
+            _m20[bytes.fromhex(_a[2:])] = bytes(12) + bytes.fromhex(_loc[2:])
+        dep_tapes = build_dep_tapes(case_dir, set(skips) | set(ext_skips), _m20)
+        for d in deps:
             _tape = dep_tapes.get(d["addr"].lower())
-            if _tape:
-                dep_inst = w3.eth.contract(address=drc["contractAddress"],
-                                           abi=d["case"]["abi"])
-                for _ws, _ls in tape_chunks(_tape):
-                    dep_inst.functions.__load(_ws, _ls).transact(
-                        {"from": a0, "gas": 12_000_000})
-                print(f"[evm] dep tape loaded: {len(_tape)} answer(s)")
+            if not _tape or d["addr"] not in _dep_local:
+                continue
+            dep_inst = w3.eth.contract(address=_dep_local[d["addr"]],
+                                       abi=d["case"]["abi"])
+            for _ws, _ls in tape_chunks(_tape):
+                dep_inst.functions.__load(_ws, _ls).transact(
+                    {"from": a0, "gas": 12_000_000})
+            print(f"[evm] dep tape loaded: {len(_tape)} answer(s) "
+                  f"@ {d['addr'][:10]}…")
 
         C = w3.eth.contract(abi=abi, bytecode=bytecode)
         txh = C.constructor(*[resolve(m) for m in meta["ctor_args"]]).transact(
