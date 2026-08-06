@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/storage_layout_struct.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 64 4096 20480
-    bytecblock 0xffffffffffffffff 0x8000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000 0x02 0x151f7c75 0x07 0xffffffffffffffffffffffff 0x800000000000000000000000 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000 0x06 0x05 0x04 0x03 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0xb6574f6e0944b14b53f7e2232b3205892e853d0b7db9f5072bf04a6fd21222e6 0x1f31c26c49b2804fe8a7eeb9df815fb08b9aea56fed3115df70c86e68a0159b7 0x010000 "p:" "s:"
+    bytecblock 0xffffffffffffffff 0x8000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000 0x02 0x151f7c75 0x07 0xffffffffffffffffffffffff 0x800000000000000000000000 0xffffffffffffffffffffffffffffffffffffffff000000000000000000000000 0x06 0x05 0x04 0x03 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x40 0xb6574f6e0944b14b53f7e2232b3205892e853d0b7db9f5072bf04a6fd21222e6 0x1f31c26c49b2804fe8a7eeb9df815fb08b9aea56fed3115df70c86e68a0159b7 0x010000 "p:" "s:"
     intc_2 // 0
     dupn 7
     pushbytes ""
@@ -89,7 +89,7 @@ main_ternary_merge@40:
     b+
 
 main_ternary_merge@43:
-    bytec 15 // 0xb6574f6e0944b14b53f7e2232b3205892e853d0b7db9f5072bf04a6fd21222e6
+    bytec 16 // 0xb6574f6e0944b14b53f7e2232b3205892e853d0b7db9f5072bf04a6fd21222e6
     callsub __storage_read
     dig 8
     dup
@@ -191,7 +191,7 @@ main_ternary_merge@51:
     b+
 
 main_ternary_merge@54:
-    bytec 16 // 0x1f31c26c49b2804fe8a7eeb9df815fb08b9aea56fed3115df70c86e68a0159b7
+    bytec 17 // 0x1f31c26c49b2804fe8a7eeb9df815fb08b9aea56fed3115df70c86e68a0159b7
     callsub __storage_read
     dig 8
     dup
@@ -1228,7 +1228,7 @@ main_ternary_merge@144:
     dup
     cover 2
     extract 0 12
-    bytec 15 // 0xb6574f6e0944b14b53f7e2232b3205892e853d0b7db9f5072bf04a6fd21222e6
+    bytec 16 // 0xb6574f6e0944b14b53f7e2232b3205892e853d0b7db9f5072bf04a6fd21222e6
     swap
     callsub __storage_write
     bytec 5 // 0x07
@@ -1317,7 +1317,7 @@ main_ternary_merge@152:
     dup
     cover 2
     extract 0 12
-    bytec 16 // 0x1f31c26c49b2804fe8a7eeb9df815fb08b9aea56fed3115df70c86e68a0159b7
+    bytec 17 // 0x1f31c26c49b2804fe8a7eeb9df815fb08b9aea56fed3115df70c86e68a0159b7
     swap
     callsub __storage_write
     bytec 9 // 0x06
@@ -1957,7 +1957,7 @@ __storage_read:
     b%
     dup
     frame_bury -1
-    bytec 17 // 0x010000
+    bytec 18 // 0x010000
     b<
     bz __storage_read_else_body@4
     pushint 8
@@ -1974,7 +1974,7 @@ __storage_read:
     intc_3 // 64
     /
     itob
-    bytec 18 // "p:"
+    bytec 19 // "p:"
     swap
     concat
     dup
@@ -2003,6 +2003,8 @@ __storage_read_else_body@4:
     intc_0 // 32
     bzero
     frame_dig -1
+    bytec 15 // 0x40
+    b/
     concat
     dup
     len
@@ -2010,7 +2012,7 @@ __storage_read_else_body@4:
     -
     intc_0 // 32
     extract3
-    bytec 19 // "s:"
+    bytec 20 // "s:"
     swap
     concat
     dup
@@ -2018,8 +2020,21 @@ __storage_read_else_body@4:
     box_len
     bury 1
     bz __storage_read_after_if_else@3
+    pushint 8
+    bzero
+    frame_dig -1
+    bytec 15 // 0x40
+    b%
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
     frame_dig 0
-    intc_2 // 0
+    swap
     intc_0 // 32
     box_extract
     frame_bury 0
@@ -2034,7 +2049,7 @@ __storage_write:
     b%
     dup
     frame_bury -2
-    bytec 17 // 0x010000
+    bytec 18 // 0x010000
     b<
     bz __storage_write_else_body@2
     pushint 8
@@ -2050,7 +2065,7 @@ __storage_write:
     intc_3 // 64
     /
     itob
-    bytec 18 // "p:"
+    bytec 19 // "p:"
     swap
     concat
     dup
@@ -2078,8 +2093,11 @@ __storage_write:
 __storage_write_else_body@2:
     intc_0 // 32
     bzero
-    dup
     frame_dig -2
+    bytec 15 // 0x40
+    b/
+    dig 1
+    swap
     concat
     dup
     len
@@ -2087,14 +2105,27 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec 19 // "s:"
+    bytec 20 // "s:"
     swap
     concat
     dup
-    intc_0 // 32
+    pushint 2048
     box_create
     pop
-    swap
+    pushint 8
+    bzero
+    frame_dig -2
+    bytec 15 // 0x40
+    b%
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    uncover 2
     frame_dig -1
     concat
     dup
@@ -2103,7 +2134,5 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    intc_2 // 0
-    swap
     box_replace
     retsub

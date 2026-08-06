@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_storage_layout_refs.sol.EvmRefs.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 16 4294967295
-    bytecblock 0x 0x01 0x151f7c75 0x02 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000003 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6 0x010000 "p:" "s:"
+    intcblock 32 1 0 8 4294967295
+    bytecblock 0x 0x01 0x151f7c75 0x02 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000003 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x40 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6 0x010000 "p:" "s:"
     intc_2 // 0
     dupn 9
     bytec_0 // ""
@@ -60,7 +60,7 @@ main_rebind_route@21:
     dup
     bury 7
     len
-    intc_3 // 16
+    pushint 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txn GroupIndex
@@ -167,7 +167,7 @@ main_ternary_merge@33:
     bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000003
     concat
     keccak256
-    intc_3 // 16
+    pushint 16
     bzero
     dig 1
     callsub __storage_read
@@ -186,13 +186,13 @@ main_ternary_merge@33:
     concat
     dup
     len
-    intc_3 // 16
+    pushint 16
     -
-    intc_3 // 16
+    pushint 16
     extract3
     dup
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     dig 1
@@ -214,13 +214,13 @@ main_ternary_merge@33:
     concat
     dup
     len
-    intc_3 // 16
+    pushint 16
     -
-    intc_3 // 16
+    pushint 16
     extract3
     dup
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     uncover 2
@@ -249,14 +249,14 @@ main_viaLocal_route@19:
     dup
     bury 5
     len
-    intc_3 // 16
+    pushint 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 3
     dup
     bury 4
     len
-    intc_3 // 16
+    pushint 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txn GroupIndex
@@ -398,7 +398,7 @@ main_ck_route@16:
     txna ApplicationArgs 1
     dup
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
@@ -494,7 +494,7 @@ main_ternary_merge@63:
     uncover 2
     b<
     assert // array index out of bounds
-    bytec 7 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
+    bytec 8 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
     b+
     callsub __storage_read
     dup
@@ -572,7 +572,7 @@ main_ternary_merge@73:
     assert // not payable
     bytec_1 // 0x01
     callsub __storage_read
-    bytec 7 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
+    bytec 8 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
     dig 1
     b+
     dig 7
@@ -1087,16 +1087,16 @@ __storage_read:
     b%
     dup
     frame_bury -1
-    bytec 8 // 0x010000
+    bytec 9 // 0x010000
     b<
     bz __storage_read_else_body@4
-    pushint 8
+    intc_3 // 8
     bzero
     frame_dig -1
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
     dup
@@ -1104,7 +1104,7 @@ __storage_read:
     pushint 64
     /
     itob
-    bytec 9 // "p:"
+    bytec 10 // "p:"
     swap
     concat
     dup
@@ -1133,6 +1133,8 @@ __storage_read_else_body@4:
     intc_0 // 32
     bzero
     frame_dig -1
+    bytec 7 // 0x40
+    b/
     concat
     dup
     len
@@ -1140,7 +1142,7 @@ __storage_read_else_body@4:
     -
     intc_0 // 32
     extract3
-    bytec 10 // "s:"
+    bytec 11 // "s:"
     swap
     concat
     dup
@@ -1148,8 +1150,21 @@ __storage_read_else_body@4:
     box_len
     bury 1
     bz __storage_read_after_if_else@3
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    bytec 7 // 0x40
+    b%
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
     frame_dig 0
-    intc_2 // 0
+    swap
     intc_0 // 32
     box_extract
     frame_bury 0
@@ -1164,23 +1179,23 @@ __storage_write:
     b%
     dup
     frame_bury -2
-    bytec 8 // 0x010000
+    bytec 9 // 0x010000
     b<
     bz __storage_write_else_body@2
-    pushint 8
+    intc_3 // 8
     bzero
     frame_dig -2
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
     dup
     pushint 64
     /
     itob
-    bytec 9 // "p:"
+    bytec 10 // "p:"
     swap
     concat
     dup
@@ -1208,8 +1223,11 @@ __storage_write:
 __storage_write_else_body@2:
     intc_0 // 32
     bzero
-    dup
     frame_dig -2
+    bytec 7 // 0x40
+    b/
+    dig 1
+    swap
     concat
     dup
     len
@@ -1217,14 +1235,27 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec 10 // "s:"
+    bytec 11 // "s:"
     swap
     concat
     dup
-    intc_0 // 32
+    pushint 2048
     box_create
     pop
-    swap
+    intc_3 // 8
+    bzero
+    frame_dig -2
+    bytec 7 // 0x40
+    b%
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    uncover 2
     frame_dig -1
     concat
     dup
@@ -1233,8 +1264,6 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    intc_2 // 0
-    swap
     box_replace
     retsub
 
@@ -1276,7 +1305,7 @@ __evm_bytes_read:
     retsub
 
 __evm_bytes_read_after_if_else@2:
-    pushint 8
+    intc_3 // 8
     bzero
     swap
     bytec_1 // 0x01
@@ -1286,7 +1315,7 @@ __evm_bytes_read_after_if_else@2:
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
     frame_bury 3
@@ -1389,7 +1418,7 @@ __evm_bytes_write:
     intc_1 // 1
     ==
     bz __evm_bytes_write_after_if_else@2
-    pushint 8
+    intc_3 // 8
     bzero
     frame_dig 6
     bytec_1 // 0x01
@@ -1399,7 +1428,7 @@ __evm_bytes_write:
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
     pushint 31

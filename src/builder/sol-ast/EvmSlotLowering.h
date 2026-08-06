@@ -85,6 +85,17 @@ public:
 	/// `delete` on an aggregate: zero the value-slot span, recurse into
 	/// bytes/array members for their keccak-region data, dynamic arrays via
 	/// __evm_dynarr_write with an empty payload (EVM delete clears elements).
+	/// Write a value of ANY declared type to a slot address: scalars via the
+	/// word codec, bytes/string via the short/long subroutines, arrays and
+	/// structs via their element writers. One dispatch shared by every
+	/// storage-write site (scalar assignment, tuple components, state
+	/// initializers) so a new shape never lands in only one of them.
+	bool writeAny(
+		Addr& _a,
+		solidity::frontend::Type const* _t,
+		std::shared_ptr<awst::Expression> _value,
+		std::vector<std::shared_ptr<awst::Statement>>& _out);
+
 	bool clearAggregate(
 		Addr const& _a,
 		solidity::frontend::Type const* _t,

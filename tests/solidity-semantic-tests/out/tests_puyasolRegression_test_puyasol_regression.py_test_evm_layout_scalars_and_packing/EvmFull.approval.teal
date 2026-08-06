@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_storage_layout.sol.EvmFull.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8 4294967295
-    bytecblock 0x151f7c75 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x05 0x08 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0 0x0f 0x0b 0x02 0x0000000000000000000000000000000000000000000000000000000000000003 0x06 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "__ctor_pending" 0xf652222313e28459528d920b65115c16c04f3efc82aaedc97be59f3f377c0d3f 0x0000000000000000000000000000000000000000000000000000000000000010 0x000000000000000000000000000000000000000000000000000000000000000e 0x000000000000000000000000000000000000000000000000000000000000000d 0x0000000000000000000000000000000000000000000000000000000000000004 0x010000 "p:" "s:"
+    bytecblock 0x151f7c75 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x05 0x08 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0 0x0f 0x0b 0x02 0x0000000000000000000000000000000000000000000000000000000000000003 0x06 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x40 "__ctor_pending" 0xf652222313e28459528d920b65115c16c04f3efc82aaedc97be59f3f377c0d3f 0x0000000000000000000000000000000000000000000000000000000000000010 0x000000000000000000000000000000000000000000000000000000000000000e 0x000000000000000000000000000000000000000000000000000000000000000d 0x0000000000000000000000000000000000000000000000000000000000000004 0x010000 "p:" "s:"
     intc_2 // 0
     dupn 10
     bytec_1 // ""
@@ -28,7 +28,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 13 // "__ctor_pending"
+    bytec 14 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -342,7 +342,7 @@ main_ternary_merge@86:
     dig 12
     b|
     extract 0 32
-    bytec 15 // 0x0000000000000000000000000000000000000000000000000000000000000010
+    bytec 16 // 0x0000000000000000000000000000000000000000000000000000000000000010
     concat
     keccak256
     callsub __evm_bytes_read
@@ -398,7 +398,7 @@ main_ternary_merge@91:
     dig 12
     b|
     extract 0 32
-    bytec 15 // 0x0000000000000000000000000000000000000000000000000000000000000010
+    bytec 16 // 0x0000000000000000000000000000000000000000000000000000000000000010
     concat
     keccak256
     dig 4
@@ -547,7 +547,7 @@ main_ternary_merge@116:
     !
     assert // not payable
     dig 5
-    bytec 16 // 0x000000000000000000000000000000000000000000000000000000000000000e
+    bytec 17 // 0x000000000000000000000000000000000000000000000000000000000000000e
     concat
     keccak256
     callsub __storage_read
@@ -601,7 +601,7 @@ main_ternary_merge@121:
     !
     assert // not payable
     dig 5
-    bytec 16 // 0x000000000000000000000000000000000000000000000000000000000000000e
+    bytec 17 // 0x000000000000000000000000000000000000000000000000000000000000000e
     concat
     keccak256
     dig 10
@@ -639,7 +639,7 @@ main_ternary_merge@126:
     dig 14
     b|
     extract 0 32
-    bytec 17 // 0x000000000000000000000000000000000000000000000000000000000000000d
+    bytec 18 // 0x000000000000000000000000000000000000000000000000000000000000000d
     concat
     keccak256
     callsub __storage_read
@@ -708,7 +708,7 @@ main_ternary_merge@131:
     dig 13
     b|
     extract 0 32
-    bytec 17 // 0x000000000000000000000000000000000000000000000000000000000000000d
+    bytec 18 // 0x000000000000000000000000000000000000000000000000000000000000000d
     concat
     keccak256
     dup
@@ -1028,7 +1028,7 @@ main_ternary_merge@161:
     dup
     bytec 5 // 0x08
     b/
-    bytec 14 // 0xf652222313e28459528d920b65115c16c04f3efc82aaedc97be59f3f377c0d3f
+    bytec 15 // 0xf652222313e28459528d920b65115c16c04f3efc82aaedc97be59f3f377c0d3f
     b+
     intc_0 // 32
     bzero
@@ -1099,7 +1099,7 @@ main_ternary_merge@166:
     dig 1
     bytec 5 // 0x08
     b/
-    bytec 14 // 0xf652222313e28459528d920b65115c16c04f3efc82aaedc97be59f3f377c0d3f
+    bytec 15 // 0xf652222313e28459528d920b65115c16c04f3efc82aaedc97be59f3f377c0d3f
     b+
     callsub __storage_read
     concat
@@ -1170,7 +1170,7 @@ main_ternary_merge@171:
     dup
     bytec 5 // 0x08
     b/
-    bytec 14 // 0xf652222313e28459528d920b65115c16c04f3efc82aaedc97be59f3f377c0d3f
+    bytec 15 // 0xf652222313e28459528d920b65115c16c04f3efc82aaedc97be59f3f377c0d3f
     b+
     intc_0 // 32
     bzero
@@ -1444,7 +1444,7 @@ main_ternary_merge@201:
     dig 11
     b|
     extract 0 32
-    bytec 18 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    bytec 19 // 0x0000000000000000000000000000000000000000000000000000000000000004
     concat
     keccak256
     dig 2
@@ -1518,7 +1518,7 @@ main_ternary_merge@206:
     dig 11
     b|
     extract 0 32
-    bytec 18 // 0x0000000000000000000000000000000000000000000000000000000000000004
+    bytec 19 // 0x0000000000000000000000000000000000000000000000000000000000000004
     concat
     keccak256
     uncover 2
@@ -2122,14 +2122,14 @@ main_ternary_false@273:
     b main_ternary_merge@274
 
 main___postInit_route@5:
-    bytec 13 // "__ctor_pending"
+    bytec 14 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec 13 // "__ctor_pending"
+    bytec 14 // "__ctor_pending"
     intc_2 // 0
     app_global_put
     pushint 41
@@ -2174,7 +2174,7 @@ __storage_read:
     b%
     dup
     frame_bury -1
-    bytec 19 // 0x010000
+    bytec 20 // 0x010000
     b<
     bz __storage_read_else_body@4
     intc_3 // 8
@@ -2191,7 +2191,7 @@ __storage_read:
     pushint 64
     /
     itob
-    bytec 20 // "p:"
+    bytec 21 // "p:"
     swap
     concat
     dup
@@ -2220,6 +2220,8 @@ __storage_read_else_body@4:
     intc_0 // 32
     bzero
     frame_dig -1
+    bytec 13 // 0x40
+    b/
     concat
     dup
     len
@@ -2227,7 +2229,7 @@ __storage_read_else_body@4:
     -
     intc_0 // 32
     extract3
-    bytec 21 // "s:"
+    bytec 22 // "s:"
     swap
     concat
     dup
@@ -2235,8 +2237,21 @@ __storage_read_else_body@4:
     box_len
     bury 1
     bz __storage_read_after_if_else@3
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    bytec 13 // 0x40
+    b%
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
     frame_dig 0
-    intc_2 // 0
+    swap
     intc_0 // 32
     box_extract
     frame_bury 0
@@ -2251,7 +2266,7 @@ __storage_write:
     b%
     dup
     frame_bury -2
-    bytec 19 // 0x010000
+    bytec 20 // 0x010000
     b<
     bz __storage_write_else_body@2
     intc_3 // 8
@@ -2267,7 +2282,7 @@ __storage_write:
     pushint 64
     /
     itob
-    bytec 20 // "p:"
+    bytec 21 // "p:"
     swap
     concat
     dup
@@ -2295,8 +2310,11 @@ __storage_write:
 __storage_write_else_body@2:
     intc_0 // 32
     bzero
-    dup
     frame_dig -2
+    bytec 13 // 0x40
+    b/
+    dig 1
+    swap
     concat
     dup
     len
@@ -2304,14 +2322,27 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec 21 // "s:"
+    bytec 22 // "s:"
     swap
     concat
     dup
-    intc_0 // 32
+    pushint 2048
     box_create
     pop
-    swap
+    intc_3 // 8
+    bzero
+    frame_dig -2
+    bytec 13 // 0x40
+    b%
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    uncover 2
     frame_dig -1
     concat
     dup
@@ -2320,8 +2351,6 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    intc_2 // 0
-    swap
     box_replace
     retsub
 

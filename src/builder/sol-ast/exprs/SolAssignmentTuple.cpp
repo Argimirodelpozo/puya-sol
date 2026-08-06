@@ -493,17 +493,14 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		{
 			auto const& lhsComp = *_sourceLhs->components()[i];
 			auto const* compType = lhsComp.annotation().type;
-			if (compType && compType->isValueType()
-				&& EvmSlotLowering::isStorageStateRef(lhsComp))
+			if (compType && EvmSlotLowering::isStorageStateRef(lhsComp))
 			{
 				EvmSlotLowering low(m_ctx, m_scope, m_loc);
 				if (auto addr = low.resolve(lhsComp))
 				{
-					auto nat = low.coerceToNative(std::move(assignValue), *addr);
-					if (nat)
+					std::vector<std::shared_ptr<awst::Statement>> slotOut;
+					if (low.writeAny(*addr, compType, assignValue, slotOut))
 					{
-						std::vector<std::shared_ptr<awst::Statement>> slotOut;
-						low.writeValue(*addr, std::move(nat), slotOut);
 						for (auto& st: slotOut)
 							m_ctx.pendingStatements.push_back(std::move(st));
 						continue;

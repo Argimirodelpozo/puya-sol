@@ -962,6 +962,41 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readValue(Addr const& _a)
 		std::move(raw), _a.wtype, _a.solType, _a.size, m_loc);
 }
 
+bool EvmSlotLowering::writeAny(
+	Addr& _a,
+	Type const* _t,
+	std::shared_ptr<awst::Expression> _value,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	if (!_t || !_value)
+		return false;
+	_a.solType = _t;
+	if (!_a.wtype)
+		_a.wtype = m_ctx.typeMapper.map(_t);
+	if (_t->isValueType())
+	{
+		auto nat = coerceToNative(std::move(_value), _a);
+		if (!nat)
+			return false;
+		writeValue(_a, std::move(nat), _out);
+		return true;
+	}
+	if (isBytesLike(_t))
+	{
+		if (_value->wtype && _value->wtype->kind() != awst::WTypeKind::Bytes
+			&& _value->wtype != awst::WType::stringType())
+			_value = awst::makeARC4Decode(
+				std::move(_value), awst::WType::bytesType(), m_loc);
+		writeBytesValue(_a, std::move(_value), _out);
+		return true;
+	}
+	if (auto const* at = dynamic_cast<ArrayType const*>(_t))
+		return writeArrayValue(_a, at, std::move(_value), _out);
+	if (dynamic_cast<StructType const*>(_t))
+		return writeStructValue(_a, std::move(_value), _out);
+	return false;
+}
+
 bool EvmSlotLowering::clearAggregate(
 	Addr const& _a,
 	Type const* _t,
