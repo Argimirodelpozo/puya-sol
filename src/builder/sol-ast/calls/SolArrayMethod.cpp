@@ -43,17 +43,80 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 		{
 			if (arrT->isByteArrayOrString())
 			{
-				Logger::instance().error(
-					"--evm-storage-layout: bytes/string push/pop not yet supported",
-					m_loc);
-				return nullptr;
+				// push/pop via whole-value read-modify-write: the short↔long
+				// form transitions already live in __evm_bytes_read/write, so
+				// appending a byte or shrinking by one needs no new runtime.
+				EvmSlotLowering lowB(m_ctx, m_scope, m_loc);
+				auto baseB = lowB.resolve(baseExpr);
+				if (!baseB)
+					return nullptr;
+				baseB->slot = awst::makeEvalOnce(baseB->slot, m_loc);
+				baseB->solType = arrT;
+				auto cur = lowB.readBytesValue(*baseB);
+				if (cur && cur->wtype != awst::WType::bytesType())
+					cur = awst::makeAsBytes(std::move(cur), m_loc);
+				std::string nm = "__evm_bp_" + std::to_string(
+					awst::NameGen::next("SolArrayMethod.bytesPP"));
+				m_ctx.queuePrePending(awst::makeAssignmentStatement(
+					awst::makeVarExpression(nm, awst::WType::bytesType(), m_loc),
+					std::move(cur), m_loc));
+				auto curVar = [&]() {
+					return awst::makeVarExpression(
+						nm, awst::WType::bytesType(), m_loc);
+				};
+				std::vector<std::shared_ptr<awst::Statement>> writesB;
+				if (memberName == "push")
+				{
+					std::shared_ptr<awst::Expression> b;
+					if (!m_call.arguments().empty())
+					{
+						b = buildExpr(*m_call.arguments()[0]);
+						if (!b)
+							return nullptr;
+						// bytes1 value → its single content byte
+						if (b->wtype != awst::WType::bytesType())
+							b = awst::makeAsBytes(std::move(b), m_loc);
+						b = awst::makeExtract(std::move(b), 0, 1, m_loc);
+					}
+					else
+						b = awst::makeBytesConstant({0}, m_loc);
+					lowB.writeBytesValue(*baseB,
+						awst::makeConcat(curVar(), std::move(b), m_loc),
+						writesB);
+				}
+				else
+				{
+					auto lenE = awst::makeLen(curVar(), m_loc);
+					auto nonEmptyB = awst::makeNumericCompare(
+						awst::makeLen(curVar(), m_loc),
+						awst::NumericComparison::Gt,
+						awst::makeIntegerConstant(uint64_t{0}, m_loc), m_loc);
+					m_ctx.queuePrePending(awst::makeExpressionStatement(
+						awst::makeAssert(std::move(nonEmptyB), m_loc,
+							"pop from empty bytes"), m_loc));
+					auto newLen = awst::makeUInt64BinOp(
+						awst::makeLen(curVar(), m_loc),
+						awst::UInt64BinaryOperator::Sub,
+						awst::makeIntegerConstant(uint64_t{1}, m_loc), m_loc);
+					(void)lenE;
+					lowB.writeBytesValue(*baseB,
+						awst::makeExtract3(curVar(),
+							awst::makeIntegerConstant(uint64_t{0}, m_loc),
+							std::move(newLen), m_loc),
+						writesB);
+				}
+				for (auto& stB: writesB)
+					m_ctx.queuePrePending(std::move(stB));
+				return awst::makeZero(m_loc, awst::WType::biguintType());
 			}
 			auto const* elemType = arrT->baseType();
 			auto const* structElem = dynamic_cast<StructType const*>(elemType);
 			auto const* structW = structElem
 				? dynamic_cast<awst::ARC4Struct const*>(m_ctx.typeMapper.map(structElem))
 				: nullptr;
-			if (!elemType->isValueType() && !structW)
+			bool aggElem = !elemType->isValueType() && !structW;
+			if (aggElem && !EvmSlotLowering::isBytesLike(elemType)
+				&& !dynamic_cast<ArrayType const*>(elemType))
 			{
 				Logger::instance().error(
 					"--evm-storage-layout: push/pop of aggregate elements not "
@@ -89,6 +152,43 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				else if (m_ctx.pendingArrayPushValue)
 					value = std::move(m_ctx.pendingArrayPushValue);
 				auto addr = low.elemAddr(dataBase, len, elemType);
+				if (aggElem)
+				{
+					// element region is virgin-zero (pop clears; fresh keccak
+					// space) — empty push() is just len+=1; push(v) writes the
+					// element via the aggregate writers
+					std::vector<std::shared_ptr<awst::Statement>> writesA;
+					if (value)
+					{
+						addr.solType = elemType;
+						addr.wtype = m_ctx.typeMapper.map(elemType);
+						if (EvmSlotLowering::isBytesLike(elemType))
+						{
+							if (value->wtype
+								&& value->wtype->kind() != awst::WTypeKind::Bytes
+								&& value->wtype != awst::WType::stringType())
+								value = awst::makeARC4Decode(std::move(value),
+									awst::WType::bytesType(), m_loc);
+							low.writeBytesValue(addr, std::move(value), writesA);
+						}
+						else if (auto const* eat =
+							dynamic_cast<ArrayType const*>(elemType))
+						{
+							if (!low.writeArrayValue(addr, eat,
+									std::move(value), writesA))
+								return nullptr;
+						}
+					}
+					for (auto& stA: writesA)
+						m_ctx.queuePrePending(std::move(stA));
+					auto newLenA = awst::makeBigUIntBinOp(len,
+						awst::BigUIntBinaryOperator::Add,
+						awst::makeIntegerConstant("1", m_loc,
+							awst::WType::biguintType()), m_loc);
+					m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+						rootSlot, std::move(newLenA), m_loc));
+					return awst::makeZero(m_loc, awst::WType::biguintType());
+				}
 				if (value && structW)
 				{
 					// struct element: split into per-slot words at the element base
@@ -130,6 +230,19 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType()),
 				m_loc), "last");
 			auto addr = low.elemAddr(dataBase, lastIdx, elemType);
+			if (aggElem)
+			{
+				addr.solType = elemType;
+				addr.wtype = m_ctx.typeMapper.map(elemType);
+				std::vector<std::shared_ptr<awst::Statement>> writesA;
+				if (!low.clearAggregate(addr, elemType, writesA))
+					return nullptr;
+				for (auto& stA: writesA)
+					m_ctx.queuePrePending(std::move(stA));
+				m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+					rootSlot, lastIdx, m_loc));
+				return awst::makeZero(m_loc, awst::WType::biguintType());
+			}
 			if (structW)
 			{
 				// zero every slot of the vacated element (EVM pop clears)
