@@ -1,5 +1,7 @@
 /// @file SolAssignmentTuple.cpp — handleTupleAssignment + buildTupleWithUpdatedField
 #include "builder/sol-ast/exprs/SolAssignment.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "awst/NameGen.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
@@ -480,6 +482,35 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			}
 		}
 
+		// --evm-storage-layout: a storage element/field has no AWST lvalue —
+		// building the LHS lowered it to a __storage_read CALL, which then sat
+		// in the assignment's TARGET position and puya rejected the whole AWST
+		// ("deserialization failed: 'SubroutineCallExpression'", 9 fixtures).
+		// Route these through the slot writer exactly like the scalar path in
+		// SolAssignment does.
+		if (builder::evmStorageLayout() && _sourceLhs
+			&& i < _sourceLhs->components().size() && _sourceLhs->components()[i])
+		{
+			auto const& lhsComp = *_sourceLhs->components()[i];
+			auto const* compType = lhsComp.annotation().type;
+			if (compType && compType->isValueType()
+				&& EvmSlotLowering::isStorageStateRef(lhsComp))
+			{
+				EvmSlotLowering low(m_ctx, m_scope, m_loc);
+				if (auto addr = low.resolve(lhsComp))
+				{
+					auto nat = low.coerceToNative(std::move(assignValue), *addr);
+					if (nat)
+					{
+						std::vector<std::shared_ptr<awst::Statement>> slotOut;
+						low.writeValue(*addr, std::move(nat), slotOut);
+						for (auto& st: slotOut)
+							m_ctx.pendingStatements.push_back(std::move(st));
+						continue;
+					}
+				}
+			}
+		}
 		auto e = awst::makeAssignmentExpression(
 			std::move(assignTarget), std::move(assignValue), m_loc);
 		m_ctx.queueStmt(e, m_loc);
