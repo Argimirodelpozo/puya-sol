@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_slot_storage_ref_param.sol.AsmSlotStorageRefParam.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
-    bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x0100 0x010000 "p:" "s:"
+    intcblock 1 32 0 8
+    bytecblock "bits" 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75 0x0100
     intc_2 // 0
     pushint 4096
     bzero
@@ -25,7 +25,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    bytec_0 // "bits"
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -43,28 +46,28 @@ main_rawWord_route@7:
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@14:
     !
     assert // not payable
-    bytec_0 // 0x
+    bytec_0 // "bits"
     callsub BitsetLib.raw
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@13:
@@ -76,31 +79,31 @@ main_get_route@6:
     dup
     bury 2
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@18
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@19:
     !
     assert // not payable
-    bytec_0 // 0x
+    bytec_0 // "bits"
     dig 1
     callsub BitsetLib.has
     pushbytes 0x00
     intc_2 // 0
     uncover 2
     setbit
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@18:
@@ -112,23 +115,23 @@ main_set_route@5:
     dup
     bury 2
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@23
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@24:
     !
     assert // not payable
-    bytec_0 // 0x
+    bytec_0 // "bits"
     dig 1
     callsub BitsetLib.setBit
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@23:
@@ -141,14 +144,20 @@ BitsetLib.setBit:
     proto 2 0
     load 0
     store 0
+    intc_1 // 32
+    bzero
+    dup
     frame_dig -2
-    callsub __storage_read
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 32
+    replace2 0
     frame_dig -1
-    bytec_3 // 0x0100
+    bytec 4 // 0x0100
     b<
     bz BitsetLib.setBit_ternary_false@2
-    intc_0 // 32
-    bzero
     intc_3 // 8
     bzero
     frame_dig -1
@@ -163,99 +172,34 @@ BitsetLib.setBit:
     pushint 255
     swap
     -
-    intc_1 // 1
+    frame_dig 0
+    swap
+    intc_0 // 1
     setbit
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 BitsetLib.setBit_ternary_merge@3:
-    frame_dig 0
+    frame_dig 1
     b|
-    frame_dig -2
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    cover 2
-    bytec 4 // 0x010000
-    b<
-    bz BitsetLib.setBit_else_body@6
-    intc_3 // 8
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    pushint 64
-    /
-    itob
-    bytec 5 // "p:"
+    frame_dig 0
     swap
     concat
     dup
-    pushint 2048
-    box_create
-    pop
-    swap
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    intc_0 // 32
-    bzero
-    uncover 3
-    concat
-    dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    box_replace
-
-BitsetLib.setBit_after_inlined___puyasol___storage_write@7:
+    frame_dig -2
+    swap
+    box_put
     load 0
     store 0
     retsub
 
-BitsetLib.setBit_else_body@6:
-    intc_0 // 32
-    bzero
-    dup
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 6 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
-    swap
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_2 // 0
-    swap
-    box_replace
-    b BitsetLib.setBit_after_inlined___puyasol___storage_write@7
-
 BitsetLib.setBit_ternary_false@2:
-    bytec_0 // 0x
+    bytec_2 // 0x
     b BitsetLib.setBit_ternary_merge@3
 
 
@@ -265,13 +209,20 @@ BitsetLib.has:
     load 0
     store 0
     frame_dig -1
-    bytec_3 // 0x0100
+    bytec 4 // 0x0100
     b<
     bz BitsetLib.has_ternary_false@2
-    frame_dig -2
-    callsub __storage_read
-    intc_0 // 32
+    intc_1 // 32
     bzero
+    frame_dig -2
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 32
+    dig 1
+    swap
+    replace2 0
     intc_3 // 8
     bzero
     frame_dig -1
@@ -286,21 +237,23 @@ BitsetLib.has:
     pushint 255
     swap
     -
-    intc_1 // 1
+    uncover 2
+    swap
+    intc_0 // 1
     setbit
     b/
 
 BitsetLib.has_ternary_merge@3:
     pushbytes 0x01
     b&
-    bytec_0 // 0x
+    bytec_2 // 0x
     b!=
     load 0
     store 0
     retsub
 
 BitsetLib.has_ternary_false@2:
-    bytec_0 // 0x
+    bytec_2 // 0x
     b BitsetLib.has_ternary_merge@3
 
 
@@ -309,88 +262,15 @@ BitsetLib.raw:
     proto 1 1
     load 0
     store 0
+    intc_1 // 32
+    bzero
     frame_dig -1
-    callsub __storage_read
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 32
+    replace2 0
     load 0
     store 0
-    retsub
-
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    intc_2 // 0
-    dup
-    bytec_0 // ""
-    frame_dig -1
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    bytec 4 // 0x010000
-    b<
-    bz __storage_read_else_body@4
-    intc_3 // 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    frame_bury 2
-    pushint 64
-    /
-    itob
-    bytec 5 // "p:"
-    swap
-    concat
-    dup
-    frame_bury 1
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 2
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    frame_dig 1
-    swap
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-__storage_read_after_if_else@3:
-    bytec_0 // 0x
-    frame_bury 0
-    retsub
-
-__storage_read_else_body@4:
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 6 // "s:"
-    swap
-    concat
-    dup
-    frame_bury 0
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 0
-    intc_2 // 0
-    intc_0 // 32
-    box_extract
-    frame_bury 0
     retsub

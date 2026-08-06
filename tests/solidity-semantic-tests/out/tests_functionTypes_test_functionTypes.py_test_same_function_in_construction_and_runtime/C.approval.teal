@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/same_function_in_construction_and_runtime.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x703a0000000000000000 "__ctor_pending" 0x151f7c75 0x82fadf35
+    bytecblock "initial" 0x151f7c75 0x82fadf35
     intc_2 // 0
     pushint 4096
     bzero
@@ -25,8 +25,14 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    bytec_0 // "initial"
+    pushbytes 0x
+    app_global_put
+    intc_3 // 2
+    itob
+    callsub double
+    bytec_0 // "initial"
+    swap
     app_global_put
     intc_1 // 1
     return
@@ -37,34 +43,27 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytes 0xbacc49e3 // method "__postInit()void"
-    bytec_3 // method "double(uint256)uint256"
+    bytec_2 // method "double(uint256)uint256"
     pushbytess 0xf76272b7 0x50a3c5f1 // method "runtime(uint256)uint256", method "initial()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_double_route@6 main_runtime_route@7 main_initial_route@8
+    match main_double_route@5 main_runtime_route@6 main_initial_route@7
     err
 
-main_initial_route@8:
+main_initial_route@7:
     txn GroupIndex
-    bz main_ternary_false@14
+    bz main_ternary_false@13
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@15:
+main_ternary_merge@14:
     !
     assert // not payable
-    bytec_0 // 0x703a0000000000000000
-    box_len
-    bury 1
-    bz main_after_if_else@24
-    bytec_0 // 0x703a0000000000000000
     intc_2 // 0
-    intc_0 // 32
-    box_extract
-
-main_after_inlined___puyasol___storage_read@28:
+    bytec_0 // "initial"
+    app_global_get_ex
+    assert // check initial exists
     dup
     len
     intc_0 // 32
@@ -73,22 +72,18 @@ main_after_inlined___puyasol___storage_read@28:
     intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_after_if_else@24:
-    pushbytes 0x
-    b main_after_inlined___puyasol___storage_read@28
-
-main_ternary_false@14:
+main_ternary_false@13:
     intc_2 // 0
-    b main_ternary_merge@15
+    b main_ternary_merge@14
 
-main_runtime_route@7:
+main_runtime_route@6:
     txna ApplicationArgs 1
     dup
     bury 2
@@ -97,13 +92,13 @@ main_runtime_route@7:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@18
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@19:
     !
     assert // not payable
     dup
@@ -116,18 +111,18 @@ main_ternary_merge@20:
     intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@19:
+main_ternary_false@18:
     intc_2 // 0
-    b main_ternary_merge@20
+    b main_ternary_merge@19
 
-main_double_route@6:
+main_double_route@5:
     txna ApplicationArgs 1
     dup
     len
@@ -135,45 +130,10 @@ main_double_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub double
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
-    return
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    intc_3 // 2
-    itob
-    callsub double
-    bytec_0 // 0x703a0000000000000000
-    pushint 2048
-    box_create
-    pop
-    intc_0 // 32
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x703a0000000000000000
-    intc_2 // 0
-    uncover 2
-    box_replace
     intc_1 // 1
     return
 
@@ -184,7 +144,7 @@ double:
     txn NumAppArgs
     bz double_after_if_else@6
     txna ApplicationArgs 0
-    bytec_3 // method "double(uint256)uint256"
+    bytec_2 // method "double(uint256)uint256"
     ==
     bz double_after_if_else@6
     txn GroupIndex

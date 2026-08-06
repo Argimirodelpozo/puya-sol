@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/lisa.sol.Lisa.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 8
-    bytecblock "__ctor_pending" 0x4401ce12442c96adf9895dc63d16f3b413d51ab5b28d18516f59e39df717e8b6 0x01 0x4d074c300413d454868834e84e1473fc3bb2e1ab13175af76c048a9bc4c909c6 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
+    intcblock 1 0
+    bytecblock "__ctor_pending" "supportedInterfaces"
     intc_1 // 0
     pushint 4096
     bzero
@@ -26,9 +26,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "__ctor_pending"
-    intc_2 // 1
+    intc_0 // 1
     app_global_put
-    intc_2 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -53,35 +53,24 @@ main_supportsInterface_route@8:
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
-    intc_2 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@15:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    pushint 28
-    bzero
-    dig 2
-    swap
-    concat
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat
-    keccak256
-    callsub __storage_read
-    concat
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 31
-    getbyte
+    bytec_1 // "supportedInterfaces"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
     intc_1 // 0
-    !=
+    swap
+    uncover 2
+    select
     pushbytes 0x00
     intc_1 // 0
     uncover 2
@@ -90,7 +79,7 @@ main_ternary_merge@15:
     swap
     concat
     log
-    intc_2 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@14:
@@ -101,7 +90,7 @@ main_skinColor_route@7:
     txn GroupIndex
     bz main_ternary_false@19
     txn GroupIndex
-    intc_2 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -110,7 +99,7 @@ main_ternary_merge@20:
     assert // not payable
     pushbytes 0x151f7c75000679656c6c6f77
     log
-    intc_2 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@19:
@@ -121,7 +110,7 @@ main_is2D_route@6:
     txn GroupIndex
     bz main_ternary_false@24
     txn GroupIndex
-    intc_2 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -130,7 +119,7 @@ main_ternary_merge@25:
     assert // not payable
     pushbytes 0x151f7c7580
     log
-    intc_2 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@24:
@@ -148,200 +137,17 @@ main___postInit_route@5:
     bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    intc_0 // 32
-    bzero
-    bytec_1 // 0x4401ce12442c96adf9895dc63d16f3b413d51ab5b28d18516f59e39df717e8b6
-    callsub __storage_read
+    bytec_1 // "supportedInterfaces"
+    pushint 2
+    box_create
+    pop
+    intc_0 // 1
+    itob
+    pushbytes 0x5629582ab9b484bf352f46e417181845583a40704f273bb6788a91c3d2d8c19f
     dig 1
+    box_put
+    pushbytes 0x9a9782334873e7858dba9ed764adc59b0d33eecc6717ae5a0d1059fff9258c43
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_2 // 0x01
-    replace2 31
-    bytec_1 // 0x4401ce12442c96adf9895dc63d16f3b413d51ab5b28d18516f59e39df717e8b6
-    swap
-    callsub __storage_write
-    bytec_3 // 0x4d074c300413d454868834e84e1473fc3bb2e1ab13175af76c048a9bc4c909c6
-    callsub __storage_read
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_2 // 0x01
-    replace2 31
-    bytec_3 // 0x4d074c300413d454868834e84e1473fc3bb2e1ab13175af76c048a9bc4c909c6
-    swap
-    callsub __storage_write
-    intc_2 // 1
+    box_put
+    intc_0 // 1
     return
-
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    intc_1 // 0
-    dup
-    pushbytes ""
-    frame_dig -1
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    bytec 5 // 0x010000
-    b<
-    bz __storage_read_else_body@4
-    intc_3 // 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    frame_bury 2
-    pushint 64
-    /
-    itob
-    bytec 6 // "p:"
-    swap
-    concat
-    dup
-    frame_bury 1
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 2
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    frame_dig 1
-    swap
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-__storage_read_after_if_else@3:
-    pushbytes 0x
-    frame_bury 0
-    retsub
-
-__storage_read_else_body@4:
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 7 // "s:"
-    swap
-    concat
-    dup
-    frame_bury 0
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 0
-    intc_1 // 0
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
-__storage_write:
-    proto 2 0
-    frame_dig -2
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -2
-    bytec 5 // 0x010000
-    b<
-    bz __storage_write_else_body@2
-    intc_3 // 8
-    bzero
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    pushint 64
-    /
-    itob
-    bytec 6 // "p:"
-    swap
-    concat
-    dup
-    pushint 2048
-    box_create
-    pop
-    swap
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    box_replace
-    retsub
-
-__storage_write_else_body@2:
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 7 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
-    swap
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 0
-    swap
-    box_replace
-    retsub

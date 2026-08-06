@@ -3,8 +3,6 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/balance_other_contract.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -23,44 +21,26 @@ main:
     replace2 64
     store 0
     txn ApplicationID
-    bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
-    intc_0 // 1
-    app_global_put
-    intc_0 // 1
-    return
-
-main_after_if_else@2:
-    pushbytes 0xbacc49e3 // method "__postInit()void"
-    txna ApplicationArgs 0
-    match main___postInit_route@4
-    err
-
-main___postInit_route@4:
-    txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_0 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
+    bnz main_after_if_else@3
     itxn_begin
-    intc_0 // 1
+    pushint 1
     itxn_field TypeEnum
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000001234
     itxn_field Receiver
-    intc_1 // 0
+    pushint 0
     itxn_field Fee
     pushint 500
     itxn_field Amount
     itxn_submit
-    intc_0 // 1
+    pushint 1
+    return
+
+main_after_if_else@3:
+    txn NumAppArgs
+    !
+    assert
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
     return

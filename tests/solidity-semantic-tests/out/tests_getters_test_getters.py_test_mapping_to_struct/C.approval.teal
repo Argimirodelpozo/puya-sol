@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/mapping_to_struct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 64 0 1
-    bytecblock 0xb37150ceb7e138645bfe4dfcef9a75073e1d7aa14c524dfdd20d3f751fad1084 "__ctor_pending" 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
+    intcblock 32 1 0 64
+    bytecblock "__ctor_pending" "x" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x2f58e78cb142c2f87ee123a92fa4d31c9fbcc6d7171a0c2c69bc73317019cfdf
     intc_2 // 0
     dup
     pushint 4096
@@ -26,10 +26,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
-    intc_3 // 1
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
-    intc_3 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -61,7 +61,7 @@ main_x_route@6:
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
-    intc_3 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -72,17 +72,6 @@ main_ternary_merge@13:
     bzero
     dup
     dig 2
-    b|
-    extract 0 32
-    dig 1
-    dig 4
-    b|
-    extract 0 32
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat
-    keccak256
-    dig 2
-    swap
     concat
     dup
     len
@@ -90,12 +79,8 @@ main_ternary_merge@13:
     -
     intc_0 // 32
     extract3
-    concat
-    keccak256
-    dup
-    callsub __storage_read
-    dig 2
     swap
+    dig 3
     concat
     dup
     len
@@ -103,37 +88,25 @@ main_ternary_merge@13:
     -
     intc_0 // 32
     extract3
-    pushint 31
+    bytec_1 // "x"
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    intc_2 // 0
     getbyte
     dig 1
-    callsub __storage_read
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 29
+    intc_1 // 1
     extract_uint16
     dig 2
-    callsub __storage_read
-    uncover 4
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 13 16
+    extract 3 16
     uncover 3
-    pushbytes 0x01
-    b+
-    callsub __storage_read
+    extract 19 32
     uncover 3
     itob
     uncover 3
@@ -141,10 +114,10 @@ main_ternary_merge@13:
     concat
     dig 2
     len
-    intc_1 // 64
+    intc_3 // 64
     <=
     assert // overflow
-    intc_1 // 64
+    intc_3 // 64
     bzero
     uncover 3
     dig 1
@@ -154,7 +127,7 @@ main_ternary_merge@13:
     concat
     dig 2
     len
-    intc_1 // 64
+    intc_3 // 64
     <=
     assert // overflow
     cover 2
@@ -164,7 +137,7 @@ main_ternary_merge@13:
     swap
     concat
     log
-    intc_3 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@12:
@@ -172,231 +145,77 @@ main_ternary_false@12:
     b main_ternary_merge@13
 
 main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    intc_0 // 32
-    bzero
-    bytec_0 // 0xb37150ceb7e138645bfe4dfcef9a75073e1d7aa14c524dfdd20d3f751fad1084
-    callsub __storage_read
-    dig 1
-    swap
-    concat
+    bytec_1 // "x"
+    pushint 2
+    box_create
+    pop
+    bytec_3 // 0x2f58e78cb142c2f87ee123a92fa4d31c9fbcc6d7171a0c2c69bc73317019cfdf
+    box_get
+    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    extract 1 2
+    dig 1
+    extract 3 16
+    uncover 2
+    extract 19 32
     pushbytes 0x03
-    replace2 31
-    bytec_0 // 0xb37150ceb7e138645bfe4dfcef9a75073e1d7aa14c524dfdd20d3f751fad1084
+    uncover 3
+    concat
+    uncover 2
+    concat
     swap
-    callsub __storage_write
-    bytec_0 // 0xb37150ceb7e138645bfe4dfcef9a75073e1d7aa14c524dfdd20d3f751fad1084
-    callsub __storage_read
+    concat
+    dup
+    extract 0 1
     dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    extract 3 16
+    uncover 2
+    extract 19 32
+    uncover 2
     pushbytes 0x0004
-    replace2 29
-    bytec_0 // 0xb37150ceb7e138645bfe4dfcef9a75073e1d7aa14c524dfdd20d3f751fad1084
+    concat
+    uncover 2
+    concat
     swap
-    callsub __storage_write
-    bytec_0 // 0xb37150ceb7e138645bfe4dfcef9a75073e1d7aa14c524dfdd20d3f751fad1084
-    callsub __storage_read
     concat
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    extract 0 1
+    dig 1
+    extract 1 2
+    uncover 2
+    extract 19 32
+    cover 2
+    concat
     pushbytes 0x00000000000000000000000000000005
-    replace2 13
-    bytec_0 // 0xb37150ceb7e138645bfe4dfcef9a75073e1d7aa14c524dfdd20d3f751fad1084
+    concat
     swap
-    callsub __storage_write
-    pushint 6
-    itob
-    pushbytes 0xb37150ceb7e138645bfe4dfcef9a75073e1d7aa14c524dfdd20d3f751fad1085
+    concat
+    dup
+    extract 0 1
+    dig 1
+    extract 1 2
+    uncover 2
+    extract 3 16
+    cover 2
+    concat
     swap
-    callsub __storage_write
-    intc_3 // 1
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
+    concat
+    bytec_3 // 0x2f58e78cb142c2f87ee123a92fa4d31c9fbcc6d7171a0c2c69bc73317019cfdf
+    swap
+    box_put
+    intc_1 // 1
     return
-
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    intc_2 // 0
-    dup
-    bytec_2 // ""
-    frame_dig -1
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    bytec 4 // 0x010000
-    b<
-    bz __storage_read_else_body@4
-    pushint 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dup
-    frame_bury 2
-    intc_1 // 64
-    /
-    itob
-    bytec 5 // "p:"
-    swap
-    concat
-    dup
-    frame_bury 1
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 2
-    intc_1 // 64
-    %
-    intc_0 // 32
-    *
-    frame_dig 1
-    swap
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-__storage_read_after_if_else@3:
-    bytec_2 // 0x
-    frame_bury 0
-    retsub
-
-__storage_read_else_body@4:
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 6 // "s:"
-    swap
-    concat
-    dup
-    frame_bury 0
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 0
-    intc_2 // 0
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
-__storage_write:
-    proto 2 0
-    frame_dig -2
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -2
-    bytec 4 // 0x010000
-    b<
-    bz __storage_write_else_body@2
-    pushint 8
-    bzero
-    frame_dig -2
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dup
-    intc_1 // 64
-    /
-    itob
-    bytec 5 // "p:"
-    swap
-    concat
-    dup
-    pushint 2048
-    box_create
-    pop
-    swap
-    intc_1 // 64
-    %
-    intc_0 // 32
-    *
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    box_replace
-    retsub
-
-__storage_write_else_body@2:
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 6 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
-    swap
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_2 // 0
-    swap
-    box_replace
-    retsub

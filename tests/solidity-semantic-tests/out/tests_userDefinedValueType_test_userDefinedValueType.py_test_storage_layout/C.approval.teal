@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/storage_layout.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    bytecblock base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)
     pushint 4096
     bzero
     dup
@@ -23,6 +24,26 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
+    pushbytes "a"
+    intc_1 // 0
+    app_global_put
+    pushbytes "b"
+    intc_1 // 0
+    app_global_put
+    pushbytes "c"
+    intc_1 // 0
+    app_global_put
+    pushbytes "d"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    pushbytes "e"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    pushbytes "f"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    pushbytess "g" 0x
+    app_global_put
     intc_0 // 1
     return
 

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/recursive_structs.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x703a0000000000000000
+    bytecblock "sstorage" 0x00020000
     pushint 4096
     bzero
     dup
@@ -24,6 +24,9 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_0 // "sstorage"
+    bytec_1 // 0x00020000
+    app_global_put
     intc_0 // 1
     return
 
@@ -49,14 +52,14 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    bytec_0 // 0x703a0000000000000000
-    pushint 2048
-    box_create
-    pop
-    bytec_0 // 0x703a0000000000000000
     intc_1 // 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    box_replace
+    bytec_0 // "sstorage"
+    app_global_get_ex
+    bury 1
+    assert // check sstorage exists
+    bytec_0 // "sstorage"
+    bytec_1 // 0x00020000
+    app_global_put
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
     intc_0 // 1

@@ -1,10 +1,8 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_vihd525j/B.sol.B.approval_program() -> uint64:
+// /tmp/multisource_cq2t4_h5/B.sol.B.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
-    bytecblock "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -24,124 +22,23 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
-    intc_1 // 1
+    pushint 10
+    itob
+    pushbytes "x"
+    dig 1
     app_global_put
-    intc_1 // 1
+    pushbytes "y"
+    swap
+    app_global_put
+    pushint 1
     return
 
 main_after_if_else@2:
-    pushbytes 0xbacc49e3 // method "__postInit()void"
-    txna ApplicationArgs 0
-    match main___postInit_route@4
-    err
-
-main___postInit_route@4:
+    txn NumAppArgs
+    !
+    assert
     txn OnCompletion
     !
     txn ApplicationID
     &&
-    assert
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_0 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    pushint 10
-    itob
-    pushbytes 0x
-    dig 1
-    callsub __storage_write
-    pushbytes 0x01
-    swap
-    callsub __storage_write
-    intc_1 // 1
     return
-
-
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
-__storage_write:
-    proto 2 0
-    frame_dig -2
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -2
-    pushbytes 0x010000
-    b<
-    bz __storage_write_else_body@2
-    intc_3 // 8
-    bzero
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    pushint 64
-    /
-    itob
-    pushbytes "p:"
-    swap
-    concat
-    dup
-    pushint 2048
-    box_create
-    pop
-    swap
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    box_replace
-    retsub
-
-__storage_write_else_body@2:
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
-    swap
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_2 // 0
-    swap
-    box_replace
-    retsub

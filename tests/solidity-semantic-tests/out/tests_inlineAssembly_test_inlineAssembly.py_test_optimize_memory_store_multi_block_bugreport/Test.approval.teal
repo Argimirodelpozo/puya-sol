@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/optimize_memory_store_multi_block_bugreport.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock 0x703a0000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intcblock 1 32 0
+    bytecblock "x" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -24,6 +24,9 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_0 // "x"
+    pushbytes 0x
+    app_global_put
     intc_0 // 1
     return
 
@@ -50,14 +53,11 @@ main_ternary_merge@9:
     !
     assert // not payable
     callsub myGetX
-    bytec_0 // 0x703a0000000000000000
-    pushint 2048
-    box_create
-    pop
-    bytec_0 // 0x703a0000000000000000
-    intc_1 // 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
-    box_replace
+    pushint 5
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
     callsub myGetX
     load 0
     store 0
@@ -84,10 +84,10 @@ main_ternary_merge@9:
     b%
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -98,7 +98,7 @@ main_ternary_merge@9:
     return
 
 main_ternary_false@8:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@9
 
 
@@ -112,16 +112,8 @@ myGetX:
     store 0
     load 0
     store 0
-    bytec_0 // 0x703a0000000000000000
-    box_len
-    bury 1
-    bz myGetX_after_if_else@4
-    bytec_0 // 0x703a0000000000000000
-    intc_1 // 0
-    intc_2 // 32
-    box_extract
-    retsub
-
-myGetX_after_if_else@4:
-    pushbytes 0x
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    assert // check x exists
     retsub

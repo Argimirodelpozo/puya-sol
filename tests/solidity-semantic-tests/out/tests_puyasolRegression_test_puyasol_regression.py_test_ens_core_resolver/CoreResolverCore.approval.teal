@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ens_core_resolver.sol.CoreResolverCore.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 24
-    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75 0x01 0x0000000000000000000000000000000000000000000000000000000000000001 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000005 0x0000000000000000000000000000000000000000000000000000000000000004 0x0000000000000000000000000000000000000000000000000000000000000003 0x0000000000000000000000000000000000000000000000000000000000000002 0x000000000000000000000000000000000000000000000000000000000000003c 0x01000000000000000000000000 0x010000 "p:" "s:"
-    intc_1 // 0
+    intcblock 0 32 1 2
+    bytecblock "recordVersions" 0x 0x151f7c75 "versionable_addresses" "__ctor_pending" "versionable_pubkeys" "versionable_names" "versionable_hashes" "versionable_texts" 0x000000000000000000000000000000000000000000000000000000000000003c 0x01000000000000000000000000
+    intc_0 // 0
     dupn 12
     bytec_1 // ""
     dupn 3
@@ -28,6 +28,9 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec 4 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
     intc_2 // 1
     return
 
@@ -37,155 +40,96 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x591d5f30 0xe1339269 0x176a6cd7 0x8c439b80 0x60b43710 0xd2fd5565 0x69dc2ff4 0x76cb8b16 0x38c6f65f 0xf9945a6c 0x097a5080 0xcad99cd3 0x738739b3 // method "setAddr(byte[32],uint256,byte[])void", method "addr(byte[32],uint256)byte[]", method "setAddrEth(byte[32],address)void", method "addrEth(byte[32])address", method "setText(byte[32],string,string)void", method "text(byte[32],string)string", method "setContenthash(byte[32],byte[])void", method "contenthash(byte[32])byte[]", method "setName(byte[32],string)void", method "getName(byte[32])string", method "setPubkey(byte[32],byte[32],byte[32])void", method "pubkey(byte[32])(byte[32],byte[32])", method "clearRecords(byte[32])void"
+    pushbytess 0xbacc49e3 0x591d5f30 0xe1339269 0x176a6cd7 0x8c439b80 0x60b43710 0xd2fd5565 0x69dc2ff4 0x76cb8b16 0x38c6f65f 0xf9945a6c 0x097a5080 0xcad99cd3 0x738739b3 // method "__postInit()void", method "setAddr(byte[32],uint256,byte[])void", method "addr(byte[32],uint256)byte[]", method "setAddrEth(byte[32],address)void", method "addrEth(byte[32])address", method "setText(byte[32],string,string)void", method "text(byte[32],string)string", method "setContenthash(byte[32],byte[])void", method "contenthash(byte[32])byte[]", method "setName(byte[32],string)void", method "getName(byte[32])string", method "setPubkey(byte[32],byte[32],byte[32])void", method "pubkey(byte[32])(byte[32],byte[32])", method "clearRecords(byte[32])void"
     txna ApplicationArgs 0
-    match main_setAddr_route@5 main_addr_route@6 main_setAddrEth_route@7 main_addrEth_route@8 main_setText_route@9 main_text_route@10 main_setContenthash_route@11 main_contenthash_route@12 main_setName_route@13 main_getName_route@14 main_setPubkey_route@15 main_pubkey_route@16 main_clearRecords_route@17
+    match main___postInit_route@5 main_setAddr_route@6 main_addr_route@7 main_setAddrEth_route@8 main_addrEth_route@9 main_setText_route@10 main_text_route@11 main_setContenthash_route@12 main_contenthash_route@13 main_setName_route@14 main_getName_route@15 main_setPubkey_route@16 main_pubkey_route@17 main_clearRecords_route@18
     err
 
-main_clearRecords_route@17:
+main_clearRecords_route@18:
     txna ApplicationArgs 1
     dup
     bury 11
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@23
+    bz main_ternary_false@24
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+main_ternary_merge@25:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    dig 10
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    dig 9
+    bytec_0 // "recordVersions"
     concat
-    keccak256
+    sha256
     dup
-    callsub __storage_read
-    pop
-    dup
-    callsub __storage_read
-    dig 2
+    box_get
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 1
-    callsub __storage_read
-    uncover 3
+    btoi
+    intc_0 // 0
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_3 // 24
-    extract_uint64
+    uncover 2
+    select
     intc_2 // 1
     +
     itob
-    replace2 24
-    callsub __storage_write
+    box_put
     intc_2 // 1
     return
 
-main_ternary_false@23:
-    intc_1 // 0
-    b main_ternary_merge@24
+main_ternary_false@24:
+    intc_0 // 0
+    b main_ternary_merge@25
 
-main_pubkey_route@16:
+main_pubkey_route@17:
     txna ApplicationArgs 1
     dup
     bury 11
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@28
+    bz main_ternary_false@29
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@29:
+main_ternary_merge@30:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    dig 10
+    dig 9
     dup
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec 5 // "versionable_pubkeys"
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat
-    keccak256
-    callsub __storage_read
-    dig 1
-    swap
-    concat
+    select
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_3 // 24
-    bzero
+    extract 0 32
     swap
-    extract 24 8
-    concat
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000005
-    concat
-    keccak256
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 2
-    swap
-    concat
-    keccak256
-    dup
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    bytec_3 // 0x01
-    b+
-    callsub __storage_read
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    extract 32 32
     concat
     bytec_2 // 0x151f7c75
     swap
@@ -194,150 +138,112 @@ main_ternary_merge@29:
     intc_2 // 1
     return
 
-main_ternary_false@28:
-    intc_1 // 0
-    b main_ternary_merge@29
+main_ternary_false@29:
+    intc_0 // 0
+    b main_ternary_merge@30
 
-main_setPubkey_route@15:
+main_setPubkey_route@16:
     txna ApplicationArgs 1
     dup
     bury 11
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     bury 7
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 3
     dup
     bury 6
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@33
+    bz main_ternary_false@34
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@34:
+main_ternary_merge@35:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    intc_3 // 24
-    bzero
-    dig 11
+    dig 5
+    dig 5
+    concat
+    dig 10
     dup
-    cover 3
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // "recordVersions"
     concat
-    keccak256
-    callsub __storage_read
-    dig 2
+    sha256
+    box_get
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 24 8
-    concat
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000005
-    concat
-    keccak256
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    keccak256
-    dig 6
-    dig 6
-    concat
-    dup
-    extract 0 32
-    dig 2
+    btoi
+    intc_0 // 0
     swap
-    callsub __storage_write
+    uncover 2
+    select
+    itob
+    bytec 5 // "versionable_pubkeys"
+    concat
+    sha256
+    concat
+    sha256
     swap
-    bytec_3 // 0x01
-    b+
-    swap
-    extract 32 32
-    callsub __storage_write
+    box_put
     intc_2 // 1
     return
 
-main_ternary_false@33:
-    intc_1 // 0
-    b main_ternary_merge@34
+main_ternary_false@34:
+    intc_0 // 0
+    b main_ternary_merge@35
 
-main_getName_route@14:
+main_getName_route@15:
     txna ApplicationArgs 1
     dup
     bury 11
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@38
+    bz main_ternary_false@39
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@39:
+main_ternary_merge@40:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    intc_3 // 24
-    bzero
-    dig 11
+    dig 9
     dup
-    cover 3
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // "recordVersions"
     concat
-    keccak256
-    callsub __storage_read
-    dig 2
+    sha256
+    box_get
     swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec 6 // "versionable_names"
     concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 24 8
+    sha256
     concat
-    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000004
-    concat
-    keccak256
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    keccak256
-    callsub __evm_bytes_read
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     itob
@@ -351,23 +257,23 @@ main_ternary_merge@39:
     intc_2 // 1
     return
 
-main_ternary_false@38:
-    intc_1 // 0
-    b main_ternary_merge@39
+main_ternary_false@39:
+    intc_0 // 0
+    b main_ternary_merge@40
 
-main_setName_route@13:
+main_setName_route@14:
     txna ApplicationArgs 1
     dup
     bury 11
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -376,111 +282,85 @@ main_setName_route@13:
     extract 2 0
     bury 11
     txn GroupIndex
-    bz main_ternary_false@43
+    bz main_ternary_false@44
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@44:
+main_ternary_merge@45:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    intc_3 // 24
-    bzero
-    dig 11
+    dig 9
     dup
-    cover 3
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // "recordVersions"
     concat
-    keccak256
-    callsub __storage_read
-    dig 2
+    sha256
+    box_get
     swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec 6 // "versionable_names"
     concat
+    sha256
+    concat
+    sha256
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 24 8
-    concat
-    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000004
-    concat
-    keccak256
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    keccak256
+    box_del
+    pop
     dig 11
-    callsub __evm_bytes_write
+    box_put
     intc_2 // 1
     return
 
-main_ternary_false@43:
-    intc_1 // 0
-    b main_ternary_merge@44
+main_ternary_false@44:
+    intc_0 // 0
+    b main_ternary_merge@45
 
-main_contenthash_route@12:
+main_contenthash_route@13:
     txna ApplicationArgs 1
     dup
     bury 11
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@48
+    bz main_ternary_false@49
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@49:
+main_ternary_merge@50:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    intc_3 // 24
-    bzero
-    dig 11
+    dig 9
     dup
-    cover 3
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // "recordVersions"
     concat
-    keccak256
-    callsub __storage_read
-    dig 2
+    sha256
+    box_get
     swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec 7 // "versionable_hashes"
     concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 24 8
+    sha256
     concat
-    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000003
-    concat
-    keccak256
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    keccak256
-    callsub __evm_bytes_read
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     itob
@@ -494,23 +374,23 @@ main_ternary_merge@49:
     intc_2 // 1
     return
 
-main_ternary_false@48:
-    intc_1 // 0
-    b main_ternary_merge@49
+main_ternary_false@49:
+    intc_0 // 0
+    b main_ternary_merge@50
 
-main_setContenthash_route@11:
+main_setContenthash_route@12:
     txna ApplicationArgs 1
     dup
     bury 11
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -519,71 +399,58 @@ main_setContenthash_route@11:
     extract 2 0
     bury 13
     txn GroupIndex
-    bz main_ternary_false@53
+    bz main_ternary_false@54
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@54:
+main_ternary_merge@55:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    intc_3 // 24
-    bzero
-    dig 11
+    dig 9
     dup
-    cover 3
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // "recordVersions"
     concat
-    keccak256
-    callsub __storage_read
-    dig 2
+    sha256
+    box_get
     swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    itob
+    bytec 7 // "versionable_hashes"
     concat
+    sha256
+    concat
+    sha256
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 24 8
-    concat
-    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000003
-    concat
-    keccak256
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    keccak256
+    box_del
+    pop
     dig 13
-    callsub __evm_bytes_write
+    box_put
     intc_2 // 1
     return
 
-main_ternary_false@53:
-    intc_1 // 0
-    b main_ternary_merge@54
+main_ternary_false@54:
+    intc_0 // 0
+    b main_ternary_merge@55
 
-main_text_route@10:
+main_text_route@11:
     txna ApplicationArgs 1
     dup
     bury 11
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -592,65 +459,41 @@ main_text_route@10:
     extract 2 0
     bury 12
     txn GroupIndex
-    bz main_ternary_false@58
+    bz main_ternary_false@59
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@59:
+main_ternary_merge@60:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    intc_3 // 24
-    bzero
     dig 11
+    sha256
+    dig 10
     dup
-    cover 3
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // "recordVersions"
     concat
-    keccak256
-    callsub __storage_read
-    dig 2
+    sha256
+    box_get
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 24 8
-    concat
-    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000002
-    concat
-    keccak256
-    dig 1
+    btoi
+    intc_0 // 0
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
     uncover 2
-    swap
+    select
+    itob
+    bytec 8 // "versionable_texts"
     concat
-    keccak256
+    sha256
     concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 12
-    swap
+    sha256
     concat
-    keccak256
-    callsub __evm_bytes_read
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     itob
@@ -664,23 +507,23 @@ main_ternary_merge@59:
     intc_2 // 1
     return
 
-main_ternary_false@58:
-    intc_1 // 0
-    b main_ternary_merge@59
+main_ternary_false@59:
+    intc_0 // 0
+    b main_ternary_merge@60
 
-main_setText_route@9:
+main_setText_route@10:
     txna ApplicationArgs 1
     dup
     bury 11
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -690,9 +533,9 @@ main_setText_route@9:
     bury 12
     txna ApplicationArgs 3
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -701,143 +544,93 @@ main_setText_route@9:
     extract 2 0
     bury 7
     txn GroupIndex
-    bz main_ternary_false@63
+    bz main_ternary_false@64
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@64:
+main_ternary_merge@65:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    intc_3 // 24
-    bzero
     dig 11
+    sha256
+    dig 10
     dup
-    cover 3
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // "recordVersions"
     concat
-    keccak256
-    callsub __storage_read
-    dig 2
+    sha256
+    box_get
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 24 8
-    concat
-    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000002
-    concat
-    keccak256
-    dig 1
+    btoi
+    intc_0 // 0
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
     uncover 2
-    swap
+    select
+    itob
+    bytec 8 // "versionable_texts"
     concat
-    keccak256
+    sha256
     concat
+    sha256
+    concat
+    sha256
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 12
-    swap
-    concat
-    keccak256
+    box_del
+    pop
     dig 7
-    callsub __evm_bytes_write
+    box_put
     intc_2 // 1
     return
 
-main_ternary_false@63:
-    intc_1 // 0
-    b main_ternary_merge@64
+main_ternary_false@64:
+    intc_0 // 0
+    b main_ternary_merge@65
 
-main_addrEth_route@8:
+main_addrEth_route@9:
     txna ApplicationArgs 1
     dup
     bury 11
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@68
+    bz main_ternary_false@69
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@69:
+main_ternary_merge@70:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
+    dig 9
     dup
-    bury 9
-    intc_3 // 24
-    bzero
-    dig 11
-    dup
-    cover 3
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // "recordVersions"
     concat
-    keccak256
-    callsub __storage_read
-    dig 2
+    sha256
+    box_get
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 24 8
-    concat
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000001
-    concat
-    keccak256
-    dig 1
+    btoi
+    intc_0 // 0
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
     uncover 2
+    select
+    itob
+    bytec_3 // "versionable_addresses"
+    concat
+    sha256
+    concat
+    sha256
+    bytec 9 // 0x000000000000000000000000000000000000000000000000000000000000003c
     swap
     concat
-    keccak256
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 10 // 0x000000000000000000000000000000000000000000000000000000000000003c
-    swap
-    concat
-    keccak256
-    callsub __evm_bytes_read
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     bury 15
     len
@@ -846,13 +639,13 @@ main_ternary_merge@69:
     itob
     dup
     bury 10
-    intc_1 // 0
+    intc_0 // 0
     itob
     b==
-    bz main_after_if_else@71
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bz main_after_if_else@72
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ens_core_resolver.sol.CoreResolverCore.addrEth@72:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ens_core_resolver.sol.CoreResolverCore.addrEth@73:
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -860,7 +653,7 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     intc_2 // 1
     return
 
-main_after_if_else@71:
+main_after_if_else@72:
     pushint 20
     itob
     dig 9
@@ -868,25 +661,28 @@ main_after_if_else@71:
     assert
     load 0
     store 0
-    intc_1 // 0
+    intc_1 // 32
+    bzero
+    bury 8
+    intc_0 // 0
     bury 4
     dup
-    bz main_ternary_false@90
+    bz main_ternary_false@91
     dig 3
     bury 2
 
-main_ternary_merge@91:
+main_ternary_merge@92:
     dup
     dig 2
     -
     dup
     bury 4
-    intc_0 // 32
+    intc_1 // 32
     <
-    bz main_ternary_false@93
+    bz main_ternary_false@94
     dig 2
 
-main_ternary_merge@94:
+main_ternary_merge@95:
     dig 14
     dig 3
     uncover 2
@@ -896,220 +692,172 @@ main_ternary_merge@94:
     cover 2
     concat
     extract 0 32
-    bytec 11 // 0x01000000000000000000000000
+    bytec 10 // 0x01000000000000000000000000
     b/
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     load 0
     store 0
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ens_core_resolver.sol.CoreResolverCore.addrEth@72
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ens_core_resolver.sol.CoreResolverCore.addrEth@73
 
-main_ternary_false@93:
-    intc_0 // 32
-    b main_ternary_merge@94
+main_ternary_false@94:
+    intc_1 // 32
+    b main_ternary_merge@95
 
-main_ternary_false@90:
+main_ternary_false@91:
     dup
     bury 2
-    b main_ternary_merge@91
+    b main_ternary_merge@92
 
-main_ternary_false@68:
-    intc_1 // 0
-    b main_ternary_merge@69
+main_ternary_false@69:
+    intc_0 // 0
+    b main_ternary_merge@70
 
-main_setAddrEth_route@7:
+main_setAddrEth_route@8:
     txna ApplicationArgs 1
     dup
     bury 11
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     bury 17
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@76
+    bz main_ternary_false@77
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@77:
+main_ternary_merge@78:
     !
     assert // not payable
     pushint 20
     bzero
     load 0
     store 0
-    intc_0 // 32
+    intc_1 // 32
     bzero
     dig 17
-    bytec 11 // 0x01000000000000000000000000
+    bytec 10 // 0x01000000000000000000000000
     b*
-    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 1
-    swap
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     extract 0 20
-    uncover 2
-    swap
     replace2 0
     load 0
     store 0
-    intc_3 // 24
-    bzero
-    dig 12
+    dig 10
     dup
-    cover 3
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // "recordVersions"
     concat
-    keccak256
-    callsub __storage_read
-    dig 4
+    sha256
+    box_get
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 24 8
-    concat
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000001
-    concat
-    keccak256
-    dig 3
+    btoi
+    intc_0 // 0
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
     uncover 2
+    select
+    itob
+    bytec_3 // "versionable_addresses"
+    concat
+    sha256
+    concat
+    sha256
+    bytec 9 // 0x000000000000000000000000000000000000000000000000000000000000003c
     swap
     concat
-    keccak256
-    uncover 2
-    swap
-    concat
+    sha256
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 10 // 0x000000000000000000000000000000000000000000000000000000000000003c
+    box_del
+    pop
     swap
-    concat
-    keccak256
-    swap
-    callsub __evm_bytes_write
+    box_put
     intc_2 // 1
     return
 
-main_ternary_false@76:
-    intc_1 // 0
-    b main_ternary_merge@77
+main_ternary_false@77:
+    intc_0 // 0
+    b main_ternary_merge@78
 
-main_addr_route@6:
+main_addr_route@7:
     txna ApplicationArgs 1
     dup
     bury 11
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     bury 18
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@81
+    bz main_ternary_false@82
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@82:
+main_ternary_merge@83:
     !
     assert // not payable
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    dup
-    dig 18
-    b|
-    extract 0 32
-    intc_3 // 24
-    bzero
-    dig 12
-    dup
-    cover 3
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat
-    keccak256
-    callsub __storage_read
-    dig 4
-    swap
+    dig 17
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    extract 24 8
-    concat
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000001
-    concat
-    keccak256
-    dig 3
-    swap
-    concat
+    dig 10
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
     uncover 2
-    swap
+    select
+    itob
+    bytec_3 // "versionable_addresses"
     concat
-    keccak256
-    uncover 2
-    swap
+    sha256
     concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    sha256
     concat
-    keccak256
-    callsub __evm_bytes_read
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     itob
@@ -1123,30 +871,30 @@ main_ternary_merge@82:
     intc_2 // 1
     return
 
-main_ternary_false@81:
-    intc_1 // 0
-    b main_ternary_merge@82
+main_ternary_false@82:
+    intc_0 // 0
+    b main_ternary_merge@83
 
-main_setAddr_route@5:
+main_setAddr_route@6:
     txna ApplicationArgs 1
     dup
     bury 11
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     bury 18
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    intc_1 // 0
+    intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -1155,499 +903,91 @@ main_setAddr_route@5:
     extract 2 0
     bury 15
     txn GroupIndex
-    bz main_ternary_false@86
+    bz main_ternary_false@87
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@87:
+main_ternary_merge@88:
     !
     assert // not payable
-    intc_0 // 32
+    intc_1 // 32
     bzero
-    dup
-    dig 18
-    b|
-    extract 0 32
-    intc_3 // 24
-    bzero
-    dig 12
-    dup
-    cover 3
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat
-    keccak256
-    callsub __storage_read
-    dig 4
-    swap
+    dig 17
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    extract 24 8
-    concat
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000001
-    concat
-    keccak256
-    dig 3
-    swap
-    concat
+    dig 10
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    bytec_0 // "recordVersions"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
     uncover 2
-    swap
+    select
+    itob
+    bytec_3 // "versionable_addresses"
     concat
-    keccak256
-    uncover 2
-    swap
+    sha256
     concat
+    sha256
+    concat
+    sha256
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    keccak256
+    box_del
+    pop
     dig 15
-    callsub __evm_bytes_write
+    box_put
     intc_2 // 1
     return
 
-main_ternary_false@86:
-    intc_1 // 0
-    b main_ternary_merge@87
+main_ternary_false@87:
+    intc_0 // 0
+    b main_ternary_merge@88
 
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    intc_1 // 0
-    dup
-    bytec_1 // ""
-    frame_dig -1
-    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    bytec 12 // 0x010000
-    b<
-    bz __storage_read_else_body@4
-    pushint 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dup
-    frame_bury 2
-    pushint 64
-    /
-    itob
-    bytec 13 // "p:"
-    swap
-    concat
-    dup
-    frame_bury 1
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 2
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    frame_dig 1
-    swap
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-__storage_read_after_if_else@3:
-    bytec_1 // 0x
-    frame_bury 0
-    retsub
-
-__storage_read_else_body@4:
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 14 // "s:"
-    swap
-    concat
-    dup
-    frame_bury 0
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 0
-    intc_1 // 0
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
-__storage_write:
-    proto 2 0
-    frame_dig -2
-    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -2
-    bytec 12 // 0x010000
-    b<
-    bz __storage_write_else_body@2
-    pushint 8
-    bzero
-    frame_dig -2
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dup
-    pushint 64
-    /
-    itob
-    bytec 13 // "p:"
-    swap
-    concat
-    dup
-    pushint 2048
-    box_create
-    pop
-    swap
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    box_replace
-    retsub
-
-__storage_write_else_body@2:
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 14 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
-    swap
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 0
-    swap
-    box_replace
-    retsub
-
-
-// __puyasol___evm_bytes_read(__slot: bytes) -> bytes:
-__evm_bytes_read:
-    proto 1 1
-    intc_1 // 0
-    dup
-    bytec_1 // ""
-    dup
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -1
-    callsub __storage_read
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dup
-    pushint 31
-    getbyte
-    dup
-    cover 2
-    pushint 2
-    %
-    bnz __evm_bytes_read_after_if_else@2
-    frame_dig 5
-    pushint 2
-    /
-    intc_1 // 0
-    swap
-    extract3
-    frame_bury 0
-    retsub
-
-__evm_bytes_read_after_if_else@2:
-    pushint 8
-    bzero
-    swap
-    bytec_3 // 0x01
-    b-
-    pushbytes 0x02
-    b/
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    frame_bury 3
-    frame_dig 4
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    keccak256
-    frame_bury 0
-    bytec_1 // 0x
-    frame_bury 1
-    intc_1 // 0
-    frame_bury 2
-
-__evm_bytes_read_while_top@3:
-    frame_dig 2
-    intc_0 // 32
-    *
-    frame_dig 3
-    <
-    bz __evm_bytes_read_after_while@5
-    frame_dig 2
-    dup
-    itob
-    frame_dig 0
-    b+
-    callsub __storage_read
-    frame_dig 4
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    frame_dig 1
-    swap
-    concat
-    frame_bury 1
-    intc_2 // 1
-    +
-    frame_bury 2
-    b __evm_bytes_read_while_top@3
-
-__evm_bytes_read_after_while@5:
-    frame_dig 1
-    intc_1 // 0
-    frame_dig 3
-    extract3
-    frame_bury 0
-    retsub
-
-
-// __puyasol___evm_bytes_write(__slot: bytes, __val: bytes) -> void:
-__evm_bytes_write:
-    proto 2 0
-    intc_1 // 0
-    bytec_1 // ""
-    dupn 2
-    frame_dig -1
-    len
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -2
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dup
-    uncover 2
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    keccak256
-    swap
-    intc_1 // 0
-    swap
-    pushint 31
-    getbyte
-    pushint 2
-    %
-    intc_2 // 1
+main___postInit_route@5:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
     ==
-    bz __evm_bytes_write_after_if_else@2
-    pushint 8
-    bzero
-    frame_dig 6
-    bytec_3 // 0x01
-    b-
-    pushbytes 0x02
-    b/
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    pushint 31
-    +
-    intc_0 // 32
-    /
-    frame_bury 8
-
-__evm_bytes_write_after_if_else@2:
-    intc_1 // 0
-    frame_bury 3
-    frame_dig 4
-    intc_0 // 32
-    <
-    bz __evm_bytes_write_else_body@4
-    pushint 31
-    bzero
-    frame_dig -1
-    swap
-    concat
-    extract 0 31
-    frame_dig 4
-    pushint 2
-    *
-    itob
-    extract 7 1
-    concat
-    frame_dig -2
-    swap
-    callsub __storage_write
-
-__evm_bytes_write_after_if_else@8:
-    frame_dig 3
-    frame_bury 2
-
-__evm_bytes_write_while_top@9:
-    frame_dig 2
-    frame_dig 8
-    <
-    bz __evm_bytes_write_after_while@11
-    frame_dig 2
-    dup
-    itob
-    frame_dig 7
-    b+
-    bytec_1 // 0x
-    callsub __storage_write
+    assert // __postInit callable only by the app creator
+    bytec 4 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "recordVersions"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_3 // "versionable_addresses"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 8 // "versionable_texts"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 7 // "versionable_hashes"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 6 // "versionable_names"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 5 // "versionable_pubkeys"
+    intc_3 // 2
+    box_create
+    pop
     intc_2 // 1
-    +
-    frame_bury 2
-    b __evm_bytes_write_while_top@9
-
-__evm_bytes_write_after_while@11:
-    retsub
-
-__evm_bytes_write_else_body@4:
-    frame_dig 4
-    dup
-    pushint 2
-    *
-    intc_2 // 1
-    +
-    itob
-    frame_dig -2
-    swap
-    callsub __storage_write
-    pushint 31
-    +
-    intc_0 // 32
-    /
-    frame_bury 3
-    frame_dig -1
-    frame_dig 5
-    concat
-    frame_bury 0
-    intc_1 // 0
-    frame_bury 1
-
-__evm_bytes_write_while_top@5:
-    frame_dig 1
-    frame_dig 3
-    <
-    bz __evm_bytes_write_after_if_else@8
-    frame_dig 1
-    dup
-    itob
-    frame_dig 7
-    b+
-    dig 1
-    intc_0 // 32
-    *
-    frame_dig 0
-    swap
-    intc_0 // 32
-    extract3
-    callsub __storage_write
-    intc_2 // 1
-    +
-    frame_bury 1
-    b __evm_bytes_write_while_top@5
+    return

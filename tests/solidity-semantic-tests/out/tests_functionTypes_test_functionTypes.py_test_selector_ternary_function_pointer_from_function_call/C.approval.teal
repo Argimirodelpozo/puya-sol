@@ -3,10 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/selector_ternary_function_pointer_from_function_call.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 16
-    bytecblock 0x703a0000000000000000 "__ctor_pending" 0x 0x3cd4690e 0x151f7c75 TMPL_APPROVAL_A TMPL_CLEAR_A
-    intc_1 // 0
-    bytec_2 // ""
+    intcblock 1 0 16
+    bytecblock "__ctor_pending" 0x3cd4690e 0x151f7c75 "a" TMPL_APPROVAL_A TMPL_CLEAR_A
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -26,7 +25,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -39,7 +38,7 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytes 0xbacc49e3 // method "__postInit()void"
-    bytec_3 // method "getContract()address"
+    bytec_1 // method "getContract()address"
     pushbytes 0x5f67db17 // method "test(bool)byte[4]"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_getContract_route@6 main_test_route@7
@@ -72,7 +71,7 @@ main_ternary_merge@14:
     pushbytess 0xf2b65f27 0x2d4970c7 // method "g()void", method "f()void"
     uncover 2
     select
-    bytec 4 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -87,7 +86,7 @@ main_getContract_route@6:
     txn NumAppArgs
     bz main_after_if_else@22
     txna ApplicationArgs 0
-    bytec_3 // method "getContract()address"
+    bytec_1 // method "getContract()address"
     ==
     bz main_after_if_else@22
     txn GroupIndex
@@ -102,62 +101,40 @@ main_ternary_merge@21:
     assert // not payable
 
 main_after_if_else@22:
-    intc_2 // 32
-    bzero
-    bury 2
-    bytec_0 // 0x703a0000000000000000
-    box_len
-    bury 1
-    bz main_after_if_else@26
-    bytec_0 // 0x703a0000000000000000
     intc_1 // 0
-    intc_2 // 32
-    box_extract
-
-main_after_inlined___puyasol___storage_read@30:
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec 4 // 0x151f7c75
+    bytec_3 // "a"
+    app_global_get_ex
+    assert // check a exists
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_after_if_else@26:
-    bytec_2 // 0x
-    b main_after_inlined___puyasol___storage_read@30
-
 main_ternary_false@20:
     intc_1 // 0
     b main_ternary_merge@21
 
 main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     itxn_begin
-    bytec 5 // TMPL_APPROVAL_A
-    bytec 6 // TMPL_CLEAR_A
+    bytec 4 // TMPL_APPROVAL_A
+    bytec 5 // TMPL_CLEAR_A
     pushint 6
     itxn_field TypeEnum
-    intc_3 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_3 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
     intc_1 // 0
     itxn_field Fee
@@ -184,24 +161,8 @@ main___postInit_route@5:
     swap
     itob
     concat
-    extract 0 32
-    bytec_0 // 0x703a0000000000000000
-    pushint 2048
-    box_create
-    pop
-    intc_2 // 32
-    bzero
+    bytec_3 // "a"
     swap
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x703a0000000000000000
-    intc_1 // 0
-    uncover 2
-    box_replace
+    app_global_put
     intc_0 // 1
     return

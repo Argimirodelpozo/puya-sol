@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_function_usage_in_constructor_arguments.sol.BaseBase.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock "__ctor_pending" 0xd3661b80 0x151f7c75 0x703a0000000000000000
+    bytecblock 0xd3661b80 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -24,8 +24,8 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
-    intc_0 // 1
+    pushbytes "m_a"
+    txna ApplicationArgs 0
     app_global_put
     intc_0 // 1
     return
@@ -36,22 +36,21 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytes 0xa5074cc7 // method "__postInit(uint256)void"
-    bytec_1 // method "overridden()uint256"
+    bytec_0 // method "overridden()uint256"
     pushbytes 0x4b2c0376 // method "g()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_overridden_route@6 main_g_route@7
+    match main_overridden_route@5 main_g_route@6
     err
 
-main_g_route@7:
+main_g_route@6:
     txn GroupIndex
-    bz main_ternary_false@13
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@14:
+main_ternary_merge@13:
     !
     assert // not payable
     callsub overridden
@@ -63,61 +62,23 @@ main_ternary_merge@14:
     intc_1 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@13:
+main_ternary_false@12:
     intc_2 // 0
-    b main_ternary_merge@14
+    b main_ternary_merge@13
 
-main_overridden_route@6:
+main_overridden_route@5:
     callsub overridden
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
-    return
-
-main___postInit_route@5:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_0 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_3 // 0x703a0000000000000000
-    pushint 2048
-    box_create
-    pop
-    intc_1 // 32
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_3 // 0x703a0000000000000000
-    intc_2 // 0
-    uncover 2
-    box_replace
     intc_0 // 1
     return
 
@@ -127,7 +88,7 @@ overridden:
     txn NumAppArgs
     bz overridden_after_if_else@6
     txna ApplicationArgs 0
-    bytec_1 // method "overridden()uint256"
+    bytec_0 // method "overridden()uint256"
     ==
     bz overridden_after_if_else@6
     txn GroupIndex

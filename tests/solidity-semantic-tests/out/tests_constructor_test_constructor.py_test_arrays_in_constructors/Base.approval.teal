@@ -1,0 +1,172 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/arrays_in_constructors.sol.Base.approval_program() -> uint64:
+main:
+    intcblock 1 32 0 2
+    bytecblock "m_s" "__ctor_pending" "m_x" 0x151f7c75
+    intc_2 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x976bf8fb 0xc8283ac6 0xce7531ad // method "__postInit(uint256,address[])void", method "part(uint256)address", method "m_x()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_part_route@6 main_m_x_route@7
+    err
+
+main_m_x_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_2 // "m_x"
+    app_global_get_ex
+    assert // check m_x exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@13:
+    intc_2 // 0
+    b main_ternary_merge@14
+
+main_part_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    dupn 2
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    pushint 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_1 // 32
+    *
+    intc_3 // 2
+    +
+    bytec_0 // "m_s"
+    swap
+    intc_1 // 32
+    box_extract // on error: index out of bounds
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
+
+main___postInit_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 32
+    *
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint8, 32>>
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "m_s"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_2 // "m_x"
+    uncover 2
+    app_global_put
+    bytec_0 // "m_s"
+    box_del
+    pop
+    bytec_0 // "m_s"
+    swap
+    box_put
+    intc_0 // 1
+    return

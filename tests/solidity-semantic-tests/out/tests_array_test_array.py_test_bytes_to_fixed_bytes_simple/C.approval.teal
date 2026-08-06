@@ -1,0 +1,250 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/bytes_to_fixed_bytes_simple.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0 16 2
+    bytecblock 0x151f7c75 "__ctor_pending" "sLong" "s"
+    intc_1 // 0
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x3df2a041 0xa88d7e51 0x3f74b247 0x1b3d8002 0xbc8a635a // method "__postInit()void", method "fromMemory(byte[])byte[16]", method "fromCalldata(byte[])byte[16]", method "fromStorage()byte[16]", method "fromStorageLong()byte[32]", method "fromSlice(byte[])byte[8]"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_fromMemory_route@6 main_fromCalldata_route@7 main_fromStorage_route@8 main_fromStorageLong_route@9 main_fromSlice_route@10
+    err
+
+main_fromSlice_route@10:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 2
+    txn GroupIndex
+    bz main_ternary_false@16
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@17:
+    !
+    assert // not payable
+    dig 1
+    substring 1 9
+    pushint 8
+    bzero
+    concat
+    extract 0 8
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@16:
+    intc_1 // 0
+    b main_ternary_merge@17
+
+main_fromStorageLong_route@9:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    bytec_2 // "sLong"
+    box_get
+    assert // box exists
+    pushint 32
+    bzero
+    concat
+    extract 0 32
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22
+
+main_fromStorage_route@8:
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    bytec_3 // "s"
+    box_get
+    assert // box exists
+    intc_2 // 16
+    bzero
+    concat
+    extract 0 16
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@26:
+    intc_1 // 0
+    b main_ternary_merge@27
+
+main_fromCalldata_route@7:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 2
+    txn GroupIndex
+    bz main_ternary_false@31
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@32:
+    !
+    assert // not payable
+    intc_2 // 16
+    bzero
+    dig 2
+    swap
+    concat
+    extract 0 16
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@31:
+    intc_1 // 0
+    b main_ternary_merge@32
+
+main_fromMemory_route@6:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 1
+    txn GroupIndex
+    bz main_ternary_false@36
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@37:
+    !
+    assert // not payable
+    intc_2 // 16
+    bzero
+    dig 1
+    swap
+    concat
+    extract 0 16
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@36:
+    intc_1 // 0
+    b main_ternary_merge@37
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_3 // "s"
+    intc_2 // 16
+    box_create
+    pop
+    bytec_3 // "s"
+    pushbytes "abcdefghabcdefgh"
+    box_put
+    bytec_2 // "sLong"
+    pushint 32
+    box_create
+    pop
+    bytec_2 // "sLong"
+    pushbytes "abcdefghabcdefghabcdefghabcdefgh"
+    box_put
+    intc_0 // 1
+    return

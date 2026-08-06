@@ -1,0 +1,300 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_selfdestruct.sol.D.approval_program() -> uint64:
+main:
+    intcblock 0 1 6 16 1000000
+    bytecblock "c" "__ctor_pending" TMPL_APPROVAL_C TMPL_CLEAR_C 0x7cb116cd 0x000000000000000000000000000000000000000000000000000000000000002a 0xb30e2ea6 0xf08d7860 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x9c86a185 0x154ed027 0xd7fc866d // method "__postInit()void", method "destroy()void", method "createAndDestroy()void", method "c()address"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_destroy_route@6 main_createAndDestroy_route@7 main_c_route@8
+    err
+
+main_c_route@8:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "c"
+    app_global_get_ex
+    assert // check c exists
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_0 // 0
+    b main_ternary_merge@15
+
+main_createAndDestroy_route@7:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    itxn_begin
+    bytec_2 // TMPL_APPROVAL_C
+    bytec_3 // TMPL_CLEAR_C
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 1000000
+    itxn_field Amount
+    itxn_submit
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_0 // "c"
+    dig 1
+    app_global_put
+    itxn_begin
+    pushint 42
+    itob
+    swap
+    pushint 24
+    extract_uint64
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec 4 // method "set(uint256)void"
+    itxn_field ApplicationArgs
+    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000002a
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn_begin
+    global CurrentApplicationAddress
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 1
+    itxn_field ApplicationID
+    bytec 6 // method "terminate(address)void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn_begin
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 7 // method "get()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    b==
+    dup
+    bury 2
+    bnz main_after_if_else@29
+    bytec 8 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+main_after_if_else@29:
+    return
+
+main_ternary_false@19:
+    intc_0 // 0
+    b main_ternary_merge@20
+
+main_destroy_route@6:
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    itxn_begin
+    pushint 42
+    itob
+    intc_0 // 0
+    bytec_0 // "c"
+    app_global_get_ex
+    assert // check c exists
+    pushint 24
+    extract_uint64
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dup
+    itxn_field ApplicationID
+    bytec 4 // method "set(uint256)void"
+    itxn_field ApplicationArgs
+    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000002a
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn_begin
+    global CurrentApplicationAddress
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 1
+    itxn_field ApplicationID
+    bytec 6 // method "terminate(address)void"
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn_begin
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 7 // method "get()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    b==
+    dup
+    bury 2
+    bnz main_after_if_else@29
+    bytec 8 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+    return
+
+main_ternary_false@26:
+    intc_0 // 0
+    b main_ternary_merge@27
+
+main___postInit_route@5:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    itxn_begin
+    bytec_2 // TMPL_APPROVAL_C
+    bytec_3 // TMPL_CLEAR_C
+    intc_2 // 6
+    itxn_field TypeEnum
+    intc_3 // 16
+    itxn_field GlobalNumUint
+    intc_3 // 16
+    itxn_field GlobalNumByteSlice
+    intc_0 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgram
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    intc 4 // 1000000
+    itxn_field Amount
+    itxn_submit
+    pushint 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_0 // "c"
+    swap
+    app_global_put
+    intc_1 // 1
+    return

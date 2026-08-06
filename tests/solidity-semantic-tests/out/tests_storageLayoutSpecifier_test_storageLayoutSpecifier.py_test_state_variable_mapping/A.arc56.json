@@ -1,7 +1,24 @@
 {
     "name": "A",
     "structs": {},
-    "methods": [],
+    "methods": [
+        {
+            "name": "__postInit",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [],
+            "recommendations": {}
+        }
+    ],
     "arcs": [
         22,
         28
@@ -10,7 +27,7 @@
     "state": {
         "schema": {
             "global": {
-                "ints": 0,
+                "ints": 1,
                 "bytes": 0
             },
             "local": {
@@ -19,25 +36,48 @@
             }
         },
         "keys": {
-            "global": {},
+            "global": {
+                "__ctor_pending": {
+                    "keyType": "AVMString",
+                    "valueType": "AVMUint64",
+                    "key": "X19jdG9yX3BlbmRpbmc="
+                }
+            },
             "local": {},
             "box": {}
         },
         "maps": {
             "global": {},
             "local": {},
-            "box": {}
+            "box": {
+                "locked": {
+                    "keyType": "AVMBytes",
+                    "valueType": "uint64",
+                    "prefix": "bG9ja2Vk"
+                }
+            }
         }
     },
     "bareActions": {
         "create": [],
-        "call": [
-            "NoOp"
-        ]
+        "call": []
     },
     "sourceInfo": {
         "approval": {
-            "sourceInfo": [],
+            "sourceInfo": [
+                {
+                    "pc": [
+                        114
+                    ],
+                    "errorMessage": "__postInit already called"
+                },
+                {
+                    "pc": [
+                        120
+                    ],
+                    "errorMessage": "__postInit callable only by the app creator"
+                }
+            ],
             "pcOffsetMethod": "none"
         },
         "clear": {
@@ -46,11 +86,11 @@
         }
     },
     "source": {
-        "approval": "I3ByYWdtYSB2ZXJzaW9uIDEyCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvc3RvcmFnZUxheW91dFNwZWNpZmllci9jb250cmFjdHMvc3RhdGVfdmFyaWFibGVfbWFwcGluZy5zb2wuQS5hcHByb3ZhbF9wcm9ncmFtKCkgLT4gdWludDY0OgptYWluOgogICAgcHVzaGludCA0MDk2CiAgICBiemVybwogICAgZHVwCiAgICBzdG9yZSA1CiAgICBkdXAKICAgIHN0b3JlIDAKICAgIGR1cAogICAgc3RvcmUgMQogICAgZHVwCiAgICBzdG9yZSAyCiAgICBkdXAKICAgIHN0b3JlIDMKICAgIHN0b3JlIDQKICAgIGxvYWQgMAogICAgcHVzaGJ5dGVzIDB4MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA4MAogICAgcmVwbGFjZTIgNjQKICAgIHN0b3JlIDAKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBibnogbWFpbl9hZnRlcl9pZl9lbHNlQDIKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCgptYWluX2FmdGVyX2lmX2Vsc2VAMjoKICAgIHR4biBOdW1BcHBBcmdzCiAgICAhCiAgICBhc3NlcnQKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAmJgogICAgcmV0dXJuCg==",
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDEyCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvc3RvcmFnZUxheW91dFNwZWNpZmllci9jb250cmFjdHMvc3RhdGVfdmFyaWFibGVfbWFwcGluZy5zb2wuQS5hcHByb3ZhbF9wcm9ncmFtKCkgLT4gdWludDY0OgptYWluOgogICAgYnl0ZWNibG9jayAiX19jdG9yX3BlbmRpbmciCiAgICBwdXNoaW50IDQwOTYKICAgIGJ6ZXJvCiAgICBkdXAKICAgIHN0b3JlIDUKICAgIGR1cAogICAgc3RvcmUgMAogICAgZHVwCiAgICBzdG9yZSAxCiAgICBkdXAKICAgIHN0b3JlIDIKICAgIGR1cAogICAgc3RvcmUgMwogICAgc3RvcmUgNAogICAgbG9hZCAwCiAgICBwdXNoYnl0ZXMgMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDgwCiAgICByZXBsYWNlMiA2NAogICAgc3RvcmUgMAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGJueiBtYWluX2FmdGVyX2lmX2Vsc2VAMgogICAgYnl0ZWNfMCAvLyAiX19jdG9yX3BlbmRpbmciCiAgICBwdXNoaW50IDEKICAgIGFwcF9nbG9iYWxfcHV0CiAgICBwdXNoaW50IDEKICAgIHJldHVybgoKbWFpbl9hZnRlcl9pZl9lbHNlQDI6CiAgICBwdXNoYnl0ZXMgMHhiYWNjNDllMyAvLyBtZXRob2QgIl9fcG9zdEluaXQoKXZvaWQiCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAwCiAgICBtYXRjaCBtYWluX19fcG9zdEluaXRfcm91dGVANAogICAgZXJyCgptYWluX19fcG9zdEluaXRfcm91dGVANDoKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAmJgogICAgYXNzZXJ0CiAgICBieXRlY18wIC8vICJfX2N0b3JfcGVuZGluZyIKICAgIGFwcF9nbG9iYWxfZ2V0CiAgICBhc3NlcnQgLy8gX19wb3N0SW5pdCBhbHJlYWR5IGNhbGxlZAogICAgdHhuIFNlbmRlcgogICAgZ2xvYmFsIENyZWF0b3JBZGRyZXNzCiAgICA9PQogICAgYXNzZXJ0IC8vIF9fcG9zdEluaXQgY2FsbGFibGUgb25seSBieSB0aGUgYXBwIGNyZWF0b3IKICAgIGJ5dGVjXzAgLy8gIl9fY3Rvcl9wZW5kaW5nIgogICAgcHVzaGludCAwCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgcHVzaGJ5dGVzICJsb2NrZWQiCiAgICBwdXNoaW50IDIKICAgIGJveF9jcmVhdGUKICAgIHBvcAogICAgcHVzaGludCAxCiAgICByZXR1cm4K",
         "clear": "I3ByYWdtYSB2ZXJzaW9uIDEyCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvc3RvcmFnZUxheW91dFNwZWNpZmllci9jb250cmFjdHMvc3RhdGVfdmFyaWFibGVfbWFwcGluZy5zb2wuQS5jbGVhcl9zdGF0ZV9wcm9ncmFtKCkgLT4gdWludDY0OgptYWluOgogICAgcHVzaGludCAxCiAgICByZXR1cm4K"
     },
     "byteCode": {
-        "approval": "DIGAIK9JNQVJNQBJNQFJNQJJNQM1BDQAgCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgFxANQAxGEAAA4EBQzEbFEQxGRQxGBBD",
+        "approval": "DCYBDl9fY3Rvcl9wZW5kaW5ngYAgr0k1BUk1AEk1AUk1Akk1AzUENACAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAXEA1ADEYQAAHKIEBZ4EBQ4AEusxJ4zYaAI4BAAEAMRkUMRgQRChkRDEAMgkSRCiBAGeABmxvY2tlZIECuUiBAUM=",
         "clear": "DIEBQw=="
     },
     "compilerInfo": {

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/mapping_internal_return.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 31 255 1
-    bytecblock 0xada5013122d395ba3c54772283fb069b10426056ef8ca54750cb9bb552a59e7d 0xcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f 0x0000000000000000000000000000000000000000000000000000000000000002 0xad3228b676f7d3cd4284a5443f17f1962b36e491b30a40b2405849e597ba5fb5 0xabbb5caa7dda850e60932de0934eb1f9d0f59695050f761dc64e443e5030a569 0xa6eef7e35abe7026729641147f7915573c7e97b47efa546f5f6e3230263bcb49 0xd9d16d34ffb15ba3a3d852f0d403e2ce1d691fb54de27ac87cd2f993f3ec330f 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
+    intcblock 0 255 1 42
+    bytecblock 0x3b196fd4907bedf51c3090e9835f2f7cb61e7ee1b2299ea3b8fed9b4183a822a 0x5c53585edd9ec296f5537f01ff9e47e2ba7977c75da7818dae99d0d524998967 "__ctor_pending" 0x3c4e2484e98493a80a0a81a933168c8d972772455c4f4b191ff23d23bd002bb2 0xd7fe8b5c4a504869334d9d78a1e3b18cb1c5d0946258af6182169b2095bc00a0 0x420853fc2bafe0357427be30906a90ac8e2b22da2c960f1f09462b6ac5d6dd33 0x33416ca544542451515a7469f2ab4453855aec530cc5f4a5d825191b150515e7 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -24,7 +24,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_3 // 1
+    bytec_2 // "__ctor_pending"
+    intc_2 // 1
+    app_global_put
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -33,147 +36,89 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x54d05d97 0xbc153c76 // method "g()(uint64,uint64,uint64,uint64,uint64,uint64)", method "h()(uint64,uint64,uint64,uint64,uint64,uint64)"
+    pushbytess 0xbacc49e3 0x54d05d97 0xbc153c76 // method "__postInit()void", method "g()(uint64,uint64,uint64,uint64,uint64,uint64)", method "h()(uint64,uint64,uint64,uint64,uint64,uint64)"
     txna ApplicationArgs 0
-    match main_g_route@5 main_h_route@6
+    match main___postInit_route@5 main_g_route@6 main_h_route@7
     err
 
-main_h_route@6:
+main_h_route@7:
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@13
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@14:
     !
     assert // not payable
-    callsub f
-    intc_0 // 32
-    bzero
-    dup
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    intc_3 // 42
+    itob
+    bytec_0 // 0x3b196fd4907bedf51c3090e9835f2f7cb61e7ee1b2299ea3b8fed9b4183a822a
     swap
-    concat
-    keccak256
-    dup
-    callsub __storage_read
-    dig 2
+    box_put
+    pushint 84
+    itob
+    bytec_1 // 0x5c53585edd9ec296f5537f01ff9e47e2ba7977c75da7818dae99d0d524998967
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x11
-    replace2 31
-    callsub __storage_write
-    bytec_3 // 0xad3228b676f7d3cd4284a5443f17f1962b36e491b30a40b2405849e597ba5fb5
-    callsub __storage_read
+    box_put
+    pushint 17
+    itob
+    bytec_3 // 0x3c4e2484e98493a80a0a81a933168c8d972772455c4f4b191ff23d23bd002bb2
     dig 1
+    box_put
+    bytec 4 // 0xd7fe8b5c4a504869334d9d78a1e3b18cb1c5d0946258af6182169b2095bc00a0
+    box_get
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 31
-    getbyte
-    intc_2 // 255
-    &
-    bytec_0 // 0xada5013122d395ba3c54772283fb069b10426056ef8ca54750cb9bb552a59e7d
-    callsub __storage_read
-    dig 2
+    btoi
+    intc_0 // 0
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 31
-    getbyte
-    intc_2 // 255
+    uncover 2
+    select
+    intc_1 // 255
     &
-    bytec 4 // 0xabbb5caa7dda850e60932de0934eb1f9d0f59695050f761dc64e443e5030a569
-    callsub __storage_read
-    dig 3
+    bytec_0 // 0x3b196fd4907bedf51c3090e9835f2f7cb61e7ee1b2299ea3b8fed9b4183a822a
+    box_get
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 31
-    getbyte
-    intc_2 // 255
-    &
-    bytec 5 // 0xa6eef7e35abe7026729641147f7915573c7e97b47efa546f5f6e3230263bcb49
-    callsub __storage_read
-    dig 4
+    btoi
+    intc_0 // 0
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 31
-    getbyte
-    intc_2 // 255
+    uncover 2
+    select
+    intc_1 // 255
     &
-    bytec_1 // 0xcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f
-    callsub __storage_read
-    dig 5
+    bytec 5 // 0x420853fc2bafe0357427be30906a90ac8e2b22da2c960f1f09462b6ac5d6dd33
+    box_get
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 31
-    getbyte
-    intc_2 // 255
-    &
-    bytec 6 // 0xd9d16d34ffb15ba3a3d852f0d403e2ce1d691fb54de27ac87cd2f993f3ec330f
-    callsub __storage_read
-    uncover 6
+    btoi
+    intc_0 // 0
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 31
-    getbyte
-    intc_2 // 255
+    uncover 2
+    select
+    intc_1 // 255
     &
-    uncover 5
+    bytec 6 // 0x33416ca544542451515a7469f2ab4453855aec530cc5f4a5d825191b150515e7
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec_1 // 0x5c53585edd9ec296f5537f01ff9e47e2ba7977c75da7818dae99d0d524998967
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    uncover 4
     itob
-    uncover 5
-    itob
-    concat
     uncover 4
     itob
     concat
@@ -186,153 +131,97 @@ main_ternary_merge@13:
     swap
     itob
     concat
+    swap
+    concat
     bytec 7 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
-main_ternary_false@12:
-    pushint 0
-    b main_ternary_merge@13
+main_ternary_false@13:
+    intc_0 // 0
+    b main_ternary_merge@14
 
-main_g_route@5:
+main_g_route@6:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@18
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@19:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    callsub f
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000002
-    swap
-    concat
-    keccak256
-    dup
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x15
-    replace2 31
-    callsub __storage_write
-    bytec_3 // 0xad3228b676f7d3cd4284a5443f17f1962b36e491b30a40b2405849e597ba5fb5
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 31
-    getbyte
-    intc_2 // 255
-    &
-    bytec_0 // 0xada5013122d395ba3c54772283fb069b10426056ef8ca54750cb9bb552a59e7d
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 31
-    getbyte
-    intc_2 // 255
-    &
-    bytec 4 // 0xabbb5caa7dda850e60932de0934eb1f9d0f59695050f761dc64e443e5030a569
-    callsub __storage_read
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 31
-    getbyte
-    intc_2 // 255
-    &
-    bytec 5 // 0xa6eef7e35abe7026729641147f7915573c7e97b47efa546f5f6e3230263bcb49
-    callsub __storage_read
-    dig 4
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 31
-    getbyte
-    intc_2 // 255
-    &
-    bytec_1 // 0xcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f
-    callsub __storage_read
-    dig 5
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 31
-    getbyte
-    intc_2 // 255
-    &
-    bytec 6 // 0xd9d16d34ffb15ba3a3d852f0d403e2ce1d691fb54de27ac87cd2f993f3ec330f
-    callsub __storage_read
-    uncover 6
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 31
-    getbyte
-    intc_2 // 255
-    &
-    uncover 5
+    intc_3 // 42
     itob
-    uncover 5
+    bytec_0 // 0x3b196fd4907bedf51c3090e9835f2f7cb61e7ee1b2299ea3b8fed9b4183a822a
+    swap
+    box_put
+    pushint 84
     itob
-    concat
+    bytec_1 // 0x5c53585edd9ec296f5537f01ff9e47e2ba7977c75da7818dae99d0d524998967
+    swap
+    box_put
+    pushint 21
+    itob
+    bytec_3 // 0x3c4e2484e98493a80a0a81a933168c8d972772455c4f4b191ff23d23bd002bb2
+    dig 1
+    box_put
+    bytec 4 // 0xd7fe8b5c4a504869334d9d78a1e3b18cb1c5d0946258af6182169b2095bc00a0
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec_0 // 0x3b196fd4907bedf51c3090e9835f2f7cb61e7ee1b2299ea3b8fed9b4183a822a
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec 5 // 0x420853fc2bafe0357427be30906a90ac8e2b22da2c960f1f09462b6ac5d6dd33
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec 6 // 0x33416ca544542451515a7469f2ab4453855aec530cc5f4a5d825191b150515e7
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    bytec_1 // 0x5c53585edd9ec296f5537f01ff9e47e2ba7977c75da7818dae99d0d524998967
+    box_get
+    swap
+    btoi
+    intc_0 // 0
+    swap
+    uncover 2
+    select
+    intc_1 // 255
+    &
+    uncover 4
+    itob
     uncover 4
     itob
     concat
@@ -345,214 +234,37 @@ main_ternary_merge@18:
     swap
     itob
     concat
+    swap
+    concat
     bytec 7 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
-main_ternary_false@17:
-    pushint 0
-    b main_ternary_merge@18
+main_ternary_false@18:
+    intc_0 // 0
+    b main_ternary_merge@19
 
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    pushint 0
-    dup
-    pushbytes ""
-    frame_dig -1
-    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    bytec 9 // 0x010000
-    b<
-    bz __storage_read_else_body@4
-    pushint 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dup
-    frame_bury 2
-    pushint 64
-    /
-    itob
-    bytec 10 // "p:"
-    swap
-    concat
-    dup
-    frame_bury 1
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 2
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    frame_dig 1
-    swap
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-__storage_read_after_if_else@3:
-    pushbytes 0x
-    frame_bury 0
-    retsub
-
-__storage_read_else_body@4:
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 11 // "s:"
-    swap
-    concat
-    dup
-    frame_bury 0
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 0
-    pushint 0
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
-__storage_write:
-    proto 2 0
-    frame_dig -2
-    bytec 8 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -2
-    bytec 9 // 0x010000
-    b<
-    bz __storage_write_else_body@2
-    pushint 8
-    bzero
-    frame_dig -2
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dup
-    pushint 64
-    /
-    itob
-    bytec 10 // "p:"
-    swap
-    concat
-    dup
-    pushint 2048
+main___postInit_route@5:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_2 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    pushbytes "a"
+    pushint 2
     box_create
     pop
-    swap
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    box_replace
-    retsub
-
-__storage_write_else_body@2:
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 11 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
+    pushbytes "b"
+    pushint 2
     box_create
     pop
-    swap
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 0
-    swap
-    box_replace
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/mapping_internal_return.sol.test.f() -> bytes:
-f:
-    intc_0 // 32
-    bzero
-    bytec_0 // 0xada5013122d395ba3c54772283fb069b10426056ef8ca54750cb9bb552a59e7d
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x2a
-    replace2 31
-    bytec_0 // 0xada5013122d395ba3c54772283fb069b10426056ef8ca54750cb9bb552a59e7d
-    swap
-    callsub __storage_write
-    bytec_1 // 0xcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f
-    callsub __storage_read
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x54
-    replace2 31
-    bytec_1 // 0xcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f
-    swap
-    callsub __storage_write
-    pushbytes 0x01
-    retsub
+    intc_2 // 1
+    return

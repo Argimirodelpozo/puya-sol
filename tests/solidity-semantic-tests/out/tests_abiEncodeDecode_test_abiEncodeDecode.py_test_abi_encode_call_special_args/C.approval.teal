@@ -4,8 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x151f7c75 0x703a0000000000000000 "__ctor_pending" 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x22b2fda0 0x10da340f 0xa0a2a599 0x88ce8eb6 0x795d221f 0x2e346852 0x7f9c7280
-    intc_1 // 0
+    bytecblock 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x22b2fda0 0x10da340f 0xa0a2a599 0x88ce8eb6 0x795d221f 0x2e346852 0x7f9c7280
     pushbytes ""
     dupn 2
     pushint 4096
@@ -27,8 +26,8 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
-    intc_0 // 1
+    pushbytes "sideEffectRan"
+    intc_1 // 0
     app_global_put
     intc_0 // 1
     return
@@ -39,29 +38,28 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytes 0xbacc49e3 // method "__postInit()void"
-    bytec 4 // method "fNoArgs()void"
+    bytec_2 // method "fNoArgs()void"
     pushbytess 0xb6e08150 0x2e5fdc8c // method "fArray(uint256[])void", method "fUint(uint256,uint256)(uint256,uint256)"
-    bytec 5 // method "fSignatureFromLiteralNoArgs()byte[]"
-    bytec 6 // method "fPointerNoArgs()byte[]"
-    bytec 7 // method "fSignatureFromLiteralArray()byte[]"
-    bytec 8 // method "fPointerArray()byte[]"
-    bytec 9 // method "fSignatureFromLiteralUint()byte[]"
-    bytec 10 // method "fPointerUint()byte[]"
+    bytec_3 // method "fSignatureFromLiteralNoArgs()byte[]"
+    bytec 4 // method "fPointerNoArgs()byte[]"
+    bytec 5 // method "fSignatureFromLiteralArray()byte[]"
+    bytec 6 // method "fPointerArray()byte[]"
+    bytec 7 // method "fSignatureFromLiteralUint()byte[]"
+    bytec 8 // method "fPointerUint()byte[]"
     pushbytes 0xb2fd8e38 // method "assertConsistentSelectors()void"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_fNoArgs_route@6 main_fArray_route@7 main_fUint_route@8 main_fSignatureFromLiteralNoArgs_route@9 main_fPointerNoArgs_route@10 main_fSignatureFromLiteralArray_route@11 main_fPointerArray_route@12 main_fSignatureFromLiteralUint_route@13 main_fPointerUint_route@14 main_assertConsistentSelectors_route@15
+    match main_fNoArgs_route@5 main_fArray_route@6 main_fUint_route@7 main_fSignatureFromLiteralNoArgs_route@8 main_fPointerNoArgs_route@9 main_fSignatureFromLiteralArray_route@10 main_fPointerArray_route@11 main_fSignatureFromLiteralUint_route@12 main_fPointerUint_route@13 main_assertConsistentSelectors_route@14
     err
 
-main_assertConsistentSelectors_route@15:
+main_assertConsistentSelectors_route@14:
     txn GroupIndex
-    bz main_ternary_false@21
+    bz main_ternary_false@20
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@22:
+main_ternary_merge@21:
     !
     assert // not payable
     callsub fSignatureFromLiteralNoArgs
@@ -71,11 +69,11 @@ main_ternary_merge@22:
     ==
     dup
     bury 4
-    bnz main_after_if_else@24
-    bytec_3 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bnz main_after_if_else@23
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@24:
+main_after_if_else@23:
     dig 2
     assert
     callsub fSignatureFromLiteralArray
@@ -85,11 +83,11 @@ main_after_if_else@24:
     ==
     dup
     bury 3
-    bnz main_after_if_else@26
-    bytec_3 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bnz main_after_if_else@25
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@26:
+main_after_if_else@25:
     dig 1
     assert
     callsub fSignatureFromLiteralUint
@@ -99,18 +97,18 @@ main_after_if_else@26:
     ==
     dup
     bury 2
-    bnz main_after_if_else@28
-    bytec_3 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bnz main_after_if_else@27
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@28:
+main_after_if_else@27:
     return
 
-main_ternary_false@21:
+main_ternary_false@20:
     intc_1 // 0
-    b main_ternary_merge@22
+    b main_ternary_merge@21
 
-main_fPointerUint_route@14:
+main_fPointerUint_route@13:
     callsub fPointerUint
     dup
     len
@@ -125,7 +123,7 @@ main_fPointerUint_route@14:
     intc_0 // 1
     return
 
-main_fSignatureFromLiteralUint_route@13:
+main_fSignatureFromLiteralUint_route@12:
     callsub fSignatureFromLiteralUint
     dup
     len
@@ -140,7 +138,7 @@ main_fSignatureFromLiteralUint_route@13:
     intc_0 // 1
     return
 
-main_fPointerArray_route@12:
+main_fPointerArray_route@11:
     callsub fPointerArray
     dup
     len
@@ -155,7 +153,7 @@ main_fPointerArray_route@12:
     intc_0 // 1
     return
 
-main_fSignatureFromLiteralArray_route@11:
+main_fSignatureFromLiteralArray_route@10:
     callsub fSignatureFromLiteralArray
     dup
     len
@@ -170,7 +168,7 @@ main_fSignatureFromLiteralArray_route@11:
     intc_0 // 1
     return
 
-main_fPointerNoArgs_route@10:
+main_fPointerNoArgs_route@9:
     callsub fPointerNoArgs
     dup
     len
@@ -185,7 +183,7 @@ main_fPointerNoArgs_route@10:
     intc_0 // 1
     return
 
-main_fSignatureFromLiteralNoArgs_route@9:
+main_fSignatureFromLiteralNoArgs_route@8:
     callsub fSignatureFromLiteralNoArgs
     dup
     len
@@ -200,7 +198,7 @@ main_fSignatureFromLiteralNoArgs_route@9:
     intc_0 // 1
     return
 
-main_fUint_route@8:
+main_fUint_route@7:
     txna ApplicationArgs 1
     len
     intc_2 // 32
@@ -212,13 +210,13 @@ main_fUint_route@8:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@44
+    bz main_ternary_false@43
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@45:
+main_ternary_merge@44:
     !
     assert // not payable
     pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -226,11 +224,11 @@ main_ternary_merge@45:
     intc_0 // 1
     return
 
-main_ternary_false@44:
+main_ternary_false@43:
     intc_1 // 0
-    b main_ternary_merge@45
+    b main_ternary_merge@44
 
-main_fArray_route@7:
+main_fArray_route@6:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
@@ -244,92 +242,34 @@ main_fArray_route@7:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     txn GroupIndex
-    bz main_ternary_false@49
+    bz main_ternary_false@48
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@55:
+main_ternary_merge@54:
     !
     assert // not payable
     intc_0 // 1
     return
 
-main_ternary_false@49:
+main_ternary_false@48:
     intc_1 // 0
-    b main_ternary_merge@55
+    b main_ternary_merge@54
 
-main_fNoArgs_route@6:
+main_fNoArgs_route@5:
     txn GroupIndex
-    bz main_ternary_false@54
+    bz main_ternary_false@53
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@55
+    b main_ternary_merge@54
 
-main_ternary_false@54:
+main_ternary_false@53:
     intc_1 // 0
-    b main_ternary_merge@55
-
-main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    intc_2 // 32
-    bzero
-    bury 4
-    bytec_1 // 0x703a0000000000000000
-    box_len
-    bury 1
-    bz main_after_if_else@59
-    bytec_1 // 0x703a0000000000000000
-    intc_1 // 0
-    intc_2 // 32
-    box_extract
-
-main_after_inlined___puyasol___storage_read@63:
-    dig 4
-    dup
-    uncover 2
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    pushbytes 0x00
-    replace2 31
-    bytec_1 // 0x703a0000000000000000
-    pushint 2048
-    box_create
-    pop
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_1 // 0x703a0000000000000000
-    intc_1 // 0
-    uncover 2
-    box_replace
-    intc_0 // 1
-    return
-
-main_after_if_else@59:
-    pushbytes 0x
-    b main_after_inlined___puyasol___storage_read@63
+    b main_ternary_merge@54
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.fSignatureFromLiteralNoArgs() -> bytes:
@@ -337,7 +277,7 @@ fSignatureFromLiteralNoArgs:
     txn NumAppArgs
     bz fSignatureFromLiteralNoArgs_after_if_else@6
     txna ApplicationArgs 0
-    bytec 5 // method "fSignatureFromLiteralNoArgs()byte[]"
+    bytec_3 // method "fSignatureFromLiteralNoArgs()byte[]"
     ==
     bz fSignatureFromLiteralNoArgs_after_if_else@6
     txn GroupIndex
@@ -365,7 +305,7 @@ fPointerNoArgs:
     txn NumAppArgs
     bz fPointerNoArgs_after_if_else@6
     txna ApplicationArgs 0
-    bytec 6 // method "fPointerNoArgs()byte[]"
+    bytec 4 // method "fPointerNoArgs()byte[]"
     ==
     bz fPointerNoArgs_after_if_else@6
     txn GroupIndex
@@ -380,7 +320,7 @@ fPointerNoArgs_ternary_merge@5:
     assert // not payable
 
 fPointerNoArgs_after_if_else@6:
-    bytec 4 // 0x22b2fda0
+    bytec_2 // 0x22b2fda0
     retsub
 
 fPointerNoArgs_ternary_false@4:
@@ -393,7 +333,7 @@ fSignatureFromLiteralArray:
     txn NumAppArgs
     bz fSignatureFromLiteralArray_after_if_else@6
     txna ApplicationArgs 0
-    bytec 7 // method "fSignatureFromLiteralArray()byte[]"
+    bytec 5 // method "fSignatureFromLiteralArray()byte[]"
     ==
     bz fSignatureFromLiteralArray_after_if_else@6
     txn GroupIndex
@@ -421,7 +361,7 @@ fPointerArray:
     txn NumAppArgs
     bz fPointerArray_after_if_else@6
     txna ApplicationArgs 0
-    bytec 8 // method "fPointerArray()byte[]"
+    bytec 6 // method "fPointerArray()byte[]"
     ==
     bz fPointerArray_after_if_else@6
     txn GroupIndex
@@ -449,7 +389,7 @@ fSignatureFromLiteralUint:
     txn NumAppArgs
     bz fSignatureFromLiteralUint_after_if_else@6
     txna ApplicationArgs 0
-    bytec 9 // method "fSignatureFromLiteralUint()byte[]"
+    bytec 7 // method "fSignatureFromLiteralUint()byte[]"
     ==
     bz fSignatureFromLiteralUint_after_if_else@6
     txn GroupIndex
@@ -477,7 +417,7 @@ fPointerUint:
     txn NumAppArgs
     bz fPointerUint_after_if_else@6
     txna ApplicationArgs 0
-    bytec 10 // method "fPointerUint()byte[]"
+    bytec 8 // method "fPointerUint()byte[]"
     ==
     bz fPointerUint_after_if_else@6
     txn GroupIndex

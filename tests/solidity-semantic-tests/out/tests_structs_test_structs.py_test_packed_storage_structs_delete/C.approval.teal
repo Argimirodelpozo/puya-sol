@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/packed_storage_structs_delete.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 31
-    bytecblock 0x01 0x 0x0000 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
-    intc_1 // 0
+    intcblock 0 1 2 3
+    bytecblock "data" 0x00000000 "x" "y"
     pushint 4096
     bzero
     dup
@@ -25,7 +24,13 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    bytec_2 // "x"
+    intc_0 // 0
+    app_global_put
+    bytec_3 // "y"
+    intc_0 // 0
+    app_global_put
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -43,171 +48,92 @@ main_test_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 main_ternary_merge@9:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
+    bytec_2 // "x"
+    intc_1 // 1
+    app_global_put
+    bytec_3 // "y"
+    intc_2 // 2
+    app_global_put
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000
+    cover 2
+    select
     dup
-    bury 2
-    bytec_1 // 0x
-    callsub __storage_read
-    dig 1
+    extract 1 2
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x01
-    replace2 31
-    bytec_1 // 0x
-    swap
-    callsub __storage_write
-    bytec_1 // 0x
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x0002
-    replace2 29
-    bytec_1 // 0x
-    swap
-    callsub __storage_write
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    extract 3 1
     pushbytes 0x02
-    replace2 31
-    bytec_0 // 0x01
-    swap
-    callsub __storage_write
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
+    uncover 2
+    concat
     swap
     concat
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    extract 0 1
+    swap
+    extract 3 1
+    swap
     pushbytes 0xabcd
-    replace2 29
-    bytec_0 // 0x01
-    swap
-    callsub __storage_write
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
+    concat
     swap
     concat
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    extract 0 1
+    swap
+    extract 1 2
+    concat
     pushbytes 0xfa
-    replace2 28
-    bytec_0 // 0x01
-    swap
-    callsub __storage_write
-    bytec_1 // 0x
-    callsub __storage_read
     concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_3 // 31
+    bytec_0 // "data"
+    swap
+    box_put
+    intc_0 // 0
+    bytec_2 // "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_1 // 1
+    !=
+    bnz main_if_body@14
+    intc_0 // 0
+    bytec_3 // "y"
+    app_global_get_ex
+    assert // check y exists
+    intc_2 // 2
+    !=
+    bnz main_if_body@14
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000
+    cover 2
+    select
+    intc_0 // 0
     getbyte
-    intc_2 // 1
+    intc_2 // 2
     !=
     bnz main_if_body@14
-    bytec_1 // 0x
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 29
-    extract_uint16
-    pushint 2
-    !=
-    bnz main_if_body@14
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_3 // 31
-    getbyte
-    pushint 2
-    !=
-    bnz main_if_body@14
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 29
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000
+    cover 2
+    select
+    intc_1 // 1
     extract_uint16
     pushint 43981
     !=
     bnz main_if_body@14
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 28
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000
+    cover 2
+    select
+    intc_3 // 3
     getbyte
     pushint 250
     !=
@@ -221,113 +147,71 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@15:
-    bytec_1 // 0x
-    callsub __storage_read
-    dig 1
+    intc_0 // 0
+    bytec_3 // "y"
+    app_global_get_ex
+    bury 1
+    assert // check y exists
+    bytec_3 // "y"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000
+    cover 2
+    select
     dup
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_2 // 0x0000
-    replace2 29
-    bytec_1 // 0x
+    extract 0 1
     swap
-    callsub __storage_write
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
+    extract 3 1
+    swap
+    pushbytes 0x0000
+    concat
     swap
     concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_2 // 0x0000
-    replace2 29
-    bytec_0 // 0x01
+    bytec_0 // "data"
     swap
-    callsub __storage_write
-    bytec_1 // 0x
-    callsub __storage_read
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_3 // 31
-    getbyte
-    intc_2 // 1
+    box_put
+    intc_0 // 0
+    bytec_2 // "x"
+    app_global_get_ex
+    assert // check x exists
+    intc_1 // 1
     !=
     bnz main_if_body@20
-    bytec_1 // 0x
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 29
-    extract_uint16
+    intc_0 // 0
+    bytec_3 // "y"
+    app_global_get_ex
+    assert // check y exists
     bnz main_if_body@20
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_3 // 31
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000
+    cover 2
+    select
+    intc_0 // 0
     getbyte
-    pushint 2
+    intc_2 // 2
     !=
     bnz main_if_body@20
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 29
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000
+    cover 2
+    select
+    intc_1 // 1
     extract_uint16
     bnz main_if_body@20
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 28
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000
+    cover 2
+    select
+    intc_3 // 3
     getbyte
     pushint 250
     !=
@@ -338,191 +222,20 @@ main_if_body@20:
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/packed_storage_structs_delete.sol.C.test@22
 
 main_after_if_else@21:
-    bytec_1 // 0x
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x00
-    replace2 31
-    bytec_1 // 0x
-    swap
-    callsub __storage_write
-    bytec_0 // 0x01
-    bytec_1 // 0x
-    callsub __storage_write
+    intc_0 // 0
+    bytec_2 // "x"
+    app_global_get_ex
+    bury 1
+    assert // check x exists
+    bytec_2 // "x"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "data"
+    bytec_1 // 0x00000000
+    box_put
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/packed_storage_structs_delete.sol.C.test@22
 
 main_ternary_false@8:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@9
-
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    intc_1 // 0
-    dup
-    bytec_1 // ""
-    frame_dig -1
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    bytec 4 // 0x010000
-    b<
-    bz __storage_read_else_body@4
-    pushint 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dup
-    frame_bury 2
-    pushint 64
-    /
-    itob
-    bytec 5 // "p:"
-    swap
-    concat
-    dup
-    frame_bury 1
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 2
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    frame_dig 1
-    swap
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-__storage_read_after_if_else@3:
-    bytec_1 // 0x
-    frame_bury 0
-    retsub
-
-__storage_read_else_body@4:
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 6 // "s:"
-    swap
-    concat
-    dup
-    frame_bury 0
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 0
-    intc_1 // 0
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
-__storage_write:
-    proto 2 0
-    frame_dig -2
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -2
-    bytec 4 // 0x010000
-    b<
-    bz __storage_write_else_body@2
-    pushint 8
-    bzero
-    frame_dig -2
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dup
-    pushint 64
-    /
-    itob
-    bytec 5 // "p:"
-    swap
-    concat
-    dup
-    pushint 2048
-    box_create
-    pop
-    swap
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    box_replace
-    retsub
-
-__storage_write_else_body@2:
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 6 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
-    swap
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 0
-    swap
-    box_replace
-    retsub

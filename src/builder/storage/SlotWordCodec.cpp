@@ -48,6 +48,17 @@ std::shared_ptr<awst::Expression> SlotWordCodec::nativeToPackedBytes(
 		return awst::makeExtract(std::move(itob),
 			static_cast<int>(8 - _size), static_cast<int>(_size), _loc);
 	}
+	if (_wtype == awst::WType::applicationType())
+	{
+		// Contract references (a `C c;` state var, `new Child()` stored in the
+		// ctor — 15 slot-lane fixtures) are uint64 app ids at heart; store the
+		// id like a uint64. asBytes(application) is not a cast puya has, which
+		// is exactly the backend crash this arm removes.
+		auto asU64 = awst::makeReinterpretCast(
+			std::move(_value), awst::WType::uint64Type(), _loc);
+		return nativeToPackedBytes(std::move(asU64),
+			awst::WType::uint64Type(), _size, _loc);
+	}
 	if (_wtype == awst::WType::biguintType())
 	{
 		// Canonical 256-bit TC (signed) / plain magnitude (unsigned): the
@@ -144,6 +155,14 @@ std::shared_ptr<awst::Expression> SlotWordCodec::packedBytesToNative(
 	}
 	if (_wtype == awst::WType::accountType())
 		return awst::makeAsAccount(awst::makeLeftPad(std::move(_raw), 32 - _size, _loc), _loc);
+	if (_wtype == awst::WType::applicationType())
+	{
+		// mirror of the encode arm: low 8 bytes hold the uint64 app id
+		auto u64 = packedBytesToNative(std::move(_raw),
+			awst::WType::uint64Type(), nullptr, _size, _loc);
+		return awst::makeReinterpretCast(std::move(u64),
+			awst::WType::applicationType(), _loc);
+	}
 	if (_wtype == awst::WType::arc4BoolType())
 	{
 		auto asBool = awst::makeNumericCompare(awst::makeBtoi(std::move(_raw), _loc),

@@ -895,6 +895,14 @@ void EvmSlotLowering::writeValue(
 	std::shared_ptr<awst::Expression> _value,
 	std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
+	// The value's carrier can lag the slot's declared wtype (storing
+	// `new helper()` leaves an APPLICATION where the contract-typed state
+	// var maps to account — 15 slot-lane fixtures died in puya on
+	// asBytes(application)). The canonical conversions already live in
+	// coerceForAssignment; route through them once, up front.
+	if (_value && _a.wtype && _value->wtype != _a.wtype
+		&& _value->wtype != awst::WType::biguintType())
+		_value = TypeCoercion::coerceForAssignment(std::move(_value), _a.wtype, m_loc);
 	if (_a.size == 32 && !_a.byteOffset)
 	{
 		// Fast path: a biguint value is already the canonical word.

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete_overlapping_variable.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
-    bytecblock 0x "__ctor_pending" 0x01 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
+    intcblock 32 1 0
+    bytecblock 0x "y" 0x01 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
     intc_2 // 0
     dup
     pushint 4096
@@ -26,8 +26,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    pushint 42
+    itob
+    bytec_1 // "y"
+    swap
     app_global_put
     intc_1 // 1
     return
@@ -38,24 +40,26 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x2bbf0199 0x963090af 0x3e40144f 0x5c5e3bbc // method "__postInit()void", method "fillArray()void", method "clearArray()void", method "x()uint256[10]", method "y()uint256"
+    pushbytess 0x2bbf0199 0x963090af 0x3e40144f 0x5c5e3bbc // method "fillArray()void", method "clearArray()void", method "x()uint256[10]", method "y()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_fillArray_route@6 main_clearArray_route@7 main_x_route@8 main_y_route@9
+    match main_fillArray_route@5 main_clearArray_route@6 main_x_route@7 main_y_route@8
     err
 
-main_y_route@9:
+main_y_route@8:
     txn GroupIndex
-    bz main_ternary_false@15
+    bz main_ternary_false@14
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@16:
+main_ternary_merge@15:
     !
     assert // not payable
-    bytec_0 // 0x
-    callsub __storage_read
+    intc_2 // 0
+    bytec_1 // "y"
+    app_global_get_ex
+    assert // check y exists
     dup
     len
     intc_0 // 32
@@ -71,19 +75,19 @@ main_ternary_merge@16:
     intc_1 // 1
     return
 
-main_ternary_false@15:
+main_ternary_false@14:
     intc_2 // 0
-    b main_ternary_merge@16
+    b main_ternary_merge@15
 
-main_x_route@8:
+main_x_route@7:
     txn GroupIndex
-    bz main_ternary_false@20
+    bz main_ternary_false@19
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+main_ternary_merge@20:
     !
     assert // not payable
     load 0
@@ -236,19 +240,19 @@ main_ternary_merge@21:
     intc_1 // 1
     return
 
-main_ternary_false@20:
+main_ternary_false@19:
     intc_2 // 0
-    b main_ternary_merge@21
+    b main_ternary_merge@20
 
-main_clearArray_route@7:
+main_clearArray_route@6:
     txn GroupIndex
-    bz main_ternary_false@25
+    bz main_ternary_false@24
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@26:
+main_ternary_merge@25:
     !
     assert // not payable
     callsub getArray
@@ -302,19 +306,19 @@ main_ternary_merge@26:
     intc_1 // 1
     return
 
-main_ternary_false@25:
+main_ternary_false@24:
     intc_2 // 0
-    b main_ternary_merge@26
+    b main_ternary_merge@25
 
-main_fillArray_route@6:
+main_fillArray_route@5:
     txn GroupIndex
-    bz main_ternary_false@30
+    bz main_ternary_false@29
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@31:
+main_ternary_merge@30:
     !
     assert // not payable
     callsub getArray
@@ -323,12 +327,12 @@ main_ternary_merge@31:
     itob
     bury 1
 
-main_while_top@32:
+main_while_top@31:
     pushint 10
     itob
     dig 1
     b>
-    bz main_after_while@34
+    bz main_after_while@33
     dupn 2
     pushbytes 0x0a
     b<
@@ -345,90 +349,42 @@ main_while_top@32:
     b<=
     assert // overflow
     bury 1
-    b main_while_top@32
+    b main_while_top@31
 
-main_after_while@34:
+main_after_while@33:
     intc_1 // 1
     return
 
-main_ternary_false@30:
+main_ternary_false@29:
     intc_2 // 0
-    b main_ternary_merge@31
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    pushint 42
-    itob
-    bytec_0 // 0x
-    swap
-    callsub __storage_write
-    intc_1 // 1
-    return
+    b main_ternary_merge@30
 
 
 // __puyasol___storage_read(__slot: bytes) -> bytes:
 __storage_read:
     proto 1 1
-    intc_2 // 0
-    dup
-    bytec_0 // ""
     frame_dig -1
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -1
-    bytec 5 // 0x010000
-    b<
-    bz __storage_read_else_body@4
-    intc_3 // 8
+    bytec_0 // 0x
+    b==
+    bz __storage_read_else_body@2
+    intc_0 // 32
     bzero
-    frame_dig -1
+    bytec_1 // "y"
+    app_global_get
     concat
     dup
     len
-    intc_3 // 8
+    intc_0 // 32
     -
-    extract_uint64
-    dup
-    frame_bury 2
-    pushint 64
-    /
-    itob
-    bytec 6 // "p:"
-    swap
-    concat
-    dup
-    frame_bury 1
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 2
-    pushint 64
-    %
     intc_0 // 32
-    *
-    frame_dig 1
-    swap
-    intc_0 // 32
-    box_extract
-    frame_bury 0
+    extract3
     retsub
 
-__storage_read_after_if_else@3:
-    bytec_0 // 0x
-    frame_bury 0
-    retsub
-
-__storage_read_else_body@4:
+__storage_read_else_body@2:
     intc_0 // 32
     bzero
     frame_dig -1
@@ -439,19 +395,16 @@ __storage_read_else_body@4:
     -
     intc_0 // 32
     extract3
-    bytec 7 // "s:"
+    bytec 5 // "s:"
     swap
     concat
     dup
-    frame_bury 0
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 0
+    intc_0 // 32
+    box_create
+    pop
     intc_2 // 0
     intc_0 // 32
     box_extract
-    frame_bury 0
     retsub
 
 
@@ -463,34 +416,9 @@ __storage_write:
     b%
     dup
     frame_bury -2
-    bytec 5 // 0x010000
-    b<
+    bytec_0 // 0x
+    b==
     bz __storage_write_else_body@2
-    intc_3 // 8
-    bzero
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    pushint 64
-    /
-    itob
-    bytec 6 // "p:"
-    swap
-    concat
-    dup
-    pushint 2048
-    box_create
-    pop
-    swap
-    pushint 64
-    %
-    intc_0 // 32
-    *
     intc_0 // 32
     bzero
     frame_dig -1
@@ -501,7 +429,9 @@ __storage_write:
     -
     intc_0 // 32
     extract3
-    box_replace
+    bytec_1 // "y"
+    swap
+    app_global_put
     retsub
 
 __storage_write_else_body@2:
@@ -516,7 +446,7 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec 7 // "s:"
+    bytec 5 // "s:"
     swap
     concat
     dup

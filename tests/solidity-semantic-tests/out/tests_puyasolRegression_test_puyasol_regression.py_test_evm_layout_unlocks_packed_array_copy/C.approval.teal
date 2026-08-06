@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_packed_array_copy.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 8 0 1
-    bytecblock 0x01 0x 0x04 0x09 0x0b 0x0c "__ctor_pending" 0x03 0x0a 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
+    bytecblock 0x01 0x 0x04 0x09 0x0b 0x0c "__ctor_pending" 0x03 0x0a 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0x0000000000000002000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
     intc_2 // 0
     dupn 3
     pushint 4096
@@ -626,8 +626,6 @@ main_while_top@34:
     b main_while_top@34
 
 main_after_while@36:
-    pushint 2
-    itob
     intc_0 // 32
     bzero
     bytec 5 // 0x0c
@@ -641,7 +639,7 @@ main_after_while@36:
     -
     intc_0 // 32
     extract3
-    dig 2
+    bytec 11 // 0x0000000000000002000000000000000000
     replace2 15
     bytec 5 // 0x0c
     swap
@@ -655,7 +653,7 @@ main_after_while@36:
     -
     intc_0 // 32
     extract3
-    swap
+    bytec 11 // 0x0000000000000002000000000000000000
     replace2 15
     bytec 4 // 0x0b
     swap
@@ -671,11 +669,11 @@ __storage_read:
     dup
     bytec_1 // ""
     frame_dig -1
-    bytec 11 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -1
-    bytec 12 // 0x010000
+    bytec 13 // 0x010000
     b<
     bz __storage_read_else_body@4
     intc_1 // 8
@@ -692,7 +690,7 @@ __storage_read:
     pushint 64
     /
     itob
-    bytec 13 // "p:"
+    bytec 14 // "p:"
     swap
     concat
     dup
@@ -728,7 +726,7 @@ __storage_read_else_body@4:
     -
     intc_0 // 32
     extract3
-    bytec 14 // "s:"
+    bytec 15 // "s:"
     swap
     concat
     dup
@@ -748,11 +746,11 @@ __storage_read_else_body@4:
 __storage_write:
     proto 2 0
     frame_dig -2
-    bytec 11 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -2
-    bytec 12 // 0x010000
+    bytec 13 // 0x010000
     b<
     bz __storage_write_else_body@2
     intc_1 // 8
@@ -768,7 +766,7 @@ __storage_write:
     pushint 64
     /
     itob
-    bytec 13 // "p:"
+    bytec 14 // "p:"
     swap
     concat
     dup
@@ -805,7 +803,7 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec 14 // "s:"
+    bytec 15 // "s:"
     swap
     concat
     dup
