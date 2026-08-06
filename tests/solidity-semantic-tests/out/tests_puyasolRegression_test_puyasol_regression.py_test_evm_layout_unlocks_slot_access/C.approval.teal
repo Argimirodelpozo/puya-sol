@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/slot_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 8 1 64
-    bytecblock 0x40 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
-    pushint 0
+    intcblock 32 0 1 64
+    bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
+    intc_1 // 0
     dup
     pushint 4096
     bzero
@@ -90,7 +90,7 @@ main_ternary_merge@14:
     cover 2
     b|
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -98,7 +98,7 @@ main_ternary_merge@14:
     return
 
 main_ternary_false@13:
-    pushint 0
+    intc_1 // 0
     b main_ternary_merge@14
 
 main_get_route@6:
@@ -122,7 +122,7 @@ main_ternary_merge@19:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -130,7 +130,7 @@ main_ternary_merge@19:
     return
 
 main_ternary_false@18:
-    pushint 0
+    intc_1 // 0
     b main_ternary_merge@19
 
 main_set_route@5:
@@ -152,26 +152,26 @@ main_ternary_merge@24:
     !
     assert // not payable
     callsub data
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bytec_3 // 0x010000
+    bytec_2 // 0x010000
     b<
     bz main_else_body@27
-    intc_1 // 8
+    pushint 8
     bzero
     swap
     concat
     dup
     len
-    intc_1 // 8
+    pushint 8
     -
     extract_uint64
     dup
     intc_3 // 64
     /
     itob
-    bytec 4 // "p:"
+    bytec_3 // "p:"
     swap
     concat
     dup
@@ -202,11 +202,8 @@ main_after_inlined___puyasol___storage_write@28:
 main_else_body@27:
     intc_0 // 32
     bzero
-    dig 1
-    bytec_0 // 0x40
-    b/
-    dig 1
-    swap
+    dup
+    uncover 2
     concat
     dup
     len
@@ -214,28 +211,15 @@ main_else_body@27:
     -
     intc_0 // 32
     extract3
-    bytec 5 // "s:"
+    bytec 4 // "s:"
     swap
     concat
     dup
-    pushint 2048
+    intc_0 // 32
     box_create
     pop
-    intc_1 // 8
-    bzero
-    uncover 3
-    bytec_0 // 0x40
-    b%
-    concat
-    dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    intc_0 // 32
-    *
-    uncover 2
-    dig 3
+    swap
+    dig 2
     concat
     dup
     len
@@ -243,35 +227,37 @@ main_else_body@27:
     -
     intc_0 // 32
     extract3
+    intc_1 // 0
+    swap
     box_replace
     b main_after_inlined___puyasol___storage_write@28
 
 main_ternary_false@23:
-    pushint 0
+    intc_1 // 0
     b main_ternary_merge@24
 
 
 // __puyasol___storage_read(__slot: bytes) -> bytes:
 __storage_read:
     proto 1 1
-    pushint 0
+    intc_1 // 0
     dup
     pushbytes ""
     frame_dig -1
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -1
-    bytec_3 // 0x010000
+    bytec_2 // 0x010000
     b<
     bz __storage_read_else_body@4
-    intc_1 // 8
+    pushint 8
     bzero
     frame_dig -1
     concat
     dup
     len
-    intc_1 // 8
+    pushint 8
     -
     extract_uint64
     dup
@@ -279,7 +265,7 @@ __storage_read:
     intc_3 // 64
     /
     itob
-    bytec 4 // "p:"
+    bytec_3 // "p:"
     swap
     concat
     dup
@@ -308,8 +294,6 @@ __storage_read_else_body@4:
     intc_0 // 32
     bzero
     frame_dig -1
-    bytec_0 // 0x40
-    b/
     concat
     dup
     len
@@ -317,7 +301,7 @@ __storage_read_else_body@4:
     -
     intc_0 // 32
     extract3
-    bytec 5 // "s:"
+    bytec 4 // "s:"
     swap
     concat
     dup
@@ -325,21 +309,8 @@ __storage_read_else_body@4:
     box_len
     bury 1
     bz __storage_read_after_if_else@3
-    intc_1 // 8
-    bzero
-    frame_dig -1
-    bytec_0 // 0x40
-    b%
-    concat
-    dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    intc_0 // 32
-    *
     frame_dig 0
-    swap
+    intc_1 // 0
     intc_0 // 32
     box_extract
     frame_bury 0

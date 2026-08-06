@@ -110,25 +110,8 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			awst::UInt64BinaryOperator::Mult, makeUint64("32"), loc);
 	};
 	auto sparseKey = [&]() {
-		// page = slot / 64 over the FULL 256-bit slot number
-		auto page = awst::makeBigUIntBinOp(slotVar(),
-			awst::BigUIntBinaryOperator::FloorDiv,
-			awst::makeBiguintConstant(std::to_string(kEvmSlotsPerPage), loc), loc);
-		auto slotBytes = awst::makeLeftPadToN(
-			awst::makeAsBytes(std::move(page), loc), 32, loc);
+		auto slotBytes = awst::makeLeftPadToN(awst::makeAsBytes(slotVar(), loc), 32, loc);
 		return awst::makeConcat(makeBytes("s:"), std::move(slotBytes), loc);
-	};
-	// byte offset of this slot inside its sparse page
-	auto sparseOff = [&]() {
-		auto idx = awst::makeBigUIntBinOp(slotVar(),
-			awst::BigUIntBinaryOperator::Mod,
-			awst::makeBiguintConstant(std::to_string(kEvmSlotsPerPage), loc), loc);
-		auto asU64 = awst::makeBtoi(
-			awst::makeExtractLastN(
-				awst::makeLeftPad(awst::makeAsBytes(std::move(idx), loc), 8, loc),
-				8, loc), loc);
-		return awst::makeUInt64BinOp(std::move(asU64),
-			awst::UInt64BinaryOperator::Mult, makeUint64("32"), loc);
 	};
 	auto boxExists = [&](std::shared_ptr<awst::Expression> _key) {
 		auto boxLen = StorageMapper::makeBoxLenTuple(m_typeMapper, std::move(_key), loc);
@@ -174,16 +157,14 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			retZero(*denseBlk);
 		}
 
-		// Sparse: PAGED like the dense region (64 slots/box) so a dynamic
-		// array's contiguous elements share box references instead of needing
-		// one each; absent page reads as 0.
+		// Sparse: one box per slot, absent slot reads as 0.
 		auto sparseBlk = awst::makeBlock(loc);
 		{
 			auto key = sparseKey();
 			auto thenBlk = awst::makeBlock(loc);
 			thenBlk->body.push_back(awst::makeReturnStatement(
 				awst::makeAsBiguint(
-					awst::makeBoxExtract(key, sparseOff(), makeUint64("32"), loc), loc),
+					awst::makeBoxExtract(key, makeUint64("0"), makeUint64("32"), loc), loc),
 				loc));
 			sparseBlk->body.push_back(awst::makeIfElse(
 				boxExists(key), std::move(thenBlk), nullptr, loc));
@@ -246,17 +227,18 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			denseBlk->body.push_back(awst::makeReturnStatement(nullptr, loc));
 		}
 
-		// Sparse: one PAGE box per 64 slots (box_create is a no-op when the box
-		// already exists, so the first write in a page allocates the full page).
+		// Sparse: one 32-byte box per slot. NOT paged: mapping entries are
+		// keccak(key ++ slot) and genuinely scattered, so a 64-slot page would
+		// hold ONE live entry while charging its full MBR (28,900 → 835,300
+		// microAlgos per entry — 29x on the commonest real pattern).
 		auto sparseBlk = awst::makeBlock(loc);
 		{
 			auto key = sparseKey();
 			sparseBlk->body.push_back(awst::makeExpressionStatement(
-				awst::makeBoxCreate(key,
-					makeUint64(std::to_string(kEvmSlotsPerPage * 32)), loc), loc));
+				awst::makeBoxCreate(key, makeUint64("32"), loc), loc));
 			auto boxReplace = awst::makeIntrinsicCall("box_replace", awst::WType::voidType(), loc);
 			boxReplace->stackArgs.push_back(key);
-			boxReplace->stackArgs.push_back(sparseOff());
+			boxReplace->stackArgs.push_back(makeUint64("0"));
 			boxReplace->stackArgs.push_back(paddedVal());
 			sparseBlk->body.push_back(
 				awst::makeExpressionStatement(std::move(boxReplace), loc));
