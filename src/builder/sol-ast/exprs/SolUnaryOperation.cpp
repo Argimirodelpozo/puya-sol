@@ -784,6 +784,24 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 			m_ctx.queuePending(std::move(st));
 		return awst::makeZero(m_loc, awst::WType::biguintType());
 	}
+	if (m_unaryOp.getOperator() == Token::Delete
+		&& solType && !solType->isValueType())
+	{
+		EvmSlotLowering low(m_ctx, m_scope, m_loc);
+		auto addr = low.resolve(sub);
+		if (!addr)
+			return nullptr;
+		addr->solType = solType;
+		addr->wtype = m_ctx.typeMapper.map(solType);
+		std::vector<std::shared_ptr<awst::Statement>> writes;
+		if (low.clearAggregate(*addr, solType, writes))
+		{
+			for (auto& st: writes)
+				m_ctx.queuePending(std::move(st));
+			return awst::makeZero(m_loc, awst::WType::biguintType());
+		}
+		return nullptr;
+	}
 	if (!solType || !solType->isValueType())
 	{
 		Logger::instance().error(

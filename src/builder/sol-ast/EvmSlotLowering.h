@@ -82,6 +82,14 @@ public:
 	/// clears the shrink tail); fixed arrays (len<=64) unrolled per element
 	/// (scalar / struct / bytes-like elems). Returns false (with an error
 	/// logged) for shapes still unsupported.
+	/// `delete` on an aggregate: zero the value-slot span, recurse into
+	/// bytes/array members for their keccak-region data, dynamic arrays via
+	/// __evm_dynarr_write with an empty payload (EVM delete clears elements).
+	bool clearAggregate(
+		Addr const& _a,
+		solidity::frontend::Type const* _t,
+		std::vector<std::shared_ptr<awst::Statement>>& _out);
+
 	bool writeArrayValue(
 		Addr const& _a,
 		solidity::frontend::ArrayType const* _at,

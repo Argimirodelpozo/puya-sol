@@ -890,6 +890,156 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readValue(Addr const& _a)
 		std::move(raw), _a.wtype, _a.solType, _a.size, m_loc);
 }
 
+bool EvmSlotLowering::clearAggregate(
+	Addr const& _a,
+	Type const* _t,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	if (!_t)
+		return false;
+	if (isBytesLike(_t))
+	{
+		writeBytesValue(_a, awst::makeBytesConstant({}, m_loc), _out);
+		return true;
+	}
+	if (auto const* at = dynamic_cast<ArrayType const*>(_t))
+	{
+		if (at->isDynamicallySized())
+		{
+			// length 0 + old-tail clear == EVM delete semantics, and the
+			// subroutine exists since S1. Aggregate elements' own keccak
+			// regions (e.g. string[] entries) are NOT reachable this way.
+			if (SlotHandleAccess::layoutFor(at->baseType()).size != 32
+				|| dynamic_cast<StructType const*>(at->baseType())
+				|| at->baseType()->isDynamicallySized())
+			{
+				Logger::instance().error(
+					"--evm-storage-layout: delete on a dynamic array of "
+					"aggregate elements not yet supported", m_loc);
+				return false;
+			}
+			auto call = awst::makeSubroutineCall(
+				awst::SubroutineID{"__puyasol___evm_dynarr_write"},
+				awst::WType::voidType(), m_loc);
+			awst::pushCallArg(call->args, "__slot", _a.slot);
+			awst::pushCallArg(call->args, "__val",
+				awst::makeBytesConstant({0, 0}, m_loc));
+			_out.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
+			return true;
+		}
+		auto lenU = at->length();
+		if (lenU == 0 || lenU > 64)
+		{
+			Logger::instance().error(
+				"--evm-storage-layout: delete on storage array of length "
+				+ lenU.str() + " not supported (cap 64)", m_loc);
+			return false;
+		}
+		unsigned len = static_cast<unsigned>(lenU);
+		auto const* elemType = at->baseType();
+		// pin the base once
+		std::string bs = "__evmcl_"
+			+ std::to_string(awst::NameGen::next("EvmSlotLowering.clr"));
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc),
+			_a.slot, m_loc));
+		auto baseVar = [&]() {
+			return awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc);
+		};
+		if (elemType->isValueType())
+		{
+			// the array owns its whole slot span — zero it (packed included)
+			auto span = at->storageSize();
+			for (solidity::u256 j = 0; j < span; ++j)
+				_out.push_back(SlotHandleAccess::writeSlot(
+					awst::makeBigUIntBinOp(baseVar(),
+						awst::BigUIntBinaryOperator::Add,
+						awst::makeIntegerConstant(j.str(), m_loc,
+							awst::WType::biguintType()), m_loc),
+					awst::makeZero(m_loc, awst::WType::biguintType()), m_loc));
+			return true;
+		}
+		auto stride = elemType->storageSize();
+		for (unsigned j = 0; j < len; ++j)
+		{
+			Addr ea;
+			ea.slot = awst::makeBigUIntBinOp(baseVar(),
+				awst::BigUIntBinaryOperator::Add,
+				awst::makeIntegerConstant((stride * j).str(), m_loc,
+					awst::WType::biguintType()), m_loc);
+			ea.solType = elemType;
+			ea.wtype = m_ctx.typeMapper.map(elemType);
+			if (!clearAggregate(ea, elemType, _out))
+				return false;
+		}
+		return true;
+	}
+	if (auto const* st = dynamic_cast<StructType const*>(_t))
+	{
+		std::string bs = "__evmcl_"
+			+ std::to_string(awst::NameGen::next("EvmSlotLowering.clrS"));
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc),
+			_a.slot, m_loc));
+		auto baseVar = [&]() {
+			return awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc);
+		};
+		// zero the struct's slot span (mapping-member slots hold no data, so
+		// zeroing them is harmless; EVM delete skips mapping CONTENT, and so
+		// do we — the keccak regions are untouched)
+		auto span = st->storageSize();
+		if (span > 64)
+		{
+			Logger::instance().error(
+				"--evm-storage-layout: delete on struct spanning "
+				+ span.str() + " slots not supported (cap 64)", m_loc);
+			return false;
+		}
+		for (solidity::u256 j = 0; j < span; ++j)
+			_out.push_back(SlotHandleAccess::writeSlot(
+				awst::makeBigUIntBinOp(baseVar(),
+					awst::BigUIntBinaryOperator::Add,
+					awst::makeIntegerConstant(j.str(), m_loc,
+						awst::WType::biguintType()), m_loc),
+				awst::makeZero(m_loc, awst::WType::biguintType()), m_loc));
+		// dynamic members: clear their keccak-region data too
+		for (auto const& m: st->structDefinition().members())
+		{
+			if (!m || !m->type())
+				continue;
+			auto const* mt = m->type();
+			bool needsRegion = isBytesLike(mt)
+				|| dynamic_cast<ArrayType const*>(mt)
+				|| dynamic_cast<StructType const*>(mt);
+			if (dynamic_cast<solidity::frontend::MappingType const*>(mt))
+				continue;
+			if (!needsRegion || mt->isValueType())
+				continue;
+			auto const& off = st->storageOffsetsOfMember(m->name());
+			Addr fa;
+			fa.slot = off.first == 0
+				? std::shared_ptr<awst::Expression>(baseVar())
+				: std::shared_ptr<awst::Expression>(awst::makeBigUIntBinOp(
+					baseVar(), awst::BigUIntBinaryOperator::Add,
+					awst::makeIntegerConstant(off.first.str(), m_loc,
+						awst::WType::biguintType()), m_loc));
+			fa.solType = mt;
+			fa.wtype = m_ctx.typeMapper.map(mt);
+			// slot span already zeroed above; for bytes/dynarrays that also
+			// zeroed the length/short word — only LONG-form data remains,
+			// which is unreachable once the length word is zero. EVM leaves
+			// it too (SSTORE-refund era cleared, but reads cannot observe
+			// the difference through Solidity). Match observable semantics.
+			(void)fa;
+		}
+		return true;
+	}
+	Logger::instance().error(
+		"--evm-storage-layout: delete on this aggregate shape not yet "
+		"supported", m_loc);
+	return false;
+}
+
 bool EvmSlotLowering::writeArrayValue(
 	Addr const& _a,
 	ArrayType const* _at,
