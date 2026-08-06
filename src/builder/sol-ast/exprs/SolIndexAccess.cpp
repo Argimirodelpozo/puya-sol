@@ -3,6 +3,7 @@
 
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
+#include "awst/NameGen.h"
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageMapper.h"
@@ -124,6 +125,53 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 		&& EvmSlotLowering::isStorageStateRef(m_indexAccess))
 	{
 		EvmSlotLowering low(m_ctx, m_scope, m_loc);
+		// bytes/string element read: whole-value read + byte extract (the
+		// short/long form logic lives in __evm_bytes_read). Bounds-assert
+		// mirrors EVM Panic 0x32 — an OOB byte read must not fall off the end.
+		if (auto const* bbat = dynamic_cast<ArrayType const*>(baseType);
+			bbat && bbat->isByteArrayOrString()
+			&& bbat->dataStoredIn(DataLocation::Storage)
+			&& m_indexAccess.indexExpression())
+		{
+			auto baseAddr = low.resolve(m_indexAccess.baseExpression());
+			if (!baseAddr)
+				return nullptr;
+			baseAddr->solType = baseType;
+			auto whole = low.readBytesValue(*baseAddr);
+			if (whole && whole->wtype != awst::WType::bytesType())
+				whole = awst::makeAsBytes(std::move(whole), m_loc);
+			std::string nm = "__evm_bi_" + std::to_string(
+				awst::NameGen::next("SolIndexAccess.bytesElem"));
+			m_ctx.queuePrePending(awst::makeAssignmentStatement(
+				awst::makeVarExpression(nm, awst::WType::bytesType(), m_loc),
+				std::move(whole), m_loc));
+			auto wv = [&]() {
+				return awst::makeVarExpression(
+					nm, awst::WType::bytesType(), m_loc);
+			};
+			auto idx = buildExpr(*m_indexAccess.indexExpression());
+			if (!idx)
+				return nullptr;
+			{
+				std::vector<std::shared_ptr<awst::Statement>> idxPre;
+				idx = TypeCoercion::checkedIndexToUint64(idxPre, std::move(idx), m_loc);
+				for (auto& ps: idxPre)
+					m_ctx.queuePrePending(std::move(ps));
+			}
+			idx = awst::makeEvalOnce(std::move(idx), m_loc);
+			auto inBounds = awst::makeNumericCompare(idx,
+				awst::NumericComparison::Lt, awst::makeLen(wv(), m_loc), m_loc);
+			m_ctx.queuePrePending(awst::makeExpressionStatement(
+				awst::makeAssert(std::move(inBounds), m_loc,
+					"bytes index out of range"), m_loc));
+			auto one = awst::makeExtract3(wv(), idx,
+				awst::makeIntegerConstant(uint64_t{1}, m_loc), m_loc);
+			auto const* resW =
+				m_ctx.typeMapper.map(m_indexAccess.annotation().type);
+			if (resW && resW != awst::WType::bytesType())
+				return awst::makeReinterpretCast(std::move(one), resW, m_loc);
+			return one;
+		}
 		auto addr = low.resolve(m_indexAccess);
 		if (!addr)
 			return nullptr;

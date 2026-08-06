@@ -335,6 +335,67 @@ SolAssignment::tryHandleEvmStorageWrite()
 				}
 
 	auto const* lhsType = lhsExpr.annotation().type;
+	// bytes/string element WRITE: whole-value read-modify-write through the
+	// short/long subroutines (replace3 at the asserted index).
+	if (m_assignment.assignmentOperator() == Token::Assign)
+		if (auto const* bia =
+			dynamic_cast<solidity::frontend::IndexAccess const*>(&lhsExpr))
+			if (auto const* bbt = dynamic_cast<ArrayType const*>(
+					bia->baseExpression().annotation().type);
+				bbt && bbt->isByteArrayOrString()
+				&& bbt->dataStoredIn(DataLocation::Storage)
+				&& EvmSlotLowering::isStorageStateRef(lhsExpr)
+				&& bia->indexExpression())
+			{
+				EvmSlotLowering low(m_ctx, m_scope, m_loc);
+				auto baseAddr = low.resolve(bia->baseExpression());
+				if (!baseAddr)
+					return std::shared_ptr<awst::Expression>{
+						awst::makeZero(m_loc, awst::WType::biguintType())};
+				baseAddr->slot = awst::makeEvalOnce(baseAddr->slot, m_loc);
+				baseAddr->solType = bbt;
+				auto whole = low.readBytesValue(*baseAddr);
+				if (whole && whole->wtype != awst::WType::bytesType())
+					whole = awst::makeAsBytes(std::move(whole), m_loc);
+				std::string nm = "__evm_bw_" + std::to_string(
+					awst::NameGen::next("SolAssignment.bytesElemW"));
+				m_ctx.queuePending(awst::makeAssignmentStatement(
+					awst::makeVarExpression(nm, awst::WType::bytesType(), m_loc),
+					std::move(whole), m_loc));
+				auto wv = [&]() {
+					return awst::makeVarExpression(
+						nm, awst::WType::bytesType(), m_loc);
+				};
+				auto idx = buildExpr(*bia->indexExpression());
+				if (!idx)
+					return std::nullopt;
+				{
+					std::vector<std::shared_ptr<awst::Statement>> idxPre;
+					idx = TypeCoercion::checkedIndexToUint64(idxPre, std::move(idx), m_loc);
+					for (auto& ps: idxPre)
+						m_ctx.queuePending(std::move(ps));
+				}
+				idx = awst::makeEvalOnce(std::move(idx), m_loc);
+				auto inBounds = awst::makeNumericCompare(idx,
+					awst::NumericComparison::Lt,
+					awst::makeLen(wv(), m_loc), m_loc);
+				m_ctx.queuePending(awst::makeExpressionStatement(
+					awst::makeAssert(std::move(inBounds), m_loc,
+						"bytes index out of range"), m_loc));
+				auto value = buildExpr(m_assignment.rightHandSide());
+				if (!value)
+					return std::nullopt;
+				if (value->wtype != awst::WType::bytesType())
+					value = awst::makeAsBytes(std::move(value), m_loc);
+				value = awst::makeExtract(std::move(value), 0, 1, m_loc);
+				value = awst::makeEvalOnce(std::move(value), m_loc);
+				std::vector<std::shared_ptr<awst::Statement>> writesE;
+				low.writeBytesValue(*baseAddr,
+					awst::makeReplace3(wv(), idx, value, m_loc), writesE);
+				for (auto& stE: writesE)
+					m_ctx.queuePending(std::move(stE));
+				return std::shared_ptr<awst::Expression>{value};
+			}
 	// Whole FIXED-array assignment: resolve the LHS slot and delegate to the
 	// slot-handle array writer (handles storage→storage slot copies, value
 	// RHS with EVM zero-fill, struct elements).
