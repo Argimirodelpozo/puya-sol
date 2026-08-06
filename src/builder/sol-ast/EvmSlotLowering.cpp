@@ -607,6 +607,8 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _
 			anyNested = true;
 		else if (isBytesLike(m->type()))
 			anyNested = true;   // string/bytes member → recursive path below
+		else if (dynamic_cast<ArrayType const*>(m->type()))
+			anyNested = true;   // array member → readArrayValue below
 		else if (!m->type()->isValueType())
 		{
 			Logger::instance().error(
@@ -648,6 +650,21 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _
 			auto v = readStructValue(fa);
 			if (!v)
 				return nullptr;
+			ns->values[m->name()] = std::move(v);
+			continue;
+		}
+		if (auto const* mat = dynamic_cast<ArrayType const*>(m->type());
+			mat && !isBytesLike(m->type()))
+		{
+			fa.wtype = m_ctx.typeMapper.map(m->type());
+			auto v = readArrayValue(fa, mat);
+			if (!v)
+				return nullptr;
+			awst::WType const* fieldW3 = nullptr;
+			for (auto const& [fname, ftype]: structW->fields())
+				if (fname == m->name()) { fieldW3 = ftype; break; }
+			if (fieldW3 && v->wtype != fieldW3)
+				v = awst::makeARC4Encode(std::move(v), fieldW3, m_loc);
 			ns->values[m->name()] = std::move(v);
 			continue;
 		}
@@ -755,6 +772,14 @@ bool EvmSlotLowering::writeStructValue(
 				fv = awst::makeARC4Decode(std::move(fv),
 					awst::WType::bytesType(), m_loc);
 			writeBytesValue(fa, std::move(fv), _out);
+			continue;
+		}
+		if (auto const* mat2 = dynamic_cast<ArrayType const*>(m->type());
+			mat2 && !isBytesLike(m->type()))
+		{
+			fa.wtype = m_ctx.typeMapper.map(m->type());
+			if (!writeArrayValue(fa, mat2, std::move(field), _out))
+				return false;
 			continue;
 		}
 		if (!m->type()->isValueType())

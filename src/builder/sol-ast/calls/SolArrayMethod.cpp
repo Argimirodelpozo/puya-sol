@@ -115,7 +115,11 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				? dynamic_cast<awst::ARC4Struct const*>(m_ctx.typeMapper.map(structElem))
 				: nullptr;
 			bool aggElem = !elemType->isValueType() && !structW;
-			if (aggElem && !EvmSlotLowering::isBytesLike(elemType)
+			bool mappingElem =
+				dynamic_cast<solidity::frontend::MappingType const*>(elemType)
+					!= nullptr;
+			if (aggElem && !mappingElem
+				&& !EvmSlotLowering::isBytesLike(elemType)
 				&& !dynamic_cast<ArrayType const*>(elemType))
 			{
 				Logger::instance().error(
@@ -151,6 +155,19 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					value = buildExpr(*m_call.arguments()[0]);
 				else if (m_ctx.pendingArrayPushValue)
 					value = std::move(m_ctx.pendingArrayPushValue);
+				if (mappingElem)
+				{
+					// push() on a mapping element: nothing to write — its
+					// content is addressed by keccak paths, exactly as EVM
+					// leaves it.
+					auto newLenM = awst::makeBigUIntBinOp(len,
+						awst::BigUIntBinaryOperator::Add,
+						awst::makeIntegerConstant("1", m_loc,
+							awst::WType::biguintType()), m_loc);
+					m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+						rootSlot, std::move(newLenM), m_loc));
+					return awst::makeZero(m_loc, awst::WType::biguintType());
+				}
 				auto addr = low.elemAddr(dataBase, len, elemType);
 				if (aggElem)
 				{
@@ -229,6 +246,14 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				awst::BigUIntBinaryOperator::Sub,
 				awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType()),
 				m_loc), "last");
+			if (mappingElem)
+			{
+				// pop: mapping content becomes unreachable, which is what EVM
+				// does too (it cannot clear a mapping element either)
+				m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+					rootSlot, lastIdx, m_loc));
+				return awst::makeZero(m_loc, awst::WType::biguintType());
+			}
 			auto addr = low.elemAddr(dataBase, lastIdx, elemType);
 			if (aggElem)
 			{
