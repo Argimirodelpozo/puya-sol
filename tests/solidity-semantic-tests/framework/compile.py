@@ -399,7 +399,10 @@ def _first_error_line(stderr: str, stdout: str = "") -> str:
     for text in (stderr or "", stdout or ""):
         for ln in text.splitlines():
             if "error:" in ln.lower():
-                return ": " + ln.strip()[:160]
+                # drop the absolute-path prefix: it ate the whole 160-char
+                # budget and truncated every message to "...error: --evm"
+                k = ln.lower().rfind("error:")
+                return ": " + ln[k:].strip()[:200]
     tail = (stderr or stdout or "").strip().splitlines()
     return (": " + tail[-1][:160]) if tail else ""
 

@@ -288,9 +288,32 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::addrForStateVar(
 	auto const* sv = layout->getVarInfoById(_vd.id());
 	if (!sv)
 	{
+		// A declaration owned by ANOTHER contract is not a layout bug: some
+		// passes speculatively lower a foreign function body (taking
+		// `Other.f.selector` registers f as a function-pointer target) and
+		// DISCARD the result — default mode emits nothing for it either. Only
+		// a variable that should be OURS (this contract or one of its bases)
+		// means the layout walk really missed something.
+		auto const* owner = dynamic_cast<solidity::frontend::ContractDefinition const*>(
+			_vd.scope());
+		auto const* self = layout->contract();
+		bool foreign = owner && self && owner != self;
+		if (foreign)
+			for (auto const* base: self->annotation().linearizedBaseContracts)
+				if (base == owner)
+					{ foreign = false; break; }
+		if (foreign)
+		{
+			Logger::instance().debug(
+				"--evm-storage-layout: skipping foreign state variable '"
+				+ _vd.name() + "' (declared in contract " + owner->name()
+				+ ", compiling " + self->name() + ")", m_loc);
+			return std::nullopt;
+		}
 		Logger::instance().error(
-			"--evm-storage-layout: state variable '" + _vd.name()
-			+ "' missing from the storage layout", m_loc);
+			"--evm-storage-layout: state variable '" + _vd.name() + "'"
+			+ (owner ? " (declared in contract " + owner->name() + ")" : "")
+			+ " missing from the storage layout", m_loc);
 		return std::nullopt;
 	}
 	// Alone in its slot (isFullSlot only covers 32-byte vars; a lone address

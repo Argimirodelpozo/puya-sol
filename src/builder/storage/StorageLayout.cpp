@@ -32,6 +32,7 @@ void StorageLayout::computeLayout(
 	if (auto const* spec = _contract.storageLayoutSpecifier())
 		if (spec->annotation().baseSlot.set())
 			baseSlot = *spec->annotation().baseSlot;
+	m_contract = &_contract;
 	solidity::u256 currentSlot = baseSlot;
 	unsigned currentOffset = 0; // bytes used in current slot
 

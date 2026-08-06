@@ -47,6 +47,15 @@ public:
 		TypeMapper& _typeMapper
 	);
 
+	/// The contract this layout was computed for (nullptr before compute).
+	/// Used to tell "our var is missing" (a real layout bug) apart from "this
+	/// declaration belongs to ANOTHER contract" (a foreign reference some pass
+	/// speculatively lowered and will discard).
+	solidity::frontend::ContractDefinition const* contract() const
+	{
+		return m_contract;
+	}
+
 	/// Look up a variable's slot info by name.
 	SlotVariable const* getVarInfo(std::string const& _name) const;
 
@@ -72,6 +81,7 @@ private:
 	std::map<int64_t, size_t> m_varById;          ///< declId → index in m_variables
 	std::map<solidity::u256, size_t> m_slotByNumber;   ///< slotNumber → index in m_slots
 	unsigned m_totalSlots = 0;
+	solidity::frontend::ContractDefinition const* m_contract = nullptr;
 };
 
 } // namespace puyasol::builder
