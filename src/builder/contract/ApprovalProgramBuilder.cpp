@@ -73,12 +73,65 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					if (!var->value())
 						continue;
 					auto const* t = var->type();
-					if (!t || !t->isValueType())
+					if (t && !t->isValueType())
 					{
-						Logger::instance().error(
-							"--evm-storage-layout: aggregate state initializer "
-							"not yet supported for '" + var->name() + "'",
+						// aggregate initializer: build the value and hand it
+						// to the aggregate writers (array / struct / bytes)
+						sol_ast::EvmSlotLowering aggLow(
+							*m_exprBuilder, *m_exprBuilder->currentScope,
 							method.sourceLocation);
+						auto aggAddr = aggLow.addrForStateVar(*var);
+						auto aggVal = aggAddr
+							? m_exprBuilder->build(*var->value()) : nullptr;
+						bool done = false;
+						if (aggAddr && aggVal)
+						{
+							aggAddr->solType = t;
+							aggVal = TypeCoercion::coerceForAssignment(
+								std::move(aggVal), aggAddr->wtype,
+								method.sourceLocation);
+							std::vector<std::shared_ptr<awst::Statement>> aggOut;
+							if (sol_ast::EvmSlotLowering::isBytesLike(t))
+							{
+								std::shared_ptr<awst::Expression> bv =
+									std::move(aggVal);
+								if (bv->wtype
+									&& bv->wtype->kind() != awst::WTypeKind::Bytes
+									&& bv->wtype != awst::WType::stringType())
+									bv = awst::makeARC4Decode(std::move(bv),
+										awst::WType::bytesType(),
+										method.sourceLocation);
+								aggLow.writeBytesValue(*aggAddr, std::move(bv),
+									aggOut);
+								done = true;
+							}
+							else if (auto const* iat =
+								dynamic_cast<solidity::frontend::ArrayType const*>(t))
+								done = aggLow.writeArrayValue(
+									*aggAddr, iat, std::move(aggVal), aggOut);
+							else if (dynamic_cast<
+								solidity::frontend::StructType const*>(t))
+								done = aggLow.writeStructValue(
+									*aggAddr, std::move(aggVal), aggOut);
+							if (done)
+							{
+								for (auto& preStmt: m_exprBuilder->takePrePending())
+									targetBody.push_back(std::move(preStmt));
+								for (auto& postStmt: m_exprBuilder->takePending())
+									targetBody.push_back(std::move(postStmt));
+								for (auto& st3: aggOut)
+									targetBody.push_back(std::move(st3));
+							}
+						}
+						if (!done)
+							Logger::instance().error(
+								"--evm-storage-layout: aggregate state initializer "
+								"not yet supported for '" + var->name() + "'",
+								method.sourceLocation);
+						continue;
+					}
+					if (!t)
+					{
 						continue;
 					}
 					sol_ast::EvmSlotLowering low(

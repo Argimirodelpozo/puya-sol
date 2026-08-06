@@ -77,6 +77,17 @@ public:
 	/// format). Returns `string`-typed when the leaf is a string.
 	std::shared_ptr<awst::Expression> readBytesValue(Addr const& _a);
 
+	/// Whole-array write into storage: dynamic 32-byte-elem arrays via the
+	/// __evm_dynarr_write runtime subroutine (writes length + elements,
+	/// clears the shrink tail); fixed arrays (len<=64) unrolled per element
+	/// (scalar / struct / bytes-like elems). Returns false (with an error
+	/// logged) for shapes still unsupported.
+	bool writeArrayValue(
+		Addr const& _a,
+		solidity::frontend::ArrayType const* _at,
+		std::shared_ptr<awst::Expression> _value,
+		std::vector<std::shared_ptr<awst::Statement>>& _out);
+
 	/// Whole bytes/string write via __evm_bytes_write (clears stale chunks).
 	void writeBytesValue(
 		Addr const& _a,

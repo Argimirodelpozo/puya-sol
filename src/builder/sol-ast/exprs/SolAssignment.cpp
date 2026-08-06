@@ -507,6 +507,48 @@ SolAssignment::tryHandleEvmStorageWrite()
 		return std::shared_ptr<awst::Expression>{
 			awst::makeVarExpression(valNm, valW, m_loc)};
 	}
+	if (auto const* lat = dynamic_cast<ArrayType const*>(lhsType);
+		lat && lat->dataStoredIn(DataLocation::Storage)
+		&& !lat->isByteArrayOrString()
+		&& m_assignment.assignmentOperator() == Token::Assign)
+	{
+		EvmSlotLowering low(m_ctx, m_scope, m_loc);
+		auto addr = low.resolve(lhsExpr);
+		if (!addr)
+			return std::shared_ptr<awst::Expression>{
+				awst::makeZero(m_loc, awst::WType::biguintType())};
+		auto const& rhsExprA = m_assignment.rightHandSide();
+		auto const* rt = rhsExprA.annotation().type;
+		std::shared_ptr<awst::Expression> value;
+		if (auto const* rat = dynamic_cast<ArrayType const*>(rt);
+			rat && rat->dataStoredIn(DataLocation::Storage))
+		{
+			// storage → storage: materialise, then re-split element-wise
+			auto raddr = low.resolve(rhsExprA);
+			if (raddr)
+			{
+				EvmSlotLowering::Addr ra = *raddr;
+				ra.solType = rt;
+				ra.wtype = m_ctx.typeMapper.map(rt);
+				value = low.readArrayValue(ra, rat);
+			}
+		}
+		else
+			value = buildExpr(rhsExprA);
+		if (!value)
+			return std::shared_ptr<awst::Expression>{
+				awst::makeZero(m_loc, awst::WType::biguintType())};
+		value = TypeCoercion::coerceForAssignment(
+			std::move(value), m_ctx.typeMapper.map(lhsType), m_loc);
+		addr->solType = lhsType;
+		addr->wtype = m_ctx.typeMapper.map(lhsType);
+		std::vector<std::shared_ptr<awst::Statement>> out;
+		if (low.writeArrayValue(*addr, lat, std::move(value), out))
+			for (auto& st2: out)
+				m_ctx.queuePending(std::move(st2));
+		return std::shared_ptr<awst::Expression>{
+			awst::makeZero(m_loc, awst::WType::biguintType())};
+	}
 	if (!lhsType || !lhsType->isValueType())
 	{
 		Logger::instance().error(

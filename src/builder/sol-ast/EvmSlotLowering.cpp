@@ -890,6 +890,141 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readValue(Addr const& _a)
 		std::move(raw), _a.wtype, _a.solType, _a.size, m_loc);
 }
 
+bool EvmSlotLowering::writeArrayValue(
+	Addr const& _a,
+	ArrayType const* _at,
+	std::shared_ptr<awst::Expression> _value,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	if (!_at || !_value)
+		return false;
+	if (_at->isDynamicallySized())
+	{
+		bool ok32 = SlotHandleAccess::layoutFor(_at->baseType()).size == 32
+			&& !dynamic_cast<StructType const*>(_at->baseType())
+			&& !_at->baseType()->isDynamicallySized();
+		if (!ok32)
+		{
+			Logger::instance().error(
+				"--evm-storage-layout: dynamic array assignment with "
+				"non-32-byte / aggregate elements not yet supported", m_loc);
+			return false;
+		}
+		if (_value->wtype != awst::WType::bytesType())
+			_value = awst::makeReinterpretCast(
+				std::move(_value), awst::WType::bytesType(), m_loc);
+		auto call = awst::makeSubroutineCall(
+			awst::SubroutineID{"__puyasol___evm_dynarr_write"},
+			awst::WType::voidType(), m_loc);
+		awst::pushCallArg(call->args, "__slot", _a.slot);
+		awst::pushCallArg(call->args, "__val", std::move(_value));
+		_out.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
+		return true;
+	}
+
+	auto lenU = _at->length();
+	if (lenU == 0 || lenU > 64)
+	{
+		Logger::instance().error(
+			"--evm-storage-layout: cannot assign storage array of length "
+			+ lenU.str() + " (unrolled writes capped at 64)", m_loc);
+		return false;
+	}
+	unsigned len = static_cast<unsigned>(lenU);
+	auto const* elemType = _at->baseType();
+	auto const* arrW = _value->wtype;
+	awst::WType const* elemW = nullptr;
+	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(arrW))
+		elemW = sa->elementType();
+	else if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(arrW))
+		elemW = da->elementType();
+
+	// pin base + value: both feed one statement per element
+	std::string bs = "__evmaw_b_"
+		+ std::to_string(awst::NameGen::next("EvmSlotLowering.arrWB"));
+	_out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc),
+		_a.slot, m_loc));
+	std::string vs = "__evmaw_v_"
+		+ std::to_string(awst::NameGen::next("EvmSlotLowering.arrWV"));
+	_out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(vs, arrW, m_loc), std::move(_value), m_loc));
+	auto baseVar = [&]() {
+		return awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc);
+	};
+	auto valVar = [&]() {
+		return awst::makeVarExpression(vs, arrW, m_loc);
+	};
+	auto elemAt = [&](unsigned j) {
+		return awst::makeIndexExpression(valVar(),
+			awst::makeIntegerConstant(static_cast<uint64_t>(j), m_loc),
+			elemW, m_loc);
+	};
+
+	if (auto const* structElem = dynamic_cast<StructType const*>(elemType))
+	{
+		auto stride = structElem->storageSize();
+		for (unsigned j = 0; j < len; ++j)
+		{
+			Addr ea;
+			ea.slot = awst::makeBigUIntBinOp(baseVar(),
+				awst::BigUIntBinaryOperator::Add,
+				awst::makeIntegerConstant((stride * j).str(), m_loc,
+					awst::WType::biguintType()), m_loc);
+			ea.solType = structElem;
+			ea.wtype = elemW;
+			if (!writeStructValue(ea, elemAt(j), _out))
+				return false;
+		}
+		return true;
+	}
+	if (isBytesLike(elemType))
+	{
+		for (unsigned j = 0; j < len; ++j)
+		{
+			Addr ea;
+			ea.slot = awst::makeBigUIntBinOp(baseVar(),
+				awst::BigUIntBinaryOperator::Add,
+				awst::makeIntegerConstant(static_cast<uint64_t>(j), m_loc,
+					awst::WType::biguintType()), m_loc);
+			ea.solType = elemType;
+			ea.wtype = m_ctx.typeMapper.map(elemType);
+			auto ev = elemAt(j);
+			std::shared_ptr<awst::Expression> fv = std::move(ev);
+			if (fv->wtype && fv->wtype->kind() != awst::WTypeKind::Bytes
+				&& fv->wtype != awst::WType::stringType())
+				fv = awst::makeARC4Decode(std::move(fv),
+					awst::WType::bytesType(), m_loc);
+			writeBytesValue(ea, std::move(fv), _out);
+		}
+		return true;
+	}
+	if (!elemType->isValueType())
+	{
+		Logger::instance().error(
+			"--evm-storage-layout: fixed array assignment with aggregate "
+			"elements of this shape not yet supported", m_loc);
+		return false;
+	}
+	auto l = SlotHandleAccess::layoutFor(elemType);
+	auto const* nativeW = m_ctx.typeMapper.map(elemType);
+	for (unsigned j = 0; j < len; ++j)
+	{
+		auto ev = elemAt(j);
+		std::shared_ptr<awst::Expression> nat = std::move(ev);
+		if (nat->wtype != nativeW)
+			nat = awst::makeARC4Decode(std::move(nat), nativeW, m_loc);
+		auto canonical = awst::makeAsBiguint(
+			SlotWordCodec::nativeToPackedBytes(std::move(nat), nativeW, 32, m_loc),
+			m_loc);
+		SlotHandleAccess::writeScalarElem(_out, baseVar(),
+			awst::makeIntegerConstant(static_cast<uint64_t>(j), m_loc,
+				awst::WType::biguintType()),
+			l, std::move(canonical), m_loc);
+	}
+	return true;
+}
+
 void EvmSlotLowering::writeValue(
 	Addr const& _a,
 	std::shared_ptr<awst::Expression> _value,

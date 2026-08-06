@@ -568,13 +568,97 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		_contractNode->methods.push_back(std::move(sub));
 	}
 
+	// ── __evm_dynarr_write(slot: biguint, val: bytes) -> void ──
+	// Inverse of __evm_dynarr_read: val is the ARC4 form [u16 count][32B
+	// elems]. Writes the length word at the slot, elements at
+	// keccak256(slot32)+i, and CLEARS the old tail when the array shrinks —
+	// EVM assignment semantics, and a later push must see zeroed slots.
+	{
+		awst::ContractMethod sub;
+		sub.sourceLocation = loc;
+		sub.cref = cref;
+		sub.memberName = "__evm_dynarr_write";
+		sub.returnType = awst::WType::voidType();
+		sub.arc4MethodConfig = std::nullopt;
+		sub.pure = false;
+		awst::SubroutineArgument slotArg3;
+		slotArg3.name = "__slot";
+		slotArg3.wtype = awst::WType::biguintType();
+		slotArg3.sourceLocation = loc;
+		sub.args.push_back(slotArg3);
+		awst::SubroutineArgument valArg;
+		valArg.name = "__val";
+		valArg.wtype = awst::WType::bytesType();
+		valArg.sourceLocation = loc;
+		sub.args.push_back(valArg);
+		auto valVar = [&]() {
+			return awst::makeVarExpression("__val", awst::WType::bytesType(), loc);
+		};
+
+		auto body = awst::makeBlock(loc);
+		// old length (for the shrink-clear tail)
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__old"), biguintToU64(readWordCall(slotVar())), loc));
+		// new length from the ARC4 u16 header
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__n"),
+			awst::makeBtoi(awst::makeExtract(valVar(), 0, 2, loc), loc), loc));
+		body->body.push_back(writeWordStmt(slotVar(),
+			u64ToBiguint(u64Var("__n"))));
+		body->body.push_back(awst::makeAssignmentStatement(
+			biguintVar("__chunk"), chunkBase(), loc));
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__i"), u64c(0), loc));
+		// write the new elements
+		{
+			auto cond = awst::makeNumericCompare(u64Var("__i"),
+				awst::NumericComparison::Lt, u64Var("__n"), loc);
+			auto loop = awst::makeBlock(loc);
+			auto off = awst::makeUInt64BinOp(
+				awst::makeUInt64BinOp(u64Var("__i"),
+					awst::UInt64BinaryOperator::Mult, u64c(32), loc),
+				awst::UInt64BinaryOperator::Add, u64c(2), loc);
+			auto word = awst::makeAsBiguint(
+				awst::makeExtract3(valVar(), std::move(off), u64c(32), loc), loc);
+			loop->body.push_back(writeWordStmt(
+				awst::makeBigUIntBinOp(biguintVar("__chunk"),
+					awst::BigUIntBinaryOperator::Add,
+					u64ToBiguint(u64Var("__i")), loc),
+				std::move(word)));
+			loop->body.push_back(awst::makeAssignmentStatement(u64Var("__i"),
+				awst::makeUInt64BinOp(u64Var("__i"),
+					awst::UInt64BinaryOperator::Add, u64c(1), loc), loc));
+			body->body.push_back(awst::makeWhileLoop(
+				std::move(cond), std::move(loop), loc));
+		}
+		// clear the shrink tail [n, old)
+		{
+			auto cond = awst::makeNumericCompare(u64Var("__i"),
+				awst::NumericComparison::Lt, u64Var("__old"), loc);
+			auto loop = awst::makeBlock(loc);
+			loop->body.push_back(writeWordStmt(
+				awst::makeBigUIntBinOp(biguintVar("__chunk"),
+					awst::BigUIntBinaryOperator::Add,
+					u64ToBiguint(u64Var("__i")), loc),
+				awst::makeZero(loc, awst::WType::biguintType())));
+			loop->body.push_back(awst::makeAssignmentStatement(u64Var("__i"),
+				awst::makeUInt64BinOp(u64Var("__i"),
+					awst::UInt64BinaryOperator::Add, u64c(1), loc), loc));
+			body->body.push_back(awst::makeWhileLoop(
+				std::move(cond), std::move(loop), loc));
+		}
+		sub.body = body;
+		_contractNode->methods.push_back(std::move(sub));
+	}
+
 	// Promote to root-level Subroutines (see buildStorageDispatch's tail).
 	std::vector<awst::ContractMethod> remainingMethods;
 	for (auto& m: _contractNode->methods)
 	{
 		if (m.memberName == "__storage_read" || m.memberName == "__storage_write"
 			|| m.memberName == "__evm_bytes_read" || m.memberName == "__evm_bytes_write"
-			|| m.memberName == "__evm_dynarr_read")
+			|| m.memberName == "__evm_dynarr_read"
+			|| m.memberName == "__evm_dynarr_write")
 		{
 			auto sub = awst::makeSubroutine(
 				std::string("__puyasol_") + m.memberName, m.memberName,
