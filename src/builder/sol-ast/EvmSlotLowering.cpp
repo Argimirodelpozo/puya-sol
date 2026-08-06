@@ -754,6 +754,52 @@ bool EvmSlotLowering::writeStructValue(
 	return true;
 }
 
+namespace
+{
+/// (storage bytes, ARC4 bytes, elements-per-slot) for a dynamic array element.
+/// ARC4 width differs from storage width for `address` (20 stored, 32 encoded)
+/// and for sub-word ints only when the ARC4 alias rounds up — both are read
+/// straight off the mapped element wtype so the two never drift.
+struct DynElemMetrics
+{
+	unsigned size = 32;
+	unsigned arc4Width = 32;
+	unsigned perSlot = 1;
+	bool ok = false;
+};
+
+DynElemMetrics dynElemMetrics(
+	solidity::frontend::Type const* _elemType, awst::WType const* _elemW)
+{
+	DynElemMetrics m;
+	if (!_elemType || !_elemW)
+		return m;
+	if (_elemType->isDynamicallySized()
+		|| dynamic_cast<solidity::frontend::StructType const*>(_elemType)
+		|| !_elemType->isValueType())
+		return m;
+	m.size = puyasol::builder::SlotHandleAccess::layoutFor(_elemType).size;
+	if (m.size == 0 || m.size > 32)
+		return m;
+	m.perSlot = 32u / m.size;
+	if (auto const* ui = dynamic_cast<awst::ARC4UIntN const*>(_elemW))
+		m.arc4Width = static_cast<unsigned>(ui->n()) / 8u;
+	else if (_elemW == awst::WType::accountType()
+		|| _elemW->name() == "address")
+		m.arc4Width = 32;
+	else if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_elemW))
+		m.arc4Width = static_cast<unsigned>(sa->arraySize());
+	else if (_elemW == awst::WType::arc4BoolType())
+		return m;   // ARC4 bool is BIT-packed — not a byte-width element
+	else
+		m.arc4Width = m.size;
+	if (m.arc4Width < m.size)
+		return m;
+	m.ok = true;
+	return m;
+}
+} // namespace
+
 std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 	Addr const& _a, ArrayType const* _at)
 {
@@ -763,24 +809,27 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 	{
 		// runtime-length: [u16 count][32B elems] via __evm_dynarr_read
 		auto const* arrW = m_ctx.typeMapper.map(_at);
-		auto const* elemArc4 = m_ctx.typeMapper.mapSolTypeToARC4(_at->baseType());
-		bool ok32 = false;
-		if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(arrW))
-			ok32 = SlotHandleAccess::layoutFor(_at->baseType()).size == 32
-				&& da->elementType() && !dynamic_cast<awst::ARC4Struct const*>(
-					da->elementType());
-		(void)elemArc4;
-		if (!ok32)
+		auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(arrW);
+		auto met = da ? dynElemMetrics(_at->baseType(), da->elementType())
+					  : DynElemMetrics{};
+		if (!met.ok || dynamic_cast<awst::ARC4Struct const*>(
+				da ? da->elementType() : nullptr))
 		{
 			Logger::instance().error(
 				"--evm-storage-layout: cannot materialise dynamic storage array "
-				"with non-32-byte / aggregate elements as a value", m_loc);
+				"with aggregate / bit-packed elements as a value", m_loc);
 			return nullptr;
 		}
 		auto call = awst::makeSubroutineCall(
 			awst::SubroutineID{"__puyasol___evm_dynarr_read"},
 			awst::WType::bytesType(), m_loc);
 		awst::pushCallArg(call->args, "__slot", _a.slot);
+		awst::pushCallArg(call->args, "__size",
+			awst::makeIntegerConstant(uint64_t{met.size}, m_loc));
+		awst::pushCallArg(call->args, "__aw",
+			awst::makeIntegerConstant(uint64_t{met.arc4Width}, m_loc));
+		awst::pushCallArg(call->args, "__per",
+			awst::makeIntegerConstant(uint64_t{met.perSlot}, m_loc));
 		return awst::makeReinterpretCast(std::move(call), arrW, m_loc);
 	}
 	auto lenU = _at->length();
@@ -909,9 +958,11 @@ bool EvmSlotLowering::clearAggregate(
 			// length 0 + old-tail clear == EVM delete semantics, and the
 			// subroutine exists since S1. Aggregate elements' own keccak
 			// regions (e.g. string[] entries) are NOT reachable this way.
-			if (SlotHandleAccess::layoutFor(at->baseType()).size != 32
-				|| dynamic_cast<StructType const*>(at->baseType())
-				|| at->baseType()->isDynamicallySized())
+			auto const* arrWc = m_ctx.typeMapper.map(at);
+			auto const* dac = dynamic_cast<awst::ARC4DynamicArray const*>(arrWc);
+			auto metc = dac ? dynElemMetrics(at->baseType(), dac->elementType())
+							: DynElemMetrics{};
+			if (!metc.ok)
 			{
 				Logger::instance().error(
 					"--evm-storage-layout: delete on a dynamic array of "
@@ -924,6 +975,12 @@ bool EvmSlotLowering::clearAggregate(
 			awst::pushCallArg(call->args, "__slot", _a.slot);
 			awst::pushCallArg(call->args, "__val",
 				awst::makeBytesConstant({0, 0}, m_loc));
+			awst::pushCallArg(call->args, "__size",
+				awst::makeIntegerConstant(uint64_t{metc.size}, m_loc));
+			awst::pushCallArg(call->args, "__aw",
+				awst::makeIntegerConstant(uint64_t{metc.arc4Width}, m_loc));
+			awst::pushCallArg(call->args, "__per",
+				awst::makeIntegerConstant(uint64_t{metc.perSlot}, m_loc));
 			_out.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
 			return true;
 		}
@@ -1050,14 +1107,15 @@ bool EvmSlotLowering::writeArrayValue(
 		return false;
 	if (_at->isDynamicallySized())
 	{
-		bool ok32 = SlotHandleAccess::layoutFor(_at->baseType()).size == 32
-			&& !dynamic_cast<StructType const*>(_at->baseType())
-			&& !_at->baseType()->isDynamicallySized();
-		if (!ok32)
+		auto const* arrWw = m_ctx.typeMapper.map(_at);
+		auto const* daw = dynamic_cast<awst::ARC4DynamicArray const*>(arrWw);
+		auto metw = daw ? dynElemMetrics(_at->baseType(), daw->elementType())
+						: DynElemMetrics{};
+		if (!metw.ok)
 		{
 			Logger::instance().error(
 				"--evm-storage-layout: dynamic array assignment with "
-				"non-32-byte / aggregate elements not yet supported", m_loc);
+				"aggregate / bit-packed elements not yet supported", m_loc);
 			return false;
 		}
 		if (_value->wtype != awst::WType::bytesType())
@@ -1068,6 +1126,12 @@ bool EvmSlotLowering::writeArrayValue(
 			awst::WType::voidType(), m_loc);
 		awst::pushCallArg(call->args, "__slot", _a.slot);
 		awst::pushCallArg(call->args, "__val", std::move(_value));
+		awst::pushCallArg(call->args, "__size",
+			awst::makeIntegerConstant(uint64_t{metw.size}, m_loc));
+		awst::pushCallArg(call->args, "__aw",
+			awst::makeIntegerConstant(uint64_t{metw.arc4Width}, m_loc));
+		awst::pushCallArg(call->args, "__per",
+			awst::makeIntegerConstant(uint64_t{metw.perSlot}, m_loc));
 		_out.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
 		return true;
 	}

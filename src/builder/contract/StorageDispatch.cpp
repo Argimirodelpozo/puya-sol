@@ -534,13 +534,23 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		slotArg2.wtype = awst::WType::biguintType();
 		slotArg2.sourceLocation = loc;
 		sub.args.push_back(slotArg2);
+		for (char const* an: {"__size", "__aw", "__per"})
+		{
+			awst::SubroutineArgument a;
+			a.name = an;
+			a.wtype = awst::WType::uint64Type();
+			a.sourceLocation = loc;
+			sub.args.push_back(a);
+		}
 
+		// __size = storage bytes per element, __aw = ARC4 bytes per element
+		// (differs for address: 20 stored, 32 encoded), __per = elements per
+		// slot (EVM packs from the LOW end of the word).
 		auto body = awst::makeBlock(loc);
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64Var("__n"), biguintToU64(readWordCall(slotVar())), loc));
 		body->body.push_back(awst::makeAssignmentStatement(
 			biguintVar("__chunk"), chunkBase(), loc));
-		// header: u16 count
 		body->body.push_back(awst::makeAssignmentStatement(
 			bytesVar("__data"),
 			awst::makeExtract(awst::makeItob(u64Var("__n"), loc), 6, 2, loc), loc));
@@ -549,15 +559,39 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		auto cond = awst::makeNumericCompare(u64Var("__i"),
 			awst::NumericComparison::Lt, u64Var("__n"), loc);
 		auto loop = awst::makeBlock(loc);
-		auto elemWord = readWordCall(awst::makeBigUIntBinOp(
-			biguintVar("__chunk"), awst::BigUIntBinaryOperator::Add,
-			u64ToBiguint(u64Var("__i")), loc));
+		// slotIdx = i / per ; j = i - slotIdx*per ; off = 32 - (j+1)*size
+		loop->body.push_back(awst::makeAssignmentStatement(u64Var("__wi"),
+			awst::makeUInt64BinOp(u64Var("__i"),
+				awst::UInt64BinaryOperator::FloorDiv, u64Var("__per"), loc), loc));
+		loop->body.push_back(awst::makeAssignmentStatement(u64Var("__j"),
+			awst::makeUInt64BinOp(u64Var("__i"),
+				awst::UInt64BinaryOperator::Sub,
+				awst::makeUInt64BinOp(u64Var("__wi"),
+					awst::UInt64BinaryOperator::Mult, u64Var("__per"), loc), loc), loc));
+		loop->body.push_back(awst::makeAssignmentStatement(bytesVar("__wb"),
+			awst::makeLeftPadToN(awst::makeAsBytes(readWordCall(
+				awst::makeBigUIntBinOp(biguintVar("__chunk"),
+					awst::BigUIntBinaryOperator::Add,
+					u64ToBiguint(u64Var("__wi")), loc)), loc), 32, loc), loc));
+		auto offExpr = awst::makeUInt64BinOp(u64c(32),
+			awst::UInt64BinaryOperator::Sub,
+			awst::makeUInt64BinOp(
+				awst::makeUInt64BinOp(u64Var("__j"),
+					awst::UInt64BinaryOperator::Add, u64c(1), loc),
+				awst::UInt64BinaryOperator::Mult, u64Var("__size"), loc), loc);
+		loop->body.push_back(awst::makeAssignmentStatement(bytesVar("__el"),
+			awst::makeExtract3(bytesVar("__wb"), std::move(offExpr),
+				u64Var("__size"), loc), loc));
+		// left-pad the stored bytes up to the ARC4 element width
 		loop->body.push_back(awst::makeAssignmentStatement(
 			bytesVar("__data"),
 			awst::makeConcat(bytesVar("__data"),
-				awst::makeLeftPadToN(
-					awst::makeAsBytes(std::move(elemWord), loc), 32, loc), loc),
-			loc));
+				awst::makeConcat(
+					awst::makeBzero(
+						awst::makeUInt64BinOp(u64Var("__aw"),
+							awst::UInt64BinaryOperator::Sub,
+							u64Var("__size"), loc), loc),
+					bytesVar("__el"), loc), loc), loc));
 		loop->body.push_back(awst::makeAssignmentStatement(u64Var("__i"),
 			awst::makeUInt64BinOp(u64Var("__i"),
 				awst::UInt64BinaryOperator::Add, u64c(1), loc), loc));
@@ -594,6 +628,14 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		auto valVar = [&]() {
 			return awst::makeVarExpression("__val", awst::WType::bytesType(), loc);
 		};
+		for (char const* an: {"__size", "__aw", "__per"})
+		{
+			awst::SubroutineArgument a;
+			a.name = an;
+			a.wtype = awst::WType::uint64Type();
+			a.sourceLocation = loc;
+			sub.args.push_back(a);
+		}
 
 		auto body = awst::makeBlock(loc);
 		// old length (for the shrink-clear tail)
@@ -609,40 +651,104 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			biguintVar("__chunk"), chunkBase(), loc));
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64Var("__i"), u64c(0), loc));
-		// write the new elements
+		// write the new elements (packed: rebuild each word from zero at its
+		// first element, so a partially-filled last word has clean high bytes)
 		{
 			auto cond = awst::makeNumericCompare(u64Var("__i"),
 				awst::NumericComparison::Lt, u64Var("__n"), loc);
 			auto loop = awst::makeBlock(loc);
-			auto off = awst::makeUInt64BinOp(
+			loop->body.push_back(awst::makeAssignmentStatement(u64Var("__wi"),
 				awst::makeUInt64BinOp(u64Var("__i"),
-					awst::UInt64BinaryOperator::Mult, u64c(32), loc),
-				awst::UInt64BinaryOperator::Add, u64c(2), loc);
-			auto word = awst::makeAsBiguint(
-				awst::makeExtract3(valVar(), std::move(off), u64c(32), loc), loc);
-			loop->body.push_back(writeWordStmt(
+					awst::UInt64BinaryOperator::FloorDiv, u64Var("__per"), loc), loc));
+			loop->body.push_back(awst::makeAssignmentStatement(u64Var("__j"),
+				awst::makeUInt64BinOp(u64Var("__i"),
+					awst::UInt64BinaryOperator::Sub,
+					awst::makeUInt64BinOp(u64Var("__wi"),
+						awst::UInt64BinaryOperator::Mult, u64Var("__per"), loc),
+					loc), loc));
+			loop->body.push_back(awst::makeAssignmentStatement(
+				biguintVar("__ws"),
 				awst::makeBigUIntBinOp(biguintVar("__chunk"),
 					awst::BigUIntBinaryOperator::Add,
-					u64ToBiguint(u64Var("__i")), loc),
-				std::move(word)));
+					u64ToBiguint(u64Var("__wi")), loc), loc));
+			// fresh word at each word boundary — no read needed, because every
+			// element of the word is (re)written before it is stored
+			loop->body.push_back(awst::makeAssignmentStatement(bytesVar("__wb"),
+				awst::makeConditional(
+					awst::makeNumericCompare(u64Var("__j"),
+						awst::NumericComparison::Eq, u64c(0), loc),
+					awst::makeBzero(u64c(32), loc),
+					bytesVar("__wb"),
+					awst::WType::bytesType(), loc), loc));
+			// element bytes from the ARC4 payload: low `size` of its `aw` slice
+			auto vOff = awst::makeUInt64BinOp(
+				awst::makeUInt64BinOp(u64Var("__i"),
+					awst::UInt64BinaryOperator::Mult, u64Var("__aw"), loc),
+				awst::UInt64BinaryOperator::Add,
+				awst::makeUInt64BinOp(u64c(2),
+					awst::UInt64BinaryOperator::Add,
+					awst::makeUInt64BinOp(u64Var("__aw"),
+						awst::UInt64BinaryOperator::Sub, u64Var("__size"), loc),
+					loc), loc);
+			loop->body.push_back(awst::makeAssignmentStatement(bytesVar("__el"),
+				awst::makeExtract3(valVar(), std::move(vOff),
+					u64Var("__size"), loc), loc));
+			auto wOff = awst::makeUInt64BinOp(u64c(32),
+				awst::UInt64BinaryOperator::Sub,
+				awst::makeUInt64BinOp(
+					awst::makeUInt64BinOp(u64Var("__j"),
+						awst::UInt64BinaryOperator::Add, u64c(1), loc),
+					awst::UInt64BinaryOperator::Mult, u64Var("__size"), loc), loc);
+			loop->body.push_back(awst::makeAssignmentStatement(bytesVar("__wb"),
+				awst::makeReplace3(bytesVar("__wb"), std::move(wOff),
+					bytesVar("__el"), loc), loc));
+			{
+				auto flush = awst::makeBlock(loc);
+				flush->body.push_back(writeWordStmt(biguintVar("__ws"),
+					awst::makeAsBiguint(bytesVar("__wb"), loc)));
+				auto lastInWord = awst::makeNumericCompare(u64Var("__j"),
+					awst::NumericComparison::Eq,
+					awst::makeUInt64BinOp(u64Var("__per"),
+						awst::UInt64BinaryOperator::Sub, u64c(1), loc), loc);
+				auto lastElem = awst::makeNumericCompare(u64Var("__i"),
+					awst::NumericComparison::Eq,
+					awst::makeUInt64BinOp(u64Var("__n"),
+						awst::UInt64BinaryOperator::Sub, u64c(1), loc), loc);
+				loop->body.push_back(awst::makeIfElse(
+					awst::makeBoolBinOp(std::move(lastInWord),
+						awst::BinaryBooleanOperator::Or, std::move(lastElem), loc),
+					std::move(flush), nullptr, loc));
+			}
 			loop->body.push_back(awst::makeAssignmentStatement(u64Var("__i"),
 				awst::makeUInt64BinOp(u64Var("__i"),
 					awst::UInt64BinaryOperator::Add, u64c(1), loc), loc));
 			body->body.push_back(awst::makeWhileLoop(
 				std::move(cond), std::move(loop), loc));
 		}
-		// clear the shrink tail [n, old)
+		// clear the shrink tail: whole WORDS from ceil(n/per) to ceil(old/per)
 		{
-			auto cond = awst::makeNumericCompare(u64Var("__i"),
-				awst::NumericComparison::Lt, u64Var("__old"), loc);
+			auto ceilDiv = [&](std::shared_ptr<awst::Expression> _v) {
+				return awst::makeUInt64BinOp(
+					awst::makeUInt64BinOp(std::move(_v),
+						awst::UInt64BinaryOperator::Add,
+						awst::makeUInt64BinOp(u64Var("__per"),
+							awst::UInt64BinaryOperator::Sub, u64c(1), loc), loc),
+					awst::UInt64BinaryOperator::FloorDiv, u64Var("__per"), loc);
+			};
+			body->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__wi"), ceilDiv(u64Var("__n")), loc));
+			body->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__we"), ceilDiv(u64Var("__old")), loc));
+			auto cond = awst::makeNumericCompare(u64Var("__wi"),
+				awst::NumericComparison::Lt, u64Var("__we"), loc);
 			auto loop = awst::makeBlock(loc);
 			loop->body.push_back(writeWordStmt(
 				awst::makeBigUIntBinOp(biguintVar("__chunk"),
 					awst::BigUIntBinaryOperator::Add,
-					u64ToBiguint(u64Var("__i")), loc),
+					u64ToBiguint(u64Var("__wi")), loc),
 				awst::makeZero(loc, awst::WType::biguintType())));
-			loop->body.push_back(awst::makeAssignmentStatement(u64Var("__i"),
-				awst::makeUInt64BinOp(u64Var("__i"),
+			loop->body.push_back(awst::makeAssignmentStatement(u64Var("__wi"),
+				awst::makeUInt64BinOp(u64Var("__wi"),
 					awst::UInt64BinaryOperator::Add, u64c(1), loc), loc));
 			body->body.push_back(awst::makeWhileLoop(
 				std::move(cond), std::move(loop), loc));

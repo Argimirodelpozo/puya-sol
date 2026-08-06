@@ -193,17 +193,32 @@ def deploy(
         (m for m in app_spec.methods if m.name == "__postInit"), None
     )
     if postinit_spec:
-        _call_postinit(
-            algod=algod,
-            localnet=localnet,
-            app_id=app_id,
-            app_spec=app_spec,
-            postinit_spec=postinit_spec,
-            ctor_args=ctor_args,
-            postinit_args=postinit_args,
-            budget_pool=postinit_budget_pool,
-            inner_txns=postinit_inner_txns,
-        )
+        # Opcode budget is a RESOURCE, not a semantic property: a ctor that
+        # initialises aggregates in slot mode costs far more than a scalar one,
+        # and the right pool size is not knowable per test. Escalate on the
+        # budget error only (any other failure propagates unchanged).
+        _pool = postinit_budget_pool
+        while True:
+            try:
+                _call_postinit(
+                    algod=algod,
+                    localnet=localnet,
+                    app_id=app_id,
+                    app_spec=app_spec,
+                    postinit_spec=postinit_spec,
+                    ctor_args=ctor_args,
+                    postinit_args=postinit_args,
+                    budget_pool=_pool,
+                    inner_txns=postinit_inner_txns,
+                )
+                break
+            except Exception as e:
+                # the group holds the call + inner txns + helpers, and AVM
+                # caps a group at 16 — never escalate past what fits
+                _cap = 14 - int(postinit_inner_txns or 0)
+                if "budget exceeded" not in str(e) or _pool >= _cap:
+                    raise
+                _pool = min(max(4, _pool * 2), _cap)
 
     # Read balance after postInit so child-app deployments and box MBR are
     # already subtracted from the baseline.
