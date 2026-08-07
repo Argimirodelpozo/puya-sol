@@ -754,6 +754,50 @@ def main():
             {"from": a0, "gas": 30_000_000})
         rc = w3.eth.get_transaction_receipt(txh)
         caddr = rc["contractAddress"]
+        if not caddr and int(rc.get("gasUsed") or 0) >= 29_000_000:
+            # Burning the WHOLE gas limit is the EIP-170 signature, not a
+            # revert (a revert refunds): unoptimised runtime code over 24 KB
+            # makes CREATE fail this way. We compile without the optimizer by
+            # default, so a large contract verified WITH it (moonbirds: 37
+            # files, optimizer runs=200) cannot deploy. RETRY with the
+            # contract's OWN verified settings — the ones the chain used, so
+            # more faithful anyway. Only on failure, so working cases are
+            # untouched.
+            _ss2 = case.get("solc_settings") or {}
+            if _ss2.get("optimizer") or _ss2.get("viaIR"):
+                try:
+                    _st2 = dict(settings)
+                    _st2["optimizer"] = _ss2.get("optimizer") or {
+                        "enabled": True, "runs": 200}
+                    if _ss2.get("viaIR"):
+                        _st2["viaIR"] = True
+                    if _ss2.get("evmVersion"):
+                        _st2["evmVersion"] = _ss2["evmVersion"]
+                    _out2 = solcx.compile_standard({
+                        "language": "Solidity", "sources": sources,
+                        "settings": _st2})
+                    _t2 = None
+                    for _byname in _out2["contracts"].values():
+                        for _cn, _cd in _byname.items():
+                            if _cn == case.get("name"):
+                                _t2 = _cd
+                    if _t2 and _t2["evm"]["bytecode"]["object"]:
+                        # NOTE: a distinct name — assigning `bytecode` here
+                        # would make it a local of run_once and turn the
+                        # earlier read into an UnboundLocalError.
+                        _bc2 = _t2["evm"]["bytecode"]["object"]
+                        print(f"[evm] ctor out of gas at 30M (EIP-170 shape) — "
+                              f"recompiled with verified settings "
+                              f"(optimizer={bool(_st2.get('optimizer'))}, "
+                              f"viaIR={bool(_st2.get('viaIR'))}), retrying")
+                        C = w3.eth.contract(abi=abi, bytecode=_bc2)
+                        txh = C.constructor(
+                            *[resolve(m) for m in meta["ctor_args"]]).transact(
+                            {"from": a0, "gas": 30_000_000})
+                        rc = w3.eth.get_transaction_receipt(txh)
+                        caddr = rc["contractAddress"]
+                except Exception as _e2:
+                    print(f"[evm] verified-settings retry failed: {str(_e2)[:120]}")
         if not caddr:
             # No contract address => the constructor reverted or ran out of gas.
             # Almost always an external dependency the ctor calls (router,

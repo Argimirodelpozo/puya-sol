@@ -25,7 +25,8 @@ std::shared_ptr<awst::Expression> StorageBackend::emitReadForVar(
 	auto kind = StorageMapper::shouldUseBoxStorage(_var)
 		? awst::AppStorageKind::Box
 		: awst::AppStorageKind::AppGlobal;
-	return m_mapper.createStateRead(_name, _type, kind, _loc);
+	return m_mapper.createStateRead(
+		m_mapper.storageNameFor(_var), _type, kind, _loc);
 }
 
 std::shared_ptr<awst::Statement> StorageBackend::emitWriteForVar(
@@ -43,7 +44,7 @@ std::shared_ptr<awst::Statement> StorageBackend::emitWriteForVar(
 	auto const* type = _value ? _value->wtype : nullptr;
 	// createStateWrite returns an Expression; wrap as Statement.
 	auto writeExpr = m_mapper.createStateWrite(
-		_name, std::move(_value), type, kind, _loc);
+		m_mapper.storageNameFor(_var), std::move(_value), type, kind, _loc);
 	return awst::makeExpressionStatement(std::move(writeExpr), _loc);
 }
 

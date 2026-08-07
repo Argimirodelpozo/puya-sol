@@ -320,7 +320,13 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 )
 {
 	std::vector<awst::AppStorageDefinition> defs;
-	std::set<std::string> seen; // avoid duplicates from inheritance
+	// Identity is the DECLARATION, not the name: inheritance can visit the
+	// same declaration twice (dedupe those), while two DIFFERENT declarations
+	// may legitimately share a name across base contracts (keep both, give the
+	// later one a distinct key). Keying by name collapsed ERC20._name onto
+	// EIP712._name in every ERC20Permit contract.
+	std::set<int64_t> seenDecls;
+	std::set<std::string> usedNames;
 
 	forEachStateVar(_contract, [&](auto const* var)
 	{
@@ -328,13 +334,32 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 			return;
 		if (var->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient)
 			return;
-		if (seen.count(var->name()))
+		if (seenDecls.count(var->id()))
 			return;
-		seen.insert(var->name());
+		seenDecls.insert(var->id());
+
+		std::string keyName = var->name();
+		if (usedNames.count(keyName))
+		{
+			std::string owner;
+			if (auto const* oc = dynamic_cast<
+					solidity::frontend::ContractDefinition const*>(var->scope()))
+				owner = oc->name();
+			keyName = var->name() + "." + (owner.empty() ? "dup" : owner);
+			// pathological: same name AND same owner name — fall back to the id
+			if (usedNames.count(keyName))
+				keyName = var->name() + "." + std::to_string(var->id());
+			Logger::instance().debug(
+				"state variable '" + var->name() + "' is declared by more than "
+				"one base contract; storing the " + owner + " one as '"
+				+ keyName + "'", makeLoc(var->location(), _sourceFile));
+		}
+		usedNames.insert(keyName);
+		m_storageNames[var->id()] = keyName;
 
 		awst::AppStorageDefinition def;
 		def.sourceLocation = makeLoc(var->location(), _sourceFile);
-		def.memberName = var->name();
+		def.memberName = keyName;
 
 		if (shouldUseBoxStorage(*var))
 		{
@@ -371,7 +396,7 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 				);
 		}
 
-		def.key = makeKeyExpr(var->name(), def.sourceLocation, def.storageKind);
+		def.key = makeKeyExpr(keyName, def.sourceLocation, def.storageKind);
 		defs.push_back(std::move(def));
 	});
 
@@ -389,6 +414,13 @@ std::shared_ptr<awst::Expression> StorageMapper::makeStorageTarget(
 		return awst::makeBoxValueExpression(_key, _type, _loc);
 	// AppGlobal (Transient is dispatched by StorageBackend before reaching here).
 	return awst::makeAppStateExpression(_key, _type, _loc);
+}
+
+std::string StorageMapper::storageNameFor(
+	solidity::frontend::VariableDeclaration const& _var) const
+{
+	auto it = m_storageNames.find(_var.id());
+	return it == m_storageNames.end() ? _var.name() : it->second;
 }
 
 std::shared_ptr<awst::Expression> StorageMapper::createStateRead(

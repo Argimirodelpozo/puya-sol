@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include "awst/Node.h"
 #include "builder/sol-types/TypeMapper.h"
 
@@ -22,6 +23,14 @@ public:
 		solidity::frontend::ContractDefinition const& _contract,
 		std::string const& _sourceFile
 	);
+
+	/// Storage key name for a state variable, disambiguating a name that two
+	/// DIFFERENT declarations share (ERC20's `string _name` vs EIP712's
+	/// `ShortString _name`, both private, both legal). The first declaration
+	/// keeps the plain name so existing contracts are byte-identical; a
+	/// colliding second one gets "<name>.<DeclaringContract>".
+	std::string storageNameFor(
+		solidity::frontend::VariableDeclaration const& _var) const;
 
 	/// Create an expression to read a state variable.
 	std::shared_ptr<awst::Expression> createStateRead(
@@ -147,6 +156,10 @@ public:
 		awst::SourceLocation const& _loc);
 
 private:
+	/// declaration id → storage key name (only populated for contracts whose
+	/// state vars are mapped; empty means "use the plain name").
+	std::map<int64_t, std::string> m_storageNames;
+
 	TypeMapper& m_typeMapper;
 
 	awst::SourceLocation makeLoc(

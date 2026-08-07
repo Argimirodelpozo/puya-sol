@@ -1047,10 +1047,63 @@ bool EvmSlotLowering::clearAggregate(
 							: DynElemMetrics{};
 			if (!metc.ok)
 			{
-				Logger::instance().error(
-					"--evm-storage-layout: delete on a dynamic array of "
-					"aggregate elements not yet supported", m_loc);
-				return false;
+				// AGGREGATE elements. EVM's delete clears each element's own
+				// region recursively — dynamic_multi_array_cleanup re-grows
+				// the array afterwards and requires zeros, so leaving stale
+				// data behind a zeroed length word is observably wrong.
+				auto const* et = at->baseType();
+				// A mapping element owns NOTHING at its own slot (content is
+				// at keccak(key ++ elemSlot), which EVM cannot clear either),
+				// so length-only IS the matching semantics.
+				if (!dynamic_cast<solidity::frontend::MappingType const*>(et))
+				{
+					auto nm = [&](char const* tag) {
+						return std::string("__evmclr_") + tag + "_"
+							+ std::to_string(awst::NameGen::next("EvmSlotLowering.clrLoop"));
+					};
+					std::string ivar = nm("i"), lvar = nm("n"), dvar = nm("d");
+					auto bv = [&](std::string const& n) {
+						return awst::makeVarExpression(n, awst::WType::biguintType(), m_loc);
+					};
+					// length and data base must be read BEFORE anything is
+					// zeroed — the loop needs both.
+					_out.push_back(awst::makeAssignmentStatement(
+						bv(lvar), readSlotWord(_a.slot, m_loc), m_loc));
+					_out.push_back(awst::makeAssignmentStatement(
+						bv(dvar), dynDataBase(_a.slot, m_loc), m_loc));
+					_out.push_back(awst::makeAssignmentStatement(
+						bv(ivar), awst::makeZero(m_loc, awst::WType::biguintType()), m_loc));
+					auto stride = et->storageSize();
+					Addr ea;
+					ea.slot = awst::makeBigUIntBinOp(bv(dvar),
+						awst::BigUIntBinaryOperator::Add,
+						stride == 1
+							? std::shared_ptr<awst::Expression>(bv(ivar))
+							: std::shared_ptr<awst::Expression>(awst::makeBigUIntBinOp(
+								bv(ivar), awst::BigUIntBinaryOperator::Mult,
+								awst::makeIntegerConstant(stride.str(), m_loc,
+									awst::WType::biguintType()), m_loc)),
+						m_loc);
+					ea.solType = et;
+					ea.wtype = m_ctx.typeMapper.map(et);
+					std::vector<std::shared_ptr<awst::Statement>> body;
+					if (!clearAggregate(ea, et, body))
+						return false;
+					body.push_back(awst::makeAssignmentStatement(bv(ivar),
+						awst::makeBigUIntBinOp(bv(ivar),
+							awst::BigUIntBinaryOperator::Add,
+							awst::makeIntegerConstant("1", m_loc,
+								awst::WType::biguintType()), m_loc), m_loc));
+					auto blk = awst::makeBlock(m_loc);
+					blk->body = std::move(body);
+					_out.push_back(awst::makeWhileLoop(
+						awst::makeNumericCompare(bv(ivar),
+							awst::NumericComparison::Lt, bv(lvar), m_loc),
+						std::move(blk), m_loc));
+				}
+				_out.push_back(SlotHandleAccess::writeSlot(_a.slot,
+					awst::makeZero(m_loc, awst::WType::biguintType()), m_loc));
+				return true;
 			}
 			auto call = awst::makeSubroutineCall(
 				awst::SubroutineID{"__puyasol___evm_dynarr_write"},
@@ -1135,13 +1188,10 @@ bool EvmSlotLowering::clearAggregate(
 				+ span.str() + " slots not supported (cap 64)", m_loc);
 			return false;
 		}
-		for (solidity::u256 j = 0; j < span; ++j)
-			_out.push_back(SlotHandleAccess::writeSlot(
-				awst::makeBigUIntBinOp(baseVar(),
-					awst::BigUIntBinaryOperator::Add,
-					awst::makeIntegerConstant(j.str(), m_loc,
-						awst::WType::biguintType()), m_loc),
-				awst::makeZero(m_loc, awst::WType::biguintType()), m_loc));
+		// ORDER MATTERS: recurse into dynamic members FIRST. Their regions are
+		// found through their length words, which the span zeroing below
+		// destroys — clearing the span first would strand the data and a later
+		// re-grow would read it back.
 		// dynamic members: clear their keccak-region data too
 		for (auto const& m: st->structDefinition().members())
 		{
@@ -1165,13 +1215,16 @@ bool EvmSlotLowering::clearAggregate(
 						awst::WType::biguintType()), m_loc));
 			fa.solType = mt;
 			fa.wtype = m_ctx.typeMapper.map(mt);
-			// slot span already zeroed above; for bytes/dynarrays that also
-			// zeroed the length/short word — only LONG-form data remains,
-			// which is unreachable once the length word is zero. EVM leaves
-			// it too (SSTORE-refund era cleared, but reads cannot observe
-			// the difference through Solidity). Match observable semantics.
-			(void)fa;
+			if (!clearAggregate(fa, mt, _out))
+				return false;
 		}
+		for (solidity::u256 j = 0; j < span; ++j)
+			_out.push_back(SlotHandleAccess::writeSlot(
+				awst::makeBigUIntBinOp(baseVar(),
+					awst::BigUIntBinaryOperator::Add,
+					awst::makeIntegerConstant(j.str(), m_loc,
+						awst::WType::biguintType()), m_loc),
+				awst::makeZero(m_loc, awst::WType::biguintType()), m_loc));
 		return true;
 	}
 	Logger::instance().error(

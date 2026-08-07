@@ -105,7 +105,10 @@ def build_dep_tapes(case_dir: Path, skipped: set, mapping20: dict | None = None,
     """
     tp = case_dir / "dep_tape.json"
     if not tp.exists():
-        return {}
+        # MUST respect with_positions: a bare {} unpacks as zero values and
+        # kills every case fetched WITHOUT --script-deps (i.e. the whole
+        # existing corpus). Regression found by the pure-Solidity campaign.
+        return ({}, {}) if with_positions else {}
     _tj = load_json(tp) or {}
     tapes = _tj.get("tapes") or {}
     # Calls the stand-in answers itself never reach the tape-playing fallback,

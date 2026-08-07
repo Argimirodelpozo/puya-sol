@@ -312,7 +312,8 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 			if (varDecl->isConstant() && varDecl->value())
 				return buildExpr(*varDecl->value());
 
-			return m_ctx.storageMapper.createStateRead(name, type, kind, m_loc);
+			return m_ctx.storageMapper.createStateRead(
+				m_ctx.storageMapper.storageNameFor(*varDecl), type, kind, m_loc);
 		}
 	}
 
