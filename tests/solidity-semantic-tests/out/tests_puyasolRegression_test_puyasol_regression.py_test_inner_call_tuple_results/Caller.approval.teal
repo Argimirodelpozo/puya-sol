@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/inner_call_tuple_results.sol.Caller.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 24
-    bytecblock 0x "__ctor_pending" 0xb5251388 0x311e3db1 0x151f7c75 0x703a0000000000000000 TMPL_APPROVAL_Cee TMPL_CLEAR_Cee
+    intcblock 0 1 6 32
+    bytecblock "__ctor_pending" "s" 0xb5251388 0x311e3db1 0x151f7c75 TMPL_APPROVAL_Cee TMPL_CLEAR_Cee
     pushint 4096
     bzero
     dup
@@ -24,10 +24,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
-    intc_2 // 1
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -45,7 +45,7 @@ main_nested_route@7:
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -53,52 +53,32 @@ main_ternary_merge@14:
     !
     assert // not payable
     itxn_begin
-    intc_0 // 32
-    bzero
-    bytec_0 // 0x
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_3 // 24
+    intc_0 // 0
+    bytec_1 // "s"
+    app_global_get_ex
+    assert // check s exists
+    pushint 24
     extract_uint64
-    pushint 6
+    intc_2 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
+    dup
     itxn_field ApplicationID
     bytec_2 // method "a()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     itxn_begin
-    bytec_0 // 0x
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_3 // 24
-    extract_uint64
-    pushint 6
+    intc_2 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
+    swap
     itxn_field ApplicationID
     bytec_3 // method "c()uint256"
     itxn_field ApplicationArgs
@@ -115,26 +95,28 @@ main_ternary_merge@14:
     assert // overflow
     dup
     len
-    intc_0 // 32
+    intc_3 // 32
     <=
     assert // overflow
+    intc_3 // 32
+    bzero
     b|
     bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@13:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@14
 
 main_tup_route@6:
     txn GroupIndex
     bz main_ternary_false@18
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -142,77 +124,45 @@ main_ternary_merge@19:
     !
     assert // not payable
     itxn_begin
-    intc_0 // 32
-    bzero
-    bytec_0 // 0x
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_3 // 24
+    intc_0 // 0
+    bytec_1 // "s"
+    app_global_get_ex
+    assert // check s exists
+    pushint 24
     extract_uint64
-    pushint 6
+    intc_2 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
+    dup
     itxn_field ApplicationID
     bytec_2 // method "a()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     itxn_begin
-    bytec_0 // 0x
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_3 // 24
-    extract_uint64
-    pushint 6
+    intc_2 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
+    dig 1
     itxn_field ApplicationID
     pushbytes 0xddb04781 // method "b()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     itxn_begin
-    bytec_0 // 0x
-    callsub __storage_read
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_3 // 24
-    extract_uint64
-    pushint 6
+    intc_2 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
+    uncover 2
     itxn_field ApplicationID
     bytec_3 // method "c()uint256"
     itxn_field ApplicationArgs
@@ -222,25 +172,28 @@ main_ternary_merge@19:
     extract 4 0
     dup
     len
-    intc_0 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    dig 3
+    intc_3 // 32
+    bzero
+    swap
+    dig 1
     b|
-    uncover 2
+    uncover 3
     extract 4 0
     dup
     len
-    intc_0 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    dig 3
+    dig 2
     b|
-    uncover 2
+    uncover 3
     extract 4 0
     dup
     len
-    intc_0 // 32
+    intc_3 // 32
     <=
     assert // overflow
     uncover 3
@@ -253,34 +206,34 @@ main_ternary_merge@19:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@18:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@19
 
 main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
-    intc_1 // 0
+    bytec_0 // "__ctor_pending"
+    intc_0 // 0
     app_global_put
     itxn_begin
-    bytec 6 // TMPL_APPROVAL_Cee
-    bytec 7 // TMPL_CLEAR_Cee
-    pushint 6
+    bytec 5 // TMPL_APPROVAL_Cee
+    bytec 6 // TMPL_CLEAR_Cee
+    intc_2 // 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
     pushint 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -292,117 +245,21 @@ main___postInit_route@5:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 1000000
     itxn_field Amount
     itxn_submit
-    intc_3 // 24
+    pushint 24
     bzero
     swap
     itob
     concat
-    extract 0 32
-    bytec 5 // 0x703a0000000000000000
-    pushint 2048
-    box_create
-    pop
-    intc_0 // 32
-    bzero
+    bytec_1 // "s"
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 5 // 0x703a0000000000000000
-    intc_1 // 0
-    uncover 2
-    box_replace
-    intc_2 // 1
+    app_global_put
+    intc_1 // 1
     return
-
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    intc_1 // 0
-    dup
-    bytec_0 // ""
-    frame_dig -1
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    pushbytes 0x010000
-    b<
-    bz __storage_read_else_body@4
-    pushint 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dup
-    frame_bury 2
-    pushint 64
-    /
-    itob
-    pushbytes "p:"
-    swap
-    concat
-    dup
-    frame_bury 1
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 2
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    frame_dig 1
-    swap
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-__storage_read_after_if_else@3:
-    bytec_0 // 0x
-    frame_bury 0
-    retsub
-
-__storage_read_else_body@4:
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes "s:"
-    swap
-    concat
-    dup
-    frame_bury 0
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 0
-    intc_1 // 0
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub

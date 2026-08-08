@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_read_write.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8 255
-    bytecblock 0x06 0x08 0x151f7c75 0x07 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
+    intcblock 1 0 185 255
+    bytecblock "data" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000003 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -24,7 +24,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    bytec_2 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -33,20 +36,20 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x327cf618 0x9804a8ae 0x74dc582b // method "testInit()(uint64,uint64,uint256,uint64,bool)", method "testCopyRead()(uint64,uint64,uint256,uint64)", method "testAssign()(uint64,uint64,uint256,uint64)"
+    pushbytess 0xbacc49e3 0x327cf618 0x9804a8ae 0x74dc582b // method "__postInit()void", method "testInit()(uint64,uint64,uint256,uint64,bool)", method "testCopyRead()(uint64,uint64,uint256,uint64)", method "testAssign()(uint64,uint64,uint256,uint64)"
     txna ApplicationArgs 0
-    match main_testInit_route@5 main_testCopyRead_route@6 main_testAssign_route@7
+    match main___postInit_route@5 main_testInit_route@6 main_testCopyRead_route@7 main_testAssign_route@8
     err
 
-main_testAssign_route@7:
+main_testAssign_route@8:
     txn GroupIndex
-    bz main_ternary_false@13
+    bz main_ternary_false@14
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@14:
+main_ternary_merge@15:
     !
     assert // not payable
     load 0
@@ -62,238 +65,186 @@ main_ternary_merge@14:
     replace2 64
     store 0
     pushbytes 0x01000200000000000000000000000000000000000000000000000000000000000000030004
-    intc_2 // 0
+    intc_1 // 0
     getbyte
     pushbytes 0x0004
-    intc_1 // 1
+    intc_0 // 1
     getbyte
     swap
-    intc 4 // 255
+    intc_3 // 255
     &
     swap
-    intc 4 // 255
+    intc_3 // 255
     &
     swap
     itob
     pushint 2
     itob
     concat
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000003
     concat
     swap
     itob
     concat
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
-main_ternary_false@13:
-    intc_2 // 0
-    b main_ternary_merge@14
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
 
-main_testCopyRead_route@6:
+main_testCopyRead_route@7:
     txn GroupIndex
-    bz main_ternary_false@18
+    bz main_ternary_false@19
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+main_ternary_merge@20:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    bytec_0 // 0x06
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x01
-    replace2 31
-    bytec_0 // 0x06
-    swap
-    callsub __storage_write
-    bytec_0 // 0x06
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x0002
-    replace2 29
-    bytec_0 // 0x06
-    swap
-    callsub __storage_write
-    pushint 3
-    itob
-    bytec_3 // 0x07
-    swap
-    callsub __storage_write
-    bytec_1 // 0x08
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x04
-    replace2 30
-    bytec_1 // 0x08
-    swap
-    callsub __storage_write
-    intc_1 // 1
-    bzero
-    bytec_1 // 0x08
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 31 1
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_1 // 1
-    -
-    intc_1 // 1
-    extract3
-    dup
-    len
-    intc_1 // 1
-    <=
-    assert // overflow
-    dig 1
-    b|
-    bytec_1 // 0x08
-    callsub __storage_read
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 30 1
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_1 // 1
-    -
-    intc_1 // 1
-    extract3
-    dup
-    len
-    intc_1 // 1
-    <=
-    assert // overflow
-    uncover 2
-    b|
-    concat
-    bytec_0 // 0x06
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 31
-    getbyte
-    itob
-    dup
-    bitlen
-    intc_3 // 8
-    <=
-    assert // overflow
-    extract 7 1
-    bytec_0 // 0x06
-    callsub __storage_read
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 29
-    extract_uint16
-    itob
-    dup
-    bitlen
-    pushint 16
-    <=
-    assert // overflow
-    extract 6 2
-    bytec_3 // 0x07
-    callsub __storage_read
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 4
-    b|
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz main_after_if_else@22
+    bytec_0 // "data"
+    intc_2 // 185
+    box_create
+    pop
+
+main_after_if_else@22:
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
-    concat
-    swap
-    concat
-    swap
-    concat
+    select
+    extract 74 37 // on error: index access is out of bounds
     dup
-    intc_2 // 0
+    extract 35 2
+    dig 1
+    extract 1 2
+    uncover 2
+    extract 3 32
+    pushbytes 0x01
+    uncover 2
+    concat
+    swap
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    pushint 74
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz main_after_if_else@24
+    bytec_0 // "data"
+    intc_2 // 185
+    box_create
+    pop
+
+main_after_if_else@24:
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 74 37 // on error: index access is out of bounds
+    dup
+    extract 35 2
+    dig 1
+    extract 0 1
+    uncover 2
+    extract 3 32
+    swap
+    pushbytes 0x0002
+    concat
+    swap
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    pushint 74
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz main_after_if_else@26
+    bytec_0 // "data"
+    intc_2 // 185
+    box_create
+    pop
+
+main_after_if_else@26:
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 74 37 // on error: index access is out of bounds
+    dup
+    extract 35 2
+    dig 1
+    extract 0 1
+    uncover 2
+    extract 1 2
+    concat
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000003
+    concat
+    swap
+    concat
+    bytec_0 // "data"
+    pushint 74
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz main_after_if_else@28
+    bytec_0 // "data"
+    intc_2 // 185
+    box_create
+    pop
+
+main_after_if_else@28:
+    bytec_0 // "data"
+    pushint 110
+    pushbytes 0x04
+    box_replace // on error: index out of bounds
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 74 37 // on error: index access is out of bounds
+    dup
+    intc_1 // 0
     getbyte
     dig 1
-    intc_1 // 1
+    intc_0 // 1
     extract_uint16
     dig 2
     extract 3 32
     uncover 3
     extract 35 2
-    intc_1 // 1
+    intc_0 // 1
     getbyte
     uncover 3
-    intc 4 // 255
+    intc_3 // 255
     &
     uncover 3
     pushint 65535
     &
     uncover 2
-    intc 4 // 255
+    intc_3 // 255
     &
     uncover 2
     itob
@@ -305,26 +256,26 @@ main_ternary_merge@19:
     swap
     itob
     concat
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
-main_ternary_false@18:
-    intc_2 // 0
-    b main_ternary_merge@19
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
 
-main_testInit_route@5:
+main_testInit_route@6:
     txn GroupIndex
-    bz main_ternary_false@23
+    bz main_ternary_false@32
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+main_ternary_merge@33:
     !
     assert // not payable
     load 0
@@ -341,172 +292,27 @@ main_ternary_merge@24:
     store 0
     pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
-main_ternary_false@23:
-    intc_2 // 0
-    b main_ternary_merge@24
+main_ternary_false@32:
+    intc_1 // 0
+    b main_ternary_merge@33
 
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    intc_2 // 0
-    dup
-    pushbytes ""
-    frame_dig -1
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    bytec 5 // 0x010000
-    b<
-    bz __storage_read_else_body@4
-    intc_3 // 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    frame_bury 2
-    pushint 64
-    /
-    itob
-    bytec 6 // "p:"
-    swap
-    concat
-    dup
-    frame_bury 1
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 2
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    frame_dig 1
-    swap
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-__storage_read_after_if_else@3:
-    pushbytes 0x
-    frame_bury 0
-    retsub
-
-__storage_read_else_body@4:
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 7 // "s:"
-    swap
-    concat
-    dup
-    frame_bury 0
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 0
-    intc_2 // 0
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
-__storage_write:
-    proto 2 0
-    frame_dig -2
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -2
-    bytec 5 // 0x010000
-    b<
-    bz __storage_write_else_body@2
-    intc_3 // 8
-    bzero
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    pushint 64
-    /
-    itob
-    bytec 6 // "p:"
-    swap
-    concat
-    dup
-    pushint 2048
+main___postInit_route@5:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_2 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "data"
+    intc_2 // 185
     box_create
     pop
-    swap
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    box_replace
-    retsub
-
-__storage_write_else_body@2:
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 7 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
-    swap
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_2 // 0
-    swap
-    box_replace
-    retsub
+    intc_0 // 1
+    return

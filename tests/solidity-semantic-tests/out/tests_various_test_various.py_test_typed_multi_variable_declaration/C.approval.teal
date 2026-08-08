@@ -1,0 +1,61 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/typed_multi_variable_declaration.sol.C.approval_program() -> uint64:
+main:
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytess "s" 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    pushint 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x4b4fb052 // method "f()bool"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    pushint 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    pushbytess "s" 0x0000000000000000000000000000000000000000000000000000000000000007
+    app_global_put
+    pushbytes 0x151f7c7580
+    log
+    pushint 1
+    return
+
+main_ternary_false@8:
+    pushint 0
+    b main_ternary_merge@9

@@ -338,6 +338,15 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 			return;
 		seenDecls.insert(var->id());
 
+		// NOTE: immutables share this key namespace with real state vars. On
+		// EVM they are inlined into bytecode and are not storage at all, which
+		// is how ERC20's `string _name` and EIP712's `ShortString immutable
+		// _name` came to collide. Giving them their own namespace was tried
+		// and REVERTED: ~14 read/write call sites across 6 files still resolve
+		// by plain name, so the keys diverged and 8 immutable tests failed.
+		// The collision itself is already fixed by keying on the DECLARATION
+		// (below); a separate namespace needs the declaration threaded through
+		// every site first.
 		std::string keyName = var->name();
 		if (usedNames.count(keyName))
 		{
@@ -345,10 +354,10 @@ std::vector<awst::AppStorageDefinition> StorageMapper::mapStateVariables(
 			if (auto const* oc = dynamic_cast<
 					solidity::frontend::ContractDefinition const*>(var->scope()))
 				owner = oc->name();
-			keyName = var->name() + "." + (owner.empty() ? "dup" : owner);
+			keyName = keyName + "." + (owner.empty() ? "dup" : owner);
 			// pathological: same name AND same owner name — fall back to the id
 			if (usedNames.count(keyName))
-				keyName = var->name() + "." + std::to_string(var->id());
+				keyName = keyName + "." + std::to_string(var->id());
 			Logger::instance().debug(
 				"state variable '" + var->name() + "' is declared by more than "
 				"one base contract; storing the " + owner + " one as '"

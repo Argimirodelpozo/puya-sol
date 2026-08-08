@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/constructor_arguments_internal.sol.Helper.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 8
-    bytecblock 0x "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
+    intcblock 0 1
+    bytecblock "name" "flag" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -24,10 +24,26 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
-    intc_2 // 1
+    txna ApplicationArgs 0
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    bytec_0 // "name"
+    pushbytes 0x000000
     app_global_put
-    intc_2 // 1
+    bytec_1 // "flag"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "name"
+    uncover 2
+    app_global_put
+    bytec_1 // "flag"
+    swap
+    app_global_put
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -36,307 +52,63 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x49e7fb1a 0x0a5c26e3 0x2fe85e04 // method "__postInit(byte[3],bool)void", method "getName()byte[3]", method "getFlag()bool"
+    pushbytess 0x0a5c26e3 0x2fe85e04 // method "getName()byte[3]", method "getFlag()bool"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_getName_route@6 main_getFlag_route@7
+    match main_getName_route@5 main_getFlag_route@6
     err
 
-main_getFlag_route@7:
+main_getFlag_route@6:
     txn GroupIndex
-    bz main_ternary_false@13
+    bz main_ternary_false@12
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@14:
+main_ternary_merge@13:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    bytec_0 // 0x
-    callsub __storage_read
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 28
-    getbyte
-    intc_1 // 0
-    !=
+    intc_0 // 0
+    bytec_1 // "flag"
+    app_global_get_ex
+    assert // check flag exists
     pushbytes 0x00
-    intc_1 // 0
+    intc_0 // 0
     uncover 2
     setbit
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@13:
-    intc_1 // 0
-    b main_ternary_merge@14
+main_ternary_false@12:
+    intc_0 // 0
+    b main_ternary_merge@13
 
-main_getName_route@6:
+main_getName_route@5:
     txn GroupIndex
-    bz main_ternary_false@18
+    bz main_ternary_false@17
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+main_ternary_merge@18:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    bytec_0 // 0x
-    callsub __storage_read
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 29 3
+    intc_0 // 0
+    bytec_0 // "name"
+    app_global_get_ex
+    assert // check name exists
     bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@18:
-    intc_1 // 0
-    b main_ternary_merge@19
-
-main___postInit_route@5:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 3
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 3>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_2 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
-    getbit
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    intc_0 // 32
-    bzero
-    bytec_0 // 0x
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 3
-    replace2 29
-    bytec_0 // 0x
-    swap
-    callsub __storage_write
-    bytec_0 // 0x
-    callsub __storage_read
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    itob
-    extract 7 1
-    replace2 28
-    bytec_0 // 0x
-    swap
-    callsub __storage_write
-    intc_2 // 1
-    return
-
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    intc_1 // 0
-    dup
-    bytec_0 // ""
-    frame_dig -1
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    bytec 4 // 0x010000
-    b<
-    bz __storage_read_else_body@4
-    intc_3 // 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    frame_bury 2
-    pushint 64
-    /
-    itob
-    bytec 5 // "p:"
-    swap
-    concat
-    dup
-    frame_bury 1
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 2
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    frame_dig 1
-    swap
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-__storage_read_after_if_else@3:
-    bytec_0 // 0x
-    frame_bury 0
-    retsub
-
-__storage_read_else_body@4:
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 6 // "s:"
-    swap
-    concat
-    dup
-    frame_bury 0
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 0
-    intc_1 // 0
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
-__storage_write:
-    proto 2 0
-    frame_dig -2
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -2
-    bytec 4 // 0x010000
-    b<
-    bz __storage_write_else_body@2
-    intc_3 // 8
-    bzero
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    pushint 64
-    /
-    itob
-    bytec 5 // "p:"
-    swap
-    concat
-    dup
-    pushint 2048
-    box_create
-    pop
-    swap
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    box_replace
-    retsub
-
-__storage_write_else_body@2:
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 6 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
-    swap
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_1 // 0
-    swap
-    box_replace
-    retsub
+main_ternary_false@17:
+    intc_0 // 0
+    b main_ternary_merge@18

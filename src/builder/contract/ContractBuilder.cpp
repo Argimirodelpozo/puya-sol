@@ -1,3 +1,5 @@
+#include <libsolidity/ast/CallGraph.h>
+#include <variant>
 #include "builder/contract/ContractBuilder.h"
 #include "awst/NameGen.h"
 #include "builder/NatSpecTags.h"
@@ -328,6 +330,76 @@ bool _isCalledInternally(
 	return false;
 }
 
+
+namespace
+{
+/// True when `_fn` performs a `.delegatecall(...)`.
+class DelegatecallScanner: public solidity::frontend::ASTConstVisitor
+{
+public:
+	bool found = false;
+	bool visit(solidity::frontend::FunctionCall const& _c) override
+	{
+		auto const* ft = dynamic_cast<solidity::frontend::FunctionType const*>(
+			_c.expression().annotation().type);
+		if (ft && ft->kind() == solidity::frontend::FunctionType::Kind::BareDelegateCall)
+			found = true;
+		if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(
+				&_c.expression()))
+			if (ma->memberName() == "delegatecall")
+				found = true;
+		return !found;
+	}
+};
+
+/// Functions reachable from this contract's external interface / constructor,
+/// per solc's own call graphs (populated during analysis).
+std::set<solidity::frontend::CallableDeclaration const*> reachableCallables(
+	solidity::frontend::ContractDefinition const& _contract)
+{
+	std::set<solidity::frontend::CallableDeclaration const*> out;
+	auto absorb = [&](solidity::frontend::CallGraph const* g) {
+		if (!g)
+			return;
+		for (auto const& [from, tos]: g->edges)
+		{
+			if (auto const* const* f =
+					std::get_if<solidity::frontend::CallableDeclaration const*>(&from))
+				if (*f)
+					out.insert(*f);
+			for (auto const& to: tos)
+				if (auto const* const* t =
+						std::get_if<solidity::frontend::CallableDeclaration const*>(&to))
+					if (*t)
+						out.insert(*t);
+		}
+	};
+	if (_contract.annotation().creationCallGraph.set())
+		absorb((*_contract.annotation().creationCallGraph).get());
+	if (_contract.annotation().deployedCallGraph.set())
+		absorb((*_contract.annotation().deployedCallGraph).get());
+	return out;
+}
+
+/// A delegatecall we may ignore: it sits in a function that is NOT part of the
+/// contract per solc's call graphs — vendored-dead library code (OZ
+/// Address.functionDelegateCall) that solc itself prunes from the bytecode.
+/// Reachable delegatecalls are left alone and still hard-error downstream.
+bool isDeadDelegatecallFunction(
+	solidity::frontend::FunctionDefinition const& _fn,
+	solidity::frontend::ContractDefinition const& _contract,
+	std::set<solidity::frontend::CallableDeclaration const*> const& _reachable)
+{
+	if (!_contract.annotation().creationCallGraph.set()
+		&& !_contract.annotation().deployedCallGraph.set())
+		return false;   // no graph → never skip
+	if (_reachable.count(&_fn))
+		return false;
+	DelegatecallScanner sc;
+	_fn.accept(sc);
+	return sc.found;
+}
+} // namespace
 
 std::shared_ptr<awst::Expression> materializeBlobStructValue(
 	TypeMapper& _typeMapper,
@@ -1030,12 +1102,26 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	}
 
 
+	// solc's call graphs answer "is this function part of the contract?".
+	// Used only to skip DEAD delegatecall-bearing library code (see
+	// isDeadDelegatecallFunction) — nothing else consults it.
+	auto const reachableFns = reachableCallables(_contract);
+
 	std::set<std::string> translatedFunctions;
 	for (auto const* func: _contract.definedFunctions())
 	{
 		if (func->isConstructor())
 			continue;
 
+		if (isDeadDelegatecallFunction(*func, _contract, reachableFns))
+		{
+			Logger::instance().debug(
+				"skipping unreachable `" + func->name() + "`: it contains a "
+				"delegatecall but is not in solc's call graph (vendored-dead "
+				"library code, pruned from the deployed bytecode too)",
+				makeLoc(func->location()));
+			continue;
+		}
 		std::string key = func->name();
 		if (m_overloadedNames.count(key))
 			key += "#" + std::to_string(func->id());
@@ -1085,6 +1171,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				continue;
 
 			if (!func->isImplemented())
+				continue;
+			if (isDeadDelegatecallFunction(*func, _contract, reachableFns))
 				continue;
 
 			translatedFunctions.insert(key);

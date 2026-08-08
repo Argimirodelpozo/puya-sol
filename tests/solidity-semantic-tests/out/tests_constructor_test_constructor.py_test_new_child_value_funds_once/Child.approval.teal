@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/new_child_value_probe.sol.Child.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
-    bytecblock 0x703a0000000000000000 "__ctor_pending"
+    intcblock 1 0 32
+    bytecblock "__ctor_pending" "seenValue"
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -52,22 +52,16 @@ main_seenValue_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    bytec_0 // 0x703a0000000000000000
-    box_len
-    bury 1
-    bz main_after_if_else@22
-    bytec_0 // 0x703a0000000000000000
-    intc_2 // 0
-    intc_1 // 32
-    box_extract
-
-main_after_inlined___puyasol___storage_read@26:
+    intc_1 // 0
+    bytec_1 // "seenValue"
+    app_global_get_ex
+    assert // check seenValue exists
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -77,24 +71,23 @@ main_after_inlined___puyasol___storage_read@26:
     intc_0 // 1
     return
 
-main_after_if_else@22:
-    pushbytes 0x
-    b main_after_inlined___puyasol___storage_read@26
-
 main_ternary_false@12:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@13
 
 main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_1 // "seenValue"
+    pushbytes 0x
     app_global_put
     txn GroupIndex
     bz main_ternary_false@17
@@ -105,27 +98,12 @@ main___postInit_route@5:
 
 main_ternary_merge@18:
     itob
-    bytec_0 // 0x703a0000000000000000
-    pushint 2048
-    box_create
-    pop
-    intc_1 // 32
-    bzero
+    bytec_1 // "seenValue"
     swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x703a0000000000000000
-    intc_2 // 0
-    uncover 2
-    box_replace
+    app_global_put
     intc_0 // 1
     return
 
 main_ternary_false@17:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@18

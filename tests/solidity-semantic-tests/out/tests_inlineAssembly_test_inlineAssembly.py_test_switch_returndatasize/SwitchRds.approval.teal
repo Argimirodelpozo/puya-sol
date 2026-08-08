@@ -3,11 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/switch_returndatasize.sol.SwitchRds.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 4
-    bytecblock 0x 0x151f7c75 "__ctor_pending" 0x010000000000000000000000000000000000000000000000000000000000000000 0x703a0000000000000000 TMPL_APPROVAL_Callee TMPL_CLEAR_Callee
-    intc_1 // 0
+    intcblock 0 1 32 4
+    bytecblock 0x151f7c75 "__ctor_pending" "c" TMPL_APPROVAL_Callee TMPL_CLEAR_Callee
+    intc_0 // 0
     dupn 3
-    bytec_0 // ""
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -27,10 +27,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
-    intc_2 // 1
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -48,62 +48,49 @@ main_c_route@7:
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 main_ternary_merge@14:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    bytec_0 // 0x
-    callsub __storage_read
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // 0x151f7c75
+    intc_0 // 0
+    bytec_2 // "c"
+    app_global_get_ex
+    assert // check c exists
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@13:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@14
 
 main_probe_route@6:
     txn GroupIndex
     bz main_ternary_false@18
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 main_ternary_merge@19:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    dup
-    bury 4
-    bytec_0 // 0x
-    callsub __storage_read
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    intc_0 // 0
+    bytec_2 // "c"
+    app_global_get_ex
+    assert // check c exists
     load 0
     store 0
     load 0
+    intc_2 // 32
+    bzero
+    bury 4
     pushbytes 0xbea484fd00000000000000000000000000000000000000000000000000000000
     replace2 0
     store 0
@@ -112,16 +99,16 @@ main_ternary_merge@19:
     extract 0 4
     load 0
     intc_3 // 4
-    intc_1 // 0
+    intc_0 // 0
     extract3
     uncover 2
     pushint 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
     swap
@@ -137,7 +124,7 @@ main_ternary_merge@19:
     bz main_ternary_false@22
     dig 4
     extract 0 4
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     ==
 
 main_ternary_merge@23:
@@ -146,7 +133,7 @@ main_ternary_merge@23:
     extract 4 0
 
 main_ternary_merge@26:
-    dig 3
+    dig 2
     dup
     cover 2
     concat
@@ -154,9 +141,9 @@ main_ternary_merge@26:
     concat
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    intc_0 // 32
+    intc_2 // 32
     extract3
     load 0
     swap
@@ -173,7 +160,7 @@ main_ternary_merge@26:
     bz main_ternary_false@28
     dig 3
     extract 0 4
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     ==
 
 main_ternary_merge@29:
@@ -184,14 +171,14 @@ main_ternary_merge@29:
 main_ternary_merge@32:
     len
     itob
-    dig 3
+    dig 2
     b|
-    bury 2
+    bury 3
     dup
     bz main_ternary_false@34
     dig 3
     extract 0 4
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     ==
 
 main_ternary_merge@35:
@@ -202,14 +189,14 @@ main_ternary_merge@35:
 main_ternary_merge@38:
     len
     itob
-    dig 3
+    dig 2
     b|
     len
-    intc_0 // 32
+    intc_2 // 32
     -
-    dig 2
+    dig 3
     swap
-    intc_0 // 32
+    intc_2 // 32
     extract3
     pushbytess 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000020
     uncover 2
@@ -219,20 +206,20 @@ main_ternary_merge@38:
 main_switch_case_next@42:
     load 0
     store 0
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    dig 3
+    dig 2
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_switch_case_1@40:
@@ -248,7 +235,7 @@ main_ternary_false@37:
     b main_ternary_merge@38
 
 main_ternary_false@34:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@35
 
 main_ternary_false@31:
@@ -256,7 +243,7 @@ main_ternary_false@31:
     b main_ternary_merge@32
 
 main_ternary_false@28:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@29
 
 main_ternary_false@25:
@@ -264,34 +251,34 @@ main_ternary_false@25:
     b main_ternary_merge@26
 
 main_ternary_false@22:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@23
 
 main_ternary_false@18:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@19
 
 main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
-    intc_1 // 0
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
     app_global_put
     itxn_begin
-    bytec 5 // TMPL_APPROVAL_Callee
-    bytec 6 // TMPL_CLEAR_Callee
+    bytec_3 // TMPL_APPROVAL_Callee
+    bytec 4 // TMPL_CLEAR_Callee
     pushint 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
     pushint 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -303,10 +290,10 @@ main___postInit_route@5:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 1000000
     itxn_field Amount
@@ -316,104 +303,8 @@ main___postInit_route@5:
     swap
     itob
     concat
-    extract 0 32
-    bytec 4 // 0x703a0000000000000000
-    pushint 2048
-    box_create
-    pop
-    intc_0 // 32
-    bzero
+    bytec_2 // "c"
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 4 // 0x703a0000000000000000
-    intc_1 // 0
-    uncover 2
-    box_replace
-    intc_2 // 1
+    app_global_put
+    intc_1 // 1
     return
-
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    intc_1 // 0
-    dup
-    bytec_0 // ""
-    frame_dig -1
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    pushbytes 0x010000
-    b<
-    bz __storage_read_else_body@4
-    pushint 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dup
-    frame_bury 2
-    pushint 64
-    /
-    itob
-    pushbytes "p:"
-    swap
-    concat
-    dup
-    frame_bury 1
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 2
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    frame_dig 1
-    swap
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-__storage_read_after_if_else@3:
-    bytec_0 // 0x
-    frame_bury 0
-    retsub
-
-__storage_read_else_body@4:
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes "s:"
-    swap
-    concat
-    dup
-    frame_bury 0
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 0
-    intc_1 // 0
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub

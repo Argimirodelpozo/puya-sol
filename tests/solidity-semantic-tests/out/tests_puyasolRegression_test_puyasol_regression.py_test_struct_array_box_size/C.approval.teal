@@ -3,12 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_array_box_size.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8 255
-    bytecblock 0x05 0x03 0xffffffffffffffffffffffffffffffffffffffff 0x8000000000000000000000000000000000000000 0xffffffffffffffffffffffff0000000000000000000000000000000000000000 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
-    intc_2 // 0
-    dupn 8
+    intcblock 1 8 32 0 255 275
+    bytecblock "wide" "small" 0x010000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffff 0x8000000000000000000000000000000000000000 0xffffffffffffffffffffffff0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    intc_3 // 0
+    dupn 4
     pushbytes ""
-    dupn 2
+    dupn 3
     pushint 4096
     bzero
     dup
@@ -28,7 +28,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    bytec 4 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -37,315 +40,228 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x10a7c4fa 0x070bdc86 0x2a09e409 0xde1ec2ef // method "setWide(uint256,uint64,uint160,uint256,uint64)void", method "getWide(uint256)(uint64,uint256,uint256,uint64)", method "setSmall(uint256,uint256)void", method "getSmall(uint256)uint256"
+    pushbytess 0xbacc49e3 0x10a7c4fa 0x070bdc86 0x2a09e409 0xde1ec2ef // method "__postInit()void", method "setWide(uint256,uint64,uint160,uint256,uint64)void", method "getWide(uint256)(uint64,uint256,uint256,uint64)", method "setSmall(uint256,uint256)void", method "getSmall(uint256)uint256"
     txna ApplicationArgs 0
-    match main_setWide_route@5 main_getWide_route@6 main_setSmall_route@7 main_getSmall_route@8
+    match main___postInit_route@5 main_setWide_route@6 main_getWide_route@7 main_setSmall_route@8 main_getSmall_route@9
     err
 
-main_getSmall_route@8:
+main_getSmall_route@9:
     txna ApplicationArgs 1
     dup
-    bury 13
+    bury 10
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@14
+    bz main_ternary_false@15
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@15:
+main_ternary_merge@16:
     !
     assert // not payable
-    dig 11
+    dig 8
     dup
-    bytec_0 // 0x05
+    bytec_2 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    bytec_1 // 0x03
-    b*
-    pushbytes 0x10
-    b+
-    callsub __storage_read
+    bytec_1 // "small"
+    box_get
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_1 // 8
+    bzero
+    uncover 2
+    concat
     dup
     len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 5 // 0x151f7c75
+    intc_1 // 8
+    -
+    extract_uint64
+    pushint 37
+    *
+    pushint 37
+    extract3 // on error: index access is out of bounds
+    extract 3 32
+    bytec 9 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
+main_ternary_false@15:
+    intc_3 // 0
+    b main_ternary_merge@16
 
-main_setSmall_route@7:
+main_setSmall_route@8:
     txna ApplicationArgs 1
     dup
-    bury 13
+    bury 10
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 11
+    bury 8
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@20
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@21:
     !
     assert // not payable
-    dig 11
-    dup
-    bytec_0 // 0x05
+    dig 8
+    bytec_2 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    bytec_1 // 0x03
-    b*
-    pushbytes 0x10
-    b+
+    bytec_1 // "small"
+    box_len
+    bury 1
+    bnz main_after_if_else@23
+    bytec_1 // "small"
+    pushint 185
+    box_create
+    pop
+
+main_after_if_else@23:
+    bytec_1 // "small"
+    box_get
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_1 // 8
+    bzero
     dig 10
-    callsub __storage_write
-    intc_1 // 1
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    pushint 37
+    *
+    swap
+    dig 1
+    pushint 37
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 35 2
+    dig 1
+    extract 0 1
+    uncover 2
+    extract 1 2
+    concat
+    dig 9
+    concat
+    swap
+    concat
+    bytec_1 // "small"
+    cover 2
+    box_replace // on error: index out of bounds
+    intc_0 // 1
     return
 
-main_ternary_false@19:
-    intc_2 // 0
-    b main_ternary_merge@20
+main_ternary_false@20:
+    intc_3 // 0
+    b main_ternary_merge@21
 
-main_getWide_route@6:
+main_getWide_route@7:
     txna ApplicationArgs 1
     dup
-    bury 13
+    bury 10
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@27
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@28:
     !
     assert // not payable
-    dig 11
+    dig 8
     dup
-    bytec_0 // 0x05
+    bytec_2 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    bytec_1 // 0x03
-    b*
-    dup
-    bury 10
-    dup
-    pushbytes 0x02
-    b+
-    intc_1 // 1
+    bytec_0 // "wide"
+    box_get
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_1 // 8
     bzero
-    intc_0 // 32
-    bzero
-    dup
-    bury 10
-    dig 2
-    callsub __storage_read
-    dig 1
-    swap
+    uncover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 8
     -
-    intc_0 // 32
-    extract3
-    extract 31 1
-    dig 2
-    swap
-    concat
+    extract_uint64
+    pushint 55
+    *
+    pushint 55
+    extract3 // on error: index access is out of bounds
     dup
-    len
-    intc_1 // 1
-    -
-    intc_1 // 1
-    extract3
-    dup
-    len
-    intc_1 // 1
-    <=
-    assert // overflow
-    dig 2
-    b|
-    uncover 3
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 30 1
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_1 // 1
-    -
-    intc_1 // 1
-    extract3
-    dup
-    len
-    intc_1 // 1
-    <=
-    assert // overflow
-    uncover 3
-    b|
-    concat
-    bury 10
-    dig 1
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 31
-    getbyte
-    itob
-    dup
-    bitlen
-    intc_3 // 8
-    <=
-    assert // overflow
-    extract 7 1
-    bury 9
-    pushint 20
-    bzero
     bury 7
-    swap
-    callsub __storage_read
-    concat
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 11 20
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffff
-    b&
-    dup
-    bytec_3 // 0x8000000000000000000000000000000000000000
-    b>=
-    bz main_ternary_false@27
-    bytec 4 // 0xffffffffffffffffffffffff0000000000000000000000000000000000000000
-    b+
-
-main_ternary_merge@28:
-    dig 5
-    dup
-    uncover 2
-    concat
-    dup
-    len
-    pushint 20
-    -
-    pushint 20
-    extract3
-    dup
-    len
-    pushint 20
-    <=
-    assert // overflow
-    b|
-    dig 9
-    pushbytes 0x01
-    b+
-    callsub __storage_read
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 7
-    b|
-    dig 8
-    uncover 2
-    concat
-    swap
-    concat
-    dig 8
-    concat
-    dup
-    bury 5
-    dup
-    intc_2 // 0
+    intc_3 // 0
     getbyte
     intc 4 // 255
     &
     bury 3
     extract 1 20
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec_3 // 0x8000000000000000000000000000000000000000
+    bytec 6 // 0x8000000000000000000000000000000000000000
     b>=
     bz main_ternary_false@30
-    bytec 4 // 0xffffffffffffffffffffffff0000000000000000000000000000000000000000
+    bytec 7 // 0xffffffffffffffffffffffff0000000000000000000000000000000000000000
     b+
 
 main_ternary_merge@31:
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec_3 // 0x8000000000000000000000000000000000000000
+    bytec 6 // 0x8000000000000000000000000000000000000000
     b>=
     bz main_ternary_false@33
-    bytec 4 // 0xffffffffffffffffffffffff0000000000000000000000000000000000000000
+    bytec 7 // 0xffffffffffffffffffffffff0000000000000000000000000000000000000000
     b+
 
 main_ternary_merge@34:
     dup
     len
-    intc_0 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    dig 6
+    intc_2 // 32
+    bzero
     b|
-    dig 4
+    dig 6
     dup
     extract 21 32
     swap
     extract 53 2
-    intc_1 // 1
+    intc_0 // 1
     getbyte
     intc 4 // 255
     &
@@ -358,11 +274,11 @@ main_ternary_merge@34:
     swap
     itob
     concat
-    bytec 5 // 0x151f7c75
+    bytec 9 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@33:
@@ -372,324 +288,278 @@ main_ternary_false@30:
     b main_ternary_merge@31
 
 main_ternary_false@27:
+    intc_3 // 0
     b main_ternary_merge@28
 
-main_ternary_false@24:
-    intc_2 // 0
-    b main_ternary_merge@25
-
-main_setWide_route@5:
+main_setWide_route@6:
     txna ApplicationArgs 1
     dup
-    bury 13
+    bury 10
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 8
+    intc_1 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     bury 1
     txna ApplicationArgs 3
     dup
-    bury 12
+    bury 9
     len
     pushint 20
     ==
     assert // invalid number of bytes for arc4.uint160
     txna ApplicationArgs 4
     dup
-    bury 11
+    bury 8
     len
-    intc_0 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 5
     dup
     len
-    intc_3 // 8
+    intc_1 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
+    bury 4
     txn GroupIndex
     bz main_ternary_false@38
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@39:
     !
     assert // not payable
-    dig 10
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffff
+    dig 7
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec_3 // 0x8000000000000000000000000000000000000000
+    bytec 6 // 0x8000000000000000000000000000000000000000
     b>=
     bz main_ternary_false@41
-    bytec 4 // 0xffffffffffffffffffffffff0000000000000000000000000000000000000000
+    bytec 7 // 0xffffffffffffffffffffffff0000000000000000000000000000000000000000
     b+
+    bury 5
 
 main_ternary_merge@42:
-    dig 1
+    dupn 2
+    intc 4 // 255
+    <=
+    assert // ABI validation
+    intc 4 // 255
+    &
+    bury 1
+    dig 3
     dup
     intc 4 // 255
     <=
     assert // ABI validation
     intc 4 // 255
     &
-    dig 4
-    dup
-    intc 4 // 255
-    <=
-    assert // ABI validation
-    intc 4 // 255
-    &
-    dig 14
-    dup
-    bytec_0 // 0x05
+    bury 4
+    dig 8
+    bytec_2 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    bytec_1 // 0x03
-    b*
-    intc_0 // 32
+    bytec_0 // "wide"
+    box_len
+    bury 1
+    bnz main_after_if_else@44
+    bytec_0 // "wide"
+    intc 5 // 275
+    box_create
+    pop
+
+main_after_if_else@44:
+    bytec_0 // "wide"
+    box_get
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_1 // 8
     bzero
-    dig 1
-    callsub __storage_read
-    dig 1
-    swap
+    dig 10
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 8
     -
-    intc_0 // 32
-    extract3
-    uncover 4
+    extract_uint64
+    pushint 55
+    *
+    dup
+    bury 5
+    swap
+    dig 1
+    pushint 55
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 53 2
+    dig 3
     itob
+    dup
+    bitlen
+    intc_1 // 8
+    <=
+    assert // overflow
     extract 7 1
-    replace2 31
     dig 2
+    extract 1 20
+    uncover 3
+    extract 21 32
+    cover 2
+    concat
     swap
-    callsub __storage_write
-    dig 1
-    callsub __storage_read
-    dig 1
+    concat
     swap
+    concat
+    bytec_0 // "wide"
+    cover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "wide"
+    box_len
+    bury 1
+    bnz main_after_if_else@46
+    bytec_0 // "wide"
+    intc 5 // 275
+    box_create
+    pop
+
+main_after_if_else@46:
+    bytec_0 // "wide"
+    box_get
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dig 3
+    dup
+    cover 2
+    pushint 55
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 53 2
+    dig 1
+    extract 0 1
+    pushint 20
+    bzero
+    dup
+    dig 10
     concat
     dup
     len
-    intc_0 // 32
+    pushint 20
     -
-    intc_0 // 32
+    pushint 20
     extract3
-    dig 1
-    uncover 5
+    dup
+    len
+    pushint 20
+    <=
+    assert // overflow
     b|
-    extract 12 20
-    replace2 11
-    dig 2
-    swap
-    callsub __storage_write
-    dig 1
-    pushbytes 0x01
-    b+
-    dig 13
-    callsub __storage_write
-    swap
-    pushbytes 0x02
-    b+
-    dup
-    callsub __storage_read
-    uncover 2
+    uncover 3
+    extract 21 32
+    cover 2
+    concat
     swap
     concat
+    swap
+    concat
+    bytec_0 // "wide"
+    cover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "wide"
+    box_len
+    bury 1
+    bnz main_after_if_else@48
+    bytec_0 // "wide"
+    intc 5 // 275
+    box_create
+    pop
+
+main_after_if_else@48:
+    bytec_0 // "wide"
+    box_get
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dig 3
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    cover 2
+    pushint 55
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 53 2
+    dig 1
+    extract 0 1
     uncover 2
+    extract 1 20
+    concat
+    dig 9
+    concat
+    swap
+    concat
+    bytec_0 // "wide"
+    cover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "wide"
+    box_len
+    bury 1
+    bnz main_after_if_else@50
+    bytec_0 // "wide"
+    intc 5 // 275
+    box_create
+    pop
+
+main_after_if_else@50:
+    dig 3
     itob
     extract 7 1
-    replace2 30
-    callsub __storage_write
-    intc_1 // 1
+    dig 3
+    pushint 54
+    +
+    bytec_0 // "wide"
+    swap
+    uncover 2
+    box_replace // on error: index out of bounds
+    intc_0 // 1
     return
 
 main_ternary_false@41:
+    bury 5
     b main_ternary_merge@42
 
 main_ternary_false@38:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@39
 
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    intc_2 // 0
-    dup
-    pushbytes ""
-    frame_dig -1
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    bytec 7 // 0x010000
-    b<
-    bz __storage_read_else_body@4
-    intc_3 // 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    frame_bury 2
-    pushint 64
-    /
-    itob
-    bytec 8 // "p:"
-    swap
-    concat
-    dup
-    frame_bury 1
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 2
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    frame_dig 1
-    swap
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-__storage_read_after_if_else@3:
-    pushbytes 0x
-    frame_bury 0
-    retsub
-
-__storage_read_else_body@4:
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 9 // "s:"
-    swap
-    concat
-    dup
-    frame_bury 0
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 0
-    intc_2 // 0
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
-__storage_write:
-    proto 2 0
-    frame_dig -2
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -2
-    bytec 7 // 0x010000
-    b<
-    bz __storage_write_else_body@2
-    intc_3 // 8
-    bzero
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    pushint 64
-    /
-    itob
-    bytec 8 // "p:"
-    swap
-    concat
-    dup
-    pushint 2048
+main___postInit_route@5:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec 4 // "__ctor_pending"
+    intc_3 // 0
+    app_global_put
+    bytec_0 // "wide"
+    intc 5 // 275
     box_create
     pop
-    swap
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    box_replace
-    retsub
-
-__storage_write_else_body@2:
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 9 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
+    bytec_1 // "small"
+    pushint 185
     box_create
     pop
-    swap
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_2 // 0
-    swap
-    box_replace
-    retsub
+    intc_0 // 1
+    return

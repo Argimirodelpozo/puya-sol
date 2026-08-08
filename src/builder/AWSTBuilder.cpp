@@ -1,3 +1,5 @@
+#include <variant>
+#include <libsolidity/ast/CallGraph.h>
 #include "builder/AWSTBuilder.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-types/SolIntType.h"
@@ -223,11 +225,89 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 }
 
 
+namespace
+{
+/// Does `_fn` perform a `.delegatecall(...)`?
+class LibDelegatecallScanner: public solidity::frontend::ASTConstVisitor
+{
+public:
+	bool found = false;
+	bool visit(solidity::frontend::FunctionCall const& _c) override
+	{
+		if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(
+				&_c.expression()))
+			if (ma->memberName() == "delegatecall")
+				found = true;
+		return !found;
+	}
+};
+
+/// A library function we may drop: it delegatecalls, and NO contract in this
+/// compilation reaches it per solc's own call graphs. That is vendored-dead
+/// library code (OZ Address.functionDelegateCall) — solc prunes it from the
+/// deployed bytecode as well. A function some contract really calls is kept,
+/// and still hard-errors at its delegatecall.
+bool libFnHasDeadDelegatecall(
+	solidity::frontend::FunctionDefinition const& _fn,
+	std::vector<solidity::frontend::ContractDefinition const*> const& _contracts)
+{
+	LibDelegatecallScanner sc;
+	_fn.accept(sc);
+	if (!sc.found)
+		return false;
+	bool anyGraph = false;
+	for (auto const* c: _contracts)
+	{
+		if (!c)
+			continue;
+		auto reach = [&](solidity::frontend::CallGraph const* g) {
+			if (!g)
+				return false;
+			for (auto const& [from, tos]: g->edges)
+			{
+				if (auto const* const* f = std::get_if<
+						solidity::frontend::CallableDeclaration const*>(&from))
+					if (*f == &_fn)
+						return true;
+				for (auto const& to: tos)
+					if (auto const* const* t = std::get_if<
+							solidity::frontend::CallableDeclaration const*>(&to))
+						if (*t == &_fn)
+							return true;
+			}
+			return false;
+		};
+		if (c->annotation().creationCallGraph.set())
+		{
+			anyGraph = true;
+			if (reach((*c->annotation().creationCallGraph).get()))
+				return false;
+		}
+		if (c->annotation().deployedCallGraph.set())
+		{
+			anyGraph = true;
+			if (reach((*c->annotation().deployedCallGraph).get()))
+				return false;
+		}
+	}
+	return anyGraph;   // no graphs at all → never drop
+}
+} // namespace
+
 void AWSTBuilder::translateLibraryFunctions(
 	solidity::frontend::CompilerStack& _compiler,
 	std::string const& _sourceFile,
 	std::vector<std::shared_ptr<awst::RootNode>>& roots)
 {
+	// every non-library contract in the unit — used only for the
+	// dead-delegatecall reachability question below
+	std::vector<solidity::frontend::ContractDefinition const*> allContracts;
+	for (auto const& sn: _compiler.sourceNames())
+		for (auto const* c: solidity::frontend::ASTNode::filteredNodes<
+				solidity::frontend::ContractDefinition>(_compiler.ast(sn).nodes()))
+			if (c && !c->isLibrary())
+				allContracts.push_back(c);
+
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
@@ -237,6 +317,7 @@ void AWSTBuilder::translateLibraryFunctions(
 		{
 			if (!contract->isLibrary())
 				continue;
+
 
 			std::string libraryName = contract->name();
 			Logger::instance().info("Translating library: " + libraryName);
@@ -307,6 +388,14 @@ void AWSTBuilder::translateLibraryFunctions(
 					continue;
 				}
 
+				if (libFnHasDeadDelegatecall(*func, allContracts))
+				{
+					Logger::instance().debug(
+						"skipping library function `" + qualifiedName + "`: it "
+						"delegatecalls but no contract in this compilation "
+						"reaches it (solc prunes it from bytecode too)");
+					continue;
+				}
 				Logger::instance().debug("Translating library function: " + qualifiedName);
 				roots.push_back(buildFreestandingSubroutine(
 					*func, _sourceFile, qualifiedName, subroutineId, libraryName));
@@ -314,6 +403,7 @@ void AWSTBuilder::translateLibraryFunctions(
 		}
 	}
 }
+
 
 void AWSTBuilder::translateFreeFunctions(
 	solidity::frontend::CompilerStack& _compiler,
