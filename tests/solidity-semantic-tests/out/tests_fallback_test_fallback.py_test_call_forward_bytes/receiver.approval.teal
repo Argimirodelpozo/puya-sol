@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.receiver.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "received" 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    intc_1 // 0
-    bytec_1 // ""
+    intcblock 32 1 0 8
+    bytecblock 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
+    intc_2 // 0
+    bytec_0 // ""
     dup
     pushint 4096
     bzero
@@ -27,21 +27,18 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "received"
-    bytec_1 // 0x
-    app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
     txn NumAppArgs
     bnz main_after_if_else@4
     callsub __fallback
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@4:
-    intc_1 // 0
+    intc_2 // 0
     bury 2
     txn OnCompletion
     !
@@ -58,7 +55,7 @@ main_switch_case_next@12:
     dup
     bnz main_after_if_else@6
     callsub __fallback
-    intc_0 // 1
+    intc_1 // 1
     bury 1
 
 main_after_if_else@6:
@@ -68,40 +65,38 @@ main_received_route@11:
     txn GroupIndex
     bz main_ternary_false@17
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 main_ternary_merge@18:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "received"
-    app_global_get_ex
-    assert // check received exists
+    bytec_0 // 0x
+    callsub __storage_read
     dup
     len
-    intc_2 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_0 // 32
     bzero
     b|
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     bury 2
     b main_switch_case_next@12
 
 main_ternary_false@17:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@18
 
 main___fallback_route@10:
     callsub __fallback
-    intc_0 // 1
+    intc_1 // 1
     bury 2
     b main_switch_case_next@12
 
@@ -110,46 +105,207 @@ main_recv_route@9:
     dup
     bury 4
     len
-    intc_2 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
     bz main_ternary_false@24
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 main_ternary_merge@25:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "received"
-    app_global_get_ex
-    assert // check received exists
-    intc_0 // 1
+    bytec_0 // 0x
+    callsub __storage_read
+    intc_1 // 1
     itob
     dig 4
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_0 // "received"
+    bytec_0 // 0x
     swap
-    app_global_put
-    intc_0 // 1
+    callsub __storage_write
+    intc_1 // 1
     bury 2
     b main_switch_case_next@12
 
 main_ternary_false@24:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@25
+
+
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    intc_2 // 0
+    dup
+    bytec_0 // ""
+    frame_dig -1
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    bytec_3 // 0x010000
+    b<
+    bz __storage_read_else_body@4
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    frame_bury 2
+    pushint 64
+    /
+    itob
+    bytec 4 // "p:"
+    swap
+    concat
+    dup
+    frame_bury 1
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 2
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    frame_dig 1
+    swap
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+__storage_read_after_if_else@3:
+    bytec_0 // 0x
+    frame_bury 0
+    retsub
+
+__storage_read_else_body@4:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "s:"
+    swap
+    concat
+    dup
+    frame_bury 0
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 0
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    frame_dig -2
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    bytec_3 // 0x010000
+    b<
+    bz __storage_write_else_body@2
+    intc_3 // 8
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    pushint 64
+    /
+    itob
+    bytec 4 // "p:"
+    swap
+    concat
+    dup
+    pushint 2048
+    box_create
+    pop
+    swap
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    box_replace
+    retsub
+
+__storage_write_else_body@2:
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_2 // 0
+    swap
+    box_replace
+    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.receiver.__fallback() -> void:
@@ -157,7 +313,7 @@ __fallback:
     txn GroupIndex
     bz __fallback_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -166,11 +322,11 @@ __fallback_ternary_merge@3:
     assert // not payable
     pushint 128
     itob
-    bytec_0 // "received"
+    bytec_0 // 0x
     swap
-    app_global_put
+    callsub __storage_write
     retsub
 
 __fallback_ternary_false@2:
-    intc_1 // 0
+    intc_2 // 0
     b __fallback_ternary_merge@3

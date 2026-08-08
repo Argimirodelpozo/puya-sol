@@ -2,6 +2,9 @@
 /// Computes EVM-compatible storage layout for Solidity contracts.
 /// Mirrors solidity/libsolidity/ast/Types.cpp StorageOffsets::computeOffsets().
 
+#include "builder/storage/EvmLayoutMode.h"
+#include <limits>
+#include <algorithm>
 #include "builder/storage/StorageLayout.h"
 #include "builder/contract/StateVarWalker.h"
 #include "Logger.h"
@@ -35,6 +38,78 @@ void StorageLayout::computeLayout(
 	m_contract = &_contract;
 	solidity::u256 currentSlot = baseSlot;
 	unsigned currentOffset = 0; // bytes used in current slot
+
+	// ── --evm-storage-layout ONLY: take solc's canonical assignment ────────
+	// `linearizedStateVariables(DataLocation::Storage)` returns solc's own
+	// (declaration, slot, byteOffset) — precisely what the hand-rolled walk
+	// below tries to reproduce and what the item-7 tripwire polices. Using it
+	// directly removes the drift, keys everything by DECLARATION (the walk
+	// de-dupes by NAME, which collapses ERC20's `string _name` onto EIP712's
+	// `ShortString _name`), and inherits solc's exclusion rules for
+	// constants/immutables/transients.
+	//
+	// STRICTLY gated: StorageLayout also backs inline-assembly `.slot`/`sload`
+	// resolution in DEFAULT mode, whose expectations the walk below encodes —
+	// applying this unconditionally broke 229 default-mode tests. Default mode
+	// keeps the original walk untouched.
+	if (builder::evmStorageLayout())
+	{
+		auto const* ct = solidity::frontend::TypeProvider::contract(_contract);
+		for (auto const& [decl, slot, offset]:
+			ct->linearizedStateVariables(solidity::frontend::DataLocation::Storage))
+		{
+			if (!decl || !decl->type())
+				continue;
+			SlotVariable sv;
+			sv.name = decl->name();
+			sv.slot = baseSlot + slot;
+			sv.byteOffset = offset;
+			sv.byteSize = decl->type()->storageBytes();
+			sv.wtype = _typeMapper.map(decl->type());
+			sv.solType = decl->type();
+			auto span = decl->type()->storageSize();
+			sv.isFullSlot = (sv.byteSize == 32) || span > 1;
+			sv.declId = decl->id();
+
+			size_t idx = m_variables.size();
+			m_variables.push_back(sv);
+			// name map keeps the FIRST declaration (asm `.slot` by name has no
+			// better answer); the id map is the unambiguous one.
+			m_varByName.emplace(sv.name, idx);
+			m_varById[sv.declId] = idx;
+
+			if (m_slotByNumber.find(sv.slot) == m_slotByNumber.end())
+			{
+				SlotInfo si;
+				si.slotNumber = sv.slot;
+				auto const* at = dynamic_cast<ArrayType const*>(decl->type());
+				si.isDynamic = dynamic_cast<MappingType const*>(decl->type())
+					|| (at && at->isDynamicallySized());
+				m_slotByNumber[sv.slot] = m_slots.size();
+				m_slots.push_back(si);
+			}
+			auto si = m_slotByNumber[sv.slot];
+			m_slots[si].variables.push_back(&m_variables[idx]);
+			m_slots[si].bytesUsed = std::max<unsigned>(
+				m_slots[si].bytesUsed, sv.byteOffset + sv.byteSize);
+
+			auto end = sv.slot + (span > 1 ? span : 1) - baseSlot;
+			if (end > solidity::u256(m_totalSlots))
+				m_totalSlots = end > solidity::u256(
+						std::numeric_limits<unsigned>::max())
+					? std::numeric_limits<unsigned>::max()
+					: static_cast<unsigned>(end);
+		}
+		if (!m_variables.empty())
+		{
+			Logger::instance().debug(
+				"Storage layout (solc canonical): "
+				+ std::to_string(m_variables.size()) + " variables in "
+				+ std::to_string(m_totalSlots) + " slots",
+				awst::SourceLocation{});
+			return;
+		}
+	}
 
 	// Collect state vars base-first (reverse of linearization).
 	std::vector<VariableDeclaration const*> allVars;

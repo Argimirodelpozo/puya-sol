@@ -5,11 +5,15 @@ info: Parsing and type-checking...
 info: Parse and type-check successful!
 info: Building AWST...
 info: Translating contract: B
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol:17 error: --evm-storage-layout: state variable 'value' (declared in contract B) missing from the storage layout
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol:17 warning: --evm-storage-layout: skipping auto-getter for public state variable 'value' (shape not yet supported; write an explicit getter)
 info: Translating contract: A
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol:271 error: `.delegatecall(...)` is not supported on AVM. DELEGATECALL's shared-storage / caller-preservation semantics have no equivalent on AVM (each app has isolated storage; inner-txn callers are the calling app, not its caller). Rewrite the call site, or use `.call(...)` if the caller-of-caller distinction isn't load-bearing.
 /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol:695 warning: address.staticcall(data) lowers to a regular inner application call on the AVM — the EVM read-only (no-state-change) guarantee is NOT enforced; the callee may mutate state.
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol:138 error: --evm-storage-layout: state variable 'value' (declared in contract A) missing from the storage layout
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol:138 warning: --evm-storage-layout: skipping auto-getter for public state variable 'value' (shape not yet supported; write an explicit getter)
 info: Translating contract: Test
 info: 'new A()' — using template variables for child bytecode (substitute before deployment).
 info: 'new B()' — using template variables for child bytecode (substitute before deployment).
-info: Generated 3 AWST root node(s)
+info: Generated 5 AWST root node(s)
 info: Wrote: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/out/tests_various_test_various.py_test_different_call_type_transient/awst.json
