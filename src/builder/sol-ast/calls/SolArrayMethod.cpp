@@ -212,6 +212,11 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 							awst::WType::biguintType()), m_loc);
 					m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
 						rootSlot, std::move(newLenA), m_loc));
+					// no-arg push() returns a REFERENCE to the new element —
+					// its slot (addr uses the pre-bump length). `push(v)`
+					// returns nothing; zero stands in.
+					if (m_call.arguments().empty())
+						return addr.slot;
 					return awst::makeZero(m_loc, awst::WType::biguintType());
 				}
 				if (value && structW)
@@ -239,6 +244,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					m_loc);
 				m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
 					rootSlot, std::move(newLen), m_loc));
+				if (m_call.arguments().empty())
+					return addr.slot;
 				return awst::makeZero(m_loc, awst::WType::biguintType());
 			}
 
