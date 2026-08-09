@@ -148,7 +148,7 @@ def main():
         fetch_case(host, address, tag, max_txns)
 
     print(f"[replay] {tag}: max_txns={max_txns}"
-          + (" [--evm-storage-layout]" if evm_layout else ""))
+          + (" [--evm-layout]" if evm_layout else ""))
     print_report(replay(tag, max_txns, snap, evm_layout, evm_memory))
 
 

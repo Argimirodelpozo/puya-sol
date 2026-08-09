@@ -44,8 +44,8 @@ python3 replay.py pepe            # uses cases/pepe/
 # EVM-COMPAT MODES: compile the AVM leg with --evm-storage-layout (flat EVM
 # slot space in boxes) and/or --evm-memory-layout (universal blob memory).
 # In slot mode the storage diff becomes SLOT-FOR-SLOT (see chd_slot_reader).
-python3 replay.py usde --evm-layout                 # storage mode
-python3 replay.py morpho --evm-layout --evm-memory  # + memory mode
+python3 replay.py usde --evm-layout                 # FULL EVM semantics (storage+memory+transient)
+python3 replay.py morpho --evm-layout               # (--evm-memory is folded into --evm-layout now)
 python3 batch.py --evm-layout --max-txns 200 --only usde,degen
 
 # Before a batch: rewind LocalNet's clock so cases replay at TRUE historical

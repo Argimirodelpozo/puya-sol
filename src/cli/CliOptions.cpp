@@ -30,6 +30,10 @@ void printUsage(char const* _progName)
 		<< "  --ensure-budget <f:N>  Inject ensure_budget(N) into function f (repeatable)\n"
 		<< "  --optimization-level <N>   Puya optimization level: 0, 1, 2 (default: 2)\n"
 		<< "  --evm-memory-slots <N> Scratch slots for EVM memory (default 5 = 20KB; UltraHonk needs ~32)\n"
+		<< "  --evm-layout           FULL EVM data-location semantics: implies both\n"
+		<< "                         --evm-storage-layout and --evm-memory-layout (plus the\n"
+		<< "                         transient space coherent with them). The recommended\n"
+		<< "                         mode for asm-heavy real-world contracts.\n"
 		<< "  --evm-memory-layout    Universal blob memory: every asm-touched memory aggregate\n"
 		<< "                         is pointer-modeled in the flat blob (EVM layout).\n"
 		<< "  --evm-storage-layout   Back all storage with EVM-numbered slots (paged/sparse boxes).\n"
@@ -122,6 +126,16 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.evmStorageLayout = true;
 		else if (arg == "--evm-memory-layout")
 			opts.evmMemoryLayout = true;
+		else if (arg == "--evm-layout")
+		{
+			// The umbrella: full EVM data-location semantics. Storage as
+			// EVM-numbered slots, memory as the flat pointer-modeled blob
+			// (asm string/bytes arithmetic works), and the transient space
+			// coherent with both. The split flags remain for lane-isolated
+			// testing.
+			opts.evmStorageLayout = true;
+			opts.evmMemoryLayout = true;
+		}
 		else if (arg == "--output-ir")
 			opts.outputIr = true;
 		else if (arg == "--no-output-logs")

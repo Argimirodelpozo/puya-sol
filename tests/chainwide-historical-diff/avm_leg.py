@@ -435,8 +435,11 @@ def main():
     # convention, so the main ctor's inner txns reach the local dep.
     evm_layout = bool(opts.get("evm_layout"))
     evm_memory = bool(opts.get("evm_memory"))
-    _mode_args = ([] + (["--evm-storage-layout"] if evm_layout else [])
-                     + (["--evm-memory-layout"] if evm_memory else [])) or None
+    # --evm-layout now maps to the compiler's UMBRELLA flag (storage + memory
+    # + transient coherence). The 39-contract zero-divergence certification
+    # predates this; a re-certification run revalidates sizes/behavior.
+    _mode_args = ([] + (["--evm-layout"] if evm_layout else [])
+                     + (["--evm-memory-layout"] if (evm_memory and not evm_layout) else [])) or None
     dep_apps = []
     dep_app_byaddr = {}
     for dspec in meta.get("dep_ctors") or []:
