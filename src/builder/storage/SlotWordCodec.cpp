@@ -91,10 +91,36 @@ std::shared_ptr<awst::Expression> SlotWordCodec::nativeToPackedBytes(
 		return awst::makeExtract(std::move(padded),
 			static_cast<int>(32 - _size), static_cast<int>(_size), _loc);
 	}
+	if (auto const* bw = dynamic_cast<awst::BytesWType const*>(_wtype);
+		bw && bw->length().has_value()
+		&& static_cast<unsigned>(*bw->length()) < _size)
+	{
+		// byte[K] value in a WIDER window (external fn-ptr byte[12] inside
+		// solc's 24-byte external-function share): LEFT-aligned, trailing
+		// zeros — the convention every read/write arm here shares.
+		return awst::makeConcat(
+			awst::makeAsBytes(std::move(_value), _loc),
+			awst::makeBzero(static_cast<int>(
+				_size - static_cast<unsigned>(*bw->length())), _loc), _loc);
+	}
 	if (_wtype && _wtype->kind() == awst::WTypeKind::Bytes)
 		return awst::makeAsBytes(std::move(_value), _loc);   // bytes[N]: raw N bytes
 	if (isByteArray(_wtype, _size))
 		return awst::makeAsBytes(std::move(_value), _loc);   // arc4 byte[N]: raw N bytes
+	if (auto const* nb = dynamic_cast<awst::ARC4StaticArray const*>(_wtype);
+		nb && nb->arraySize() > 0
+		&& static_cast<unsigned>(nb->arraySize()) < _size
+		&& [&]{ auto const* e = dynamic_cast<awst::ARC4UIntN const*>(
+			nb->elementType()); return e && e->n() == 8; }())
+	{
+		// byte[K] value in a WIDER window: LEFT-aligned, trailing zeros
+		// (matches the BytesWType arm — one convention for both labels of
+		// the same fn-ptr handle).
+		return awst::makeConcat(
+			awst::makeAsBytes(std::move(_value), _loc),
+			awst::makeBzero(static_cast<int>(
+				_size - static_cast<unsigned>(nb->arraySize())), _loc), _loc);
+	}
 	if (_wtype && _wtype->name() == "address"
 		&& dynamic_cast<awst::ARC4StaticArray const*>(_wtype) && _size <= 32)
 	{
@@ -182,10 +208,27 @@ std::shared_ptr<awst::Expression> SlotWordCodec::packedBytesToNative(
 				static_cast<int>(_size - backing), static_cast<int>(backing), _loc);
 		return awst::makeReinterpretCast(std::move(b), _wtype, _loc);
 	}
+	if (auto const* bw = dynamic_cast<awst::BytesWType const*>(_wtype);
+		bw && bw->length().has_value()
+		&& static_cast<unsigned>(*bw->length()) < _size)
+		return awst::makeReinterpretCast(
+			awst::makeExtract(std::move(_raw), 0,
+				static_cast<int>(*bw->length()), _loc), _wtype, _loc);
 	if (_wtype && _wtype->kind() == awst::WTypeKind::Bytes)
 		return awst::makeReinterpretCast(std::move(_raw), _wtype, _loc);
 	if (isByteArray(_wtype, _size))
 		return awst::makeReinterpretCast(std::move(_raw), _wtype, _loc);
+	if (auto const* nb = dynamic_cast<awst::ARC4StaticArray const*>(_wtype);
+		nb && nb->arraySize() > 0
+		&& static_cast<unsigned>(nb->arraySize()) < _size
+		&& [&]{ auto const* e = dynamic_cast<awst::ARC4UIntN const*>(
+			nb->elementType()); return e && e->n() == 8; }())
+	{
+		unsigned k = static_cast<unsigned>(nb->arraySize());
+		return awst::makeReinterpretCast(
+			awst::makeExtract(std::move(_raw), 0, static_cast<int>(k), _loc),
+			_wtype, _loc);
+	}
 	if (_wtype && _wtype->name() == "address"
 		&& dynamic_cast<awst::ARC4StaticArray const*>(_wtype) && _size <= 32)
 		return awst::makeReinterpretCast(
