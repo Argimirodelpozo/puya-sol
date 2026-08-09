@@ -604,6 +604,32 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 	if (m_indexAccess.indexExpression())
 		index = buildExpr(*m_indexAccess.indexExpression());
 
+	// Pin a side-effecting index ONCE, before any consumer. Two independent
+	// consumers share this subtree: the sol-eb dispatch coerces it through
+	// checkedIndexToUint64 (emitting a pin + bounds assert that EVALUATE it)
+	// and, when the builder does not claim the access, the fallthrough uses
+	// the ORIGINAL subtree again — `result[--p] = 0x3d` decremented twice
+	// per statement (the no-asm Base64 encoder wrote its padding into the
+	// wrong cells). Pure indexes pass through: single-use temps are
+	// copy-propagated by the backend.
+	{
+		auto triviallyPureIx = [](awst::Expression const* e) -> bool {
+			while (auto const* rc = dynamic_cast<awst::ReinterpretCast const*>(e))
+				e = rc->expr.get();
+			return !e || dynamic_cast<awst::VarExpression const*>(e)
+				|| dynamic_cast<awst::IntegerConstant const*>(e);
+		};
+		if (index && !triviallyPureIx(index.get()))
+		{
+			static int s_ixPin = 0;
+			std::string nm = "__sol_ixpin_" + std::to_string(s_ixPin++);
+			auto tmp = awst::makeVarExpression(nm, index->wtype, m_loc);
+			m_ctx.prePendingStatements.push_back(
+				awst::makeAssignmentStatement(tmp, std::move(index), m_loc));
+			index = awst::makeVarExpression(nm, tmp->wtype, m_loc);
+		}
+	}
+
 	// Try sol-eb builder dispatch
 	if (index)
 	{

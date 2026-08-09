@@ -411,20 +411,64 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			&& decl.type() && !builder::memoryUsesBlob(type))
 		{
 			bool aliasable = decl.type()->category() == solidity::frontend::Type::Category::Struct;
+			bool declBytesLike = false;
 			if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(decl.type()))
+			{
 				aliasable = !at->isByteArrayOrString();
-			auto const* srcId = dynamic_cast<solidity::frontend::Identifier const*>(initialValue);
+				declBytesLike = at->isByteArrayOrString();
+			}
+			// `bytes memory rb = bytes(strVar)` / `string memory s = string(bVar)`:
+			// on EVM the cast is a zero-cost reinterpret of the SAME pointer, so
+			// element writes through the new name must hit the original. Peel the
+			// type conversion and alias — a copy silently dropped every write
+			// (the no-asm Base64 encoder wrote its output into a detached copy).
+			solidity::frontend::Expression const* aliasSrc = initialValue;
+			bool viaByteCast = false;
+			if (auto const* fc = dynamic_cast<solidity::frontend::FunctionCall const*>(initialValue);
+				fc && fc->annotation().kind.set()
+				&& *fc->annotation().kind
+					== solidity::frontend::FunctionCallKind::TypeConversion
+				&& fc->arguments().size() == 1 && declBytesLike)
+			{
+				auto const* innerT = dynamic_cast<solidity::frontend::ArrayType const*>(
+					fc->arguments()[0]->annotation().type);
+				if (innerT && innerT->isByteArrayOrString()
+					&& innerT->dataStoredIn(solidity::frontend::DataLocation::Memory))
+				{
+					aliasSrc = fc->arguments()[0].get();
+					viaByteCast = true;
+				}
+			}
+			auto const* srcId = dynamic_cast<solidity::frontend::Identifier const*>(aliasSrc);
 			auto const* srcVd = srcId
 				? dynamic_cast<VariableDeclaration const*>(srcId->annotation().referencedDeclaration)
 				: nullptr;
-			if (aliasable && srcVd
+			if ((aliasable || viaByteCast) && srcVd
 				&& srcVd->referenceLocation() == VariableDeclaration::Location::Memory
 				&& builder::reassignedMemoryLocalsRegistry().count(decl.id()) == 0
 				&& builder::reassignedMemoryLocalsRegistry().count(srcVd->id()) == 0)
 			{
-				m_blk.setMemoryAlias(decl.id(), value); // value = buildExpr(a) = a's (resolved) local read
-				m_blk.builderCtx().appendPendingTo(result);
-				return result;
+				if (viaByteCast)
+				{
+					// re-resolve the PEELED source (value was built from the
+					// cast); relabel to the declared wtype so uses type-check.
+					auto srcRead = m_blk.builderCtx().build(*aliasSrc);
+					if (srcRead)
+					{
+						if (srcRead->wtype != type)
+							srcRead = awst::makeReinterpretCast(
+								std::move(srcRead), type, m_loc);
+						m_blk.setMemoryAlias(decl.id(), std::move(srcRead));
+						m_blk.builderCtx().appendPendingTo(result);
+						return result;
+					}
+				}
+				else
+				{
+					m_blk.setMemoryAlias(decl.id(), value); // value = buildExpr(a) = a's (resolved) local read
+					m_blk.builderCtx().appendPendingTo(result);
+					return result;
+				}
 			}
 		}
 
