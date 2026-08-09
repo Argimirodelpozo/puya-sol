@@ -629,7 +629,12 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 			emitBoxCreateForStateVars(_contract, *postInitBody, method.sourceLocation);
 
-			// State var defaults after box creation, before constructor bodies.
+			// State var defaults. LEGACY: all levels' initializers run before any
+			// ctor arg evaluation (create-path parity; dedup set makes the
+			// interleaved re-emission below a no-op). viaIR: interleaved with the
+			// ctor bodies below so derived initializers (`uint y = f()`) observe
+			// BASE ctor state — the all-up-front order returned pre-ctor values.
+			if (!m_viaIR)
 			{
 				auto const& lin = _contract.annotation().linearizedBaseContracts;
 				for (auto it2 = lin.rbegin(); it2 != lin.rend(); ++it2)
@@ -703,10 +708,13 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				}
 			}
 
-			// Inline base constructor bodies into __postInit (base-first MRO order)
+			// Inline base constructor bodies into __postInit (base-first MRO
+			// order), interleaving each level's state-var initializers before its
+			// body (viaIR; legacy already emitted them above, dedup no-ops here).
 			for (auto it = linearized.rbegin(); it != linearized.rend(); ++it)
 			{
 				auto const* base = *it;
+				emitStateVarInit(*base, postInitBody->body);
 				if (base == &_contract)
 					continue;
 
