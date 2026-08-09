@@ -11,6 +11,10 @@ state vars whose raw bytes layout matters).
 """
 from __future__ import annotations
 
+# Set by call.Result whenever a call reverts; as_int uses it to explain a None
+# return instead of raising an opaque TypeError. Per-process, tests are serial.
+_LAST_REVERT = ""
+
 
 def lpad(value: bytes | int, width: int = 32) -> bytes:
     """Left-pad value to `width` bytes (typical Solidity uint encoding)."""
@@ -129,6 +133,10 @@ def as_int(value) -> int:
             return int.from_bytes(_enc.decode_address(value), "big")
         except Exception:
             pass
+    if value is None and _LAST_REVERT:
+        raise AssertionError(
+            "call returned no value because it REVERTED: " + _LAST_REVERT[:200]
+        )
     raise TypeError(f"can't coerce {type(value).__name__} to int: {value!r}")
 
 

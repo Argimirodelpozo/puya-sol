@@ -40,6 +40,12 @@ from .revert import classify_revert, Reverted, ErrorString, Panic, RawRevert
 # app ids are unique per localnet session.
 _needs_populate: set[int] = set()
 
+# Diagnostics: the resource-populate/simulate machinery has several layered
+# retries whose failures used to be silently swallowed — record the last ones
+# so a final failure can name the REAL first cause.
+_LAST_POPULATE_ERROR: str = ""
+_LAST_POOL_EXEC_ERROR: str = ""
+
 
 @dataclass
 class Result:
@@ -50,6 +56,20 @@ class Result:
     revert_reason: Reverted | ErrorString | Panic | RawRevert | None = None
     raw_response: Any = None  # algosdk return for tests that need the raw bytes
     fail_message: str = ""
+
+    def __post_init__(self):
+        # A reverted call has abi_return=None, so a test doing as_int(r.abi_return)
+        # fails with "can't coerce NoneType" and hides the revert entirely. Record
+        # the reason so as_int can name the real cause (see values.last_revert).
+        if self.reverted:
+            import framework.values as _v
+
+            # An empty RawRevert carries no information — prefer the AVM message,
+            # which names the failing pc/opcodes.
+            reason = str(self.revert_reason or "")
+            if not self.revert_data and self.fail_message:
+                reason = self.fail_message
+            _v._LAST_REVERT = reason or "<no reason captured>"
 
 
 class CallError(Exception):
@@ -253,6 +273,7 @@ def call(
          synthetic 4-byte selector instead so the app's router reverts;
          otherwise CallError.
     """
+    global _LAST_POPULATE_ERROR
     algod = localnet.algod
     sender = localnet.account.address
     signer = AccountTransactionSigner(localnet.account.private_key)
@@ -315,8 +336,8 @@ def call(
     if populated:
         try:
             atc = au.populate_app_call_resources(atc, algod)
-        except Exception:
-            pass
+        except Exception as pe:
+            _LAST_POPULATE_ERROR = f"populate: {pe}"
 
     try:
         resp = atc.execute(algod, wait_rounds=4)
@@ -340,8 +361,8 @@ def call(
             )
             try:
                 retry_atc = au.populate_app_call_resources(retry_atc, algod)
-            except Exception:
-                pass
+            except Exception as pe:
+                _LAST_POPULATE_ERROR = f"retry-populate: {pe}"
             try:
                 resp = retry_atc.execute(algod, wait_rounds=4)
                 _needs_populate.add(app.app_id)
@@ -354,22 +375,48 @@ def call(
         # Budget-exhausted? Retry with a pool of dummy helper-app calls in
         # the same group (each contributes 700 opcodes via fee pooling).
         if _is_budget_error(e) or _is_resource_error(e):
-            retry_result = _retry_with_budget_pool(
-                algod=algod,
-                localnet=localnet,
-                app=app,
-                sender=sender,
-                signer=signer,
-                abi_method=abi_method,
-                encoded_args=encoded_args,
-                payment_wei=payment_wei,
-                extra_fee=extra_fee,
-                extra_apps=extra_apps,
-                extra_accounts=extra_accounts,
+            for _amp in (False, True):
+                retry_result = _retry_with_budget_pool(
+                    algod=algod,
+                    localnet=localnet,
+                    app=app,
+                    sender=sender,
+                    signer=signer,
+                    abi_method=abi_method,
+                    encoded_args=encoded_args,
+                    payment_wei=payment_wei,
+                    extra_fee=extra_fee,
+                    extra_apps=extra_apps,
+                    extra_accounts=extra_accounts,
+                    boxes=boxes,
+                    amplify=_amp,
+                )
+                if retry_result is not None:
+                    return retry_result
+
+        # Fee shortfall: bump the outer fee by the reported need (+1 margin)
+        # and resubmit once. "(need NmA)" is algod's milliAlgo phrasing.
+        if _is_fee_error(e):
+            import re as _re
+            m = _re.search(r"need (\d+)mA", str(e))
+            bump = (int(m.group(1)) + 1) * 1000 if m else 4000
+            fee_atc = _build_atc(
+                algod=algod, app=app, sender=sender, signer=signer,
+                abi_method=abi_method, encoded_args=encoded_args,
+                payment_wei=payment_wei, extra_fee=extra_fee + bump,
+                extra_apps=extra_apps, extra_accounts=extra_accounts,
                 boxes=boxes,
             )
-            if retry_result is not None:
-                return retry_result
+            try:
+                fee_atc = au.populate_app_call_resources(fee_atc, algod)
+            except Exception as pe:
+                _LAST_POPULATE_ERROR = f"fee-retry-populate: {pe}"
+            try:
+                resp = fee_atc.execute(algod, wait_rounds=4)
+                abi_return = resp.abi_results[-1].return_value if resp.abi_results else None
+                return Result(abi_return=abi_return, logs=_collect_logs(resp), raw_response=resp)
+            except Exception as e2:
+                e = e2  # keep the escalated failure for the revert path
 
         # Re-simulate to extract revert info, using a fresh ATC.
         sim_atc = _build_atc(
@@ -415,6 +462,14 @@ def _is_budget_error(exc: Exception) -> bool:
     return "budget" in msg or "opcode" in msg or "dynamic cost" in msg
 
 
+def _is_fee_error(exc: Exception) -> bool:
+    """Inner-txn fee shortfall: `new C()` emits create (+ forced __postInit in
+    slot mode) inner txns at fee 0; pooled outer fee must cover them. Tests
+    don't model fees, so escalate instead of failing (EVM has no analogue)."""
+    msg = str(exc).lower()
+    return "fee" in msg and "too small" in msg
+
+
 def _is_resource_error(exc: Exception) -> bool:
     """Reference-array overflow: >8 foreign refs per txn. The budget-pool retry
     group (16 txns) also multiplies reference capacity (8 per txn), so the same
@@ -430,6 +485,7 @@ def _retry_with_budget_pool(
     algod, localnet, app, sender, signer, abi_method, encoded_args,
     payment_wei, extra_fee, extra_apps, extra_accounts, boxes,
     pool_size: int = 15,
+    amplify: bool = False,
 ):
     """Retry the call with `pool_size` dummy budget-helper calls in the same group.
 
@@ -442,6 +498,7 @@ def _retry_with_budget_pool(
     """
     try:
         helper_id = localnet.budget_helper_id
+        target_id = localnet.budget_target_id
     except Exception:
         return None
 
@@ -455,9 +512,26 @@ def _retry_with_budget_pool(
     pool_size = min(pool_size,
                     _MAX_GROUP - 1 - (1 if payment_wei > 0 else 0))
 
+    # Each helper call amplifies via _OPUP_DEPTH inner self-calls (+700 budget
+    # each), so the group ceiling is pool_size*(1+_OPUP_DEPTH)*700 ≈ 94k ops.
+    # The outer fee must cover every inner txn too.
+    # Two configs (caller tries plain first, amplified second):
+    #  - plain:     bare dummies — every ref slot free (15×8=120) for populate
+    #               to spread NAMED box refs + duplicates (I/O-heavy calls);
+    #               budget ceiling 15×700 ≈ 11k ops.
+    #  - amplified: each dummy issues _OPUP_DEPTH inner calls to the target
+    #               (+700 each, ceiling ≈ 95k ops) and carries 2 EMPTY box
+    #               refs (creation quota for boxes of apps created IN-group —
+    #               `new C()`'s __postInit box_create; no named ref can exist
+    #               pre-submit). Costs ref slots — hence not the first try.
+    _OPUP_DEPTH = 8 if amplify else 0
     sp_call = algod.suggested_params()
     sp_call.flat_fee = True
-    sp_call.fee = 1000 * (pool_size + 2) + extra_fee  # +2: header + helper-call fee accounting
+    # + 16k headroom: the app under test may emit inner txns of its own
+    # (`new C()` = create + __postInit in slot mode) — without this the group
+    # is exactly their fees short ("group fee 0.0A too small (need 1mA)").
+    sp_call.fee = (1000 * (pool_size + 2) + extra_fee
+                   + 1000 * pool_size * _OPUP_DEPTH + 16_000)
 
     atc = AtomicTransactionComposer()
     if payment_wei > 0:
@@ -492,6 +566,9 @@ def _retry_with_budget_pool(
                 ApplicationCallTxn(
                     sender=sender, sp=sp_dummy, index=helper_id,
                     on_complete=OnComplete.NoOpOC, note=os.urandom(8),
+                    app_args=[_OPUP_DEPTH.to_bytes(8, "big")] if amplify else None,
+                    foreign_apps=[target_id] if amplify else None,
+                    boxes=[(0, b"")] * 2 if amplify else None,
                 ),
                 signer,
             )
@@ -499,12 +576,15 @@ def _retry_with_budget_pool(
 
     try:
         atc = au.populate_app_call_resources(atc, algod)
-    except Exception:
-        pass
+    except Exception as pe:
+        global _LAST_POPULATE_ERROR
+        _LAST_POPULATE_ERROR = f"pool-populate: {pe}"
 
     try:
         resp = atc.execute(algod, wait_rounds=4)
-    except Exception:
+    except Exception as ee:
+        global _LAST_POOL_EXEC_ERROR
+        _LAST_POOL_EXEC_ERROR = f"pool-exec: {ee}"
         return None
 
     abi_return = resp.abi_results[-1].return_value if resp.abi_results else None

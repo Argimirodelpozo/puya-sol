@@ -46,10 +46,17 @@ class LocalNet:
         self.account = self.client.account.localnet_dispenser()
         self.client.account.set_signer_from_account(self.account)
         self._budget_helper_id: int | None = None
+        self._budget_target_id: int | None = None
 
     @property
     def algod(self):
         return self.client.client.algod
+
+    @property
+    def budget_target_id(self) -> int:
+        """Bare `int 1` app the amplifier inner-calls (also deployed on first use)."""
+        _ = self.budget_helper_id
+        return self._budget_target_id
 
     @property
     def budget_helper_id(self) -> int:
@@ -64,21 +71,52 @@ class LocalNet:
             )
 
             algod = self.algod
-            approval = encoding.base64.b64decode(
-                algod.compile("#pragma version 10\nint 1")["result"]
-            )
-            clear = approval
-            sp = algod.suggested_params()
-            txn = ApplicationCreateTxn(
-                sender=self.account.address,
-                sp=sp,
-                on_complete=OnComplete.NoOpOC,
-                approval_program=approval,
-                clear_program=clear,
-                global_schema=StateSchema(num_uints=0, num_byte_slices=0),
-                local_schema=StateSchema(num_uints=0, num_byte_slices=0),
-            )
-            txid = algod.send_transaction(txn.sign(self.account.private_key))
-            result = wait_for_confirmation(algod, txid, 4)
-            self._budget_helper_id = result["application-index"]
+
+            def _deploy(teal: str) -> int:
+                approval = encoding.base64.b64decode(algod.compile(teal)["result"])
+                sp0 = algod.suggested_params()
+                t = ApplicationCreateTxn(
+                    sender=self.account.address,
+                    sp=sp0,
+                    on_complete=OnComplete.NoOpOC,
+                    approval_program=approval,
+                    clear_program=approval,
+                    global_schema=StateSchema(num_uints=0, num_byte_slices=0),
+                    local_schema=StateSchema(num_uints=0, num_byte_slices=0),
+                )
+                tid = algod.send_transaction(t.sign(self.account.private_key))
+                res = wait_for_confirmation(algod, tid, 4)
+                return res["application-index"]
+
+            # OpUp pair: an app cannot inner-call ITSELF (AVM re-entrancy ban),
+            # so the amplifier (arg0 btoi = N inner calls, +700 pooled budget
+            # each) targets a separate bare `int 1` app. Bare calls to the
+            # amplifier (no args) stay cheap no-ops for backward compatibility.
+            target_id = _deploy("#pragma version 10\nint 1")
+            self._budget_target_id = target_id
+            opup_teal = f"""#pragma version 10
+txn NumAppArgs
+bz done
+txna ApplicationArgs 0
+btoi
+store 0
+loop:
+load 0
+bz done
+itxn_begin
+int appl
+itxn_field TypeEnum
+int {target_id}
+itxn_field ApplicationID
+int 0
+itxn_field Fee
+itxn_submit
+load 0
+int 1
+-
+store 0
+b loop
+done:
+int 1"""
+            self._budget_helper_id = _deploy(opup_teal)
         return self._budget_helper_id
