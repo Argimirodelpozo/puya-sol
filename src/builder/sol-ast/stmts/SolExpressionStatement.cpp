@@ -11,6 +11,7 @@
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "Logger.h"
 
 namespace puyasol::builder::sol_ast
 {
@@ -194,6 +195,65 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 						if (!addr)
 							return result;   // error already logged
 						stmt->value = addr->slot;
+						m_blk.builderCtx().appendPendingTo(result);
+						result.push_back(std::move(stmt));
+						return result;
+					}
+					// MULTI-value return with storage component(s):
+					// `return (1, 2, data)` where the 3rd is `T storage`. The
+					// generic build below would MATERIALISE the aggregate (or
+					// reject it); the declared slot-handle convention wants the
+					// biguint slot in that position. Build component-wise.
+					bool anyStorageRet = false;
+					for (auto const& rp: rps)
+						if (rp->referenceLocation()
+							== solidity::frontend::VariableDeclaration::Location::Storage)
+							anyStorageRet = true;
+					if (rps.size() > 1 && anyStorageRet)
+					{
+						auto const* srcTup = dynamic_cast<
+							solidity::frontend::TupleExpression const*>(
+								m_node.expression());
+						if (!srcTup
+							|| srcTup->components().size() != rps.size())
+						{
+							Logger::instance().error(
+								"--evm-storage-layout: multi-value return with "
+								"storage refs must be a literal tuple", m_loc);
+							return result;
+						}
+						EvmSlotLowering low(m_blk.builderCtx(), m_blk, m_loc);
+						auto tup = awst::makeTupleExpression(nullptr, m_loc);
+						std::vector<awst::WType const*> wts;
+						for (size_t ri = 0; ri < rps.size(); ++ri)
+						{
+							auto const& compExpr = *srcTup->components()[ri];
+							std::shared_ptr<awst::Expression> v;
+							if (rps[ri]->referenceLocation()
+								== solidity::frontend::VariableDeclaration::Location::Storage)
+							{
+								auto addr = low.resolve(compExpr);
+								if (!addr)
+									return result;   // error already logged
+								v = addr->slot;
+							}
+							else
+							{
+								v = m_blk.builderCtx().build(compExpr);
+								if (v)
+									v = builder::TypeCoercion::coerceForAssignment(
+										std::move(v),
+										m_blk.typeMapper().map(rps[ri]->type()),
+										m_loc);
+							}
+							if (!v)
+								return result;
+							wts.push_back(v->wtype);
+							tup->items.push_back(std::move(v));
+						}
+						tup->wtype = m_blk.typeMapper()
+							.createType<awst::WTuple>(std::move(wts), std::nullopt);
+						stmt->value = std::move(tup);
 						m_blk.builderCtx().appendPendingTo(result);
 						result.push_back(std::move(stmt));
 						return result;

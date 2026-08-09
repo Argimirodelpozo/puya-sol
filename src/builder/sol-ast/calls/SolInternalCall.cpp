@@ -820,9 +820,24 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 				std::shared_ptr<awst::Expression> ptrExpr;
 				if (varDecl->isStateVariable())
 				{
-					ptrExpr = m_ctx.storageMapper.createStateRead(
-						name, ptrWType,
-						awst::AppStorageKind::AppGlobal, m_loc);
+					// Slot mode: the write lowered to a slot, so the read must
+					// too (absent slot reads 0 → uninitialised-call panic, same
+					// as EVM). typeMapper maps FunctionType to ptrWType exactly.
+					if (builder::evmStorageLayout() && !varDecl->isConstant()
+						&& !varDecl->immutable()
+						&& varDecl->referenceLocation()
+							!= VariableDeclaration::Location::Transient)
+					{
+						EvmSlotLowering low(m_ctx, m_scope, m_loc);
+						auto addr = low.addrForStateVar(*varDecl);
+						if (!addr)
+							return nullptr;
+						ptrExpr = low.readValue(*addr);
+					}
+					else
+						ptrExpr = m_ctx.storageMapper.createStateRead(
+							name, ptrWType,
+							awst::AppStorageKind::AppGlobal, m_loc);
 				}
 				else
 				{
@@ -981,9 +996,22 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 				{
 					if (funcType->kind() == FunctionType::Kind::Internal)
 					{
-						auto ptrExpr = m_ctx.storageMapper.createStateRead(
-							varDecl->name(), awst::WType::uint64Type(),
-							awst::AppStorageKind::AppGlobal, m_loc);
+						std::shared_ptr<awst::Expression> ptrExpr;
+						if (builder::evmStorageLayout() && !varDecl->isConstant()
+							&& !varDecl->immutable()
+							&& varDecl->referenceLocation()
+								!= VariableDeclaration::Location::Transient)
+						{
+							EvmSlotLowering low(m_ctx, m_scope, m_loc);
+							auto addr = low.addrForStateVar(*varDecl);
+							if (!addr)
+								return nullptr;
+							ptrExpr = low.readValue(*addr);
+						}
+						else
+							ptrExpr = m_ctx.storageMapper.createStateRead(
+								varDecl->name(), awst::WType::uint64Type(),
+								awst::AppStorageKind::AppGlobal, m_loc);
 
 						std::vector<std::shared_ptr<awst::Expression>> args;
 						for (auto const& arg : m_call.arguments())

@@ -66,10 +66,30 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	// re-emit byte-identically with no pin. Tuple assignments keep the plain
 	// build (their element-wise handler owns sequencing).
 	std::shared_ptr<awst::Expression> target, value;
+	// Slot mode, tuple LHS: building a storage-element component (arrayData[3])
+	// eagerly queues its bounds assert into prePending — BEFORE the RHS
+	// snapshot the tuple handler emits, so `(.., arrayData[3]) = (.., grow(),
+	// ..)` asserts on the PRE-grow length. EVM checks lvalues after the RHS:
+	// capture the LHS build's effects and flush them after the tuple handler
+	// has queued its snapshot (asserts still precede every store, which the
+	// handler puts in pendingStatements).
+	eb::ContractContext::OperandDeltas tupleLhsD;
+	bool deferTupleLhsEffects = false;
 	if (dynamic_cast<TupleType const*>(m_assignment.leftHandSide().annotation().type))
 	{
-		target = buildExpr(m_assignment.leftHandSide());
-		value = buildExpr(m_assignment.rightHandSide());
+		if (builder::evmStorageLayout())
+		{
+			target = m_ctx.buildScopedOperand(
+				[&] { return buildExpr(m_assignment.leftHandSide()); }, tupleLhsD,
+				/*_conditional=*/false);
+			deferTupleLhsEffects = true;
+			value = buildExpr(m_assignment.rightHandSide());
+		}
+		else
+		{
+			target = buildExpr(m_assignment.leftHandSide());
+			value = buildExpr(m_assignment.rightHandSide());
+		}
 	}
 	else
 	{
@@ -126,7 +146,17 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	value = applyEnumRangeCheck(std::move(value), op);
 	if (auto r = trySlotBasedArrayWrite(op, target, value))                     return std::move(*r);
 	if (auto r = trySlotBasedScalarWrite(op, target, value))                    return std::move(*r);
-	if (auto r = tryTupleAssignment(target, value))                             return std::move(*r);
+	if (auto r = tryTupleAssignment(target, value))
+	{
+		if (deferTupleLhsEffects)
+		{
+			for (auto& st: tupleLhsD.pre)
+				m_ctx.prePendingStatements.push_back(std::move(st));
+			for (auto& st: tupleLhsD.post)
+				m_ctx.pendingStatements.push_back(std::move(st));
+		}
+		return std::move(*r);
+	}
 	if (auto r = tryBytesElemAssignment(target, value))                         return std::move(*r);
 	if (auto r = tryStructOrNamedTupleFieldAssignment(op, target, value))       return std::move(*r);
 

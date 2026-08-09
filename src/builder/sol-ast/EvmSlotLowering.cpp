@@ -102,6 +102,12 @@ bool EvmSlotLowering::isStorageStateRef(Expression const& _e)
 		}
 		if (auto const* ma = dynamic_cast<MemberAccess const*>(cur))
 		{
+			// Contract-qualified state var (`C.x = g`): same slot as bare `x` —
+			// resolveMemberAccess handles it, so the shape test must admit it.
+			if (auto const* qvd = dynamic_cast<VariableDeclaration const*>(
+					ma->annotation().referencedDeclaration);
+				qvd && isPersistentStateVar(qvd))
+				return true;
 			// Only peel STRUCT member access — `.length`/`.push` etc. are not
 			// storage lvalue layers.
 			if (dynamic_cast<StructType const*>(ma->expression().annotation().type))
@@ -435,6 +441,14 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveIndexAccess(
 std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveMemberAccess(
 	MemberAccess const& _ma)
 {
+	// Contract-qualified state variable (`C.x`, `Base.y`, `super.z`): the base is
+	// a contract/type expression, not a storage struct. It denotes exactly the
+	// same slot as the bare identifier, so resolve the referenced declaration.
+	if (auto const* qvd = dynamic_cast<VariableDeclaration const*>(
+			_ma.annotation().referencedDeclaration);
+		qvd && isPersistentStateVar(qvd))
+		return addrForStateVar(*qvd);
+
 	auto const* st = dynamic_cast<StructType const*>(_ma.expression().annotation().type);
 	if (!st || !st->dataStoredIn(DataLocation::Storage))
 	{

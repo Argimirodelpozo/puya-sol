@@ -237,7 +237,6 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	}
 
 	// Collect then reverse (right-to-left) to match Solidity viaYul tuple semantics.
-	std::vector<std::shared_ptr<awst::Statement>> assignStmts;
 	auto pendingBefore = m_ctx.pendingStatements.size();
 
 	for (size_t i = 0; i < items.size(); ++i)
@@ -264,6 +263,38 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 					&& lhsDecl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 					&& !lhsDecl->isStateVariable())
 				{
+					// Slot mode: the local IS a runtime biguint slot handle, so a
+					// tuple component re-points it with an ordinary assignment —
+					// the compile-time alias below never fires there (slot-handle
+					// reads don't consult the alias map), which silently dropped
+					// `(a, b, c) = g()` rebinds of storage-ref returns.
+					if (builder::evmStorageLayout())
+					{
+						auto const* valueTuple2 =
+							dynamic_cast<awst::WTuple const*>(_value->wtype);
+						auto const* compW = (valueTuple2 && i < valueTuple2->types().size())
+							? valueTuple2->types()[i] : nullptr;
+						if (compW == awst::WType::biguintType())
+						{
+							// pendingStatements, NOT a local vector: the tail
+							// reverses pendingStatements[pendingBefore:] for the
+							// right-to-left tuple order, and only that queue is
+							// ever emitted.
+							m_ctx.pendingStatements.push_back(
+								awst::makeAssignmentStatement(
+									awst::makeVarExpression(lhsDecl->name(),
+										awst::WType::biguintType(), m_loc),
+									awst::makeTupleItem(_value, static_cast<int>(i),
+										compW, m_loc),
+									m_loc));
+							continue;
+						}
+						Logger::instance().error(
+							"--evm-storage-layout: tuple component for storage "
+							"pointer '" + lhsDecl->name()
+							+ "' is not a slot handle", m_loc);
+						return nullptr;
+					}
 					// Prefer the RHS tuple's i-th item directly: it carries the
 					// BoxValueExpression/AppStateExpression needed for downstream
 					// mapping-key resolution (TupleItemExpression slice loses that).

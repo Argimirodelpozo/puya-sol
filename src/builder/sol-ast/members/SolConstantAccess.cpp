@@ -4,6 +4,8 @@
 
 #include "builder/sol-ast/members/SolConstantAccess.h"
 
+#include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"
 #include <libsolidity/ast/AST.h>
@@ -33,6 +35,23 @@ std::shared_ptr<awst::Expression> SolConstantAccess::toAwst()
 		// Non-constant state variable: Contract.stateVar → read from storage
 		if (varDecl->isStateVariable() && !varDecl->isConstant())
 		{
+			// Slot mode: `C.x` denotes the same slot as the bare `x`, so it must
+			// go through the slot space too — the legacy app-global read below
+			// would look up a key the constructor never wrote.
+			if (builder::evmStorageLayout() && !varDecl->immutable()
+				&& varDecl->referenceLocation()
+					!= VariableDeclaration::Location::Transient)
+			{
+				bool const bytesLike = EvmSlotLowering::isBytesLike(varDecl->type());
+				if ((varDecl->type() && varDecl->type()->isValueType()) || bytesLike)
+				{
+					EvmSlotLowering low(m_ctx, m_scope, m_loc);
+					auto addr = low.resolve(m_memberAccess);
+					if (!addr)
+						return nullptr;
+					return bytesLike ? low.readBytesValue(*addr) : low.readValue(*addr);
+				}
+			}
 			auto* wtype = m_ctx.typeMapper.map(varDecl->type());
 			std::string name = varDecl->name();
 			auto kind = builder::StorageMapper::shouldUseBoxStorage(*varDecl)
