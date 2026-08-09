@@ -62,7 +62,11 @@ void StorageLayout::computeLayout(
 				continue;
 			SlotVariable sv;
 			sv.name = decl->name();
-			sv.slot = baseSlot + slot;
+			// solc's linearizedStateVariables already folds the `layout at N`
+			// base in (computeOffsets with layoutBaseForInheritanceHierarchy);
+			// adding baseSlot again DOUBLED it (x.slot returned 14 for
+			// `layout at 7`).
+			sv.slot = slot;
 			sv.byteOffset = offset;
 			sv.byteSize = decl->type()->storageBytes();
 			sv.wtype = _typeMapper.map(decl->type());

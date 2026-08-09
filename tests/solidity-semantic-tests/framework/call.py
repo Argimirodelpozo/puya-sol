@@ -592,6 +592,64 @@ def _retry_with_budget_pool(
     return Result(abi_return=abi_return, logs=logs, raw_response=resp)
 
 
+def _raw_pool_execute(
+    algod, localnet, app, sender, signer, *,
+    app_args, payment_wei, extra_fee, amplify, pool_size=15,
+):
+    """Raw-call twin of _retry_with_budget_pool (same dummy construction —
+    plain round spreads refs, amplified round adds budget + creation quota).
+    Returns a Result on success, None when this round also failed."""
+    try:
+        helper_id = localnet.budget_helper_id
+        target_id = localnet.budget_target_id
+    except Exception:
+        return None
+    _MAX_GROUP = 16
+    pool_size = min(pool_size, _MAX_GROUP - 1 - (1 if payment_wei > 0 else 0))
+    _OPUP_DEPTH = 8 if amplify else 0
+    sp_call = algod.suggested_params()
+    sp_call.flat_fee = True
+    sp_call.fee = (1000 * (pool_size + 2) + extra_fee
+                   + 1000 * pool_size * _OPUP_DEPTH + 16_000)
+    atc = AtomicTransactionComposer()
+    if payment_wei > 0:
+        sp_pay = algod.suggested_params()
+        sp_pay.flat_fee = True
+        sp_pay.fee = 1000
+        atc.add_transaction(TransactionWithSigner(
+            PaymentTxn(sender, sp_pay, app.app_addr, payment_wei,
+                       note=os.urandom(8)), signer))
+    atc.add_transaction(TransactionWithSigner(
+        ApplicationCallTxn(
+            sender=sender, sp=sp_call, index=app.app_id,
+            on_complete=OnComplete.NoOpOC, app_args=app_args,
+            note=os.urandom(8)),
+        signer))
+    for _ in range(pool_size):
+        sp_dummy = algod.suggested_params()
+        sp_dummy.flat_fee = True
+        sp_dummy.fee = 0
+        atc.add_transaction(TransactionWithSigner(
+            ApplicationCallTxn(
+                sender=sender, sp=sp_dummy, index=helper_id,
+                on_complete=OnComplete.NoOpOC, note=os.urandom(8),
+                app_args=[_OPUP_DEPTH.to_bytes(8, "big")] if amplify else None,
+                foreign_apps=[target_id] if amplify else None,
+                boxes=[(0, b"")] * 2 if amplify else None),
+            signer))
+    global _LAST_POPULATE_ERROR, _LAST_POOL_EXEC_ERROR
+    try:
+        atc = au.populate_app_call_resources(atc, algod)
+    except Exception as pe:
+        _LAST_POPULATE_ERROR = f"raw-pool-populate: {pe}"
+    try:
+        atc.execute(algod, wait_rounds=4)
+        return Result()
+    except Exception as ee:
+        _LAST_POOL_EXEC_ERROR = f"raw-pool-exec: {ee}"
+        return None
+
+
 def call_raw(
     localnet,
     app,
@@ -617,6 +675,7 @@ def call_raw(
         algod, app, sender, signer, selector,
         extra_args=extra_args, payment_wei=payment_wei,
         extra_fee=extra_fee, expect_revert=expect_revert,
+        localnet=localnet,
     )
 
 
@@ -624,6 +683,7 @@ def _raw_call_inner(
     algod, app, sender, signer, selector: bytes | None, *,
     extra_args: tuple, payment_wei: int,
     extra_fee: int, expect_revert: bool,
+    localnet=None,
 ) -> Result:
     sp = algod.suggested_params()
     sp.flat_fee = True
@@ -666,14 +726,15 @@ def _raw_call_inner(
     # Same optimistic-populate strategy as the ABI path: skip the per-call
     # populate SIMULATE unless this app is known to need resource discovery;
     # on failure retry once populated (fallback contracts with boxes).
+    global _LAST_POPULATE_ERROR
     populated = app.app_id in _needs_populate
     try:
         atc = _new_atc()
         if populated:
             try:
                 atc = au.populate_app_call_resources(atc, algod)
-            except Exception:
-                pass
+            except Exception as pe:
+                _LAST_POPULATE_ERROR = f"raw-populate: {pe}"
         atc.execute(algod, wait_rounds=4)
         return Result()
     except Exception as e:
@@ -685,8 +746,28 @@ def _raw_call_inner(
                 return Result()
             except Exception as e2:
                 e = e2
+        # Budget/resource shortfall: same two-round dummy pool as the ABI
+        # path (plain = max ref spread, amplified = opcode budget + creation
+        # quota). Raw fallback calls WRITE boxes too — without this a
+        # slot-mode `fallback() { savedData = msg.data; }` lost its write.
+        if localnet is not None and (_is_budget_error(e) or _is_resource_error(e)):
+            for _amp in (False, True):
+                pooled = _raw_pool_execute(
+                    algod, localnet, app, sender, signer,
+                    app_args=app_args, payment_wei=payment_wei,
+                    extra_fee=extra_fee, amplify=_amp)
+                if pooled is not None:
+                    _needs_populate.add(app.app_id)
+                    return pooled
         sim_result = _simulate_for_revert(algod, _new_atc())
         sim_result.raw_response = str(e)
+        if not sim_result.reverted:
+            # The SIMULATE succeeds (unnamed resources + pooled budget the real
+            # group didn't carry) while the submit failed. Raw calls exist to
+            # exercise fallback/receive dispatch, which almost always WRITES —
+            # reporting success here silently drops the write (the ABI path
+            # gained this honesty check long ago; this twin never did).
+            return Result(reverted=True, fail_message=str(e), raw_response=str(e))
         return sim_result
 
 
