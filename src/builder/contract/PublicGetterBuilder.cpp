@@ -213,7 +213,13 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			auto body = awst::makeBlock(loc);
 
 			std::shared_ptr<awst::Expression> readExpr;
-			if (!var->isConstant() && !var->immutable() && evmStorageLayout())
+			// Transient vars are NOT in the storage layout (slot space is
+			// persistent storage only) — they keep the TRANSIENT_SLOT blob
+			// getter below, same as default mode.
+			if (!var->isConstant() && !var->immutable()
+				&& var->referenceLocation()
+					!= solidity::frontend::VariableDeclaration::Location::Transient
+				&& evmStorageLayout())
 			{
 				// --evm-storage-layout: walk the declared type over the getter
 				// args (mapping keys / array indices) to the leaf's slot address
