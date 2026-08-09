@@ -589,6 +589,19 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::coerceToNative(
 	return _value;
 }
 
+namespace
+{
+/// ARC4Decode target for a bytes-like leaf: puya type-checks the decode, so a
+/// Solidity `string` (arc4 len+utf8[]) must decode to `string`, not `bytes`.
+awst::WType const* bytesLikeDecodeTarget(solidity::frontend::Type const* _t)
+{
+	if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
+		if (at->isString())
+			return awst::WType::stringType();
+	return awst::WType::bytesType();
+}
+} // namespace
+
 bool EvmSlotLowering::isBytesLike(Type const* _t)
 {
 	auto const* at = dynamic_cast<ArrayType const*>(_t);
@@ -813,7 +826,7 @@ bool EvmSlotLowering::writeStructValue(
 			if (fv->wtype && fv->wtype->kind() != awst::WTypeKind::Bytes
 				&& fv->wtype != awst::WType::stringType())
 				fv = awst::makeARC4Decode(std::move(fv),
-					awst::WType::bytesType(), m_loc);
+					bytesLikeDecodeTarget(m->type()), m_loc);
 			writeBytesValue(fa, std::move(fv), _out);
 			continue;
 		}
@@ -1060,7 +1073,7 @@ bool EvmSlotLowering::writeAny(
 		if (_value->wtype && _value->wtype->kind() != awst::WTypeKind::Bytes
 			&& _value->wtype != awst::WType::stringType())
 			_value = awst::makeARC4Decode(
-				std::move(_value), awst::WType::bytesType(), m_loc);
+				std::move(_value), bytesLikeDecodeTarget(_t), m_loc);
 		writeBytesValue(_a, std::move(_value), _out);
 		return true;
 	}
@@ -1393,7 +1406,7 @@ bool EvmSlotLowering::writeArrayValue(
 			if (fv->wtype && fv->wtype->kind() != awst::WTypeKind::Bytes
 				&& fv->wtype != awst::WType::stringType())
 				fv = awst::makeARC4Decode(std::move(fv),
-					awst::WType::bytesType(), m_loc);
+					bytesLikeDecodeTarget(elemType), m_loc);
 			writeBytesValue(ea, std::move(fv), _out);
 		}
 		return true;

@@ -579,11 +579,29 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			if (!declarations[i]) continue;
 			auto const& decl = *declarations[i];
 			auto* type = m_blk.typeMapper().map(decl.type());
+			// --evm-storage-layout: a STORAGE-located destructured var is a
+			// biguint slot handle (the RHS component already is one) — typing
+			// it by the mapped aggregate mislabeled the var (an ARC4Struct
+			// wtype puya then failed to even deserialize) and broke every
+			// `(, S storage y, ) = g()` read.
+			bool slotHandle = builder::evmStorageLayout()
+				&& decl.referenceLocation()
+					== solidity::frontend::VariableDeclaration::Location::Storage;
+			if (slotHandle)
+			{
+				type = awst::WType::biguintType();
+				m_blk.setSlotStorageRef(decl.id(), awst::makeVarExpression(
+					decl.name(), awst::WType::biguintType(),
+					m_blk.makeLoc(decl.location())));
+			}
 
 			// Shadow-safe name: `uint a=100; { (uint a,)=f(); } return a;`
-			// without mangling, inner `a` overwrites the outer one.
+			// without mangling, inner `a` overwrites the outer one. Slot
+			// handles use the PLAIN name — that is what isSlotHandleLocal
+			// reads resolve to (same convention as the single-decl binding).
 			auto target = awst::makeVarExpression(
-				m_blk.awstVarName(decl), type, m_blk.makeLoc(decl.location()));
+				slotHandle ? decl.name() : m_blk.awstVarName(decl), type,
+				m_blk.makeLoc(decl.location()));
 
 			// Extract with the slot's ACTUAL wtype (the RHS element type), then
 			// coerce to the declared type. Extracting with the declared type
