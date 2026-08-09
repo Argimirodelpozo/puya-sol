@@ -668,6 +668,31 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				auto const& params = baseCtor->parameters();
 				for (size_t i = 0; i < args.size() && i < params.size(); ++i)
 				{
+					// --evm-storage-layout: storage-ref args bind as runtime
+					// SLOT HANDLES. Resolve the SOURCE (m[1] etc.) instead of
+					// building it — a value build would materialise (or refuse:
+					// mapping-typed elements are uncopyable by construction).
+					if (evmStorageLayout()
+						&& params[i]->referenceLocation()
+							== solidity::frontend::VariableDeclaration::Location::Storage)
+					{
+						sol_ast::EvmSlotLowering low(
+							*m_exprBuilder, *m_exprBuilder->currentScope,
+							makeLoc(args[i]->location()));
+						if (auto addr = low.resolve(*args[i]))
+						{
+							for (auto& pst: m_exprBuilder->takePrePending())
+								postInitBody->body.push_back(std::move(pst));
+							postInitBody->body.push_back(
+								awst::makeAssignmentStatement(
+									awst::makeVarExpression(params[i]->name(),
+										awst::WType::biguintType(),
+										makeLoc(args[i]->location())),
+									addr->slot, makeLoc(args[i]->location())));
+						}
+						continue;   // resolve failure already logged
+					}
+
 					auto argExpr = m_exprBuilder->build(*args[i]);
 					if (!argExpr)
 						continue;

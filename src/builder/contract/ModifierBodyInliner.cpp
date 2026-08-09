@@ -6,6 +6,8 @@
 /// ModifierInliner.cpp::buildModifierChain.
 
 #include "builder/contract/ContractBuilder.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "awst/StatementWalk.h"
 #include "awst/NameGen.h"
 #include "builder/contract/StateVarWalker.h"
@@ -258,6 +260,32 @@ void inlineModifiers(
 			for (size_t i = 0; i < args->size() && i < params.size(); ++i)
 			{
 				auto const& param = params[i];
+
+				// --evm-storage-layout, storage-ref param + bare state-var arg
+				// (`bumpArr(arr, i)`): bind the param as a runtime SLOT HANDLE.
+				// Building the arg would MATERIALISE the aggregate (a value copy
+				// whose writes never reach storage), and the legacy alias below
+				// is the named-cell model this mode retired. Guarded to
+				// Identifier args — resolving those is pure.
+				if (builder::evmStorageLayout()
+					&& param->referenceLocation()
+						== solidity::frontend::VariableDeclaration::Location::Storage
+					&& dynamic_cast<solidity::frontend::Identifier const*>(
+						(*args)[i].get()))
+				{
+					sol_ast::EvmSlotLowering low(
+						m_exprBuilder, *m_exprBuilder.currentScope, modLoc);
+					if (auto addr = low.resolve(*(*args)[i]))
+					{
+						modBody->body.push_back(awst::makeAssignmentStatement(
+							awst::makeVarExpression(param->name(),
+								awst::WType::biguintType(), modLoc),
+							addr->slot, modLoc));
+						remappedDeclIds.push_back(param->id());
+						continue;
+					}
+					continue;   // error already logged
+				}
 
 				auto argExpr = m_exprBuilder.build(*(*args)[i]);
 				if (!argExpr)

@@ -3,6 +3,7 @@
 #include "builder/sol-ast/exprs/SolIdentifier.h"
 #include "Logger.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/contract/ContractBuilder.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
@@ -270,6 +271,20 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 					EvmSlotLowering low(m_ctx, m_scope, m_loc);
 					if (auto addr = low.resolve(m_ident))
 						return low.readArrayValue(*addr, at0);
+					return nullptr;
+				}
+				// MAPPING as a value: the only legal contexts are pointer
+				// bindings (decl init, ptr assignment, tuple components, fn
+				// args — solc rejects everything else), and the pointer
+				// convention IS the biguint slot. Hand it over directly.
+				// Same for aggregates CONTAINING mappings (mapping(...)[]): they
+				// are equally uncopyable, so a value-use is always a binding.
+				if (dynamic_cast<MappingType const*>(varDecl->type())
+					|| builder::containsMappingType(varDecl->type()))
+				{
+					EvmSlotLowering low(m_ctx, m_scope, m_loc);
+					if (auto addr = low.resolve(m_ident))
+						return addr->slot;
 					return nullptr;
 				}
 				Logger::instance().error(
