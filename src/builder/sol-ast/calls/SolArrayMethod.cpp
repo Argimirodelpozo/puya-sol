@@ -73,10 +73,18 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						b = buildExpr(*m_call.arguments()[0]);
 						if (!b)
 							return nullptr;
-						// bytes1 value → its single content byte
-						if (b->wtype != awst::WType::bytesType())
-							b = awst::makeAsBytes(std::move(b), m_loc);
-						b = awst::makeExtract(std::move(b), 0, 1, m_loc);
+						// bytes1 value → its single content byte. A uint64
+						// (integer literal / conversion) has no direct bytes
+						// cast — itob and take the LOW byte instead.
+						if (b->wtype == awst::WType::uint64Type())
+							b = awst::makeExtract(
+								awst::makeItob(std::move(b), m_loc), 7, 1, m_loc);
+						else
+						{
+							if (b->wtype != awst::WType::bytesType())
+								b = awst::makeAsBytes(std::move(b), m_loc);
+							b = awst::makeExtract(std::move(b), 0, 1, m_loc);
+						}
 					}
 					else
 						b = awst::makeBytesConstant({0}, m_loc);

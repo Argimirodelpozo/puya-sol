@@ -1003,6 +1003,18 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 				m_loc);
 			arr->values.push_back(awst::makeARC4Encode(std::move(b), elemW, m_loc));
 		}
+		else if (auto const* fbt =
+			dynamic_cast<solidity::frontend::FixedBytesType const*>(elemType))
+		{
+			// bytesN element: the packed window's bytes ARE the value — the
+			// canonical-biguint detour has no ARC4Encode into byte[N]
+			// ("cannot encode biguint to uint8[2]"). Relabel the raw bytes.
+			auto raw = awst::makeLeftPadToN(
+				awst::makeAsBytes(std::move(v), m_loc),
+				static_cast<int>(fbt->numBytes()), m_loc);
+			arr->values.push_back(
+				awst::makeReinterpretCast(std::move(raw), elemW, m_loc));
+		}
 		else
 			arr->values.push_back(awst::makeARC4Encode(std::move(v), elemW, m_loc));
 	}
