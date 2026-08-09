@@ -346,29 +346,65 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 					}
 					else if (argVal->wtype == awst::WType::biguintType())
 					{
-						unsigned bits = 256;
-						if (auto it = builder::SolIntType::fromSol(paramSolType); it && !it->isSigned)
-							bits = it->bits;
-						auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-						auto encode = awst::makeARC4Encode(std::move(argVal), arc4T, m_loc);
-						argVal = std::move(encode);
+						auto it = builder::SolIntType::fromSol(paramSolType);
+						if (childHasPostInit && (!it || it->isSigned))
+						{
+							// SIGNED params stay biguint in __postInit (arc56
+							// renders them uint512; the router asserts 64
+							// bytes) — send the canonical value zero-extended.
+							argVal = awst::makeLeftPadToN(
+								awst::makeAsBytes(std::move(argVal), m_loc), 64,
+								m_loc);
+						}
+						else
+						{
+							unsigned bits = 256;
+							if (it && !it->isSigned)
+								bits = it->bits;
+							auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
+							auto encode = awst::makeARC4Encode(std::move(argVal), arc4T, m_loc);
+							argVal = std::move(encode);
+						}
 					}
 					else if (argVal->wtype == awst::WType::uint64Type())
 					{
-						unsigned bits = 64;
-						auto const* intT = dynamic_cast<IntegerType const*>(paramSolType);
-						if (intT) bits = intT->numBits();
-						auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-						auto encode = awst::makeARC4Encode(std::move(argVal), arc4T, m_loc);
-						argVal = std::move(encode);
+						if (childHasPostInit)
+						{
+							// __postInit keeps uint64-wtype params as declared
+							// uint64 (router: btoi of an 8-byte arg).
+							auto itob64 = awst::makeIntrinsicCall(
+								"itob", awst::WType::bytesType(), m_loc);
+							itob64->stackArgs.push_back(std::move(argVal));
+							argVal = std::move(itob64);
+						}
+						else
+						{
+							unsigned bits = 64;
+							auto const* intT = dynamic_cast<IntegerType const*>(paramSolType);
+							if (intT) bits = intT->numBits();
+							auto* arc4T = m_ctx.typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
+							auto encode = awst::makeARC4Encode(std::move(argVal), arc4T, m_loc);
+							argVal = std::move(encode);
+						}
 					}
 					else if (argVal->wtype == awst::WType::boolType())
 					{
-						auto asU64 = awst::makeAsUInt64(std::move(argVal), m_loc);
-						auto itob = awst::makeIntrinsicCall(
-							"itob", awst::WType::bytesType(), m_loc);
-						itob->stackArgs.push_back(std::move(asU64));
-						argVal = std::move(itob);
+						if (childHasPostInit)
+						{
+							// __postInit declares the param as arc4 bool (its
+							// router asserts len==1); the 8-byte itob form is
+							// the CREATE-path reader's convention only.
+							argVal = awst::makeARC4Encode(std::move(argVal),
+								awst::WType::arc4BoolType(), m_loc);
+						}
+						else
+						{
+							auto asU64 = awst::makeAsUInt64(std::move(argVal), m_loc);
+							auto itob = awst::makeIntrinsicCall(
+								"itob", awst::WType::bytesType(), m_loc);
+							itob->stackArgs.push_back(std::move(asU64));
+							argVal = std::move(itob);
+						}
 					}
 					else if (argVal->wtype
 						&& argVal->wtype->kind() == awst::WTypeKind::ReferenceArray)
