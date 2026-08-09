@@ -198,6 +198,7 @@ def deploy(
         # and the right pool size is not knowable per test. Escalate on the
         # budget error only (any other failure propagates unchanged).
         _pool = postinit_budget_pool
+        _fee_bump = 0
         while True:
             try:
                 _call_postinit(
@@ -210,13 +211,27 @@ def deploy(
                     postinit_args=postinit_args,
                     budget_pool=_pool,
                     inner_txns=postinit_inner_txns,
+                    fee_bump=_fee_bump,
                 )
                 break
             except Exception as e:
                 # the group holds the call + inner txns + helpers, and AVM
                 # caps a group at 16 — never escalate past what fits
                 _cap = 14 - int(postinit_inner_txns or 0)
-                if "budget exceeded" not in str(e) or _pool >= _cap:
+                msg = str(e)
+                # inner-txn fee shortfall ("group fee 0.0A too small (need
+                # NmA)"): the ctor spawned more inner txns than
+                # postinit_inner_txns declared (slot mode adds a __postInit
+                # per `new C()`). Pool helpers are FEE-NEUTRAL (each adds
+                # 1000 and consumes 1000), so the shortfall goes straight
+                # onto the call's flat fee.
+                import re as _re
+                m = _re.search(r"need (\d+)mA", msg)
+                fee_short = "fee" in msg and "too small" in msg
+                if fee_short and _fee_bump < 32_000:
+                    _fee_bump += ((int(m.group(1)) if m else 3) + 1) * 1000
+                    continue
+                if "budget exceeded" not in msg or _pool >= _cap:
                     raise
                 _pool = min(max(4, _pool * 2), _cap)
 
@@ -303,6 +318,7 @@ def _call_postinit(
     ctor_args: list | None,
     postinit_args: list | None,
     budget_pool: int = 0,
+    fee_bump: int = 0,
     inner_txns: int = 0,
 ) -> None:
     """Call the __postInit method, populating box refs via simulate.
@@ -326,7 +342,7 @@ def _call_postinit(
     sp = algod.suggested_params()
     sp.flat_fee = True
     base_extra = max(4, inner_txns + 1)
-    sp.fee = 1000 * (budget_pool + base_extra) if (budget_pool or inner_txns) else 4000
+    sp.fee = (1000 * (budget_pool + base_extra) if (budget_pool or inner_txns) else 4000) + fee_bump
 
     abi_method = postinit_spec.to_abi_method()
     args = postinit_args if postinit_args is not None else (ctor_args or [])

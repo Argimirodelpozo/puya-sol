@@ -157,6 +157,13 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 		using namespace solidity::frontend;
 		auto& reg = structRefOffsetParamsRegistry();
 		reg.clear();
+		// --evm-storage-layout: storage refs are UNIFORM biguint slot handles;
+		// an array-element ref is just resolve(arr[i]).slot. The dual
+		// (key,offset) convention is the legacy box-keyed model — registering
+		// params here would add companion offset params the slot-mode call
+		// sites never pass ("function call arguments do not match signature").
+		if (!builder::evmStorageLayout())
+		{
 		struct OffsetWalker: ASTConstVisitor {
 			std::set<int64_t>& out;
 			explicit OffsetWalker(std::set<int64_t>& o): out(o) {}
@@ -203,6 +210,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					scanOffsetBody(fn);
 			for (auto const* fn: ASTNode::filteredNodes<FunctionDefinition>(unit.nodes()))
 				scanOffsetBody(fn);
+		}
 		}
 	}
 
