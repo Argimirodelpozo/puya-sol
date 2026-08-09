@@ -871,6 +871,9 @@ struct DynElemMetrics
 	unsigned size = 32;
 	unsigned arc4Width = 32;
 	unsigned perSlot = 1;
+	unsigned lanesPerElem = 1;   // fixed-array / uniform-struct elements: the
+	                             // element is this many LANES, identical in
+	                             // slot layout and ARC4 concatenation order
 	bool ok = false;
 };
 
@@ -880,8 +883,63 @@ DynElemMetrics dynElemMetrics(
 	DynElemMetrics m;
 	if (!_elemType || !_elemW)
 		return m;
+	// FIXED-array element (uint256[2], uint24[3]): lanes are the inner
+	// scalars. Accepted when the lanes are full words (any element slot
+	// count) or the whole element packs into ONE slot — both keep the global
+	// lane index aligned with the per-slot packing math.
+	if (auto const* fat = dynamic_cast<solidity::frontend::ArrayType const*>(_elemType);
+		fat && !fat->isDynamicallySized() && !fat->isByteArrayOrString())
+	{
+		auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_elemW);
+		if (!sa)
+			return m;
+		auto inner = dynElemMetrics(fat->baseType(), sa->elementType());
+		if (!inner.ok || inner.lanesPerElem != 1)
+			return m;
+		auto lanesU = fat->length();
+		if (lanesU == 0 || lanesU > 64)
+			return m;
+		unsigned lanes = static_cast<unsigned>(lanesU);
+		if (inner.size != 32 && lanes * inner.size > 32)
+			return m;
+		m.size = inner.size;
+		m.arc4Width = inner.arc4Width;
+		m.perSlot = inner.size == 32 ? 1 : lanes;
+		m.lanesPerElem = lanes;
+		m.ok = true;
+		return m;
+	}
+	// Uniform STRUCT element (struct S { uint256 a; uint256 b; }): every
+	// member a full-slot 32-byte value whose ARC4 encoding is its canonical
+	// word — the element is a plain word concatenation.
+	if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(_elemType))
+	{
+		auto const* sw = dynamic_cast<awst::ARC4Struct const*>(_elemW);
+		if (!sw)
+			return m;
+		unsigned lanes = 0;
+		for (auto const& mem: st->structDefinition().members())
+		{
+			if (!mem || !mem->type())
+				return m;
+			auto const* mt = mem->type();
+			if (!mt->isValueType() || mt->storageBytes() != 32)
+				return m;
+			if (dynamic_cast<solidity::frontend::FixedBytesType const*>(mt) == nullptr
+				&& mt->category() != solidity::frontend::Type::Category::Integer)
+				return m;
+			++lanes;
+		}
+		if (lanes == 0 || lanes > 64)
+			return m;
+		m.size = 32;
+		m.arc4Width = 32;
+		m.perSlot = 1;
+		m.lanesPerElem = lanes;
+		m.ok = true;
+		return m;
+	}
 	if (_elemType->isDynamicallySized()
-		|| dynamic_cast<solidity::frontend::StructType const*>(_elemType)
 		|| !_elemType->isValueType())
 		return m;
 	m.size = puyasol::builder::SlotHandleAccess::layoutFor(_elemType).size;
@@ -916,10 +974,38 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 		// runtime-length: [u16 count][32B elems] via __evm_dynarr_read
 		auto const* arrW = m_ctx.typeMapper.map(_at);
 		auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(arrW);
+		// dyn-of-dyn (uint[][], S[][]): element j's slot holds the INNER
+		// length; compose per element via __evm_dynarr2_read with the INNER
+		// element's metrics.
+		if (auto const* dInner = dynamic_cast<ArrayType const*>(_at->baseType());
+			dInner && dInner->isDynamicallySized()
+			&& !dInner->isByteArrayOrString() && da)
+		{
+			auto const* innerW = dynamic_cast<awst::ARC4DynamicArray const*>(
+				da->elementType());
+			auto met2 = innerW
+				? dynElemMetrics(dInner->baseType(), innerW->elementType())
+				: DynElemMetrics{};
+			if (met2.ok)
+			{
+				auto call = awst::makeSubroutineCall(
+					awst::SubroutineID{"__puyasol___evm_dynarr2_read"},
+					awst::WType::bytesType(), m_loc);
+				awst::pushCallArg(call->args, "__slot", _a.slot);
+				awst::pushCallArg(call->args, "__size",
+					awst::makeIntegerConstant(uint64_t{met2.size}, m_loc));
+				awst::pushCallArg(call->args, "__aw",
+					awst::makeIntegerConstant(uint64_t{met2.arc4Width}, m_loc));
+				awst::pushCallArg(call->args, "__per",
+					awst::makeIntegerConstant(uint64_t{met2.perSlot}, m_loc));
+				awst::pushCallArg(call->args, "__mul",
+					awst::makeIntegerConstant(uint64_t{met2.lanesPerElem}, m_loc));
+				return awst::makeReinterpretCast(std::move(call), arrW, m_loc);
+			}
+		}
 		auto met = da ? dynElemMetrics(_at->baseType(), da->elementType())
 					  : DynElemMetrics{};
-		if (!met.ok || dynamic_cast<awst::ARC4Struct const*>(
-				da ? da->elementType() : nullptr))
+		if (!met.ok)
 		{
 			Logger::instance().error(
 				"--evm-storage-layout: cannot materialise dynamic storage array "
@@ -940,6 +1026,8 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 			awst::makeIntegerConstant(uint64_t{met.arc4Width}, m_loc));
 		awst::pushCallArg(call->args, "__per",
 			awst::makeIntegerConstant(uint64_t{met.perSlot}, m_loc));
+		awst::pushCallArg(call->args, "__mul",
+			awst::makeIntegerConstant(uint64_t{met.lanesPerElem}, m_loc));
 		return awst::makeReinterpretCast(std::move(call), arrW, m_loc);
 	}
 	auto lenU = _at->length();
@@ -980,6 +1068,31 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 			arr->values.push_back(SlotHandleAccess::readStructElem(
 				m_ctx.prePendingStatements, std::move(elemBase), structElem,
 				structW, m_loc));
+		}
+		return arr;
+	}
+	// FIXED-array elements (uint256[2][2]): recurse per element — the scalar
+	// loop below would hand a biguint to an arc4 static-array wtype
+	// ("cannot encode biguint to uint256[2]").
+	if (auto const* eat = dynamic_cast<ArrayType const*>(elemType);
+		eat && !eat->isDynamicallySized() && !isBytesLike(elemType))
+	{
+		auto stride = elemType->storageSize();
+		for (unsigned j = 0; j < len; ++j)
+		{
+			Addr ea;
+			ea.slot = awst::makeBigUIntBinOp(baseVar(),
+				awst::BigUIntBinaryOperator::Add,
+				awst::makeIntegerConstant((stride * j).str(), m_loc,
+					awst::WType::biguintType()), m_loc);
+			ea.byteOffset = nullptr;
+			ea.size = 32;
+			ea.solType = elemType;
+			ea.wtype = m_ctx.typeMapper.map(elemType);
+			auto ev = readArrayValue(ea, eat);
+			if (!ev)
+				return nullptr;
+			arr->values.push_back(std::move(ev));
 		}
 		return arr;
 	}
@@ -1191,6 +1304,8 @@ bool EvmSlotLowering::clearAggregate(
 				awst::makeIntegerConstant(uint64_t{metc.arc4Width}, m_loc));
 			awst::pushCallArg(call->args, "__per",
 				awst::makeIntegerConstant(uint64_t{metc.perSlot}, m_loc));
+			awst::pushCallArg(call->args, "__mul",
+				awst::makeIntegerConstant(uint64_t{metc.lanesPerElem}, m_loc));
 			_out.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
 			return true;
 		}
@@ -1319,6 +1434,38 @@ bool EvmSlotLowering::writeArrayValue(
 	{
 		auto const* arrWw = m_ctx.typeMapper.map(_at);
 		auto const* daw = dynamic_cast<awst::ARC4DynamicArray const*>(arrWw);
+		if (auto const* dInner = dynamic_cast<ArrayType const*>(_at->baseType());
+			dInner && dInner->isDynamicallySized()
+			&& !dInner->isByteArrayOrString() && daw)
+		{
+			auto const* innerW = dynamic_cast<awst::ARC4DynamicArray const*>(
+				daw->elementType());
+			auto met2 = innerW
+				? dynElemMetrics(dInner->baseType(), innerW->elementType())
+				: DynElemMetrics{};
+			if (met2.ok)
+			{
+				if (_value->wtype != awst::WType::bytesType())
+					_value = awst::makeReinterpretCast(
+						std::move(_value), awst::WType::bytesType(), m_loc);
+				auto call = awst::makeSubroutineCall(
+					awst::SubroutineID{"__puyasol___evm_dynarr2_write"},
+					awst::WType::voidType(), m_loc);
+				awst::pushCallArg(call->args, "__slot", _a.slot);
+				awst::pushCallArg(call->args, "__val", std::move(_value));
+				awst::pushCallArg(call->args, "__size",
+					awst::makeIntegerConstant(uint64_t{met2.size}, m_loc));
+				awst::pushCallArg(call->args, "__aw",
+					awst::makeIntegerConstant(uint64_t{met2.arc4Width}, m_loc));
+				awst::pushCallArg(call->args, "__per",
+					awst::makeIntegerConstant(uint64_t{met2.perSlot}, m_loc));
+				awst::pushCallArg(call->args, "__mul",
+					awst::makeIntegerConstant(uint64_t{met2.lanesPerElem}, m_loc));
+				_out.push_back(awst::makeExpressionStatement(
+					std::move(call), m_loc));
+				return true;
+			}
+		}
 		auto metw = daw ? dynElemMetrics(_at->baseType(), daw->elementType())
 						: DynElemMetrics{};
 		if (!metw.ok)
@@ -1342,6 +1489,8 @@ bool EvmSlotLowering::writeArrayValue(
 			awst::makeIntegerConstant(uint64_t{metw.arc4Width}, m_loc));
 		awst::pushCallArg(call->args, "__per",
 			awst::makeIntegerConstant(uint64_t{metw.perSlot}, m_loc));
+		awst::pushCallArg(call->args, "__mul",
+			awst::makeIntegerConstant(uint64_t{metw.lanesPerElem}, m_loc));
 		_out.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
 		return true;
 	}
@@ -1420,6 +1569,66 @@ bool EvmSlotLowering::writeArrayValue(
 				fv = awst::makeARC4Decode(std::move(fv),
 					bytesLikeDecodeTarget(elemType), m_loc);
 			writeBytesValue(ea, std::move(fv), _out);
+		}
+		return true;
+	}
+	// ARRAY elements: recurse per element. Fixed sub-arrays slice via arc4
+	// indexing; DYNAMIC sub-arrays follow the static-array head table
+	// manually (u16 offsets at position 2j, relative to the value start —
+	// arc4 element-indexing does not decode head/tail for this shape).
+	if (auto const* eat2 = dynamic_cast<ArrayType const*>(elemType);
+		eat2 && !isBytesLike(elemType))
+	{
+		bool dynInner = eat2->isDynamicallySized();
+		auto stride = dynInner ? solidity::u256(1) : elemType->storageSize();
+		std::shared_ptr<awst::Expression> rawBytes;
+		std::string rb;
+		if (dynInner)
+		{
+			rb = "__evmaw_r_"
+				+ std::to_string(awst::NameGen::next("EvmSlotLowering.arrWR"));
+			_out.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(rb, awst::WType::bytesType(), m_loc),
+				awst::makeReinterpretCast(valVar(), awst::WType::bytesType(),
+					m_loc), m_loc));
+		}
+		auto rawVar = [&]() {
+			return awst::makeVarExpression(rb, awst::WType::bytesType(), m_loc);
+		};
+		auto headAt = [&](unsigned idx) {
+			return awst::makeBtoi(awst::makeExtract(rawVar(),
+				static_cast<int>(2 * idx), 2, m_loc), m_loc);
+		};
+		for (unsigned j = 0; j < len; ++j)
+		{
+			Addr ea;
+			ea.slot = awst::makeBigUIntBinOp(baseVar(),
+				awst::BigUIntBinaryOperator::Add,
+				awst::makeIntegerConstant((stride * j).str(), m_loc,
+					awst::WType::biguintType()), m_loc);
+			ea.byteOffset = nullptr;
+			ea.size = 32;
+			ea.solType = elemType;
+			ea.wtype = elemW ? elemW : m_ctx.typeMapper.map(elemType);
+			std::shared_ptr<awst::Expression> ev;
+			if (dynInner)
+			{
+				auto start = headAt(j);
+				auto end = (j + 1 < len)
+					? std::shared_ptr<awst::Expression>(headAt(j + 1))
+					: std::shared_ptr<awst::Expression>(
+						awst::makeLen(rawVar(), m_loc));
+				auto sliceLen = awst::makeUInt64BinOp(std::move(end),
+					awst::UInt64BinaryOperator::Sub, start, m_loc);
+				ev = awst::makeReinterpretCast(
+					awst::makeExtract3(rawVar(), headAt(j),
+						std::move(sliceLen), m_loc),
+					ea.wtype, m_loc);
+			}
+			else
+				ev = elemAt(j);
+			if (!writeArrayValue(ea, eat2, std::move(ev), _out))
+				return false;
 		}
 		return true;
 	}

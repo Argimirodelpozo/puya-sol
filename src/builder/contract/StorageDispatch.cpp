@@ -537,7 +537,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		slotArg2.wtype = awst::WType::biguintType();
 		slotArg2.sourceLocation = loc;
 		sub.args.push_back(slotArg2);
-		for (char const* an: {"__size", "__aw", "__per"})
+		for (char const* an: {"__size", "__aw", "__per", "__mul"})
 		{
 			awst::SubroutineArgument a;
 			a.name = an;
@@ -552,6 +552,12 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		auto body = awst::makeBlock(loc);
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64Var("__n"), biguintToU64(readWordCall(slotVar())), loc));
+		// __mul = lanes per ELEMENT (fixed-array / uniform-struct elements are
+		// lane concatenations in both slot and ARC4 layouts); the loops run
+		// over LANES while the count word/prefix stays in elements.
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__nl"), awst::makeUInt64BinOp(u64Var("__n"),
+				awst::UInt64BinaryOperator::Mult, u64Var("__mul"), loc), loc));
 		body->body.push_back(awst::makeAssignmentStatement(
 			biguintVar("__chunk"), chunkBase(), loc));
 		body->body.push_back(awst::makeAssignmentStatement(
@@ -560,7 +566,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64Var("__i"), u64c(0), loc));
 		auto cond = awst::makeNumericCompare(u64Var("__i"),
-			awst::NumericComparison::Lt, u64Var("__n"), loc);
+			awst::NumericComparison::Lt, u64Var("__nl"), loc);
 		auto loop = awst::makeBlock(loc);
 		// slotIdx = i / per ; j = i - slotIdx*per ; off = 32 - (j+1)*size
 		loop->body.push_back(awst::makeAssignmentStatement(u64Var("__wi"),
@@ -631,7 +637,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		auto valVar = [&]() {
 			return awst::makeVarExpression("__val", awst::WType::bytesType(), loc);
 		};
-		for (char const* an: {"__size", "__aw", "__per"})
+		for (char const* an: {"__size", "__aw", "__per", "__mul"})
 		{
 			awst::SubroutineArgument a;
 			a.name = an;
@@ -648,6 +654,12 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64Var("__n"),
 			awst::makeBtoi(awst::makeExtract(valVar(), 0, 2, loc), loc), loc));
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__nl"), awst::makeUInt64BinOp(u64Var("__n"),
+				awst::UInt64BinaryOperator::Mult, u64Var("__mul"), loc), loc));
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64Var("__oldl"), awst::makeUInt64BinOp(u64Var("__old"),
+				awst::UInt64BinaryOperator::Mult, u64Var("__mul"), loc), loc));
 		body->body.push_back(writeWordStmt(slotVar(),
 			u64ToBiguint(u64Var("__n"))));
 		body->body.push_back(awst::makeAssignmentStatement(
@@ -658,7 +670,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		// first element, so a partially-filled last word has clean high bytes)
 		{
 			auto cond = awst::makeNumericCompare(u64Var("__i"),
-				awst::NumericComparison::Lt, u64Var("__n"), loc);
+				awst::NumericComparison::Lt, u64Var("__nl"), loc);
 			auto loop = awst::makeBlock(loc);
 			loop->body.push_back(awst::makeAssignmentStatement(u64Var("__wi"),
 				awst::makeUInt64BinOp(u64Var("__i"),
@@ -715,7 +727,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 						awst::UInt64BinaryOperator::Sub, u64c(1), loc), loc);
 				auto lastElem = awst::makeNumericCompare(u64Var("__i"),
 					awst::NumericComparison::Eq,
-					awst::makeUInt64BinOp(u64Var("__n"),
+					awst::makeUInt64BinOp(u64Var("__nl"),
 						awst::UInt64BinaryOperator::Sub, u64c(1), loc), loc);
 				loop->body.push_back(awst::makeIfElse(
 					awst::makeBoolBinOp(std::move(lastInWord),
@@ -739,9 +751,9 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 					awst::UInt64BinaryOperator::FloorDiv, u64Var("__per"), loc);
 			};
 			body->body.push_back(awst::makeAssignmentStatement(
-				u64Var("__wi"), ceilDiv(u64Var("__n")), loc));
+				u64Var("__wi"), ceilDiv(u64Var("__nl")), loc));
 			body->body.push_back(awst::makeAssignmentStatement(
-				u64Var("__we"), ceilDiv(u64Var("__old")), loc));
+				u64Var("__we"), ceilDiv(u64Var("__oldl")), loc));
 			auto cond = awst::makeNumericCompare(u64Var("__wi"),
 				awst::NumericComparison::Lt, u64Var("__we"), loc);
 			auto loop = awst::makeBlock(loc);
@@ -760,6 +772,208 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		_contractNode->methods.push_back(std::move(sub));
 	}
 
+	// ── __evm_dynarr2_read / __evm_dynarr2_write ──
+	// Dynamic array OF dynamic arrays (uint[][], S[][]): outer count at the
+	// slot, element j's INNER length at keccak256(slot32)+j, inner data at
+	// keccak256(elemSlot32)+i. Both compose the flat __evm_dynarr_* pair per
+	// element and forward the INNER element metrics (__size/__aw/__per/__mul)
+	// verbatim. ARC4 form: u16 count ++ u16 heads (offsets relative to the
+	// tuple start, i.e. byte 2) ++ inner tails.
+	{
+		auto metricArgs = [&](std::vector<awst::CallArg>& _args) {
+			for (char const* an: {"__size", "__aw", "__per", "__mul"})
+				awst::pushCallArg(_args, an, u64Var(an));
+		};
+		auto innerRead = [&](std::shared_ptr<awst::Expression> _slot) {
+			auto call = awst::makeSubroutineCall(
+				awst::SubroutineID{"__puyasol___evm_dynarr_read"},
+				awst::WType::bytesType(), loc);
+			awst::pushCallArg(call->args, "__slot", std::move(_slot));
+			metricArgs(call->args);
+			return std::shared_ptr<awst::Expression>(std::move(call));
+		};
+		auto innerWriteStmt = [&](std::shared_ptr<awst::Expression> _slot,
+			std::shared_ptr<awst::Expression> _bytes) {
+			auto call = awst::makeSubroutineCall(
+				awst::SubroutineID{"__puyasol___evm_dynarr_write"},
+				awst::WType::voidType(), loc);
+			awst::pushCallArg(call->args, "__slot", std::move(_slot));
+			awst::pushCallArg(call->args, "__val", std::move(_bytes));
+			metricArgs(call->args);
+			return awst::makeExpressionStatement(std::move(call), loc);
+		};
+		auto elemSlotJ = [&]() {
+			return awst::makeBigUIntBinOp(biguintVar("__chunk"),
+				awst::BigUIntBinaryOperator::Add,
+				u64ToBiguint(u64Var("__j")), loc);
+		};
+		auto u16Of = [&](std::shared_ptr<awst::Expression> _v) {
+			return awst::makeExtract(awst::makeItob(std::move(_v), loc), 6, 2, loc);
+		};
+		auto incJ = [&]() {
+			return awst::makeAssignmentStatement(u64Var("__j"),
+				awst::makeUInt64BinOp(u64Var("__j"),
+					awst::UInt64BinaryOperator::Add, u64c(1), loc), loc);
+		};
+		auto mkArgs = [&](awst::ContractMethod& _sub, bool _withVal) {
+			awst::SubroutineArgument sa;
+			sa.name = "__slot";
+			sa.wtype = awst::WType::biguintType();
+			sa.sourceLocation = loc;
+			_sub.args.push_back(sa);
+			if (_withVal)
+			{
+				awst::SubroutineArgument va;
+				va.name = "__val";
+				va.wtype = awst::WType::bytesType();
+				va.sourceLocation = loc;
+				_sub.args.push_back(va);
+			}
+			for (char const* an: {"__size", "__aw", "__per", "__mul"})
+			{
+				awst::SubroutineArgument a;
+				a.name = an;
+				a.wtype = awst::WType::uint64Type();
+				a.sourceLocation = loc;
+				_sub.args.push_back(a);
+			}
+		};
+
+		// READ
+		{
+			awst::ContractMethod sub;
+			sub.sourceLocation = loc;
+			sub.cref = cref;
+			sub.memberName = "__evm_dynarr2_read";
+			sub.returnType = awst::WType::bytesType();
+			sub.arc4MethodConfig = std::nullopt;
+			sub.pure = false;
+			mkArgs(sub, /*_withVal=*/false);
+			auto body = awst::makeBlock(loc);
+			body->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__n"), biguintToU64(readWordCall(slotVar())), loc));
+			body->body.push_back(awst::makeAssignmentStatement(
+				biguintVar("__chunk"), chunkBase(), loc));
+			body->body.push_back(awst::makeAssignmentStatement(
+				bytesVar("__heads"), awst::makeBytesConstant({}, loc), loc));
+			body->body.push_back(awst::makeAssignmentStatement(
+				bytesVar("__tails"), awst::makeBytesConstant({}, loc), loc));
+			body->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__off"), awst::makeUInt64BinOp(u64c(2),
+					awst::UInt64BinaryOperator::Mult, u64Var("__n"), loc), loc));
+			body->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__j"), u64c(0), loc));
+			auto cond = awst::makeNumericCompare(u64Var("__j"),
+				awst::NumericComparison::Lt, u64Var("__n"), loc);
+			auto loop = awst::makeBlock(loc);
+			loop->body.push_back(awst::makeAssignmentStatement(
+				bytesVar("__heads"),
+				awst::makeConcat(bytesVar("__heads"),
+					u16Of(u64Var("__off")), loc), loc));
+			loop->body.push_back(awst::makeAssignmentStatement(
+				bytesVar("__inner"), innerRead(elemSlotJ()), loc));
+			loop->body.push_back(awst::makeAssignmentStatement(
+				bytesVar("__tails"),
+				awst::makeConcat(bytesVar("__tails"), bytesVar("__inner"),
+					loc), loc));
+			loop->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__off"), awst::makeUInt64BinOp(u64Var("__off"),
+					awst::UInt64BinaryOperator::Add,
+					awst::makeLen(bytesVar("__inner"), loc), loc), loc));
+			loop->body.push_back(incJ());
+			body->body.push_back(awst::makeWhileLoop(
+				std::move(cond), std::move(loop), loc));
+			auto ret = awst::makeReturnStatement(
+				awst::makeConcat(u16Of(u64Var("__n")),
+					awst::makeConcat(bytesVar("__heads"), bytesVar("__tails"),
+						loc), loc), loc);
+			body->body.push_back(std::move(ret));
+			sub.body = body;
+			_contractNode->methods.push_back(std::move(sub));
+		}
+
+		// WRITE
+		{
+			awst::ContractMethod sub;
+			sub.sourceLocation = loc;
+			sub.cref = cref;
+			sub.memberName = "__evm_dynarr2_write";
+			sub.returnType = awst::WType::voidType();
+			sub.arc4MethodConfig = std::nullopt;
+			sub.pure = false;
+			mkArgs(sub, /*_withVal=*/true);
+			auto valVar2 = [&]() {
+				return awst::makeVarExpression("__val", awst::WType::bytesType(), loc);
+			};
+			auto headAbs = [&](std::shared_ptr<awst::Expression> _idx) {
+				// absolute byte start of element _idx: 2 + head (head is
+				// relative to the tuple start at byte 2)
+				return awst::makeUInt64BinOp(u64c(2),
+					awst::UInt64BinaryOperator::Add,
+					awst::makeBtoi(awst::makeExtract3(valVar2(),
+						awst::makeUInt64BinOp(u64c(2),
+							awst::UInt64BinaryOperator::Add,
+							awst::makeUInt64BinOp(u64c(2),
+								awst::UInt64BinaryOperator::Mult,
+								std::move(_idx), loc), loc),
+						u64c(2), loc), loc), loc);
+			};
+			auto body = awst::makeBlock(loc);
+			body->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__old"), biguintToU64(readWordCall(slotVar())), loc));
+			body->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__n"),
+				awst::makeBtoi(awst::makeExtract(valVar2(), 0, 2, loc), loc),
+				loc));
+			body->body.push_back(writeWordStmt(slotVar(),
+				u64ToBiguint(u64Var("__n"))));
+			body->body.push_back(awst::makeAssignmentStatement(
+				biguintVar("__chunk"), chunkBase(), loc));
+			body->body.push_back(awst::makeAssignmentStatement(
+				u64Var("__j"), u64c(0), loc));
+			{
+				auto cond = awst::makeNumericCompare(u64Var("__j"),
+					awst::NumericComparison::Lt, u64Var("__n"), loc);
+				auto loop = awst::makeBlock(loc);
+				loop->body.push_back(awst::makeAssignmentStatement(
+					u64Var("__hs"), headAbs(u64Var("__j")), loc));
+				auto lastJ = awst::makeNumericCompare(
+					awst::makeUInt64BinOp(u64Var("__j"),
+						awst::UInt64BinaryOperator::Add, u64c(1), loc),
+					awst::NumericComparison::Lt, u64Var("__n"), loc);
+				loop->body.push_back(awst::makeAssignmentStatement(
+					u64Var("__he"),
+					awst::makeConditional(std::move(lastJ),
+						headAbs(awst::makeUInt64BinOp(u64Var("__j"),
+							awst::UInt64BinaryOperator::Add, u64c(1), loc)),
+						awst::makeLen(valVar2(), loc),
+						awst::WType::uint64Type(), loc), loc));
+				loop->body.push_back(innerWriteStmt(elemSlotJ(),
+					awst::makeExtract3(valVar2(), u64Var("__hs"),
+						awst::makeUInt64BinOp(u64Var("__he"),
+							awst::UInt64BinaryOperator::Sub, u64Var("__hs"),
+							loc), loc)));
+				loop->body.push_back(incJ());
+				body->body.push_back(awst::makeWhileLoop(
+					std::move(cond), std::move(loop), loc));
+			}
+			// shrink-clear: writing an EMPTY inner array clears its length and
+			// stale words
+			{
+				auto cond = awst::makeNumericCompare(u64Var("__j"),
+					awst::NumericComparison::Lt, u64Var("__old"), loc);
+				auto loop = awst::makeBlock(loc);
+				loop->body.push_back(innerWriteStmt(elemSlotJ(),
+					awst::makeBytesConstant({0, 0}, loc)));
+				loop->body.push_back(incJ());
+				body->body.push_back(awst::makeWhileLoop(
+					std::move(cond), std::move(loop), loc));
+			}
+			sub.body = body;
+			_contractNode->methods.push_back(std::move(sub));
+		}
+	}
+
 	// Promote to root-level Subroutines (see buildStorageDispatch's tail).
 	std::vector<awst::ContractMethod> remainingMethods;
 	for (auto& m: _contractNode->methods)
@@ -767,7 +981,9 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		if (m.memberName == "__storage_read" || m.memberName == "__storage_write"
 			|| m.memberName == "__evm_bytes_read" || m.memberName == "__evm_bytes_write"
 			|| m.memberName == "__evm_dynarr_read"
-			|| m.memberName == "__evm_dynarr_write")
+			|| m.memberName == "__evm_dynarr_write"
+			|| m.memberName == "__evm_dynarr2_read"
+			|| m.memberName == "__evm_dynarr2_write")
 		{
 			auto sub = awst::makeSubroutine(
 				std::string("__puyasol_") + m.memberName, m.memberName,

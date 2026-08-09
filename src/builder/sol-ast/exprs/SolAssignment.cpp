@@ -534,6 +534,29 @@ SolAssignment::tryHandleEvmStorageWrite()
 				value = buildExpr(rhsExpr);
 			if (!value)
 				return std::nullopt;
+			// FIXED array of DYNAMIC elements (uint[][2] = calldata/memory):
+			// per-element head slicing + inner length/keccak-region writes —
+			// only writeArrayValue models that; the slot-route writer below
+			// smears the head/tail encoding across raw words.
+			if (auto const* lelem2 = dynamic_cast<ArrayType const*>(lat->baseType());
+				lelem2 && lelem2->isDynamicallySized()
+				&& !lat->isDynamicallySized() && !lat->isByteArrayOrString())
+			{
+				EvmSlotLowering lowFD(m_ctx, m_scope, m_loc);
+				EvmSlotLowering::Addr la2 = *laddr;
+				la2.solType = lhsType;
+				la2.wtype = m_ctx.typeMapper.map(lhsType);
+				std::vector<std::shared_ptr<awst::Statement>> wsFD;
+				if (lowFD.writeArrayValue(la2, lat, std::move(value), wsFD))
+				{
+					for (auto& st: wsFD)
+						m_ctx.queuePending(std::move(st));
+					return std::shared_ptr<awst::Expression>{
+						awst::makeZero(m_loc, awst::WType::biguintType())};
+				}
+				return std::shared_ptr<awst::Expression>{
+					awst::makeZero(m_loc, awst::WType::biguintType())};
+			}
 			if (auto r = trySlotBasedArrayWrite(Token::Assign, laddr->slot, value))
 				return std::move(*r);
 			return std::shared_ptr<awst::Expression>{
