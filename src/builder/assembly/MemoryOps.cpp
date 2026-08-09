@@ -627,6 +627,15 @@ bool AssemblyBuilder::tryHandleBytesMemoryMcopy(
 	auto srcIt = m_locals.find(srcVar);
 	if (dstIt == m_locals.end() || srcIt == m_locals.end())
 		return false;
+	// BLOB-backed vars (--evm-memory-layout, asm-touched) hold a uint64
+	// offset; the real data lives in the blob. This value-model fast path
+	// would replace3 a DETACHED copy while every other reader (returns,
+	// mloads) uses the blob — the writes silently vanished
+	// (mcopy_to_right_overlap returned the original bytes). Fall through to
+	// the generic word-copy, which goes through mload/mstore and is
+	// memmove-safe via the M13 source-word snapshot.
+	if (m_blobOffsetVars.count(dstVar) || m_blobOffsetVars.count(srcVar))
+		return false;
 	if (dstIt->second != awst::WType::bytesType() && dstIt->second != awst::WType::stringType())
 		return false;
 	if (srcIt->second != awst::WType::bytesType() && srcIt->second != awst::WType::stringType())
