@@ -65,7 +65,13 @@ _original_uint_encode = _UintType.encode
 
 def _patched_uint_encode(self, value):
     if isinstance(value, int) and value < 0:
-        value = value & ((1 << self.bit_size) - 1)
+        # Wrap at the SOLIDITY width, capped at 256: Solidity has no int wider
+        # than 256 bits, so a uint512 param is always the __postInit biguint
+        # CARRIER whose convention is the canonical-256 value zero-extended —
+        # TC-512 put the sign bits in the high half and the ctor read a huge
+        # positive (`A(a > 0 ? a : -a)` took the wrong branch).
+        wrap_bits = min(self.bit_size, 256)
+        value = value & ((1 << wrap_bits) - 1)
     return _original_uint_encode(self, value)
 
 
