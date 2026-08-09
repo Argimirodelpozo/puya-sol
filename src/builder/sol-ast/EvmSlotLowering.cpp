@@ -252,6 +252,31 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolve(Expression const& 
 		return resolveIndexAccess(*ia);
 	if (auto const* ma = dynamic_cast<MemberAccess const*>(&_e))
 		return resolveMemberAccess(*ma);
+	// Ternary of storage refs (`c ? a1 : a2`): the slot is a runtime select.
+	// Guarded to BARE state-var branches — those resolve without queueing
+	// side effects, so evaluating "both" (as slot constants) is pure; complex
+	// branches (m[k], arr[i]) would run the untaken side's key/index effects.
+	if (auto const* cond = dynamic_cast<Conditional const*>(&_e))
+	{
+		auto const* ti = dynamic_cast<Identifier const*>(&cond->trueExpression());
+		auto const* fi = dynamic_cast<Identifier const*>(&cond->falseExpression());
+		if (ti && fi)
+		{
+			auto ta = resolve(*ti);
+			auto fa = resolve(*fi);
+			if (ta && fa)
+			{
+				auto c = m_ctx.buildExpr(cond->condition());
+				if (!c)
+					return std::nullopt;
+				auto const* t = _e.annotation().type;
+				auto sel = awst::makeConditional(std::move(c),
+					ta->slot, fa->slot, awst::WType::biguintType(), m_loc);
+				return makeLeafAddr(std::move(sel), nullptr,
+					t ? t->storageBytes() : 32, /*alone*/ true, t);
+			}
+		}
+	}
 	// Type conversion over a storage ref (`bytes(a)` on a storage string):
 	// same location, different label — peel it.
 	if (auto const* fc = dynamic_cast<FunctionCall const*>(&_e))

@@ -567,15 +567,12 @@ main_while_top@34:
     dig 4
     b>
     bz main_after_while@36
-    dig 3
-    dup
-    bytec_3 // 0x09
-    b<
-    assert // array index out of bounds
     intc_1 // 8
     bzero
     dup
-    dig 2
+    dig 5
+    dup
+    cover 2
     concat
     dup
     len
@@ -583,7 +580,11 @@ main_while_top@34:
     -
     intc_1 // 8
     extract3
-    dig 2
+    dig 1
+    bytec_3 // 0x09
+    b<
+    assert // array index out of bounds
+    dig 1
     bytec_2 // 0x04
     b/
     intc_0 // 32
@@ -597,10 +598,10 @@ main_while_top@34:
     -
     intc_0 // 32
     extract3
-    dig 4
+    dig 3
     bytec_2 // 0x04
     b%
-    uncover 4
+    uncover 5
     swap
     concat
     dup

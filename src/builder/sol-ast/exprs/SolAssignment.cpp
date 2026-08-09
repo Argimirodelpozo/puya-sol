@@ -355,12 +355,18 @@ SolAssignment::tryHandleEvmStorageWrite()
 						if (!r)
 							return std::shared_ptr<awst::Expression>{
 								awst::makeZero(m_loc, awst::WType::biguintType())};
-						m_ctx.queuePending(awst::makeAssignmentStatement(
-							awst::makeVarExpression(lvd->name(),
-								awst::WType::biguintType(), m_loc),
-							r->slot, m_loc));
+						// PRE-pending, and the expression VALUE is the pointer:
+						// `(m = m2)[2] = 21` indexes the assignment's value —
+						// makeZero here sent the write to SLOT 0 (= the first
+						// mapping!), and a post-queued rebind ran after it.
+						m_ctx.prePendingStatements.push_back(
+							awst::makeAssignmentStatement(
+								awst::makeVarExpression(lvd->name(),
+									awst::WType::biguintType(), m_loc),
+								r->slot, m_loc));
 						return std::shared_ptr<awst::Expression>{
-							awst::makeZero(m_loc, awst::WType::biguintType())};
+							awst::makeVarExpression(lvd->name(),
+								awst::WType::biguintType(), m_loc)};
 					}
 				}
 
@@ -649,6 +655,21 @@ SolAssignment::tryHandleEvmStorageWrite()
 			awst::makeZero(m_loc, awst::WType::biguintType())};
 	}
 
+	// RHS FIRST (solc legacy + viaYul): `arr[j++] = j` stores the
+	// PRE-increment j, and callee write-backs in `s.f = bump(s)` land before
+	// the lvalue's index/key effects. Pin the built value via PREpending so it
+	// is captured before resolve() queues those effects (a post-queued pin
+	// would read the mutated state no matter the build order).
+	Token op = m_assignment.assignmentOperator();
+	auto rhsBuilt = buildExpr(m_assignment.rightHandSide());
+	if (!rhsBuilt)
+		return std::nullopt;
+	std::string rhsNm = "__evm_arhs_"
+		+ std::to_string(awst::NameGen::next("SolAssignment.evmAssignRhs"));
+	auto const* rhsW = rhsBuilt->wtype;
+	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(rhsNm, rhsW, m_loc), std::move(rhsBuilt), m_loc));
+
 	EvmSlotLowering low(m_ctx, m_scope, m_loc);
 	auto addr = low.resolve(lhsExpr);
 	if (!addr)
@@ -659,10 +680,8 @@ SolAssignment::tryHandleEvmStorageWrite()
 	// write statement, so SingleEvaluation is safe.
 	addr->slot = awst::makeEvalOnce(addr->slot, m_loc);
 
-	Token op = m_assignment.assignmentOperator();
-	auto value = buildExpr(m_assignment.rightHandSide());
-	if (!value)
-		return std::nullopt;
+	std::shared_ptr<awst::Expression> value =
+		awst::makeVarExpression(rhsNm, rhsW, m_loc);
 	if (op != Token::Assign)
 	{
 		auto current = low.readValue(*addr);
@@ -677,16 +696,18 @@ SolAssignment::tryHandleEvmStorageWrite()
 	// EXPRESSION evaluates to it (chained `a = b = v` — returning a zero
 	// sentinel here wrote 0 through the outer link; storage_packed_array_copy
 	// ctor's `_y[8] = _y[9] = ...`). Single-use pins are copy-propagated by
-	// the backend.
+	// the backend. PREpending, not pending: the OUTER link of a chain pins
+	// its RHS (this var) via prePending, which flushes before the statement —
+	// a post-queued assignment here left that read undefined.
 	std::string valNm = "__evm_aval_"
 		+ std::to_string(awst::NameGen::next("SolAssignment.evmAssignVal"));
 	auto const* valW = value->wtype;
-	m_ctx.queuePending(awst::makeAssignmentStatement(
+	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(valNm, valW, m_loc), std::move(value), m_loc));
 	std::vector<std::shared_ptr<awst::Statement>> out;
 	low.writeValue(*addr, awst::makeVarExpression(valNm, valW, m_loc), out);
 	for (auto& st: out)
-		m_ctx.queuePending(std::move(st));
+		m_ctx.prePendingStatements.push_back(std::move(st));
 	return std::shared_ptr<awst::Expression>{
 		awst::makeVarExpression(valNm, valW, m_loc)};
 }

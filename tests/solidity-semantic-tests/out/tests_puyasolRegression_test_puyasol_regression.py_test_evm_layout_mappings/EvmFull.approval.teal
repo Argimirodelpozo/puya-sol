@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_storage_layout.sol.EvmFull.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8 4294967295
-    bytecblock 0x151f7c75 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x05 0x08 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0 0x0f 0x0b 0x02 0x0000000000000000000000000000000000000000000000000000000000000003 0x06 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "__ctor_pending" 0xf652222313e28459528d920b65115c16c04f3efc82aaedc97be59f3f377c0d3f 0x0000000000000000000000000000000000000000000000000000000000000010 0x000000000000000000000000000000000000000000000000000000000000000e 0x000000000000000000000000000000000000000000000000000000000000000d 0x0000000000000000000000000000000000000000000000000000000000000004 0x010000 "p:" "s:"
+    bytecblock 0x151f7c75 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 0x05 0x08 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0 0x0f 0x0b 0x0000000000000000000000000000000000000000000000000000000000000003 0x06 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x02 "__ctor_pending" 0xf652222313e28459528d920b65115c16c04f3efc82aaedc97be59f3f377c0d3f 0x0000000000000000000000000000000000000000000000000000000000000010 0x000000000000000000000000000000000000000000000000000000000000000e 0x000000000000000000000000000000000000000000000000000000000000000d 0x0000000000000000000000000000000000000000000000000000000000000004 0x010000 "p:" "s:"
     intc_2 // 0
     dupn 10
     bytec_1 // ""
@@ -139,7 +139,7 @@ main_ternary_merge@61:
     replace2 0
     store 0
     load 0
-    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000003
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000003
     replace2 32
     store 0
     load 0
@@ -1018,7 +1018,7 @@ main_ternary_merge@161:
     assert // ABI validation
     intc 4 // 4294967295
     &
-    bytec 11 // 0x06
+    bytec 10 // 0x06
     callsub __storage_read
     dig 14
     dup
@@ -1087,7 +1087,7 @@ main_packedAt_route@27:
 main_ternary_merge@166:
     !
     assert // not payable
-    bytec 11 // 0x06
+    bytec 10 // 0x06
     callsub __storage_read
     dig 13
     dup
@@ -1165,7 +1165,7 @@ main_ternary_merge@171:
     assert // ABI validation
     intc 4 // 4294967295
     &
-    bytec 11 // 0x06
+    bytec 10 // 0x06
     callsub __storage_read
     dup
     bytec 5 // 0x08
@@ -1206,7 +1206,7 @@ main_ternary_merge@171:
     callsub __storage_write
     bytec_2 // 0x01
     b+
-    bytec 11 // 0x06
+    bytec 10 // 0x06
     swap
     callsub __storage_write
     intc_1 // 1
@@ -1561,7 +1561,7 @@ main_ternary_merge@211:
     assert // not payable
     dig 2
     extract 0 32
-    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000003
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000003
     concat
     keccak256
     callsub __storage_read
@@ -1611,7 +1611,7 @@ main_ternary_merge@216:
     assert // not payable
     dig 2
     extract 0 32
-    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000003
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000003
     concat
     keccak256
     dup
@@ -1619,7 +1619,7 @@ main_ternary_merge@216:
     dig 11
     b+
     dup
-    bytec 12 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     callsub __storage_write
@@ -1657,7 +1657,7 @@ main_ternary_merge@221:
     assert // not payable
     dig 2
     extract 0 32
-    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000003
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000003
     concat
     keccak256
     dig 10
@@ -1703,7 +1703,7 @@ main_ternary_merge@231:
     assert // not payable
     intc_0 // 32
     bzero
-    bytec 9 // 0x02
+    bytec 12 // 0x02
     callsub __storage_read
     concat
     dup
@@ -2037,7 +2037,7 @@ main_ternary_merge@269:
     bytec_2 // 0x01
     b+
     dup
-    bytec 12 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_1 // 0x
@@ -2048,7 +2048,7 @@ main_ternary_merge@269:
     bytec_2 // 0x01
     b+
     dup
-    bytec 12 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_1 // 0x
@@ -2059,10 +2059,11 @@ main_ternary_merge@269:
     pop
     bytec_1 // 0x
     callsub __storage_read
-    bytec 9 // 0x02
+    pushint 2
+    itob
     b+
     dup
-    bytec 12 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_1 // 0x
@@ -2139,7 +2140,7 @@ main___postInit_route@5:
     callsub __storage_write
     txn Sender
     extract 0 32
-    bytec 9 // 0x02
+    bytec 12 // 0x02
     swap
     callsub __storage_write
     intc_0 // 32
@@ -2368,7 +2369,7 @@ __evm_bytes_read_after_if_else@2:
     swap
     bytec_2 // 0x01
     b-
-    bytec 9 // 0x02
+    bytec 12 // 0x02
     b/
     concat
     dup
@@ -2481,7 +2482,7 @@ __evm_bytes_write:
     frame_dig 6
     bytec_2 // 0x01
     b-
-    bytec 9 // 0x02
+    bytec 12 // 0x02
     b/
     concat
     dup

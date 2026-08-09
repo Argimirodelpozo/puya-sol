@@ -2415,11 +2415,28 @@ def test_slot_handle_array_bounds_and_packed_compound(harness):
 def test_conditional_storage_ptr_reassign_fails_loud(harness):
     """puyasolRegression/contracts/cond_storage_ptr_reassign.sol — NOT an o.g. test.
 
-    `p = a2` on a storage-pointer local lowers to a COMPILE-TIME alias rebind;
-    inside an if-branch it applied unconditionally (`if (c) p = a2; p.push(1);`
-    always pushed to a2 — verified miscompile). Until a runtime lowering
-    exists, conditional reassignment must be a loud compile error.
+    DEFAULT mode: `p = a2` on a storage-pointer local lowers to a
+    COMPILE-TIME alias rebind; inside an if-branch it applied
+    unconditionally (`if (c) p = a2; p.push(1);` always pushed to a2 —
+    verified miscompile). Until a runtime lowering exists there,
+    conditional reassignment must be a loud compile error.
+
+    SLOT mode (--evm-storage-layout): the pointer IS a runtime biguint
+    slot handle, so the conditional rebind is sound — assert the actual
+    EVM semantics instead of the legacy limitation.
     """
+    import os
+    if "--evm-storage-layout" in os.environ.get("PUYA_SOL_EXTRA_ARGS", ""):
+        app = harness.compile_and_deploy(
+            "puyasolRegression/contracts/cond_storage_ptr_reassign.sol")
+        # f(false): p stays a1 -> a1.length == 1
+        assert as_int(harness.call(app, "f(bool)", False).abi_return) == 1
+        # f(true): p re-points to a2 -> a2 grows -> returns 1 (a2 len)
+        assert as_int(harness.call(app, "f(bool)", True).abi_return) == 1
+        # a1 grew once (first call), a2 once (second) — a third f(false)
+        # pushes a1 again: length 2.
+        assert as_int(harness.call(app, "f(bool)", False).abi_return) == 2
+        return
     with pytest.raises(CompileError):
         harness.compile_and_deploy("puyasolRegression/contracts/cond_storage_ptr_reassign.sol")
 
@@ -3275,7 +3292,19 @@ def test_assign_target_constant_fails_loud(harness):
     location than any parameter and is NOT a storage-pointer alias — contrast
     test_storage_slot_write_through, where `r.slot := store.slot` IS an identity
     alias and now compiles. Needs real storage-pointer arithmetic; stay loud.
+
+    SLOT mode (--evm-storage-layout): asm slot ARITHMETIC is the native
+    representation (r.slot holds a runtime biguint; keccak+add is exactly the
+    EVM derivation the mode implements) — assert the OZ Checkpoints semantics
+    instead of the legacy limitation.
     """
+    import os
+    if "--evm-storage-layout" in os.environ.get("PUYA_SOL_EXTRA_ARGS", ""):
+        app = harness.compile_and_deploy(
+            "puyasolRegression/contracts/assign_target_constant.sol")
+        harness.call(app, "push(uint224)", 7)
+        harness.call(app, "overwriteLast(uint224)", 42)
+        return
     with pytest.raises(CompileError):
         harness.compile_and_deploy(
             "puyasolRegression/contracts/assign_target_constant.sol")
@@ -3381,7 +3410,17 @@ def test_storage_slot_write_through_contract_method_fails_loud(harness):
     (buildFreestandingSubroutine); a contract method would drop the store. That
     combination was previously unreachable, and must not become silent now that
     the alias resolves.
+
+    SLOT mode: storage refs ARE slot handles by value everywhere (contract
+    methods included), so the write-through is sound — assert it round-trips.
     """
+    import os
+    if "--evm-storage-layout" in os.environ.get("PUYA_SOL_EXTRA_ARGS", ""):
+        app = harness.compile_and_deploy(
+            "puyasolRegression/contracts/storage_slot_write_contract_method.sol")
+        harness.call(app, "setB(string)", "hello")
+        assert harness.call(app, "getB()").abi_return == "hello"
+        return
     with pytest.raises(CompileError):
         harness.compile_and_deploy(
             "puyasolRegression/contracts/storage_slot_write_contract_method.sol")
