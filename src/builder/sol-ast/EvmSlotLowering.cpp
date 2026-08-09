@@ -609,6 +609,8 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _
 			anyNested = true;   // string/bytes member → recursive path below
 		else if (dynamic_cast<ArrayType const*>(m->type()))
 			anyNested = true;   // array member → readArrayValue below
+		else if (dynamic_cast<solidity::frontend::MappingType const*>(m->type()))
+			anyNested = true;   // mapping member → SKIPPED (Solidity does too)
 		else if (!m->type()->isValueType())
 		{
 			Logger::instance().error(
@@ -653,6 +655,8 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _
 			ns->values[m->name()] = std::move(v);
 			continue;
 		}
+		if (dynamic_cast<solidity::frontend::MappingType const*>(m->type()))
+			continue;   // mapping content is addressed by keccak paths, never copied
 		if (auto const* mat = dynamic_cast<ArrayType const*>(m->type());
 			mat && !isBytesLike(m->type()))
 		{
@@ -774,6 +778,8 @@ bool EvmSlotLowering::writeStructValue(
 			writeBytesValue(fa, std::move(fv), _out);
 			continue;
 		}
+		if (dynamic_cast<solidity::frontend::MappingType const*>(m->type()))
+			continue;   // Solidity skips mapping members on struct assignment
 		if (auto const* mat2 = dynamic_cast<ArrayType const*>(m->type());
 			mat2 && !isBytesLike(m->type()))
 		{
@@ -865,7 +871,11 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 		{
 			Logger::instance().error(
 				"--evm-storage-layout: cannot materialise dynamic storage array "
-				"with aggregate / bit-packed elements as a value", m_loc);
+				"with aggregate / bit-packed elements as a value "
+				"(element type: "
+				+ std::string(_at->baseType() ? _at->baseType()->humanReadableName()
+											  : "?")
+				+ ")", m_loc);
 			return nullptr;
 		}
 		auto call = awst::makeSubroutineCall(
