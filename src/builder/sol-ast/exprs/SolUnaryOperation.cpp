@@ -860,6 +860,20 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 	bool isInc = (op == Token::Inc);
 	bool isPrefix = m_unaryOp.isPrefixOperation();
 	auto current = low.readValue(*addr);
+	// Postfix returns the OLD value: pin it BEFORE the write. Returning a
+	// fresh read with the write queued post-statement looked equivalent, but
+	// `return st.a++` hoists pending statements ahead of the return, so the
+	// "old" read observed the incremented value.
+	std::shared_ptr<awst::Expression> oldPin;
+	if (!isPrefix)
+	{
+		std::string onm = "__evm_old_"
+			+ std::to_string(awst::NameGen::next("SolUnaryOperation.evmOld"));
+		m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(onm, current->wtype, m_loc), current, m_loc));
+		oldPin = awst::makeVarExpression(onm, current->wtype, m_loc);
+		current = awst::makeVarExpression(onm, current->wtype, m_loc);
+	}
 	auto one = awst::makeIntegerConstant("1", m_loc,
 		addr->wtype == awst::WType::biguintType()
 			? awst::WType::biguintType() : awst::WType::uint64Type());
@@ -880,16 +894,14 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 	if (!newValue)
 		return nullptr;
 	low.writeValue(*addr, std::move(newValue), writes);
-	// Prefix: write BEFORE the value read (fresh read sees the new value).
-	// Postfix: write queued after — the value read still sees the old one.
+	// Both forms write via prePending (after the postfix old-pin above, so
+	// ordering inside prePending is pin -> write). Prefix returns a fresh
+	// read (sees the new value); postfix returns the pinned old value.
 	for (auto& st: writes)
-	{
-		if (isPrefix)
-			m_ctx.prePendingStatements.push_back(std::move(st));
-		else
-			m_ctx.queuePending(std::move(st));
-	}
-	return low.readValue(*addr);
+		m_ctx.prePendingStatements.push_back(std::move(st));
+	if (isPrefix)
+		return low.readValue(*addr);
+	return oldPin;
 }
 
 std::shared_ptr<awst::Expression> SolUnaryOperation::toAwst()
