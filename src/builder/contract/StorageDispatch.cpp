@@ -15,6 +15,7 @@
 #include <libsolidity/ast/ASTVisitor.h>
 
 #include <algorithm>
+#include <functional>
 #include <set>
 
 namespace puyasol::builder
@@ -28,6 +29,83 @@ struct InlineAsmDetector: public solidity::frontend::ASTConstVisitor
 	bool visit(solidity::frontend::InlineAssembly const&) override
 	{ found = true; return false; }
 };
+}
+
+bool evmContractNeedsSparseSlots(
+	solidity::frontend::ContractDefinition const& _contract,
+	TypeMapper& _typeMapper,
+	unsigned long long& _denseSlotsOut)
+{
+	StorageLayout layout;
+	layout.computeLayout(_contract, _typeMapper);
+	_denseSlotsOut = layout.totalSlots();
+
+	InlineAsmDetector asmDetector;
+	forEachDefinedFunction(_contract, [&](auto const* func)
+	{
+		if (asmDetector.found) return;
+		if (func->isImplemented())
+			func->body().accept(asmDetector);
+	});
+	if (asmDetector.found)
+		return true;
+
+	// PACKED addresses stash their high 12 bytes in a keccak-derived shadow
+	// aux slot (EvmSlotLowering::packedAddrAuxSlot) — a hashed slot the type
+	// walk below cannot see. Layouts that layout-at near 2^256 also exceed
+	// the dense region outright.
+	for (auto const& sv: layout.variables())
+	{
+		if (sv.slot >= solidity::u256(kEvmDenseSlotLimit))
+			return true;
+		// "Packed" = actually SHARING the slot: isFullSlot is false even for a
+		// lone address (20 B), and the lone case widens to the full window and
+		// emits no aux write.
+		if (sv.wtype == awst::WType::accountType() && sv.byteSize == 20)
+			if (auto const* si = layout.getSlotInfo(sv.slot);
+				si && si->variables.size() > 1)
+				return true;
+	}
+
+	std::function<bool(solidity::frontend::Type const*)> usesHashedSlots =
+		[&](solidity::frontend::Type const* t) -> bool {
+		if (!t)
+			return true;
+		if (dynamic_cast<solidity::frontend::MappingType const*>(t))
+			return true;
+		if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(t))
+		{
+			if (at->isDynamicallySized())
+				return true; // incl. bytes/string chunk regions
+			return usesHashedSlots(at->baseType());
+		}
+		if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(t))
+		{
+			for (auto const& member: st->structDefinition().members())
+				if (member && usesHashedSlots(member->type()))
+					return true;
+			return false;
+		}
+		return false;
+	};
+	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+	{
+		if (!base)
+			continue;
+		for (auto const* var: base->stateVariables())
+		{
+			if (!var || var->isConstant() || var->immutable())
+				continue;
+			// Transient vars live in their own overlapping slot space routed
+			// with sentinel offsets — keep the full-fat runtime around them.
+			if (var->referenceLocation()
+				== solidity::frontend::VariableDeclaration::Location::Transient)
+				return true;
+			if (usesHashedSlots(var->annotation().type))
+				return true;
+		}
+	}
+	return false;
 }
 
 void ContractBuilder::buildEvmSlotStorageDispatch(
@@ -49,6 +127,17 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 
 	if (layout.totalSlots() == 0 && !asmDetector.found)
 		return;
+
+	// Dense-only: every runtime slot is provably < 2^16 — no mapping / dynamic
+	// array / bytes / string anywhere in the persistent layout (their slots are
+	// keccak-derived) and no inline assembly (arbitrary computed slots). The
+	// sparse "s:" arms and the mod-2^256 slot wrap are then dead weight — a
+	// scalar-only contract pays a few hundred bytes of unreachable code
+	// (pushed external_call_signed_narrow_return's child-embed over the 8KB cap).
+	// UNIT-GLOBAL, not per-contract: the runtime subroutines share one
+	// SubroutineID across the whole unit, so variant bodies clobber each other
+	// (AWSTBuilder pre-scans and sets the flags before any contract builds).
+	bool const denseOnly = evmDenseOnlyUnit();
 
 	std::string cref = m_sourceFile + "." + _contractName;
 	awst::SourceLocation loc;
@@ -84,25 +173,39 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	};
 
 	// Bind the uint64 slot, then key = "p:" ++ itob(slot / 64), off = (slot % 64) * 32.
+	// Dense-only, single-page layouts (≤64 slots): key is the constant page-0
+	// name, offset drops the mod, and the biguint→u64 cast needs no 8-byte
+	// normalisation (slot fits 2 bytes; btoi accepts ≤8). Unit-global like
+	// denseOnly (same shared-SubroutineID hazard).
+	bool const singlePage = denseOnly && evmSinglePageUnit();
 	std::string const s64Name = "__eslot64";
 	auto s64Var = [&]() {
 		return awst::makeVarExpression(s64Name, awst::WType::uint64Type(), loc);
 	};
 	auto bindS64 = [&](awst::Block& _blk) {
+		// ALWAYS 8-byte-normalise before btoi: a biguint's byte length is not
+		// bounded by its VALUE — slot args arrive 32-byte-padded from the
+		// getter path (leftPadToN canonicals), and btoi rejects >8 bytes.
 		auto cast = awst::makeAsBytes(slotVar(), loc);
 		auto cat = awst::makeLeftPad(std::move(cast), 8, loc);
 		auto extract = awst::makeExtractLastN(std::move(cat), 8, loc);
 		_blk.body.push_back(awst::makeAssignmentStatement(
 			s64Var(), awst::makeBtoi(std::move(extract), loc), loc));
 	};
-	auto pageKey = [&]() {
+	auto pageKey = [&]() -> std::shared_ptr<awst::Expression> {
+		if (singlePage)
+			return awst::makeConcat(makeBytes("p:"),
+				awst::makeItob(makeUint64("0"), loc), loc);
 		auto page = awst::makeUInt64BinOp(s64Var(),
 			awst::UInt64BinaryOperator::FloorDiv,
 			makeUint64(std::to_string(kEvmSlotsPerPage)), loc);
 		return awst::makeConcat(makeBytes("p:"),
 			awst::makeItob(std::move(page), loc), loc);
 	};
-	auto pageOff = [&]() {
+	auto pageOff = [&]() -> std::shared_ptr<awst::Expression> {
+		if (singlePage)
+			return awst::makeUInt64BinOp(s64Var(),
+				awst::UInt64BinaryOperator::Mult, makeUint64("32"), loc);
 		auto idx = awst::makeUInt64BinOp(s64Var(),
 			awst::UInt64BinaryOperator::Mod,
 			makeUint64(std::to_string(kEvmSlotsPerPage)), loc);
@@ -139,7 +242,8 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		readSub.args.push_back(slotArg);
 
 		auto body = awst::makeBlock(loc);
-		body->body.push_back(makeSlotWrapStmt());
+		if (!denseOnly)
+			body->body.push_back(makeSlotWrapStmt());
 
 		// Dense: absent page reads as 0 (no box_create on the read path — a
 		// read must not charge MBR).
@@ -157,22 +261,28 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			retZero(*denseBlk);
 		}
 
-		// Sparse: one box per slot, absent slot reads as 0.
-		auto sparseBlk = awst::makeBlock(loc);
+		if (denseOnly)
+			for (auto& st: denseBlk->body)
+				body->body.push_back(std::move(st));
+		else
 		{
-			auto key = sparseKey();
-			auto thenBlk = awst::makeBlock(loc);
-			thenBlk->body.push_back(awst::makeReturnStatement(
-				awst::makeAsBiguint(
-					awst::makeBoxExtract(key, makeUint64("0"), makeUint64("32"), loc), loc),
-				loc));
-			sparseBlk->body.push_back(awst::makeIfElse(
-				boxExists(key), std::move(thenBlk), nullptr, loc));
-			retZero(*sparseBlk);
-		}
+			// Sparse: one box per slot, absent slot reads as 0.
+			auto sparseBlk = awst::makeBlock(loc);
+			{
+				auto key = sparseKey();
+				auto thenBlk = awst::makeBlock(loc);
+				thenBlk->body.push_back(awst::makeReturnStatement(
+					awst::makeAsBiguint(
+						awst::makeBoxExtract(key, makeUint64("0"), makeUint64("32"), loc), loc),
+					loc));
+				sparseBlk->body.push_back(awst::makeIfElse(
+					boxExists(key), std::move(thenBlk), nullptr, loc));
+				retZero(*sparseBlk);
+			}
 
-		body->body.push_back(awst::makeIfElse(
-			denseCmp(), std::move(denseBlk), std::move(sparseBlk), loc));
+			body->body.push_back(awst::makeIfElse(
+				denseCmp(), std::move(denseBlk), std::move(sparseBlk), loc));
+		}
 
 		readSub.body = body;
 		_contractNode->methods.push_back(std::move(readSub));
@@ -201,7 +311,8 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		writeSub.args.push_back(valArg);
 
 		auto body = awst::makeBlock(loc);
-		body->body.push_back(makeSlotWrapStmt());
+		if (!denseOnly)
+			body->body.push_back(makeSlotWrapStmt());
 
 		auto paddedVal = [&]() {
 			return awst::makeLeftPadToN(awst::makeAsBytes(
@@ -227,26 +338,32 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			denseBlk->body.push_back(awst::makeReturnStatement(nullptr, loc));
 		}
 
-		// Sparse: one 32-byte box per slot. NOT paged: mapping entries are
-		// keccak(key ++ slot) and genuinely scattered, so a 64-slot page would
-		// hold ONE live entry while charging its full MBR (28,900 → 835,300
-		// microAlgos per entry — 29x on the commonest real pattern).
-		auto sparseBlk = awst::makeBlock(loc);
+		if (denseOnly)
+			for (auto& st: denseBlk->body)
+				body->body.push_back(std::move(st));
+		else
 		{
-			auto key = sparseKey();
-			sparseBlk->body.push_back(awst::makeExpressionStatement(
-				awst::makeBoxCreate(key, makeUint64("32"), loc), loc));
-			auto boxReplace = awst::makeIntrinsicCall("box_replace", awst::WType::voidType(), loc);
-			boxReplace->stackArgs.push_back(key);
-			boxReplace->stackArgs.push_back(makeUint64("0"));
-			boxReplace->stackArgs.push_back(paddedVal());
-			sparseBlk->body.push_back(
-				awst::makeExpressionStatement(std::move(boxReplace), loc));
-			sparseBlk->body.push_back(awst::makeReturnStatement(nullptr, loc));
-		}
+			// Sparse: one 32-byte box per slot. NOT paged: mapping entries are
+			// keccak(key ++ slot) and genuinely scattered, so a 64-slot page would
+			// hold ONE live entry while charging its full MBR (28,900 → 835,300
+			// microAlgos per entry — 29x on the commonest real pattern).
+			auto sparseBlk = awst::makeBlock(loc);
+			{
+				auto key = sparseKey();
+				sparseBlk->body.push_back(awst::makeExpressionStatement(
+					awst::makeBoxCreate(key, makeUint64("32"), loc), loc));
+				auto boxReplace = awst::makeIntrinsicCall("box_replace", awst::WType::voidType(), loc);
+				boxReplace->stackArgs.push_back(key);
+				boxReplace->stackArgs.push_back(makeUint64("0"));
+				boxReplace->stackArgs.push_back(paddedVal());
+				sparseBlk->body.push_back(
+					awst::makeExpressionStatement(std::move(boxReplace), loc));
+				sparseBlk->body.push_back(awst::makeReturnStatement(nullptr, loc));
+			}
 
-		body->body.push_back(awst::makeIfElse(
-			denseCmp(), std::move(denseBlk), std::move(sparseBlk), loc));
+			body->body.push_back(awst::makeIfElse(
+				denseCmp(), std::move(denseBlk), std::move(sparseBlk), loc));
+		}
 
 		writeSub.body = body;
 		_contractNode->methods.push_back(std::move(writeSub));

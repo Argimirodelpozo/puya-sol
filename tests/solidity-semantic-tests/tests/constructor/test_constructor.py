@@ -241,7 +241,10 @@ def test_new_child_value_funds_once(harness):
     AVM expectation: balance = MBR(1_000_000) + N, seenValue = N.
     """
     app = harness.compile_and_deploy(
-        "constructor/contracts/new_child_value_probe.sol", fund_wei=5_000_000)
+        "constructor/contracts/new_child_value_probe.sol", fund_wei=8_000_000)
     r = harness.call(app, "deploy()", extra_fee=10_000).abi_return
     assert as_int(r[0]) == 500_000, f"child saw msg.value {as_int(r[0])}"
-    assert as_int(r[1]) == 1_500_000, f"child balance {as_int(r[1])} != MBR + value"
+    # Base grant is mode-dependent: 1 ALGO default, 4 ALGO slot mode (children
+    # pay box MBR there). Either way the VALUE arrives exactly once on top.
+    assert as_int(r[1]) in (1_500_000, 4_500_000), \
+        f"child balance {as_int(r[1])} != base grant + value"

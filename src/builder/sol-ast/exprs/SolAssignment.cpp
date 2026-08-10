@@ -20,6 +20,7 @@
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/SlotHandleAccess.h"
+#include "builder/storage/SlotWordCodec.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -658,6 +659,42 @@ SolAssignment::tryHandleEvmStorageWrite()
 		if (!value)
 			return std::shared_ptr<awst::Expression>{
 				awst::makeZero(m_loc, awst::WType::biguintType())};
+		// Element-type widening (int8[]→int16[]: per-element SIGN-extend) before
+		// the slot writer — its metrics come from the LHS type, so a narrower
+		// RHS mis-slices (dynarr) or zero-extends (fixed; chop_sign_bits).
+		// Widen helpers ONLY — the generic encode fallback would reject the
+		// same-width static→dynamic shape the writer already consumes natively
+		// (uint8[5] into uint8[] storage, inline_array_return).
+		if (auto const* tgtW = m_ctx.typeMapper.map(lhsType);
+			tgtW && value->wtype && value->wtype != tgtW
+			&& (value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
+				|| value->wtype->kind() == awst::WTypeKind::ARC4DynamicArray))
+		{
+			// Pin FIRST: the dynamic widen emits its loop via prePending during
+			// the call, and those statements read the pinned source var.
+			std::string wn = "__evm_wsrc_"
+				+ std::to_string(awst::NameGen::next("SolAssignment.evmWidenSrc"));
+			m_ctx.prePendingStatements.push_back(
+				awst::makeAssignmentStatement(
+					awst::makeVarExpression(wn, awst::WType::bytesType(), m_loc),
+					awst::makeAsBytes(value, m_loc), m_loc));
+			auto mkSrc = [&, wn]() {
+				return awst::makeVarExpression(wn, awst::WType::bytesType(), m_loc);
+			};
+			std::shared_ptr<awst::Expression> widened;
+			if (tgtW->kind() == awst::WTypeKind::ARC4StaticArray)
+				widened = builder::tryWidenArc4StaticArrayInt(
+					value->wtype, tgtW, mkSrc, m_loc);
+			else if (tgtW->kind() == awst::WTypeKind::ARC4DynamicArray)
+				widened = builder::tryWidenArc4DynamicArrayInt(
+					value->wtype, tgtW, mkSrc,
+					[this](std::shared_ptr<awst::Statement> _s) {
+						m_ctx.prePendingStatements.push_back(std::move(_s));
+					},
+					m_loc);
+			if (widened)
+				value = std::move(widened);
+		}
 		value = TypeCoercion::coerceForAssignment(
 			std::move(value), m_ctx.typeMapper.map(lhsType), m_loc);
 		addr->solType = lhsType;
@@ -687,6 +724,9 @@ SolAssignment::tryHandleEvmStorageWrite()
 	auto rhsBuilt = buildExpr(m_assignment.rightHandSide());
 	if (!rhsBuilt)
 		return std::nullopt;
+	// Panic 0x21 on out-of-range enum stores (asm-scribbled locals) — this
+	// early-out otherwise bypasses the default path's check entirely.
+	rhsBuilt = applyEnumRangeCheck(std::move(rhsBuilt), op);
 	std::string rhsNm = "__evm_arhs_"
 		+ std::to_string(awst::NameGen::next("SolAssignment.evmAssignRhs"));
 	auto const* rhsW = rhsBuilt->wtype;
@@ -958,7 +998,10 @@ SolAssignment::trySlotBasedArrayWrite(
 
 	std::vector<std::shared_ptr<awst::Statement>> out;
 
-	// rhs is itself a slot handle → copy every slot of the array footprint.
+	// rhs is itself a slot handle → copy the SOURCE footprint's slots, then
+	// zero-fill the target's tail (EVM partial-assign: uint256[4] = uint256[2]
+	// copies 2 and DELETES the rest — copying all 4 sequentially also re-read
+	// freshly written dst slots when the regions adjoin).
 	if (_value->wtype == awst::WType::biguintType())
 	{
 		auto slots = arrType->storageSize();
@@ -969,16 +1012,30 @@ SolAssignment::trySlotBasedArrayWrite(
 				+ " slots exceeds the unroll cap (256)", m_loc);
 			return std::nullopt;
 		}
+		auto srcSlots = slots;
+		if (auto const* rhsArr = dynamic_cast<ArrayType const*>(
+				m_assignment.rightHandSide().annotation().type);
+			rhsArr && !rhsArr->isDynamicallySized())
+			srcSlots = rhsArr->storageSize();
 		auto srcVar = [&]() { return _value; };
 		auto dstVar = [&]() { return _target; };
 		unsigned n = static_cast<unsigned>(slots);
+		unsigned srcN = static_cast<unsigned>(
+			srcSlots < slots ? srcSlots : slots);
 		for (unsigned j = 0; j < n; ++j)
 		{
 			auto jc = [&]() { return awst::makeIntegerConstant(j, m_loc, awst::WType::biguintType()); };
-			auto src = awst::makeBigUIntBinOp(srcVar(), awst::BigUIntBinaryOperator::Add, jc(), m_loc);
 			auto dst = awst::makeBigUIntBinOp(dstVar(), awst::BigUIntBinaryOperator::Add, jc(), m_loc);
-			out.push_back(builder::SlotHandleAccess::writeSlot(
-				std::move(dst), builder::SlotHandleAccess::readSlot(std::move(src), m_loc), m_loc));
+			if (j < srcN)
+			{
+				auto src = awst::makeBigUIntBinOp(srcVar(), awst::BigUIntBinaryOperator::Add, jc(), m_loc);
+				out.push_back(builder::SlotHandleAccess::writeSlot(
+					std::move(dst), builder::SlotHandleAccess::readSlot(std::move(src), m_loc), m_loc));
+			}
+			else
+				out.push_back(builder::SlotHandleAccess::writeSlot(
+					std::move(dst),
+					awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()), m_loc));
 		}
 		for (auto& st: out)
 			m_ctx.queuePending(std::move(st));
@@ -1004,6 +1061,27 @@ SolAssignment::trySlotBasedArrayWrite(
 	auto const* structElem = dynamic_cast<StructType const*>(elemType);
 	auto layout = builder::SlotHandleAccess::layoutFor(elemType);
 
+	// int8[2] memory → int16[2] storage: per-element SIGN-extend first — the
+	// packed writes below slice the value at the LHS element width, so a
+	// narrower source mis-slices / zero-extends (chop_sign_bits).
+	std::shared_ptr<awst::Expression> value = _value;
+	if (auto const* tgtW = m_ctx.typeMapper.map(arrType);
+		tgtW && value->wtype != tgtW
+		&& value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
+		&& tgtW->kind() == awst::WTypeKind::ARC4StaticArray)
+	{
+		std::string wn = "__slotw_wsrc_" + std::to_string(m_assignment.id());
+		out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(wn, awst::WType::bytesType(), m_loc),
+			awst::makeAsBytes(value, m_loc), m_loc));
+		auto mkSrc = [&, wn]() {
+			return awst::makeVarExpression(wn, awst::WType::bytesType(), m_loc);
+		};
+		if (auto widened = builder::tryWidenArc4StaticArrayInt(
+				value->wtype, tgtW, mkSrc, m_loc))
+			value = std::move(widened);
+	}
+
 	// bind target + value once
 	std::string tBase = "__slotw_base_" + std::to_string(m_assignment.id());
 	out.push_back(awst::makeAssignmentStatement(
@@ -1011,13 +1089,13 @@ SolAssignment::trySlotBasedArrayWrite(
 	auto baseVar = [&]() { return awst::makeVarExpression(tBase, awst::WType::biguintType(), m_loc); };
 	std::string tVal = "__slotw_val_" + std::to_string(m_assignment.id());
 	out.push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(tVal, _value->wtype, m_loc), _value, m_loc));
-	auto valVar = [&]() { return awst::makeVarExpression(tVal, _value->wtype, m_loc); };
+		awst::makeVarExpression(tVal, value->wtype, m_loc), value, m_loc));
+	auto valVar = [&]() { return awst::makeVarExpression(tVal, value->wtype, m_loc); };
 
 	awst::WType const* elemWtype;
-	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_value->wtype))
+	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(value->wtype))
 		elemWtype = sa->elementType();
-	else if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(_value->wtype))
+	else if (auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(value->wtype))
 		elemWtype = da->elementType();
 	else
 		elemWtype = m_ctx.typeMapper.map(elemType);
@@ -1074,6 +1152,27 @@ SolAssignment::trySlotBasedArrayWrite(
 				elemVal = awst::makeARC4Decode(std::move(elemVal), awst::WType::biguintType(), m_loc);
 			else if (elemVal->wtype == awst::WType::uint64Type())
 				elemVal = awst::makeAsBiguint(awst::makeItob(std::move(elemVal), m_loc), m_loc);
+			else if (auto const* vw = elemVal->wtype;
+				vw && vw != awst::WType::biguintType()
+				&& (vw->kind() == awst::WTypeKind::Bytes
+					|| [&]{
+						auto const* sa =
+							dynamic_cast<awst::ARC4StaticArray const*>(vw);
+						auto const* eu = sa ? dynamic_cast<awst::ARC4UIntN const*>(
+							sa->elementType()) : nullptr;
+						return eu && eu->n() == 8;
+					}()))
+			{
+				// BYTE-STRING handles only (external fn-ptr byte[12] in its
+				// 24-byte share, bytesN): the codec owns the in-window
+				// alignment; its packed form's biguint IS the canonical
+				// element value. Aggregate element wtypes (nested arrays,
+				// structs) must pass through untouched — the codec rejects
+				// them ("unsupported type in packed storage slot").
+				elemVal = awst::makeAsBiguint(
+					builder::SlotWordCodec::nativeToPackedBytes(
+						std::move(elemVal), vw, layout.size, m_loc), m_loc);
+			}
 		}
 		else
 			elemVal = awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType());

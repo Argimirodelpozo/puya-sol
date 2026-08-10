@@ -1680,8 +1680,13 @@ def test_external_call_signed_narrow_return(harness):
     (value-independent). Fixed by extracting the low 8 bytes (canonical uint64-backed form) before
     btoi when the Solidity return type is signed. Found by the cross-contract differential fuzzer.
     """
+    cee = harness.compile_and_deploy(
+        "puyasolRegression/contracts/external_call_signed_narrow_return.sol", contract_name="Cee")
+    # Canonical contract-address form (bzero24 ++ itob(app_id)) — NOT the real
+    # app account address (a hash the low-8-byte app-id extraction can't parse).
     app = harness.compile_and_deploy(
-        "puyasolRegression/contracts/external_call_signed_narrow_return.sol", contract_name="Caller")
+        "puyasolRegression/contracts/external_call_signed_narrow_return.sol", contract_name="Caller",
+        ctor_args=[cee.app_id])
     # Forwards widen+offset (+1000) so the observable is a clean positive int; broken decode reverts.
     assert as_int(harness.call(app, "g8(int256)", 5).abi_return) == 1005
     assert as_int(harness.call(app, "g8(int256)", -5).abi_return) == 995

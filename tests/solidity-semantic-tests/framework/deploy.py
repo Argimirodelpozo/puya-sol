@@ -170,6 +170,12 @@ def deploy(
 
     # Fund: base MBR + state schema + headroom for inner txns + ctor value forward
     min_balance = 100_000 + 28_500 * 16 + 50_000 * 16 + 10_000_000
+    # Slot mode: `new C()` grants children 4 ALGO (box MBR headroom) and the
+    # inner create raises the creator's own min balance — give every deploy
+    # enough slack that a couple of child creations never overspend.
+    if "--evm-storage-layout" in os.environ.get("PUYA_SOL_EXTRA_ARGS", "") \
+            or "--evm-layout" in os.environ.get("PUYA_SOL_EXTRA_ARGS", ""):
+        min_balance += 10_000_000
     total_fund = min_balance + fund_wei + extra_funding_microalgos
     sp2 = algod.suggested_params()
     pay = PaymentTxn(
@@ -349,6 +355,19 @@ def _call_postinit(
     # Pad missing trailing args with zero values
     while len(args) < len(abi_method.args):
         args.append(_zero_for_type(str(abi_method.args[len(args)].type)))
+    # Coerce bare ints aimed at byte[N] params (fn-ptr carriers: the EVM
+    # fixture spells a fn ptr as one packed word) to N big-endian bytes, and
+    # ints aimed at address params to the canonical 32-byte form (algosdk's
+    # address codec takes base32/bytes32, not ints).
+    for i, spec in enumerate(abi_method.args[: len(args)]):
+        t = str(spec.type)
+        if not (isinstance(args[i], int) and not isinstance(args[i], bool)):
+            continue
+        if t.startswith("byte[") and t != "byte[]":
+            n = int(t[5:-1])
+            args[i] = list((args[i] % (1 << (8 * n))).to_bytes(n, "big"))
+        elif t == "address":
+            args[i] = (args[i] % (1 << 256)).to_bytes(32, "big")
 
     atc = AtomicTransactionComposer()
     if budget_pool > 0:

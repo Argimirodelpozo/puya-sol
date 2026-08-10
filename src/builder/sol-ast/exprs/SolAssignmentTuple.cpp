@@ -3,6 +3,7 @@
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "awst/NameGen.h"
+#include "builder/storage/SlotHandleAccess.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
@@ -333,6 +334,76 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 							"to all following uses).", m_loc);
 					m_scope.setStorageAlias(lhsDecl->id(), std::move(alias));
 					continue;
+				}
+
+				// Slot mode, storage STRUCT ← storage STRUCT component: emit a
+				// slot-level copy with POINTER semantics — no snapshot. The tail
+				// reversal below then orders components right-to-left, which is
+				// exactly Solidity's storage-tuple quirk: `(x, y) = (y, x)` is
+				// `y = x; x = y` (swap_in_storage_overwrite pins it).
+				if (builder::evmStorageLayout())
+				{
+					auto const* lst = dynamic_cast<solidity::frontend::StructType const*>(
+						comp->annotation().type);
+					auto const* rhsTupExpr = dynamic_cast<solidity::frontend::TupleExpression const*>(
+						&m_assignment.rightHandSide());
+					solidity::frontend::Expression const* rcomp =
+						(rhsTupExpr && i < rhsTupExpr->components().size()
+							&& rhsTupExpr->components()[i])
+						? rhsTupExpr->components()[i].get() : nullptr;
+					auto const* rst = rcomp ? dynamic_cast<solidity::frontend::StructType const*>(
+						rcomp->annotation().type) : nullptr;
+					if (lst && rst
+						&& &lst->structDefinition() == &rst->structDefinition()
+						&& lst->storageSize() <= 64
+						&& EvmSlotLowering::isStorageStateRef(*comp)
+						&& EvmSlotLowering::isStorageStateRef(*rcomp))
+					{
+						EvmSlotLowering low(m_ctx, m_scope, m_loc);
+						auto la = low.resolve(*comp);
+						auto ra = low.resolve(*rcomp);
+						if (la && ra)
+						{
+							unsigned slots = static_cast<unsigned>(lst->storageSize());
+							// NAMED pins, not EvalOnce: the copy spans several
+							// statements and the tail reversal reorders them —
+							// cross-statement SingleEvaluation reuse is the
+							// known SE-dominance hazard.
+							int swpId = awst::NameGen::next("SolAssignmentTuple.swp");
+							std::string lname = "__swp_l_" + std::to_string(swpId);
+							std::string rname = "__swp_r_" + std::to_string(swpId);
+							m_ctx.prePendingStatements.push_back(
+								awst::makeAssignmentStatement(
+									awst::makeVarExpression(lname,
+										awst::WType::biguintType(), m_loc),
+									la->slot, m_loc));
+							m_ctx.prePendingStatements.push_back(
+								awst::makeAssignmentStatement(
+									awst::makeVarExpression(rname,
+										awst::WType::biguintType(), m_loc),
+									ra->slot, m_loc));
+							auto lslot = awst::makeVarExpression(
+								lname, awst::WType::biguintType(), m_loc);
+							auto rslot = awst::makeVarExpression(
+								rname, awst::WType::biguintType(), m_loc);
+							for (unsigned j = 0; j < slots; ++j)
+							{
+								auto jc = [&]() {
+									return awst::makeIntegerConstant(
+										j, m_loc, awst::WType::biguintType());
+								};
+								auto dst = awst::makeBigUIntBinOp(lslot,
+									awst::BigUIntBinaryOperator::Add, jc(), m_loc);
+								auto src = awst::makeBigUIntBinOp(rslot,
+									awst::BigUIntBinaryOperator::Add, jc(), m_loc);
+								m_ctx.pendingStatements.push_back(
+									builder::SlotHandleAccess::writeSlot(std::move(dst),
+										builder::SlotHandleAccess::readSlot(
+											std::move(src), m_loc), m_loc));
+							}
+							continue;
+						}
+					}
 				}
 			}
 		}

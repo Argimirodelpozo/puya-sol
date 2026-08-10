@@ -456,4 +456,15 @@ private:
 	std::optional<awst::ContractMethod> m_postInitMethod;
 };
 
+/// Slot-mode unit pre-scan (see evmDenseOnlyUnit in EvmLayoutMode.h): true iff
+/// this contract can reach keccak-derived (sparse) slots — inline assembly
+/// anywhere in its defined functions, or a persistent state var whose type
+/// derives hashed slots (mapping / dynamic array / bytes / string, recursively
+/// through structs and fixed arrays). `_denseSlotsOut` receives the contract's
+/// dense layout slot count (for the unit-global single-page decision).
+bool evmContractNeedsSparseSlots(
+	solidity::frontend::ContractDefinition const& _contract,
+	TypeMapper& _typeMapper,
+	unsigned long long& _denseSlotsOut);
+
 } // namespace puyasol::builder

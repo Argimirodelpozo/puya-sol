@@ -1052,6 +1052,34 @@ void AWSTBuilder::translateContracts(
 	bool _viaYulBehavior,
 	std::vector<std::shared_ptr<awst::RootNode>>& roots)
 {
+	// Slot-mode unit pre-scan: the storage runtime subroutines share one
+	// SubroutineID across the whole unit, so their bodies must be IDENTICAL for
+	// every contract — decide dense-only / single-page globally BEFORE any
+	// contract builds. Libraries and abstract bases count (their functions and
+	// vars compile into hosts/derived contracts).
+	if (builder::evmStorageLayout())
+	{
+		bool anySparse = false;
+		unsigned long long maxSlots = 0;
+		for (auto const& sourceName: _compiler.sourceNames())
+			for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
+				solidity::frontend::ContractDefinition>(_compiler.ast(sourceName).nodes()))
+			{
+				if (!contract || contract->isInterface())
+					continue;
+				unsigned long long slots = 0;
+				if (builder::evmContractNeedsSparseSlots(*contract, m_typeMapper, slots))
+					anySparse = true;
+				if (slots > maxSlots)
+					maxSlots = slots;
+			}
+		builder::setEvmDenseOnlyUnit(!anySparse);
+		builder::setEvmSinglePageUnit(maxSlots <= builder::kEvmSlotsPerPage);
+		Logger::instance().debug("PRESCAN dense=" + std::to_string(!anySparse)
+			+ " singlePage=" + std::to_string(maxSlots <= builder::kEvmSlotsPerPage)
+			+ " maxSlots=" + std::to_string(maxSlots));
+	}
+
 	bool emittedDeployable = false;
 	std::vector<solidity::frontend::ContractDefinition const*> deployableLibraries;
 	for (auto const& sourceName: _compiler.sourceNames())

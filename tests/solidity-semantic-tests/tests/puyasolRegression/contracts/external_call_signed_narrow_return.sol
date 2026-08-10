@@ -73,7 +73,11 @@ contract Cee {
 }
 contract Caller {
     Cee c;
-    constructor() { c = new Cee(); }
+    // Cee arrives by address: with `new Cee()` the child binary is EMBEDDED in
+    // Caller's program, and the pair sits so close to the AVM 8KB program cap
+    // that slot mode's ~0.4KB runtime pushed it over. The regression target is
+    // the CALLER-side return decode — unchanged by who deploys the callee.
+    constructor(address a) { c = Cee(a); }
     function g8(int256 a)  external returns (int256) { return int256(c.r8(a))  + 1000; }
     function g16(int256 a) external returns (int256) { return int256(c.r16(a)) + 1000; }
     function g32(int256 a) external returns (int256) { return int256(c.r32(a)) + 1000; }

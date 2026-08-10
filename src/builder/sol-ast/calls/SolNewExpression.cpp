@@ -12,6 +12,7 @@
 #include "builder/contract/PostInitTriggers.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/storage/EvmLayoutMode.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
@@ -520,7 +521,12 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				// Bundling here too → 2x value (MBR+2*500000 verified). A pay txn
 				// always transfers Amount — no "only-sets-msg.value" mode.
 				// [pay,create,postInit] impossible: child's addr/app-id unknown until create.
-				auto baseMbr = awst::makeIntegerConstant("1000000", m_loc);
+				// Slot mode: the child's state lives in boxes (page box ≈0.83
+				// ALGO, sparse ≈0.029 each) — 1 ALGO starves any child that
+				// stores an aggregate in its ctor. 10 ALGO covers a page + ~300
+				// sparse slots.
+				auto baseMbr = awst::makeIntegerConstant(
+					builder::evmStorageLayout() ? "4000000" : "1000000", m_loc);
 				std::shared_ptr<awst::Expression> ctorValueForFund =
 					childHasPostInit ? nullptr : extractCallValue();
 				std::shared_ptr<awst::Expression> totalFundAmount;

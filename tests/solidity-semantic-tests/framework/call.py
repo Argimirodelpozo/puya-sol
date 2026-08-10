@@ -394,6 +394,27 @@ def call(
                 if retry_result is not None:
                     return retry_result
 
+        # Min-balance shortfall (slot mode: 4-ALGO child grants + created-app
+        # params MBR ratchet the creator's account): top up and retry once.
+        if _try_minbalance_topup(algod, localnet, e):
+            mb_atc = _build_atc(
+                algod=algod, app=app, sender=sender, signer=signer,
+                abi_method=abi_method, encoded_args=encoded_args,
+                payment_wei=payment_wei, extra_fee=extra_fee,
+                extra_apps=extra_apps, extra_accounts=extra_accounts,
+                boxes=boxes,
+            )
+            try:
+                mb_atc = au.populate_app_call_resources(mb_atc, algod)
+            except Exception as pe:
+                _LAST_POPULATE_ERROR = f"minbal-populate: {pe}"
+            try:
+                resp = mb_atc.execute(algod, wait_rounds=4)
+                abi_return = resp.abi_results[-1].return_value if resp.abi_results else None
+                return Result(abi_return=abi_return, logs=_collect_logs(resp), raw_response=resp)
+            except Exception as e2:
+                e = e2  # flow into the fee/revert handling below
+
         # Fee shortfall: bump the outer fee by the reported need (+1 margin)
         # and resubmit once. "(need NmA)" is algod's milliAlgo phrasing.
         if _is_fee_error(e):
@@ -480,6 +501,43 @@ def _is_resource_error(exc: Exception) -> bool:
             or "unavailable account" in msg)
 
 
+def _try_minbalance_topup(algod, localnet, exc: Exception) -> bool:
+    """Top up an app account whose min balance outgrew its funds and say so.
+
+    Slot mode compounds this: every `new C()` grants the child 4 ALGO AND
+    permanently raises the creator's own min balance (created-app params MBR),
+    so an app creating several children drains below min mid-test. Tests don't
+    model balances, and EVM has no MBR analogue — auto-fund instead of failing.
+    Parses `account <addr> balance <B> below min <M>` / `tried to spend <N>`
+    from algod's error text; pays shortfall + slack to <addr>. Returns True if
+    a payment was sent (caller should retry once).
+    """
+    import re as _re
+    from algosdk.transaction import PaymentTxn, wait_for_confirmation
+    msg = str(exc)
+    m = _re.search(r"account ([A-Z2-7]{58}).{0,120}?balance (\d+) below min (\d+)", msg)
+    amount = None
+    addr = None
+    if m:
+        addr = m.group(1)
+        amount = int(m.group(3)) - int(m.group(2)) + 8_000_000
+    else:
+        m = _re.search(r"overspend \(account ([A-Z2-7]{58})", msg)
+        if m:
+            addr = m.group(1)
+            amount = 12_000_000
+    if not addr or not amount or amount <= 0:
+        return False
+    try:
+        sp = algod.suggested_params()
+        pay = PaymentTxn(localnet.account.address, sp, addr, amount, note=os.urandom(8))
+        wait_for_confirmation(
+            algod, algod.send_transaction(pay.sign(localnet.account.private_key)), 4)
+        return True
+    except Exception:
+        return False
+
+
 def _retry_with_budget_pool(
     *,
     algod, localnet, app, sender, signer, abi_method, encoded_args,
@@ -534,6 +592,28 @@ def _retry_with_budget_pool(
                    + 1000 * pool_size * _OPUP_DEPTH + 16_000)
 
     atc = AtomicTransactionComposer()
+    # Dummies FIRST: pooled budget is sequential — an amplifier's OpUp inner
+    # calls only add budget once its txn has EXECUTED, so a main call at index
+    # 0 sees just 700×group ≈ 11k no matter the OpUp depth. Helpers up front
+    # accrue ≈ pool×depth×700 before the main program runs. The payment stays
+    # IMMEDIATELY before the app call (payable check reads gtxns[GroupIndex-1]).
+    for _ in range(pool_size):
+        sp_dummy = algod.suggested_params()
+        sp_dummy.flat_fee = True
+        sp_dummy.fee = 0  # paid from sp_call.fee pool
+        atc.add_transaction(
+            TransactionWithSigner(
+                ApplicationCallTxn(
+                    sender=sender, sp=sp_dummy, index=helper_id,
+                    on_complete=OnComplete.NoOpOC, note=os.urandom(8),
+                    app_args=[_OPUP_DEPTH.to_bytes(8, "big")] if amplify else None,
+                    foreign_apps=[target_id] if amplify else None,
+                    boxes=[(0, b"")] * 2 if amplify else None,
+                ),
+                signer,
+            )
+        )
+
     if payment_wei > 0:
         sp_pay = algod.suggested_params()
         sp_pay.flat_fee = True
@@ -556,23 +636,6 @@ def _retry_with_budget_pool(
         accounts=extra_accounts,
         boxes=boxes,
     )
-
-    for _ in range(pool_size):
-        sp_dummy = algod.suggested_params()
-        sp_dummy.flat_fee = True
-        sp_dummy.fee = 0  # paid from sp_call.fee pool
-        atc.add_transaction(
-            TransactionWithSigner(
-                ApplicationCallTxn(
-                    sender=sender, sp=sp_dummy, index=helper_id,
-                    on_complete=OnComplete.NoOpOC, note=os.urandom(8),
-                    app_args=[_OPUP_DEPTH.to_bytes(8, "big")] if amplify else None,
-                    foreign_apps=[target_id] if amplify else None,
-                    boxes=[(0, b"")] * 2 if amplify else None,
-                ),
-                signer,
-            )
-        )
 
     try:
         atc = au.populate_app_call_resources(atc, algod)
@@ -612,6 +675,20 @@ def _raw_pool_execute(
     sp_call.fee = (1000 * (pool_size + 2) + extra_fee
                    + 1000 * pool_size * _OPUP_DEPTH + 16_000)
     atc = AtomicTransactionComposer()
+    # Dummies FIRST (see _retry_with_budget_pool): OpUp budget must accrue
+    # before the main call executes; payment stays adjacent to the app call.
+    for _ in range(pool_size):
+        sp_dummy = algod.suggested_params()
+        sp_dummy.flat_fee = True
+        sp_dummy.fee = 0
+        atc.add_transaction(TransactionWithSigner(
+            ApplicationCallTxn(
+                sender=sender, sp=sp_dummy, index=helper_id,
+                on_complete=OnComplete.NoOpOC, note=os.urandom(8),
+                app_args=[_OPUP_DEPTH.to_bytes(8, "big")] if amplify else None,
+                foreign_apps=[target_id] if amplify else None,
+                boxes=[(0, b"")] * 2 if amplify else None),
+            signer))
     if payment_wei > 0:
         sp_pay = algod.suggested_params()
         sp_pay.flat_fee = True
@@ -625,18 +702,6 @@ def _raw_pool_execute(
             on_complete=OnComplete.NoOpOC, app_args=app_args,
             note=os.urandom(8)),
         signer))
-    for _ in range(pool_size):
-        sp_dummy = algod.suggested_params()
-        sp_dummy.flat_fee = True
-        sp_dummy.fee = 0
-        atc.add_transaction(TransactionWithSigner(
-            ApplicationCallTxn(
-                sender=sender, sp=sp_dummy, index=helper_id,
-                on_complete=OnComplete.NoOpOC, note=os.urandom(8),
-                app_args=[_OPUP_DEPTH.to_bytes(8, "big")] if amplify else None,
-                foreign_apps=[target_id] if amplify else None,
-                boxes=[(0, b"")] * 2 if amplify else None),
-            signer))
     global _LAST_POPULATE_ERROR, _LAST_POOL_EXEC_ERROR
     try:
         atc = au.populate_app_call_resources(atc, algod)
