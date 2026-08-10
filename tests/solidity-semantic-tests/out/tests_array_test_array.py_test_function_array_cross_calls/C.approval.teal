@@ -280,6 +280,7 @@ main_after_while@39:
     bz main_else_body@41
     extract 8 4
     callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
+    intc_0 // 0
     callsub __funcptr_dispatch_ret_t_uint256
     bury 8
 
@@ -296,6 +297,7 @@ main_after_if_else@42:
     bz main_else_body@44
     extract 8 4
     callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
+    intc_0 // 0
     callsub __funcptr_dispatch_ret_t_uint256
     bury 7
 
@@ -312,6 +314,7 @@ main_after_if_else@45:
     bz main_else_body@47
     extract 8 4
     callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
+    intc_0 // 0
     callsub __funcptr_dispatch_ret_t_uint256
 
 main_after_if_else@48:
@@ -471,29 +474,38 @@ g_ternary_false@2:
     b g_ternary_merge@3
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_array_cross_calls.sol.C.__funcptr_dispatch_ret_t_uint256(__funcptr_id: uint64) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_array_cross_calls.sol.C.__funcptr_dispatch_ret_t_uint256(__funcptr_id: uint64, __static: uint64) -> bytes:
 __funcptr_dispatch_ret_t_uint256:
-    proto 1 1
-    frame_dig -1
+    proto 2 1
+    frame_dig -2
     pushint 4
     ==
     bz __funcptr_dispatch_ret_t_uint256_else_body@2
+    frame_dig -1
+    !
+    assert // write protection
     callsub g
     retsub
 
 __funcptr_dispatch_ret_t_uint256_else_body@2:
-    frame_dig -1
+    frame_dig -2
     pushint 3
     ==
     bz __funcptr_dispatch_ret_t_uint256_else_body@4
+    frame_dig -1
+    !
+    assert // write protection
     callsub f
     retsub
 
 __funcptr_dispatch_ret_t_uint256_else_body@4:
-    frame_dig -1
+    frame_dig -2
     pushint 5
     ==
     assert // invalid function pointer
+    frame_dig -1
+    !
+    assert // write protection
     callsub e
     retsub
 

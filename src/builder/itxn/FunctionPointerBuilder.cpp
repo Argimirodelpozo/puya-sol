@@ -51,6 +51,16 @@ std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDis
 
 	awst::pushCallArg(call->args, "__funcptr_id", std::move(_ptrIdExpr));
 
+	// EVM write protection: a view/pure-typed pointer runs its target in a
+	// static context — dispatching to a NON-view target (only reachable by
+	// laundering the id through asm) must revert like a failed staticcall.
+	// The dispatch's non-view arms assert on this flag.
+	bool staticCtx = _funcType
+		&& (_funcType->stateMutability() == StateMutability::View
+			|| _funcType->stateMutability() == StateMutability::Pure);
+	awst::pushCallArg(call->args, "__static",
+		awst::makeIntegerConstant(staticCtx ? uint64_t{1} : uint64_t{0}, _loc));
+
 	for (size_t i = 0; i < _args.size(); ++i)
 	{
 		awst::CallArg arg;
@@ -479,13 +489,20 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		// per-entry body below adapts them back to the native return.
 		dispatch.returnType = computeReturnType(_ctx, funcType);
 
-		// Args: __funcptr_id first, then function params.
+		// Args: __funcptr_id first, then __static, then function params.
 		{
 			awst::SubroutineArgument idArg;
 			idArg.name = "__funcptr_id";
 			idArg.wtype = awst::WType::uint64Type();
 			idArg.sourceLocation = _loc;
 			dispatch.args.push_back(idArg);
+		}
+		{
+			awst::SubroutineArgument stArg;
+			stArg.name = "__static";
+			stArg.wtype = awst::WType::uint64Type();
+			stArg.sourceLocation = _loc;
+			dispatch.args.push_back(stArg);
 		}
 		for (size_t i = 0; i < funcType->parameterTypes().size(); ++i)
 		{
@@ -534,6 +551,22 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			auto cmp = awst::makeNumericCompare(std::move(idVar), awst::NumericComparison::Eq, std::move(idConst), _loc);
 
 			auto ifBlock = awst::makeBlock(_loc);
+			// Write protection: this target mutates state — a static-context
+			// dispatch (view/pure pointer, id laundered in via asm) reverts,
+			// mirroring EVM's failed staticcall (tstore_hidden_staticcall).
+			if (entry->funcDef
+				&& (entry->funcDef->stateMutability() == StateMutability::NonPayable
+					|| entry->funcDef->stateMutability() == StateMutability::Payable))
+			{
+				auto stVar = awst::makeVarExpression(
+					"__static", awst::WType::uint64Type(), _loc);
+				auto isZero = awst::makeNumericCompare(std::move(stVar),
+					awst::NumericComparison::Eq,
+					awst::makeIntegerConstant(uint64_t{0}, _loc), _loc);
+				ifBlock->body.push_back(awst::makeExpressionStatement(
+					awst::makeAssert(std::move(isZero), _loc,
+						"write protection"), _loc));
+			}
 			{
 				awst::SubroutineTarget target = !entry->subroutineId.empty()
 					? awst::SubroutineTarget{awst::SubroutineID{entry->subroutineId}}
@@ -547,7 +580,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				for (size_t i = 0; i < funcType->parameterTypes().size(); ++i)
 				{
 					awst::CallArg arg;
-					auto var = awst::makeVarExpression("__arg" + std::to_string(i), dispatch.args[i + 1].wtype, _loc);
+					auto var = awst::makeVarExpression("__arg" + std::to_string(i), dispatch.args[i + 2].wtype, _loc);
 
 					// Use the target's param name; fall back to _paramN for unnamed
 					// params (matches AWSTBuilder's synthesised naming).

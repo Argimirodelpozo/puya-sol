@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/send_zero_ether.sol.Main.approval_program() -> uint64:
 main:
     intcblock 1 0 16
-    bytecblock TMPL_APPROVAL_Receiver TMPL_CLEAR_Receiver
+    bytecblock "__ctor_pending" TMPL_APPROVAL_Receiver TMPL_CLEAR_Receiver
     pushint 4096
     bzero
     dup
@@ -24,34 +24,37 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    pushbytes 0x7134a6bd // method "s()bool"
-    txna ApplicationArgs 0
-    match main_s_route@4
-    err
-
-main_s_route@4:
     txn OnCompletion
     !
-    txn ApplicationID
-    &&
     assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x7134a6bd // method "__postInit()void", method "s()bool"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_s_route@6
+    err
+
+main_s_route@6:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@12
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@13:
     !
     assert // not payable
     itxn_begin
-    bytec_0 // TMPL_APPROVAL_Receiver
-    bytec_1 // TMPL_CLEAR_Receiver
+    bytec_1 // TMPL_APPROVAL_Receiver
+    bytec_2 // TMPL_CLEAR_Receiver
     pushint 6
     itxn_field TypeEnum
     intc_2 // 16
@@ -75,7 +78,7 @@ main_ternary_merge@9:
     itxn_field Receiver
     intc_1 // 0
     itxn_field Fee
-    pushint 1000000
+    pushint 4000000
     itxn_field Amount
     itxn_submit
     pushint 24
@@ -97,6 +100,20 @@ main_ternary_merge@9:
     intc_0 // 1
     return
 
-main_ternary_false@8:
+main_ternary_false@12:
     intc_1 // 0
-    b main_ternary_merge@9
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    intc_0 // 1
+    return
