@@ -99,12 +99,24 @@ class Harness:
         sol_path: str | Path,
         **opts,
     ) -> CompiledArtifacts:
-        """Compile a .sol file. Raises CompileError on failure."""
+        """Compile a .sol file. Raises CompileError on failure.
+
+        Each compile gets an isolated compile-NNNN dir so the compile cache
+        never captures a previous compile's artifacts (cache stores copy the
+        whole directory). The final artifacts are ALSO mirrored to the test's
+        out dir top level: the harness fixture wipes that dir at setup, and
+        this mirror is what refreshes the repo's tracked out/ artifacts —
+        without it every test run just deletes them.
+        """
         resolved = self.resolve_sol_path(sol_path)
         self._compile_count += 1
         compile_dir = self.out_dir / f"compile-{self._compile_count:04d}"
         self._compile_dirs.append(compile_dir)
-        return compile_sol(resolved, compile_dir, **opts)
+        artifacts = compile_sol(resolved, compile_dir, **opts)
+        for src in compile_dir.iterdir():
+            if src.is_file():
+                shutil.copy2(src, self.out_dir / src.name)
+        return artifacts
 
     def deploy(
         self,

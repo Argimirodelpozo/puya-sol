@@ -1,4 +1,5 @@
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/SourceLocConvert.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
 
@@ -683,14 +684,10 @@ awst::SourceLocation AssemblyBuilder::makeLoc(
 	solidity::langutil::DebugData::ConstPtr const& _debugData
 )
 {
+	if (_debugData)
+		return builder::toAwstLoc(m_sourceFile, _debugData->nativeLocation);
 	awst::SourceLocation loc;
 	loc.file = m_sourceFile;
-	if (_debugData)
-	{
-		auto const& nativeLoc = _debugData->nativeLocation;
-		loc.line = nativeLoc.start >= 0 ? nativeLoc.start : 0;
-		loc.endLine = nativeLoc.end >= 0 ? nativeLoc.end : 0;
-	}
 	return loc;
 }
 

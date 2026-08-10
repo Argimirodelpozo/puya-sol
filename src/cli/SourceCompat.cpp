@@ -56,8 +56,18 @@ std::string transformSource(std::string const& _source)
 				pos = endPos;
 				continue;
 			}
-			// Word-boundary check.
-			if (pos > 0 && (std::isalnum(result[pos - 1]) || result[pos - 1] == '_'))
+			// Word-boundary check — BOTH sides. A trailing identifier char
+			// means this is a longer identifier (`chainidentifier` would have
+			// become `chainid()entifier`).
+			if (pos > 0 && (std::isalnum(static_cast<unsigned char>(result[pos - 1]))
+				|| result[pos - 1] == '_'))
+			{
+				pos = endPos;
+				continue;
+			}
+			if (endPos < result.size()
+				&& (std::isalnum(static_cast<unsigned char>(result[endPos]))
+					|| result[endPos] == '_'))
 			{
 				pos = endPos;
 				continue;

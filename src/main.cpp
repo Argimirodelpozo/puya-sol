@@ -5,6 +5,7 @@
 
 #include "Logger.h"
 #include "builder/AWSTBuilder.h"
+#include "builder/SourceLocConvert.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-ast/calls/SolNewExpression.h"
@@ -178,6 +179,25 @@ int main(int _argc, char* _argv[])
 	logger.info("Parse and type-check successful!");
 	logger.debug("Source units: " + std::to_string(compiler.sourceNames().size()));
 
+	// Register each unit's CharStream so AWST locations carry one-based
+	// LINES (solc AST locations are byte offsets; puya slices source lines).
+	// The builder's `sourceFile` is the ABSOLUTE path while solc keys streams
+	// by unit name — alias the entry files' paths so offset-only call sites
+	// (no solc SourceLocation) resolve too.
+	puyasol::builder::clearCharStreams();
+	for (auto const& srcName: compiler.sourceNames())
+		puyasol::builder::registerCharStream(srcName, &compiler.charStream(srcName));
+	puyasol::builder::registerCharStream(
+		sourceFile, &compiler.charStream(sourceUnitName));
+	for (size_t i = 1; i < opts.sourceFiles.size(); ++i)
+	{
+		fs::path extraPath = fs::absolute(opts.sourceFiles[i]);
+		std::string extraUnit = fileReader.cliPathToSourceUnitName(extraPath);
+		if (sources.count(extraUnit))
+			puyasol::builder::registerCharStream(
+				extraPath.string(), &compiler.charStream(extraUnit));
+	}
+
 	// Build AWST
 	logger.info("Building AWST...");
 	puyasol::builder::AWSTBuilder builder;
@@ -207,11 +227,19 @@ int main(int _argc, char* _argv[])
 	// Create output directory
 	fs::create_directories(opts.outputDir);
 
-	// Write awst.json
+	// Write awst.json — and verify the write. A silently truncated awst.json
+	// (full disk, permissions) would otherwise feed the backend a stale or
+	// partial file from a reused output directory.
 	std::string awstPath = (fs::path(opts.outputDir) / "awst.json").string();
 	{
 		std::ofstream out(awstPath);
 		out << awstJson.dump(2) << std::endl;
+		out.close();
+		if (!out)
+		{
+			logger.error("Failed writing " + awstPath);
+			return 1;
+		}
 		logger.info("Wrote: " + awstPath);
 	}
 

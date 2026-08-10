@@ -1,0 +1,718 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 8
+    bytecblock "testArray" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x010000000000000000 0x01 0xc67bf355 0x6773290f 0xa57f2c18 "s:" 0x0000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 0
+    dupn 9
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x2bbf0199 0x5990fed5 // method "__postInit()void", method "fillArray()void", method "shrinkArray()uint256"
+    bytec 7 // method "canaryValue()uint256"
+    bytec 8 // method "arrayLength()uint256"
+    bytec 9 // method "getDataSlotContent(uint256)byte[32]"
+    pushbytess 0xb84ebf4d 0xbb389e16 0x40f5d5e4 // method "checkSlots()(byte[32],byte[32],byte[32],uint256,uint256)", method "getSlot1LastBytes()byte[14]", method "getArrayBytes(uint256,uint256)byte[]"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_fillArray_route@6 main_shrinkArray_route@7 main_canaryValue_route@8 main_arrayLength_route@9 main_getDataSlotContent_route@10 main_checkSlots_route@11 main_getSlot1LastBytes_route@12 main_getArrayBytes_route@13
+    err
+
+main_getArrayBytes_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 10
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_3 // 8
+    bzero
+    dup
+    bury 2
+    dig 10
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    bzero
+    bury 2
+    intc_2 // 0
+    itob
+    bury 6
+
+main_while_top@21:
+    dig 5
+    dig 10
+    b<
+    bz main_after_while@24
+    dig 8
+    dig 6
+    b+
+    dup
+    bury 9
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "testArray"
+    box_len
+    pop
+    itob
+    b<
+    bz main_after_while@24
+    dig 7
+    dup
+    bytec 5 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 1
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    bytec_0 // "testArray"
+    swap
+    intc_1 // 1
+    box_extract
+    dig 7
+    dup
+    bytec 5 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    uncover 2
+    dig 1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 4
+    swap
+    uncover 3
+    replace3
+    bury 3
+    bytec 6 // 0x01
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bury 6
+    b main_while_top@21
+
+main_after_while@24:
+    dig 1
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@19:
+    intc_2 // 0
+    b main_ternary_merge@20
+
+main_getSlot1LastBytes_route@12:
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    intc_1 // 1
+    itob
+    callsub getDataSlotContent
+    load 0
+    store 0
+    intc_0 // 32
+    bzero
+    swap
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushbytes 0x0000000000000000000000000001000000000000000000000000000000000000
+    b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 14
+    load 0
+    store 0
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_checkSlots_route@11:
+    txn GroupIndex
+    bz main_ternary_false@34
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@35:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+    callsub getDataSlotContent
+    intc_1 // 1
+    itob
+    callsub getDataSlotContent
+    pushint 2
+    itob
+    callsub getDataSlotContent
+    callsub canaryValue
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    callsub arrayLength
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@34:
+    intc_2 // 0
+    b main_ternary_merge@35
+
+main_getDataSlotContent_route@10:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub getDataSlotContent
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_arrayLength_route@9:
+    callsub arrayLength
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_canaryValue_route@8:
+    callsub canaryValue
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_shrinkArray_route@7:
+    txn GroupIndex
+    bz main_ternary_false@45
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@46:
+    !
+    assert // not payable
+    pushint 50
+    bzero
+    bury 3
+    intc_2 // 0
+    itob
+    bury 4
+
+main_while_top@47:
+    pushint 50
+    itob
+    dig 4
+    b>
+    bz main_after_while@49
+    intc_3 // 8
+    bzero
+    pushint 2
+    itob
+    dig 5
+    dup
+    cover 3
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 255
+    &
+    itob
+    extract 7 1
+    dig 2
+    bytec 5 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    swap
+    dig 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dig 5
+    swap
+    uncover 2
+    replace3
+    bury 4
+    bytec 6 // 0x01
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bury 4
+    b main_while_top@47
+
+main_after_while@49:
+    bytec_0 // "testArray"
+    box_del
+    pop
+    bytec_0 // "testArray"
+    dig 3
+    box_put
+    bytec_0 // "testArray"
+    box_len
+    pop
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@45:
+    intc_2 // 0
+    b main_ternary_merge@46
+
+main_fillArray_route@6:
+    txn GroupIndex
+    bz main_ternary_false@53
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@54:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+    bury 5
+
+main_while_top@55:
+    pushint 96
+    itob
+    dig 5
+    b>
+    bz main_after_inlined___puyasol___storage_write@61
+    bytec_0 // "testArray"
+    box_get
+    assert // box exists
+    intc_3 // 8
+    bzero
+    intc_1 // 1
+    itob
+    dig 7
+    dup
+    cover 4
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 255
+    &
+    itob
+    extract 7 1
+    concat
+    bytec_0 // "testArray"
+    box_del
+    pop
+    bytec_0 // "testArray"
+    swap
+    box_put
+    bytec 6 // 0x01
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bury 5
+    b main_while_top@55
+
+main_after_inlined___puyasol___storage_write@61:
+    intc_1 // 1
+    return
+
+main_ternary_false@53:
+    intc_2 // 0
+    b main_ternary_merge@54
+
+main___postInit_route@5:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec 4 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "testArray"
+    intc_2 // 0
+    box_create
+    pop
+    callsub getCanary
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bury 8
+    pushbytes 0x
+    b==
+    bz main_else_body@60
+    bytec_0 // "testArray"
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    app_global_put
+    b main_after_inlined___puyasol___storage_write@61
+
+main_else_body@60:
+    intc_0 // 32
+    bzero
+    dig 7
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 10 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    intc_2 // 0
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    box_replace
+    b main_after_inlined___puyasol___storage_write@61
+
+
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    frame_dig -1
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    pushbytes 0x
+    b==
+    bz __storage_read_else_body@2
+    intc_0 // 32
+    bzero
+    bytec_0 // "testArray"
+    app_global_get
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    retsub
+
+__storage_read_else_body@2:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 10 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getCanary() -> bytes:
+getCanary:
+    load 0
+    store 0
+    load 0
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 0
+    load 0
+    store 0
+    pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e566
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol.C.canaryValue() -> bytes:
+canaryValue:
+    txn NumAppArgs
+    bz canaryValue_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 7 // method "canaryValue()uint256"
+    ==
+    bz canaryValue_after_if_else@6
+    txn GroupIndex
+    bz canaryValue_ternary_false@4
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+canaryValue_ternary_merge@5:
+    !
+    assert // not payable
+
+canaryValue_after_if_else@6:
+    callsub getCanary
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+canaryValue_ternary_false@4:
+    intc_2 // 0
+    b canaryValue_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol.C.arrayLength() -> bytes:
+arrayLength:
+    txn NumAppArgs
+    bz arrayLength_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 8 // method "arrayLength()uint256"
+    ==
+    bz arrayLength_after_if_else@6
+    txn GroupIndex
+    bz arrayLength_ternary_false@4
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+arrayLength_ternary_merge@5:
+    !
+    assert // not payable
+
+arrayLength_after_if_else@6:
+    bytec_0 // "testArray"
+    box_len
+    pop
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+arrayLength_ternary_false@4:
+    intc_2 // 0
+    b arrayLength_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol.C.getDataSlotContent(__arc4_index: bytes) -> bytes:
+getDataSlotContent:
+    proto 1 1
+    txn NumAppArgs
+    bz getDataSlotContent_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 9 // method "getDataSlotContent(uint256)byte[32]"
+    ==
+    bz getDataSlotContent_after_if_else@6
+    txn GroupIndex
+    bz getDataSlotContent_ternary_false@4
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getDataSlotContent_ternary_merge@5:
+    !
+    assert // not payable
+
+getDataSlotContent_after_if_else@6:
+    load 0
+    store 0
+    load 0
+    intc_0 // 32
+    bzero
+    swap
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 0
+    pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    frame_dig -1
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 0 32
+    load 0
+    store 0
+    retsub
+
+getDataSlotContent_ternary_false@4:
+    intc_2 // 0
+    b getDataSlotContent_ternary_merge@5

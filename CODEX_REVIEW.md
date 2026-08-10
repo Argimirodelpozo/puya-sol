@@ -3,6 +3,48 @@
 Date: 2026-08-10
 Branch: `codex-review`
 
+## Post-review disposition (2026-08-10, follow-up commit)
+
+The landed review changes were verified regression-free against both tracked
+lanes (default 11f/1410p byte-identical failure set; slot lane at its 15-real
+baseline). The remaining findings were then triaged: genuine ones fixed, the
+rest annotated inline below with a **DISPOSITION** note explaining why they
+are not being adopted. Summary:
+
+Fixed in the follow-up commit:
+
+- **`(new C()).stateVar()` fold removed** (P0). The fold predated real child
+  deployment and evaluated the initializer in the CALLER's context
+  (`uint x = msg.value - 10` folded to the caller's `msg.value`). The
+  `{value:}` variant never matched the fold's AST pattern and always took the
+  faithful deploy-then-call path — proving it works. All fold-shape fixtures
+  pass on-chain via the faithful path now.
+- **Source locations** (P1). New `builder/SourceLocConvert` registers every
+  compiled unit's `CharStream` (keyed by solc unit name, plus absolute-path
+  aliases for entry files) and converts byte offsets to one-based lines at a
+  single seam; all eight duplicate `makeLoc()` bodies now delegate to it. A
+  node's own source unit selects the stream (imports get correct lines); the
+  `file` field keeps the caller's readable path because puya opens it to
+  excerpt source lines. Verified: a 42-line contract now caps at line 28
+  (was byte offset 764).
+- **`chainid` identifier boundary** (part of the SourceCompat P0): the rewrite
+  now requires a word boundary on BOTH sides, so `chainidentifier` survives.
+- **CLI numeric parsing**: all seven `std::sto*` call sites route through a
+  checked whole-string `parseNumber()` that fails with the option named
+  instead of an uncaught `std::invalid_argument` (or silently accepting
+  `12abc`).
+- **Unknown `--evm-version` is now fatal** (was warn-and-compile-as-cancun).
+- **`awst.json` write is verified** (ofstream state checked; failure aborts
+  before the backend can consume a truncated/stale file).
+- **Harness compile isolation vs tracked artifacts**: the review's
+  `compile-NNNN` isolation silently broke the repository's tracked-`out/`
+  refresh — the per-test fixture wipes `out/<test>/` at setup, and the
+  compile previously rewrote artifacts in place; after the isolation change
+  the wipe just permanently deleted ~26k tracked files as tests ran. The
+  isolated dirs are kept (the cache-contamination fix is real), and final
+  artifacts are now ALSO mirrored to the test dir top level, restoring the
+  refresh until the untracking decision is made explicitly.
+
 ## Scope and baseline
 
 This was a repository-wide structural review with a deeper pass over `src/builder/`,
@@ -59,6 +101,20 @@ after failed analysis. If a diagnostic must be classified, use solc `ErrorId`, n
 `what()` text. Add source-to-source golden tests covering comments, strings,
 overloaded events, nested imports, and identifier boundaries.
 
+> **DISPOSITION — partially adopted, remainder deliberate.** The `chainid`
+> identifier-boundary bug is fixed (word boundary required on both sides).
+> The rest of the compat layer stays as-is for now: it exists to replay REAL
+> deployed 0.5.x–0.7.x verified sources through the chain-history differ,
+> where "never lower after failed analysis" would simply drop that corpus —
+> the suppression list is the price of admission, and the differ's
+> transaction-level equivalence checking is the safety net that catches any
+> mis-rewrite (a corrupted AST diverges from the EVM leg immediately and
+> loudly). Agreed follow-ups, in order of value: classify suppressions by
+> solc `ErrorId` instead of message substrings, and constrain rewrites with
+> scanner tokens. Both are queued behind the semantic-suite work rather than
+> done here, because every historical mis-rewrite so far surfaced as a
+> compile error, not a silent miscompile.
+
 ### P0 — unsupported expressions can silently become valid-looking constants
 
 The fallback in `src/builder/sol-ast/SolExpressionDispatch.cpp` warns about an
@@ -73,6 +129,18 @@ If an intentional AVM divergence has a defined approximation, represent it with 
 dedicated lowering node/policy and test it explicitly—do not share the unsupported
 fallback.
 
+> **DISPOSITION — no-go as a blanket policy.** A blanket warn→hard-error flip
+> was already attempted on this codebase and REVERTED: it broke real-contract
+> replays whose warned stubs are deliberate, documented AVM divergences (e.g.
+> `chainid` and several EVM-introspection members degrade to warnings by
+> design so legacy verified sources stay replayable). The negotiated position
+> is case-by-case fail-loud promotion — several were promoted this way
+> (constant-assignment-target scan in `main.cpp`, the `mstore` length-word
+> fail-loud, blob value-use hard errors) and more get promoted whenever a stub
+> is caught masking a real divergence. The `Expected<>`-style typed lowering
+> is good architecture but belongs to the `CompilationSession` refactor, not a
+> point fix.
+
 ### P0 — `(new C()).stateVar()` is folded by removing deployment semantics
 
 `SolExternalCall::toAwst()` folds `(new C()).stateVar()` to the declaration's literal
@@ -83,6 +151,11 @@ also removes the observable deployment side effect.
 Recommendation: remove the fold. Either implement the child getter call faithfully
 or reject this shape until the child program can return the value. A warning does not
 make this semantics-preserving.
+
+> **DISPOSITION — fixed in the follow-up commit.** Fold removed; the faithful
+> deploy-then-call path (which the `{value:}` variant always used, since
+> `FunctionCallOptions` never matched the fold's pattern) handles the shape.
+> All fold-shape fixtures verified on localnet.
 
 ### P1 — declaration-sensitive calls used source-order arguments (fixed)
 
@@ -112,6 +185,14 @@ one-based lines and columns, preserve the actual source-unit name per AST node, 
 delete the duplicate `makeLoc()` implementations. This is a direct opportunity to
 use solc instead of hand-rolling location conversion.
 
+> **DISPOSITION — fixed in the follow-up commit** via `builder/SourceLocConvert`
+> (CharStream registry + one conversion seam; all eight `makeLoc()` bodies
+> delegate). One deliberate deviation: the `file` field keeps the caller's
+> readable absolute path rather than the node's unit name — puya OPENS that
+> path to excerpt source lines, and unit names are not readable paths. The
+> node's unit still selects the correct stream, so imported nodes get correct
+> line numbers.
+
 ### P1 — backend invocation used a shell command (fixed)
 
 `PuyaRunner` built an unquoted command and passed it to `std::system()`. Compiler
@@ -131,6 +212,12 @@ This branch stops on unreadable secondary sources and only writes child deployme
 templates after backend success. The stronger follow-up is to compile into a staging
 directory, validate every write/backend artifact, then atomically publish the result.
 At minimum, maintain and remove a manifest of files produced by the previous run.
+
+> **DISPOSITION — partially adopted.** The follow-up commit verifies the
+> `awst.json` write (stream state checked, failure aborts before the backend
+> runs). Full staging-directory publishing is deferred: the semantic harness
+> already compiles into per-test directories and the compile cache validates
+> its own entries, so the remaining exposure is the manual-CLI path only.
 
 ## Builder design and refactoring recommendations
 
@@ -248,13 +335,30 @@ fold the still-open items into the normal issue tracker.
   `info`, and numeric ranges are not validated. Introduce a small declarative option
   parser or central `parseNumber()` returning diagnostics; make parsing return a
   result instead of calling `exit()`.
+
+  > **DISPOSITION — core fixed.** All seven `std::sto*` sites now go through a
+  > checked whole-string `parseNumber()` that names the offending option. The
+  > declarative-parser / no-`exit()` refactor is deferred as ergonomics: this
+  > is a CLI entry point, `exit(2)` with a clear message is acceptable there.
+
 - An unknown EVM version currently warns and silently compiles as Cancun. Invalid
   target names should be fatal because they change accepted syntax and opcode
   semantics.
+
+  > **DISPOSITION — fixed.** Unknown `--evm-version` is now a fatal error.
 - CMake hard-codes `$HOME/.local/boost-1.83`, disables system search, manually lists
   every source, and links vendored static libraries by path. Use imported targets and
   an optional Boost hint/toolchain setting. Separate a reusable frontend library from
   the CLI executable so builder unit tests can link a small target.
+
+  > **DISPOSITION — deferred, not disputed.** Single-developer, single-machine
+  > project today; the pinned Boost path IS this environment's install and the
+  > manual source list has never actually drifted (the build fails loudly when
+  > it does). Modernizing buys nothing until a second environment or CI
+  > appears, and touching the build system risks the only known-good setup
+  > mid-campaign. The frontend-library split is the one piece with immediate
+  > value (unit-testing builder passes) and should ride along with the
+  > `CompilationSession` refactor.
 - The README previously recommended `CMAKE_CXX_FLAGS="-w"`; this branch removes that
   suppression and documents CTest. Mark vendored include paths `SYSTEM`, then enable a
   useful project warning baseline in CI. The warning build produced too much vendored
@@ -288,12 +392,29 @@ fold the still-open items into the normal issue tracker.
   not fail CI, so fixed cases can stay hidden indefinitely. Make known limitations
   strict and keep open compiler bugs as ordinary failures or a separately reported
   quarantine.
+
+  > **DISPOSITION — no-go by standing project policy.** XPASSed tests
+  > deliberately STAY xfailed here (owner's explicit decision): many xfails
+  > cover behavior that is localnet-timing- or budget-marginal, and
+  > `strict=True` would turn those into flaky hard failures. Drift is not
+  > hidden — every gate run records the xpass count (currently 32/34 per
+  > lane) and any movement in it is investigated, which is how several
+  > "stale folklore" xfails were retired (e.g. the V4 tick-crossing 256-cap).
 - The repository tracks 25,929 files under
   `tests/solidity-semantic-tests/out/` plus 231 historical result text files (about
   99 MB). The checkout currently uses about 4.6 GB for `tests/`; semantic output is
   about 1.0 GB and its ignored compile cache about 2.4 GB. Git objects and submodule
   objects add substantial clone cost. Keep small curated golden files, move run
   reports to CI artifacts, untrack generated output, and add `out/` to `.gitignore`.
+
+  > **DISPOSITION — owner decision pending; convention restored meanwhile.**
+  > Reasonable proposal, but the tracked artifacts are part of the current
+  > review workflow (TEAL diffs ride along in commits, which is how several
+  > codegen regressions were caught in review). Note the review branch's
+  > compile-isolation change had already half-forced this decision by
+  > silently deleting tracked artifacts at test runtime — that interaction is
+  > fixed (isolated compile dirs kept for cache hygiene, artifacts mirrored
+  > back). Untracking remains available as an explicit choice.
 - Cache entries are unbounded. Add a size/age policy and a cache schema version so
   harness-format changes cannot reuse structurally incompatible artifacts.
 - Full-suite pass totals are maintained in large narrative/result files. Generate a

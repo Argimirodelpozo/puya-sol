@@ -12,6 +12,34 @@ namespace fs = boost::filesystem;
 namespace puyasol::cli
 {
 
+namespace
+{
+/// Checked numeric option parse: whole-string, non-negative decimal.
+/// Malformed input is a fatal usage error with the option named — the bare
+/// std::sto* calls previously terminated with an uncaught std::invalid_argument
+/// (or silently accepted trailing garbage like "12abc").
+unsigned long long parseNumber(std::string const& _opt, std::string const& _val)
+{
+	if (_val.empty()
+		|| _val.find_first_not_of("0123456789") != std::string::npos)
+	{
+		std::cerr << "Error: " << _opt << " expects a non-negative integer, got '"
+			<< _val << "'" << std::endl;
+		std::exit(2);
+	}
+	try
+	{
+		return std::stoull(_val);
+	}
+	catch (std::exception const&)
+	{
+		std::cerr << "Error: " << _opt << " value out of range: '" << _val
+			<< "'" << std::endl;
+		std::exit(2);
+	}
+}
+} // namespace
+
 void printUsage(char const* _progName)
 {
 	std::cout
@@ -109,19 +137,22 @@ Options parseArgs(int _argc, char* _argv[])
 		else if (arg == "--no-puya")
 			opts.noPuya = true;
 		else if (arg == "--opup-budget" && i + 1 < _argc)
-			opts.opupBudget = std::stoull(_argv[++i]);
+			opts.opupBudget = parseNumber("--opup-budget", _argv[++i]);
 		else if (arg == "--ensure-budget" && i + 1 < _argc)
 		{
 			// Format: func_name:budget
 			std::string spec = _argv[++i];
 			auto colon = spec.find(':');
 			if (colon != std::string::npos)
-				opts.ensureBudget[spec.substr(0, colon)] = std::stoull(spec.substr(colon + 1));
+				opts.ensureBudget[spec.substr(0, colon)] =
+					parseNumber("--ensure-budget", spec.substr(colon + 1));
 		}
 		else if (arg == "--optimization-level" && i + 1 < _argc)
-			opts.optimizationLevel = std::stoi(_argv[++i]);
+			opts.optimizationLevel = static_cast<int>(
+				parseNumber("--optimization-level", _argv[++i]));
 		else if (arg == "--evm-memory-slots" && i + 1 < _argc)
-			opts.evmMemorySlots = std::stoi(_argv[++i]);
+			opts.evmMemorySlots = static_cast<int>(
+				parseNumber("--evm-memory-slots", _argv[++i]));
 		else if (arg == "--evm-storage-layout")
 			opts.evmStorageLayout = true;
 		else if (arg == "--evm-memory-layout")
@@ -169,7 +200,8 @@ Options parseArgs(int _argc, char* _argv[])
 				size_t end = (comma == std::string::npos) ? idxs.size() : comma;
 				std::string tok = idxs.substr(p, end - p);
 				if (!tok.empty())
-					ps.splitPoints.push_back(std::stoul(tok));
+					ps.splitPoints.push_back(
+						parseNumber("--uros-splitter", tok));
 				if (comma == std::string::npos) break;
 				p = comma + 1;
 			}
@@ -214,7 +246,7 @@ Options parseArgs(int _argc, char* _argv[])
 					? idxList.size() : comma;
 				std::string tok = idxList.substr(start, end - start);
 				if (!tok.empty())
-					fnSpec.splitPoints.push_back(std::stoull(tok));
+					fnSpec.splitPoints.push_back(parseNumber("--fn-split", tok));
 				if (comma == std::string::npos) break;
 				start = comma + 1;
 			}
@@ -227,7 +259,8 @@ Options parseArgs(int _argc, char* _argv[])
 					"(got '" << gTok << "')" << std::endl;
 				std::exit(1);
 			}
-			fnSpec.groupId = std::stoi(gTok.substr(1));
+			fnSpec.groupId = static_cast<int>(
+				parseNumber("--fn-split group", gTok.substr(1)));
 
 			if (toks.size() == 4)
 			{

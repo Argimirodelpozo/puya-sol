@@ -1,0 +1,19 @@
+info: puya-sol v0.1.0 — Solidity to Algorand Compiler
+info: Source: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol
+info: EVM version set to: cancun (hasChainID=true)
+info: Parsing and type-checking...
+info: Parse and type-check successful!
+info: Building AWST...
+info: Translating contract: D
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:7 error: `codesize()` is not supported on AVM — there is no opcode exposing the deployed program's byte length, so the old stub returned a fabricated 50. Refuse rather than emit a silent wrong value.
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:8 error: unsupported Yul builtin function `codecopy`: no AVM translation exists, so it would be stubbed as 0 — a silent wrong value.
+info: Translating contract: C
+info: 'new D()' — using template variables for child bytecode (substitute before deployment).
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:19 warning: type(C).runtimeCode has no AVM analog — stubbed as 32 zero bytes; code that depends on the actual bytecode will misbehave
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:23 warning: `extcodesize(addr)` resolves the app id from the address's last 8 bytes (this compiler's contract-value convention) and returns that application's approval-program length, matching `address(addr).code.length`. An address NOT in that form reads as size 0.
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:24 error: unsupported Yul builtin function `extcodecopy`: no AVM translation exists, so it would be stubbed as 0 — a silent wrong value.
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:27 warning: type(C).runtimeCode has no AVM analog — stubbed as 32 zero bytes; code that depends on the actual bytecode will misbehave
+info: 'new D()' — using template variables for child bytecode (substitute before deployment).
+/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_access_content.sol:34 warning: type(C).creationCode has no AVM analog — stubbed as 32 zero bytes; code that depends on the actual bytecode will misbehave
+info: Generated 2 AWST root node(s)
+info: Wrote: /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/out/tests_various_test_various.py_test_code_access_content/compile-0001/awst.json

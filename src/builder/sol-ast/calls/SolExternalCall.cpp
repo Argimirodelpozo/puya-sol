@@ -288,47 +288,12 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 		return vc;
 	}
 
-	// Fold `(new C()).stateVar()` to the literal initialiser. `new C()` stub
-	// emits a minimal program; any call returns no log and trips itxn
-	// LastLog extraction. Fold avoids the inner txn.
-	{
-		// `(new C())` → Tuple(FunctionCall(NewExpression)) in AST;
-		// peel outer tuples or the fold never fires.
-		Expression const* base = solidity::frontend::resolveOuterUnaryTuples(
-			&memberAccess->expression());
-		if (auto const* outerFuncCall = dynamic_cast<FunctionCall const*>(base))
-		{
-			if (auto const* newExpr = dynamic_cast<NewExpression const*>(&outerFuncCall->expression()))
-			{
-				auto const* refDecl = memberAccess->annotation().referencedDeclaration;
-				auto const* varDecl = dynamic_cast<VariableDeclaration const*>(refDecl);
-				if (newExpr && varDecl && varDecl->isStateVariable()
-					&& varDecl->value()
-					&& m_call.arguments().empty())
-				{
-					auto val = buildExpr(*varDecl->value());
-					if (val)
-					{
-						auto const* retType = m_ctx.typeMapper.map(
-							m_call.annotation().type);
-						if (retType)
-							val = builder::TypeCoercion::implicitNumericCast(
-								std::move(val), retType, m_loc);
-						Logger::instance().warning(
-							"folded `(new " + (
-								dynamic_cast<ContractType const*>(
-									newExpr->typeName().annotation().type)
-								? dynamic_cast<ContractType const*>(
-									newExpr->typeName().annotation().type
-								)->contractDefinition().name()
-								: std::string("C"))
-							+ ").stateVar()` to compile-time initial value", m_loc);
-						return val;
-					}
-				}
-			}
-		}
-	}
+	// `(new C()).stateVar()` deploys the child and calls its auto-getter via
+	// inner txn like any other external call. (A former fold to the declared
+	// initializer predated real child deployment: it evaluated the initializer
+	// in the CALLER's context — `uint x = msg.value - 10` folded to the
+	// caller's msg.value — and skipped constructor effects entirely. The
+	// `{value:}` variant always took this faithful path, proving it works.)
 
 	// Detect delegatecall to library functions — not supported on AVM
 	if (auto const* refDecl = memberAccess->annotation().referencedDeclaration)

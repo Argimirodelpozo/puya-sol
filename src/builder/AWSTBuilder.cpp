@@ -1,4 +1,5 @@
 #include <variant>
+#include "builder/SourceLocConvert.h"
 #include <libsolidity/ast/CallGraph.h>
 #include "builder/AWSTBuilder.h"
 #include "builder/storage/EvmLayoutMode.h"
@@ -458,10 +459,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	auto sub = std::make_shared<awst::Subroutine>();
 	sub->inlineOpt = false; // Prevent puya from inlining large subroutines
 
-	awst::SourceLocation loc;
-	loc.file = _sourceFile;
-	loc.line = _func.location().start >= 0 ? _func.location().start : 0;
-	loc.endLine = _func.location().end >= 0 ? _func.location().end : 0;
+	awst::SourceLocation loc = toAwstLoc(_sourceFile, _func.location());
 
 	sub->sourceLocation = loc;
 	sub->id = _subroutineId;
@@ -485,9 +483,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		arg.name = param->name();
 		if (arg.name.empty())
 			arg.name = "_param" + std::to_string(pi);
-		arg.sourceLocation.file = _sourceFile;
-		arg.sourceLocation.line = param->location().start >= 0 ? param->location().start : 0;
-		arg.sourceLocation.endLine = param->location().end >= 0 ? param->location().end : 0;
+		arg.sourceLocation = toAwstLoc(_sourceFile, param->location());
 
 		// Mapping storage refs (including array-of-mapping): callee receives
 		// the caller's box key prefix as bytes so `m[k]` hashes against the

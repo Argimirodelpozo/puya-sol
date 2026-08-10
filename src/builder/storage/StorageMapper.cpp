@@ -1,4 +1,5 @@
 #include "builder/storage/StorageMapper.h"
+#include "builder/SourceLocConvert.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -19,11 +20,7 @@ awst::SourceLocation StorageMapper::makeLoc(
 	std::string const& _file
 )
 {
-	awst::SourceLocation loc;
-	loc.file = _file;
-	loc.line = _solLoc.start >= 0 ? _solLoc.start : 0;
-	loc.endLine = _solLoc.end >= 0 ? _solLoc.end : 0;
-	return loc;
+	return toAwstLoc(_file, _solLoc);
 }
 
 std::shared_ptr<awst::BytesConstant> StorageMapper::makeKeyExpr(

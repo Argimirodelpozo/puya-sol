@@ -45,6 +45,7 @@ set(SOURCES
 	src/awst/Termination.cpp
 	# Builder core
 	src/builder/AWSTBuilder.cpp
+	src/builder/SourceLocConvert.cpp
 	src/builder/FunctionIdRegistry.cpp
 	src/builder/SubroutineReachability.cpp
 	src/builder/contract/ContractBuilder.cpp

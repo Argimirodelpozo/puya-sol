@@ -1,6 +1,7 @@
 #pragma once
 
 #include "awst/Node.h"
+#include "builder/SourceLocConvert.h"
 #include "awst/WType.h"
 #include "builder/sol-ast/Context.h"
 
@@ -305,11 +306,7 @@ public:
 
 	awst::SourceLocation makeLoc(int _start, int _end) const
 	{
-		awst::SourceLocation loc;
-		loc.file = sourceFile;
-		loc.line = _start >= 0 ? _start : 0;
-		loc.endLine = _end >= 0 ? _end : 0;
-		return loc;
+		return builder::toAwstLoc(sourceFile, _start, _end);
 	}
 
 };

@@ -5,6 +5,7 @@
 
 #include <unistd.h>
 
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 
@@ -97,9 +98,11 @@ solidity::langutil::EVMVersion resolveEvmVersion(std::string const& _name)
 	if (auto evmVer = solidity::langutil::EVMVersion::fromString(_name))
 		return *evmVer;
 
-	puyasol::Logger::instance().warning(
-		"Unknown EVM version '" + _name + "'; defaulting to cancun");
-	return defaultVersion;
+	// FATAL: a misspelled target would silently compile as cancun with
+	// different accepted syntax and opcode gating.
+	puyasol::Logger::instance().error(
+		"Unknown EVM version '" + _name + "' (accepted: solc names homestead..osaka)");
+	std::exit(2);
 }
 
 void applyRemappings(

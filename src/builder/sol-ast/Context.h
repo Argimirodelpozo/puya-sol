@@ -12,6 +12,7 @@
 /// Context caches a ScopeState* so every level reaches the same flat state.
 
 #include "awst/Node.h"
+#include "builder/SourceLocConvert.h"
 #include "builder/ReturnWirePlan.h"
 
 #include <libsolidity/ast/AST.h>
@@ -358,20 +359,12 @@ struct TranslationContext: Context
 
 	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _sl) const
 	{
-		awst::SourceLocation loc;
-		loc.file = sourceFile;
-		loc.line = _sl.start >= 0 ? _sl.start : 0;
-		loc.endLine = _sl.end >= 0 ? _sl.end : 0;
-		return loc;
+		return builder::toAwstLoc(sourceFile, _sl);
 	}
 
 	awst::SourceLocation makeLoc(int _start, int _end) const
 	{
-		awst::SourceLocation loc;
-		loc.file = sourceFile;
-		loc.line = _start >= 0 ? _start : 0;
-		loc.endLine = _end >= 0 ? _end : 0;
-		return loc;
+		return builder::toAwstLoc(sourceFile, _start, _end);
 	}
 };
 

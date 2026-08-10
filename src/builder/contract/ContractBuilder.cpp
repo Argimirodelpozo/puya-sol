@@ -1,4 +1,5 @@
 #include <libsolidity/ast/CallGraph.h>
+#include "builder/SourceLocConvert.h"
 #include <variant>
 #include "builder/contract/ContractBuilder.h"
 #include "awst/NameGen.h"
@@ -66,11 +67,7 @@ awst::SourceLocation makeLoc(
 	std::string const& _sourceFile,
 	solidity::langutil::SourceLocation const& _solLoc)
 {
-	awst::SourceLocation loc;
-	loc.file = _sourceFile;
-	loc.line = _solLoc.start >= 0 ? _solLoc.start : 0;
-	loc.endLine = _solLoc.end >= 0 ? _solLoc.end : 0;
-	return loc;
+	return toAwstLoc(_sourceFile, _solLoc);
 }
 
 namespace {
