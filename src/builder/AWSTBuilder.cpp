@@ -182,7 +182,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 					refDecl = ma->annotation().referencedDeclaration;
 				auto const* fd = dynamic_cast<FunctionDefinition const*>(refDecl);
 				if (fd) {
-					auto const& args = fc.arguments();
+					auto const args = fc.sortedArguments();
 					auto const& params = fd->parameters();
 					size_t shift = 0;
 					if (params.size() == args.size()) shift = 0;

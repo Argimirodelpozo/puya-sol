@@ -86,6 +86,11 @@ def test_named_error_args(harness):
     # f() -> FAILURE, hex"85208890", hex"0000000000000000000000000000000000000000000000000000000000000002", hex"0000000000000000000000000000000000000000000000000000000000000007"
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted
+    from framework import arc4_encode, arc4_selector
+    assert r.revert_data == (
+        arc4_selector("E(uint256,uint256)")
+        + arc4_encode("(uint256,uint256)", [2, 7])
+    )
 
 def test_named_parameters_shadowing_types(harness):
     """errors/contracts/named_parameters_shadowing_types.sol"""

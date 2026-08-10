@@ -50,12 +50,13 @@ Submodules first:
 git submodule update --init --recursive
 ```
 
-Build the C++ frontend (Solidity 0.8.x AST library is built as part of the `solidity` submodule):
+Build the C++ frontend (the Solidity AST libraries are provided by the
+`solidity` submodule build):
 
 ```bash
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_CXX_FLAGS="-w"
-make -j$(nproc)
+cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake --build build -j$(nproc)
+ctest --test-dir build --output-on-failure
 ```
 
 Set up the Python backend venv (puya is a submodule at [`puya/`](puya/)):

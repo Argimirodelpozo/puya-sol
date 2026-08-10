@@ -377,7 +377,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 
 	// Add call arguments
 	size_t argIdx = 0;
-	for (auto const& arg: m_call.arguments())
+	for (auto const& arg: m_call.sortedArguments())
 	{
 		Type const* paramType = (argIdx < paramSolTypes.size()) ? paramSolTypes[argIdx] : nullptr;
 		++argIdx;

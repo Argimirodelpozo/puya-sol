@@ -319,7 +319,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			auto buildEncodedCtorArgs = [&]() {
 				std::vector<std::shared_ptr<awst::Expression>> out;
 				if (!childCtor) return out;
-				auto const& ctorArgs = m_call.arguments();
+				auto const ctorArgs = m_call.sortedArguments();
 				auto const& ctorParams = childCtor->parameters();
 				for (size_t i = 0; i < ctorArgs.size() && i < ctorParams.size(); ++i)
 				{

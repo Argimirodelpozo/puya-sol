@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.13)
 project(puya-sol VERSION 0.1.0 LANGUAGES CXX)
 
+include(CTest)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -185,6 +187,12 @@ set(SOURCES
 
 add_executable(puya-sol ${SOURCES})
 
+# A dangling-reference bug in the solc AST wrapper survived because normal
+# builds suppress warnings. Keep this high-signal lifetime diagnostic fatal.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+	target_compile_options(puya-sol PRIVATE -Werror=return-local-addr)
+endif()
+
 # Link solidity static libraries
 target_link_libraries(puya-sol
 	${SOLIDITY_BUILD_DIR}/libsolidity/libsolidity.a
@@ -201,4 +209,14 @@ target_link_libraries(puya-sol
 find_library(Z3_LIB z3)
 if(Z3_LIB)
 	target_link_libraries(puya-sol ${Z3_LIB})
+endif()
+
+if(BUILD_TESTING)
+	add_executable(puya-sol-runner-tests
+		tests/cpp/PuyaRunnerTests.cpp
+		src/runner/PuyaRunner.cpp
+		src/Logger.cpp
+	)
+	target_include_directories(puya-sol-runner-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	add_test(NAME puya-sol-runner-paths COMMAND puya-sol-runner-tests)
 endif()

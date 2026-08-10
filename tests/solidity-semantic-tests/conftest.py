@@ -49,9 +49,9 @@ def harness(localnet: LocalNet, request: pytest.FixtureRequest):
     h = Harness(localnet, test_out)
     yield h
     # Keep out dir on failure for post-mortem; clean on pass.
-    if not request.node.rep_call.failed if hasattr(request.node, "rep_call") else True:
-        # No-op if rep_call isn't set (skip / error during collection).
-        pass
+    rep_call = getattr(request.node, "rep_call", None)
+    if rep_call is not None and rep_call.passed:
+        h.cleanup()
 
 
 # Capture per-test outcome so the harness fixture can decide whether to

@@ -6,7 +6,6 @@
 #include <unistd.h>
 
 #include <fstream>
-#include <map>
 #include <sstream>
 
 namespace fs = boost::filesystem;
@@ -89,34 +88,18 @@ solidity::langutil::EVMVersion resolveEvmVersion(std::string const& _name)
 {
 	// Default: cancun. Test runner translates `// EVMVersion: ...` directives
 	// to --evm-version. Accepts any solc-supported name (homestead..osaka).
-	auto evmVer = solidity::langutil::EVMVersion::cancun();
+	auto const defaultVersion = solidity::langutil::EVMVersion::cancun();
 	if (_name.empty())
-		return evmVer;
+		return defaultVersion;
 
-	using V = solidity::langutil::EVMVersion;
-	static std::map<std::string, V> const namedVersions = {
-		{"homestead",        V::homestead()},
-		{"tangerineWhistle", V::tangerineWhistle()},
-		{"spuriousDragon",   V::spuriousDragon()},
-		{"byzantium",        V::byzantium()},
-		{"constantinople",   V::constantinople()},
-		{"petersburg",       V::petersburg()},
-		{"istanbul",         V::istanbul()},
-		{"berlin",           V::berlin()},
-		{"london",           V::london()},
-		{"paris",            V::paris()},
-		{"shanghai",         V::shanghai()},
-		{"cancun",           V::cancun()},
-		{"prague",           V::prague()},
-		{"osaka",            V::osaka()},
-	};
-	auto it = namedVersions.find(_name);
-	if (it != namedVersions.end())
-		evmVer = it->second;
-	else
-		puyasol::Logger::instance().warning(
-			"Unknown EVM version '" + _name + "'; defaulting to cancun");
-	return evmVer;
+	// Keep accepted version names in lockstep with the vendored compiler instead
+	// of duplicating solc's version table here (and drifting on future forks).
+	if (auto evmVer = solidity::langutil::EVMVersion::fromString(_name))
+		return *evmVer;
+
+	puyasol::Logger::instance().warning(
+		"Unknown EVM version '" + _name + "'; defaulting to cancun");
+	return defaultVersion;
 }
 
 void applyRemappings(

@@ -78,6 +78,8 @@ class Harness:
         self.localnet = localnet
         self.out_dir = out_dir
         self.out_dir.mkdir(parents=True, exist_ok=True)
+        self._compile_count = 0
+        self._compile_dirs: list[Path] = []
 
     @staticmethod
     def resolve_sol_path(spec: str | Path) -> Path:
@@ -99,7 +101,10 @@ class Harness:
     ) -> CompiledArtifacts:
         """Compile a .sol file. Raises CompileError on failure."""
         resolved = self.resolve_sol_path(sol_path)
-        return compile_sol(resolved, self.out_dir, **opts)
+        self._compile_count += 1
+        compile_dir = self.out_dir / f"compile-{self._compile_count:04d}"
+        self._compile_dirs.append(compile_dir)
+        return compile_sol(resolved, compile_dir, **opts)
 
     def deploy(
         self,
@@ -191,5 +196,6 @@ class Harness:
         return _call_raw(self.localnet, app, None, **opts)
 
     def cleanup(self) -> None:
-        """Remove the per-test output directory."""
-        shutil.rmtree(self.out_dir, ignore_errors=True)
+        """Remove isolated compile outputs while preserving legacy tracked files."""
+        for compile_dir in self._compile_dirs:
+            shutil.rmtree(compile_dir, ignore_errors=True)

@@ -11,50 +11,25 @@ std::shared_ptr<awst::Expression> SolStructConstruction::toAwst()
 {
 	auto* solType = m_call.annotation().type;
 	auto* wtype = m_ctx.typeMapper.map(solType);
-
-	auto const& names = m_call.names();
-	auto const& args = m_call.arguments();
+	auto const args = m_call.sortedArguments();
 
 	std::map<std::string, std::shared_ptr<awst::Expression>> fieldValues;
 
 	auto const* tupleType = dynamic_cast<awst::WTuple const*>(wtype);
 	auto const* arc4StructType = dynamic_cast<awst::ARC4Struct const*>(wtype);
-
-	if (!names.empty())
+	auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(solType);
+	if (structType)
 	{
-		// Named arguments: MyStruct({field1: val1, field2: val2})
-		for (size_t i = 0; i < names.size(); ++i)
+		auto const& members = structType->structDefinition().members();
+		for (size_t i = 0; i < args.size() && i < members.size(); ++i)
 		{
 			auto val = buildExpr(*args[i]);
 			if (tupleType && i < tupleType->types().size())
 				val = TypeCoercion::implicitNumericCast(std::move(val), tupleType->types()[i], m_loc);
-			else if (arc4StructType)
-			{
-				for (auto const& [fname, ftype]: arc4StructType->fields())
-					if (fname == *names[i])
-					{
-						val = TypeCoercion::implicitNumericCast(std::move(val), ftype, m_loc);
-						break;
-					}
-			}
-			fieldValues[*names[i]] = std::move(val);
-		}
-	}
-	else
-	{
-		// Positional arguments: MyStruct(val1, val2)
-		if (auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(solType))
-		{
-			auto const& members = structType->structDefinition().members();
-			for (size_t i = 0; i < args.size() && i < members.size(); ++i)
-			{
-				auto val = buildExpr(*args[i]);
-				if (tupleType && i < tupleType->types().size())
-					val = TypeCoercion::implicitNumericCast(std::move(val), tupleType->types()[i], m_loc);
-				else if (arc4StructType && i < arc4StructType->fields().size())
-					val = TypeCoercion::implicitNumericCast(std::move(val), arc4StructType->fields()[i].second, m_loc);
-				fieldValues[members[i]->name()] = std::move(val);
-			}
+			else if (arc4StructType && i < arc4StructType->fields().size())
+				val = TypeCoercion::implicitNumericCast(
+					std::move(val), arc4StructType->fields()[i].second, m_loc);
+			fieldValues[members[i]->name()] = std::move(val);
 		}
 	}
 

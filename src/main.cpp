@@ -147,6 +147,11 @@ int main(int _argc, char* _argv[])
 			fileReader.addOrUpdateFile(extraPath, extraContent);
 			logger.info("Additional source: " + extraUnit);
 		}
+		else
+		{
+			logger.error("Cannot read additional source file: " + extraPath.string());
+			return 1;
+		}
 	}
 	compiler.setSources(sources);
 
@@ -309,7 +314,10 @@ int main(int _argc, char* _argv[])
 		runner.setPuyaPath(opts.puyaPath);
 		int exitCode = runner.run(awstPath, optionsPath, opts.logLevel);
 
-		writeChildDeployTemplates(opts.outputDir);
+		// Never derive deployment templates from stale .bin files left in a
+		// reused output directory when this backend invocation failed.
+		if (exitCode == 0)
+			writeChildDeployTemplates(opts.outputDir);
 
 		return exitCode;
 	}

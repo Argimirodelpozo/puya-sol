@@ -59,6 +59,9 @@ def _puya_backend_sig() -> str:
             cwd=str(puya_dir), capture_output=True, text=True, timeout=5
         ).stdout
         for line in dirty.splitlines():
+            # Always mix in the status record itself. Deleted and renamed files
+            # have no single current path to hash, but still change the backend.
+            parts.append(f"status:{line}")
             # Format: "XY <path>"
             if len(line) < 4:
                 continue

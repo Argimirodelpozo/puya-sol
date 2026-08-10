@@ -15,6 +15,8 @@ namespace puyasol::builder::sol_ast
 class SolFunctionCall: public SolExpression
 {
 public:
+	using Arguments = std::vector<std::shared_ptr<solidity::frontend::Expression const>>;
+
 	SolFunctionCall(
 		eb::ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _call);
@@ -22,10 +24,12 @@ public:
 	/// The underlying FunctionCall AST node.
 	solidity::frontend::FunctionCall const& call() const { return m_call; }
 
-	/// The function arguments.
-	std::vector<std::shared_ptr<solidity::frontend::Expression const>> const& arguments() const
+	/// The function arguments. solc's FunctionCall::arguments() returns a vector
+	/// by value, so cache that vector for the lifetime of this wrapper rather than
+	/// returning a dangling reference to solc's temporary.
+	Arguments const& arguments() const
 	{
-		return m_call.arguments();
+		return m_arguments;
 	}
 
 	/// The unwrapped function expression (strips FunctionCallOptions).
@@ -36,6 +40,7 @@ public:
 
 protected:
 	solidity::frontend::FunctionCall const& m_call;
+	Arguments m_arguments;
 };
 
 } // namespace puyasol::builder::sol_ast

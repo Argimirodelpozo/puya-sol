@@ -277,6 +277,11 @@ def _encode_ctor_args(values: list, app_spec, artifacts) -> list[bytes]:
     if not method:
         # No spec — fall back to per-value default encoding
         return [_default_encode(v) for v in values]
+    if len(values) != len(method.args):
+        raise DeployError(
+            f"constructor argument count mismatch: expected {len(method.args)}, "
+            f"got {len(values)}"
+        )
 
     encoded: list[bytes] = []
     for spec, val in zip(method.args, values):
@@ -351,7 +356,14 @@ def _call_postinit(
     sp.fee = (1000 * (budget_pool + base_extra) if (budget_pool or inner_txns) else 4000) + fee_bump
 
     abi_method = postinit_spec.to_abi_method()
-    args = postinit_args if postinit_args is not None else (ctor_args or [])
+    # Padding and ABI coercion below mutate the list. Work on a copy so a
+    # caller can safely reuse its ctor_args/postinit_args after deployment.
+    args = list(postinit_args if postinit_args is not None else (ctor_args or []))
+    if len(args) > len(abi_method.args):
+        raise DeployError(
+            f"__postInit argument count mismatch: expected at most "
+            f"{len(abi_method.args)}, got {len(args)}"
+        )
     # Pad missing trailing args with zero values
     while len(args) < len(abi_method.args):
         args.append(_zero_for_type(str(abi_method.args[len(args)].type)))

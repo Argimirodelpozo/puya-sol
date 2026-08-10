@@ -72,7 +72,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 	};
 	std::vector<FieldInfo> fields;
 
-	auto const& callArgs = eventCall.arguments();
+	auto const callArgs = eventCall.sortedArguments();
 	auto const& params = eventDef ? eventDef->parameters()
 		: std::vector<std::shared_ptr<VariableDeclaration>>{};
 	std::vector<std::shared_ptr<awst::Statement>> preStatements;

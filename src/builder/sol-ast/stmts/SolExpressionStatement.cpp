@@ -92,11 +92,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 		auto sig = errorDef->functionType(true)->externalSignature();
 		std::shared_ptr<awst::Expression> blob =
 			awst::makeMethodConstant(sig, awst::WType::bytesType(), m_loc);
-		if (!m_node.errorCall().arguments().empty())
+		auto const errorArgs = m_node.errorCall().sortedArguments();
+		if (!errorArgs.empty())
 			blob = awst::makeConcat(
 				std::move(blob),
 				eb::AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(
-					m_blk.builderCtx(), m_node.errorCall().arguments(),
+					m_blk.builderCtx(), errorArgs,
 					errorDef->functionType(true)->parameterTypes(), m_loc),
 				m_loc);
 		// Arg builds may hoist side effects / loop encoders to prePending.

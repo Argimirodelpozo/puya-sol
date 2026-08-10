@@ -10,7 +10,8 @@ SolFunctionCall::SolFunctionCall(
 	eb::ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _call)
 	: SolExpression(_ctx, _call),
-	  m_call(_call)
+	  m_call(_call),
+	  m_arguments(_call.arguments())
 {
 }
 

@@ -65,13 +65,14 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 					auto sig = errorDef->functionType(true)->externalSignature();
 					std::shared_ptr<awst::Expression> blob =
 						awst::makeMethodConstant(sig, awst::WType::bytesType(), m_loc);
-					if (!errorCall->arguments().empty())
+					auto const errorArgs = errorCall->sortedArguments();
+					if (!errorArgs.empty())
 						// selector ++ ARC4(args) at declared param types ([[abi-arc4-migration]]);
 						// Error(string)/Panic stay EVM-literal (errorString path).
 						blob = awst::makeConcat(
 							std::move(blob),
 							eb::AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(
-								m_ctx, errorCall->arguments(),
+								m_ctx, errorArgs,
 								errorDef->functionType(true)->parameterTypes(), m_loc),
 							m_loc);
 					std::string tmpName = "__require_err_blob_"
@@ -84,7 +85,7 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 				}
 				else
 					// No ErrorDefinition: evaluate args for side effects only.
-					for (auto const& a : errorCall->arguments())
+					for (auto const& a : errorCall->sortedArguments())
 					{
 						auto argExpr = buildExpr(*a);
 						if (argExpr && argExpr->wtype && argExpr->wtype != awst::WType::voidType())
