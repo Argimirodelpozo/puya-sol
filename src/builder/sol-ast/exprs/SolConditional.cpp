@@ -2,6 +2,8 @@
 /// Migrated from ConditionalBuilder.cpp.
 
 #include "builder/sol-ast/exprs/SolConditional.h"
+#include "builder/storage/EvmLayoutMode.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
 #include "awst/NameGen.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -55,6 +57,42 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 		[&] { return buildExpr(m_conditional.falseExpression()); }, falseD);
 
 	e->wtype = m_ctx.typeMapper.map(m_conditional.annotation().type);
+
+	// Slot mode: a branch that is a STORAGE REF (biguint slot handle — e.g.
+	// OZ Checkpoints' `pos == 0 ? Checkpoint(0,0) : _unsafeAccess(ckpts, …)`,
+	// whose false arm returns `Checkpoint storage`) flowing into a VALUE-typed
+	// ternary must MATERIALIZE the referenced aggregate; the handle itself can
+	// never coerce to the struct/array value type.
+	auto materializeSlotRef = [&](std::shared_ptr<awst::Expression> branch,
+		solidity::frontend::Expression const& srcExpr)
+		-> std::shared_ptr<awst::Expression>
+	{
+		if (!builder::evmStorageLayout() || !branch || !e->wtype
+			|| branch->wtype != awst::WType::biguintType())
+			return branch;
+		auto k = e->wtype->kind();
+		if (k != awst::WTypeKind::ARC4Struct
+			&& k != awst::WTypeKind::ARC4StaticArray
+			&& k != awst::WTypeKind::ARC4DynamicArray)
+			return branch;
+		auto const* st = srcExpr.annotation().type;
+		if (!st || !st->dataStoredIn(solidity::frontend::DataLocation::Storage))
+			return branch;
+		EvmSlotLowering low(m_ctx, m_scope, m_loc);
+		EvmSlotLowering::Addr a;
+		a.slot = std::move(branch);
+		a.solType = st;
+		a.wtype = e->wtype;
+		if (dynamic_cast<solidity::frontend::StructType const*>(st))
+			return low.readStructValue(a);
+		if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(st))
+			return low.readArrayValue(a, at);
+		return a.slot;
+	};
+	e->trueExpr = materializeSlotRef(
+		std::move(e->trueExpr), m_conditional.trueExpression());
+	e->falseExpr = materializeSlotRef(
+		std::move(e->falseExpr), m_conditional.falseExpression());
 
 	// Coerce branches to target type. For tuples, coerce element-by-element.
 	auto coerceBranch = [&](std::shared_ptr<awst::Expression> branch)

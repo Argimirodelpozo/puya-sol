@@ -1,0 +1,114 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol.B.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    intc_2 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    pushbytess "value" 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc46a4b39 0x75d12918 // method "setValue(uint256)void", method "value()uint256"
+    txna ApplicationArgs 0
+    match main_setValue_route@5 main_value_route@6
+    err
+
+main_value_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    load 5
+    extract 0 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@12:
+    intc_2 // 0
+    b main_ternary_merge@13
+
+main_setValue_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    load 5
+    extract 0 32
+    dig 1
+    b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    load 5
+    intc_1 // 32
+    bzero
+    uncover 2
+    b|
+    extract 0 32
+    replace2 0
+    store 5
+    intc_0 // 1
+    return
+
+main_ternary_false@17:
+    intc_2 // 0
+    b main_ternary_merge@18

@@ -406,16 +406,21 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
 	awst::SourceLocation const& _loc)
 {
 	// AVM has no DELEGATECALL: every app has isolated storage, every inner txn
-	// has its own caller. Hard-error rather than silently wrong stub.
-	Logger::instance().error(
-		"`.delegatecall(...)` is not supported on AVM. DELEGATECALL's "
-		"shared-storage / caller-preservation semantics have no equivalent "
-		"on AVM (each app has isolated storage; inner-txn callers are the "
-		"calling app, not its caller). Rewrite the call site, or use "
-		"`.call(...)` if the caller-of-caller distinction isn't load-bearing.",
+	// has its own caller. Fail LOUDLY — but at RUNTIME, on reach: a compile
+	// error here rejected whole real-world trees over OZ Address.sol's
+	// unreachable functionDelegateCall utility (Aave's Pool never calls it;
+	// puya's DCE strips the unreached body entirely). Any delegatecall that
+	// actually EXECUTES still dies with an explicit message, never a silently
+	// wrong stub.
+	Logger::instance().warning(
+		"`.delegatecall(...)` has no AVM equivalent (isolated storage; inner-"
+		"txn callers are the calling app). Lowered to a runtime failure — "
+		"this call site REVERTS if ever reached.",
 		_loc);
 	for (auto const& arg : _callNode.arguments())
 		_ctx.buildExpr(*arg);
+	_ctx.queuePreStmt(awst::makeAssert(awst::makeFalse(_loc), _loc,
+		"delegatecall is not supported on AVM"), _loc);
 	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
 }
 

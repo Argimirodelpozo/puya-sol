@@ -140,18 +140,77 @@ public:
 
 	ResultT visitTryCatch(TryStatement const& _n) override
 	{
+		// AVM has no in-transaction revert recovery: a failing inner txn
+		// aborts the whole outer txn, so CATCH CLAUSES ARE UNREACHABLE by
+		// construction. Lower `try CALL returns (..) { S } catch.. {..}` to
+		// CALL + bind returns + S, and DROP the catch arms — a documented
+		// divergence that surfaces honestly in replay: any historical txn
+		// whose catch path ran on EVM reverts here instead of being
+		// swallowed (Aave supplyWithPermit's `try permit {} catch {}`
+		// front-run-tolerance idiom is the common shape; its success path
+		// is identical on both VMs).
 		auto loc = locOf(_n);
-		Logger::instance().error(
-			"try/catch is not supported on AVM. Solidity's try requires at "
-			"least one catch clause, and AVM has no in-transaction revert "
-			"recovery — a failing inner txn aborts the whole outer txn. The "
-			"catch path's user-written logic can't be honored, so silently "
-			"compiling would produce semantically different code. Refactor "
-			"the call site to handle the contract directly (e.g. drop the "
-			"try, or guard with an explicit if-check) before recompiling.",
+		Logger::instance().warning(
+			"try/catch: catch clauses are UNREACHABLE on AVM (a failing "
+			"inner txn aborts the whole txn). Compiling the try call + "
+			"success block; a reached catch path becomes a txn failure.",
 			loc);
 
-		return {};
+		ResultT out;
+		auto call = m_blk.builderCtx().build(_n.externalCall());
+		if (!call)
+			return out;
+		auto const& clauses = _n.clauses();
+		TryCatchClause const* success =
+			clauses.empty() ? nullptr : clauses[0].get();
+		auto const* params = success ? success->parameters() : nullptr;
+
+		if (params && !params->parameters().empty())
+		{
+			auto const& ps = params->parameters();
+			if (ps.size() == 1 && ps[0])
+			{
+				auto tgt = awst::makeVarExpression(
+					m_blk.awstVarName(*ps[0]), call->wtype, loc);
+				out.push_back(awst::makeAssignmentStatement(
+					std::move(tgt), std::move(call), loc));
+			}
+			else
+			{
+				auto const* tup =
+					dynamic_cast<awst::WTuple const*>(call->wtype);
+				auto targets = awst::makeTupleExpression(call->wtype, loc);
+				for (size_t i = 0; i < ps.size(); ++i)
+				{
+					auto const* w = (tup && i < tup->types().size())
+						? tup->types()[i]
+						: m_blk.builderCtx().typeMapper.map(
+							ps[i] ? ps[i]->type() : nullptr);
+					targets->items.push_back(awst::makeVarExpression(
+						ps[i] ? m_blk.awstVarName(*ps[i])
+							  : ("__try_skip" + std::to_string(i)),
+						w, loc));
+				}
+				out.push_back(awst::makeAssignmentStatement(
+					std::move(targets), std::move(call), loc));
+			}
+		}
+		else if (call->wtype && call->wtype != awst::WType::voidType())
+			out.push_back(awst::makeExpressionStatement(std::move(call), loc));
+		else
+			out.push_back(awst::makeExpressionStatement(std::move(call), loc));
+		m_blk.builderCtx().appendPendingTo(out);
+
+		if (success)
+		{
+			auto childBlk = m_blk.nest();
+			auto blkGuard = m_blk.builderCtx().pushScopeRaii(&childBlk);
+			SolBlock handler(childBlk, success->block(),
+				m_blk.makeLoc(success->block().location()));
+			for (auto& st: handler.toAwst())
+				out.push_back(std::move(st));
+		}
+		return out;
 	}
 
 	ResultT visitBlock(Block const& _n) override
