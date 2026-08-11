@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_with_256_members.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 255 0 256
+    intcblock 1 255 0 8
     bytecblock 0x151f7c75
     intc_2 // 0
+    dup
     pushbytes ""
     dup
     pushint 4096
@@ -44,6 +45,8 @@ main_after_if_else@2:
 main_decodeEnum_route@8:
     txna ApplicationArgs 1
     dup
+    bury 4
+    dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
@@ -53,7 +56,7 @@ main_decodeEnum_route@8:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 3
+    bury 4
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -64,10 +67,22 @@ main_decodeEnum_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
+    dig 3
+    len
+    pushint 32
+    ==
+    bz main_else_body@17
     dig 2
-    btoi
+    extract 2 32
     dup
-    intc_3 // 256
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+
+main_after_if_else@18:
+    dup
+    pushint 256
     <
     assert // enum out of range
     intc_1 // 255
@@ -80,6 +95,11 @@ main_ternary_merge@15:
     intc_0 // 1
     return
 
+main_else_body@17:
+    dig 3
+    btoi
+    b main_after_if_else@18
+
 main_ternary_false@14:
     intc_2 // 0
     b main_ternary_merge@15
@@ -88,19 +108,19 @@ main_enumToInt_route@7:
     txna ApplicationArgs 1
     dup
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     bury 2
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@22
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@23:
     !
     assert // not payable
     dig 1
@@ -124,27 +144,27 @@ main_ternary_merge@20:
     intc_0 // 1
     return
 
-main_ternary_false@19:
+main_ternary_false@22:
     intc_2 // 0
-    b main_ternary_merge@20
+    b main_ternary_merge@23
 
 main_intToEnum_route@6:
     txna ApplicationArgs 1
     dup
     len
-    pushint 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     bury 1
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@27
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@28:
     !
     assert // not payable
     dupn 2
@@ -154,7 +174,7 @@ main_ternary_merge@25:
     intc_1 // 255
     &
     dup
-    intc_3 // 256
+    pushint 256
     <
     assert // enum out of range
     intc_1 // 255
@@ -167,19 +187,19 @@ main_ternary_merge@25:
     intc_0 // 1
     return
 
-main_ternary_false@24:
+main_ternary_false@27:
     intc_2 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@28
 
 main_getMinMax_route@5:
     txn GroupIndex
-    bz main_ternary_false@29
+    bz main_ternary_false@32
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+main_ternary_merge@33:
     !
     assert // not payable
     pushbytes 0x151f7c75000000000000000000000000000000ff
@@ -187,6 +207,6 @@ main_ternary_merge@30:
     intc_0 // 1
     return
 
-main_ternary_false@29:
+main_ternary_false@32:
     intc_2 // 0
-    b main_ternary_merge@30
+    b main_ternary_merge@33

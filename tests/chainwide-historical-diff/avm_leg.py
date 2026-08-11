@@ -237,7 +237,7 @@ def _abi_type_for(vtype, arc56):
     return t
 
 
-def read_avm_maps(algod, app_id, arc56, syms, fold):
+def read_avm_maps(algod, app_id, arc56, syms, fold, calls=None):
     """Box-backed mappings → {mapname: {symbol: value}}, KEY-ALIGNED with the
     EVM side so entries compare one-for-one.
 
@@ -269,6 +269,31 @@ def read_avm_maps(algod, app_id, arc56, syms, fold):
             return None
         if not raw:
             return 0
+        # Mapping-carrying struct values (OZ EnumerableSet in a mapping): the
+        # non-mapping fields live at chain++"_inner", holding the INNER
+        # struct's ARC4 encoding. Summarise dynamic-array members to their
+        # LENGTH — that is exactly what the EVM leg reads at the struct's
+        # member slot (the array's length word) — so entries compare 1:1.
+        if name_b.endswith(b"_inner"):
+            structs = (arc56 or {}).get("structs") or {}
+            fields = structs.get(str(vtype or "")) or []
+            inner_t = fields[0].get("type") if fields else None
+            abi_t = _abi_type_for(inner_t, arc56) if inner_t else None
+            if abi_t:
+                try:
+                    from algosdk import abi as _abi
+                    dec = _abi.ABIType.from_string(abi_t).decode(raw)
+                    vals = [len(m) if isinstance(m, list) else _canon_abi(m)
+                            for m in (dec if isinstance(dec, list) else [dec])]
+                    # The EVM leg's struct view omits mapping members (solc
+                    # layout skips them); the arc56 twin carries flattened
+                    # placeholders that read as trailing zeros — trim them.
+                    while len(vals) > 1 and not vals[-1]:
+                        vals.pop()
+                    return vals
+                except Exception:
+                    pass
+            return None
         # An address-valued mapping must fold to a registry SYMBOL, or it reads
         # as a huge raw integer and every entry looks divergent against the EVM
         # side (which folds). Numeric types stay integers.
@@ -299,14 +324,62 @@ def read_avm_maps(algod, app_id, arc56, syms, fold):
             return any(_nonempty(x) for x in v)
         return True
 
+    # Key hints mirroring the EVM leg's derivations from the SAME calls.json:
+    # ordered (sender, arg_i, arg_j) triples for 3-deep mappings (Permit2's
+    # allowance) and small/arg-derived uint words for mapping(addr => mapping
+    # (uint => V)) (nonceBitmap). Same construction as evm_leg — key strings
+    # must align for the differ to compare entries one-for-one.
+    from chd_common import symbol as _symbol
+
+    def _syms_in(v):
+        if isinstance(v, dict) and set(v) == {"__addr__"}:
+            yield _symbol(v["__addr__"])
+        elif isinstance(v, list):
+            for x in v:
+                yield from _syms_in(x)
+
+    triples: list = []
+    uint_keys: list = [0, 1, 2, 3]
+    for c in (calls or []):
+        if c.get("sender") and c.get("args"):
+            s_sym = _symbol(c["sender"]["__addr__"])
+            seen_args = [t for a in c["args"] for t in _syms_in(a)]
+            for i2 in range(len(seen_args)):
+                for j2 in range(len(seen_args)):
+                    if i2 == j2:
+                        continue
+                    tri = (s_sym, seen_args[i2], seen_args[j2])
+                    if tri not in triples:
+                        triples.append(tri)
+        for a in (c.get("args") or []):
+            if isinstance(a, int) and 0 <= a < (1 << 256):
+                for cand in (a >> 8, a):
+                    if 0 <= cand < 4096 and cand not in uint_keys:
+                        uint_keys.append(cand)
+
     matched = set()
     for mapname, mspec in bmaps.items():
         vtype = mspec.get("valueType")
         m = mapname.encode()
         got = {}
-        for sym, k in syms.items():                       # depth 1
-            nm = hashlib.sha256(k + m).digest()
+        def _hit(nm):
+            """The chain box, or its mapping-carrying-struct "_inner" twin."""
             if nm in have:
+                return nm
+            if nm + b"_inner" in have:
+                return nm + b"_inner"
+            return None
+
+        # Hex-form symbols first so a bytes32 key and an address symbol with
+        # the SAME 32-byte content (zero role vs «Z») label the box the way
+        # the EVM leg does; a box already claimed is not re-labeled.
+        ordered_syms = sorted(
+            syms.items(), key=lambda kv: 0 if str(kv[0]).startswith("0x") else 1)
+        claimed: set = set()
+        for sym, k in ordered_syms:                       # depth 1
+            nm = _hit(hashlib.sha256(k + m).digest())
+            if nm and nm not in claimed:
+                claimed.add(nm)
                 matched.add(nm)
                 v = val_of(nm, vtype)
                 if _nonempty(v):
@@ -321,6 +394,29 @@ def read_avm_maps(algod, app_id, arc56, syms, fold):
                         v = val_of(nm, vtype)
                         if _nonempty(v):
                             got[f"{s1}->{s2}"] = v
+        if not got:                                       # depth 3 (triples)
+            for (t1, t2, t3) in triples:
+                k1, k2, k3 = syms.get(t1), syms.get(t2), syms.get(t3)
+                if k1 is None or k2 is None or k3 is None:
+                    continue
+                nm = hashlib.sha256(k3 + hashlib.sha256(
+                    k2 + hashlib.sha256(k1 + m).digest()).digest()).digest()
+                if nm in have:
+                    matched.add(nm)
+                    v = val_of(nm, vtype)
+                    if _nonempty(v):
+                        got[f"{t1}->{t2}->{t3}"] = v
+        if not got:                                       # addr -> uint word
+            for s1, k1 in syms.items():
+                inner = hashlib.sha256(k1 + m).digest()
+                for w in uint_keys:
+                    nm = hashlib.sha256(
+                        w.to_bytes(32, "big") + inner).digest()
+                    if nm in have:
+                        matched.add(nm)
+                        v = val_of(nm, vtype)
+                        if _nonempty(v):
+                            got[f"{s1}->#{w}"] = v
         out[mapname] = got          # keep empty maps: see evm_leg read_maps
 
     # COVERAGE, mirroring the EVM leg's blind-slot trace: boxes that exist on
@@ -783,6 +879,9 @@ def main():
         for a in c.get("args") or []:
             if isinstance(a, dict) and set(a) == {"__b__"} and len(a["__b__"]) == 64:
                 syms["0x" + a["__b__"]] = bytes.fromhex(a["__b__"])
+    # The zero word, labeled in hex like the EVM leg's b32 arm (ctor-granted
+    # DEFAULT_ADMIN_ROLE state must compare under the SAME key string).
+    syms.setdefault("0x" + "0" * 64, bytes(32))
     if evm_layout:
         # --evm-storage-layout: storage IS solc's slot layout in boxes — read
         # it exactly the way the EVM leg reads py-evm state (chd_slot_reader).
@@ -792,7 +891,7 @@ def main():
             read_slot_map(algod, app.app_id), slot_layout, syms, fold, calls)
     else:
         storage = read_avm_storage(algod, app.app_id, arc56, fold)
-        storage["maps"] = read_avm_maps(algod, app.app_id, arc56, syms, fold)
+        storage["maps"] = read_avm_maps(algod, app.app_id, arc56, syms, fold, calls)
     dump_json(case_dir / "avm_results.json",
               {"results": {str(k): v for k, v in results.items()},
                "snapshots": snapshots,

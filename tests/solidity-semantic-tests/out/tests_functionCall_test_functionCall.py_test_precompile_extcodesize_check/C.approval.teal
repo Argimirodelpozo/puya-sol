@@ -5,6 +5,8 @@
 main:
     intcblock 0 1 32 6
     bytecblock 0xb55e211f 0x0000000000000000000000000000000000000000000000000000000000000005 0x151f7c75
+    intc_0 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -64,7 +66,27 @@ main_ternary_merge@14:
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
+    dup
+    bury 3
     extract 4 0
+    dup
+    bury 2
+    len
+    intc_2 // 32
+    ==
+    bz main_else_body@16
+    dig 1
+    extract 4 32
+
+main_after_if_else@17:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -72,19 +94,23 @@ main_ternary_merge@14:
     intc_1 // 1
     return
 
+main_else_body@16:
+    dup
+    b main_after_if_else@17
+
 main_ternary_false@13:
     intc_0 // 0
     b main_ternary_merge@14
 
 main_testHighLevel2_route@6:
     txn GroupIndex
-    bz main_ternary_false@18
+    bz main_ternary_false@21
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+main_ternary_merge@22:
     !
     assert // not payable
     itxn_begin
@@ -145,19 +171,19 @@ main_ternary_merge@19:
     intc_1 // 1
     return
 
-main_ternary_false@18:
+main_ternary_false@21:
     intc_0 // 0
-    b main_ternary_merge@19
+    b main_ternary_merge@22
 
 main_testHighLevel_route@5:
     txn GroupIndex
-    bz main_ternary_false@23
+    bz main_ternary_false@26
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+main_ternary_merge@27:
     !
     assert // not payable
     itxn_begin
@@ -179,6 +205,6 @@ main_ternary_merge@24:
     intc_1 // 1
     return
 
-main_ternary_false@23:
+main_ternary_false@26:
     intc_0 // 0
-    b main_ternary_merge@24
+    b main_ternary_merge@27

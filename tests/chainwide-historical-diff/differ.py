@@ -19,7 +19,20 @@ KNOWN_NOISE_GETTERS = {
     "clock()",                     # ERC-6372: block.number — EVM leg's local
                                    # height vs the AVM round can never match
 }
-_NOISE_SIG_RE = re.compile(r"(DOMAIN_SEPARATOR|chainid|CHAIN_ID)", re.I)
+_NOISE_SIG_RE = re.compile(r"(DOMAIN_?SEPARATOR|chainid|CHAIN_ID)", re.I)
+
+_HEX_RE = re.compile(r"^\??0x[0-9a-fA-F]+$")
+
+
+def _hex_norm(v):
+    """Numeric view of hex-string observables (recursively for lists):
+    '?0x00…5e7ec' and '?0x…0005e7ec' are the same value at different widths."""
+    if isinstance(v, list):
+        return [_hex_norm(x) for x in v]
+    if isinstance(v, str) and _HEX_RE.match(v):
+        return int(v.lstrip("?"), 16)
+    return v
+
 
 
 # How far apart two legs' clocks can plausibly be. Both legs now drive their
@@ -205,6 +218,12 @@ def diff_case(case_dir: Path) -> dict:
             ev_, av_ = es.get(sig), as_.get(sig)
             if ev_ == av_:
                 continue
+            # Width-insensitive hex equality: an address/bytesN constant can
+            # surface at different byte widths per leg (pol's PERMIT2() —
+            # 20-byte EVM word vs the AVM's wider zero-padded form). Values
+            # that parse to the SAME integer are the same observable.
+            if _hex_norm(ev_) == _hex_norm(av_):
+                continue
             # EIP-5267 eip712Domain(): field 3 is the CHAIN ID — pure
             # environment (py-evm's id vs the AVM's fixed 1), not compilation.
             # Compare the other six fields for real; matching = noise.
@@ -256,6 +275,11 @@ def diff_case(case_dir: Path) -> dict:
         numerically is lossless, so a genuinely different value still differs.
         """
         if x == y:
+            return True
+        # Width-insensitive hex + list-recursive numeric view ("0x…01" vs 1,
+        # [len] vs ['0x…01']) — mapping-carrying-struct summaries compare by
+        # value, not rendering.
+        if _hex_norm(x) == _hex_norm(y):
             return True
         for a, b in ((x, y), (y, x)):
             if isinstance(a, str) and a.startswith("0x") and isinstance(b, int) \

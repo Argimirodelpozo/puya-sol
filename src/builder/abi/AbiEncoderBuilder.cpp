@@ -2,12 +2,15 @@
 /// Handles abi.encode*, abi.decode — extracted from FunctionCallBuilder.
 
 #include "builder/abi/AbiEncoderBuilder.h"
+#include "awst/NameGen.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/abi/AbiSelectorCalldataBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 
 #include <libsolidity/ast/TypeProvider.h>
+
+#include <functional>
 
 namespace puyasol::builder::eb
 {
@@ -397,6 +400,165 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 
 // ── decode ──
 
+namespace
+{
+/// Runtime dual-format abi.decode support for FLAT component lists (value
+/// types + string/bytes). Externally-produced blobs — proxy/initialize(bytes)
+/// parameters, off-chain encoders — arrive in EVM ABI layout (32-byte words,
+/// u256 offset heads), which the ARC4-everywhere reinterpret cannot parse
+/// ("extraction beyond length"; e741's initialize). The blob's layout is only
+/// knowable at runtime, so emit BOTH decoders behind a sniff: every dynamic
+/// member's head word must have 24 leading zero bytes and a word-aligned,
+/// in-bounds offset — bytes an ARC4 encoding of the same components cannot
+/// produce at those positions. ARC4 remains the native path (round-trips are
+/// unchanged); nested aggregates keep ARC4-only.
+struct EvmDecodeComp
+{
+	solidity::frontend::Type const* solType = nullptr;
+	awst::WType const* wtype = nullptr;
+	bool dynamic = false; // string/bytes member
+};
+
+/// Classify components; false if any member is outside the flat subset.
+bool collectEvmDecodeComps(
+	ContractContext& _ctx,
+	std::vector<solidity::frontend::Type const*> const& _comps,
+	std::vector<EvmDecodeComp>& _out)
+{
+	using namespace solidity::frontend;
+	for (auto const* t: _comps)
+	{
+		if (!t)
+			return false;
+		EvmDecodeComp c;
+		c.solType = t;
+		c.wtype = _ctx.typeMapper.map(t);
+		if (!c.wtype)
+			return false;
+		if (auto const* at = dynamic_cast<ArrayType const*>(t))
+		{
+			if (!at->isByteArrayOrString())
+				return false; // nested array — ARC4-only
+			c.dynamic = true;
+		}
+		else if (dynamic_cast<IntegerType const*>(t) || dynamic_cast<BoolType const*>(t)
+			|| dynamic_cast<AddressType const*>(t) || dynamic_cast<EnumType const*>(t)
+			|| dynamic_cast<ContractType const*>(t))
+			c.dynamic = false;
+		else
+			return false; // structs, fixed bytes, fn ptrs … — ARC4-only
+		_out.push_back(c);
+	}
+	return !_out.empty();
+}
+
+/// Build the native value of component `i` from the pinned EVM blob var.
+std::shared_ptr<awst::Expression> evmDecodeComponent(
+	std::function<std::shared_ptr<awst::Expression>()> const& _blob,
+	EvmDecodeComp const& _c,
+	size_t _i,
+	awst::SourceLocation const& _loc)
+{
+	auto word = [&]() {
+		return awst::makeExtract3(_blob(),
+			awst::makeIntegerConstant(uint64_t{32 * _i}, _loc),
+			awst::makeIntegerConstant(uint64_t{32}, _loc), _loc);
+	};
+	auto wordU64 = [&]() {
+		return awst::makeBtoi(awst::makeExtractLastN(word(), 8, _loc), _loc);
+	};
+	if (_c.dynamic)
+	{
+		// head → [len32][data]; trim to len.
+		auto off = wordU64();
+		auto lenWord = awst::makeExtract3(_blob(), off,
+			awst::makeIntegerConstant(uint64_t{32}, _loc), _loc);
+		auto len = awst::makeBtoi(awst::makeExtractLastN(std::move(lenWord), 8, _loc), _loc);
+		auto dataOff = awst::makeUInt64BinOp(wordU64(),
+			awst::UInt64BinaryOperator::Add,
+			awst::makeIntegerConstant(uint64_t{32}, _loc), _loc);
+		auto data = awst::makeExtract3(_blob(), std::move(dataOff), std::move(len), _loc);
+		if (_c.wtype == awst::WType::stringType())
+			return awst::makeReinterpretCast(std::move(data),
+				awst::WType::stringType(), _loc);
+		return data;
+	}
+	if (_c.wtype == awst::WType::boolType())
+		return awst::makeNumericCompare(wordU64(), awst::NumericComparison::Ne,
+			awst::makeIntegerConstant(uint64_t{0}, _loc), _loc);
+	if (_c.wtype == awst::WType::uint64Type())
+		return wordU64();
+	if (_c.wtype == awst::WType::accountType())
+		// EVM word = 12 zero bytes ++ 20-byte address — exactly this project's
+		// canonical 32-byte account form.
+		return awst::makeReinterpretCast(word(), awst::WType::accountType(), _loc);
+	if (_c.wtype == awst::WType::applicationType())
+		return awst::makeReinterpretCast(wordU64(),
+			awst::WType::applicationType(), _loc);
+	// biguint (uint>64 / signed canonical-256 TC): the word IS the value.
+	return awst::makeAsBiguint(word(), _loc);
+}
+
+/// The runtime layout sniff: blob long enough for the static head area, and
+/// every dynamic head word EVM-shaped (24 zero prefix bytes, aligned offset,
+/// in-bounds with its length word and data).
+std::shared_ptr<awst::Expression> evmLayoutSniff(
+	std::function<std::shared_ptr<awst::Expression>()> const& _blob,
+	std::vector<EvmDecodeComp> const& _comps,
+	awst::SourceLocation const& _loc)
+{
+	auto u64c = [&](uint64_t v) { return awst::makeIntegerConstant(v, _loc); };
+	auto blobLen = [&]() { return awst::makeLen(_blob(), _loc); };
+	std::shared_ptr<awst::Expression> cond = awst::makeNumericCompare(
+		blobLen(), awst::NumericComparison::Gte,
+		u64c(32 * _comps.size()), _loc);
+	auto andWith = [&](std::shared_ptr<awst::Expression> more) {
+		cond = awst::makeBoolBinOp(std::move(cond),
+			awst::BinaryBooleanOperator::And, std::move(more), _loc);
+	};
+	bool anyDynamic = false;
+	for (size_t i = 0; i < _comps.size(); ++i)
+	{
+		if (!_comps[i].dynamic)
+			continue;
+		anyDynamic = true;
+		auto word = [&, i]() {
+			return awst::makeExtract3(_blob(), u64c(32 * i), u64c(32), _loc);
+		};
+		auto off = [&, i]() {
+			return awst::makeBtoi(awst::makeExtractLastN(word(), 8, _loc), _loc);
+		};
+		// 24-byte zero prefix (offsets beyond 2^64 are not real blobs).
+		// Compared as biguint — 24 zero bytes ⇔ value 0.
+		andWith(awst::makeNumericCompare(
+			awst::makeAsBiguint(
+				awst::makeExtract3(_blob(), u64c(32 * i), u64c(24), _loc), _loc),
+			awst::NumericComparison::Eq,
+			awst::makeIntegerConstant("0", _loc, awst::WType::biguintType()),
+			_loc));
+		// word-aligned …
+		andWith(awst::makeNumericCompare(
+			awst::makeUInt64BinOp(off(), awst::UInt64BinaryOperator::Mod,
+				u64c(32), _loc),
+			awst::NumericComparison::Eq, u64c(0), _loc));
+		// … and the length word fits before the blob end.
+		andWith(awst::makeNumericCompare(
+			awst::makeUInt64BinOp(off(), awst::UInt64BinaryOperator::Add,
+				u64c(32), _loc),
+			awst::NumericComparison::Lte, blobLen(), _loc));
+	}
+	if (!anyDynamic)
+	{
+		// All-static: EVM layout is exactly 32 bytes per component (the ARC4
+		// form only coincides when every member is 256-bit — then both parses
+		// agree anyway).
+		cond = awst::makeNumericCompare(blobLen(),
+			awst::NumericComparison::Eq, u64c(32 * _comps.size()), _loc);
+	}
+	return cond;
+}
+} // namespace
+
 std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
@@ -418,39 +580,106 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 	if (!targetType || (decoded->wtype == targetType && !dynByteTarget))
 		return std::make_unique<GenericAbiResult>(_ctx, std::move(decoded));
 
-	// ── ARC4-everywhere: the input bytes ARE the ARC4 encoding. Reinterpret to
-	// the target's ARC4 type and ARC4Decode to native — NO EVM offset-table
-	// walk. (Kills decodeAbiValue + the nested-array/struct decode helpers,
-	// which were bridging an EVM layout we no longer produce.)
+	// ── ARC4-everywhere with a runtime EVM-layout escape hatch. The native
+	// path reinterprets the bytes as the target's ARC4 encoding (round-trips
+	// with abi.encode). For FLAT component lists a runtime sniff additionally
+	// recognises EVM ABI layout — externally-encoded blobs like proxy
+	// initialize(bytes) parameters — and takes an offset walk instead.
 	{
 		auto dataExpr = decoded;
 		if (dataExpr->wtype != awst::WType::bytesType())
 			dataExpr = awst::makeAsBytes(std::move(dataExpr), _loc);
 
 		auto const* callType = _callNode.annotation().type;
-		if (auto const* tupleType =
-			dynamic_cast<solidity::frontend::TupleType const*>(callType))
+		auto const* tupleType =
+			dynamic_cast<solidity::frontend::TupleType const*>(callType);
+
+		std::vector<solidity::frontend::Type const*> compTypes;
+		if (tupleType)
+			for (auto const* comp: tupleType->components())
+				compTypes.push_back(comp);
+		else
+			compTypes.push_back(callType);
+
+		// The native-ARC4 decode expression, over an arbitrary blob source.
+		auto buildArc4Decode = [&](std::shared_ptr<awst::Expression> _blob)
+			-> std::shared_ptr<awst::Expression> {
+			if (tupleType)
+			{
+				std::vector<awst::WType const*> arc4Types;
+				for (auto const* comp: tupleType->components())
+					arc4Types.push_back(
+						_ctx.typeMapper.mapToARC4Type(_ctx.typeMapper.map(comp)));
+				auto const* arc4TupleT =
+					_ctx.typeMapper.createType<awst::ARC4Tuple>(arc4Types);
+				auto arc4Val = awst::makeReinterpretCast(
+					std::move(_blob), arc4TupleT, _loc);
+				return awst::makeARC4Decode(std::move(arc4Val), targetType, _loc);
+			}
+			auto const* arc4T = _ctx.typeMapper.mapToARC4Type(targetType);
+			std::shared_ptr<awst::Expression> arc4Val =
+				awst::makeReinterpretCast(std::move(_blob), arc4T, _loc);
+			if (targetType == arc4T)
+				return arc4Val;
+			return awst::makeARC4Decode(std::move(arc4Val), targetType, _loc);
+		};
+
+		std::vector<EvmDecodeComp> comps;
+		if (collectEvmDecodeComps(_ctx, compTypes, comps))
 		{
-			std::vector<awst::WType const*> arc4Types;
-			for (auto const* comp : tupleType->components())
-				arc4Types.push_back(
-					_ctx.typeMapper.mapToARC4Type(_ctx.typeMapper.map(comp)));
-			auto const* arc4TupleT = _ctx.typeMapper.createType<awst::ARC4Tuple>(arc4Types);
-			auto arc4Val = awst::makeReinterpretCast(std::move(dataExpr), arc4TupleT, _loc);
-			// targetType is the native WTuple for this tuple decode.
-			auto nativeTuple = awst::makeARC4Decode(std::move(arc4Val), targetType, _loc);
-			return std::make_unique<GenericAbiResult>(_ctx, std::move(nativeTuple));
+			int uid = awst::NameGen::next("AbiEncoderBuilder.dualDecode");
+			std::string bnm = "__abidec_b_" + std::to_string(uid);
+			_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(bnm, awst::WType::bytesType(), _loc),
+				std::move(dataExpr), _loc));
+			auto blob = [&, bnm]() {
+				return awst::makeVarExpression(bnm, awst::WType::bytesType(), _loc);
+			};
+
+			std::vector<std::string> compNames;
+			auto compVar = [&](size_t i) {
+				return awst::makeVarExpression(
+					compNames[i], comps[i].wtype, _loc);
+			};
+			for (size_t i = 0; i < comps.size(); ++i)
+				compNames.push_back(
+					"__abidec_c" + std::to_string(i) + "_" + std::to_string(uid));
+
+			auto evmBlk = awst::makeBlock(_loc);
+			for (size_t i = 0; i < comps.size(); ++i)
+				evmBlk->body.push_back(awst::makeAssignmentStatement(
+					compVar(i), evmDecodeComponent(blob, comps[i], i, _loc), _loc));
+
+			auto arcBlk = awst::makeBlock(_loc);
+			if (tupleType)
+			{
+				auto targets = awst::makeTupleExpression(targetType, _loc);
+				for (size_t i = 0; i < comps.size(); ++i)
+					targets->items.push_back(compVar(i));
+				arcBlk->body.push_back(awst::makeAssignmentStatement(
+					std::move(targets), buildArc4Decode(blob()), _loc));
+			}
+			else
+				arcBlk->body.push_back(awst::makeAssignmentStatement(
+					compVar(0), buildArc4Decode(blob()), _loc));
+
+			_ctx.prePendingStatements.push_back(awst::makeIfElse(
+				evmLayoutSniff(blob, comps, _loc),
+				std::move(evmBlk), std::move(arcBlk), _loc));
+
+			if (tupleType)
+			{
+				auto result = awst::makeTupleExpression(targetType, _loc);
+				for (size_t i = 0; i < comps.size(); ++i)
+					result->items.push_back(compVar(i));
+				return std::make_unique<GenericAbiResult>(_ctx, std::move(result));
+			}
+			return std::make_unique<GenericAbiResult>(_ctx, compVar(0));
 		}
 
-		auto const* arc4T = _ctx.typeMapper.mapToARC4Type(targetType);
-		std::shared_ptr<awst::Expression> arc4Val =
-			awst::makeReinterpretCast(std::move(dataExpr), arc4T, _loc);
-		std::shared_ptr<awst::Expression> result;
-		if (targetType == arc4T)
-			result = std::move(arc4Val);
-		else
-			result = awst::makeARC4Decode(std::move(arc4Val), targetType, _loc);
-		return std::make_unique<GenericAbiResult>(_ctx, std::move(result));
+		// Unsupported shapes (nested aggregates, fixed bytes, …): ARC4-only.
+		return std::make_unique<GenericAbiResult>(
+			_ctx, buildArc4Decode(std::move(dataExpr)));
 	}
 }
 

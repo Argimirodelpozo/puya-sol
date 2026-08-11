@@ -5,6 +5,8 @@
 main:
     intcblock 0 32 1 2
     bytecblock "cnt" "arr" 0x151f7c75 "__ctor_pending" 0x0000
+    intc_0 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -223,6 +225,8 @@ main_ternary_merge@32:
     assert // overflow
     intc_1 // 32
     bzero
+    dup
+    bury 4
     uncover 2
     dig 1
     b|
@@ -231,28 +235,34 @@ main_ternary_merge@32:
     intc_1 // 32
     <=
     assert // overflow
-    uncover 2
-    dig 2
+    cover 2
     b|
     concat
     dup
+    len
+    pushint 64
+    ==
+    pop
+    dup
     extract 0 32
-    swap
+    bury 3
     extract 32 32
-    dig 1
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    swap
     dig 2
-    b|
-    dig 1
+    dup
     len
     intc_1 // 32
     <=
     assert // overflow
-    swap
+    dig 2
+    dup
+    cover 2
+    b|
+    uncover 2
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
     dig 2
     b|
     intc_0 // 0
@@ -283,13 +293,13 @@ main_ternary_false@31:
 
 main_pushOnce_route@6:
     txn GroupIndex
-    bz main_ternary_false@36
+    bz main_ternary_false@39
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@37:
+main_ternary_merge@40:
     !
     assert // not payable
     intc_0 // 0
@@ -353,9 +363,9 @@ main_ternary_merge@37:
     intc_2 // 1
     return
 
-main_ternary_false@36:
+main_ternary_false@39:
     intc_0 // 0
-    b main_ternary_merge@37
+    b main_ternary_merge@40
 
 main___postInit_route@5:
     bytec_3 // "__ctor_pending"

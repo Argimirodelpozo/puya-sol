@@ -3,6 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/evm_exceptions_in_constructor_call_fail.sol.A.approval_program() -> uint64:
 main:
+    bytecblock "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -22,15 +23,33 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    pushint 1
+    app_global_put
     pushint 1
     return
 
 main_after_if_else@2:
-    txn NumAppArgs
-    !
-    assert
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    txna ApplicationArgs 0
+    match main___postInit_route@4
+    err
+
+main___postInit_route@4:
     txn OnCompletion
     !
     txn ApplicationID
     &&
+    assert
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_0 // "__ctor_pending"
+    pushint 0
+    app_global_put
+    pushint 1
     return

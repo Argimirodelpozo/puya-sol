@@ -240,6 +240,24 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			if (auto const* d = ident->annotation().referencedDeclaration;
 				d && !m_scope.findMappingKeyParam(d->id()).empty())
 				return awst::makeVarExpression(name, awst::WType::bytesType(), m_loc);
+			// A storage-ref LOCAL (`P storage allowed = allowance[a][b][c];`)
+			// carries its element's box key in its ALIAS — lift it. The
+			// name fallback below literally named a box after the local, so
+			// every entry the callee wrote through such a param COLLAPSED
+			// into one shared "allowed" box (Permit2's allowance).
+			if (auto const* d = ident->annotation().referencedDeclaration)
+				if (auto const* alias = m_scope.findStorageAlias(d->id()))
+				{
+					auto e = awst::unwrapStateGet(alias->expr);
+					while (auto const* rc =
+						dynamic_cast<awst::ReinterpretCast const*>(e.get()))
+						e = rc->expr;
+					if (auto const* box =
+							dynamic_cast<awst::BoxValueExpression const*>(e.get());
+						box && box->key)
+						return awst::makeReinterpretCast(
+							box->key, awst::WType::bytesType(), m_loc);
+				}
 		}
 		else if (auto const* ma = dynamic_cast<MemberAccess const*>(&argExpr))
 		{

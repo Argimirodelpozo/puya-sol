@@ -397,15 +397,39 @@ def main():
     assert target, f"contract {case['name']} not in solc output"
     bytecode = target["evm"]["bytecode"]["object"]
 
-    # event topic map for log decoding
+    # Event topic map for log decoding — over EVERY unit in the compilation,
+    # not just the target contract's ABI: events emitted from LIBRARY helpers
+    # (e741's libES20.emitApproval) log the library's topic, which the target
+    # ABI may not declare; decoding against it alone silently dropped those
+    # logs and produced phantom event divergences (AVM emitted, "EVM didn't").
+    # topic0 → CANDIDATE LIST, disambiguated at decode time by topic count:
+    # overloads sharing a signature (e741's ERC-20 Approval w/ 2 indexed args
+    # vs ERC-721 Approval w/ 3) hash to the SAME topic0 — a single-entry map
+    # let one clobber the other and every log of the losing shape was dropped
+    # ("Expected 3 log topics. Got 2"). Sourced from every compiled unit
+    # (library-declared events included) plus the verified ABI.
     from web3._utils.events import get_event_data
-    topic_map = {}
+    topic_map: dict = {}
+
+    def _add_event_abi(e):
+        if e.get("type") != "event" or e.get("anonymous"):
+            return
+        try:
+            key = "0x" + event_abi_to_log_topic(e).hex()
+        except Exception:
+            return
+        cands = topic_map.setdefault(key, [])
+        n_indexed = sum(1 for i2 in e.get("inputs", []) if i2.get("indexed"))
+        if not any(sum(1 for i2 in c.get("inputs", []) if i2.get("indexed"))
+                   == n_indexed for c in cands):
+            cands.append(e)
+
+    for by_name in out["contracts"].values():
+        for cdata in by_name.values():
+            for e in cdata.get("abi", []) or []:
+                _add_event_abi(e)
     for e in abi:
-        if e.get("type") == "event" and not e.get("anonymous"):
-            try:
-                topic_map["0x" + event_abi_to_log_topic(e).hex()] = e
-            except Exception:
-                pass
+        _add_event_abi(e)
 
     # dependency bytecodes (single-file, same relaxed settings)
     for d in deps:
@@ -517,7 +541,10 @@ def main():
         return (None, vt)                    # string/bytes/other: not covered
 
     # bytes32 keys actually used by this window's calls (marker form {"__b__": hex})
-    b32_keys = []
+    # — plus the zero word: OZ's DEFAULT_ADMIN_ROLE is granted in constructors
+    # and never appears in calldata, leaving real role-member state unprobed
+    # (pol's «Z» false divergence: AVM read it, this leg never looked).
+    b32_keys = ["0" * 64]
     for c in calls:
         for a in c.get("args") or []:
             if isinstance(a, dict) and set(a) == {"__b__"} and len(a["__b__"]) == 64:
@@ -835,12 +862,20 @@ def main():
                     continue
                 t0 = topics[0]
                 t0 = "0x" + (t0.hex() if hasattr(t0, "hex") else str(t0)).removeprefix("0x")
-                ev = topic_map.get(t0) or topic_map.get(t0.lower())
-                if not ev:
-                    continue
-                try:
-                    data = get_event_data(w3.codec, ev, lg)["args"]
-                except Exception:
+                cands = topic_map.get(t0) or topic_map.get(t0.lower()) or []
+                # Prefer the overload whose indexed-arg count matches the log.
+                cands = sorted(cands, key=lambda c: sum(
+                    1 for i2 in c.get("inputs", []) if i2.get("indexed"))
+                    != len(topics) - 1)
+                ev, data = None, None
+                for cand in cands:
+                    try:
+                        data = get_event_data(w3.codec, cand, lg)["args"]
+                        ev = cand
+                        break
+                    except Exception:
+                        continue
+                if ev is None:
                     continue
                 outl.append({"name": ev["name"],
                              "args": [canon_value(data[i2["name"]], i2["type"], fold,

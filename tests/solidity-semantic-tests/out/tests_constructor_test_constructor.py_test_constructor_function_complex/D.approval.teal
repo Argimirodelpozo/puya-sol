@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/constructor_function_complex.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 32
+    bytecblock "__ctor_pending" "x"
     pushint 4096
     bzero
     dup
@@ -22,8 +23,75 @@ main:
     replace2 64
     store 0
     txn ApplicationID
-    bnz main_after_if_else@6
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x8a11fa24 0x7c1072af // method "__postInit(byte[12])void", method "x()uint256"
     txna ApplicationArgs 0
+    match main___postInit_route@5 main_x_route@6
+    err
+
+main_x_route@6:
+    txn GroupIndex
+    bz main_ternary_false@12
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@13:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "x"
+    app_global_get_ex
+    assert // check x exists
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@12:
+    intc_0 // 0
+    b main_ternary_merge@13
+
+main___postInit_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 12
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 12>
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_0 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
     dup
     intc_0 // 0
     extract_uint64
@@ -46,53 +114,8 @@ main:
     itxn_submit
     itxn LastLog
     extract 4 0
-    pushbytes "x"
+    bytec_1 // "x"
     swap
     app_global_put
     intc_1 // 1
     return
-
-main_after_if_else@6:
-    pushbytes 0x7c1072af // method "x()uint256"
-    txna ApplicationArgs 0
-    match main_x_route@8
-    err
-
-main_x_route@8:
-    txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
-    txn GroupIndex
-    bz main_ternary_false@12
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@13:
-    !
-    assert // not payable
-    intc_0 // 0
-    pushbytes "x"
-    app_global_get_ex
-    assert // check x exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@12:
-    intc_0 // 0
-    b main_ternary_merge@13

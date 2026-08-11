@@ -152,6 +152,54 @@ bool detectNewExprInConstructor(solidity::frontend::ContractDefinition const& _c
 	return checker.found;
 }
 
+/// True if the constructor (incl. inherited ctors / state-var inits) performs
+/// an EXTERNAL call — an inner txn on AVM, whose foreign-app/asset refs the
+/// bare create txn cannot carry (resource population only reaches the
+/// __postInit call). The Aave WrappedTokenGatewayV3 ctor calls its pool dep
+/// at construction: inline in the create txn that dies with "unavailable
+/// App". `this.f()` self-calls lower to subroutines — skipped.
+bool detectExternalCallInConstructor(solidity::frontend::ContractDefinition const& _contract)
+{
+	struct ExternalCallChecker: public solidity::frontend::ASTConstVisitor
+	{
+		bool found = false;
+		bool visit(solidity::frontend::FunctionCall const& _fc) override
+		{
+			if (found) return false;
+			auto const* ft = dynamic_cast<solidity::frontend::FunctionType const*>(
+				_fc.expression().annotation().type);
+			if (!ft) return true;
+			using K = solidity::frontend::FunctionType::Kind;
+			switch (ft->kind())
+			{
+			case K::External:
+			case K::BareCall:
+			case K::BareStaticCall:
+			case K::Send:
+			case K::Transfer:
+				break;
+			default:
+				return true; // internal/library/event/... — no inner txn
+			}
+			// `this.f()` is a subroutine call on AVM, not an inner txn.
+			if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(
+					&_fc.expression()))
+				if (auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(
+						&ma->expression()))
+					if (id->name() == "this"
+						&& dynamic_cast<solidity::frontend::MagicVariableDeclaration const*>(
+							id->annotation().referencedDeclaration))
+						return true;
+			found = true;
+			return false;
+		}
+	};
+	ExternalCallChecker checker;
+	walkAllStateVarInits(_contract, checker);
+	walkAllConstructors(_contract, checker, [&]{ return checker.found; });
+	return checker.found;
+}
+
 /// True if the constructor reads msg.value/sender/data (only valid in __postInit group).
 bool detectMsgRefInConstructor(solidity::frontend::ContractDefinition const& _contract)
 {
@@ -300,6 +348,13 @@ bool computeNeedsPostInit(solidity::frontend::ContractDefinition const& _contrac
 	if (detectNewExprInConstructor(_contract))
 	{
 		Logger::instance().debug("Forcing __postInit: constructor/state-init deploys child contracts via new C()");
+		return true;
+	}
+	if (detectExternalCallInConstructor(_contract))
+	{
+		Logger::instance().debug(
+			"Forcing __postInit: constructor performs external calls (inner "
+			"txns need resource population unavailable in the create txn)");
 		return true;
 	}
 	if (detectMsgRefInConstructor(_contract))

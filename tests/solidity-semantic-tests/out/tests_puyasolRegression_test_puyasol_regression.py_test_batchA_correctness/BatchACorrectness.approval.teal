@@ -5,6 +5,8 @@
 main:
     intcblock 1 32 0
     bytecblock 0x151f7c75
+    intc_2 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -60,6 +62,23 @@ main_ternary_merge@16:
     assert // overflow
     intc_1 // 32
     bzero
+    dup
+    bury 3
+    b|
+    dup
+    len
+    intc_1 // 32
+    ==
+    bz main_else_body@18
+    extract 0 32
+
+main_after_if_else@19:
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 1
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -68,19 +87,22 @@ main_ternary_merge@16:
     intc_0 // 1
     return
 
+main_else_body@18:
+    b main_after_if_else@19
+
 main_ternary_false@15:
     intc_2 // 0
     b main_ternary_merge@16
 
 main_m16Uint_route@8:
     txn GroupIndex
-    bz main_ternary_false@20
+    bz main_ternary_false@23
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+main_ternary_merge@24:
     !
     assert // not payable
     pushint 5
@@ -93,6 +115,23 @@ main_ternary_merge@21:
     assert // overflow
     intc_1 // 32
     bzero
+    dup
+    bury 4
+    b|
+    dup
+    len
+    intc_1 // 32
+    ==
+    bz main_else_body@26
+    extract 0 32
+
+main_after_if_else@27:
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 2
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -101,9 +140,12 @@ main_ternary_merge@21:
     intc_0 // 1
     return
 
-main_ternary_false@20:
+main_else_body@26:
+    b main_after_if_else@27
+
+main_ternary_false@23:
     intc_2 // 0
-    b main_ternary_merge@21
+    b main_ternary_merge@24
 
 main_f_route@7:
     txna ApplicationArgs 1
@@ -139,13 +181,13 @@ main_f_route@6:
 
 main_m4Transient_route@5:
     txn GroupIndex
-    bz main_ternary_false@29
+    bz main_ternary_false@35
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+main_ternary_merge@36:
     !
     assert // not payable
     load 5
@@ -169,9 +211,9 @@ main_ternary_merge@30:
     intc_0 // 1
     return
 
-main_ternary_false@29:
+main_ternary_false@35:
     intc_2 // 0
-    b main_ternary_merge@30
+    b main_ternary_merge@36
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol.BatchACorrectness.f(u256)(__arc4_x: bytes) -> bytes:
