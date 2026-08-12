@@ -4189,3 +4189,36 @@ def test_blob_memory_dynarray_element_offset(harness):
     plain = [as_int(x) for x in harness.call(app, "plainCopy()", extra_fee=10_000).abi_return]
     assert plain == [11, 22, 33], f"control (non-blob) copy wrong: {plain}"
     assert blob == [11, 22, 33], f"blob-backed elements shifted: {blob}"
+
+
+def test_blob_offset_arms(harness):
+    """puyasolRegression/contracts/blob_offset_arms.sol — NOT an o.g. test.
+
+    Coverage sweep of resolveBlobOffset's arms, written after its dynamic-array
+    arm was found to omit the length word (silent corruption, see
+    test_blob_memory_dynarray_element_offset). Each probe is paired with a
+    NON-BLOB control of identical logic, so the expectation never depends on
+    the path under test.
+
+    Probe B is the boundary guard for that fix: a FIXED-size array has no
+    length word and must NOT gain the +32.
+    """
+    arts = harness.compile("puyasolRegression/contracts/blob_offset_arms.sol")
+    app = harness.deploy(arts, "Audit", extra_funding_microalgos=5_000_000)
+    ints = lambda r: [as_int(x) for x in r.abi_return]
+
+    blob = ints(harness.call(app, "structInDynBlob()", extra_fee=15_000))
+    plain = ints(harness.call(app, "structInDynPlain()", extra_fee=15_000))
+    assert blob == plain == [11, 22, 33, 44], f"struct-in-dynarray: {blob} vs {plain}"
+
+    assert ints(harness.call(app, "fixedArrBlob()", extra_fee=15_000)) == [11, 22, 33], \
+        "fixed-size array must not skip a length word it does not have"
+    assert ints(harness.call(app, "structFieldsBlob()", extra_fee=15_000)) == [77, 88]
+
+    for n in (1, 3, 5):
+        b = ints(harness.call(app, "runtimeIdxBlob(uint256)", n, extra_fee=15_000))
+        p = ints(harness.call(app, "runtimeIdxPlain(uint256)", n, extra_fee=15_000))
+        assert b == p == [(i + 1) * 100 for i in range(n)], f"runtime idx n={n}: {b} vs {p}"
+
+    # the element the old off-by-one never wrote
+    assert as_int(harness.call(app, "lastElemBlob()", extra_fee=15_000).abi_return) == 4
