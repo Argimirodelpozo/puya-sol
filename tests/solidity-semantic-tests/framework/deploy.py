@@ -153,6 +153,10 @@ def deploy(
         local_schema=StateSchema(num_uints=0, num_byte_slices=0),
         extra_pages=extra_pages,
         app_args=app_args,
+        # Unique note: two xdist workers deploying the SAME fixture bytecode
+        # in the same round would otherwise build IDENTICAL create txns —
+        # same txid, second submit rejected "already in ledger".
+        note=os.urandom(8),
     )
     signed = create_txn.sign(localnet.account.private_key)
     try:

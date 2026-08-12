@@ -1,0 +1,3486 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/WIP/tiny-fuzzing-oracle/contracts/_gen.sol.G.approval_program() -> uint64:
+main:
+    intcblock 8 0 2 1 9223372036854775808 256 128 18446744073709551360 65536 18446744073709551488 18446744073709486080 32768 65535 32767 18446744073709518848 9223372036854775807
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000 0x0100 0x01 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000 0x80 0x151f7c75 0x0000000000000000 0xffff 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0xffffffffffffffff 0x8000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000 0xff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    intc_1 // 0
+    dupn 62
+    pushbytes ""
+    dupn 45
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd39378ab 0x013abd4e 0x0d3d7961 0xf25bfe60 0x39a627dd 0x6f856953 // method "f0(int8[],int8[][],uint64,uint64,uint64,uint64)uint256", method "f1(uint16[],uint16[][],uint64,uint64,uint64,uint64)uint64", method "f2(int16[],int16[][],uint64,uint64,uint64,uint64)uint256", method "f3(uint64[],uint64[][],uint64,uint64,uint64,uint64)uint64", method "f4(int8[],int8[][],uint64,uint64,uint64,uint64)uint256", method "f5(int64[],int64[][],uint64,uint64,uint64,uint64)uint256"
+    txna ApplicationArgs 0
+    match main_f0_route@5 main_f1_route@6 main_f2_route@7 main_f3_route@8 main_f4_route@9 main_f5_route@10
+    err
+
+main_f5_route@10:
+    txna ApplicationArgs 1
+    dup
+    bury 98
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 31
+    intc_0 // 8
+    *
+    intc_2 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint64>
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 30
+    intc_2 // 2
+    *
+    bury 21
+    dup
+    len
+    bury 2
+    extract 2 0
+    bury 96
+    intc_1 // 0
+    bury 22
+
+main_for_header@15:
+    dig 21
+    dig 28
+    <
+    bz main_after_for@17
+    dig 21
+    dup
+    intc_2 // 2
+    *
+    dig 97
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 23
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+(len+uint64[])[])
+    dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 8
+    *
+    intc_2 // 2
+    +
+    +
+    bury 21
+    intc_3 // 1
+    +
+    bury 22
+    b main_for_header@15
+
+main_after_for@17:
+    dig 19
+    intc_2 // 2
+    +
+    dig 1
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint64>>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 44
+    txna ApplicationArgs 4
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 24
+    txna ApplicationArgs 6
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 23
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    dup
+    bury 87
+    dig 44
+    bury 39
+    bury 85
+
+main_while_top@21:
+    dig 28
+    itob
+    dup
+    bury 52
+    dig 85
+    b>
+    bz main_after_while@23
+    dig 84
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_0 // 8
+    bzero
+    dup
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dup
+    dig 32
+    <
+    assert // array index out of bounds
+    dig 40
+    itob
+    bytec_1 // 0x010000000000000000
+    b%
+    dig 100
+    extract 2 0
+    uncover 2
+    intc_0 // 8
+    *
+    intc_0 // 8
+    extract3 // on error: index access is out of bounds
+    bytec_1 // 0x010000000000000000
+    b%
+    b+
+    bytec_1 // 0x010000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bury 39
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 85
+    b main_while_top@21
+
+main_after_while@23:
+    dig 85
+    bury 80
+
+main_while_top@24:
+    dig 79
+    dig 51
+    b<
+    bz main_after_while@80
+    intc_0 // 8
+    bzero
+    dup
+    bury 56
+    dig 38
+    itob
+    dup
+    bury 56
+    bytec_1 // 0x010000000000000000
+    b%
+    dig 45
+    itob
+    bytec_1 // 0x010000000000000000
+    b%
+    b+
+    bytec_1 // 0x010000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc 4 // 9223372036854775808
+    ^
+    dig 24
+    intc 15 // 9223372036854775807
+    ^
+    >
+    bz main_ternary_false@27
+    dig 43
+
+main_ternary_merge@28:
+    intc 4 // 9223372036854775808
+    ^
+    bury 6
+    dig 22
+    itob
+    bytec 12 // 0xffffffffffffffff
+    b&
+    dup
+    bytec 13 // 0x8000000000000000
+    b>=
+    bz main_ternary_false@30
+    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
+    b+
+    bury 103
+
+main_ternary_merge@31:
+    dig 53
+    bytec 12 // 0xffffffffffffffff
+    b&
+    dup
+    bytec 13 // 0x8000000000000000
+    b>=
+    bz main_ternary_false@33
+    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
+    b+
+    bury 101
+
+main_ternary_merge@34:
+    dig 102
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 5
+    bz main_ternary_false@49
+    dig 3
+    bz main_ternary_false@37
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 103
+    b-
+    bury 69
+
+main_ternary_merge@38:
+    dig 100
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 4
+    bz main_ternary_false@40
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 101
+    b-
+
+main_ternary_merge@41:
+    dig 69
+    swap
+    b%
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@49
+    dig 3
+    bz main_ternary_false@44
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 103
+    b-
+    bury 68
+
+main_ternary_merge@45:
+    dig 2
+    bz main_ternary_false@47
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 101
+    b-
+
+main_ternary_merge@48:
+    dig 68
+    swap
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+main_ternary_merge@56:
+    dig 55
+    swap
+    concat
+    bury 49
+    dig 3
+    bz main_ternary_false@71
+    dig 3
+    bz main_ternary_false@59
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 103
+    b-
+    bury 75
+
+main_ternary_merge@60:
+    dig 100
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 3
+    bz main_ternary_false@62
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 101
+    b-
+
+main_ternary_merge@63:
+    dig 75
+    swap
+    b%
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@71
+    dig 3
+    bz main_ternary_false@66
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 103
+    b-
+    bury 74
+
+main_ternary_merge@67:
+    dig 1
+    bz main_ternary_false@69
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 101
+    b-
+
+main_ternary_merge@70:
+    dig 74
+    swap
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+main_ternary_merge@78:
+    dig 55
+    swap
+    concat
+    len
+    intc_0 // 8
+    -
+    dig 49
+    swap
+    extract_uint64
+    intc 15 // 9223372036854775807
+    ^
+    dig 6
+    >=
+    bnz main_after_while@80
+    dig 79
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 55
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dup
+    dig 31
+    <
+    assert // array index out of bounds
+    dig 98
+    extract 2 0
+    swap
+    intc_0 // 8
+    *
+    extract_uint64
+    dig 39
+    |
+    bury 39
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 80
+    b main_while_top@24
+
+main_after_while@80:
+    dig 37
+    itob
+    bytec 12 // 0xffffffffffffffff
+    b&
+    dup
+    bytec 13 // 0x8000000000000000
+    b>=
+    bz main_ternary_false@82
+    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
+    b+
+
+main_ternary_merge@83:
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@82:
+    b main_ternary_merge@83
+
+main_ternary_false@69:
+    dig 100
+    b main_ternary_merge@70
+
+main_ternary_false@66:
+    dig 102
+    bury 74
+    b main_ternary_merge@67
+
+main_ternary_false@71:
+    dig 3
+    bz main_ternary_false@73
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 103
+    b-
+    bury 73
+
+main_ternary_merge@74:
+    dig 100
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz main_ternary_false@76
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 101
+    b-
+
+main_ternary_merge@77:
+    dig 73
+    swap
+    b%
+    b main_ternary_merge@78
+
+main_ternary_false@76:
+    dig 100
+    b main_ternary_merge@77
+
+main_ternary_false@73:
+    dig 102
+    bury 73
+    b main_ternary_merge@74
+
+main_ternary_false@62:
+    dig 100
+    b main_ternary_merge@63
+
+main_ternary_false@59:
+    dig 102
+    bury 75
+    b main_ternary_merge@60
+
+main_ternary_false@47:
+    dig 100
+    b main_ternary_merge@48
+
+main_ternary_false@44:
+    dig 102
+    bury 68
+    b main_ternary_merge@45
+
+main_ternary_false@49:
+    dig 3
+    bz main_ternary_false@51
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 103
+    b-
+    bury 67
+
+main_ternary_merge@52:
+    dig 100
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz main_ternary_false@54
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 101
+    b-
+
+main_ternary_merge@55:
+    dig 67
+    swap
+    b%
+    b main_ternary_merge@56
+
+main_ternary_false@54:
+    dig 100
+    b main_ternary_merge@55
+
+main_ternary_false@51:
+    dig 102
+    bury 67
+    b main_ternary_merge@52
+
+main_ternary_false@40:
+    dig 100
+    b main_ternary_merge@41
+
+main_ternary_false@37:
+    dig 102
+    bury 69
+    b main_ternary_merge@38
+
+main_ternary_false@33:
+    bury 101
+    b main_ternary_merge@34
+
+main_ternary_false@30:
+    bury 103
+    b main_ternary_merge@31
+
+main_ternary_false@27:
+    dig 23
+    dup
+    intc 4 // 9223372036854775808
+    ^
+    dig 39
+    intc 4 // 9223372036854775808
+    ^
+    <
+    dig 24
+    swap
+    select
+    b main_ternary_merge@28
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_f4_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 98
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 33
+    intc_2 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 32
+    intc_2 // 2
+    *
+    bury 21
+    dup
+    len
+    bury 2
+    extract 2 0
+    bury 96
+    intc_1 // 0
+    bury 22
+
+main_for_header@86:
+    dig 21
+    dig 30
+    <
+    bz main_after_for@88
+    dig 21
+    dup
+    intc_2 // 2
+    *
+    dig 97
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 23
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+(len+uint8[])[])
+    dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    +
+    bury 21
+    intc_3 // 1
+    +
+    bury 22
+    b main_for_header@86
+
+main_after_for@88:
+    dig 19
+    intc_2 // 2
+    +
+    dig 1
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint8>>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 44
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 25
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 24
+    txna ApplicationArgs 6
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 23
+    txn GroupIndex
+    bz main_ternary_false@90
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@91:
+    !
+    assert // not payable
+    dig 43
+    pushint 127
+    <=
+    bnz main_bool_true@93
+    dig 43
+    intc 9 // 18446744073709551488
+    >=
+    bz main_bool_false@94
+
+main_bool_true@93:
+    intc_3 // 1
+
+main_bool_merge@95:
+    assert // ABI validation
+    dig 24
+    pushint 127
+    <=
+    bnz main_bool_true@97
+    dig 24
+    intc 9 // 18446744073709551488
+    >=
+    bz main_bool_false@98
+
+main_bool_true@97:
+    intc_3 // 1
+
+main_bool_merge@99:
+    assert // ABI validation
+    dig 23
+    pushint 127
+    <=
+    bnz main_bool_true@101
+    dig 23
+    intc 9 // 18446744073709551488
+    >=
+    bz main_bool_false@102
+
+main_bool_true@101:
+    intc_3 // 1
+
+main_bool_merge@103:
+    assert // ABI validation
+    dig 22
+    pushint 127
+    <=
+    bnz main_bool_true@105
+    dig 22
+    intc 9 // 18446744073709551488
+    >=
+    bz main_bool_false@106
+
+main_bool_true@105:
+    intc_3 // 1
+
+main_bool_merge@107:
+    assert // ABI validation
+    intc_1 // 0
+    itob
+    dup
+    bury 89
+    dig 44
+    bury 40
+    bury 87
+
+main_while_top@108:
+    dig 30
+    itob
+    dig 87
+    b>
+    bz main_after_while@110
+    dig 86
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_0 // 8
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dup
+    dig 33
+    <
+    assert // array index out of bounds
+    dig 98
+    extract 2 0
+    swap
+    getbyte
+    dig 40
+    &
+    bury 40
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 87
+    b main_while_top@108
+
+main_after_while@110:
+    dig 38
+    intc 5 // 256
+    %
+    dup
+    intc 6 // 128
+    >=
+    bz main_ternary_false@112
+    intc 7 // 18446744073709551360
+    +
+
+main_ternary_merge@113:
+    intc 4 // 9223372036854775808
+    ^
+    bury 12
+    dig 24
+    intc 5 // 256
+    %
+    dup
+    intc 6 // 128
+    >=
+    bz main_ternary_false@115
+    intc 7 // 18446744073709551360
+    +
+
+main_ternary_merge@116:
+    intc 4 // 9223372036854775808
+    ^
+    dig 12
+    >
+    bz main_else_body@118
+    dig 38
+    dig 25
+    &
+    bury 39
+
+main_after_if_else@147:
+    dig 38
+    itob
+    bytec 15 // 0xff
+    b&
+    dup
+    bytec 6 // 0x80
+    b>=
+    bz main_ternary_false@149
+    bytec 16 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+
+main_ternary_merge@150:
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@149:
+    b main_ternary_merge@150
+
+main_else_body@118:
+    dig 87
+    bury 81
+
+main_while_top@119:
+    intc_2 // 2
+    itob
+    dig 81
+    b>
+    bz main_after_if_else@147
+    bytec_3 // 0x01
+    bury 107
+    dig 43
+    intc 5 // 256
+    %
+    dup
+    intc 6 // 128
+    >=
+    bz main_ternary_false@122
+    intc 7 // 18446744073709551360
+    +
+
+main_ternary_merge@123:
+    intc 4 // 9223372036854775808
+    ^
+    bury 10
+    dig 22
+    intc 5 // 256
+    %
+    dup
+    intc 6 // 128
+    >=
+    bz main_ternary_false@126
+    intc 7 // 18446744073709551360
+    +
+
+main_ternary_merge@127:
+    intc 9 // 18446744073709551488
+    !=
+    dig 25
+    dig 45
+    uncover 2
+    select
+    intc 5 // 256
+    %
+    dup
+    intc 6 // 128
+    >=
+    bz main_ternary_false@129
+    intc 7 // 18446744073709551360
+    +
+
+main_ternary_merge@130:
+    intc 4 // 9223372036854775808
+    ^
+    dig 10
+    >
+    bz main_ternary_false@132
+    dig 24
+
+main_ternary_merge@133:
+    itob
+    bytec_2 // 0x0100
+    b%
+    dup
+    bytec 6 // 0x80
+    b<
+    dup
+    bury 7
+    bnz main_ternary_false@135
+    bytec_2 // 0x0100
+    swap
+    b-
+    bury 109
+
+main_ternary_merge@136:
+    intc_3 // 1
+    itob
+    bury 108
+
+main_while_top@137:
+    dig 107
+    pushbytes 0x
+    b>
+    bz main_after_while@141
+    dig 107
+    bytec_3 // 0x01
+    b&
+    pushbytes 0x
+    b!=
+    bz main_after_if_else@140
+    dig 106
+    dig 109
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 107
+
+main_after_if_else@140:
+    dig 107
+    pushbytes 0x02
+    b/
+    bury 108
+    dig 108
+    dup
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 109
+    b main_while_top@137
+
+main_after_while@141:
+    intc_0 // 8
+    bzero
+    bury 48
+    dig 4
+    bnz main_ternary_false@144
+    dig 106
+    bytec_2 // 0x0100
+    b%
+    dup
+    bury 48
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@144
+    bytec_2 // 0x0100
+    dig 47
+    b-
+    bytec_2 // 0x0100
+    b%
+    bury 67
+
+main_ternary_merge@145:
+    dig 47
+    dig 67
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bury 39
+    dig 80
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 81
+    b main_while_top@119
+
+main_ternary_false@144:
+    dig 106
+    bytec_2 // 0x0100
+    b%
+    bury 67
+    b main_ternary_merge@145
+
+main_ternary_false@135:
+    bury 109
+    b main_ternary_merge@136
+
+main_ternary_false@132:
+    intc_0 // 8
+    bzero
+    dig 39
+    itob
+    bytec_2 // 0x0100
+    b%
+    dig 26
+    itob
+    bytec_2 // 0x0100
+    b%
+    b+
+    bytec_2 // 0x0100
+    b%
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    b main_ternary_merge@133
+
+main_ternary_false@129:
+    b main_ternary_merge@130
+
+main_ternary_false@126:
+    b main_ternary_merge@127
+
+main_ternary_false@122:
+    b main_ternary_merge@123
+
+main_ternary_false@115:
+    b main_ternary_merge@116
+
+main_ternary_false@112:
+    b main_ternary_merge@113
+
+main_bool_false@106:
+    intc_1 // 0
+    b main_bool_merge@107
+
+main_bool_false@102:
+    intc_1 // 0
+    b main_bool_merge@103
+
+main_bool_false@98:
+    intc_1 // 0
+    b main_bool_merge@99
+
+main_bool_false@94:
+    intc_1 // 0
+    b main_bool_merge@95
+
+main_ternary_false@90:
+    intc_1 // 0
+    b main_ternary_merge@91
+
+main_f3_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 98
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 35
+    intc_0 // 8
+    *
+    intc_2 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint64>
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 34
+    intc_2 // 2
+    *
+    bury 21
+    dup
+    len
+    bury 2
+    extract 2 0
+    bury 96
+    intc_1 // 0
+    bury 22
+
+main_for_header@153:
+    dig 21
+    dig 32
+    <
+    bz main_after_for@155
+    dig 21
+    dup
+    intc_2 // 2
+    *
+    dig 97
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 23
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+(len+uint64[])[])
+    dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 8
+    *
+    intc_2 // 2
+    +
+    +
+    bury 21
+    intc_3 // 1
+    +
+    bury 22
+    b main_for_header@153
+
+main_after_for@155:
+    dig 19
+    intc_2 // 2
+    +
+    dig 1
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint64>>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 44
+    txna ApplicationArgs 4
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 24
+    txna ApplicationArgs 6
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    txn GroupIndex
+    bz main_ternary_false@157
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@158:
+    !
+    assert // not payable
+    intc_0 // 8
+    bzero
+    dup
+    bury 54
+    dig 44
+    itob
+    bytec 12 // 0xffffffffffffffff
+    b+
+    bytec_1 // 0x010000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bury 40
+    intc_1 // 0
+    itob
+    bury 89
+
+main_while_top@159:
+    dig 32
+    itob
+    dig 89
+    b>
+    bz main_after_while@162
+    dig 23
+    dig 40
+    dup
+    cover 2
+    %
+    !=
+    bnz main_after_while@162
+    dig 88
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 53
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dup
+    dig 35
+    <
+    assert // array index out of bounds
+    dig 98
+    extract 2 0
+    swap
+    intc_0 // 8
+    *
+    extract_uint64
+    bury 41
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 89
+    b main_while_top@159
+
+main_after_while@162:
+    dig 39
+    itob
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@157:
+    intc_1 // 0
+    b main_ternary_merge@158
+
+main_f2_route@7:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    *
+    intc_2 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint16>
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 23
+    intc_2 // 2
+    *
+    bury 21
+    dup
+    len
+    bury 2
+    extract 2 0
+    bury 96
+    intc_1 // 0
+    bury 22
+
+main_for_header@165:
+    dig 21
+    dig 21
+    <
+    bz main_after_for@167
+    dig 21
+    dup
+    intc_2 // 2
+    *
+    dig 97
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 23
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+(len+uint16[])[])
+    dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    *
+    intc_2 // 2
+    +
+    +
+    bury 21
+    intc_3 // 1
+    +
+    bury 22
+    b main_for_header@165
+
+main_after_for@167:
+    dig 19
+    intc_2 // 2
+    +
+    dig 1
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint16>>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 44
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 25
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 24
+    txna ApplicationArgs 6
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 23
+    txn GroupIndex
+    bz main_ternary_false@169
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@170:
+    !
+    assert // not payable
+    dig 43
+    intc 13 // 32767
+    <=
+    bnz main_bool_true@172
+    dig 43
+    intc 14 // 18446744073709518848
+    >=
+    bz main_bool_false@173
+
+main_bool_true@172:
+    intc_3 // 1
+
+main_bool_merge@174:
+    assert // ABI validation
+    dig 24
+    intc 13 // 32767
+    <=
+    bnz main_bool_true@176
+    dig 24
+    intc 14 // 18446744073709518848
+    >=
+    bz main_bool_false@177
+
+main_bool_true@176:
+    intc_3 // 1
+
+main_bool_merge@178:
+    assert // ABI validation
+    dig 23
+    intc 13 // 32767
+    <=
+    bnz main_bool_true@180
+    dig 23
+    intc 14 // 18446744073709518848
+    >=
+    bz main_bool_false@181
+
+main_bool_true@180:
+    intc_3 // 1
+
+main_bool_merge@182:
+    assert // ABI validation
+    dig 22
+    intc 13 // 32767
+    <=
+    bnz main_bool_true@184
+    dig 22
+    intc 14 // 18446744073709518848
+    >=
+    bz main_bool_false@185
+
+main_bool_true@184:
+    intc_3 // 1
+
+main_bool_merge@186:
+    assert // ABI validation
+    intc_1 // 0
+    itob
+    dup
+    bury 92
+    dig 44
+    bury 42
+    bury 90
+
+main_while_top@187:
+    pushint 3
+    itob
+    dig 90
+    b>
+    bz main_after_while@192
+    intc_0 // 8
+    bzero
+    dup
+    bury 64
+    dig 41
+    itob
+    bytec 5 // 0x010000
+    b%
+    bury 61
+    dig 25
+    itob
+    bytec_1 // 0x010000000000000000
+    swap
+    b-
+    bytec_1 // 0x010000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc 8 // 65536
+    %
+    dup
+    intc 11 // 32768
+    >=
+    bz main_ternary_false@190
+    intc 10 // 18446744073709486080
+    +
+
+main_ternary_merge@191:
+    itob
+    bytec 5 // 0x010000
+    b%
+    dig 60
+    b+
+    bytec 5 // 0x010000
+    b%
+    dig 63
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bury 41
+    dig 89
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 90
+    b main_while_top@187
+
+main_ternary_false@190:
+    b main_ternary_merge@191
+
+main_after_while@192:
+    dig 22
+    intc 8 // 65536
+    %
+    dup
+    bury 46
+    intc 11 // 32768
+    >=
+    dup
+    bury 10
+    bz main_ternary_false@194
+    dig 44
+    intc 10 // 18446744073709486080
+    +
+
+main_ternary_merge@195:
+    intc 4 // 9223372036854775808
+    ^
+    bury 8
+    dig 40
+    intc 8 // 65536
+    %
+    dup
+    intc 11 // 32768
+    >=
+    bz main_ternary_false@197
+    intc 10 // 18446744073709486080
+    +
+
+main_ternary_merge@198:
+    intc 4 // 9223372036854775808
+    ^
+    dig 8
+    <
+    bz main_else_body@269
+    intc_0 // 8
+    bzero
+    dup
+    bury 53
+    dig 41
+    itob
+    bytec 5 // 0x010000
+    b%
+    dig 25
+    itob
+    bytec 5 // 0x010000
+    b%
+    b+
+    bytec 5 // 0x010000
+    b%
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    bytec_1 // 0x010000000000000000
+    swap
+    b-
+    bytec_1 // 0x010000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc 8 // 65536
+    %
+    dup
+    intc 11 // 32768
+    >=
+    bz main_ternary_false@201
+    intc 10 // 18446744073709486080
+    +
+    bury 46
+
+main_ternary_merge@202:
+    dig 8
+    bz main_ternary_false@204
+    dig 44
+    intc 10 // 18446744073709486080
+    +
+
+main_ternary_merge@205:
+    intc 4 // 9223372036854775808
+    ^
+    pushint 9223372036854743040
+    >
+    dig 25
+    dup
+    cover 2
+    dig 43
+    uncover 2
+    select
+    itob
+    bytec 5 // 0x010000
+    b%
+    swap
+    itob
+    bytec 5 // 0x010000
+    b%
+    b*
+    bytec 5 // 0x010000
+    b%
+    dig 52
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    intc 8 // 65536
+    %
+    dup
+    intc 11 // 32768
+    >=
+    bz main_ternary_false@208
+    intc 10 // 18446744073709486080
+    +
+
+main_ternary_merge@209:
+    itob
+    bytec 9 // 0xffff
+    b&
+    dup
+    bytec 10 // 0x8000
+    b>=
+    bz main_ternary_false@211
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    b+
+    bury 105
+
+main_ternary_merge@212:
+    dig 45
+    intc 8 // 65536
+    %
+    dup
+    intc 11 // 32768
+    >=
+    bz main_ternary_false@214
+    intc 10 // 18446744073709486080
+    +
+
+main_ternary_merge@215:
+    itob
+    bytec 9 // 0xffff
+    b&
+    dup
+    bytec 10 // 0x8000
+    b>=
+    bz main_ternary_false@217
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    b+
+    bury 102
+
+main_ternary_merge@218:
+    dig 104
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 19
+    bnz main_and_contd@220
+    dig 101
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz main_ternary_false@236
+
+main_and_contd@220:
+    dig 17
+    bz main_and_contd@222
+    dig 101
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bnz main_ternary_false@236
+
+main_and_contd@222:
+    dig 17
+    bz main_ternary_false@224
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 105
+    b-
+    bury 75
+
+main_ternary_merge@225:
+    dig 101
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 18
+    bz main_ternary_false@227
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 102
+    b-
+
+main_ternary_merge@228:
+    dig 75
+    swap
+    b/
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@236
+    dig 17
+    bz main_ternary_false@231
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 105
+    b-
+    bury 74
+
+main_ternary_merge@232:
+    dig 16
+    bz main_ternary_false@234
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 102
+    b-
+
+main_ternary_merge@235:
+    dig 74
+    swap
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+main_ternary_merge@243:
+    dig 52
+    swap
+    concat
+    bury 65
+    dig 17
+    bnz main_and_contd@245
+    dig 101
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz main_ternary_false@261
+
+main_and_contd@245:
+    dig 17
+    bz main_and_contd@247
+    dig 101
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bnz main_ternary_false@261
+
+main_and_contd@247:
+    dig 17
+    bz main_ternary_false@249
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 105
+    b-
+    bury 72
+
+main_ternary_merge@250:
+    dig 101
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 16
+    bz main_ternary_false@252
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 102
+    b-
+
+main_ternary_merge@253:
+    dig 72
+    swap
+    b/
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@261
+    dig 17
+    bz main_ternary_false@256
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 105
+    b-
+    bury 71
+
+main_ternary_merge@257:
+    dig 14
+    bz main_ternary_false@259
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 102
+    b-
+
+main_ternary_merge@260:
+    dig 71
+    swap
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+main_ternary_merge@268:
+    dig 52
+    swap
+    concat
+    len
+    intc_0 // 8
+    -
+    dig 65
+    swap
+    extract_uint64
+    dig 41
+    &
+    bury 41
+
+main_after_if_else@345:
+    dig 90
+    bury 82
+
+main_while_top@346:
+    dig 20
+    itob
+    dig 82
+    b>
+    bz main_after_while@351
+    dig 90
+    bury 78
+
+main_while_top@348:
+    dig 81
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_0 // 8
+    bzero
+    dup
+    bury 60
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dup
+    dig 22
+    <
+    assert // array index out of bounds
+    intc_2 // 2
+    *
+    dig 96
+    dup
+    uncover 2
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_2 // 2
+    *
+    intc_2 // 2
+    +
+    extract3
+    dup
+    bury 99
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 35
+    itob
+    dig 78
+    b>
+    bnz main_after_if_else@350
+    dig 81
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 82
+    b main_while_top@346
+
+main_after_if_else@350:
+    dig 77
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 58
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dup
+    dig 36
+    <
+    assert // array index out of bounds
+    dig 99
+    extract 2 0
+    swap
+    intc_2 // 2
+    *
+    extract_uint16
+    dig 42
+    |
+    bury 42
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 78
+    b main_while_top@348
+
+main_after_while@351:
+    dig 40
+    itob
+    bytec 9 // 0xffff
+    b&
+    dup
+    bytec 10 // 0x8000
+    b>=
+    bz main_ternary_false@353
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    b+
+
+main_ternary_merge@354:
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@353:
+    b main_ternary_merge@354
+
+main_ternary_false@259:
+    dig 101
+    b main_ternary_merge@260
+
+main_ternary_false@256:
+    dig 104
+    bury 71
+    b main_ternary_merge@257
+
+main_ternary_false@261:
+    dig 17
+    bz main_ternary_false@263
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 105
+    b-
+    bury 70
+
+main_ternary_merge@264:
+    dig 101
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz main_ternary_false@266
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 102
+    b-
+
+main_ternary_merge@267:
+    dig 70
+    swap
+    b/
+    b main_ternary_merge@268
+
+main_ternary_false@266:
+    dig 101
+    b main_ternary_merge@267
+
+main_ternary_false@263:
+    dig 104
+    bury 70
+    b main_ternary_merge@264
+
+main_ternary_false@252:
+    dig 101
+    b main_ternary_merge@253
+
+main_ternary_false@249:
+    dig 104
+    bury 72
+    b main_ternary_merge@250
+
+main_ternary_false@234:
+    dig 101
+    b main_ternary_merge@235
+
+main_ternary_false@231:
+    dig 104
+    bury 74
+    b main_ternary_merge@232
+
+main_ternary_false@236:
+    dig 17
+    bz main_ternary_false@238
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 105
+    b-
+    bury 73
+
+main_ternary_merge@239:
+    dig 101
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz main_ternary_false@241
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 102
+    b-
+
+main_ternary_merge@242:
+    dig 73
+    swap
+    b/
+    b main_ternary_merge@243
+
+main_ternary_false@241:
+    dig 101
+    b main_ternary_merge@242
+
+main_ternary_false@238:
+    dig 104
+    bury 73
+    b main_ternary_merge@239
+
+main_ternary_false@227:
+    dig 101
+    b main_ternary_merge@228
+
+main_ternary_false@224:
+    dig 104
+    bury 75
+    b main_ternary_merge@225
+
+main_ternary_false@217:
+    bury 102
+    b main_ternary_merge@218
+
+main_ternary_false@214:
+    b main_ternary_merge@215
+
+main_ternary_false@211:
+    bury 105
+    b main_ternary_merge@212
+
+main_ternary_false@208:
+    b main_ternary_merge@209
+
+main_ternary_false@204:
+    dig 44
+    b main_ternary_merge@205
+
+main_ternary_false@201:
+    bury 46
+    b main_ternary_merge@202
+
+main_else_body@269:
+    dig 23
+    intc 8 // 65536
+    %
+    dup
+    intc 11 // 32768
+    >=
+    bz main_ternary_false@271
+    intc 10 // 18446744073709486080
+    +
+
+main_ternary_merge@272:
+    itob
+    bytec 9 // 0xffff
+    b&
+    dup
+    bytec 10 // 0x8000
+    b>=
+    bz main_ternary_false@274
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    b+
+    bury 104
+
+main_ternary_merge@275:
+    intc_0 // 8
+    bzero
+    bury 62
+    dig 103
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 14
+    bz main_ternary_false@297
+    dig 12
+    bz main_ternary_false@285
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 104
+    b-
+
+main_ternary_merge@286:
+    bytec 8 // 0x0000000000000000
+    b/
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@297
+    dig 12
+    bz main_ternary_false@292
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 104
+    b-
+
+main_ternary_merge@293:
+    bytec 8 // 0x0000000000000000
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+main_ternary_merge@304:
+    dig 62
+    swap
+    concat
+    bury 61
+    dig 12
+    bz main_ternary_false@322
+    dig 12
+    bz main_ternary_false@310
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 104
+    b-
+
+main_ternary_merge@311:
+    bytec 8 // 0x0000000000000000
+    b/
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@322
+    dig 12
+    bz main_ternary_false@317
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 104
+    b-
+
+main_ternary_merge@318:
+    bytec 8 // 0x0000000000000000
+    b/
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+
+main_ternary_merge@329:
+    dig 62
+    swap
+    concat
+    len
+    intc_0 // 8
+    -
+    dig 61
+    swap
+    extract_uint64
+    intc 8 // 65536
+    %
+    dup
+    intc 11 // 32768
+    >=
+    bz main_ternary_false@331
+    intc 10 // 18446744073709486080
+    +
+    bury 19
+
+main_ternary_merge@332:
+    dig 43
+    intc 8 // 65536
+    %
+    dup
+    intc 11 // 32768
+    >=
+    bz main_ternary_false@334
+    intc 10 // 18446744073709486080
+    +
+
+main_ternary_merge@335:
+    dig 19
+    ==
+    bz main_else_body@343
+    dig 40
+    itob
+    bytec 5 // 0x010000
+    b%
+    bytec 5 // 0x010000
+    b+
+    bury 59
+    dig 23
+    itob
+    bytec 5 // 0x010000
+    b%
+    dup
+    b*
+    bytec 5 // 0x010000
+    b%
+    dig 62
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    bytec 9 // 0xffff
+    b&
+    dup
+    bytec 10 // 0x8000
+    b>=
+    bz main_ternary_false@338
+    bytec 11 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
+    b+
+
+main_ternary_merge@339:
+    dup
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000100
+    b/
+    swap
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    bz main_ternary_false@341
+    pushbytes 0xff00000000000000000000000000000000000000000000000000000000000000
+    b|
+
+main_ternary_merge@342:
+    dig 62
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    bytec 5 // 0x010000
+    b%
+    dig 60
+    swap
+    b-
+    bytec 5 // 0x010000
+    b%
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    bury 41
+    b main_after_if_else@345
+
+main_ternary_false@341:
+    b main_ternary_merge@342
+
+main_ternary_false@338:
+    b main_ternary_merge@339
+
+main_else_body@343:
+    dig 40
+    dig 23
+    ^
+    bury 41
+    b main_after_if_else@345
+
+main_ternary_false@334:
+    b main_ternary_merge@335
+
+main_ternary_false@331:
+    bury 19
+    b main_ternary_merge@332
+
+main_ternary_false@317:
+    dig 103
+    b main_ternary_merge@318
+
+main_ternary_false@322:
+    dig 12
+    bz main_ternary_false@324
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 104
+    b-
+
+main_ternary_merge@325:
+    bytec 8 // 0x0000000000000000
+    b/
+    b main_ternary_merge@329
+
+main_ternary_false@324:
+    dig 103
+    b main_ternary_merge@325
+
+main_ternary_false@310:
+    dig 103
+    b main_ternary_merge@311
+
+main_ternary_false@292:
+    dig 103
+    b main_ternary_merge@293
+
+main_ternary_false@297:
+    dig 12
+    bz main_ternary_false@299
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 104
+    b-
+
+main_ternary_merge@300:
+    bytec 8 // 0x0000000000000000
+    b/
+    b main_ternary_merge@304
+
+main_ternary_false@299:
+    dig 103
+    b main_ternary_merge@300
+
+main_ternary_false@285:
+    dig 103
+    b main_ternary_merge@286
+
+main_ternary_false@274:
+    bury 104
+    b main_ternary_merge@275
+
+main_ternary_false@271:
+    b main_ternary_merge@272
+
+main_ternary_false@197:
+    b main_ternary_merge@198
+
+main_ternary_false@194:
+    dig 44
+    b main_ternary_merge@195
+
+main_bool_false@185:
+    intc_1 // 0
+    b main_bool_merge@186
+
+main_bool_false@181:
+    intc_1 // 0
+    b main_bool_merge@182
+
+main_bool_false@177:
+    intc_1 // 0
+    b main_bool_merge@178
+
+main_bool_false@173:
+    intc_1 // 0
+    b main_bool_merge@174
+
+main_ternary_false@169:
+    intc_1 // 0
+    b main_ternary_merge@170
+
+main_f1_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 98
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 29
+    intc_2 // 2
+    *
+    intc_2 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint16>
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 23
+    intc_2 // 2
+    *
+    bury 21
+    dup
+    len
+    bury 2
+    extract 2 0
+    bury 96
+    intc_1 // 0
+    bury 22
+
+main_for_header@357:
+    dig 21
+    dig 21
+    <
+    bz main_after_for@359
+    dig 21
+    dup
+    intc_2 // 2
+    *
+    dig 97
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 23
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+(len+uint16[])[])
+    dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    *
+    intc_2 // 2
+    +
+    +
+    bury 21
+    intc_3 // 1
+    +
+    bury 22
+    b main_for_header@357
+
+main_after_for@359:
+    dig 19
+    intc_2 // 2
+    +
+    dig 1
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint16>>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 44
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 25
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 24
+    txna ApplicationArgs 6
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 23
+    txn GroupIndex
+    bz main_ternary_false@361
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@362:
+    !
+    assert // not payable
+    dig 43
+    dup
+    intc 12 // 65535
+    <=
+    assert // ABI validation
+    intc 12 // 65535
+    &
+    dig 25
+    intc 12 // 65535
+    <=
+    assert // ABI validation
+    dig 24
+    intc 12 // 65535
+    <=
+    assert // ABI validation
+    dig 23
+    intc 12 // 65535
+    <=
+    assert // ABI validation
+    intc_1 // 0
+    itob
+    dup
+    bury 97
+    swap
+    bury 44
+    bury 94
+
+main_while_top@363:
+    dig 26
+    itob
+    dig 94
+    b>
+    bz main_after_while@365
+    dig 93
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_0 // 8
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dup
+    dig 29
+    <
+    assert // array index out of bounds
+    dig 98
+    extract 2 0
+    swap
+    intc_2 // 2
+    *
+    extract_uint16
+    dig 44
+    *
+    intc 8 // 65536
+    %
+    bury 44
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 94
+    b main_while_top@363
+
+main_after_while@365:
+    dig 94
+    bury 83
+
+main_while_top@366:
+    dig 20
+    itob
+    dup
+    bury 58
+    dig 83
+    b>
+    bz main_after_while@371
+    dig 94
+    bury 79
+
+main_while_top@368:
+    dig 82
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_0 // 8
+    bzero
+    dup
+    bury 58
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dup
+    dig 22
+    <
+    assert // array index out of bounds
+    intc_2 // 2
+    *
+    dig 96
+    dup
+    uncover 2
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_2 // 2
+    *
+    intc_2 // 2
+    +
+    extract3
+    dup
+    bury 101
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 27
+    itob
+    dig 79
+    b>
+    bnz main_after_if_else@370
+    dig 82
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 83
+    b main_while_top@366
+
+main_after_if_else@370:
+    dig 78
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 56
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dup
+    dig 28
+    <
+    assert // array index out of bounds
+    dig 101
+    extract 2 0
+    swap
+    intc_2 // 2
+    *
+    extract_uint16
+    dig 44
+    *
+    intc 8 // 65536
+    %
+    bury 44
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 79
+    b main_while_top@368
+
+main_after_while@371:
+    dig 94
+    bury 77
+
+main_while_top@372:
+    dig 76
+    dig 57
+    b<
+    bz main_after_while@377
+    dig 94
+    bury 76
+
+main_while_top@374:
+    dig 76
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_0 // 8
+    bzero
+    dup
+    bury 52
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dup
+    dig 22
+    <
+    assert // array index out of bounds
+    intc_2 // 2
+    *
+    dig 96
+    dup
+    uncover 2
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_2 // 2
+    *
+    intc_2 // 2
+    +
+    extract3
+    dup
+    bury 100
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 36
+    itob
+    dig 76
+    b>
+    bnz main_after_if_else@376
+    dig 76
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 77
+    b main_while_top@372
+
+main_after_if_else@376:
+    dig 75
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 50
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dup
+    dig 37
+    <
+    assert // array index out of bounds
+    dig 44
+    intc 8 // 65536
+    +
+    dig 101
+    extract 2 0
+    uncover 2
+    intc_2 // 2
+    *
+    extract_uint16
+    -
+    intc 8 // 65536
+    %
+    bury 44
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 76
+    b main_while_top@374
+
+main_after_while@377:
+    dig 42
+    intc 12 // 65535
+    &
+    itob
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@361:
+    intc_1 // 0
+    b main_ternary_merge@362
+
+main_f0_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 98
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 39
+    intc_2 // 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 38
+    intc_2 // 2
+    *
+    bury 21
+    dup
+    len
+    bury 2
+    extract 2 0
+    bury 96
+    intc_1 // 0
+    bury 22
+
+main_for_header@380:
+    dig 21
+    dig 36
+    <
+    bz main_after_for@382
+    dig 21
+    dup
+    intc_2 // 2
+    *
+    dig 97
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 23
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+(len+uint8[])[])
+    dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    +
+    bury 21
+    intc_3 // 1
+    +
+    bury 22
+    b main_for_header@380
+
+main_after_for@382:
+    dig 19
+    intc_2 // 2
+    +
+    dig 1
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint8>>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 44
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 25
+    txna ApplicationArgs 5
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 24
+    txna ApplicationArgs 6
+    dup
+    len
+    intc_0 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    bury 23
+    txn GroupIndex
+    bz main_ternary_false@384
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@385:
+    !
+    assert // not payable
+    dig 43
+    pushint 127
+    <=
+    bnz main_bool_true@387
+    dig 43
+    intc 9 // 18446744073709551488
+    >=
+    bz main_bool_false@388
+
+main_bool_true@387:
+    intc_3 // 1
+
+main_bool_merge@389:
+    assert // ABI validation
+    dig 24
+    pushint 127
+    <=
+    bnz main_bool_true@391
+    dig 24
+    intc 9 // 18446744073709551488
+    >=
+    bz main_bool_false@392
+
+main_bool_true@391:
+    intc_3 // 1
+
+main_bool_merge@393:
+    assert // ABI validation
+    dig 23
+    pushint 127
+    <=
+    bnz main_bool_true@395
+    dig 23
+    intc 9 // 18446744073709551488
+    >=
+    bz main_bool_false@396
+
+main_bool_true@395:
+    intc_3 // 1
+
+main_bool_merge@397:
+    assert // ABI validation
+    dig 22
+    pushint 127
+    <=
+    bnz main_bool_true@399
+    dig 22
+    intc 9 // 18446744073709551488
+    >=
+    bz main_bool_false@400
+
+main_bool_true@399:
+    intc_3 // 1
+
+main_bool_merge@401:
+    assert // ABI validation
+    intc_1 // 0
+    itob
+    dup
+    bury 94
+    dig 44
+    bury 43
+    bury 92
+
+main_while_top@402:
+    pushint 3
+    itob
+    dig 92
+    b>
+    bz main_after_while@432
+    dig 43
+    dup
+    dig 25
+    dup
+    cover 2
+    ^
+    intc_0 // 8
+    bzero
+    dup
+    cover 3
+    bury 67
+    swap
+    itob
+    bytec_2 // 0x0100
+    b%
+    dup
+    bury 64
+    uncover 3
+    itob
+    bytec_2 // 0x0100
+    b%
+    b*
+    bytec_2 // 0x0100
+    b%
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    |
+    intc 5 // 256
+    %
+    dup
+    intc 6 // 128
+    >=
+    bz main_ternary_false@405
+    intc 7 // 18446744073709551360
+    +
+
+main_ternary_merge@406:
+    intc 4 // 9223372036854775808
+    ^
+    bury 11
+    dig 24
+    intc 5 // 256
+    %
+    dup
+    intc 6 // 128
+    >=
+    bz main_ternary_false@415
+    intc 7 // 18446744073709551360
+    +
+
+main_ternary_merge@416:
+    intc 4 // 9223372036854775808
+    ^
+    intc 15 // 9223372036854775807
+    <
+    bz main_ternary_false@424
+    dig 23
+    intc 5 // 256
+    %
+    dup
+    intc 6 // 128
+    >=
+    bz main_ternary_false@419
+    intc 7 // 18446744073709551360
+    +
+
+main_ternary_merge@420:
+    intc 4 // 9223372036854775808
+    ^
+    bury 7
+    dig 22
+    intc 5 // 256
+    %
+    dup
+    intc 6 // 128
+    >=
+    bz main_ternary_false@422
+    intc 7 // 18446744073709551360
+    +
+
+main_ternary_merge@423:
+    intc 4 // 9223372036854775808
+    ^
+    dig 7
+    <=
+    dig 42
+    intc 9 // 18446744073709551488
+    uncover 2
+    select
+
+main_ternary_merge@425:
+    intc 5 // 256
+    %
+    dup
+    intc 6 // 128
+    >=
+    bz main_ternary_false@427
+    intc 7 // 18446744073709551360
+    +
+
+main_ternary_merge@428:
+    intc 4 // 9223372036854775808
+    ^
+    dig 11
+    >=
+    bz main_else_body@430
+    dig 23
+    intc 9 // 18446744073709551488
+    &
+    itob
+    bytec_2 // 0x0100
+    b%
+    dig 25
+    itob
+    bytec_2 // 0x0100
+    b%
+    dig 61
+    b+
+    bytec_2 // 0x0100
+    b%
+    dig 64
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    intc_0 // 8
+    extract3
+    bytec_2 // 0x0100
+    b%
+    uncover 2
+    b*
+    bytec_2 // 0x0100
+    b%
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dig 42
+    ^
+    bury 42
+
+main_after_if_else@431:
+    dig 91
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 92
+    b main_while_top@402
+
+main_else_body@430:
+    dig 22
+    bury 42
+    b main_after_if_else@431
+
+main_ternary_false@427:
+    b main_ternary_merge@428
+
+main_ternary_false@422:
+    b main_ternary_merge@423
+
+main_ternary_false@419:
+    b main_ternary_merge@420
+
+main_ternary_false@424:
+    dig 41
+    b main_ternary_merge@425
+
+main_ternary_false@415:
+    b main_ternary_merge@416
+
+main_ternary_false@405:
+    b main_ternary_merge@406
+
+main_after_while@432:
+    dig 92
+    bury 84
+
+main_while_top@433:
+    dig 36
+    itob
+    dig 84
+    b>
+    bz main_after_while@496
+    dig 43
+    dig 25
+    &
+    intc 5 // 256
+    %
+    dup
+    intc 6 // 128
+    >=
+    bz main_ternary_false@436
+    intc 7 // 18446744073709551360
+    +
+
+main_ternary_merge@437:
+    itob
+    bytec 15 // 0xff
+    b&
+    dup
+    bytec 6 // 0x80
+    b>=
+    bz main_ternary_false@439
+    bytec 16 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+    bury 106
+
+main_ternary_merge@440:
+    intc_0 // 8
+    bzero
+    bury 66
+    dig 105
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b>=
+    dup
+    bury 17
+    bz main_ternary_false@459
+    dig 15
+    bz main_ternary_false@447
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 106
+    b-
+
+main_ternary_merge@448:
+    bytec 6 // 0x80
+    b%
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@459
+    dig 15
+    bz main_ternary_false@454
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 106
+    b-
+
+main_ternary_merge@455:
+    bytec 6 // 0x80
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+    bury 74
+
+main_ternary_merge@466:
+    dig 65
+    dig 74
+    concat
+    bury 64
+    dig 15
+    bz main_ternary_false@481
+    dig 15
+    bz main_ternary_false@469
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 106
+    b-
+
+main_ternary_merge@470:
+    bytec 6 // 0x80
+    b%
+    pushbytes 0x
+    b==
+    bnz main_ternary_false@481
+    dig 15
+    bz main_ternary_false@476
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 106
+    b-
+
+main_ternary_merge@477:
+    bytec 6 // 0x80
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    b-
+    bury 71
+
+main_ternary_merge@488:
+    dig 65
+    dig 71
+    concat
+    len
+    intc_0 // 8
+    -
+    dig 64
+    swap
+    extract_uint64
+    intc 5 // 256
+    %
+    dup
+    intc 6 // 128
+    >=
+    bz main_ternary_false@490
+    intc 7 // 18446744073709551360
+    +
+
+main_ternary_merge@491:
+    intc 4 // 9223372036854775808
+    ^
+    bury 14
+    dig 23
+    pushint 255
+    ^
+    dig 44
+    itob
+    bytec_2 // 0x0100
+    b%
+    bytec 6 // 0x80
+    b*
+    bytec_2 // 0x0100
+    b%
+    dig 67
+    swap
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    |
+    intc 5 // 256
+    %
+    dup
+    intc 6 // 128
+    >=
+    bz main_ternary_false@493
+    intc 7 // 18446744073709551360
+    +
+
+main_ternary_merge@494:
+    intc 4 // 9223372036854775808
+    ^
+    dig 14
+    >
+    bnz main_after_while@496
+    dig 83
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 66
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 8
+    -
+    extract_uint64
+    dup
+    dig 39
+    <
+    assert // array index out of bounds
+    dig 98
+    extract 2 0
+    swap
+    getbyte
+    dig 43
+    |
+    bury 43
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bury 84
+    b main_while_top@433
+
+main_after_while@496:
+    dig 41
+    itob
+    bytec 15 // 0xff
+    b&
+    dup
+    bytec 6 // 0x80
+    b>=
+    bz main_ternary_false@498
+    bytec 16 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+
+main_ternary_merge@499:
+    dup
+    len
+    pushint 32
+    <=
+    assert // overflow
+    pushint 32
+    bzero
+    b|
+    bytec 7 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@498:
+    b main_ternary_merge@499
+
+main_ternary_false@493:
+    b main_ternary_merge@494
+
+main_ternary_false@490:
+    b main_ternary_merge@491
+
+main_ternary_false@476:
+    dig 105
+    b main_ternary_merge@477
+
+main_ternary_false@481:
+    dig 15
+    bz main_ternary_false@483
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 106
+    b-
+
+main_ternary_merge@484:
+    bytec 6 // 0x80
+    b%
+    bury 71
+    b main_ternary_merge@488
+
+main_ternary_false@483:
+    dig 105
+    b main_ternary_merge@484
+
+main_ternary_false@469:
+    dig 105
+    b main_ternary_merge@470
+
+main_ternary_false@454:
+    dig 105
+    b main_ternary_merge@455
+
+main_ternary_false@459:
+    dig 15
+    bz main_ternary_false@461
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    dig 106
+    b-
+    bury 72
+
+main_ternary_merge@462:
+    dig 71
+    bytec 6 // 0x80
+    b%
+    bury 74
+    b main_ternary_merge@466
+
+main_ternary_false@461:
+    dig 105
+    bury 72
+    b main_ternary_merge@462
+
+main_ternary_false@447:
+    dig 105
+    b main_ternary_merge@448
+
+main_ternary_false@439:
+    bury 106
+    b main_ternary_merge@440
+
+main_ternary_false@436:
+    b main_ternary_merge@437
+
+main_bool_false@400:
+    intc_1 // 0
+    b main_bool_merge@401
+
+main_bool_false@396:
+    intc_1 // 0
+    b main_bool_merge@397
+
+main_bool_false@392:
+    intc_1 // 0
+    b main_bool_merge@393
+
+main_bool_false@388:
+    intc_1 // 0
+    b main_bool_merge@389
+
+main_ternary_false@384:
+    intc_1 // 0
+    b main_ternary_merge@385

@@ -419,7 +419,17 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
 		_loc);
 	for (auto const& arg : _callNode.arguments())
 		_ctx.buildExpr(*arg);
-	_ctx.queuePreStmt(awst::makeAssert(awst::makeFalse(_loc), _loc,
+	// assert(false) is a compile-time TERMINATOR: puya flags the statements
+	// that consume the (bool, bytes) result as unreachable and rejects the
+	// whole program (fbtc). Use a runtime-opaque always-false condition —
+	// Global.Round is never 0 on any chain, and puya cannot fold it.
+	auto round = awst::makeIntrinsicCall(
+		"global", awst::WType::uint64Type(), _loc);
+	round->immediates.push_back("Round");
+	auto neverTrue = awst::makeNumericCompare(std::move(round),
+		awst::NumericComparison::Eq,
+		awst::makeIntegerConstant(uint64_t{0}, _loc), _loc);
+	_ctx.queuePreStmt(awst::makeAssert(std::move(neverTrue), _loc,
 		"delegatecall is not supported on AVM"), _loc);
 	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
 }

@@ -455,6 +455,12 @@ def call(
         )
         sim_result = _simulate_for_revert(algod, sim_atc)
         sim_result.raw_response = str(e)
+        # Diagnosability: a test that only asserts on abi_return surfaces this
+        # failure as an opaque `as_int(None)` TypeError; the REAL error lives
+        # in fail_message. Print it — pytest captures stdout and shows it in
+        # the failure report, so -n2 flakes self-diagnose from gate logs.
+        print(f"[call] {getattr(abi_method, 'name', '?')} FAILED after retries: "
+              f"{str(e)[:300]}")
         if not sim_result.reverted and not _method_is_readonly(app, abi_method):
             # The SIMULATION succeeds (simulate allows unnamed resources and pooled
             # budget the real txn group can't carry) while the actual submission
