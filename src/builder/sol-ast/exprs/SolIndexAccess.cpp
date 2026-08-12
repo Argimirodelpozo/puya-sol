@@ -439,7 +439,20 @@ std::shared_ptr<awst::Expression> SolIndexAccess::resolveBlobOffset(
 			std::move(idx), awst::WType::uint64Type(), _loc);
 		unsigned stride = builder::computeEncodedElementSize(
 			_ctx.typeMapper.map(ia->annotation().type));
-		return awst::makeUInt64BinOp(std::move(parent), awst::UInt64BinaryOperator::Add,
+		// EVM memory layout: a DYNAMIC array's pointer addresses its LENGTH
+		// word, so element i starts 32 bytes further in. Without this every
+		// element write landed one slot early — element 0 clobbered the length
+		// and the last element was never written (silent corruption, seen as
+		// [22,33,0] for a [11,22,33] copy). Fixed-size arrays have no length
+		// word and are already correct.
+		auto const* baseArr = dynamic_cast<ArrayType const*>(
+			ia->baseExpression().annotation().type);
+		std::shared_ptr<awst::Expression> base = std::move(parent);
+		if (baseArr && baseArr->isDynamicallySized() && !baseArr->isByteArrayOrString())
+			base = awst::makeUInt64BinOp(std::move(base),
+				awst::UInt64BinaryOperator::Add,
+				awst::makeIntegerConstant(uint64_t{32}, _loc), _loc);
+		return awst::makeUInt64BinOp(std::move(base), awst::UInt64BinaryOperator::Add,
 			awst::makeUInt64BinOp(std::move(idx), awst::UInt64BinaryOperator::Mult,
 				awst::makeIntegerConstant(static_cast<uint64_t>(stride), _loc), _loc), _loc);
 	}

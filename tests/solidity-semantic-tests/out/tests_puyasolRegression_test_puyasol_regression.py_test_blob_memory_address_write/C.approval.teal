@@ -1,0 +1,367 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/blob_memory_address_write.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 4096 20480
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" "_count" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "_list"
+    intc_2 // 0
+    dupn 8
+    pushbytes ""
+    dupn 2
+    intc_3 // 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xcbf90cf8 0xecb7bef0 // method "__postInit()void", method "seed(address,address)void", method "copyOut()address[]"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_seed_route@6 main_copyOut_route@7
+    err
+
+main_copyOut_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_3 // "_count"
+    app_global_get_ex
+    swap
+    dup
+    cover 2
+    bury 9
+    assert // check _count exists
+    intc_2 // 0
+    itob
+    bury 10
+    load 0
+    pushint 88
+    extract_uint64
+    bury 4
+    pushint 8
+    bzero
+    dup
+    bury 6
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    bury 1
+    pushbytes 0x0000
+    bury 12
+    intc_2 // 0
+    bury 2
+
+main_while_top@15:
+    dup2
+    <
+    bz main_after_while@17
+    dig 11
+    dup
+    intc_2 // 0
+    extract_uint16
+    intc_1 // 1
+    +
+    itob
+    extract 6 0
+    replace2 0
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    bury 12
+    dig 1
+    intc_1 // 1
+    +
+    bury 2
+    b main_while_top@15
+
+main_after_while@17:
+    dig 8
+    bury 8
+
+main_while_top@18:
+    dig 7
+    dig 7
+    b<
+    bz main_after_while@23
+    intc_0 // 32
+    bzero
+    dup
+    bury 7
+    dig 8
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "_list"
+    concat
+    sha256
+    dup
+    bury 6
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    bz main_else_body@21
+    dig 7
+    dup
+    dig 10
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    dig 6
+    box_get
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dig 5
+    intc_0 // 32
+    +
+    uncover 2
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 3
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 6
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    +
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_3 // 4096
+    /
+    dig 8
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    loads
+    uncover 3
+    intc_3 // 4096
+    %
+    uncover 2
+    replace3
+    stores
+
+main_after_if_else@22:
+    dig 7
+    pushbytes 0x01
+    b+
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bury 8
+    b main_while_top@18
+
+main_else_body@21:
+    dig 8
+    pushbytes 0x01
+    b+
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bury 9
+    b main_after_if_else@22
+
+main_after_while@23:
+    load 0
+    store 0
+    dig 2
+    dup
+    intc_0 // 32
+    +
+    dup
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dig 1
+    intc_3 // 4096
+    /
+    intc_0 // 32
+    bzero
+    dig 10
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 13
+    b-
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    loads
+    uncover 4
+    intc_3 // 4096
+    %
+    swap
+    dig 1
+    uncover 3
+    replace3
+    dig 2
+    swap
+    stores
+    load 0
+    store 0
+    swap
+    loads
+    swap
+    intc_0 // 32
+    extract3
+    pushint 24
+    extract_uint64
+    dup
+    itob
+    extract 6 2
+    load 0
+    uncover 2
+    intc_0 // 32
+    *
+    uncover 3
+    swap
+    extract3
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@13:
+    intc_2 // 0
+    b main_ternary_merge@14
+
+main_seed_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 12
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 11
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@27
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@28:
+    !
+    assert // not payable
+    pushbytes 0xc179e834c1ea500bc2f9f0bfb47f565013c4d45c23975e012d05f78757470fc2
+    dig 11
+    box_put
+    pushbytes 0xb8706a89d68c2c93e22120c9b472155eeb1d68308b6a506e8e9b8742f132e5f1
+    dig 10
+    box_put
+    pushint 3
+    itob
+    bytec_3 // "_count"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_ternary_false@27:
+    intc_2 // 0
+    b main_ternary_merge@28
+
+main___postInit_route@5:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_2 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec 5 // "_list"
+    pushint 2
+    box_create
+    pop
+    bytec_3 // "_count"
+    pushbytes 0x
+    app_global_put
+    intc_1 // 1
+    return

@@ -4146,3 +4146,46 @@ def test_evm_layout_packed_address(harness):
                  extra_fee=10_000)
     s = harness.call(app, "single()", extra_fee=10_000).abi_return
     assert s[0] == a and as_int(s[1]) == 7 and s[2] is False
+
+
+def test_blob_memory_address_write(harness):
+    """puyasolRegression/contracts/blob_memory_address_write.sol — NOT an o.g. test.
+
+    An ADDRESS stored into an asm-touched (blob-backed) memory array. The blob
+    write path pins its value temp as biguint, but `implicitNumericCast` only
+    converts NUMERIC sources — an `account` passed through unchanged, so the
+    emitted store had a biguint target and an account value and puya rejected
+    the whole program with "assignment target type differs" (an error whose
+    location points at the contract, not the offending statement — it cost a
+    full AWST bisect to localise on Aave V3's Pool, whose getReservesList
+    copies `_reservesList[i]` into a memory `address[]`).
+    """
+    from algosdk import encoding as _enc
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/blob_memory_address_write.sol",
+        contract_name="C")
+    a = _enc.encode_address(bytes(24) + (11).to_bytes(8, "big"))
+    b = _enc.encode_address(bytes(24) + (22).to_bytes(8, "big"))
+    harness.call(app, "seed(address,address)", a, b, extra_fee=10_000)
+    got = harness.call(app, "copyOut()", extra_fee=10_000).abi_return
+    assert list(got) == [a, b], f"addresses lost through blob memory: {got!r}"
+
+
+def test_blob_memory_dynarray_element_offset(harness):
+    """puyasolRegression/contracts/blob_memory_address_write.sol (Shift) — NOT o.g.
+
+    A blob-backed DYNAMIC memory array's pointer addresses its LENGTH word, so
+    element i lives at +32+i*32. resolveBlobOffset omitted that header, so every
+    element write landed one slot early: element 0 clobbered the length word and
+    the last element was never written — a [11,22,33] copy read back as
+    [22,33,0]. Silent data corruption, type-independent (found while isolating
+    an address-typed failure on Aave V3's Pool). The non-blob twin is the
+    control: it was always correct.
+    """
+    arts = harness.compile("puyasolRegression/contracts/blob_memory_address_write.sol")
+    app = harness.deploy(arts, "Shift", extra_funding_microalgos=5_000_000)
+    harness.call(app, "seed()", extra_fee=10_000)
+    blob = [as_int(x) for x in harness.call(app, "blobCopy()", extra_fee=10_000).abi_return]
+    plain = [as_int(x) for x in harness.call(app, "plainCopy()", extra_fee=10_000).abi_return]
+    assert plain == [11, 22, 33], f"control (non-blob) copy wrong: {plain}"
+    assert blob == [11, 22, 33], f"blob-backed elements shifted: {blob}"

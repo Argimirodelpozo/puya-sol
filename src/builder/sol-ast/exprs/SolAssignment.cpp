@@ -239,6 +239,18 @@ SolAssignment::tryHandleBlobAggregateWrite()
 	auto v = buildExpr(m_assignment.rightHandSide());
 	v = builder::TypeCoercion::implicitNumericCast(
 		std::move(v), awst::WType::biguintType(), m_loc);
+	// implicitNumericCast only converts NUMERIC sources. A byte-shaped value
+	// (account — an address is the 32-byte AVM account word — or bytesN)
+	// passes through unchanged and then mints an assignment whose target is
+	// biguint, which puya rejects far downstream as "assignment target type
+	// differs" (Aave's getReservesList writes `_reservesList[i]`, an address,
+	// into an asm-touched memory array). Reinterpret the bytes as the word's
+	// numeric value; the pad-to-32 below restores the identical bytes.
+	if (v->wtype != awst::WType::biguintType()
+		&& (v->wtype == awst::WType::accountType()
+			|| v->wtype == awst::WType::bytesType()
+			|| (v->wtype && v->wtype->kind() == awst::WTypeKind::Bytes)))
+		v = awst::makeAsBiguint(awst::makeAsBytes(std::move(v), m_loc), m_loc);
 	std::string vN = "__blobassign_v_" + std::to_string(m_assignment.id());
 	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(vN, awst::WType::biguintType(), m_loc), std::move(v), m_loc));
