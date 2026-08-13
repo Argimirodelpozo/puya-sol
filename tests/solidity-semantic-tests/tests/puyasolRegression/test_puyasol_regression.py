@@ -4148,6 +4148,58 @@ def test_evm_layout_packed_address(harness):
     assert s[0] == a and as_int(s[1]) == 7 and s[2] is False
 
 
+def test_evm_layout_dynamic_array_of_packed_bool_arrays(harness):
+    """Whole-value reads/writes of bool[2][] bridge two different layouts.
+
+    Solidity stores each bool as a low-end byte and starts every inner fixed
+    array on a fresh slot. ARC4 packs each bool[2] into the two high bits of
+    one byte. Exercise every bit combination plus overwrite, shrink-tail
+    clearing, and delete so an empty-array-only implementation cannot pass.
+    """
+    arts = harness.compile(
+        "puyasolRegression/contracts/evm_layout_bool_nested_array.sol",
+        extra_args=["--evm-storage-layout"])
+    app = harness.deploy(arts, "EvmLayoutBoolNestedArray",
+                         extra_funding_microalgos=5_000_000)
+    opts = {"extra_fee": 10_000}
+
+    assert list(harness.call(app, "get()", **opts).abi_return) == []
+
+    values = [[False, False], [True, False], [False, True], [True, True]]
+    harness.call(app, "set(bool[2][])", values, **opts)
+    assert [list(v) for v in harness.call(app, "get()", **opts).abi_return] == values
+
+    # EVM slot bytes are little-endian within the word: bool[0] at byte 0,
+    # bool[1] at byte 1. The ARC4 representation used at the ABI boundary is
+    # deliberately different (0x00, 0x80, 0x40, 0xc0).
+    for i, expected in enumerate((0, 1, 1 << 8, 1 | (1 << 8))):
+        got = as_int(harness.call(app, "rawElementWord(uint256)", i, **opts).abi_return)
+        assert got == expected, f"element {i}: EVM word {got:#x} != {expected:#x}"
+
+    harness.call(app, "set(bool[2][])", [[True, True]], **opts)
+    assert [list(v) for v in harness.call(app, "get()", **opts).abi_return] == [[True, True]]
+    assert as_int(harness.call(app, "rawElementWord(uint256)", 1, **opts).abi_return) == 0
+
+    harness.call(app, "clear()", **opts)
+    assert list(harness.call(app, "get()", **opts).abi_return) == []
+    assert as_int(harness.call(app, "rawElementWord(uint256)", 0, **opts).abi_return) == 0
+
+    # Nine bools require two ARC4 bytes per inner array. The unused low seven
+    # bits of each second byte must not make the next outer element continue
+    # the previous element's bit run.
+    wide = [
+        [True, False, False, False, False, False, False, False, True],
+        [False, True, False, False, False, False, False, True, False],
+    ]
+    harness.call(app, "setWide(bool[9][])", wide, **opts)
+    assert [list(v) for v in harness.call(app, "getWide()", **opts).abi_return] == wide
+    expected_words = (1 | (1 << 64), (1 << 8) | (1 << 56))
+    for i, expected in enumerate(expected_words):
+        got = as_int(harness.call(
+            app, "rawWideElementWord(uint256)", i, **opts).abi_return)
+        assert got == expected, f"wide element {i}: EVM word {got:#x} != {expected:#x}"
+
+
 def test_blob_memory_address_write(harness):
     """puyasolRegression/contracts/blob_memory_address_write.sol — NOT an o.g. test.
 

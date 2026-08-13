@@ -567,7 +567,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		slotArg2.wtype = awst::WType::biguintType();
 		slotArg2.sourceLocation = loc;
 		sub.args.push_back(slotArg2);
-		for (char const* an: {"__size", "__aw", "__per", "__mul"})
+		for (char const* an: {"__size", "__aw", "__per", "__mul", "__bp"})
 		{
 			awst::SubroutineArgument a;
 			a.name = an;
@@ -584,7 +584,9 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			u64Var("__n"), biguintToU64(readWordCall(slotVar())), loc));
 		// __mul = lanes per ELEMENT (fixed-array / uniform-struct elements are
 		// lane concatenations in both slot and ARC4 layouts); the loops run
-		// over LANES while the count word/prefix stays in elements.
+		// over LANES while the count word/prefix stays in elements. __bp marks
+		// fixed bool[N] elements: EVM stores byte lanes, ARC4 stores MSB-first
+		// bits in an __aw-byte region reset for each outer element.
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64Var("__nl"), awst::makeUInt64BinOp(u64Var("__n"),
 				awst::UInt64BinaryOperator::Mult, u64Var("__mul"), loc), loc));
@@ -621,16 +623,54 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		loop->body.push_back(awst::makeAssignmentStatement(bytesVar("__el"),
 			awst::makeExtract3(bytesVar("__wb"), std::move(offExpr),
 				u64Var("__size"), loc), loc));
-		// left-pad the stored bytes up to the ARC4 element width
-		loop->body.push_back(awst::makeAssignmentStatement(
-			bytesVar("__data"),
-			awst::makeConcat(bytesVar("__data"),
-				awst::makeConcat(
-					awst::makeBzero(
-						awst::makeUInt64BinOp(u64Var("__aw"),
-							awst::UInt64BinaryOperator::Sub,
-							u64Var("__size"), loc), loc),
-					bytesVar("__el"), loc), loc), loc));
+		// Byte-aligned elements append one ARC4 lane. Fixed bool[N] elements
+		// append a zeroed region once per outer element and set its bits from
+		// the canonical low-byte EVM lanes.
+		{
+			auto bitBlk = awst::makeBlock(loc);
+			bitBlk->body.push_back(awst::makeAssignmentStatement(u64Var("__bj"),
+				awst::makeUInt64BinOp(u64Var("__i"),
+					awst::UInt64BinaryOperator::Mod, u64Var("__mul"), loc), loc));
+			auto beginElem = awst::makeBlock(loc);
+			beginElem->body.push_back(awst::makeAssignmentStatement(
+				bytesVar("__data"), awst::makeConcat(bytesVar("__data"),
+					awst::makeBzero(u64Var("__aw"), loc), loc), loc));
+			bitBlk->body.push_back(awst::makeIfElse(
+				awst::makeNumericCompare(u64Var("__bj"),
+					awst::NumericComparison::Eq, u64c(0), loc),
+				std::move(beginElem), nullptr, loc));
+			auto elemNo = awst::makeUInt64BinOp(u64Var("__i"),
+				awst::UInt64BinaryOperator::FloorDiv, u64Var("__mul"), loc);
+			auto bitIndex = awst::makeUInt64BinOp(
+				awst::makeUInt64BinOp(
+					awst::makeUInt64BinOp(u64c(2),
+						awst::UInt64BinaryOperator::Add,
+						awst::makeUInt64BinOp(std::move(elemNo),
+							awst::UInt64BinaryOperator::Mult, u64Var("__aw"), loc), loc),
+					awst::UInt64BinaryOperator::Mult, u64c(8), loc),
+				awst::UInt64BinaryOperator::Add, u64Var("__bj"), loc);
+			auto isTrue = awst::makeNumericCompare(
+				awst::makeBtoi(bytesVar("__el"), loc),
+				awst::NumericComparison::Ne, u64c(0), loc);
+			bitBlk->body.push_back(awst::makeAssignmentStatement(
+				bytesVar("__data"), awst::makeSetbit(bytesVar("__data"),
+					std::move(bitIndex), std::move(isTrue), loc), loc));
+
+			auto byteBlk = awst::makeBlock(loc);
+			byteBlk->body.push_back(awst::makeAssignmentStatement(
+				bytesVar("__data"),
+				awst::makeConcat(bytesVar("__data"),
+					awst::makeConcat(
+						awst::makeBzero(
+							awst::makeUInt64BinOp(u64Var("__aw"),
+								awst::UInt64BinaryOperator::Sub,
+								u64Var("__size"), loc), loc),
+						bytesVar("__el"), loc), loc), loc));
+			loop->body.push_back(awst::makeIfElse(
+				awst::makeNumericCompare(u64Var("__bp"),
+					awst::NumericComparison::Ne, u64c(0), loc),
+				std::move(bitBlk), std::move(byteBlk), loc));
+		}
 		loop->body.push_back(awst::makeAssignmentStatement(u64Var("__i"),
 			awst::makeUInt64BinOp(u64Var("__i"),
 				awst::UInt64BinaryOperator::Add, u64c(1), loc), loc));
@@ -667,7 +707,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		auto valVar = [&]() {
 			return awst::makeVarExpression("__val", awst::WType::bytesType(), loc);
 		};
-		for (char const* an: {"__size", "__aw", "__per", "__mul"})
+		for (char const* an: {"__size", "__aw", "__per", "__mul", "__bp"})
 		{
 			awst::SubroutineArgument a;
 			a.name = an;
@@ -725,19 +765,47 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 					awst::makeBzero(u64c(32), loc),
 					bytesVar("__wb"),
 					awst::WType::bytesType(), loc), loc));
-			// element bytes from the ARC4 payload: low `size` of its `aw` slice
-			auto vOff = awst::makeUInt64BinOp(
-				awst::makeUInt64BinOp(u64Var("__i"),
-					awst::UInt64BinaryOperator::Mult, u64Var("__aw"), loc),
-				awst::UInt64BinaryOperator::Add,
-				awst::makeUInt64BinOp(u64c(2),
+			// Byte-aligned elements take the low `size` bytes of each ARC4 lane.
+			// Fixed bool[N] elements read one ARC4 bit and turn it back into the
+			// canonical 0/1 byte stored by Solidity.
+			{
+				auto bitBlk = awst::makeBlock(loc);
+				bitBlk->body.push_back(awst::makeAssignmentStatement(u64Var("__bj"),
+					awst::makeUInt64BinOp(u64Var("__i"),
+						awst::UInt64BinaryOperator::Mod, u64Var("__mul"), loc), loc));
+				auto elemNo = awst::makeUInt64BinOp(u64Var("__i"),
+					awst::UInt64BinaryOperator::FloorDiv, u64Var("__mul"), loc);
+				auto bitIndex = awst::makeUInt64BinOp(
+					awst::makeUInt64BinOp(
+						awst::makeUInt64BinOp(u64c(2),
+							awst::UInt64BinaryOperator::Add,
+							awst::makeUInt64BinOp(std::move(elemNo),
+								awst::UInt64BinaryOperator::Mult, u64Var("__aw"), loc), loc),
+						awst::UInt64BinaryOperator::Mult, u64c(8), loc),
+					awst::UInt64BinaryOperator::Add, u64Var("__bj"), loc);
+				bitBlk->body.push_back(awst::makeAssignmentStatement(bytesVar("__el"),
+					awst::makeExtract(awst::makeItob(
+						awst::makeGetbit(valVar(), std::move(bitIndex), loc), loc),
+						7, 1, loc), loc));
+
+				auto byteBlk = awst::makeBlock(loc);
+				auto vOff = awst::makeUInt64BinOp(
+					awst::makeUInt64BinOp(u64Var("__i"),
+						awst::UInt64BinaryOperator::Mult, u64Var("__aw"), loc),
 					awst::UInt64BinaryOperator::Add,
-					awst::makeUInt64BinOp(u64Var("__aw"),
-						awst::UInt64BinaryOperator::Sub, u64Var("__size"), loc),
-					loc), loc);
-			loop->body.push_back(awst::makeAssignmentStatement(bytesVar("__el"),
-				awst::makeExtract3(valVar(), std::move(vOff),
-					u64Var("__size"), loc), loc));
+					awst::makeUInt64BinOp(u64c(2),
+						awst::UInt64BinaryOperator::Add,
+						awst::makeUInt64BinOp(u64Var("__aw"),
+							awst::UInt64BinaryOperator::Sub, u64Var("__size"), loc),
+						loc), loc);
+				byteBlk->body.push_back(awst::makeAssignmentStatement(bytesVar("__el"),
+					awst::makeExtract3(valVar(), std::move(vOff),
+						u64Var("__size"), loc), loc));
+				loop->body.push_back(awst::makeIfElse(
+					awst::makeNumericCompare(u64Var("__bp"),
+						awst::NumericComparison::Ne, u64c(0), loc),
+					std::move(bitBlk), std::move(byteBlk), loc));
+			}
 			auto wOff = awst::makeUInt64BinOp(u64c(32),
 				awst::UInt64BinaryOperator::Sub,
 				awst::makeUInt64BinOp(
@@ -806,12 +874,13 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	// Dynamic array OF dynamic arrays (uint[][], S[][]): outer count at the
 	// slot, element j's INNER length at keccak256(slot32)+j, inner data at
 	// keccak256(elemSlot32)+i. Both compose the flat __evm_dynarr_* pair per
-	// element and forward the INNER element metrics (__size/__aw/__per/__mul)
+	// element and forward the INNER element metrics
+	// (__size/__aw/__per/__mul/__bp)
 	// verbatim. ARC4 form: u16 count ++ u16 heads (offsets relative to the
 	// tuple start, i.e. byte 2) ++ inner tails.
 	{
 		auto metricArgs = [&](std::vector<awst::CallArg>& _args) {
-			for (char const* an: {"__size", "__aw", "__per", "__mul"})
+			for (char const* an: {"__size", "__aw", "__per", "__mul", "__bp"})
 				awst::pushCallArg(_args, an, u64Var(an));
 		};
 		auto innerRead = [&](std::shared_ptr<awst::Expression> _slot) {
@@ -859,7 +928,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 				va.sourceLocation = loc;
 				_sub.args.push_back(va);
 			}
-			for (char const* an: {"__size", "__aw", "__per", "__mul"})
+			for (char const* an: {"__size", "__aw", "__per", "__mul", "__bp"})
 			{
 				awst::SubroutineArgument a;
 				a.name = an;

@@ -326,6 +326,8 @@ struct DynElemMetrics
 	unsigned lanesPerElem = 1;   // fixed-array / uniform-struct elements: the
 	                             // element is this many LANES, identical in
 	                             // slot layout and ARC4 concatenation order
+	bool bitPacked = false;       // fixed bool[N]: byte lanes in EVM storage,
+	                              // MSB-first bits in each ARC4 element
 	bool ok = false;
 };
 
@@ -345,6 +347,26 @@ DynElemMetrics dynElemMetrics(
 		auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_elemW);
 		if (!sa)
 			return m;
+		// Solidity gives every bool one storage byte, while ARC4 packs a
+		// bool[N] into ceil(N/8) bytes, MSB-first. A fixed array used as a
+		// dynamic-array element starts on a fresh EVM slot, so support the
+		// one-slot form here and let the runtime codec reset its ARC4 bit
+		// cursor at every outer-element boundary.
+		if (dynamic_cast<solidity::frontend::BoolType const*>(fat->baseType())
+			&& sa->elementType() == awst::WType::arc4BoolType())
+		{
+			auto lanesU = fat->length();
+			if (lanesU == 0 || lanesU > 32)
+				return m;
+			unsigned lanes = static_cast<unsigned>(lanesU);
+			m.size = 1;
+			m.arc4Width = (lanes + 7u) / 8u;
+			m.perSlot = lanes;
+			m.lanesPerElem = lanes;
+			m.bitPacked = true;
+			m.ok = true;
+			return m;
+		}
 		auto inner = dynElemMetrics(fat->baseType(), sa->elementType());
 		if (!inner.ok || inner.lanesPerElem != 1)
 			return m;
@@ -452,6 +474,8 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 					awst::makeIntegerConstant(uint64_t{met2.perSlot}, m_loc));
 				awst::pushCallArg(call->args, "__mul",
 					awst::makeIntegerConstant(uint64_t{met2.lanesPerElem}, m_loc));
+				awst::pushCallArg(call->args, "__bp",
+					awst::makeIntegerConstant(uint64_t{met2.bitPacked}, m_loc));
 				return awst::makeReinterpretCast(std::move(call), arrW, m_loc);
 			}
 		}
@@ -480,6 +504,8 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 			awst::makeIntegerConstant(uint64_t{met.perSlot}, m_loc));
 		awst::pushCallArg(call->args, "__mul",
 			awst::makeIntegerConstant(uint64_t{met.lanesPerElem}, m_loc));
+		awst::pushCallArg(call->args, "__bp",
+			awst::makeIntegerConstant(uint64_t{met.bitPacked}, m_loc));
 		return awst::makeReinterpretCast(std::move(call), arrW, m_loc);
 	}
 	auto lenU = _at->length();
@@ -758,6 +784,8 @@ bool EvmSlotLowering::clearAggregate(
 				awst::makeIntegerConstant(uint64_t{metc.perSlot}, m_loc));
 			awst::pushCallArg(call->args, "__mul",
 				awst::makeIntegerConstant(uint64_t{metc.lanesPerElem}, m_loc));
+			awst::pushCallArg(call->args, "__bp",
+				awst::makeIntegerConstant(uint64_t{metc.bitPacked}, m_loc));
 			_out.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
 			return true;
 		}
@@ -913,6 +941,8 @@ bool EvmSlotLowering::writeArrayValue(
 					awst::makeIntegerConstant(uint64_t{met2.perSlot}, m_loc));
 				awst::pushCallArg(call->args, "__mul",
 					awst::makeIntegerConstant(uint64_t{met2.lanesPerElem}, m_loc));
+				awst::pushCallArg(call->args, "__bp",
+					awst::makeIntegerConstant(uint64_t{met2.bitPacked}, m_loc));
 				_out.push_back(awst::makeExpressionStatement(
 					std::move(call), m_loc));
 				return true;
@@ -943,6 +973,8 @@ bool EvmSlotLowering::writeArrayValue(
 			awst::makeIntegerConstant(uint64_t{metw.perSlot}, m_loc));
 		awst::pushCallArg(call->args, "__mul",
 			awst::makeIntegerConstant(uint64_t{metw.lanesPerElem}, m_loc));
+		awst::pushCallArg(call->args, "__bp",
+			awst::makeIntegerConstant(uint64_t{metw.bitPacked}, m_loc));
 		_out.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
 		return true;
 	}

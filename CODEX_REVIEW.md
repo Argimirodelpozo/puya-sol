@@ -23,6 +23,9 @@ and with the active semantic pytest suite used as the behavioral check.
   storage facts in `StorageRuntimePlan`.
 - Split EVM storage lowering into address/path resolution and value read/write
   implementation files.
+- Added whole-value EVM-layout support for dynamic arrays whose elements are
+  one-slot fixed boolean arrays. The runtime codec now translates Solidity's
+  byte-per-bool slot lanes to ARC4's MSB-first bit packing in both directions.
 - Removed remaining mutable generated-name counters and the global child-
   contract/template registry from builder code.
 
