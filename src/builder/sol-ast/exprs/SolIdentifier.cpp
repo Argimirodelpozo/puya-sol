@@ -72,7 +72,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 	{
 		// --evm-storage-layout: a storage-located local/param IS its biguint
 		// slot handle (bound at declaration / by the call convention).
-		if (builder::evmStorageLayout()
+		if (m_ctx.typeMapper.profile().evmStorageLayout
 			&& !varDecl->isStateVariable()
 			&& (varDecl->isLocalVariable() || varDecl->isCallableOrCatchParameter())
 			&& varDecl->referenceLocation() == VariableDeclaration::Location::Storage)
@@ -240,7 +240,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 			// --evm-storage-layout: persistent state vars read from their EVM
 			// slot address. Aggregates never build here — index/member/write
 			// accesses intercept on the AST above this identifier.
-			if (builder::evmStorageLayout()
+			if (m_ctx.typeMapper.profile().evmStorageLayout
 				&& !varDecl->isConstant() && !varDecl->immutable()
 				&& varDecl->referenceLocation() != VariableDeclaration::Location::Transient)
 			{
@@ -311,7 +311,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 					return read;
 			}
 
-			auto kind = builder::StorageMapper::shouldUseBoxStorage(*varDecl)
+			auto kind = m_ctx.storageMapper.shouldUseBoxStorage(*varDecl)
 				? awst::AppStorageKind::Box
 				: awst::AppStorageKind::AppGlobal;
 

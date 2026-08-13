@@ -12,6 +12,7 @@
 /// transport; this is the offset-faithful view Yul arithmetic needs.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "awst/NameGen.h"
 #include "builder/abi/AbiEncoderBuilder.h"
 
 #include <libsolidity/ast/Types.h>
@@ -606,13 +607,12 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 
 	// Tail pass: for each dynamic param, emit length word + EVM-encoded data,
 	// then advance __cd_tail_off and patch the next dynamic head via replace3.
-	static int s_cdBodyCtr = 0;
 	for (size_t i = 0; i < _params.size(); ++i)
 	{
 		auto const& [name, type] = _params[i];
 		if (!isDynamicCalldataType(type)) continue;
 
-		int bodyId = s_cdBodyCtr++;
+		int bodyId = awst::NameGen::next("SyntheticCalldata.body");
 		std::string cntN = "__cd_cnt_" + std::to_string(bodyId);
 		std::string bodyN = "__cd_body_" + std::to_string(bodyId);
 		auto cntVar = [&]() { return u64Var(cntN); };

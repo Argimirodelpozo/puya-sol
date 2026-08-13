@@ -39,8 +39,7 @@ SolAssignment::SolAssignment(eb::ContractContext& _ctx, Assignment const& _node)
 // toAwst pipeline:
 //   (1) Pre-buildExpr early-outs (transient, storage-ptr, multi-box, push-assign)
 //   (2) Build target + value
-//   (3) Per-shape early-outs (enum check, slot writes, tuple, bytes-elem, struct/WTuple)
-//   (4) Generic finalization (compound op, coerce, lvalue norm, ARC4 encode, box pre-populate)
+//   (3) Build an LValuePlan and dispatch the single applicable write strategy.
 std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 {
 	Token op = m_assignment.assignmentOperator();
@@ -78,11 +77,11 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	bool deferTupleLhsEffects = false;
 	if (dynamic_cast<TupleType const*>(m_assignment.leftHandSide().annotation().type))
 	{
-		if (builder::evmStorageLayout())
+		if (m_ctx.typeMapper.profile().evmStorageLayout)
 		{
-			target = m_ctx.buildScopedOperand(
-				[&] { return buildExpr(m_assignment.leftHandSide()); }, tupleLhsD,
-				/*_conditional=*/false);
+			auto lowered = m_ctx.lower(m_assignment.leftHandSide(), false);
+			target = std::move(lowered.value);
+			tupleLhsD = std::move(lowered.effects);
 			deferTupleLhsEffects = true;
 			value = buildExpr(m_assignment.rightHandSide());
 		}
@@ -95,10 +94,12 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	else
 	{
 		eb::ContractContext::OperandDeltas lhsD, rhsD;
-		target = m_ctx.buildScopedOperand(
-			[&] { return buildExpr(m_assignment.leftHandSide()); }, lhsD, /*_conditional=*/false);
-		value = m_ctx.buildScopedOperand(
-			[&] { return buildExpr(m_assignment.rightHandSide()); }, rhsD, /*_conditional=*/false);
+		auto lhs = m_ctx.lower(m_assignment.leftHandSide(), false);
+		auto rhs = m_ctx.lower(m_assignment.rightHandSide(), false);
+		target = std::move(lhs.value);
+		value = std::move(rhs.value);
+		lhsD = std::move(lhs.effects);
+		rhsD = std::move(rhs.effects);
 		if (m_ctx.viaIRSequencing)
 		{
 			// via-IR keeps build order (LHS then RHS effects).
@@ -143,31 +144,102 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			m_assignment.rightHandSide().annotation().type,
 			m_assignment.leftHandSide().annotation().type, m_loc, "assignment");
 
-	// (3) Per-shape early-outs.
+	// (3) Classify once, then execute the selected write strategy.
 	value = applyEnumRangeCheck(std::move(value), op);
-	if (auto r = trySlotBasedArrayWrite(op, target, value))                     return std::move(*r);
-	if (auto r = trySlotBasedScalarWrite(op, target, value))                    return std::move(*r);
-	if (auto r = tryTupleAssignment(target, value))
+	auto lvaluePlan = planLValue(target);
+	return emitLValuePlan(
+		lvaluePlan, op, std::move(target), std::move(value),
+		deferTupleLhsEffects, std::move(tupleLhsD));
+}
+
+SolAssignment::LValuePlan SolAssignment::planLValue(
+	std::shared_ptr<awst::Expression> const& _target) const
+{
+	if (dynamic_cast<awst::TupleExpression const*>(_target.get()))
+		return {LValueKind::Tuple};
+
+	if (_target->wtype == awst::WType::biguintType())
 	{
-		if (deferTupleLhsEffects)
+		auto const* lhsType = m_assignment.leftHandSide().annotation().type;
+		auto const* rhsType = m_assignment.rightHandSide().annotation().type;
+		auto const* lhsArray = lhsType ? dynamic_cast<ArrayType const*>(lhsType) : nullptr;
+		auto const* rhsArray = rhsType ? dynamic_cast<ArrayType const*>(rhsType) : nullptr;
+		if ((lhsArray && !lhsArray->isDynamicallySized())
+			|| (rhsArray && !rhsArray->isDynamicallySized()))
+			return {LValueKind::SlotArray};
+		if (dynamic_cast<awst::BigUIntBinaryOperation const*>(_target.get()))
+			return {LValueKind::SlotScalar};
+	}
+
+	if (auto const* index = dynamic_cast<awst::IndexExpression const*>(_target.get());
+		index && index->base && index->base->wtype
+		&& index->base->wtype->kind() == awst::WTypeKind::Bytes)
+		return {LValueKind::BytesElement};
+
+	auto unwrapped = _target;
+	if (auto const* decode = dynamic_cast<awst::ARC4Decode const*>(_target.get()))
+		unwrapped = decode->value;
+	if (dynamic_cast<awst::FieldExpression const*>(unwrapped.get()))
+		return {LValueKind::Field};
+
+	return {LValueKind::Generic};
+}
+
+std::shared_ptr<awst::Expression> SolAssignment::emitLValuePlan(
+	LValuePlan _plan,
+	Token _op,
+	std::shared_ptr<awst::Expression> _target,
+	std::shared_ptr<awst::Expression> _value,
+	bool _deferTupleLhsEffects,
+	eb::ContractContext::OperandDeltas _tupleLhsEffects)
+{
+	std::optional<std::shared_ptr<awst::Expression>> result;
+	switch (_plan.kind)
+	{
+	case LValueKind::SlotArray:
+		result = trySlotBasedArrayWrite(_op, _target, _value);
+		break;
+	case LValueKind::SlotScalar:
+		result = trySlotBasedScalarWrite(_op, _target, _value);
+		break;
+	case LValueKind::Tuple:
+		result = tryTupleAssignment(_target, _value);
+		if (_deferTupleLhsEffects)
 		{
-			for (auto& st: tupleLhsD.pre)
+			for (auto& st: _tupleLhsEffects.pre)
 				m_ctx.prePendingStatements.push_back(std::move(st));
-			for (auto& st: tupleLhsD.post)
+			for (auto& st: _tupleLhsEffects.post)
 				m_ctx.pendingStatements.push_back(std::move(st));
 		}
-		return std::move(*r);
+		break;
+	case LValueKind::BytesElement:
+		result = tryBytesElemAssignment(_target, _value);
+		break;
+	case LValueKind::Field:
+		result = tryStructOrNamedTupleFieldAssignment(_op, _target, _value);
+		break;
+	case LValueKind::Generic:
+		break;
 	}
-	if (auto r = tryBytesElemAssignment(target, value))                         return std::move(*r);
-	if (auto r = tryStructOrNamedTupleFieldAssignment(op, target, value))       return std::move(*r);
 
-	// (4) Generic finalization.
-	value = applyCompoundAssignment(op, target, std::move(value));
-	value = applyAssignmentTypeCoercion(std::move(value), target);
-	target = awst::makeWritableTarget(std::move(target));
-	value = applyArc4EncodeIfNeeded(std::move(value), target);
-	maybePrePopulateBox(target);
-	return awst::makeAssignmentExpression(std::move(target), std::move(value), m_loc);
+	// A specialist may deliberately decline an unsupported subtype; retain the
+	// generic path so diagnostics remain identical to the previous pipeline.
+	if (result)
+		return std::move(*result);
+	return emitGenericAssignment(_op, std::move(_target), std::move(_value));
+}
+
+std::shared_ptr<awst::Expression> SolAssignment::emitGenericAssignment(
+	Token _op,
+	std::shared_ptr<awst::Expression> _target,
+	std::shared_ptr<awst::Expression> _value)
+{
+	_value = applyCompoundAssignment(_op, _target, std::move(_value));
+	_value = applyAssignmentTypeCoercion(std::move(_value), _target);
+	_target = awst::makeWritableTarget(std::move(_target));
+	_value = applyArc4EncodeIfNeeded(std::move(_value), _target);
+	maybePrePopulateBox(_target);
+	return awst::makeAssignmentExpression(std::move(_target), std::move(_value), m_loc);
 }
 
 std::optional<std::shared_ptr<awst::Expression>>
@@ -310,7 +382,7 @@ bool rootsInSlotHandle(
 std::optional<std::shared_ptr<awst::Expression>>
 SolAssignment::tryHandleBlobRespill()
 {
-	if (!builder::evmMemoryLayout()
+	if (!m_ctx.typeMapper.profile().evmMemoryLayout
 		|| m_assignment.assignmentOperator() != Token::Assign)
 		return std::nullopt;
 	auto const* lid = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide());
@@ -340,7 +412,7 @@ SolAssignment::tryHandleBlobRespill()
 std::optional<std::shared_ptr<awst::Expression>>
 SolAssignment::tryHandleEvmStorageWrite()
 {
-	if (!builder::evmStorageLayout())
+	if (!m_ctx.typeMapper.profile().evmStorageLayout)
 		return std::nullopt;
 	auto const& lhsExpr = m_assignment.leftHandSide();
 	if (!EvmSlotLowering::isStorageStateRef(lhsExpr))

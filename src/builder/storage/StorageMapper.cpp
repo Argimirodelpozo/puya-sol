@@ -3,6 +3,7 @@
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/ProgramAnalysis.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 
 #include "Logger.h"
@@ -20,7 +21,7 @@ awst::SourceLocation StorageMapper::makeLoc(
 	std::string const& _file
 )
 {
-	return toAwstLoc(_file, _solLoc);
+	return m_typeMapper.sourceMap().toAwstLoc(_file, _solLoc);
 }
 
 std::shared_ptr<awst::BytesConstant> StorageMapper::makeKeyExpr(
@@ -243,7 +244,7 @@ unsigned StorageMapper::elementsPerBox(awst::WType const* _type)
 	return BOX_VALUE_CAPACITY / elemSize;
 }
 
-bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration const& _var)
+bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration const& _var) const
 {
 	auto const* type = _var.type();
 	if (!type)
@@ -277,7 +278,7 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 	// PREFIX (it short-circuits on containsMappingType), and its own comment
 	// promises that predicate "AGREES with the var-level boxing decision — no
 	// mismatch". It did not: a SMALL mapping-containing struct ref-passed only to
-	// a LIBRARY is absent from refPassedStructRegistry (which skips libraries by
+	// a LIBRARY is absent from the ref-passed analysis (which skips libraries by
 	// design) and passes the size heuristic, so it lived in app-global state while
 	// every ref to it read a box that was never written. That read does not fail —
 	// it yields an EMPTY value, so `EnumerableSet.values()` returned `[]` for a
@@ -291,9 +292,9 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 
 	// Structs passed by reference somewhere → box (handle-model Stage 1b): boxing makes the
 	// ref a box-key handle that writes through into contract methods. Targeted to ref-passed
-	// types (refPassedStructRegistry) so never-ref-passed structs keep their app-global layout.
+	// types so never-ref-passed structs keep their app-global layout.
 	if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(type))
-		if (puyasol::builder::refPassedStructRegistry().count(st->structDefinition().id()) > 0)
+		if (m_typeMapper.analysis().refPassedStructs.count(st->structDefinition().id()) > 0)
 			return true;
 
 	// AVM global-state limit is 128B (key+value). storageSizeUpperBound()*32 estimates value size.

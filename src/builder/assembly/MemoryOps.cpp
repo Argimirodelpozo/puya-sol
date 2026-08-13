@@ -40,7 +40,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 }
 
 // ── Multi-slot memory word access ───────────────────────────────────────────
-// EVM memory spans scratch slots [MEMORY_SLOT_FIRST, MEMORY_SLOT_LAST], each
+// EVM memory spans the session-configured scratch slots, each
 // SLOT_SIZE (4096) bytes. Offset → (slot = off/SLOT_SIZE, sub = off%SLOT_SIZE).
 // All slots (including 0) read/write directly to scratch; no __evm_memory cache.
 // 32-byte-aligned accesses never straddle a boundary (SLOT_SIZE % 32 == 0);
@@ -50,7 +50,8 @@ std::shared_ptr<awst::Statement> AssemblyBuilder::memBoundsAssert(
 	std::shared_ptr<awst::Expression> _off, awst::SourceLocation const& _loc)
 {
 	// assert(off + 32 <= cap): spilling into non-memory scratch slots corrupts silently.
-	uint64_t cap = static_cast<uint64_t>(SLOT_SIZE) * static_cast<uint64_t>(MEMORY_SLOT_LAST + 1);
+	uint64_t cap = static_cast<uint64_t>(SLOT_SIZE)
+		* static_cast<uint64_t>(MEMORY_SLOT_LAST + 1);
 	auto end = awst::makeUInt64BinOp(std::move(_off), awst::UInt64BinaryOperator::Add,
 		awst::makeIntegerConstant(static_cast<uint64_t>(32), _loc), _loc);
 	auto cond = awst::makeNumericCompare(std::move(end), awst::NumericComparison::Lte,
@@ -152,8 +153,8 @@ void AssemblyBuilder::writeMemWordDyn(
 	// writeMemWordDirect materialises slot+value and bounds-asserts; only the
 	// offset needs pinning here so its side effects run once across the
 	// assert + slot + sub references.
-	static int s_ctr = 0;
-	std::string offN = "__mem_dyn_off_" + std::to_string(s_ctr++);
+	std::string offN = "__mem_dyn_off_" + std::to_string(
+		awst::NameGen::next("MemoryOps.dynamicOffset"));
 	_out.push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
 		offsetToUint64(std::move(_offset), _loc), _loc));
@@ -269,8 +270,7 @@ void AssemblyBuilder::writeMemWordDirect(
 	std::shared_ptr<awst::Expression> _offset, std::shared_ptr<awst::Expression> _value32,
 	awst::SourceLocation const& _loc, std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
-	static int s_ctr = 0;
-	int id = s_ctr++;
+	int id = awst::NameGen::next("MemoryOps.dynamicStore");
 	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
 
 	_out.push_back(memBoundsAssert(_offset, _loc));

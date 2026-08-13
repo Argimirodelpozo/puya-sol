@@ -61,162 +61,19 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	std::string const& _sourceFile,
 	uint64_t _opupBudget,
 	std::map<std::string, uint64_t> const& _ensureBudget,
-	bool _viaYulBehavior
+	bool _viaYulBehavior,
+	std::map<std::string, std::string> const& _sourceAliases,
+	TargetProfile _targetProfile
 )
 {
-	m_storageMapper = std::make_unique<StorageMapper>(m_typeMapper);
+	_targetProfile.viaIRSequencing = _viaYulBehavior;
+	m_session.begin(_compiler, _sourceAliases, std::move(_targetProfile));
+	m_storageMapper = std::make_unique<StorageMapper>(m_session.typeMapper);
 	m_libraryFunctionIds.clear();
 	std::vector<std::shared_ptr<awst::RootNode>> roots;
 
-	// Populate the box-keyed-struct registry: a struct used as a mapping VALUE
-	// anywhere is box-keyed; plain state-var/local structs stay by-value. This
-	// is a compile-time calling-convention classifier only. Scans all contracts
-	// because the mapping(=>Struct) and the library methods on Struct may be in
-	// different source units (V4: orchestrator declares, Position library uses).
-	{
-		auto& reg = boxKeyedStructRegistry();
-		reg.clear();
-		std::set<solidity::frontend::Type const*> seen;
-		for (auto const& sourceName: _compiler.sourceNames())
-			for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
-				solidity::frontend::ContractDefinition>(_compiler.ast(sourceName).nodes()))
-				for (auto const* sv: contract->stateVariables())
-					collectMappingValueStructs(sv->type(), reg, seen);
-	}
-
-	// Populate the ref-passed-struct registry: any struct appearing as a `T storage`
-	// PARAMETER is boxed (shouldUseBoxStorage) so its ref travels as a box-key handle that
-	// writes through into contract methods. Targeted (only ref-passed types) so never-ref-
-	// passed structs keep their app-global layout. Scans contract methods + free/library fns.
-	{
-		using namespace solidity::frontend;
-		auto& refReg = refPassedStructRegistry();
-		refReg.clear();
-		auto scan = [&](FunctionDefinition const* fn) {
-			if (!fn) return;
-			for (auto const& p: fn->parameters())
-				if (p->referenceLocation() == VariableDeclaration::Location::Storage)
-					if (auto const* st = dynamic_cast<StructType const*>(p->type()))
-						refReg.insert(st->structDefinition().id());
-		};
-		// Only CONTRACT methods need boxing: libraries + free functions go through
-		// buildFreestandingSubroutine, which augments storage-ref params (copy+write-back), so
-		// they already write through. Boxing structs they take regresses library-modifier paths.
-		for (auto const& sourceName: _compiler.sourceNames())
-		{
-			auto const& unit = _compiler.ast(sourceName);
-			for (auto const* contract: ASTNode::filteredNodes<ContractDefinition>(unit.nodes()))
-			{
-				if (contract->isLibrary())
-					continue;
-				for (auto const* fn: contract->definedFunctions())
-					scan(fn);
-			}
-		}
-	}
-
-	// Memory-reassignment registry: memory aggregate vars whole-var REASSIGNED (`b = …`)
-	// anywhere → the b=a copy-elision alias (SolVariableDeclaration) is unsafe for them
-	// (re-pointing one side would clobber the aliased local), so they fall back to a copy.
-	{
-		using namespace solidity::frontend;
-		auto& reassigned = reassignedMemoryLocalsRegistry();
-		reassigned.clear();
-		struct ReassignWalker: ASTConstVisitor {
-			std::set<int64_t>& out;
-			explicit ReassignWalker(std::set<int64_t>& o): out(o) {}
-			bool visit(Assignment const& a) override {
-				if (auto const* id = dynamic_cast<Identifier const*>(&a.leftHandSide()))
-					if (auto const* vd = dynamic_cast<VariableDeclaration const*>(
-							id->annotation().referencedDeclaration))
-						if (vd->referenceLocation() == VariableDeclaration::Location::Memory)
-							out.insert(vd->id());
-				return true;
-			}
-		} walker(reassigned);
-		auto scanBody = [&](FunctionDefinition const* fn) {
-			if (fn && fn->isImplemented()) fn->body().accept(walker);
-		};
-		for (auto const& sourceName: _compiler.sourceNames())
-		{
-			auto const& unit = _compiler.ast(sourceName);
-			for (auto const* contract: ASTNode::filteredNodes<ContractDefinition>(unit.nodes()))
-				for (auto const* fn: contract->definedFunctions())
-					scanBody(fn);
-			for (auto const* fn: ASTNode::filteredNodes<FunctionDefinition>(unit.nodes()))
-				scanBody(fn);
-		}
-	}
-
-	// Struct-ref offset-convention pre-pass (handle-model dual handle): a storage struct-ref param
-	// that receives an ARRAY-ELEMENT ref (`f(arr[i])`) at any call site → mark it so the callee
-	// gains a companion uint64 offset param and `s.field` writes the element slice (not the whole
-	// array box). Whole-box callers of the same param pass offset 0. Conservative: calls whose
-	// arg/param counts don't line up (default args, exotic using-for) are skipped → those params
-	// stay whole-box (no regression, just no fix). Precise marking avoids over-boxing.
-	{
-		using namespace solidity::frontend;
-		auto& reg = structRefOffsetParamsRegistry();
-		reg.clear();
-		// --evm-storage-layout: storage refs are UNIFORM biguint slot handles;
-		// an array-element ref is just resolve(arr[i]).slot. The dual
-		// (key,offset) convention is the legacy box-keyed model — registering
-		// params here would add companion offset params the slot-mode call
-		// sites never pass ("function call arguments do not match signature").
-		if (!builder::evmStorageLayout())
-		{
-		struct OffsetWalker: ASTConstVisitor {
-			std::set<int64_t>& out;
-			explicit OffsetWalker(std::set<int64_t>& o): out(o) {}
-			static bool isArrayElemStructRef(Expression const* e) {
-				auto const* ia = dynamic_cast<IndexAccess const*>(e);
-				if (!ia) return false;
-				auto const* at = dynamic_cast<ArrayType const*>(ia->baseExpression().annotation().type);
-				if (!at || at->isByteArrayOrString()) return false;
-				return at->baseType() && at->baseType()->category() == Type::Category::Struct;
-			}
-			bool visit(FunctionCall const& fc) override {
-				Declaration const* refDecl = nullptr;
-				if (auto const* id = dynamic_cast<Identifier const*>(&fc.expression()))
-					refDecl = id->annotation().referencedDeclaration;
-				else if (auto const* ma = dynamic_cast<MemberAccess const*>(&fc.expression()))
-					refDecl = ma->annotation().referencedDeclaration;
-				auto const* fd = dynamic_cast<FunctionDefinition const*>(refDecl);
-				if (fd) {
-					auto const args = fc.sortedArguments();
-					auto const& params = fd->parameters();
-					size_t shift = 0;
-					if (params.size() == args.size()) shift = 0;
-					else if (params.size() == args.size() + 1) shift = 1; // using-for receiver = param 0
-					else return true; // can't reliably map arg→param; skip
-					for (size_t i = 0; i < args.size(); ++i) {
-						size_t pIdx = i + shift;
-						if (pIdx < params.size() && isArrayElemStructRef(args[i].get())
-							&& params[pIdx]->referenceLocation()
-								== VariableDeclaration::Location::Storage)
-							out.insert(params[pIdx]->id());
-					}
-				}
-				return true;
-			}
-		} offsetWalker(reg);
-		auto scanOffsetBody = [&](FunctionDefinition const* fn) {
-			if (fn && fn->isImplemented()) fn->body().accept(offsetWalker);
-		};
-		for (auto const& sourceName: _compiler.sourceNames())
-		{
-			auto const& unit = _compiler.ast(sourceName);
-			for (auto const* contract: ASTNode::filteredNodes<ContractDefinition>(unit.nodes()))
-				for (auto const* fn: contract->definedFunctions())
-					scanOffsetBody(fn);
-			for (auto const* fn: ASTNode::filteredNodes<FunctionDefinition>(unit.nodes()))
-				scanOffsetBody(fn);
-		}
-		}
-	}
-
 	registerFunctionIds(_compiler, _sourceFile, m_libraryFunctionIds, m_freeFunctionById);
-	presetDispatchCref(_compiler, _sourceFile);
+	presetDispatchCref(_compiler, _sourceFile, m_session.functionPointers);
 	translateLibraryFunctions(_compiler, _sourceFile, roots);
 	translateFreeFunctions(_compiler, _sourceFile, roots);
 	translateContracts(_compiler, _sourceFile, _opupBudget, _ensureBudget, _viaYulBehavior, roots);
@@ -459,7 +316,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	auto sub = std::make_shared<awst::Subroutine>();
 	sub->inlineOpt = false; // Prevent puya from inlining large subroutines
 
-	awst::SourceLocation loc = toAwstLoc(_sourceFile, _func.location());
+	awst::SourceLocation loc = m_session.sourceMap.toAwstLoc(
+		_sourceFile, _func.location());
 
 	sub->sourceLocation = loc;
 	sub->id = _subroutineId;
@@ -483,14 +341,15 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		arg.name = param->name();
 		if (arg.name.empty())
 			arg.name = "_param" + std::to_string(pi);
-		arg.sourceLocation = toAwstLoc(_sourceFile, param->location());
+		arg.sourceLocation = m_session.sourceMap.toAwstLoc(
+			_sourceFile, param->location());
 
 		// Mapping storage refs (including array-of-mapping): callee receives
 		// the caller's box key prefix as bytes so `m[k]` hashes against the
 		// caller's storage var, not the param name. Without widening,
 		// array-of-mapping params encode as their own "state var" and box
 		// keys diverge from the auto-getter's reads.
-		if (builder::evmStorageLayout()
+		if (m_session.profile.evmStorageLayout
 			&& param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
 		{
 			// --evm-storage-layout: every storage ref IS a biguint slot handle;
@@ -499,20 +358,21 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			evmSlotRefParams.insert(pi);
 		}
 		else if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-			&& (isBoxKeyedStorageRef(param->type()) || slotParams.count(pi))) // widened: plain structs + asm .slot refs
+			&& (isBoxKeyedStorageRef(param->type(), m_session.analysis)
+				|| slotParams.count(pi))) // widened: plain structs + asm .slot refs
 		{
 			arg.wtype = awst::WType::bytesType();
 			mappingStorageParams.insert(pi);
 		}
 		else if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-			&& memoryUsesBlob(m_typeMapper.map(param->type())))
+			&& memoryUsesBlob(m_session.typeMapper.map(param->type())))
 		{
 			// Memory aggregate >4KB → passed as uint64 base offset (pointer model).
 			arg.wtype = awst::WType::uint64Type();
 			blobAggParams.insert(pi);
 		}
 		else
-			arg.wtype = m_typeMapper.map(param->type());
+			arg.wtype = m_session.typeMapper.map(param->type());
 		sub->args.push_back(std::move(arg));
 	}
 
@@ -524,7 +384,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		&& _func.stateMutability() != solidity::frontend::StateMutability::Pure;
 	bool isPrivate = _func.visibility() == solidity::frontend::Visibility::Private;
 	// --evm-storage-layout: slot handles write straight through — no write-back.
-	if (isMutating && !isPrivate && !builder::evmStorageLayout())
+	if (isMutating && !isPrivate && !m_session.profile.evmStorageLayout)
 	{
 		storageParamIndices = collectParamIndices(_func, [&](size_t pi) {
 			return _func.parameters()[pi]->referenceLocation()
@@ -546,7 +406,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				return !arr->isByteArrayOrString();
 			return dynamic_cast<solidity::frontend::StructType const*>(t) != nullptr;
 		};
-		ParamMutationDetector detector;
+		ParamMutationDetector detector{m_session.analysis};
 		for (auto const& p : _func.parameters())
 			detector.paramIds.insert(p->id());
 		_func.body().accept(detector);
@@ -567,8 +427,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		for (auto const& rp: returnParams)
 		{
 			// >4KB memory return → blob-backed, returns uint64 base offset (pointer model).
-			auto const* rpW = m_typeMapper.map(rp->type());
-			if (builder::evmStorageLayout()
+			auto const* rpW = m_session.typeMapper.map(rp->type());
+			if (m_session.profile.evmStorageLayout
 				&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
 				types.push_back(awst::WType::biguintType());   // slot handle
 			else if (!rp->name().empty()
@@ -588,7 +448,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		else if (types.size() == 1)
 			sub->returnType = types[0];
 		else
-			sub->returnType = new awst::WTuple(std::move(types));
+			sub->returnType = m_session.typeMapper.createType<awst::WTuple>(std::move(types));
 	}
 
 	sub->pure = _func.stateMutability() == solidity::frontend::StateMutability::Pure;
@@ -597,11 +457,11 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// pass a long-lived object (a temporary `{}` would dangle → SIGSEGV).
 	static std::unordered_set<std::string> const EMPTY_OVERLOAD_NAMES;
 	eb::ContractContext exprBuilder(
-		m_typeMapper, *m_storageMapper, _sourceFile, _libraryName, m_libraryFunctionIds,
-		EMPTY_OVERLOAD_NAMES, m_freeFunctionById
+		m_session.typeMapper, *m_storageMapper, _sourceFile, _libraryName, m_libraryFunctionIds,
+		EMPTY_OVERLOAD_NAMES, m_freeFunctionById, m_session.functionPointers
 	);
 
-	sol_ast::TranslationContext tr{exprBuilder, m_typeMapper, _sourceFile};
+	sol_ast::TranslationContext tr{exprBuilder, m_session.typeMapper, _sourceFile};
 	auto trGuard = exprBuilder.pushScopeRaii(&tr);
 	sol_ast::FunctionContext fnCtx{tr, {}, sub->returnType, {}};
 	auto fnGuard = exprBuilder.pushScopeRaii(&fnCtx);
@@ -638,14 +498,14 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			auto* ptype = evmSlotRefParams.count(pi) ? awst::WType::biguintType()
 				: mappingStorageParams.count(pi) ? awst::WType::bytesType()
 				: blobAggParams.count(pi) ? awst::WType::uint64Type()
-				: m_typeMapper.map(param->type());
+				: m_session.typeMapper.map(param->type());
 			paramContext.emplace_back(pname, ptype);
 			// Struct storage-ref param used via `.slot` in asm: record the ARC4
 			// struct wtype so `param.slot` resolves to a BoxValueExpression over
 			// the box-key handle (the bytes param value). Slot mode: the param
 			// IS the biguint slot — no sentinel.
-			if (slotParams.count(pi) && !builder::evmStorageLayout())
-				boxKeyStructParams[pname] = m_typeMapper.map(param->type());
+			if (slotParams.count(pi) && !m_session.profile.evmStorageLayout)
+				boxKeyStructParams[pname] = m_session.typeMapper.map(param->type());
 			if (auto it = builder::SolIntType::fromSol(param->annotation().type); it && it->bits < 64)
 				bitWidths[pname] = it->bits;
 		}
@@ -672,7 +532,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		if (rp->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Storage
 			|| rp->name().empty())
 			continue;
-		if (builder::evmStorageLayout())
+		if (m_session.profile.evmStorageLayout)
 			fnCtx.setSlotStorageRef(rp->id(), awst::makeVarExpression(
 				rp->name(), awst::WType::biguintType(), awst::SourceLocation{}));
 		else if (dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
@@ -686,7 +546,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		if (rp->name().empty()
 			|| rp->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Memory)
 			continue;
-		auto const* rpTypeB = m_typeMapper.map(rp->type());
+		auto const* rpTypeB = m_session.typeMapper.map(rp->type());
 		if (memoryUsesBlob(rpTypeB))
 			fnCtx.setBlobAggregate(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
 	}
@@ -708,7 +568,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// --evm-memory-layout: spill asm-pointer memory params (the LIBRARY path —
 	// Morpho's MarketParamsLib.id(), Solady's LibString helpers, ...).
 	std::vector<std::shared_ptr<awst::Statement>> asmParamSpills;
-	emitAsmParamSpills(m_typeMapper, fnCtx, _func.body(), _sourceFile,
+	emitAsmParamSpills(m_session.typeMapper, fnCtx, _func.body(), _sourceFile,
 		asmParamSpills);
 
 	sub->body = sol_ast::buildBlock(blk, _func.body());
@@ -743,12 +603,14 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			blobAggList.push_back(_func.parameters()[idx].get());
 
 		FunctionTranslationCtx ftCtx{
-			m_typeMapper, exprBuilder, tr, _sourceFile,
-			fnCtx.params, sub->returnType, fnCtx.paramBitWidths,
-			std::move(namedReturnList), std::move(mappingKeyList),
-			std::move(blobAggList),
-			/*currentContract=*/nullptr,
-		};
+			m_session.typeMapper, exprBuilder, tr, _sourceFile};
+		ftCtx.params = fnCtx.params;
+		ftCtx.returnType = sub->returnType;
+		ftCtx.paramBitWidths = fnCtx.paramBitWidths;
+		ftCtx.namedReturns = std::move(namedReturnList);
+		ftCtx.mappingKeyParams = std::move(mappingKeyList);
+		ftCtx.blobAggParams = std::move(blobAggList);
+		ftCtx.currentContract = nullptr;
 		inlineModifiers(ftCtx, _func, sub->body);
 	}
 
@@ -765,7 +627,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				&& storageRefReturnIsBytesKeyed(&_func))
 				continue;
 			// --evm-storage-layout: named storage return = biguint slot handle.
-			if (builder::evmStorageLayout()
+			if (m_session.profile.evmStorageLayout
 				&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
 			{
 				inits.push_back(awst::makeAssignmentStatement(
@@ -773,7 +635,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 					awst::makeZero(loc, awst::WType::biguintType()), loc));
 				continue;
 			}
-			auto* rpType = m_typeMapper.map(rp->type());
+			auto* rpType = m_session.typeMapper.map(rp->type());
 
 			// Blob-backed (>4KB) returns: pre-zeroed via FMP bump; skip bzero init.
 			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
@@ -819,7 +681,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			if (rp->referenceLocation()
 				!= solidity::frontend::VariableDeclaration::Location::Memory)
 				continue;
-			auto const* rpTypeC = m_typeMapper.map(rp->type());
+			auto const* rpTypeC = m_session.typeMapper.map(rp->type());
 			int szC = computeEncodedElementSize(rpTypeC);
 			if (szC <= AssemblyBuilder::SLOT_SIZE)
 				continue;
@@ -913,8 +775,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	if (sub->body->body.empty() && _func.name() == "efficientKeccak256"
 		&& _func.parameters().size() == 2)
 	{
-		auto varA = awst::makeVarExpression(_func.parameters()[0]->name(), m_typeMapper.map(_func.parameters()[0]->type()), loc);
-		auto varB = awst::makeVarExpression(_func.parameters()[1]->name(), m_typeMapper.map(_func.parameters()[1]->type()), loc);
+		auto varA = awst::makeVarExpression(_func.parameters()[0]->name(), m_session.typeMapper.map(_func.parameters()[0]->type()), loc);
+		auto varB = awst::makeVarExpression(_func.parameters()[1]->name(), m_session.typeMapper.map(_func.parameters()[1]->type()), loc);
 		auto concat = awst::makeConcat(std::move(varA), std::move(varB), loc);
 		auto hash = awst::makeKeccak256(std::move(concat), loc);
 		auto cast = awst::makeReinterpretCast(std::move(hash), sub->returnType, loc);
@@ -964,7 +826,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 
 			// Include augmented args after named-return values to match sub->returnType.
 			if (returnParams.size() == 1 && totalAugmented2 == 0
-				&& builder::evmMemoryLayout()
+				&& m_session.profile.evmMemoryLayout
 				&& returnParams[0]->referenceLocation()
 					== solidity::frontend::VariableDeclaration::Location::Memory
 				&& [&]{ auto const* at3 = dynamic_cast<
@@ -981,8 +843,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			}
 			else if (returnParams.size() == 1 && totalAugmented2 == 0)
 			{
-				auto const* rp0W = m_typeMapper.map(returnParams[0]->type());
-				if (builder::evmStorageLayout()
+				auto const* rp0W = m_session.typeMapper.map(returnParams[0]->type());
+				if (m_session.profile.evmStorageLayout
 					&& returnParams[0]->referenceLocation()
 						== solidity::frontend::VariableDeclaration::Location::Storage)
 					rp0W = awst::WType::biguintType();   // slot handle
@@ -1001,8 +863,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				auto tuple = awst::makeTupleExpression(nullptr, loc);
 				for (auto const& rp: returnParams)
 				{
-					auto const* rpW = m_typeMapper.map(rp->type());
-					if (builder::evmStorageLayout()
+					auto const* rpW = m_session.typeMapper.map(rp->type());
+					if (m_session.profile.evmStorageLayout
 						&& rp->referenceLocation()
 							== solidity::frontend::VariableDeclaration::Location::Storage)
 						rpW = awst::WType::biguintType();   // slot handle
@@ -1053,7 +915,7 @@ void AWSTBuilder::translateContracts(
 	// every contract — decide dense-only / single-page globally BEFORE any
 	// contract builds. Libraries and abstract bases count (their functions and
 	// vars compile into hosts/derived contracts).
-	if (builder::evmStorageLayout())
+	if (m_session.profile.evmStorageLayout)
 	{
 		bool anySparse = false;
 		unsigned long long maxSlots = 0;
@@ -1064,13 +926,14 @@ void AWSTBuilder::translateContracts(
 				if (!contract || contract->isInterface())
 					continue;
 				unsigned long long slots = 0;
-				if (builder::evmContractNeedsSparseSlots(*contract, m_typeMapper, slots))
+				if (builder::evmContractNeedsSparseSlots(*contract, m_session.typeMapper, slots))
 					anySparse = true;
 				if (slots > maxSlots)
 					maxSlots = slots;
 			}
-		builder::setEvmDenseOnlyUnit(!anySparse);
-		builder::setEvmSinglePageUnit(maxSlots <= builder::kEvmSlotsPerPage);
+		m_session.profile.denseOnlyStorage = !anySparse;
+		m_session.profile.singlePageStorage =
+			maxSlots <= builder::kEvmSlotsPerPage;
 		Logger::instance().debug("PRESCAN dense=" + std::to_string(!anySparse)
 			+ " singlePage=" + std::to_string(maxSlots <= builder::kEvmSlotsPerPage)
 			+ " maxSlots=" + std::to_string(maxSlots));
@@ -1118,7 +981,8 @@ void AWSTBuilder::translateContracts(
 			Logger::instance().info("Translating contract: " + contract->name());
 
 			ContractBuilder translator(
-				m_typeMapper, *m_storageMapper, _sourceFile, m_libraryFunctionIds,
+				m_session.typeMapper, *m_storageMapper, m_session.functionPointers,
+				_sourceFile, m_libraryFunctionIds,
 				_opupBudget, m_freeFunctionById, _ensureBudget, _viaYulBehavior,
 				m_internalizableLibFuncs
 			);
@@ -1260,7 +1124,8 @@ void AWSTBuilder::translateContracts(
 		{
 			Logger::instance().info("Translating library as deployable contract: " + lib->name());
 			ContractBuilder translator(
-				m_typeMapper, *m_storageMapper, _sourceFile, m_libraryFunctionIds,
+				m_session.typeMapper, *m_storageMapper, m_session.functionPointers,
+				_sourceFile, m_libraryFunctionIds,
 				_opupBudget, m_freeFunctionById, _ensureBudget, _viaYulBehavior,
 				m_internalizableLibFuncs
 			);

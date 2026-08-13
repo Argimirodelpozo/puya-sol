@@ -349,7 +349,7 @@ void encodeChainDispatchReturn(
 			}
 			for (auto const& p: plan)
 				wireTypes.push_back(p.wireType);
-			tuple->wtype = new awst::WTuple(std::move(wireTypes));   // fresh instance (Pass 3/4 convention)
+			tuple->wtype = m_typeMapper.createType<awst::WTuple>(std::move(wireTypes));
 		}
 	});
 
@@ -360,7 +360,7 @@ void encodeChainDispatchReturn(
 		std::vector<awst::WType const*> wireTypes;
 		for (auto const& p: plan)
 			wireTypes.push_back(p.wireType);
-		method.returnType = new awst::WTuple(std::move(wireTypes));
+		method.returnType = m_typeMapper.createType<awst::WTuple>(std::move(wireTypes));
 	}
 }
 

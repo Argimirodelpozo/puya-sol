@@ -1,6 +1,7 @@
 #pragma once
 
 #include "awst/Node.h"
+#include "builder/CompilationSession.h"
 #include "builder/contract/ContractBuilder.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -8,6 +9,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/interface/CompilerStack.h>
+#include <liblangutil/EVMVersion.h>
 
 #include <memory>
 #include <string>
@@ -25,6 +27,8 @@ namespace puyasol::builder
 class AWSTBuilder
 {
 public:
+	BuildArtifacts const& artifacts() const { return m_session.artifacts; }
+
 	/// Build AWST from a Solidity source file.
 	/// Returns root nodes (contracts, subroutines) for JSON serialization.
 	/// _opupBudget: if > 0, inject ensure_budget(_opupBudget) into public methods.
@@ -33,11 +37,13 @@ public:
 		std::string const& _sourceFile,
 		uint64_t _opupBudget = 0,
 		std::map<std::string, uint64_t> const& _ensureBudget = {},
-		bool _viaYulBehavior = false
+		bool _viaYulBehavior = false,
+		std::map<std::string, std::string> const& _sourceAliases = {},
+		TargetProfile _targetProfile = {}
 	);
 
 private:
-	TypeMapper m_typeMapper;
+	CompilationSession m_session;
 	std::unique_ptr<StorageMapper> m_storageMapper;
 
 	/// Registry of library function IDs, populated during the library translation pass.

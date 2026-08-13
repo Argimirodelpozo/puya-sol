@@ -81,14 +81,16 @@ void walkAllStateVarInits(
 }
 
 /// True if the constructor (directly or via a function call) touches box-stored state.
-bool detectBoxRefsInConstructor(solidity::frontend::ContractDefinition const& _contract)
+bool detectBoxRefsInConstructor(
+	solidity::frontend::ContractDefinition const& _contract,
+	StorageMapper const& _storageMapper)
 {
 	std::set<int64_t> boxVarIds;
 	forEachStateVar(_contract, [&](auto const* var)
 	{
 		if (var->isConstant())
 			return;
-		if (StorageMapper::shouldUseBoxStorage(*var))
+		if (_storageMapper.shouldUseBoxStorage(*var))
 			boxVarIds.insert(var->id());
 	});
 	if (boxVarIds.empty())
@@ -307,12 +309,14 @@ bool detectAvmLibCallInConstructor(solidity::frontend::ContractDefinition const&
 
 } // namespace
 
-bool computeNeedsPostInit(solidity::frontend::ContractDefinition const& _contract)
+bool computeNeedsPostInit(
+	solidity::frontend::ContractDefinition const& _contract,
+	StorageMapper const& _storageMapper)
 {
 	// --evm-storage-layout: EVERY state write is a box write, and boxes of the
 	// app being created cannot be referenced in the create txn — defer any
 	// state initializer / constructor body to __postInit.
-	if (evmStorageLayout())
+	if (_storageMapper.profile().evmStorageLayout)
 	{
 		// INHERITED constructors count too. A contract with no ctor of its own
 		// but an `Ownable` base still runs `_transferOwnership` during create,
@@ -343,7 +347,7 @@ bool computeNeedsPostInit(solidity::frontend::ContractDefinition const& _contrac
 			return true;
 		}
 	}
-	if (detectBoxRefsInConstructor(_contract))
+	if (detectBoxRefsInConstructor(_contract, _storageMapper))
 		return true;
 	if (detectNewExprInConstructor(_contract))
 	{

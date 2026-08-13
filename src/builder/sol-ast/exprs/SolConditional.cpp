@@ -26,9 +26,9 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 	// The condition evaluates unconditionally and FIRST: hoist its write-backs
 	// (post-pendings) so both branches observe them (`bump(s) > 0 ? s.f : 0`
 	// reads the post-call s.f on EVM). Pin the condition value before the hoist.
-	eb::ContractContext::OperandDeltas condD;
-	e->condition = m_ctx.buildScopedOperand(
-		[&] { return buildExpr(m_conditional.condition()); }, condD, /*_conditional=*/false);
+	auto loweredCondition = m_ctx.lower(m_conditional.condition(), false);
+	e->condition = std::move(loweredCondition.value);
+	auto condD = std::move(loweredCondition.effects);
 	bool condHadPost = !condD.post.empty();
 	e->condition = m_ctx.emitSequencedOperand(
 		std::move(condD), std::move(e->condition), condHadPost, m_loc);
@@ -46,15 +46,15 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 	// Each branch only executes conditionally, so its pre-statements (a `**`
 	// square-and-multiply loop, `new C()` inner txns, `arr.push()=x`, checked-op
 	// asserts) AND its write-backs must be gated behind the condition, not
-	// flushed unconditionally. buildScopedOperand captures them out of the flat
+	// flushed unconditionally. lowerOperand captures them out of the flat
 	// lists (OperandPlan, fable-review item 7); gated into if/else blocks below.
-	eb::ContractContext::OperandDeltas trueD;
-	e->trueExpr = m_ctx.buildScopedOperand(
-		[&] { return buildExpr(m_conditional.trueExpression()); }, trueD);
+	auto loweredTrue = m_ctx.lower(m_conditional.trueExpression());
+	e->trueExpr = std::move(loweredTrue.value);
+	auto trueD = std::move(loweredTrue.effects);
 
-	eb::ContractContext::OperandDeltas falseD;
-	e->falseExpr = m_ctx.buildScopedOperand(
-		[&] { return buildExpr(m_conditional.falseExpression()); }, falseD);
+	auto loweredFalse = m_ctx.lower(m_conditional.falseExpression());
+	e->falseExpr = std::move(loweredFalse.value);
+	auto falseD = std::move(loweredFalse.effects);
 
 	e->wtype = m_ctx.typeMapper.map(m_conditional.annotation().type);
 
@@ -67,7 +67,7 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 		solidity::frontend::Expression const& srcExpr)
 		-> std::shared_ptr<awst::Expression>
 	{
-		if (!builder::evmStorageLayout() || !branch || !e->wtype
+		if (!m_ctx.typeMapper.profile().evmStorageLayout || !branch || !e->wtype
 			|| branch->wtype != awst::WType::biguintType())
 			return branch;
 		auto k = e->wtype->kind();

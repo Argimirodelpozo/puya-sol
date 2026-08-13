@@ -152,7 +152,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	std::map<std::string, AssemblyBuilder::BoxKeyedSlot> boxKeyedStructSlots;
 	for (auto const& [yulId, extInfo]: annotation.externalReferences)
 	{
-		if (builder::evmStorageLayout()) break;   // slot space is real — no box sentinels
+		if (m_blk.typeMapper().profile().evmStorageLayout) break;   // slot space is real — no box sentinels
 		if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 		if (!varDecl || !varDecl->isLocalVariable()) continue;
@@ -175,11 +175,11 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	std::map<std::string, AssemblyBuilder::StateVarSlot> stateVarSlots;
 	for (auto const& [yulId, extInfo]: annotation.externalReferences)
 	{
-		if (builder::evmStorageLayout()) break;   // sstore(v.slot, w) writes the real slot
+		if (m_blk.typeMapper().profile().evmStorageLayout) break;   // sstore(v.slot, w) writes the real slot
 		if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 		if (!varDecl || !varDecl->isStateVariable() || varDecl->isConstant()) continue;
-		if (builder::StorageMapper::shouldUseBoxStorage(*varDecl)) continue;
+		if (m_blk.builderCtx().storageMapper.shouldUseBoxStorage(*varDecl)) continue;
 		// Restrict to FULL-WIDTH uint256 scalars: `sstore(x.slot, word)` then equals
 		// writing x's value directly. Sub-word vars (uint8/int8/bytesN) are packed
 		// multiple-per-slot in EVM, so `sstore(packedSlot, word)` sets several vars at
@@ -201,7 +201,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	// --evm-storage-layout: EVERY storage-located local/param is a biguint slot
 	// variable — `x.slot` reads it, `x.slot := e` (StatementOps) writes it.
 	// `.offset` on storage refs is 0 (packed sub-word refs unsupported here).
-	if (builder::evmStorageLayout())
+	if (m_blk.typeMapper().profile().evmStorageLayout)
 		for (auto const& [yulId, extInfo]: annotation.externalReferences)
 		{
 			if (!extInfo.declaration) continue;
@@ -276,14 +276,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			// HERE, in the compiler (zero opcodes) — routing is constant comparison.
 			forEachStateVar(*contractDef, [&](solidity::frontend::VariableDeclaration const* svDecl)
 			{
-				if (builder::evmStorageLayout()) return;   // no named-cell routes in slot space
+				if (m_blk.typeMapper().profile().evmStorageLayout) return;   // no named-cell routes in slot space
 				if (!svDecl || svDecl->isConstant() || svDecl->immutable()) return;
 				if (svDecl->referenceLocation() == VariableDeclaration::Location::Transient) return;
 				auto const* vi = layout.getVarInfo(svDecl->name());
 				if (!vi) return;
 				auto const* arrT = dynamic_cast<solidity::frontend::ArrayType const*>(svDecl->type());
 				if (arrT && arrT->isDynamicallySized() && !arrT->isByteArrayOrString()
-					&& builder::StorageMapper::shouldUseBoxStorage(*svDecl))
+					&& m_blk.builderCtx().storageMapper.shouldUseBoxStorage(*svDecl))
 				{
 					auto* arc4Elem = m_blk.typeMapper().mapSolTypeToARC4(arrT->baseType());
 					if (builder::StorageMapper::computeEncodedElementSize(arc4Elem) != 32)
@@ -304,7 +304,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				}
 				else if (vi->isFullSlot
 					&& svDecl->type()->isValueType()   // structs share the slot repr; route can't model them
-					&& !builder::StorageMapper::shouldUseBoxStorage(*svDecl))
+					&& !m_blk.builderCtx().storageMapper.shouldUseBoxStorage(*svDecl))
 				{
 					AssemblyBuilder::SlotRoute r;
 					r.kind = AssemblyBuilder::SlotRoute::Kind::Scalar;
@@ -323,7 +323,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			// unmodeled-.slot hard error exists to stop).
 			for (auto const& [yulId, extInfo]: annotation.externalReferences)
 			{
-				if (builder::evmStorageLayout()) break;   // member arrays live at real slots
+				if (m_blk.typeMapper().profile().evmStorageLayout) break;   // member arrays live at real slots
 				if (extInfo.suffix != "slot" || !extInfo.declaration) continue;
 				auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 				if (!varDecl || !varDecl->isLocalVariable()) continue;
@@ -332,7 +332,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				auto const* structVar = maIt->second.first;
 				auto const& fieldName = maIt->second.second;
 
-				if (!builder::StorageMapper::shouldUseBoxStorage(*structVar)) continue;
+				if (!m_blk.builderCtx().storageMapper.shouldUseBoxStorage(*structVar)) continue;
 				auto const* structWType = dynamic_cast<awst::ARC4Struct const*>(
 					m_blk.typeMapper().map(structVar->type()));
 				auto const* structType = dynamic_cast<StructType const*>(structVar->type());
@@ -376,7 +376,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 					// Slot mode: the local IS a biguint slot var (registered above);
 					// resolving through the alias to a CONSTANT would go stale on
 					// pointer rebinds.
-					if (builder::evmStorageLayout()) continue;
+					if (m_blk.typeMapper().profile().evmStorageLayout) continue;
 					// Local storage references: `uint256[] storage x = a;`
 					// The initialiser lives in the parent VariableDeclarationStatement,
 					// not in VariableDeclaration::value(). We must look it up from the

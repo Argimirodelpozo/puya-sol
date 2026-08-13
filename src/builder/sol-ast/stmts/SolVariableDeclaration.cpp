@@ -91,7 +91,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		// --evm-storage-layout: a storage-pointer local IS a biguint slot.
 		// Resolve the initializer's slot on the AST (building the aggregate
 		// value would be wrong/rejected) and bind `name = slot`.
-		if (builder::evmStorageLayout()
+		if (m_blk.typeMapper().profile().evmStorageLayout
 			&& decl.referenceLocation() == VariableDeclaration::Location::Storage
 			&& initialValue)
 		{
@@ -144,7 +144,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			// --evm-storage-layout: a storage-typed initializer builds to its
 			// biguint slot handle; a MEMORY struct local needs the VALUE —
 			// materialise it from the slots (storage → memory copy).
-			if (builder::evmStorageLayout() && value
+			if (m_blk.typeMapper().profile().evmStorageLayout && value
 				&& value->wtype == awst::WType::biguintType()
 				&& decl.referenceLocation() != VariableDeclaration::Location::Storage)
 				if (auto const* ist = dynamic_cast<solidity::frontend::StructType const*>(
@@ -445,8 +445,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				: nullptr;
 			if ((aliasable || viaByteCast) && srcVd
 				&& srcVd->referenceLocation() == VariableDeclaration::Location::Memory
-				&& builder::reassignedMemoryLocalsRegistry().count(decl.id()) == 0
-				&& builder::reassignedMemoryLocalsRegistry().count(srcVd->id()) == 0)
+				&& m_blk.typeMapper().analysis().reassignedMemoryLocals.count(decl.id()) == 0
+				&& m_blk.typeMapper().analysis().reassignedMemoryLocals.count(srcVd->id()) == 0)
 			{
 				if (viaByteCast)
 				{
@@ -505,7 +505,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			// stage 3 (--evm-memory-layout): ANY initializer — build the VALUE,
 			// allocate its EVM-layout region in the blob, store it, bind the
 			// offset (shared emitBlobBackValue; also used for param spills).
-			if (!newCall && builder::evmMemoryLayout())
+			if (!newCall && m_blk.typeMapper().profile().evmMemoryLayout)
 			{
 				auto loc2 = m_blk.makeLoc(decl.location());
 				auto v0 = m_blk.builderCtx().build(*initialValue);
@@ -628,7 +628,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			// it by the mapped aggregate mislabeled the var (an ARC4Struct
 			// wtype puya then failed to even deserialize) and broke every
 			// `(, S storage y, ) = g()` read.
-			bool slotHandle = builder::evmStorageLayout()
+			bool slotHandle = m_blk.typeMapper().profile().evmStorageLayout
 				&& decl.referenceLocation()
 					== solidity::frontend::VariableDeclaration::Location::Storage;
 			if (slotHandle)

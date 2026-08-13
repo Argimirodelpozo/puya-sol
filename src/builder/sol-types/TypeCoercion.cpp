@@ -9,6 +9,7 @@
 #include <libsolidity/ast/TypeProvider.h>
 #include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/Arc4Defaults.h"
+#include "builder/sol-types/TypeMapper.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <libsolutil/Numeric.h>
@@ -189,6 +190,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnElement(
 }
 
 std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnValue(
+	TypeMapper& _typeMapper,
 	std::shared_ptr<awst::Expression> _value,
 	std::vector<ReturnWireElem> const& _plan,
 	awst::SourceLocation const& _loc,
@@ -211,7 +213,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::encodeReturnValue(
 	for (auto const& p: _plan)
 		wireTypes.push_back(p.wireType);
 	auto makeWireTuple = [&]() {
-		return new awst::WTuple(std::vector<awst::WType const*>(wireTypes));
+		return _typeMapper.createType<awst::WTuple>(
+			std::vector<awst::WType const*>(wireTypes));
 	};
 	// Encode each item of a literal tuple in place (uses the item's own location,
 	// matching the post-pass); retype the tuple to the wire tuple.
@@ -530,8 +533,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::checkedIndexToUint64(
 	// temp so a side-effecting index (`a[--i]`) evaluates once.
 	if (_idx && _idx->wtype == awst::WType::biguintType())
 	{
-		static int s_ckIdxCtr = 0;
-		std::string nm = "__ckidx_" + std::to_string(s_ckIdxCtr++);
+		std::string nm = "__ckidx_" + std::to_string(
+			awst::NameGen::next("TypeCoercion.checkedIndex"));
 		_preStmts.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(nm, awst::WType::biguintType(), _loc), std::move(_idx), _loc));
 		auto fits = awst::makeNumericCompare(
@@ -558,8 +561,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::checkedAmountToUint64(
 	// amount evaluates once.
 	if (_amount && _amount->wtype == awst::WType::biguintType())
 	{
-		static int s_ckAmtCtr = 0;
-		std::string nm = "__ckamt_" + std::to_string(s_ckAmtCtr++);
+		std::string nm = "__ckamt_" + std::to_string(
+			awst::NameGen::next("TypeCoercion.checkedAmount"));
 		_preStmts.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(nm, awst::WType::biguintType(), _loc), std::move(_amount), _loc));
 		auto fits = awst::makeNumericCompare(

@@ -21,7 +21,8 @@ ContractContext::ContractContext(
 	std::string const& _contractName,
 	std::unordered_map<std::string, std::string> const& _libraryFunctionIds,
 	std::unordered_set<std::string> const& _overloadedNames,
-	std::unordered_map<int64_t, std::string> const& _freeFunctionById
+	std::unordered_map<int64_t, std::string> const& _freeFunctionById,
+	FunctionPointerRegistry& _functionPointers
 )
 	: typeMapper(_typeMapper),
 	  storageMapper(_storageMapper),
@@ -30,25 +31,9 @@ ContractContext::ContractContext(
 	  libraryFunctionIds(_libraryFunctionIds),
 	  overloadedNames(_overloadedNames),
 	  freeFunctionById(_freeFunctionById),
+	  functionPointers(_functionPointers),
 	  registry(std::make_unique<BuilderRegistry>())
-{
-	// Capture `this` in callbacks — ContractContext is non-movable/non-copyable.
-	buildExpr = [this](solidity::frontend::Expression const& _expr) {
-		return this->build(_expr);
-	};
-	buildBinaryOp = [this](solidity::frontend::Token _op,
-		std::shared_ptr<awst::Expression> _left,
-		std::shared_ptr<awst::Expression> _right,
-		awst::WType const* _resultType,
-		awst::SourceLocation const& _loc) {
-		assert(currentScope && "buildBinaryOp called with no current scope");
-		return eb::buildBinaryOp(*this, *currentScope, _op,
-			std::move(_left), std::move(_right), _resultType, _loc);
-	};
-	builderForInstance = [this](solidity::frontend::Type const* _solType, std::shared_ptr<awst::Expression> _expr) {
-		return registry->tryBuildInstance(*this, _solType, std::move(_expr));
-	};
-}
+{}
 
 ContractContext::~ContractContext() = default;
 
@@ -56,6 +41,25 @@ std::shared_ptr<awst::Expression> ContractContext::build(
 	solidity::frontend::Expression const& _expr)
 {
 	return sol_ast::buildExpression(*this, _expr);
+}
+
+std::shared_ptr<awst::Expression> ContractContext::buildBinaryOp(
+	solidity::frontend::Token _op,
+	std::shared_ptr<awst::Expression> _left,
+	std::shared_ptr<awst::Expression> _right,
+	awst::WType const* _resultType,
+	awst::SourceLocation const& _loc)
+{
+	assert(currentScope && "buildBinaryOp called with no current scope");
+	return eb::buildBinaryOp(*this, *currentScope, _op,
+		std::move(_left), std::move(_right), _resultType, _loc);
+}
+
+std::unique_ptr<InstanceBuilder> ContractContext::builderForInstance(
+	solidity::frontend::Type const* _solType,
+	std::shared_ptr<awst::Expression> _expr)
+{
+	return registry->tryBuildInstance(*this, _solType, std::move(_expr));
 }
 
 std::vector<std::shared_ptr<awst::Statement>> ContractContext::takePending()

@@ -219,7 +219,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			if (!var->isConstant() && !var->immutable()
 				&& var->referenceLocation()
 					!= solidity::frontend::VariableDeclaration::Location::Transient
-				&& evmStorageLayout())
+				&& m_typeMapper.profile().evmStorageLayout)
 			{
 				// --evm-storage-layout: walk the declared type over the getter
 				// args (mapping keys / array indices) to the leaf's slot address
@@ -433,7 +433,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			else if (getter.args.empty())
 			{
 				// Simple state variable (no keys/indices): read from storage.
-				auto storageKind = StorageMapper::shouldUseBoxStorage(*var)
+				auto storageKind = m_storageMapper.shouldUseBoxStorage(*var)
 					? awst::AppStorageKind::Box
 					: awst::AppStorageKind::AppGlobal;
 
@@ -490,7 +490,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				auto* arrWType = m_typeMapper.map(arrType);
 				auto* elemARC4 = m_typeMapper.mapSolTypeToARC4(arrType->baseType());
 
-				auto storageKind = StorageMapper::shouldUseBoxStorage(*var)
+				auto storageKind = m_storageMapper.shouldUseBoxStorage(*var)
 					? awst::AppStorageKind::Box
 					: awst::AppStorageKind::AppGlobal;
 
@@ -595,7 +595,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				if (keyArgCount == 0)
 				{
 					// No mapping keys: plain multi-dim array; read the whole value.
-					auto storageKind = StorageMapper::shouldUseBoxStorage(*var)
+					auto storageKind = m_storageMapper.shouldUseBoxStorage(*var)
 						? awst::AppStorageKind::Box
 						: awst::AppStorageKind::AppGlobal;
 					storageRead = m_storageMapper.createStateRead(

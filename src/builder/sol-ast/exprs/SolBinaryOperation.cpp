@@ -84,19 +84,19 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolShortCircuit()
 	// pendings) so the RHS observes them (`bump(s) > 0 && s.f == 6` — the RHS
 	// runs at call-return state on EVM, not pre-write-back). Pin the left value
 	// before the hoist so it keeps its pre-write-back reads.
-	eb::ContractContext::OperandDeltas leftD;
-	auto left = m_ctx.buildScopedOperand(
-		[&] { return buildExpr(m_binOp.leftExpression()); }, leftD, /*_conditional=*/false);
+	auto loweredLeft = m_ctx.lower(m_binOp.leftExpression(), false);
+	auto left = std::move(loweredLeft.value);
+	auto leftD = std::move(loweredLeft.effects);
 	bool leftHadPost = !leftD.post.empty();
 	left = m_ctx.emitSequencedOperand(std::move(leftD), std::move(left), leftHadPost, m_loc);
 
 	// Build the RHS, capturing any side effects it pushes (a checked op's overflow/zero assert, a
 	// `**` square-and-multiply loop, a nested short-circuit, a call's write-back). They must run
 	// ONLY when the RHS is evaluated, else `b != 0 && a / b > x` divides by zero when b == 0
-	// (EVM short-circuits). buildScopedOperand owns the capture (OperandPlan, fable-review item 7).
-	eb::ContractContext::OperandDeltas rhsD;
-	auto right = m_ctx.buildScopedOperand(
-		[&] { return buildExpr(m_binOp.rightExpression()); }, rhsD);
+	// (EVM short-circuits). lowerOperand owns the explicit effect capture.
+	auto loweredRight = m_ctx.lower(m_binOp.rightExpression());
+	auto right = std::move(loweredRight.value);
+	auto rhsD = std::move(loweredRight.effects);
 
 	auto boolOp = (op == Token::And)
 		? awst::BinaryBooleanOperator::And : awst::BinaryBooleanOperator::Or;
@@ -284,11 +284,12 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 	// write-backs (hoisted), then left's pre — so left's inline reads see
 	// right's effects and right's pinned value predates left's. Effect-free
 	// operands re-emit byte-identically with no pin.
-	eb::ContractContext::OperandDeltas ld, rd;
-	auto left = m_ctx.buildScopedOperand(
-		[&] { return buildExpr(m_binOp.leftExpression()); }, ld, /*_conditional=*/false);
-	auto right = m_ctx.buildScopedOperand(
-		[&] { return buildExpr(m_binOp.rightExpression()); }, rd, /*_conditional=*/false);
+	auto loweredLeft = m_ctx.lower(m_binOp.leftExpression(), false);
+	auto loweredRight = m_ctx.lower(m_binOp.rightExpression(), false);
+	auto left = std::move(loweredLeft.value);
+	auto right = std::move(loweredRight.value);
+	auto ld = std::move(loweredLeft.effects);
+	auto rd = std::move(loweredRight.effects);
 	if (m_ctx.viaIRSequencing)
 	{
 		// via-IR evaluates left-to-right == build order: keep everything put.

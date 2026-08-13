@@ -64,7 +64,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 		elemType = sa->elementType();
 	if (!elemType)
 		elemType = m_ctx.typeMapper.mapSolTypeToARC4(fieldArrayType->baseType());
-	auto kind = builder::StorageMapper::shouldUseBoxStorage(_structVar)
+	auto kind = m_ctx.storageMapper.shouldUseBoxStorage(_structVar)
 		? awst::AppStorageKind::Box
 		: awst::AppStorageKind::AppGlobal;
 

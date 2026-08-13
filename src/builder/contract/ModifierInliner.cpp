@@ -229,7 +229,7 @@ void ContractBuilder::buildModifierChain(
 				// isSlotHandleLocal reads resolve). Building the arg would
 				// materialise the aggregate; the alias below is the retired
 				// named-cell model. Identifier args resolve purely.
-				if (builder::evmStorageLayout()
+				if (m_typeMapper.profile().evmStorageLayout
 					&& param->referenceLocation()
 						== solidity::frontend::VariableDeclaration::Location::Storage
 					&& dynamic_cast<solidity::frontend::Identifier const*>(

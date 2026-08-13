@@ -24,6 +24,7 @@ void registerFunctionIds(
 
 void presetDispatchCref(
 	solidity::frontend::CompilerStack& _compiler,
-	std::string const& _sourceFile);
+	std::string const& _sourceFile,
+	eb::FunctionPointerRegistry& _functionPointers);
 
 } // namespace puyasol::builder

@@ -120,6 +120,7 @@ std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 
 std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 	solidity::frontend::FunctionDefinition const& _func,
+	TypeMapper const& _typeMapper,
 	bool _useABICoderV2,
 	std::string const& _sourceFile)
 {
@@ -131,7 +132,7 @@ std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 		std::string name = param->name().empty()
 			? "_param" + std::to_string(pi) : param->name();
 		descs.push_back({param->annotation().type, std::move(name),
-			makeLoc(_sourceFile, param->location())});
+			makeLoc(_typeMapper, _sourceFile, param->location())});
 	}
 	return buildABIEntryChecks(descs, _useABICoderV2);
 }

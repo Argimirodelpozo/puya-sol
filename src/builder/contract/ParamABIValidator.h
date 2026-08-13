@@ -20,8 +20,11 @@
 namespace puyasol::builder
 {
 
-std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
+class TypeMapper;
+
+	std::vector<std::shared_ptr<awst::Statement>> buildABIEntryChecks(
 	solidity::frontend::FunctionDefinition const& _func,
+	TypeMapper const& _typeMapper,
 	bool _useABICoderV2,
 	std::string const& _sourceFile);
 

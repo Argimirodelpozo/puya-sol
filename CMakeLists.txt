@@ -45,6 +45,7 @@ set(SOURCES
 	src/awst/Termination.cpp
 	# Builder core
 	src/builder/AWSTBuilder.cpp
+	src/builder/ProgramAnalysis.cpp
 	src/builder/SourceLocConvert.cpp
 	src/builder/FunctionIdRegistry.cpp
 	src/builder/SubroutineReachability.cpp
@@ -91,6 +92,7 @@ set(SOURCES
 	# Storage, type, and intrinsic mappers
 	src/builder/storage/StorageMapper.cpp
 	src/builder/storage/StorageLayout.cpp
+	src/builder/storage/StorageRuntimePlan.cpp
 	src/builder/storage/SlotHandleAccess.cpp
 	src/builder/storage/SlotWordCodec.cpp
 	src/builder/storage/TransientStorage.cpp
@@ -125,6 +127,7 @@ set(SOURCES
 	src/builder/sol-eb/TypeConversions.cpp
 	src/builder/sol-ast/Context.cpp
 	src/builder/sol-ast/EvmSlotLowering.cpp
+	src/builder/sol-ast/EvmSlotValueLowering.cpp
 	src/builder/sol-ast/SolExpression.cpp
 	src/builder/sol-ast/SolFunctionCall.cpp
 	src/builder/sol-ast/SolExpressionFactory.cpp

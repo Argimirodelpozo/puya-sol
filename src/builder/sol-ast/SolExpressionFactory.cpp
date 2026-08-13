@@ -4,6 +4,7 @@
 
 #include "builder/sol-ast/SolExpressionFactory.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
+#include "builder/itxn/CallResolver.h"
 #include "builder/sol-ast/calls/SolRequireAssert.h"
 #include "builder/sol-ast/calls/SolRevert.h"
 #include "builder/sol-ast/calls/SolBuiltinCall.h"
@@ -101,6 +102,7 @@ public:
 		if (!regType)
 			regType = m_funcDef->functionType(false);
 		eb::FunctionPointerBuilder::registerTarget(
+			m_ctx,
 			m_funcDef,
 			regType,
 			awstName);
@@ -259,114 +261,9 @@ std::unique_ptr<SolFunctionCall> SolExpressionFactory::createFunctionCall(
 	case Kind::External:
 	case Kind::DelegateCall:
 	{
-		// Route External/DelegateCall as INTERNAL in two cases:
-		// 1. Public library functions — AVM has no delegatecall; libraries share the TU.
-		// 2. Self-calls (`this.f(...)`, `A(this).f(...)`) — AVM v10 rejects self-calls
-		//    with "attempt to self-call"; inline as internal. Loses revert isolation.
-
-		// Unwrap FunctionCallOptions (e.g. `this.f{value: X}(args)`).
-		auto const* callExpr = &_node.expression();
-		if (auto const* callOpts = dynamic_cast<
-				solidity::frontend::FunctionCallOptions const*>(callExpr))
-		{
-			callExpr = &callOpts->expression();
-		}
-
-		// Unwrap parenthesized expression so `(x.mul)({x: a})` is a library call.
-		if (auto const* tuple = dynamic_cast<
-				solidity::frontend::TupleExpression const*>(callExpr))
-		{
-			if (tuple->components().size() == 1 && tuple->components()[0])
-				callExpr = tuple->components()[0].get();
-		}
-
-		auto const* memberAccess = dynamic_cast<
-			solidity::frontend::MemberAccess const*>(callExpr);
-		if (memberAccess)
-		{
-			// Case 1: library
-			if (auto const* refDecl = memberAccess->annotation().referencedDeclaration)
-			{
-				if (auto const* funcDef = dynamic_cast<solidity::frontend::FunctionDefinition const*>(refDecl))
-				{
-					auto const* contractDef = funcDef->annotation().contract;
-					if (contractDef && contractDef->isLibrary())
-						return std::make_unique<SolInternalCall>(m_ctx, _node);
-				}
-			}
-
-			// Case 2: `this.f()` or `A(this).f()` — self-call.
-			auto const* baseExpr = &memberAccess->expression();
-
-			// Unwrap `A(this)` type conversion.
-			if (auto const* baseCall = dynamic_cast<
-					solidity::frontend::FunctionCall const*>(baseExpr))
-			{
-				if (baseCall->annotation().kind.set()
-					&& *baseCall->annotation().kind
-						== solidity::frontend::FunctionCallKind::TypeConversion
-					&& baseCall->arguments().size() == 1)
-				{
-					baseExpr = baseCall->arguments()[0].get();
-				}
-			}
-
-			if (auto const* ident = dynamic_cast<
-					solidity::frontend::Identifier const*>(baseExpr))
-			{
-				if (ident->name() == "this")
-					return std::make_unique<SolInternalCall>(m_ctx, _node);
-			}
-		}
-
-		// Case 3: fn-ptr variable call `x(a)` → SolInternalCall (inner app txn).
-		if (auto const* ident = dynamic_cast<
-				solidity::frontend::Identifier const*>(callExpr))
-		{
-			auto const* decl = ident->annotation().referencedDeclaration;
-			if (auto const* varDecl = dynamic_cast<
-					solidity::frontend::VariableDeclaration const*>(decl))
-			{
-				if (dynamic_cast<solidity::frontend::FunctionType const*>(varDecl->type()))
-					return std::make_unique<SolInternalCall>(m_ctx, _node);
-			}
-		}
-
-		// Case 4: fn-ptr stored in an array or struct: `arr[i](args)` /
-		// `s.fn(args)`. The callee expression evaluates to a function type.
-		if (auto const* callExprType = callExpr->annotation().type)
-		{
-			if (dynamic_cast<solidity::frontend::FunctionType const*>(callExprType))
-			{
-				if (dynamic_cast<solidity::frontend::IndexAccess const*>(callExpr))
-					return std::make_unique<SolInternalCall>(m_ctx, _node);
-				// `k1()()`: inner call yields function type; SolInternalCall's
-				// fn-ptr dispatch handles it (SolExternalCall mis-classifies it).
-				if (dynamic_cast<solidity::frontend::FunctionCall const*>(callExpr))
-					return std::make_unique<SolInternalCall>(m_ctx, _node);
-				if (auto const* ma = dynamic_cast<
-						solidity::frontend::MemberAccess const*>(callExpr))
-				{
-					// Struct-field fn-ptrs only (not contract method calls).
-					auto const* baseType = ma->expression().annotation().type;
-					while (baseType)
-					{
-						if (dynamic_cast<solidity::frontend::StructType const*>(baseType))
-						{
-							return std::make_unique<SolInternalCall>(m_ctx, _node);
-						}
-						if (auto const* at = dynamic_cast<
-								solidity::frontend::ArrayType const*>(baseType))
-						{
-							baseType = at->baseType();
-							continue;
-						}
-						break;
-					}
-				}
-			}
-		}
-
+		auto plan = eb::CallResolver::plan(_node);
+		if (plan.transport == eb::CallTransport::Internal)
+			return std::make_unique<SolInternalCall>(m_ctx, _node);
 		return std::make_unique<SolExternalCall>(m_ctx, _node);
 	}
 

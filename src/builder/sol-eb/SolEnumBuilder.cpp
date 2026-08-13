@@ -2,6 +2,7 @@
 /// Solidity enum type builder — enums encoded as uint64 on AVM.
 
 #include "builder/sol-eb/SolEnumBuilder.h"
+#include "awst/NameGen.h"
 
 namespace puyasol::builder::eb
 {
@@ -22,10 +23,10 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 	if (m_enumType)
 	{
 		unsigned numMembers = m_enumType->numberOfMembers();
-		static int s_enumCmpTemp = 0;
 		auto spillAndValidate = [&](std::shared_ptr<awst::Expression> val)
 			-> std::shared_ptr<awst::Expression> {
-			std::string tmpName = "__enum_cmp_" + std::to_string(s_enumCmpTemp++);
+			std::string tmpName = "__enum_cmp_" + std::to_string(
+				awst::NameGen::next("SolEnumBuilder.compare"));
 			auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::uint64Type(), _loc);
 			m_ctx.prePendingStatements.push_back(
 				awst::makeAssignmentStatement(tmpVar, std::move(val), _loc));

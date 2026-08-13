@@ -385,8 +385,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		auto vByte = makeExtract(_inputData, 63, 1, _loc);
 		auto vInt = awst::makeBtoi(std::move(vByte), _loc);
 		auto* u64v = awst::WType::uint64Type();
-		static int s_ecRecVTmp = 0;
-		std::string vName = "__ecrec_v_" + std::to_string(++s_ecRecVTmp);
+		std::string vName = "__ecrec_v_" + std::to_string(
+			awst::NameGen::next("InnerCallShapes.ecrecoverV") + 1);
 		auto bindV = awst::makeAssignmentExpression(
 			awst::makeVarExpression(vName, u64v, _loc), std::move(vInt), _loc, u64v);
 		auto vRead = [&]() { return awst::makeVarExpression(vName, u64v, _loc); };

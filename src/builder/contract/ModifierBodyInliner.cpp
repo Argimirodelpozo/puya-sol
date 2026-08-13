@@ -123,7 +123,7 @@ void inlineModifiers(
 	auto& m_tr = _ctx.tr;
 	auto const* m_currentContract = _ctx.currentContract;
 	auto makeLocFree = [&](solidity::langutil::SourceLocation const& loc) {
-		return makeLoc(_ctx.sourceFile, loc);
+		return makeLoc(_ctx.typeMapper, _ctx.sourceFile, loc);
 	};
 	std::shared_ptr<awst::Block> __placeholder;
 	auto setPlaceholderBody = [&](std::shared_ptr<awst::Block> p) {
@@ -267,7 +267,7 @@ void inlineModifiers(
 				// whose writes never reach storage), and the legacy alias below
 				// is the named-cell model this mode retired. Guarded to
 				// Identifier args — resolving those is pure.
-				if (builder::evmStorageLayout()
+				if (m_exprBuilder.typeMapper.profile().evmStorageLayout
 					&& param->referenceLocation()
 						== solidity::frontend::VariableDeclaration::Location::Storage
 					&& dynamic_cast<solidity::frontend::Identifier const*>(

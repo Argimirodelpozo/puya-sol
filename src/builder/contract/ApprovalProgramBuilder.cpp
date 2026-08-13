@@ -36,7 +36,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	auto body = awst::makeBlock(method.sourceLocation);
 
 	// __postInit triggers: box writes, new C(), msg.*, or AVM stdlib calls.
-	bool needsPostInit = computeNeedsPostInit(_contract);
+	bool needsPostInit = computeNeedsPostInit(_contract, m_storageMapper);
 
 	// Create-time check: if (Txn.ApplicationID == 0) { base_ctors; ctor_body; return true; }
 	{
@@ -66,7 +66,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				// (absent box = 0); only explicit initializers need a write.
 				// Immutables keep their named cells (they are not in EVM
 				// storage) and fall through to the existing path.
-				if (evmStorageLayout() && !var->immutable()
+				if (m_typeMapper.profile().evmStorageLayout && !var->immutable()
 					&& var->referenceLocation()
 						!= solidity::frontend::VariableDeclaration::Location::Transient)
 				{
@@ -156,7 +156,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					continue;
 				}
 
-				auto kind = StorageMapper::shouldUseBoxStorage(*var)
+				auto kind = m_storageMapper.shouldUseBoxStorage(*var)
 					? awst::AppStorageKind::Box
 					: awst::AppStorageKind::AppGlobal;
 
@@ -290,7 +290,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// Collect box-stored array/bytes vars for box_create in __postInit.
 		// --evm-storage-layout: no named boxes exist; slot pages materialise
 		// lazily on first write.
-		if (!evmStorageLayout())
+		if (!m_typeMapper.profile().evmStorageLayout)
 		{
 			std::set<std::string> lengthInitialized;
 			forEachStateVarReverse(_contract, [&](auto const* var)
@@ -300,7 +300,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				if (lengthInitialized.count(var->name()))
 					return;
 
-				auto kind = StorageMapper::shouldUseBoxStorage(*var)
+				auto kind = m_storageMapper.shouldUseBoxStorage(*var)
 					? awst::AppStorageKind::Box
 					: awst::AppStorageKind::AppGlobal;
 
@@ -672,7 +672,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					// SLOT HANDLES. Resolve the SOURCE (m[1] etc.) instead of
 					// building it — a value build would materialise (or refuse:
 					// mapping-typed elements are uncopyable by construction).
-					if (evmStorageLayout()
+					if (m_typeMapper.profile().evmStorageLayout
 						&& params[i]->referenceLocation()
 							== solidity::frontend::VariableDeclaration::Location::Storage)
 					{
@@ -1013,7 +1013,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// `T memory t;` locals (FMP bumps on slot 0) see a valid blob.
 		// Uninitialised scratch reads as uint64 0 — must bzero every slot per call.
 		{
-			for (int s = AssemblyBuilder::MEMORY_SLOT_FIRST; s <= AssemblyBuilder::MEMORY_SLOT_LAST; ++s)
+			for (int s = AssemblyBuilder::MEMORY_SLOT_FIRST;
+				s <= AssemblyBuilder::MEMORY_SLOT_LAST; ++s)
 			{
 				auto storeOp = awst::makeStoreSlot(
 					s,

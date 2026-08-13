@@ -11,6 +11,7 @@
 
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -35,7 +36,9 @@ splitter::PureHelperExtractor::Result extractPureHelpers(
 std::optional<int> runSimpleSplitterIfRequested(
 	AwstRoots& _roots, Options const& _opts, std::string const& _sourceFile);
 
-/// Bundle new-C() child binaries into deploy.tmpl.json and reset the registry.
-void writeChildDeployTemplates(std::string const& _outputDir);
+/// Bundle new-C() child binaries into deploy.tmpl.json.
+void writeChildDeployTemplates(
+	std::string const& _outputDir,
+	std::set<std::string> const& _childContracts);
 
 } // namespace puyasol::cli

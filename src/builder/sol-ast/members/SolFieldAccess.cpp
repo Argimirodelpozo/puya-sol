@@ -20,7 +20,7 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 
 	// --evm-storage-layout: struct-field reads rooted at a persistent state
 	// var resolve to their EVM word address (writes intercept in SolAssignment).
-	if (builder::evmStorageLayout()
+	if (m_ctx.typeMapper.profile().evmStorageLayout
 		&& EvmSlotLowering::isStorageStateRef(m_memberAccess))
 	{
 		EvmSlotLowering low(m_ctx, m_scope, m_loc);

@@ -25,11 +25,34 @@ struct ResolvedCall
 	bool isExternalCall = false;    ///< Needs inner txn.
 };
 
+enum class CallTransport
+{
+	Internal,
+	External,
+};
+
+/// Source-level call classification computed from solc annotations. Argument
+/// binding and target emission consume this shared plan instead of each call
+/// builder re-inspecting the callee syntax.
+struct CallPlan
+{
+	CallTransport transport = CallTransport::Internal;
+	solidity::frontend::FunctionType const* functionType = nullptr;
+	solidity::frontend::Expression const* callee = nullptr;
+	solidity::frontend::FunctionDefinition const* declaration = nullptr;
+	bool isSelfCall = false;
+	bool isFunctionPointer = false;
+};
+
 /// Resolves function call targets (library, free function, super, base
 /// internal, external, or regular instance method) from Solidity AST.
 class CallResolver
 {
 public:
+	/// Classify an already type-checked call as an internal/subroutine path or
+	/// an external inner-transaction path.
+	static CallPlan plan(solidity::frontend::FunctionCall const& _call);
+
 	/// Try to resolve a function call from an Identifier callee; nullopt on failure.
 	static std::optional<ResolvedCall> resolveFromIdentifier(
 		ContractContext& _ctx,

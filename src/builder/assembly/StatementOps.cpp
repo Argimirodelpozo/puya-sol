@@ -2,6 +2,7 @@
 /// Yul statement translation: variable declarations, assignments, expression statements, function definitions.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "awst/NameGen.h"
 #include "Logger.h"
 
 #include <libsolutil/Numeric.h>
@@ -676,8 +677,7 @@ void AssemblyBuilder::buildExpressionStatement(
 				// overlap-safe by construction), trim to `len`, extend with the
 				// dst's own tail bytes up to a word boundary (so the word-loop
 				// writer's zero-pad never clobbers past dst+len), then write.
-				static int s_dynMcopyCtr = 0;
-				int uid = s_dynMcopyCtr++;
+				int uid = awst::NameGen::next("StatementOps.dynamicMcopy");
 				auto nm = [&](char const* t) {
 					return "__mcopyd_" + std::string(t) + "_" + std::to_string(uid);
 				};
@@ -831,7 +831,6 @@ void AssemblyBuilder::buildExpressionStatement(
 				// Memmove semantics (M13): snapshot ALL source words into
 				// temps BEFORE any write — the interleaved mload/mstore
 				// forward loop corrupted overlapping ranges (dst inside src).
-				static int s_mcopyCtr = 0;
 				std::vector<std::pair<unsigned long long, std::string>> srcWords;
 				for (unsigned long long w = 0; w < nwords; ++w)
 				{
@@ -839,7 +838,8 @@ void AssemblyBuilder::buildExpressionStatement(
 					auto loadedVal = handleMload(mloadArgs, loc);
 					if (!loadedVal)
 						continue;
-					std::string vn = "__mcopy_w_" + std::to_string(s_mcopyCtr++);
+					std::string vn = "__mcopy_w_" + std::to_string(
+						awst::NameGen::next("StatementOps.mcopyWord"));
 					auto const* wt = loadedVal->wtype;
 					_out.push_back(awst::makeAssignmentStatement(
 						awst::makeVarExpression(vn, wt, loc), std::move(loadedVal), loc));
@@ -849,7 +849,8 @@ void AssemblyBuilder::buildExpressionStatement(
 				std::string tailVn;
 				if (r != 0)
 				{
-					tailVn = "__mcopy_w_" + std::to_string(s_mcopyCtr++);
+					tailVn = "__mcopy_w_" + std::to_string(
+						awst::NameGen::next("StatementOps.mcopyWord"));
 					auto srcWord = readMemWordDyn(atOff(args[1], 32 * nwords), loc);
 					_out.push_back(awst::makeAssignmentStatement(
 						awst::makeVarExpression(tailVn, awst::WType::bytesType(), loc),

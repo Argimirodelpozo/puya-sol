@@ -13,6 +13,7 @@
 
 #include "awst/Node.h"
 #include "builder/SourceLocConvert.h"
+#include "builder/sol-types/TypeMapper.h"
 #include "builder/ReturnWirePlan.h"
 
 #include <libsolidity/ast/AST.h>
@@ -28,7 +29,6 @@
 
 namespace puyasol::builder
 {
-class TypeMapper;
 namespace eb { class ContractContext; }
 }
 
@@ -359,12 +359,12 @@ struct TranslationContext: Context
 
 	awst::SourceLocation makeLoc(solidity::langutil::SourceLocation const& _sl) const
 	{
-		return builder::toAwstLoc(sourceFile, _sl);
+		return typeMapper.sourceMap().toAwstLoc(sourceFile, _sl);
 	}
 
 	awst::SourceLocation makeLoc(int _start, int _end) const
 	{
-		return builder::toAwstLoc(sourceFile, _start, _end);
+		return typeMapper.sourceMap().toAwstLoc(sourceFile, _start, _end);
 	}
 };
 

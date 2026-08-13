@@ -14,6 +14,7 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageLayout.h"
+#include "builder/BuildArtifacts.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
@@ -40,6 +41,7 @@ namespace puyasol::builder
 ContractBuilder::ContractBuilder(
 	TypeMapper& _typeMapper,
 	StorageMapper& _storageMapper,
+	eb::FunctionPointerRegistry& _functionPointers,
 	std::string const& _sourceFile,
 	LibraryFunctionIdMap const& _libraryFunctionIds,
 	uint64_t _opupBudget,
@@ -50,6 +52,7 @@ ContractBuilder::ContractBuilder(
 )
 	: m_typeMapper(_typeMapper),
 	  m_storageMapper(_storageMapper),
+	  m_functionPointers(_functionPointers),
 	  m_sourceFile(_sourceFile),
 	  m_libraryFunctionIds(_libraryFunctionIds),
 	  m_opupBudget(_opupBudget),
@@ -64,10 +67,11 @@ ContractBuilder::ContractBuilder(
 // ContractBuilder (contract-method path).
 
 awst::SourceLocation makeLoc(
+	TypeMapper const& _typeMapper,
 	std::string const& _sourceFile,
 	solidity::langutil::SourceLocation const& _solLoc)
 {
-	return toAwstLoc(_sourceFile, _solLoc);
+	return _typeMapper.sourceMap().toAwstLoc(_sourceFile, _solLoc);
 }
 
 namespace {
@@ -265,7 +269,11 @@ class AssemblyAggregateScanner: public solidity::frontend::ASTConstVisitor
 {
 public:
 	std::set<int64_t>& ids;
-	explicit AssemblyAggregateScanner(std::set<int64_t>& _ids): ids(_ids) {}
+	bool universalMemory;
+	explicit AssemblyAggregateScanner(
+		std::set<int64_t>& _ids, bool _universalMemory)
+		: ids(_ids), universalMemory(_universalMemory)
+	{}
 
 	bool visit(solidity::frontend::InlineAssembly const& _asm) override
 	{
@@ -297,10 +305,10 @@ public:
 				// named-return spelling of the same idiom was always fine, which
 				// is exactly the inconsistency this removes. Stage 3 keeps the
 				// universal pointer model.
-				if (!evmMemoryLayout() && _onlyWholeAssignTarget(_asm, vd))
+				if (!universalMemory && _onlyWholeAssignTarget(_asm, vd))
 					continue;
 				if (!at->isByteArrayOrString()
-					|| evmMemoryLayout()   // stage 3: universal pointer model
+					|| universalMemory   // stage 3: universal pointer model
 					|| (_isNewAllocatedLocal(vd) && _bufferPointerEscapes(_asm, vd)))
 					ids.insert(vd->id());
 			}
@@ -489,7 +497,7 @@ void emitAsmParamSpills(
 	std::string const& _sourceFile,
 	std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
-	if (!evmMemoryLayout())
+	if (!_typeMapper.profile().evmMemoryLayout)
 		return;
 	// collect the DECLS asm references (the aggregate scanner only keeps ids)
 	struct DeclScan: solidity::frontend::ASTConstVisitor
@@ -522,7 +530,7 @@ void emitAsmParamSpills(
 			continue;   // already pointer-modeled (>4KB path)
 		auto const* wt = _typeMapper.map(t);
 		std::string offN = "__blobagg_off_" + std::to_string(id);
-		awst::SourceLocation loc0 = makeLoc(_sourceFile, vd->location());
+		awst::SourceLocation loc0 = makeLoc(_typeMapper, _sourceFile, vd->location());
 		if (emitBlobBackValue(_typeMapper, t, wt,
 				awst::makeVarExpression(vd->name(), wt, loc0),
 				offN, static_cast<int>(id), loc0, _out))
@@ -703,7 +711,8 @@ void markAssemblyAggregates(
 	solidity::frontend::Block const& _block)
 {
 	std::set<int64_t> asmAggIds;
-	AssemblyAggregateScanner scanner{asmAggIds};
+	AssemblyAggregateScanner scanner{
+		asmAggIds, _fn.tr.typeMapper.profile().evmMemoryLayout};
 	_block.accept(scanner);
 	for (int64_t id: asmAggIds)
 		_fn.markAssemblyAggregate(id);
@@ -746,7 +755,8 @@ std::shared_ptr<awst::Block> buildBlock(
 	// box_replace(key, offset+fieldOff). The offset param itself is in the subroutine signature
 	// (FunctionBuilder) and supplied by the caller (SolInternalCall).
 	for (auto const* mp: _ctx.mappingKeyParams)
-		if (mp && !mp->name().empty() && structRefOffsetParamsRegistry().count(mp->id()))
+		if (mp && !mp->name().empty()
+			&& _ctx.typeMapper.analysis().structRefOffsetParams.count(mp->id()))
 			fn.setStructRefOffset(mp->id(), mp->name() + "__off");
 
 	// Named returns >4 KB: blob-backed aggregates (pointer model) so `p.field[i]`
@@ -797,24 +807,20 @@ awst::SourceLocation ContractBuilder::makeLoc(
 	solidity::langutil::SourceLocation const& _solLoc
 )
 {
-	return ::puyasol::builder::makeLoc(m_sourceFile, _solLoc);
+	return ::puyasol::builder::makeLoc(m_typeMapper, m_sourceFile, _solLoc);
 }
 
 FunctionTranslationCtx ContractBuilder::makeFunctionCtx()
 {
 	auto ctx = FunctionTranslationCtx{
-		m_typeMapper,
-		*m_exprBuilder,
-		*m_tr,
-		m_sourceFile,
-		m_currentParams,
-		m_currentReturnType,
-		m_currentBitWidths,
-		m_currentNamedReturns,
-		m_currentMappingKeyParams,
-		m_currentBlobAggParams,
-		m_currentContract,
-	};
+		m_typeMapper, *m_exprBuilder, *m_tr, m_sourceFile};
+	ctx.params = m_currentParams;
+	ctx.returnType = m_currentReturnType;
+	ctx.paramBitWidths = m_currentBitWidths;
+	ctx.namedReturns = m_currentNamedReturns;
+	ctx.mappingKeyParams = m_currentMappingKeyParams;
+	ctx.blobAggParams = m_currentBlobAggParams;
+	ctx.currentContract = m_currentContract;
 	ctx.inConstructor = m_currentInConstructor;
 	ctx.frameIsProgram = m_currentFrameIsProgram;
 	ctx.encodeReturnsAtBuildTime = m_currentEncodeReturnsAtBuildTime;
@@ -949,7 +955,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	awst::NameGen::resetAll();
 
 	// Reset Yul subroutine sink (drained below).
-	AssemblyBuilder::resetPendingSubroutines();
+	m_typeMapper.artifacts().pendingYulSubroutines.clear();
 
 	// Collect transient state variables
 	m_transientStorage.collectVars(_contract, m_typeMapper);
@@ -995,14 +1001,15 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	m_exprBuilder = std::make_unique<eb::ContractContext>(
 		m_typeMapper, m_storageMapper, m_sourceFile, contractName,
-		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById
+		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById,
+		m_functionPointers
 	);
 	m_exprBuilder->currentContract = &_contract;
 	m_exprBuilder->viaIRSequencing = m_viaIR;
 
 	// --evm-storage-layout: expose the solc-exact layout to expression builders
 	// so state access lowers to slot addresses (EvmSlotLowering).
-	if (evmStorageLayout())
+	if (m_typeMapper.profile().evmStorageLayout)
 	{
 		m_evmLayout = std::make_unique<StorageLayout>();
 		m_evmLayout->computeLayout(_contract, m_typeMapper);
@@ -1040,7 +1047,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_storageBackend.emplace(m_storageMapper, m_exprBuilder->transientStorage);
 	m_exprBuilder->storageBackend = &*m_storageBackend;
 
-	eb::FunctionPointerBuilder::setCurrentCref(contractId);
+	eb::FunctionPointerBuilder::setCurrentCref(*m_exprBuilder, contractId);
 
 	auto contract = std::make_shared<awst::Contract>();
 	contract->sourceLocation = makeLoc(_contract.location());
@@ -1065,7 +1072,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	// --evm-storage-layout: state lives in opaque numbered slots — no per-var
 	// ARC-56 declarations (the reason the mode is opt-in; see the design doc).
-	if (!evmStorageLayout())
+	if (!m_typeMapper.profile().evmStorageLayout)
 		contract->appState = m_storageMapper.mapStateVariables(_contract, m_sourceFile);
 
 	// EVM-memory scratch slots 0..MEMORY_SLOT_LAST (default 0-4; raisable via
@@ -1219,7 +1226,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	{
 		// Set subroutine IDs for library/free function targets so dispatch
 		// uses SubroutineID (resolvable by puya) instead of InstanceMethodTarget.
-		eb::FunctionPointerBuilder::setSubroutineIds(m_freeFunctionById);
+		eb::FunctionPointerBuilder::setSubroutineIds(
+			*m_exprBuilder, m_freeFunctionById);
 
 		std::string cref = m_sourceFile + "." + contractName;
 		awst::SourceLocation loc;
@@ -1229,13 +1237,14 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			dispCtx, cref, loc, &m_dispatchSubroutines);
 		for (auto& m : dispatchMethods)
 			contract->methods.push_back(std::move(m));
-		eb::FunctionPointerBuilder::reset();
+		eb::FunctionPointerBuilder::reset(*m_exprBuilder);
 	}
 
 	// Drain any Subroutines emitted for recursive Yul functions so the
 	// contract-builder caller picks them up alongside fn-ptr dispatchers.
 	{
-		auto yulSubs = AssemblyBuilder::takePendingSubroutines();
+		auto yulSubs = std::move(m_typeMapper.artifacts().pendingYulSubroutines);
+		m_typeMapper.artifacts().pendingYulSubroutines.clear();
 		for (auto& sub: yulSubs)
 			m_dispatchSubroutines.push_back(std::move(sub));
 	}

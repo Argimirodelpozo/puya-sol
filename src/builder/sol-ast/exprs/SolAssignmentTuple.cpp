@@ -269,7 +269,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 					// the compile-time alias below never fires there (slot-handle
 					// reads don't consult the alias map), which silently dropped
 					// `(a, b, c) = g()` rebinds of storage-ref returns.
-					if (builder::evmStorageLayout())
+					if (m_ctx.typeMapper.profile().evmStorageLayout)
 					{
 						auto const* valueTuple2 =
 							dynamic_cast<awst::WTuple const*>(_value->wtype);
@@ -341,7 +341,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				// reversal below then orders components right-to-left, which is
 				// exactly Solidity's storage-tuple quirk: `(x, y) = (y, x)` is
 				// `y = x; x = y` (swap_in_storage_overwrite pins it).
-				if (builder::evmStorageLayout())
+				if (m_ctx.typeMapper.profile().evmStorageLayout)
 				{
 					auto const* lst = dynamic_cast<solidity::frontend::StructType const*>(
 						comp->annotation().type);
@@ -590,7 +590,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		// ("deserialization failed: 'SubroutineCallExpression'", 9 fixtures).
 		// Route these through the slot writer exactly like the scalar path in
 		// SolAssignment does.
-		if (builder::evmStorageLayout() && _sourceLhs
+		if (m_ctx.typeMapper.profile().evmStorageLayout && _sourceLhs
 			&& i < _sourceLhs->components().size() && _sourceLhs->components()[i])
 		{
 			auto const& lhsComp = *_sourceLhs->components()[i];

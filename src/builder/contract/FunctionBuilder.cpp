@@ -183,7 +183,7 @@ namespace {
 void augmentMethodForMutatedMemoryParams(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& func,
-	TypeMapper& /*tm*/)
+	TypeMapper& typeMapper)
 {
 	using namespace solidity::frontend;
 	if (!func.isImplemented() || !method.body) return;
@@ -196,7 +196,7 @@ void augmentMethodForMutatedMemoryParams(
 		if (auto const* arr = dynamic_cast<ArrayType const*>(t)) return !arr->isByteArrayOrString();
 		return dynamic_cast<StructType const*>(t) != nullptr;
 	};
-	ParamMutationDetector detector;
+	ParamMutationDetector detector{typeMapper.analysis()};
 	for (auto const& p : func.parameters()) detector.paramIds.insert(p->id());
 	func.body().accept(detector);
 
@@ -225,7 +225,7 @@ void augmentMethodForMutatedMemoryParams(
 	}
 	for (size_t idx : memIdx) types.push_back(method.args[idx].wtype);
 	awst::WType const* newRetType =
-		types.size() == 1 ? types[0] : new awst::WTuple(std::move(types));
+		types.size() == 1 ? types[0] : typeMapper.createType<awst::WTuple>(std::move(types));
 	method.returnType = newRetType;
 	bool newIsTuple = (dynamic_cast<awst::WTuple const*>(newRetType) != nullptr);
 
@@ -316,7 +316,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		arg.sourceLocation = makeLoc(param->location());
 		arg.wtype = m_typeMapper.map(param->type());
 		// --evm-storage-layout: a storage ref IS a biguint slot number.
-		if (evmStorageLayout()
+		if (m_typeMapper.profile().evmStorageLayout
 			&& param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
 			arg.wtype = awst::WType::biguintType();
 		// Memory aggregate >4KB: pass as uint64 base offset (blob pointer model).
@@ -333,10 +333,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	// after all regular params. The caller appends matching offset args in the same order; the
 	// body's `s.field` writes target the element slice via box_replace(key, offset+fieldOff).
 	for (auto const& param: _func.parameters())
-		if (!evmStorageLayout()   // slot handles carry the element position directly
+		if (!m_typeMapper.profile().evmStorageLayout   // slot handles carry the element position directly
 			&& param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
 			&& !param->name().empty()
-			&& structRefOffsetParamsRegistry().count(param->id()))
+			&& m_typeMapper.analysis().structRefOffsetParams.count(param->id()))
 		{
 			awst::SubroutineArgument offArg;
 			offArg.name = param->name() + "__off";
@@ -356,7 +356,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	{
 		method.returnType = m_typeMapper.map(returnParams[0]->type());
 		// --evm-storage-layout: ANY storage ref return is a biguint slot.
-		if (evmStorageLayout()
+		if (m_typeMapper.profile().evmStorageLayout
 			&& returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
 			method.returnType = awst::WType::biguintType();
 		// .slot assembly storage ref: return biguint (slot number).
@@ -399,7 +399,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		{
 			auto const& rp = returnParams[ri];
 			auto* mappedType = m_typeMapper.map(rp->type());
-			if (evmStorageLayout()
+			if (m_typeMapper.profile().evmStorageLayout
 				&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
 				mappedType = awst::WType::biguintType();
 			auto intInfo = builder::SolIntType::fromSolOrEnum(rp->type());
@@ -428,10 +428,11 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		{
 			// Suffix "Return" to avoid ARC56 collision across methods.
 			std::string tupleName = _func.name() + "Return";
-			method.returnType = new awst::WTuple(std::move(types), std::move(names), std::move(tupleName));
+			method.returnType = m_typeMapper.createType<awst::WTuple>(
+				std::move(types), std::move(names), std::move(tupleName));
 		}
 		else
-			method.returnType = new awst::WTuple(std::move(types));
+			method.returnType = m_typeMapper.createType<awst::WTuple>(std::move(types));
 	}
 
 	// Pure/view
@@ -583,9 +584,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// Covers both input params (storage m) and named returns (storage r assigned r=m1).
 		std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParamDecls;
 		auto isMappingStorageRef = [&](solidity::frontend::VariableDeclaration const* p) {
-			return !evmStorageLayout()   // slot handles replace box-key prefixes
+			return !m_typeMapper.profile().evmStorageLayout   // slot handles replace box-key prefixes
 				&& p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-				&& isBoxKeyedStorageRef(p->type()) // widened: plain structs too
+				&& isBoxKeyedStorageRef(p->type(), m_typeMapper.analysis()) // widened: plain structs too
 				&& !p->name().empty();
 		};
 		for (auto const& p: _func.parameters())
@@ -605,7 +606,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		// --evm-storage-layout: storage params + named storage returns are
 		// biguint slot handles; register so body access resolves through them.
 		std::vector<solidity::frontend::VariableDeclaration const*> slotRefParamDecls;
-		if (evmStorageLayout())
+		if (m_typeMapper.profile().evmStorageLayout)
 		{
 			for (auto const& p: _func.parameters())
 				if (p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
@@ -655,7 +656,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					&& storageRefReturnIsBytesKeyed(&_func))
 					continue;
 				// --evm-storage-layout: the named return holds a biguint slot.
-				if (evmStorageLayout()
+				if (m_typeMapper.profile().evmStorageLayout
 					&& rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
 				{
 					inits.push_back(awst::makeAssignmentStatement(
@@ -765,7 +766,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					if (m_currentSeededCalldataPointers.count(retParams[0]->name()))
 						retStmt->value = TypeCoercion::calldataPointerValueRead(
 							retParams[0]->name(), method.sourceLocation);
-					else if (evmMemoryLayout()
+					else if (m_typeMapper.profile().evmMemoryLayout
 						&& retParams[0]->referenceLocation()
 							== solidity::frontend::VariableDeclaration::Location::Memory
 						&& [&]{ auto const* at3 = dynamic_cast<
@@ -781,7 +782,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 							dynamic_cast<solidity::frontend::ArrayType const*>(
 								retParams[0]->type())->isString(),
 							method.sourceLocation);
-					else if (evmStorageLayout()
+					else if (m_typeMapper.profile().evmStorageLayout
 						&& retParams[0]->referenceLocation()
 							== solidity::frontend::VariableDeclaration::Location::Storage)
 						retStmt->value = awst::makeVarExpression(
@@ -795,7 +796,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					auto tuple = awst::makeTupleExpression(nullptr, method.sourceLocation);
 					for (auto const& rp: retParams)
 					{
-						auto* vt = (evmStorageLayout()
+						auto* vt = (m_typeMapper.profile().evmStorageLayout
 							&& rp->referenceLocation()
 								== solidity::frontend::VariableDeclaration::Location::Storage)
 							? awst::WType::biguintType()
@@ -821,7 +822,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			{
 				std::vector<std::shared_ptr<awst::Statement>> prepend;
 				retStmt->value = TypeCoercion::encodeReturnValue(
-					std::move(retStmt->value), returnPlan, method.sourceLocation, prepend,
+					m_typeMapper, std::move(retStmt->value), returnPlan,
+					method.sourceLocation, prepend,
 					/*asmWrap=*/funcHasInlineAssembly);
 				for (auto& s: prepend)
 					method.body->body.push_back(std::move(s));
@@ -858,7 +860,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				std::vector<awst::WType const*> wireTypes;
 				for (auto const& p: returnPlan)
 					wireTypes.push_back(p.wireType);
-				method.returnType = new awst::WTuple(std::move(wireTypes));
+				method.returnType = m_typeMapper.createType<awst::WTuple>(std::move(wireTypes));
 			}
 		}
 		else
@@ -927,7 +929,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				if (ann.useABICoderV2.set())
 					useV2 = *ann.useABICoderV2;
 			}
-			auto entryChecks = buildABIEntryChecks(_func, useV2, m_sourceFile);
+			auto entryChecks = buildABIEntryChecks(
+				_func, m_typeMapper, useV2, m_sourceFile);
 			if (!entryChecks.empty())
 			{
 				method.body->body.insert(

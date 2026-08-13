@@ -117,7 +117,8 @@ void registerFunctionIds(
 
 void presetDispatchCref(
 	solidity::frontend::CompilerStack& _compiler,
-	std::string const& _sourceFile)
+	std::string const& _sourceFile,
+	eb::FunctionPointerRegistry& _functionPointers)
 {
 	// Set fn-ptr dispatch cref to the first deployable contract so library
 	// subroutines can build SubroutineIDs (libs translated before contracts).
@@ -129,7 +130,7 @@ void presetDispatchCref(
 		{
 			if (!c->isLibrary() && !c->abstract() && !c->isInterface())
 			{
-				eb::FunctionPointerBuilder::setCurrentCref(_sourceFile + "." + c->name());
+				_functionPointers.currentCref = _sourceFile + "." + c->name();
 				return;
 			}
 		}

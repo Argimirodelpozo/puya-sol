@@ -5,10 +5,7 @@
 
 #include "Logger.h"
 #include "builder/AWSTBuilder.h"
-#include "builder/SourceLocConvert.h"
 #include "builder/assembly/AssemblyBuilder.h"
-#include "builder/storage/EvmLayoutMode.h"
-#include "builder/sol-ast/calls/SolNewExpression.h"
 #include "cli/AwstPostPasses.h"
 #include "cli/CliOptions.h"
 #include "cli/CompilerSetup.h"
@@ -42,9 +39,6 @@ int main(int _argc, char* _argv[])
 	// --evm-memory-slots: N scratch slots for EVM memory (default 5 = 20KB).
 	if (opts.evmMemorySlots > 0)
 		puyasol::builder::AssemblyBuilder::MEMORY_SLOT_LAST = opts.evmMemorySlots - 1;
-
-	puyasol::builder::setEvmStorageLayout(opts.evmStorageLayout);
-	puyasol::builder::setEvmMemoryLayout(opts.evmMemoryLayout);
 
 	if (opts.sourceFiles.empty())
 	{
@@ -159,7 +153,6 @@ int main(int _argc, char* _argv[])
 	// Configure EVM version (shared with the builder for version-gated lowering).
 	auto evmVer = resolveEvmVersion(opts.evmVersion);
 	compiler.setEVMVersion(evmVer);
-	puyasol::builder::setCompileEVMVersion(evmVer);
 	logger.info("EVM version set to: " + evmVer.name() + " (hasChainID=" + (evmVer.hasChainID() ? "true" : "false") + ")");
 
 	// Apply import remappings (Foundry-style: prefix=target)
@@ -179,29 +172,30 @@ int main(int _argc, char* _argv[])
 	logger.info("Parse and type-check successful!");
 	logger.debug("Source units: " + std::to_string(compiler.sourceNames().size()));
 
-	// Register each unit's CharStream so AWST locations carry one-based
-	// LINES (solc AST locations are byte offsets; puya slices source lines).
-	// The builder's `sourceFile` is the ABSOLUTE path while solc keys streams
-	// by unit name — alias the entry files' paths so offset-only call sites
-	// (no solc SourceLocation) resolve too.
-	puyasol::builder::clearCharStreams();
-	for (auto const& srcName: compiler.sourceNames())
-		puyasol::builder::registerCharStream(srcName, &compiler.charStream(srcName));
-	puyasol::builder::registerCharStream(
-		sourceFile, &compiler.charStream(sourceUnitName));
+	// Alias absolute entry paths to solc source-unit names for offset-only
+	// source locations. CompilationSession owns the actual CharStream map.
+	std::map<std::string, std::string> sourceAliases;
+	sourceAliases[sourceFile] = sourceUnitName;
 	for (size_t i = 1; i < opts.sourceFiles.size(); ++i)
 	{
 		fs::path extraPath = fs::absolute(opts.sourceFiles[i]);
 		std::string extraUnit = fileReader.cliPathToSourceUnitName(extraPath);
 		if (sources.count(extraUnit))
-			puyasol::builder::registerCharStream(
-				extraPath.string(), &compiler.charStream(extraUnit));
+			sourceAliases[extraPath.string()] = extraUnit;
 	}
 
 	// Build AWST
 	logger.info("Building AWST...");
 	puyasol::builder::AWSTBuilder builder;
-	auto roots = builder.build(compiler, sourceFile, opts.opupBudget, opts.ensureBudget, opts.viaYulBehavior);
+	puyasol::builder::TargetProfile targetProfile{
+		.evmStorageLayout = opts.evmStorageLayout,
+		.evmMemoryLayout = opts.evmMemoryLayout,
+		.viaIRSequencing = opts.viaYulBehavior,
+		.evmVersion = evmVer,
+	};
+	auto roots = builder.build(
+		compiler, sourceFile, opts.opupBudget, opts.ensureBudget,
+		opts.viaYulBehavior, sourceAliases, std::move(targetProfile));
 
 	if (roots.empty())
 	{
@@ -307,7 +301,7 @@ int main(int _argc, char* _argv[])
 	}
 
 	// Write options.json (with template var declarations for child contracts)
-	auto const& childContracts = puyasol::builder::sol_ast::SolNewExpression::childContracts();
+	auto const& childContracts = builder.artifacts().childContracts;
 	std::string optionsPath = (fs::path(opts.outputDir) / "options.json").string();
 	std::map<std::string, int64_t> intTemplateVars;
 	// --deploy-pure-helpers injects TemplateVars at rewritten call sites;
@@ -345,7 +339,7 @@ int main(int _argc, char* _argv[])
 		// Never derive deployment templates from stale .bin files left in a
 		// reused output directory when this backend invocation failed.
 		if (exitCode == 0)
-			writeChildDeployTemplates(opts.outputDir);
+			writeChildDeployTemplates(opts.outputDir, childContracts);
 
 		return exitCode;
 	}

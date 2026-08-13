@@ -305,8 +305,8 @@ SolAssignment::tryHandleBoxedArrayElemWrite()
 	// rhs → ARC4 bytes of the slot type; pin to a temp so it's also the assignment result.
 	auto rhs = builder::TypeCoercion::coerceForAssignment(
 		buildExpr(m_assignment.rightHandSide()), m_ctx.typeMapper.map(valSol), m_loc);
-	static int s_baeCtr = 0;
-	std::string vn = "__bae_val_" + std::to_string(s_baeCtr++);
+	std::string vn = "__bae_val_" + std::to_string(
+		awst::NameGen::next("SolAssignment.boxedArrayElement"));
 	auto vv = awst::makeVarExpression(vn, rhs->wtype, m_loc);
 	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(vv, std::move(rhs), m_loc));
 	auto valForEnc = awst::makeVarExpression(vn, vv->wtype, m_loc);
@@ -374,8 +374,8 @@ SolAssignment::tryHandleOffsetStructRefFieldWrite()
 
 	auto rhs = builder::TypeCoercion::coerceForAssignment(
 		buildExpr(m_assignment.rightHandSide()), m_ctx.typeMapper.map(valSol), m_loc);
-	static int s_osCtr = 0;
-	std::string vn = "__osref_val_" + std::to_string(s_osCtr++);
+	std::string vn = "__osref_val_" + std::to_string(
+		awst::NameGen::next("SolAssignment.offsetStructRef"));
 	auto vv = awst::makeVarExpression(vn, rhs->wtype, m_loc);
 	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(vv, std::move(rhs), m_loc));
 	auto valForEnc = awst::makeVarExpression(vn, vv->wtype, m_loc);

@@ -1,5 +1,7 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/SourceLocConvert.h"
+#include "builder/CompilationSession.h"
+#include "builder/BuildArtifacts.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
 
@@ -15,27 +17,9 @@
 
 namespace puyasol::builder
 {
-namespace {
-// Set once at startup in main.cpp via puyasol::builder::setCompileEVMVersion.
-// getFunctionName uses this to resolve BuiltinHandle through the same dialect
-// the Solidity front-end used to parse the source, so we don't guess and end
-// up returning the wrong builtin name.
-std::optional<solidity::langutil::EVMVersion>& globalEVMVersion()
-{
-	static std::optional<solidity::langutil::EVMVersion> v;
-	return v;
-}
-}
-void setCompileEVMVersion(solidity::langutil::EVMVersion _v)
-{
-	globalEVMVersion() = _v;
-}
-}
 
-namespace puyasol::builder
-{
-
-std::string AssemblyBuilder::getFunctionName(solidity::yul::FunctionName const& _name)
+std::string AssemblyBuilder::getFunctionName(
+	solidity::yul::FunctionName const& _name) const
 {
 	if (auto const* ident = std::get_if<solidity::yul::Identifier>(&_name))
 		return ident->name.str();
@@ -45,7 +29,8 @@ std::string AssemblyBuilder::getFunctionName(solidity::yul::FunctionName const& 
 		// BuiltinHandle is dialect-specific; a different dialect silently resolves
 		// to the wrong builtin or throws.
 		using solidity::langutil::EVMVersion;
-		EVMVersion const ver = globalEVMVersion().value_or(EVMVersion::cancun());
+		EVMVersion const ver =
+			m_typeMapper.profile().evmVersion.value_or(EVMVersion::cancun());
 		try
 		{
 			auto const& dialect = solidity::yul::EVMDialect::strictAssemblyForEVMObjects(ver, std::nullopt);
@@ -685,7 +670,8 @@ awst::SourceLocation AssemblyBuilder::makeLoc(
 )
 {
 	if (_debugData)
-		return builder::toAwstLoc(m_sourceFile, _debugData->nativeLocation);
+		return m_typeMapper.sourceMap().toAwstLoc(
+			m_sourceFile, _debugData->nativeLocation);
 	awst::SourceLocation loc;
 	loc.file = m_sourceFile;
 	return loc;
@@ -885,26 +871,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeBtoi(
 	return awst::makeBiguintToUInt64(std::move(_biguintExpr), _loc);
 }
 
-// ─── Recursive Yul function subroutine sink ─────────────────────────────────
-
-namespace {
-std::vector<std::shared_ptr<awst::Subroutine>>& pendingSubroutinesRef()
-{
-	static std::vector<std::shared_ptr<awst::Subroutine>> s;
-	return s;
-}
-}
-
-std::vector<std::shared_ptr<awst::Subroutine>> AssemblyBuilder::takePendingSubroutines()
-{
-	return std::move(pendingSubroutinesRef());
-}
-
-void AssemblyBuilder::resetPendingSubroutines()
-{
-	pendingSubroutinesRef().clear();
-}
-
 void AssemblyBuilder::buildRecursiveYulSubroutine(
 	solidity::yul::FunctionDefinition const& _funcDef,
 	std::string const& _subroutineId,
@@ -982,7 +948,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	else if (nRet > 1)
 	{
 		std::vector<awst::WType const*> rts(nRet, awst::WType::biguintType());
-		retType = new awst::WTuple(std::move(rts));
+		retType = m_typeMapper.createType<awst::WTuple>(std::move(rts));
 		auto tupleExpr = awst::makeTupleExpression(retType, loc);
 		for (auto const& r: _funcDef.returnVariables)
 			tupleExpr->items.push_back(
@@ -1001,7 +967,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 		_subroutineId, _subroutineName, std::move(subArgs),
 		retType, std::move(block), /*pure=*/false, loc);
 
-	pendingSubroutinesRef().push_back(std::move(sub));
+	m_typeMapper.artifacts().pendingYulSubroutines.push_back(std::move(sub));
 
 	m_locals = std::move(savedLocals);
 	m_localConstants = std::move(savedConstants);

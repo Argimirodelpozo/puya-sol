@@ -57,8 +57,8 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 		&& m_arrayType->dataStoredIn(solidity::frontend::DataLocation::CallData))
 	{
 		base = awst::makeEvalOnce(std::move(base), _loc);
-		static int s_cdIxCtr = 0;
-		std::string tmpName = "__sol_cdix_" + std::to_string(s_cdIxCtr++);
+		std::string tmpName = "__sol_cdix_" + std::to_string(
+			awst::NameGen::next("SolArrayBuilder.cdIndex"));
 		auto tmpVar = [&]() {
 			return awst::makeVarExpression(tmpName, awst::WType::uint64Type(), _loc);
 		};

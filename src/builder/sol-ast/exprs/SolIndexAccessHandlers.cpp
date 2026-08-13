@@ -89,8 +89,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 				&& m_scope.findMappingKeyParam(decl->id()).empty())
 			{
 				// idx feeds the assert AND the element access — pin once.
-				static int s_dynIxCtr = 0;
-				std::string tmpName = "__sol_dynix_" + std::to_string(s_dynIxCtr++);
+				std::string tmpName = "__sol_dynix_" + std::to_string(
+					awst::NameGen::next("SolIndexAccess.dynamicIndex"));
 				auto tmpVar = [&]() {
 					return awst::makeVarExpression(
 						tmpName, awst::WType::uint64Type(), m_loc);
@@ -278,7 +278,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 				}
 				else if (ki == 0 && cursorVar && cursorVar->isStateVariable()
 					&& !ctx.aliasOverridePrefix
-					&& builder::StorageMapper::shouldUseBoxStorage(*cursorVar))
+					&& m_ctx.storageMapper.shouldUseBoxStorage(*cursorVar))
 					bound = SolLengthAccess::stateDynArrayLength(
 						m_ctx, cursorIdent->name(), at, m_loc);
 				if (bound)
@@ -621,8 +621,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 		};
 		if (index && !triviallyPureIx(index.get()))
 		{
-			static int s_ixPin = 0;
-			std::string nm = "__sol_ixpin_" + std::to_string(s_ixPin++);
+			std::string nm = "__sol_ixpin_" + std::to_string(
+				awst::NameGen::next("SolIndexAccess.indexPin"));
 			auto tmp = awst::makeVarExpression(nm, index->wtype, m_loc);
 			m_ctx.prePendingStatements.push_back(
 				awst::makeAssignmentStatement(tmp, std::move(index), m_loc));
@@ -670,8 +670,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 		if (dynamic_cast<awst::AssignmentExpression const*>(index.get())
 			|| dynamic_cast<awst::SubroutineCallExpression const*>(index.get()))
 		{
-			static int idxCoerceTemp = 0;
-			std::string tempName = "__sol_ixc_" + std::to_string(idxCoerceTemp++);
+			std::string tempName = "__sol_ixc_" + std::to_string(
+				awst::NameGen::next("SolIndexAccess.coercedIndex"));
 			auto tempVar = awst::makeVarExpression(tempName, index->wtype, m_loc);
 			m_ctx.prePendingStatements.push_back(
 				awst::makeAssignmentStatement(tempVar, std::move(index), m_loc));

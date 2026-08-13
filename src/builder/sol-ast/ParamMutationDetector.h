@@ -1,6 +1,7 @@
 #pragma once
 
 #include "builder/sol-ast/AsmScan.h"
+#include "builder/ProgramAnalysis.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
@@ -29,13 +30,17 @@ namespace puyasol::builder
 /// redundant-but-correct, and an over-declined aliasing Copy fails loud).
 ///
 /// Usage:
-///     ParamMutationDetector det;
+///     ParamMutationDetector det{typeMapper.analysis()};
 ///     for (auto const& p: func->parameters()) det.paramIds.insert(p->id());
 ///     func->body().accept(det);
 ///     bool isMutated = det.mutated.count(paramId);
 class ParamMutationDetector: public solidity::frontend::ASTConstVisitor
 {
 public:
+	explicit ParamMutationDetector(ProgramAnalysis const& _analysis)
+		: m_analysis(_analysis)
+	{}
+
 	std::set<int64_t> paramIds;  // input: param decl ids to track
 	std::set<int64_t> mutated;   // output: subset of paramIds written to
 
@@ -98,38 +103,39 @@ public:
 	}
 
 	/// Transitively-mutated param decl ids of `_f` (direct + via callees).
-	/// Process-wide memo (single compile per process, same precedent as
-	/// boxKeyedStructRegistry); recursion cycles over-approximate to ALL
+	/// Program-owned memo; recursion cycles over-approximate to ALL
 	/// reference params of the in-progress function.
-	static std::set<int64_t> const& transitivelyMutated(
+	std::set<int64_t> const& transitivelyMutated(
 		solidity::frontend::FunctionDefinition const& _f)
 	{
-		static std::map<int64_t, std::set<int64_t>> s_cache;
-		static std::set<int64_t> s_inProgress;
-		if (auto it = s_cache.find(_f.id()); it != s_cache.end())
+		auto& cache = m_analysis.transitivelyMutatedParams;
+		auto& inProgress = m_analysis.mutationAnalysisInProgress;
+		if (auto it = cache.find(_f.id()); it != cache.end())
 			return it->second;
-		if (s_inProgress.count(_f.id()))
+		if (inProgress.count(_f.id()))
 		{
 			// Cycle: conservatively treat every reference param as mutated.
 			std::set<int64_t> all;
 			for (auto const& p: _f.parameters())
 				if (isReferenceParam(*p))
 					all.insert(p->id());
-			return s_cache.emplace(_f.id(), std::move(all)).first->second;
+			return cache.emplace(_f.id(), std::move(all)).first->second;
 		}
-		s_inProgress.insert(_f.id());
-		ParamMutationDetector det;
+		inProgress.insert(_f.id());
+		ParamMutationDetector det{m_analysis};
 		for (auto const& p: _f.parameters())
 			det.paramIds.insert(p->id());
 		if (_f.isImplemented())
 			_f.body().accept(det);
-		s_inProgress.erase(_f.id());
+		inProgress.erase(_f.id());
 		// A cycle hit may have cached the conservative set meanwhile — the
 		// computed (tighter) result wins.
-		return s_cache.insert_or_assign(_f.id(), std::move(det.mutated)).first->second;
+		return cache.insert_or_assign(_f.id(), std::move(det.mutated)).first->second;
 	}
 
 private:
+	ProgramAnalysis const& m_analysis;
+
 	/// The internal-call target, when statically resolvable. Virtual dispatch
 	/// resolves to the DECLARED target (documented residual).
 	static solidity::frontend::FunctionDefinition const* resolveCalleeFunction(

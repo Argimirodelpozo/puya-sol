@@ -17,6 +17,7 @@ class StorageMapper
 {
 public:
 	explicit StorageMapper(TypeMapper& _typeMapper): m_typeMapper(_typeMapper) {}
+	TargetProfile const& profile() const { return m_typeMapper.profile(); }
 
 	/// Create AppStorageDefinitions for a contract's state variables.
 	std::vector<awst::AppStorageDefinition> mapStateVariables(
@@ -50,7 +51,7 @@ public:
 	);
 
 	/// Determine if a variable should use box storage.
-	static bool shouldUseBoxStorage(solidity::frontend::VariableDeclaration const& _var);
+	bool shouldUseBoxStorage(solidity::frontend::VariableDeclaration const& _var) const;
 
 	/// Compute the fixed encoded byte size of an AWST element type.
 	/// Returns 0 for variable-length types (skip splitting).

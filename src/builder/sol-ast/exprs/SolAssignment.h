@@ -18,7 +18,38 @@ public:
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:
+	/// Classification of an already-lowered assignment target.  Keeping this
+	/// decision in one place prevents the top-level translator from becoming a
+	/// growing chain of mutually-exclusive dynamic_cast probes.
+	enum class LValueKind
+	{
+		SlotArray,
+		SlotScalar,
+		Tuple,
+		BytesElement,
+		Field,
+		Generic,
+	};
+
+	struct LValuePlan
+	{
+		LValueKind kind = LValueKind::Generic;
+	};
+
 	solidity::frontend::Assignment const& m_assignment;
+
+	LValuePlan planLValue(std::shared_ptr<awst::Expression> const& _target) const;
+	std::shared_ptr<awst::Expression> emitLValuePlan(
+		LValuePlan _plan,
+		solidity::frontend::Token _op,
+		std::shared_ptr<awst::Expression> _target,
+		std::shared_ptr<awst::Expression> _value,
+		bool _deferTupleLhsEffects,
+		eb::ContractContext::OperandDeltas _tupleLhsEffects);
+	std::shared_ptr<awst::Expression> emitGenericAssignment(
+		solidity::frontend::Token _op,
+		std::shared_ptr<awst::Expression> _target,
+		std::shared_ptr<awst::Expression> _value);
 
 	std::shared_ptr<awst::Expression> handleTupleAssignment(
 		std::shared_ptr<awst::Expression> _target,

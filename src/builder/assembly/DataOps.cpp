@@ -2,6 +2,7 @@
 /// Data operations: calldataload, resolveConstantYulValue, keccak256.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "awst/NameGen.h"
 #include "Logger.h"
 #include <libsolutil/Keccak256.h>
 
@@ -632,10 +633,9 @@ void AssemblyBuilder::handleRevert(
 				// cap), so it straddles AT MOST one slot boundary: read the
 				// in-slot part, and when len overruns the slot, concat the
 				// remainder from slot+1 — one log either way.
-				static int s_revCtr = 0;
-				std::string offN = "__rev_off_" + std::to_string(s_revCtr);
-				std::string lenN = "__rev_len_" + std::to_string(s_revCtr);
-				++s_revCtr;
+				int revId = awst::NameGen::next("DataOps.revertSlice");
+				std::string offN = "__rev_off_" + std::to_string(revId);
+				std::string lenN = "__rev_len_" + std::to_string(revId);
 				_out.push_back(awst::makeAssignmentStatement(
 					awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
 					offsetToUint64(_args[0], _loc), _loc));

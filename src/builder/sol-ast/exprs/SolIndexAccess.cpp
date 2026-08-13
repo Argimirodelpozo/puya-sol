@@ -121,7 +121,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 	// --evm-storage-layout: reads rooted at a persistent state var resolve to
 	// their EVM word address (writes intercept in SolAssignment and never
 	// build the index expression).
-	if (builder::evmStorageLayout()
+	if (m_ctx.typeMapper.profile().evmStorageLayout
 		&& EvmSlotLowering::isStorageStateRef(m_indexAccess))
 	{
 		EvmSlotLowering low(m_ctx, m_scope, m_loc);

@@ -45,6 +45,17 @@ using OverloadedNamesSet = std::unordered_set<std::string>;
 /// it needs `currentContract` for.
 struct FunctionTranslationCtx
 {
+	FunctionTranslationCtx(
+		TypeMapper& _typeMapper,
+		eb::ContractContext& _exprBuilder,
+		sol_ast::TranslationContext& _tr,
+		std::string _sourceFile)
+		: typeMapper(_typeMapper),
+		  exprBuilder(_exprBuilder),
+		  tr(_tr),
+		  sourceFile(std::move(_sourceFile))
+	{}
+
 	TypeMapper& typeMapper;
 	eb::ContractContext& exprBuilder;
 	sol_ast::TranslationContext& tr;
@@ -67,20 +78,16 @@ struct FunctionTranslationCtx
 	// True while building a constructor body (incl. base ctors and the
 	// __postInit-deferred copy): flows into FunctionContext::inConstructor
 	// so ctor-only semantics (e.g. msg.data is EMPTY during construction)
-	// apply wherever the body ends up. NOT part of makeFunctionCtx's
-	// positional aggregate init — assigned explicitly after construction.
+	// apply wherever the body ends up.
 	bool inConstructor = false;
 	// Mirrors FunctionContext::frameIsProgram (internal/private function =>
-	// assembly return() halts the program). Appended at struct end like
-	// inConstructor — mid-struct insertion breaks aggregate init.
+	// assembly return() halts the program).
 	bool frameIsProgram = false;
 	/// Declared solc param types by BARE name (possible_solc item 2): the
 	/// synthetic-calldata blob derives the EVM-ABI head layout + value
 	/// widening (sign extension, static-aggregate inlining) from these.
-	/// Appended at struct end (aggregate init) — assigned explicitly.
 	std::map<std::string, solidity::frontend::Type const*> paramSolTypes;
 	// Build-time ABI return encoding (D2) — mirror FunctionContext's fields.
-	// Appended (assigned explicitly, not positional) like inConstructor/frameIsProgram.
 	bool encodeReturnsAtBuildTime = false;
 	bool returnAsmWrap = false;
 	std::vector<ReturnWireElem> returnWirePlan;
@@ -88,13 +95,13 @@ struct FunctionTranslationCtx
 	std::set<std::string>* seededCalldataPointers = nullptr;
 	/// --evm-storage-layout: storage-ref params + named storage returns,
 	/// carried as biguint slot handles; `buildBlock` registers each as a
-	/// slot-storage ref. Appended at struct end (aggregate init) — assigned
-	/// explicitly, never positional.
+	/// slot-storage ref.
 	std::vector<solidity::frontend::VariableDeclaration const*> slotRefParams;
 };
 
 /// Make an `awst::SourceLocation` from a Solidity `SourceLocation`.
 awst::SourceLocation makeLoc(
+	TypeMapper const& typeMapper,
 	std::string const& sourceFile,
 	solidity::langutil::SourceLocation const& solLoc);
 
@@ -187,6 +194,7 @@ public:
 	ContractBuilder(
 		TypeMapper& _typeMapper,
 		StorageMapper& _storageMapper,
+		eb::FunctionPointerRegistry& _functionPointers,
 		std::string const& _sourceFile,
 		LibraryFunctionIdMap const& _libraryFunctionIds,
 		uint64_t _opupBudget = 0,
@@ -211,6 +219,7 @@ private:
 	std::vector<std::shared_ptr<awst::Subroutine>> m_dispatchSubroutines;
 	TypeMapper& m_typeMapper;
 	StorageMapper& m_storageMapper;
+	eb::FunctionPointerRegistry& m_functionPointers;
 	std::string m_sourceFile;
 	LibraryFunctionIdMap const& m_libraryFunctionIds;
 	uint64_t m_opupBudget = 0;
@@ -456,7 +465,7 @@ private:
 	std::optional<awst::ContractMethod> m_postInitMethod;
 };
 
-/// Slot-mode unit pre-scan (see evmDenseOnlyUnit in EvmLayoutMode.h): true iff
+/// Slot-mode unit pre-scan: true iff
 /// this contract can reach keccak-derived (sparse) slots — inline assembly
 /// anywhere in its defined functions, or a persistent state var whose type
 /// derives hashed slots (mapping / dynamic array / bytes / string, recursively

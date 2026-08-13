@@ -923,7 +923,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::toAwst()
 	{
 		Token op = m_unaryOp.getOperator();
 		if ((op == Token::Inc || op == Token::Dec || op == Token::Delete)
-			&& builder::evmStorageLayout()
+			&& m_ctx.typeMapper.profile().evmStorageLayout
 			&& EvmSlotLowering::isStorageStateRef(m_unaryOp.subExpression()))
 			return handleEvmStorageIncDecDelete();
 	}

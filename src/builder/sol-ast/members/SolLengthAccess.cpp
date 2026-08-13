@@ -154,7 +154,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 	}
 
 	// --evm-storage-layout: dynamic storage array length = its slot's word.
-	if (builder::evmStorageLayout())
+	if (m_ctx.typeMapper.profile().evmStorageLayout)
 		if (auto const* arrType = dynamic_cast<ArrayType const*>(
 				baseExpr.annotation().type);
 			arrType && arrType->dataStoredIn(solidity::frontend::DataLocation::Storage)
@@ -192,7 +192,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 			if (varDecl->isStateVariable()
 				&& !varDecl->isConstant()
 				&& !varDecl->immutable()
-				&& builder::StorageMapper::shouldUseBoxStorage(*varDecl)
+				&& m_ctx.storageMapper.shouldUseBoxStorage(*varDecl)
 				&& dynamic_cast<ArrayType const*>(varDecl->type()))
 			{
 				auto const* arrType = dynamic_cast<ArrayType const*>(varDecl->type());

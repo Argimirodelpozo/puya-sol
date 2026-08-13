@@ -82,7 +82,7 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 	if (_funcDef->returnParameters().size() == 1)
 	{
 		// --evm-storage-layout: ANY storage ref return is a biguint slot.
-		if (builder::evmStorageLayout()
+		if (m_ctx.typeMapper.profile().evmStorageLayout
 			&& _funcDef->returnParameters()[0]->referenceLocation()
 				== VariableDeclaration::Location::Storage)
 			return awst::WType::biguintType();
@@ -114,7 +114,7 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 	std::vector<awst::WType const*> retTypes;
 	for (auto const& param: _funcDef->returnParameters())
 	{
-		if (builder::evmStorageLayout()
+		if (m_ctx.typeMapper.profile().evmStorageLayout
 			&& param->referenceLocation() == VariableDeclaration::Location::Storage)
 			retTypes.push_back(awst::WType::biguintType());   // slot handle
 		else
@@ -138,7 +138,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	{
 		// --evm-storage-layout: the biguint slot IS the reference — no
 		// IndexExpression reconstitution.
-		if (builder::evmStorageLayout())
+		if (m_ctx.typeMapper.profile().evmStorageLayout)
 			return _result;
 		auto const* indexAccess = builder::storageRefPointerReturn(_funcDef);
 		if (!indexAccess)
@@ -173,7 +173,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		for (size_t pi = 0; pi < _funcDef->parameters().size(); ++pi)
 		{
 			auto const& param = _funcDef->parameters()[pi];
-			if (builder::evmStorageLayout()
+			if (m_ctx.typeMapper.profile().evmStorageLayout
 				&& param->referenceLocation() == VariableDeclaration::Location::Storage)
 			{
 				// --evm-storage-layout: pass the biguint slot of the argument.
@@ -181,7 +181,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				evmSlotRefParamIndices.insert(pi);
 			}
 			else if (param->referenceLocation() == VariableDeclaration::Location::Storage
-				&& (builder::isBoxKeyedStorageRef(param->type()) || slotParams.count(pi))) // widened: plain structs + asm .slot refs
+				&& (builder::isBoxKeyedStorageRef(
+						param->type(), m_ctx.typeMapper.analysis())
+					|| slotParams.count(pi))) // widened: plain structs + asm .slot refs
 			{
 				paramTypes.push_back(awst::WType::bytesType());
 				mappingStorageParamIndices.insert(pi);
@@ -311,8 +313,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		if (auto const* memberAccess = dynamic_cast<MemberAccess const*>(&funcExpr))
 		{
 			awst::CallArg ca;
-			eb::ContractContext::OperandDeltas d;
-			ca.value = m_ctx.buildScopedOperand([&]() -> std::shared_ptr<awst::Expression> {
+			auto lowered = m_ctx.lowerOperand([&]() -> std::shared_ptr<awst::Expression> {
 				if (evmSlotRefParamIndices.count(0))
 				{
 					sol_ast::EvmSlotLowering low(m_ctx, m_scope, m_loc);
@@ -326,8 +327,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 					v = builder::TypeCoercion::implicitNumericCast(
 						std::move(v), paramTypes[0], m_loc);
 				return v;
-			}, d, /*_conditional=*/false);
-			argDeltas.push_back(std::move(d));
+			}, /*_conditional=*/false);
+			ca.value = std::move(lowered.value);
+			argDeltas.push_back(std::move(lowered.effects));
 			argMayWrite.push_back(builder::EffectScan::mayWrite(memberAccess->expression()));
 			argLocalPure.push_back(builder::onlyLocalPure(memberAccess->expression()));
 			call->args.push_back(std::move(ca));
@@ -340,7 +342,6 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	{
 		awst::CallArg ca;
 		size_t paramIdx = _isUsingForCall ? (i + 1) : i;
-		eb::ContractContext::OperandDeltas d;
 		// Tripwire (possible_solc item 6): each arg→param pair must be a
 		// solc-legal implicit conversion; a trip = wrong annotation plumbing.
 		if (_funcDef && paramIdx < _funcDef->parameters().size()
@@ -348,7 +349,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			builder::TypeCoercion::assertImplicitlyConvertible(
 				sortedArgs[i]->annotation().type,
 				_funcDef->parameters()[paramIdx]->type(), m_loc, "internal-call arg");
-		ca.value = m_ctx.buildScopedOperand([&]() -> std::shared_ptr<awst::Expression> {
+		auto lowered = m_ctx.lowerOperand([&]() -> std::shared_ptr<awst::Expression> {
 			if (evmSlotRefParamIndices.count(paramIdx))
 			{
 				sol_ast::EvmSlotLowering low(m_ctx, m_scope, m_loc);
@@ -368,8 +369,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 					std::move(v), sortedArgs[i]->annotation().type,
 					_funcDef->parameters()[paramIdx]->type(), m_loc);
 			return v;
-		}, d, /*_conditional=*/false);
-		argDeltas.push_back(std::move(d));
+		}, /*_conditional=*/false);
+		ca.value = std::move(lowered.value);
+		argDeltas.push_back(std::move(lowered.effects));
 		argMayWrite.push_back(builder::EffectScan::mayWrite(*sortedArgs[i]));
 		argLocalPure.push_back(builder::onlyLocalPure(*sortedArgs[i]));
 		call->args.push_back(std::move(ca));
@@ -432,7 +434,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		};
 		for (size_t pi = 0; pi < _funcDef->parameters().size(); ++pi)
 		{
-			if (!builder::structRefOffsetParamsRegistry().count(_funcDef->parameters()[pi]->id()))
+			if (!m_ctx.typeMapper.analysis().structRefOffsetParams.count(
+					_funcDef->parameters()[pi]->id()))
 				continue;
 			Expression const* argExpr = nullptr;
 			if (_isUsingForCall)
@@ -456,7 +459,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	if (_funcDef)
 	{
 		// Which params does the callee mutate?
-		ParamMutationDetector mutDet;
+		ParamMutationDetector mutDet{m_ctx.typeMapper.analysis()};
 		for (auto const& p : _funcDef->parameters())
 			mutDet.paramIds.insert(p->id());
 		if (_funcDef->isImplemented())
@@ -524,7 +527,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	// order must match AWSTBuilder.cpp:388-403 — source-order parameters()).
 	std::vector<size_t> storageParamIndices;
 	if (_funcDef
-		&& !builder::evmStorageLayout()   // slot handles write through — no write-back
+		&& !m_ctx.typeMapper.profile().evmStorageLayout   // slot handles write through — no write-back
 		&& ((calleeIsLibrary && !calleeIsPrivate) || calleeIsFree)
 		&& _funcDef->stateMutability() != StateMutability::View
 		&& _funcDef->stateMutability() != StateMutability::Pure)
@@ -543,7 +546,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			// plain structs like `Pool.State`): travel as bytes key-prefix,
 			// write directly to box, no write-back slot. Must match callee
 			// predicate (AWSTBuilder.cpp `isBoxKeyedStorageRef`) or arity diverges.
-			if (builder::isBoxKeyedStorageRef(p->type()) || wbSlotParams.count(pi)) // widened: plain structs + asm .slot refs
+			if (builder::isBoxKeyedStorageRef(
+					p->type(), m_ctx.typeMapper.analysis()) || wbSlotParams.count(pi)) // widened: plain structs + asm .slot refs
 				continue;
 			storageParamIndices.push_back(pi);
 		}
@@ -567,7 +571,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			return dynamic_cast<StructType const*>(t) != nullptr;
 		};
 		// Use-def: collect mutated params (ParamMutationDetector, same as AWSTBuilder).
-		ParamMutationDetector detector;
+		ParamMutationDetector detector{m_ctx.typeMapper.analysis()};
 		for (auto const& p : _funcDef->parameters())
 			detector.paramIds.insert(p->id());
 		_funcDef->body().accept(detector);
@@ -841,7 +845,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 					// Slot mode: the write lowered to a slot, so the read must
 					// too (absent slot reads 0 → uninitialised-call panic, same
 					// as EVM). typeMapper maps FunctionType to ptrWType exactly.
-					if (builder::evmStorageLayout() && !varDecl->isConstant()
+					if (m_ctx.typeMapper.profile().evmStorageLayout && !varDecl->isConstant()
 						&& !varDecl->immutable()
 						&& varDecl->referenceLocation()
 							!= VariableDeclaration::Location::Transient)
@@ -1015,7 +1019,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 					if (funcType->kind() == FunctionType::Kind::Internal)
 					{
 						std::shared_ptr<awst::Expression> ptrExpr;
-						if (builder::evmStorageLayout() && !varDecl->isConstant()
+						if (m_ctx.typeMapper.profile().evmStorageLayout && !varDecl->isConstant()
 							&& !varDecl->immutable()
 							&& varDecl->referenceLocation()
 								!= VariableDeclaration::Location::Transient)

@@ -180,7 +180,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 
 		// --evm-storage-layout: `return <storage expr>` in a function declared
 		// `returns (T storage)` returns the biguint slot.
-		if (builder::evmStorageLayout())
+		if (m_blk.typeMapper().profile().evmStorageLayout)
 			if (auto const* retAnn =
 					dynamic_cast<ReturnAnnotation const*>(&m_node.annotation()))
 				if (retAnn->functionReturnParameters)
@@ -275,7 +275,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 				if (rps.size() == 1
 					&& rps[0]->referenceLocation()
 						== solidity::frontend::VariableDeclaration::Location::Storage
-					&& builder::isBoxKeyedStorageRef(rps[0]->type())) // widened: plain structs too
+					&& builder::isBoxKeyedStorageRef(
+						rps[0]->type(), m_blk.typeMapper().analysis())) // widened: plain structs too
 					storageRefMapReturn = true;
 			}
 		if (storageRefMapReturn
@@ -572,7 +573,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 		auto valLoc = stmt->value->sourceLocation;
 		std::vector<std::shared_ptr<awst::Statement>> prepend;
 		stmt->value = builder::TypeCoercion::encodeReturnValue(
-			std::move(stmt->value), m_blk.fn.returnWirePlan, valLoc, prepend,
+			m_blk.typeMapper(), std::move(stmt->value), m_blk.fn.returnWirePlan,
+			valLoc, prepend,
 			m_blk.fn.returnAsmWrap);
 		// Opaque-tuple spill assignment(s) go before the return.
 		for (auto& s: prepend)

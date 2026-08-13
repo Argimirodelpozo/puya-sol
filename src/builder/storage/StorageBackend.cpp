@@ -22,7 +22,7 @@ std::shared_ptr<awst::Expression> StorageBackend::emitReadForVar(
 	if (isTransient(_var))
 		return m_transient->buildRead(_name, _type, _loc);
 
-	auto kind = StorageMapper::shouldUseBoxStorage(_var)
+	auto kind = m_mapper.shouldUseBoxStorage(_var)
 		? awst::AppStorageKind::Box
 		: awst::AppStorageKind::AppGlobal;
 	return m_mapper.createStateRead(
@@ -38,7 +38,7 @@ std::shared_ptr<awst::Statement> StorageBackend::emitWriteForVar(
 	if (isTransient(_var))
 		return m_transient->buildWrite(_name, std::move(_value), _loc);
 
-	auto kind = StorageMapper::shouldUseBoxStorage(_var)
+	auto kind = m_mapper.shouldUseBoxStorage(_var)
 		? awst::AppStorageKind::Box
 		: awst::AppStorageKind::AppGlobal;
 	auto const* type = _value ? _value->wtype : nullptr;

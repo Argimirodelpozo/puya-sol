@@ -741,7 +741,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								auto* pt = _ctx.typeMapper.map(ret->type());
 								tupleTypes.push_back(pt ? pt : awst::WType::voidType());
 							}
-							auto* tupleTypeOwned = new awst::WTuple(std::move(tupleTypes));
+							auto* tupleTypeOwned = _ctx.typeMapper.createType<awst::WTuple>(
+								std::move(tupleTypes));
 							auto call = awst::makeSubroutineCall(
 								awst::InstanceMethodTarget{targetName},
 								tupleTypeOwned, _loc);
@@ -930,7 +931,8 @@ void InnerCallHandlers::fundCreatedApp(
 {
 	auto appId = awst::makeItxn("CreatedApplicationID", awst::WType::uint64Type(), _loc);
 
-	auto* tupleType = new awst::WTuple({awst::WType::bytesType(), awst::WType::boolType()});
+	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
+		std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::boolType()});
 	auto appParams = awst::makeAppParamsGet(
 		"AppAddress", std::move(appId), tupleType, _loc);
 

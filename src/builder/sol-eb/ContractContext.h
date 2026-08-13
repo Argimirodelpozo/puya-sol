@@ -9,7 +9,6 @@
 #include <liblangutil/Token.h>
 
 #include <cstdint>
-#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -44,14 +43,15 @@ namespace puyasol::builder::eb
 
 class InstanceBuilder;
 class BuilderRegistry;
+struct FunctionPointerRegistry;
 
 // Re-exported from sol_ast::Context for legacy callers (e.g. ModifierInliner).
 using ParamRemap = sol_ast::ParamRemap;
 
 /// Central context for expression/statement builders: owns pending-statement buffers,
 /// references compiler services (TypeMapper, StorageMapper), and holds the builder
-/// registry. Callbacks (buildExpr, buildBinaryOp, builderForInstance) are wired
-/// in the constructor and consumed by sol-ast wrappers.
+/// registry. Expression and type-operation dispatch are ordinary methods so
+/// their availability and lifetime follow the context itself.
 class ContractContext
 {
 public:
@@ -62,7 +62,8 @@ public:
 		std::string const& _contractName,
 		std::unordered_map<std::string, std::string> const& _libraryFunctionIds,
 		std::unordered_set<std::string> const& _overloadedNames,
-		std::unordered_map<int64_t, std::string> const& _freeFunctionById
+		std::unordered_map<int64_t, std::string> const& _freeFunctionById,
+		FunctionPointerRegistry& _functionPointers
 	);
 
 	~ContractContext();
@@ -74,6 +75,23 @@ public:
 
 	/// Build an AWST expression from a Solidity expression. Primary entry point.
 	std::shared_ptr<awst::Expression> build(solidity::frontend::Expression const& _expr);
+	std::shared_ptr<awst::Expression> buildExpr(solidity::frontend::Expression const& _expr)
+	{
+		return build(_expr);
+	}
+
+	/// Fallback binary operation when the type-specific builder does not handle it.
+	std::shared_ptr<awst::Expression> buildBinaryOp(
+		solidity::frontend::Token _op,
+		std::shared_ptr<awst::Expression> _left,
+		std::shared_ptr<awst::Expression> _right,
+		awst::WType const* _resultType,
+		awst::SourceLocation const& _loc);
+
+	/// Returns nullptr if no builder is registered for the Solidity type.
+	std::unique_ptr<InstanceBuilder> builderForInstance(
+		solidity::frontend::Type const* _solType,
+		std::shared_ptr<awst::Expression> _expr);
 
 	/// Consume any pending statements generated during expression translation.
 	std::vector<std::shared_ptr<awst::Statement>> takePending();
@@ -81,7 +99,7 @@ public:
 	/// Consume any pre-pending statements (must execute before the expression).
 	std::vector<std::shared_ptr<awst::Statement>> takePrePending();
 
-		/// Drain pre-pending then pending into `_out` (execution order).
+	/// Drain pre-pending then pending into `_out` (execution order).
 	void appendPendingTo(std::vector<std::shared_ptr<awst::Statement>>& _out);
 
 	/// Owned type-builder registry — populated on construction.
@@ -106,6 +124,7 @@ public:
 	std::unordered_map<std::string, std::string> const& libraryFunctionIds;
 	std::unordered_set<std::string> const& overloadedNames;
 	std::unordered_map<int64_t, std::string> const& freeFunctionById;
+	FunctionPointerRegistry& functionPointers;
 	/// funcDef.id() → synthesized method name; CallResolver returns InstanceMethodTarget
 	/// instead of SubroutineID when the funcDef appears here.
 	std::unordered_map<int64_t, std::string> internalizedLibFuncNames;
@@ -183,6 +202,15 @@ public:
 		bool empty() const { return pre.empty() && post.empty(); }
 	};
 
+	template <typename Value>
+	struct LoweredValue
+	{
+		Value value;
+		OperandDeltas effects;
+	};
+
+	using LoweredExpression = LoweredValue<std::shared_ptr<awst::Expression>>;
+
 	/// Put a captured operand's deltas back exactly where they came from
 	/// (pre → prePending, post → pending) — the no-reorder path.
 	void restoreOperandDeltas(OperandDeltas&& _d)
@@ -193,27 +221,27 @@ public:
 			pendingStatements.push_back(std::move(s));
 	}
 
-	/// Build an operand via `_build`, then MOVE the pre/post pending statements
-	/// it pushed into `_out` so the caller controls their placement. Pass
+	/// Build an operand via `_build`, then return its value together with the
+	/// pre/post pending statements it produced. Pass
 	/// `_conditional = true` when the operand executes conditionally (ternary
 	/// branch, short-circuit RHS) — it marks a ConditionalRegion and the caller
 	/// gates the effects behind the condition. `false` for pure re-ORDERING to
 	/// legacy-solc evaluation order (binop right-before-left, assignment
 	/// RHS-first, call args left-to-right), where effects still run
-	/// unconditionally. `_out` stays empty in the common effect-free case.
+	/// unconditionally. `effects` stays empty in the common effect-free case.
 	template <class BuildFn>
-	auto buildScopedOperand(
+	auto lowerOperand(
 		BuildFn&& _build,
-		OperandDeltas& _out,
 		bool _conditional = true)
-		-> decltype(_build())
+		-> LoweredValue<decltype(_build())>
 	{
+		LoweredValue<decltype(_build())> result;
 		std::optional<ConditionalRegion> region;
 		if (_conditional)
 			region.emplace(*this);
 		auto preBefore = prePendingStatements.size();
 		auto postBefore = pendingStatements.size();
-		auto value = _build();
+		result.value = _build();
 		auto moveTail = [](auto& _buf, size_t _from, auto& _outVec) {
 			if (_buf.size() <= _from)
 				return;
@@ -222,9 +250,16 @@ public:
 				std::make_move_iterator(_buf.end()));
 			_buf.erase(_buf.begin() + _from, _buf.end());
 		};
-		moveTail(prePendingStatements, preBefore, _out.pre);
-		moveTail(pendingStatements, postBefore, _out.post);
-		return value;
+		moveTail(prePendingStatements, preBefore, result.effects.pre);
+		moveTail(pendingStatements, postBefore, result.effects.post);
+		return result;
+	}
+
+	LoweredExpression lower(
+		solidity::frontend::Expression const& _expr,
+		bool _conditional = true)
+	{
+		return lowerOperand([&] { return build(_expr); }, _conditional);
 	}
 
 	/// Re-emit a captured operand at its evaluation position: its pre-effects,
@@ -291,22 +326,9 @@ public:
 	/// the LHS; SolArrayMethod::push() consumes it as the element (not the default).
 	std::shared_ptr<awst::Expression> pendingArrayPushValue;
 
-	std::function<std::shared_ptr<awst::Expression>(
-		solidity::frontend::Expression const&)> buildExpr;
-
-	/// Fallback binary-op when sol-eb builders don't handle the operation.
-	std::function<std::shared_ptr<awst::Expression>(
-		solidity::frontend::Token, std::shared_ptr<awst::Expression>,
-		std::shared_ptr<awst::Expression>, awst::WType const*,
-		awst::SourceLocation const&)> buildBinaryOp;
-
-	/// Returns nullptr if no builder is registered for the Solidity type.
-	std::function<std::unique_ptr<InstanceBuilder>(
-		solidity::frontend::Type const*, std::shared_ptr<awst::Expression>)> builderForInstance;
-
 	awst::SourceLocation makeLoc(int _start, int _end) const
 	{
-		return builder::toAwstLoc(sourceFile, _start, _end);
+		return typeMapper.sourceMap().toAwstLoc(sourceFile, _start, _end);
 	}
 
 };

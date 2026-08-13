@@ -38,7 +38,7 @@ std::shared_ptr<awst::Expression> SolConstantAccess::toAwst()
 			// Slot mode: `C.x` denotes the same slot as the bare `x`, so it must
 			// go through the slot space too — the legacy app-global read below
 			// would look up a key the constructor never wrote.
-			if (builder::evmStorageLayout() && !varDecl->immutable()
+			if (m_ctx.typeMapper.profile().evmStorageLayout && !varDecl->immutable()
 				&& varDecl->referenceLocation()
 					!= VariableDeclaration::Location::Transient)
 			{
@@ -54,7 +54,7 @@ std::shared_ptr<awst::Expression> SolConstantAccess::toAwst()
 			}
 			auto* wtype = m_ctx.typeMapper.map(varDecl->type());
 			std::string name = varDecl->name();
-			auto kind = builder::StorageMapper::shouldUseBoxStorage(*varDecl)
+			auto kind = m_ctx.storageMapper.shouldUseBoxStorage(*varDecl)
 				? awst::AppStorageKind::Box
 				: awst::AppStorageKind::AppGlobal;
 			return m_ctx.storageMapper.createStateRead(name, wtype, kind, m_loc);

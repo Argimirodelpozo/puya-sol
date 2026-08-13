@@ -19,11 +19,6 @@
 namespace puyasol::builder
 {
 
-// Set the compile-target EVM version for getFunctionName's BuiltinHandle resolution.
-// Called once at startup from main.cpp after compiler.setEVMVersion.
-void setCompileEVMVersion(solidity::langutil::EVMVersion _v);
-
-
 /// Builds AWST nodes from Yul inline assembly blocks.
 ///
 /// Translates EVM Yul opcodes to equivalent AVM operations using biguint arithmetic
@@ -140,7 +135,7 @@ public:
 	);
 
 	/// Extract function name from a Yul FunctionName (Identifier or BuiltinName).
-	static std::string getFunctionName(solidity::yul::FunctionName const& _name);
+	std::string getFunctionName(solidity::yul::FunctionName const& _name) const;
 
 	/// AWST name for a Yul external ref: locals + fn-ptr .selector/.address → mangled via
 	/// _declName; state vars/constants/.slot/.offset/.length → bare Yul name.
@@ -155,7 +150,6 @@ public:
 	/// Scratch slots for EVM memory. Default 5 (0..4 = 20KB).
 	/// Raise via `--evm-memory-slots N` for memory-hungry contracts
 	/// (UltraHonk verify needs ~32 slots / 128KB for FrLib.invert / shplemini).
-	/// LAST is a runtime static so raising it for one compile doesn't bloat others.
 	static constexpr int MEMORY_SLOT_FIRST = 0;
 	static inline int MEMORY_SLOT_LAST = 4;
 	static constexpr int SLOT_SIZE = 4096;
@@ -1204,12 +1198,6 @@ private:
 		std::string const& _subroutineId,
 		std::string const& _subroutineName
 	);
-
-public:
-	/// Take all Subroutines emitted for recursive Yul functions since last reset.
-	static std::vector<std::shared_ptr<awst::Subroutine>> takePendingSubroutines();
-	/// Clear the pending-subroutines sink (once per contract build).
-	static void resetPendingSubroutines();
 
 private:
 

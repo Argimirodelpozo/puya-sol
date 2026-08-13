@@ -86,8 +86,8 @@ std::shared_ptr<awst::Expression> buildBigUIntShift(
 	// saturation conditional evaluates branches LAZILY, but Solidity requires the
 	// shifted operand to evaluate even when the shift saturates — `(d/d) << 256`
 	// with d=0 must REVERT, not fold to 0 (fuzzer find: evm=REVERT avm=0).
-	static int s_shiftTemp = 0;
-	std::string vName = "__shift_v_" + std::to_string(s_shiftTemp++);
+	std::string vName = "__shift_v_" + std::to_string(
+		awst::NameGen::next("BigUIntMath.shift"));
 	auto vRead = [&]() { return awst::makeVarExpression(vName, biguint, _loc); };
 	auto bindV = awst::makeAssignmentExpression(
 		awst::makeVarExpression(vName, biguint, _loc), std::move(_value), _loc, biguint);
@@ -134,8 +134,7 @@ std::shared_ptr<awst::Expression> buildBigUIntArithmeticShiftRight(
 {
 	auto* biguint = awst::WType::biguintType();
 	auto* u64 = awst::WType::uint64Type();
-	static int s_asrTemp = 0;
-	int id = s_asrTemp++;
+	int id = awst::NameGen::next("BigUIntMath.asr");
 	std::string vName = "__asr_v_" + std::to_string(id);
 	std::string nrName = "__asr_nr_" + std::to_string(id);
 	std::string nName = "__asr_n_" + std::to_string(id);
@@ -322,8 +321,7 @@ std::shared_ptr<awst::Expression> buildSignedModDiv(
 	// Or(isLeftNeg, isRightNeg) — an SE temp defined there doesn't dominate later
 	// uses (puya: "used but never defined").
 	auto* biguintW = awst::WType::biguintType();
-	static int s_smdTemp = 0;
-	int smdId = s_smdTemp++;
+	int smdId = awst::NameGen::next("BigUIntMath.signedMulDiv");
 	std::string lName = "__smd_l_" + std::to_string(smdId);
 	std::string rName = "__smd_r_" + std::to_string(smdId);
 	auto bindL = awst::makeAssignmentExpression(

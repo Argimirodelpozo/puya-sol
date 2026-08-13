@@ -34,7 +34,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 	// --evm-storage-layout: push/pop on a storage dynamic array = length-word
 	// RMW at the root slot + element write at keccak256(slot32)+addressing.
 	// Pop ZEROES the vacated element (EVM semantics), so push() never needs to.
-	if (builder::evmStorageLayout() && (memberName == "push" || memberName == "pop"))
+	if (m_ctx.typeMapper.profile().evmStorageLayout && (memberName == "push" || memberName == "pop"))
 	{
 		auto const* arrT = dynamic_cast<ArrayType const*>(baseExpr.annotation().type);
 		if (arrT && arrT->isDynamicallySized()
@@ -610,7 +610,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				{
 					std::string varName = varDecl->name();
 					auto loc = m_loc;
-					auto kind = builder::StorageMapper::shouldUseBoxStorage(*varDecl)
+					auto kind = m_ctx.storageMapper.shouldUseBoxStorage(*varDecl)
 						? awst::AppStorageKind::Box
 						: awst::AppStorageKind::AppGlobal;
 
@@ -664,7 +664,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				{
 					std::string varName = varDecl->name();
 					auto loc = m_loc;
-					auto kind = builder::StorageMapper::shouldUseBoxStorage(*varDecl)
+					auto kind = m_ctx.storageMapper.shouldUseBoxStorage(*varDecl)
 						? awst::AppStorageKind::Box
 						: awst::AppStorageKind::AppGlobal;
 
@@ -733,7 +733,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 
 			// Generic box-stored dynamic array (non-bytes)
 			if (varDecl->isStateVariable()
-				&& builder::StorageMapper::shouldUseBoxStorage(*varDecl)
+				&& m_ctx.storageMapper.shouldUseBoxStorage(*varDecl)
 				&& dynamic_cast<ArrayType const*>(varDecl->type()))
 			{
 				return handleBoxArray(memberName, baseExpr, *varDecl);

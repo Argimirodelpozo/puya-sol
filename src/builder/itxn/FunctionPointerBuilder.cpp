@@ -40,11 +40,12 @@ std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDis
 	std::vector<std::shared_ptr<awst::Expression>> const& _args,
 	awst::SourceLocation const& _loc)
 {
+	auto& registry = _ctx.functionPointers;
 	std::string dname = dispatchName(_funcType);
-	s_neededDispatches[dname] = _funcType;
+	registry.neededDispatches[dname] = _funcType;
 
-	awst::SubroutineTarget target = inLibraryContext(_ctx, s_currentCref)
-		? awst::SubroutineTarget{awst::SubroutineID{s_currentCref + "." + dname}}
+	awst::SubroutineTarget target = inLibraryContext(_ctx, registry.currentCref)
+		? awst::SubroutineTarget{awst::SubroutineID{registry.currentCref + "." + dname}}
 		: awst::SubroutineTarget{awst::InstanceMethodTarget{dname}};
 	auto call = awst::makeSubroutineCall(
 		std::move(target), computeReturnType(_ctx, _funcType), _loc);
@@ -78,18 +79,15 @@ std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDis
 	return call;
 }
 
-// Static members
-std::map<std::pair<int64_t, std::string>, FuncPtrEntry> FunctionPointerBuilder::s_targets;
-unsigned FunctionPointerBuilder::s_nextId = 1; // 0 = invalid
-std::map<std::string, solidity::frontend::FunctionType const*> FunctionPointerBuilder::s_neededDispatches;
-std::string FunctionPointerBuilder::s_currentCref;
-
-void FunctionPointerBuilder::reset()
+void FunctionPointerBuilder::setCurrentCref(
+	ContractContext& _ctx, std::string _cref)
 {
-	s_targets.clear();
-	s_nextId = 1;
-	s_neededDispatches.clear();
-	s_currentCref.clear();
+	_ctx.functionPointers.currentCref = std::move(_cref);
+}
+
+void FunctionPointerBuilder::reset(ContractContext& _ctx)
+{
+	_ctx.functionPointers.reset();
 }
 
 // ── Type mapping ──
@@ -114,20 +112,22 @@ awst::WType const* FunctionPointerBuilder::mapFunctionType(
 // ── Register a function as a pointer target ──
 
 void FunctionPointerBuilder::registerTarget(
+	ContractContext& _ctx,
 	FunctionDefinition const* _funcDef,
 	FunctionType const* _funcType,
 	std::string _awstName)
 {
+	auto& registry = _ctx.functionPointers;
 	if (!_funcDef) return;
 	int64_t id = _funcDef->id();
 	std::pair<int64_t, std::string> key{id, _awstName};
-	if (s_targets.count(key)) return; // already registered for this caller context
+	if (registry.targets.count(key)) return; // already registered for this caller context
 
 	std::string name = _awstName.empty() ? _funcDef->name() : _awstName;
-	s_targets[key] = FuncPtrEntry{
+	registry.targets[key] = FuncPtrEntry{
 		id,
 		name,
-		s_nextId++,
+		registry.nextId++,
 		_funcType,
 		_funcDef,
 		"" // subroutineId — populated later via setSubroutineId
@@ -135,9 +135,10 @@ void FunctionPointerBuilder::registerTarget(
 }
 
 void FunctionPointerBuilder::setSubroutineIds(
+	ContractContext& _ctx,
 	std::unordered_map<int64_t, std::string> const& _idMap)
 {
-	for (auto& [key, entry] : s_targets)
+	for (auto& [key, entry] : _ctx.functionPointers.targets)
 	{
 		auto it = _idMap.find(key.first);
 		if (it != _idMap.end())
@@ -172,7 +173,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 	}
 
 	// Register as target
-	registerTarget(_funcDef, funcType, _awstName);
+	registerTarget(_ctx, _funcDef, funcType, _awstName);
 
 	bool isExternal = isExternalFunctionPointer(funcType);
 
@@ -221,7 +222,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 			// crossing contract boundaries. Dispatch site shortcuts to internal dispatch
 			// when appId == CurrentApplicationID.
 			if (auto const* internalFuncType = _funcDef->functionType(true))
-				registerTarget(_funcDef, internalFuncType, _awstName);
+				registerTarget(_ctx, _funcDef, internalFuncType, _awstName);
 
 			auto curApp = awst::makeGlobal(
 				std::string("CurrentApplicationID"), awst::WType::uint64Type(), _loc);
@@ -239,8 +240,9 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 	}
 
 	// Internal: return the function's unique ID
-	auto it = s_targets.find({_funcDef->id(), _awstName});
-	unsigned funcId = (it != s_targets.end()) ? it->second.id : 0;
+	auto const& targets = _ctx.functionPointers.targets;
+	auto it = targets.find({_funcDef->id(), _awstName});
+	unsigned funcId = (it != targets.end()) ? it->second.id : 0;
 
 	auto idConst = awst::makeIntegerConstant(funcId, _loc);
 	return idConst;
@@ -283,10 +285,11 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		// Selector slot holds the ARC4 selector (for .selector accessor consistency).
 		// Map selector → internal id via __sel_to_id_<sig> (generated in generateDispatchMethods).
 		std::string selToIdName = "__sel_to_id_" + dispatchName(_funcType);
-		s_neededDispatches[dispatchName(_funcType)] = _funcType;
+		auto& registry = _ctx.functionPointers;
+		registry.neededDispatches[dispatchName(_funcType)] = _funcType;
 
-		awst::SubroutineTarget selToIdTarget = inLibraryContext(_ctx, s_currentCref)
-			? awst::SubroutineTarget{awst::SubroutineID{s_currentCref + "." + selToIdName}}
+		awst::SubroutineTarget selToIdTarget = inLibraryContext(_ctx, registry.currentCref)
+			? awst::SubroutineTarget{awst::SubroutineID{registry.currentCref + "." + selToIdName}}
 			: awst::SubroutineTarget{awst::InstanceMethodTarget{selToIdName}};
 		auto selToIdCall = awst::makeSubroutineCall(
 			std::move(selToIdTarget), awst::WType::uint64Type(), _loc);
@@ -421,8 +424,9 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 	std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs)
 {
 	std::vector<awst::ContractMethod> methods;
+	auto const& registry = _ctx.functionPointers;
 
-	if (s_targets.empty() && s_neededDispatches.empty())
+	if (registry.targets.empty() && registry.neededDispatches.empty())
 		return methods;
 
 	auto funcScopeContract = [](FunctionDefinition const* fd) -> ContractDefinition const* {
@@ -435,7 +439,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		contractName = _cref.substr(dotPos + 1);
 
 	std::map<std::string, std::vector<FuncPtrEntry const*>> groups;
-	for (auto const& [key, entry] : s_targets)
+	for (auto const& [key, entry] : registry.targets)
 	{
 		// Skip foreign targets (different non-library, non-base contract).
 		// Keep if: awstName starts with __super_, subroutineId is set,
@@ -459,7 +463,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		groups[dname].push_back(&entry);
 	}
 	// Ensure needed signatures have entries, even if empty.
-	for (auto const& [dname, funcType] : s_neededDispatches)
+	for (auto const& [dname, funcType] : registry.neededDispatches)
 	{
 		if (groups.find(dname) == groups.end())
 			groups[dname] = {};
@@ -470,8 +474,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		FunctionType const* funcType = nullptr;
 		if (!entries.empty())
 			funcType = entries[0]->funcType;
-		else if (s_neededDispatches.count(dname))
-			funcType = s_neededDispatches.at(dname);
+		else if (registry.neededDispatches.count(dname))
+			funcType = registry.neededDispatches.at(dname);
 		if (!funcType) continue;
 
 		awst::ContractMethod dispatch;
@@ -593,7 +597,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 					}
 
 					awst::WType const* arc4Type = isPublic
-						? dispatchPublicArgArc4Type(var->wtype, funcType->parameterTypes()[i])
+						? dispatchPublicArgArc4Type(
+							_ctx.typeMapper, var->wtype, funcType->parameterTypes()[i])
 						: nullptr;
 
 					if (arc4Type && arc4Type != var->wtype)
@@ -620,11 +625,11 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 						it && it->isSigned && it->bits <= 64)
 						retIsSignedNarrow = true;
 				if (isPublic && dispatch.returnType == awst::WType::biguintType())
-					call->wtype = new awst::ARC4UIntN(256); // arc4.uint256
+					call->wtype = _ctx.typeMapper.createType<awst::ARC4UIntN>(256); // arc4.uint256
 				else if (isPublic && retIsSignedNarrow
 					&& dispatch.returnType == awst::WType::uint64Type())
 					// Signed narrow publishes as uint256 on the wire.
-					call->wtype = new awst::ARC4UIntN(256);
+					call->wtype = _ctx.typeMapper.createType<awst::ARC4UIntN>(256);
 				// (public multi-return handled by the entry skip above)
 
 				if (dispatch.returnType != awst::WType::voidType())

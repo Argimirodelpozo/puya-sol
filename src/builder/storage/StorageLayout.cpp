@@ -52,7 +52,7 @@ void StorageLayout::computeLayout(
 	// resolution in DEFAULT mode, whose expectations the walk below encodes —
 	// applying this unconditionally broke 229 default-mode tests. Default mode
 	// keeps the original walk untouched.
-	if (builder::evmStorageLayout())
+	if (_typeMapper.profile().evmStorageLayout)
 	{
 		auto const* ct = solidity::frontend::TypeProvider::contract(_contract);
 		for (auto const& [decl, slot, offset]:
@@ -93,7 +93,7 @@ void StorageLayout::computeLayout(
 				m_slots.push_back(si);
 			}
 			auto si = m_slotByNumber[sv.slot];
-			m_slots[si].variables.push_back(&m_variables[idx]);
+			m_slots[si].variableIndices.push_back(idx);
 			m_slots[si].bytesUsed = std::max<unsigned>(
 				m_slots[si].bytesUsed, sv.byteOffset + sv.byteSize);
 
@@ -130,10 +130,6 @@ void StorageLayout::computeLayout(
 		if (alreadySeen) return;
 		allVars.push_back(var);
 	});
-
-	// Reserve upfront: m_slots[].variables hold &m_variables[i]; a mid-loop
-	// reallocation would dangle those pointers.
-	m_variables.reserve(allVars.size());
 
 	for (auto const* var: allVars)
 	{
@@ -201,7 +197,7 @@ void StorageLayout::computeLayout(
 
 		// Add variable to slot record.
 		auto slotIdx = m_slotByNumber[currentSlot];
-		m_slots[slotIdx].variables.push_back(&m_variables[varIdx]);
+		m_slots[slotIdx].variableIndices.push_back(varIdx);
 		m_slots[slotIdx].bytesUsed = currentOffset + byteSize;
 
 		// Advance position.

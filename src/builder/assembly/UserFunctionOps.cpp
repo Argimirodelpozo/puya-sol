@@ -58,8 +58,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 		awst::WType const* callRetType =
 			nRet == 0 ? awst::WType::voidType()
 			: nRet == 1 ? awst::WType::biguintType()
-			: static_cast<awst::WType const*>(new awst::WTuple(
-				std::vector<awst::WType const*>(nRet, awst::WType::biguintType())));
+			: m_typeMapper.createType<awst::WTuple>(
+				std::vector<awst::WType const*>(nRet, awst::WType::biguintType()));
 		auto call = awst::makeSubroutineCall(awst::SubroutineID{subIt->second}, callRetType, _loc);
 		for (auto const& a: _args)
 			awst::pushCallArg(call->args, ensureBiguint(a, _loc));

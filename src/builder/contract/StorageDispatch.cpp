@@ -3,6 +3,7 @@
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/storage/StorageRuntimePlan.h"
 #include "builder/storage/SlotWordCodec.h"
 #include "builder/storage/SlotHandleAccess.h"
 
@@ -12,100 +13,20 @@
 #include "awst/NameGen.h"
 #include "Logger.h"
 
-#include <libsolidity/ast/ASTVisitor.h>
-
 #include <algorithm>
-#include <functional>
 #include <set>
 
 namespace puyasol::builder
 {
-
-namespace {
-/// Recursive visitor for any InlineAssembly node (including deeply nested).
-struct InlineAsmDetector: public solidity::frontend::ASTConstVisitor
-{
-	bool found = false;
-	bool visit(solidity::frontend::InlineAssembly const&) override
-	{ found = true; return false; }
-};
-}
 
 bool evmContractNeedsSparseSlots(
 	solidity::frontend::ContractDefinition const& _contract,
 	TypeMapper& _typeMapper,
 	unsigned long long& _denseSlotsOut)
 {
-	StorageLayout layout;
-	layout.computeLayout(_contract, _typeMapper);
-	_denseSlotsOut = layout.totalSlots();
-
-	InlineAsmDetector asmDetector;
-	forEachDefinedFunction(_contract, [&](auto const* func)
-	{
-		if (asmDetector.found) return;
-		if (func->isImplemented())
-			func->body().accept(asmDetector);
-	});
-	if (asmDetector.found)
-		return true;
-
-	// PACKED addresses stash their high 12 bytes in a keccak-derived shadow
-	// aux slot (EvmSlotLowering::packedAddrAuxSlot) — a hashed slot the type
-	// walk below cannot see. Layouts that layout-at near 2^256 also exceed
-	// the dense region outright.
-	for (auto const& sv: layout.variables())
-	{
-		if (sv.slot >= solidity::u256(kEvmDenseSlotLimit))
-			return true;
-		// "Packed" = actually SHARING the slot: isFullSlot is false even for a
-		// lone address (20 B), and the lone case widens to the full window and
-		// emits no aux write.
-		if (sv.wtype == awst::WType::accountType() && sv.byteSize == 20)
-			if (auto const* si = layout.getSlotInfo(sv.slot);
-				si && si->variables.size() > 1)
-				return true;
-	}
-
-	std::function<bool(solidity::frontend::Type const*)> usesHashedSlots =
-		[&](solidity::frontend::Type const* t) -> bool {
-		if (!t)
-			return true;
-		if (dynamic_cast<solidity::frontend::MappingType const*>(t))
-			return true;
-		if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(t))
-		{
-			if (at->isDynamicallySized())
-				return true; // incl. bytes/string chunk regions
-			return usesHashedSlots(at->baseType());
-		}
-		if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(t))
-		{
-			for (auto const& member: st->structDefinition().members())
-				if (member && usesHashedSlots(member->type()))
-					return true;
-			return false;
-		}
-		return false;
-	};
-	for (auto const* base: _contract.annotation().linearizedBaseContracts)
-	{
-		if (!base)
-			continue;
-		for (auto const* var: base->stateVariables())
-		{
-			if (!var || var->isConstant() || var->immutable())
-				continue;
-			// Transient vars live in their own overlapping slot space routed
-			// with sentinel offsets — keep the full-fat runtime around them.
-			if (var->referenceLocation()
-				== solidity::frontend::VariableDeclaration::Location::Transient)
-				return true;
-			if (usesHashedSlots(var->annotation().type))
-				return true;
-		}
-	}
-	return false;
+	auto plan = StorageRuntimePlan::analyze(_contract, _typeMapper);
+	_denseSlotsOut = plan.layout.totalSlots();
+	return plan.requiresSparseSlots;
 }
 
 void ContractBuilder::buildEvmSlotStorageDispatch(
@@ -114,18 +35,9 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	std::string const& _contractName
 )
 {
-	StorageLayout layout;
-	layout.computeLayout(_contract, m_typeMapper);
-
-	InlineAsmDetector asmDetector;
-	forEachDefinedFunction(_contract, [&](auto const* func)
-	{
-		if (asmDetector.found) return;
-		if (func->isImplemented())
-			func->body().accept(asmDetector);
-	});
-
-	if (layout.totalSlots() == 0 && !asmDetector.found)
+	auto runtimePlan = StorageRuntimePlan::analyze(_contract, m_typeMapper);
+	auto const& layout = runtimePlan.layout;
+	if (!runtimePlan.needsDispatch())
 		return;
 
 	// Dense-only: every runtime slot is provably < 2^16 — no mapping / dynamic
@@ -137,7 +49,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	// UNIT-GLOBAL, not per-contract: the runtime subroutines share one
 	// SubroutineID across the whole unit, so variant bodies clobber each other
 	// (AWSTBuilder pre-scans and sets the flags before any contract builds).
-	bool const denseOnly = evmDenseOnlyUnit();
+	bool const denseOnly = m_typeMapper.profile().denseOnlyStorage;
 
 	std::string cref = m_sourceFile + "." + _contractName;
 	awst::SourceLocation loc;
@@ -177,7 +89,8 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	// name, offset drops the mod, and the biguint→u64 cast needs no 8-byte
 	// normalisation (slot fits 2 bytes; btoi accepts ≤8). Unit-global like
 	// denseOnly (same shared-SubroutineID hazard).
-	bool const singlePage = denseOnly && evmSinglePageUnit();
+	bool const singlePage = denseOnly
+		&& m_typeMapper.profile().singlePageStorage;
 	std::string const s64Name = "__eslot64";
 	auto s64Var = [&]() {
 		return awst::makeVarExpression(s64Name, awst::WType::uint64Type(), loc);
@@ -1124,24 +1037,15 @@ void ContractBuilder::buildStorageDispatch(
 	std::string const& _contractName
 )
 {
-	if (evmStorageLayout())
+	if (m_typeMapper.profile().evmStorageLayout)
 	{
 		buildEvmSlotStorageDispatch(_contract, _contractNode, _contractName);
 		return;
 	}
 
-	StorageLayout layout;
-	layout.computeLayout(_contract, m_typeMapper);
-
-	InlineAsmDetector asmDetector;
-	forEachDefinedFunction(_contract, [&](auto const* func)
-	{
-		if (asmDetector.found) return;
-		if (func->isImplemented())
-			func->body().accept(asmDetector);
-	});
-
-	if (layout.totalSlots() == 0 && !asmDetector.found)
+	auto runtimePlan = StorageRuntimePlan::analyze(_contract, m_typeMapper);
+	auto const& layout = runtimePlan.layout;
+	if (!runtimePlan.needsDispatch())
 		return;
 
 	std::string cref = m_sourceFile + "." + _contractName;
@@ -1193,9 +1097,12 @@ void ContractBuilder::buildStorageDispatch(
 	// Assemble the full 32-byte word for a packed slot (gaps zero-filled).
 	auto packedWordBytes = [&](SlotInfo const& si) -> std::shared_ptr<awst::Expression> {
 		std::vector<SlotVariable const*> vars;
-		for (auto const* v: si.variables)
+		for (auto const index: si.variableIndices)
+		{
+			auto const* v = &layout.variables().at(index);
 			if (v && v->wtype && v->wtype != awst::WType::voidType())
 				vars.push_back(v);
+		}
 		std::sort(vars.begin(), vars.end(), [](auto const* a, auto const* b) {
 			return a->byteOffset > b->byteOffset;   // BE left→right
 		});
@@ -1227,8 +1134,9 @@ void ContractBuilder::buildStorageDispatch(
 			awst::makeVarExpression(tmp, awst::WType::bytesType(), loc), std::move(padded), loc));
 		auto wordVar = [&]() { return awst::makeVarExpression(tmp, awst::WType::bytesType(), loc); };
 
-		for (auto const* v: si.variables)
+		for (auto const index: si.variableIndices)
 		{
+			auto const* v = &layout.variables().at(index);
 			if (!v || !v->wtype || v->wtype == awst::WType::voidType())
 				continue;
 			unsigned sz = v->byteSize;
@@ -1253,7 +1161,7 @@ void ContractBuilder::buildStorageDispatch(
 	forEachStateVar(_contract, [&](auto const* var)
 	{
 		if (!var || var->isConstant() || var->immutable()) return;
-		boxVars[var->name()] = StorageMapper::shouldUseBoxStorage(*var);
+		boxVars[var->name()] = m_storageMapper.shouldUseBoxStorage(*var);
 		if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(var->type()))
 			structVars[var->name()] = st;
 	});
@@ -1346,9 +1254,12 @@ void ContractBuilder::buildStorageDispatch(
 		for (auto const& si: layout.slots())
 		{
 			std::vector<SlotVariable const*> vars;
-			for (auto const* v: si.variables)
+			for (auto const index: si.variableIndices)
+			{
+				auto const* v = &layout.variables().at(index);
 				if (v && v->wtype && v->wtype != awst::WType::voidType())
 					vars.push_back(v);
+			}
 			if (vars.empty()) continue;
 
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::biguintType(), loc);
@@ -1519,9 +1430,12 @@ void ContractBuilder::buildStorageDispatch(
 		for (auto const& si: layout.slots())
 		{
 			std::vector<SlotVariable const*> vars;
-			for (auto const* v: si.variables)
+			for (auto const index: si.variableIndices)
+			{
+				auto const* v = &layout.variables().at(index);
 				if (v && v->wtype && v->wtype != awst::WType::voidType())
 					vars.push_back(v);
+			}
 			if (vars.empty()) continue;
 
 			auto slotVar = awst::makeVarExpression("__slot", awst::WType::biguintType(), loc);

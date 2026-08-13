@@ -1,6 +1,5 @@
 #include "cli/AwstPostPasses.h"
 #include "Logger.h"
-#include "builder/sol-ast/calls/SolNewExpression.h"
 #include "experimental/splitter/FunctionSplitter.h"
 #include "experimental/splitter/SimpleSplitterRunner.h"
 
@@ -245,17 +244,18 @@ std::optional<int> runSimpleSplitterIfRequested(
 	return std::nullopt;
 }
 
-void writeChildDeployTemplates(std::string const& _outputDir)
+void writeChildDeployTemplates(
+	std::string const& _outputDir,
+	std::set<std::string> const& _childContracts)
 {
-	auto const& children = puyasol::builder::sol_ast::SolNewExpression::childContracts();
-	if (children.empty())
+	if (_childContracts.empty())
 		return;
 
 	auto& logger = puyasol::Logger::instance();
 
 	std::string tmplPath = (fs::path(_outputDir) / "deploy.tmpl.json").string();
 	njson tmpl = njson::object();
-	for (auto const& childName : children)
+	for (auto const& childName : _childContracts)
 	{
 		// Read child's compiled binaries from the output dir.
 		auto approvalBin = fs::path(_outputDir) / (childName + ".approval.bin");
@@ -292,7 +292,6 @@ void writeChildDeployTemplates(std::string const& _outputDir)
 	std::ofstream tf(tmplPath);
 	tf << tmpl.dump(2);
 	logger.info("Wrote: " + tmplPath);
-	puyasol::builder::sol_ast::SolNewExpression::resetChildContracts();
 }
 
 } // namespace puyasol::cli

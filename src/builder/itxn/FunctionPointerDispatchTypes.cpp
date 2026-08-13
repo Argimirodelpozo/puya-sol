@@ -21,14 +21,16 @@ awst::WType const* computeReturnType(ContractContext& _ctx, FunctionType const* 
 }
 
 awst::WType const* dispatchPublicArgArc4Type(
-	awst::WType const* _nativeType, solidity::frontend::Type const* _paramSolType)
+	TypeMapper& _typeMapper,
+	awst::WType const* _nativeType,
+	solidity::frontend::Type const* _paramSolType)
 {
 	if (_nativeType == awst::WType::biguintType())
 	{
 		unsigned bits = 256;
 		if (auto const* intType = dynamic_cast<IntegerType const*>(_paramSolType))
 			bits = intType->numBits();
-		return new awst::ARC4UIntN(static_cast<int>(bits));
+		return _typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
 	}
 	if (_nativeType && _nativeType->kind() == awst::WTypeKind::Bytes
 		&& dynamic_cast<FunctionType const*>(_paramSolType))
@@ -38,8 +40,9 @@ awst::WType const* dispatchPublicArgArc4Type(
 		auto const* bytesType = static_cast<awst::BytesWType const*>(_nativeType);
 		if (bytesType->length().has_value())
 		{
-			auto const* arc4Byte = new awst::ARC4UIntN(8);
-			return new awst::ARC4StaticArray(arc4Byte, bytesType->length().value());
+			auto const* arc4Byte = _typeMapper.createType<awst::ARC4UIntN>(8);
+			return _typeMapper.createType<awst::ARC4StaticArray>(
+				arc4Byte, bytesType->length().value());
 		}
 	}
 	return nullptr;

@@ -3,6 +3,7 @@
 /// Migrated from FunctionCallBuilder.cpp lines 2144-2304.
 
 #include "builder/sol-ast/calls/SolNewExpression.h"
+#include "builder/BuildArtifacts.h"
 #include "awst/NameGen.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -20,8 +21,6 @@
 
 namespace puyasol::builder::sol_ast
 {
-
-std::set<std::string> SolNewExpression::s_childContracts;
 
 using namespace solidity::frontend;
 
@@ -301,7 +300,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				"child bytecode (substitute before deployment).");
 
 			// Track this child contract for .tmpl file generation
-			s_childContracts.insert(childName);
+			m_ctx.typeMapper.artifacts().childContracts.insert(childName);
 
 			// __postInit needed when ctor reads msg.value/sender/data (unavailable
 			// at AppCreate time where sender/value belong to the parent).
@@ -313,7 +312,8 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			// child defer ALL init to __postInit while the caller passed args at create
 			// and never called __postInit -> child deployed with NO state, failing only
 			// on the first read (arrays_in_constructors).
-			bool childHasPostInit = computeNeedsPostInit(contractType->contractDefinition());
+			bool childHasPostInit = computeNeedsPostInit(
+				contractType->contractDefinition(), m_ctx.storageMapper);
 
 			// ARC4-encode ctor args once; reused for AppCreate or __postInit.
 			auto buildEncodedCtorArgs = [&]() {
@@ -492,8 +492,9 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				// Use the stored app ID
 				auto fundAppId = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
 
-				auto* fundTupleType = new awst::WTuple(
-					{awst::WType::bytesType(), awst::WType::boolType()});
+				auto* fundTupleType = m_ctx.typeMapper.createType<awst::WTuple>(
+					std::vector<awst::WType const*>{
+						awst::WType::bytesType(), awst::WType::boolType()});
 				auto fundAppParams = awst::makeAppParamsGet(
 					"AppAddress", std::move(fundAppId), fundTupleType, m_loc);
 
@@ -526,7 +527,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				// stores an aggregate in its ctor. 10 ALGO covers a page + ~300
 				// sparse slots.
 				auto baseMbr = awst::makeIntegerConstant(
-					builder::evmStorageLayout() ? "4000000" : "1000000", m_loc);
+					m_ctx.typeMapper.profile().evmStorageLayout ? "4000000" : "1000000", m_loc);
 				std::shared_ptr<awst::Expression> ctorValueForFund =
 					childHasPostInit ? nullptr : extractCallValue();
 				std::shared_ptr<awst::Expression> totalFundAmount;

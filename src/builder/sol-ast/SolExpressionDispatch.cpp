@@ -114,7 +114,7 @@ public:
 		// --evm-storage-layout: NOT needed — the call returns a real biguint
 		// slot handle and member access/writes resolve through it (and
 		// contract-method storage params work: slots write straight through).
-		if (!builder::evmStorageLayout())
+		if (!m_ctx.typeMapper.profile().evmStorageLayout)
 		if (auto const* call = dynamic_cast<FunctionCall const*>(&_n.expression()))
 		{
 			Declaration const* refDecl = nullptr;

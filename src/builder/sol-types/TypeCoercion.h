@@ -28,6 +28,8 @@ class Type;
 namespace puyasol::builder
 {
 
+class TypeMapper;
+
 /// 2^256 as a decimal string — used across the compiler for modular wrapping,
 /// sign extension, and overflow detection.  Centralised here to avoid 15+
 /// copies of the same 78-digit literal scattered through the codebase.
@@ -103,6 +105,7 @@ public:
 	/// value (`return f()`) which spills to a temp appended to `_prepend`. Returns
 	/// the (possibly new) value; the caller inserts `_prepend` before the return.
 	static std::shared_ptr<awst::Expression> encodeReturnValue(
+		TypeMapper& _typeMapper,
 		std::shared_ptr<awst::Expression> _value,
 		std::vector<ReturnWireElem> const& _plan,
 		awst::SourceLocation const& _loc,

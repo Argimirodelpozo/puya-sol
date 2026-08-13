@@ -7,6 +7,86 @@
 namespace puyasol::builder::eb
 {
 
+CallPlan CallResolver::plan(solidity::frontend::FunctionCall const& _call)
+{
+	using namespace solidity::frontend;
+	CallPlan result;
+	result.functionType = dynamic_cast<FunctionType const*>(
+		_call.expression().annotation().type);
+	result.callee = &_call.expression();
+	if (!result.functionType)
+		return result;
+
+	auto kind = result.functionType->kind();
+	result.transport = (kind == FunctionType::Kind::External
+		|| kind == FunctionType::Kind::DelegateCall)
+		? CallTransport::External : CallTransport::Internal;
+
+	if (auto const* options = dynamic_cast<FunctionCallOptions const*>(result.callee))
+		result.callee = &options->expression();
+	if (auto const* tuple = dynamic_cast<TupleExpression const*>(result.callee);
+		tuple && tuple->components().size() == 1 && tuple->components()[0])
+		result.callee = tuple->components()[0].get();
+
+	if (auto const* member = dynamic_cast<MemberAccess const*>(result.callee))
+	{
+		result.declaration = dynamic_cast<FunctionDefinition const*>(
+			member->annotation().referencedDeclaration);
+		if (result.declaration && result.declaration->annotation().contract
+			&& result.declaration->annotation().contract->isLibrary())
+			result.transport = CallTransport::Internal;
+
+		auto const* receiver = &member->expression();
+		if (auto const* conversion = dynamic_cast<FunctionCall const*>(receiver);
+			conversion && conversion->annotation().kind.set()
+			&& *conversion->annotation().kind == FunctionCallKind::TypeConversion
+			&& conversion->arguments().size() == 1)
+			receiver = conversion->arguments()[0].get();
+		if (auto const* identifier = dynamic_cast<Identifier const*>(receiver);
+			identifier && identifier->name() == "this")
+		{
+			result.isSelfCall = true;
+			result.transport = CallTransport::Internal;
+		}
+
+		// A function-valued struct/array member is data, not a contract method.
+		auto const* baseType = member->expression().annotation().type;
+		while (baseType)
+		{
+			if (dynamic_cast<StructType const*>(baseType))
+			{
+				result.isFunctionPointer = true;
+				result.transport = CallTransport::Internal;
+				break;
+			}
+			if (auto const* array = dynamic_cast<ArrayType const*>(baseType))
+			{
+				baseType = array->baseType();
+				continue;
+			}
+			break;
+		}
+	}
+	else if (auto const* identifier = dynamic_cast<Identifier const*>(result.callee))
+	{
+		if (auto const* variable = dynamic_cast<VariableDeclaration const*>(
+				identifier->annotation().referencedDeclaration);
+			variable && dynamic_cast<FunctionType const*>(variable->type()))
+		{
+			result.isFunctionPointer = true;
+			result.transport = CallTransport::Internal;
+		}
+	}
+	else if (dynamic_cast<IndexAccess const*>(result.callee)
+		|| dynamic_cast<FunctionCall const*>(result.callee))
+	{
+		result.isFunctionPointer = true;
+		result.transport = CallTransport::Internal;
+	}
+
+	return result;
+}
+
 std::string CallResolver::resolveMethodName(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionDefinition const& _func)

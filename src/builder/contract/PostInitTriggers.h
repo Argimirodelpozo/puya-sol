@@ -10,6 +10,10 @@
 namespace puyasol::builder
 {
 
-bool computeNeedsPostInit(solidity::frontend::ContractDefinition const& _contract);
+class StorageMapper;
+
+bool computeNeedsPostInit(
+	solidity::frontend::ContractDefinition const& _contract,
+	StorageMapper const& _storageMapper);
 
 } // namespace puyasol::builder

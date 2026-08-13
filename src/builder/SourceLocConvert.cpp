@@ -2,19 +2,11 @@
 
 #include <liblangutil/CharStream.h>
 
-#include <map>
-
 namespace puyasol::builder
 {
 
 namespace
 {
-std::map<std::string, solidity::langutil::CharStream const*>& streams()
-{
-	static std::map<std::string, solidity::langutil::CharStream const*> s;
-	return s;
-}
-
 /// One-based line for a byte offset; -1 when no stream / bad offset.
 int lineAt(solidity::langutil::CharStream const* _cs, int _offset)
 {
@@ -52,41 +44,36 @@ awst::SourceLocation convert(
 }
 } // namespace
 
-void registerCharStream(
+void SourceMap::registerCharStream(
 	std::string const& _sourceName, solidity::langutil::CharStream const* _cs)
 {
-	streams()[_sourceName] = _cs;
+	m_streams[_sourceName] = _cs;
 }
 
-void clearCharStreams()
-{
-	streams().clear();
-}
-
-awst::SourceLocation toAwstLoc(
+awst::SourceLocation SourceMap::toAwstLoc(
 	std::string const& _fallbackFile,
-	solidity::langutil::SourceLocation const& _sl)
+	solidity::langutil::SourceLocation const& _sl) const
 {
 	// The node's own source unit picks the STREAM (imports have their own
 	// offsets); the FILE stays the caller's path — puya opens it to excerpt
 	// source lines, and unit names are not readable paths.
 	auto it = _sl.sourceName
-		? streams().find(*_sl.sourceName) : streams().end();
-	if (it == streams().end())
-		it = streams().find(_fallbackFile);
+		? m_streams.find(*_sl.sourceName) : m_streams.end();
+	if (it == m_streams.end())
+		it = m_streams.find(_fallbackFile);
 	return convert(
 		_fallbackFile,
-		it != streams().end() ? it->second : nullptr,
+		it != m_streams.end() ? it->second : nullptr,
 		_sl.start, _sl.end);
 }
 
-awst::SourceLocation toAwstLoc(
-	std::string const& _fallbackFile, int _start, int _end)
+awst::SourceLocation SourceMap::toAwstLoc(
+	std::string const& _fallbackFile, int _start, int _end) const
 {
-	auto it = streams().find(_fallbackFile);
+	auto it = m_streams.find(_fallbackFile);
 	return convert(
 		_fallbackFile,
-		it != streams().end() ? it->second : nullptr,
+		it != m_streams.end() ? it->second : nullptr,
 		_start, _end);
 }
 

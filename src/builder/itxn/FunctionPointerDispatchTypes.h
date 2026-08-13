@@ -22,7 +22,9 @@ awst::WType const* computeReturnType(ContractContext& _ctx, solidity::frontend::
 ///   - bytes[12] FunctionType param → arc4.static_array<arc4.uint8, 12>
 ///   - other → nullptr (no wrapping).
 awst::WType const* dispatchPublicArgArc4Type(
-	awst::WType const* _nativeType, solidity::frontend::Type const* _paramSolType);
+	TypeMapper& _typeMapper,
+	awst::WType const* _nativeType,
+	solidity::frontend::Type const* _paramSolType);
 
 // (mapDispatchType and encodeArgForInnerTxn DELETED 2026-07-20: both had
 // drifted from their canonical twins — dispatch types now come from

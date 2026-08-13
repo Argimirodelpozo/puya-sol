@@ -32,6 +32,23 @@ struct FuncPtrEntry
 	std::string subroutineId; // AWST subroutine ID for library/free functions (empty = contract method)
 };
 
+/// Per-compilation function-pointer dispatch state.
+struct FunctionPointerRegistry
+{
+	std::map<std::pair<int64_t, std::string>, FuncPtrEntry> targets;
+	unsigned nextId = 1;
+	std::map<std::string, solidity::frontend::FunctionType const*> neededDispatches;
+	std::string currentCref;
+
+	void reset()
+	{
+		targets.clear();
+		nextId = 1;
+		neededDispatches.clear();
+		currentCref.clear();
+	}
+};
+
 class FunctionPointerBuilder
 {
 public:
@@ -64,6 +81,7 @@ public:
 	/// Register a function pointer target.
 	/// @param _awstName  AWST name (may differ from _funcDef->name() for super refs, e.g. "f__super_8").
 	static void registerTarget(
+		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _funcDef,
 		solidity::frontend::FunctionType const* _funcType,
 		std::string _awstName = "");
@@ -83,14 +101,15 @@ public:
 
 	/// Set subroutine IDs for registered targets; call after all library/free fns are registered.
 	static void setSubroutineIds(
+		ContractContext& _ctx,
 		std::unordered_map<int64_t, std::string> const& _idMap);
 
 	/// Set current contract cref before translating function bodies
 	/// (library subroutines need it to construct SubroutineIDs).
-	static void setCurrentCref(std::string _cref) { s_currentCref = std::move(_cref); }
+	static void setCurrentCref(ContractContext& _ctx, std::string _cref);
 
 	/// Clear all registered targets between contracts.
-	static void reset();
+	static void reset(ContractContext& _ctx);
 
 private:
 	/// Build internal-dispatch SubroutineCallExpression (shared by internal
@@ -102,13 +121,6 @@ private:
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
 		awst::SourceLocation const& _loc);
 
-	// Keyed by (AST ID, awst name); empty name for default refs, "f__super_<id>"
-	// for super refs — lets diamond MRO produce distinct entries per caller context.
-	static std::map<std::pair<int64_t, std::string>, FuncPtrEntry> s_targets;
-	static unsigned s_nextId; ///< 0 = invalid/zero-initialized.
-	// dispatch name → FunctionType* for signatures needed (from buildFunctionPointerCall).
-	static std::map<std::string, solidity::frontend::FunctionType const*> s_neededDispatches;
-	static std::string s_currentCref;
 };
 
 } // namespace puyasol::builder::eb
