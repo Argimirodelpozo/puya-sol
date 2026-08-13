@@ -733,8 +733,12 @@ def test_transient_storage_creation(harness):
     app = harness.compile_and_deploy("inlineAssembly/contracts/transient_storage_creation.sol")
     # constructor-only test — deployment succeeding is the assertion
 
-def test_transient_storage_low_level_calls(harness):  # currently fails
+def test_transient_storage_low_level_calls(harness):
     """inlineAssembly/contracts/transient_storage_low_level_calls.sol"""
+    # This fixture creates each callee with Solidity's `{salt: ...}` syntax,
+    # i.e. CREATE2. AVM app IDs are assigned sequentially and cannot reproduce
+    # CREATE2's salt + initcode-hash deterministic address derivation.
+    pytest.xfail("CREATE2 (`new C{salt: ...}`) has no AVM equivalent")
     app = harness.compile_and_deploy('inlineAssembly/contracts/transient_storage_low_level_calls.sol')
     r = harness.call(app, 'testDelegateCall()')
     assert r.abi_return is True

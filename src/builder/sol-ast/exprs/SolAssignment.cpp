@@ -132,6 +132,17 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		}
 	}
 
+	// A failed shape lowerer logs its own diagnostic and may return null.  Do
+	// not feed that sentinel into planning/finalization: both require a typed
+	// AWST expression.  In the tuple path, return the captured effects first so
+	// a failed assignment cannot leak or discard queued work in the context.
+	if (!target || !value)
+	{
+		if (deferTupleLhsEffects)
+			m_ctx.restoreOperandDeltas(std::move(tupleLhsD));
+		return nullptr;
+	}
+
 	// Tripwire (possible_solc item 6): a plain `=` must be a solc-legal
 	// implicit conversion; a trip = wrong src/target annotation plumbing.
 	// Compound ops follow binaryOperatorResult rules instead — skip; tuples
@@ -164,8 +175,12 @@ SolAssignment::LValuePlan SolAssignment::planLValue(
 		auto const* rhsType = m_assignment.rightHandSide().annotation().type;
 		auto const* lhsArray = lhsType ? dynamic_cast<ArrayType const*>(lhsType) : nullptr;
 		auto const* rhsArray = rhsType ? dynamic_cast<ArrayType const*>(rhsType) : nullptr;
-		if ((lhsArray && !lhsArray->isDynamicallySized())
-			|| (rhsArray && !rhsArray->isDynamicallySized()))
+		// Keep this selection identical to trySlotBasedArrayWrite: an array-typed
+		// LHS owns the strategy decision; only a non-array LHS may borrow the RHS
+		// array type.  In particular, dynamic-LHS/fixed-RHS must continue to the
+		// scalar-slot strategy exactly as the former specialist chain did.
+		auto const* arrayType = lhsArray ? lhsArray : rhsArray;
+		if (arrayType && !arrayType->isDynamicallySized())
 			return {LValueKind::SlotArray};
 		if (dynamic_cast<awst::BigUIntBinaryOperation const*>(_target.get()))
 			return {LValueKind::SlotScalar};
@@ -204,13 +219,6 @@ std::shared_ptr<awst::Expression> SolAssignment::emitLValuePlan(
 		break;
 	case LValueKind::Tuple:
 		result = tryTupleAssignment(_target, _value);
-		if (_deferTupleLhsEffects)
-		{
-			for (auto& st: _tupleLhsEffects.pre)
-				m_ctx.prePendingStatements.push_back(std::move(st));
-			for (auto& st: _tupleLhsEffects.post)
-				m_ctx.pendingStatements.push_back(std::move(st));
-		}
 		break;
 	case LValueKind::BytesElement:
 		result = tryBytesElemAssignment(_target, _value);
@@ -222,8 +230,15 @@ std::shared_ptr<awst::Expression> SolAssignment::emitLValuePlan(
 		break;
 	}
 
-	// A specialist may deliberately decline an unsupported subtype; retain the
-	// generic path so diagnostics remain identical to the previous pipeline.
+	// Tuple-LHS lowering captures bounds checks/write-backs until after the RHS
+	// snapshot has been queued.  Restore them regardless of the selected plan:
+	// Tuple is the expected shape, but a failed or future lowering must not make
+	// effects disappear merely because its AWST node has another representation.
+	if (_deferTupleLhsEffects)
+		m_ctx.restoreOperandDeltas(std::move(_tupleLhsEffects));
+
+	// A selected specialist may deliberately decline an unsupported subtype;
+	// retain the generic finalization path.
 	if (result)
 		return std::move(*result);
 	return emitGenericAssignment(_op, std::move(_target), std::move(_value));

@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 contract EvmLayoutBoolNestedArray {
     bool[2][] private flags;
-    bool[9][] private wideFlags;
+    bool[32][] private wideFlags;
 
     function set(bool[2][] memory value) external {
         flags = value;
@@ -23,11 +23,11 @@ contract EvmLayoutBoolNestedArray {
         }
     }
 
-    function setWide(bool[9][] memory value) external {
+    function setWide(bool[32][] memory value) external {
         wideFlags = value;
     }
 
-    function getWide() external view returns (bool[9][] memory) {
+    function getWide() external view returns (bool[32][] memory) {
         return wideFlags;
     }
 

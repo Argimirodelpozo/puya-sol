@@ -4184,20 +4184,41 @@ def test_evm_layout_dynamic_array_of_packed_bool_arrays(harness):
     assert list(harness.call(app, "get()", **opts).abi_return) == []
     assert as_int(harness.call(app, "rawElementWord(uint256)", 0, **opts).abi_return) == 0
 
-    # Nine bools require two ARC4 bytes per inner array. The unused low seven
-    # bits of each second byte must not make the next outer element continue
-    # the previous element's bit run.
-    wide = [
-        [True, False, False, False, False, False, False, False, True],
-        [False, True, False, False, False, False, False, True, False],
-    ]
-    harness.call(app, "setWide(bool[9][])", wide, **opts)
+    # Thirty-two bool lanes fill one complete EVM word and four ARC4 bytes per
+    # outer element. Besides guarding bit-run reset at the element boundary,
+    # this is the expensive read shape: __evm_dynarr_read must load the word
+    # once and reuse it for all 32 lanes, not issue 32 identical storage reads.
+    wide = [[False] * 32 for _ in range(2)]
+    for bit in (0, 8, 31):
+        wide[0][bit] = True
+    for bit in (1, 7, 16, 30):
+        wide[1][bit] = True
+    harness.call(app, "setWide(bool[32][])", wide, **opts)
     assert [list(v) for v in harness.call(app, "getWide()", **opts).abi_return] == wide
-    expected_words = (1 | (1 << 64), (1 << 8) | (1 << 56))
+    expected_words = (
+        1 | (1 << 64) | (1 << 248),
+        (1 << 8) | (1 << 56) | (1 << 128) | (1 << 240),
+    )
     for i, expected in enumerate(expected_words):
         got = as_int(harness.call(
             app, "rawWideElementWord(uint256)", i, **opts).abi_return)
         assert got == expected, f"wide element {i}: EVM word {got:#x} != {expected:#x}"
+
+
+def test_evm_layout_tuple_lhs_effects_after_rhs_snapshot(harness):
+    """Deferred tuple-LHS bounds effects survive LValuePlan dispatch.
+
+    The RHS calls returnsArray(), which grows arrayData from empty to length 9.
+    EVM checks the tuple lvalue arrayData[3] after that RHS evaluation. Slot
+    lowering captures the bounds check while building the LHS, so dispatch
+    must restore it after the tuple handler queues its RHS snapshot.
+    """
+    arts = harness.compile(
+        "various/contracts/destructuring_assignment.sol",
+        extra_args=_EVM_LAYOUT)
+    app = harness.deploy(arts, extra_funding_microalgos=30_000_000)
+    r = harness.call(app, "f(bytes)", b"abcde", extra_fee=10_000)
+    assert as_int(r.abi_return) == 0
 
 
 def test_blob_memory_address_write(harness):

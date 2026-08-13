@@ -609,11 +609,21 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 				awst::UInt64BinaryOperator::Sub,
 				awst::makeUInt64BinOp(u64Var("__wi"),
 					awst::UInt64BinaryOperator::Mult, u64Var("__per"), loc), loc), loc));
-		loop->body.push_back(awst::makeAssignmentStatement(bytesVar("__wb"),
-			awst::makeLeftPadToN(awst::makeAsBytes(readWordCall(
-				awst::makeBigUIntBinOp(biguintVar("__chunk"),
-					awst::BigUIntBinaryOperator::Add,
-					u64ToBiguint(u64Var("__wi")), loc)), loc), 32, loc), loc));
+		// Read once at the first lane of each storage word.  Packed elements —
+		// especially fixed bool arrays, where one outer element expands to many
+		// lanes — otherwise paid for the same storage read on every lane.
+		{
+			auto loadWord = awst::makeBlock(loc);
+			loadWord->body.push_back(awst::makeAssignmentStatement(bytesVar("__wb"),
+				awst::makeLeftPadToN(awst::makeAsBytes(readWordCall(
+					awst::makeBigUIntBinOp(biguintVar("__chunk"),
+						awst::BigUIntBinaryOperator::Add,
+						u64ToBiguint(u64Var("__wi")), loc)), loc), 32, loc), loc));
+			loop->body.push_back(awst::makeIfElse(
+				awst::makeNumericCompare(u64Var("__j"),
+					awst::NumericComparison::Eq, u64c(0), loc),
+				std::move(loadWord), nullptr, loc));
+		}
 		auto offExpr = awst::makeUInt64BinOp(u64c(32),
 			awst::UInt64BinaryOperator::Sub,
 			awst::makeUInt64BinOp(
