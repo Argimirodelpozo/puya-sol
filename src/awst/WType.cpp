@@ -21,7 +21,7 @@ struct ARC4BasicWType: public WType
 		: WType(std::move(_name), WTypeKind::Basic, true)
 	{
 	}
-	std::string jsonType() const override { return "ARC4Type"; }
+	char const* jsonType() const override { return "ARC4Type"; }
 };
 
 // Singleton basic types — allocated once, never freed (static lifetime).

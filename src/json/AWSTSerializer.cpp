@@ -1,6 +1,8 @@
 #include "json/AWSTSerializer.h"
 #include "json/Base85.h"
 
+#include <string_view>
+
 namespace puyasol::json
 {
 
@@ -872,7 +874,7 @@ njson AWSTSerializer::serializeWType(awst::WType const* _type)
 		break;
 	}
 	default:
-		if (_type->jsonType() == "ARC4Type")
+		if (std::string_view{_type->jsonType()} == "ARC4Type")
 		{
 			j["arc4_alias"] = nullptr;
 			j["source_location"] = nullptr;

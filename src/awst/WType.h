@@ -34,7 +34,7 @@ class WType
 public:
 	virtual ~WType() = default;
 
-	virtual std::string jsonType() const { return "WType"; }
+	virtual char const* jsonType() const { return "WType"; }
 	virtual bool immutable() const { return m_immutable; }
 	std::string const& name() const { return m_name; }
 	WTypeKind kind() const { return m_kind; }
@@ -81,7 +81,7 @@ public:
 	{
 	}
 
-	std::string jsonType() const override { return "BytesWType"; }
+	char const* jsonType() const override { return "BytesWType"; }
 	std::optional<int> length() const { return m_length; }
 
 private:
@@ -141,7 +141,7 @@ public:
 	{
 	}
 
-	std::string jsonType() const override { return "ARC4UIntN"; }
+	char const* jsonType() const override { return "ARC4UIntN"; }
 	int n() const { return m_n; }
 	std::string const& arc4Alias() const { return m_arc4Alias; }
 
@@ -171,7 +171,7 @@ public:
 	{
 	}
 
-	std::string jsonType() const override { return "ARC4UFixedNxM"; }
+	char const* jsonType() const override { return "ARC4UFixedNxM"; }
 	int n() const { return m_n; }
 	int m() const { return m_m; }
 
@@ -188,7 +188,7 @@ public:
 	{
 	}
 
-	std::string jsonType() const override { return "ARC4Tuple"; }
+	char const* jsonType() const override { return "ARC4Tuple"; }
 	std::vector<WType const*> const& types() const { return m_types; }
 
 private:
@@ -211,7 +211,7 @@ public:
 	{
 	}
 
-	std::string jsonType() const override { return "ARC4DynamicArray"; }
+	char const* jsonType() const override { return "ARC4DynamicArray"; }
 	WType const* elementType() const { return m_elementType; }
 	std::string const& arc4Alias() const { return m_arc4Alias; }
 
@@ -238,7 +238,7 @@ public:
 	{
 	}
 
-	std::string jsonType() const override { return "ARC4StaticArray"; }
+	char const* jsonType() const override { return "ARC4StaticArray"; }
 	WType const* elementType() const { return m_elementType; }
 	int64_t arraySize() const { return m_arraySize; }
 	std::string const& arc4Alias() const { return m_arc4Alias; }
@@ -265,7 +265,7 @@ public:
 	{
 	}
 
-	std::string jsonType() const override { return "ARC4Struct"; }
+	char const* jsonType() const override { return "ARC4Struct"; }
 	std::vector<std::pair<std::string, WType const*>> const& fields() const { return m_fields; }
 	bool frozen() const { return m_frozen; }
 
@@ -294,7 +294,7 @@ public:
 	{
 	}
 
-	std::string jsonType() const override { return "ReferenceArray"; }
+	char const* jsonType() const override { return "ReferenceArray"; }
 	WType const* elementType() const { return m_elementType; }
 	std::optional<int64_t> arraySize() const { return m_arraySize; }
 
@@ -317,7 +317,7 @@ public:
 	{
 	}
 
-	std::string jsonType() const override { return "WTuple"; }
+	char const* jsonType() const override { return "WTuple"; }
 	std::vector<WType const*> const& types() const { return m_types; }
 	std::optional<std::vector<std::string>> const& names() const { return m_names; }
 
@@ -341,7 +341,7 @@ public:
 	{
 	}
 
-	std::string jsonType() const override { return "WInnerTransactionFields"; }
+	char const* jsonType() const override { return "WInnerTransactionFields"; }
 	std::optional<int> transactionType() const { return m_transactionType; }
 
 private:
@@ -376,7 +376,7 @@ public:
 	{
 	}
 
-	std::string jsonType() const override { return "WInnerTransaction"; }
+	char const* jsonType() const override { return "WInnerTransaction"; }
 	std::optional<int> transactionType() const { return m_transactionType; }
 
 private:
