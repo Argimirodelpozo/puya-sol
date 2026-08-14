@@ -1,9 +1,9 @@
 #include "builder/storage/StorageRuntimePlan.h"
 
+#include "builder/ProgramAnalysis.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/storage/EvmLayoutMode.h"
 
-#include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/Types.h>
 
 #include <functional>
@@ -13,16 +13,6 @@ namespace puyasol::builder
 
 namespace
 {
-
-struct InlineAsmDetector: solidity::frontend::ASTConstVisitor
-{
-	bool found = false;
-	bool visit(solidity::frontend::InlineAssembly const&) override
-	{
-		found = true;
-		return false;
-	}
-};
 
 bool typeUsesHashedSlots(solidity::frontend::Type const* _type)
 {
@@ -50,13 +40,18 @@ StorageRuntimePlan StorageRuntimePlan::analyze(
 	StorageRuntimePlan result;
 	result.layout.computeLayout(_contract, _typeMapper);
 
-	InlineAsmDetector asmDetector;
+	auto const& asmCallables = _typeMapper.analysis().callablesWithInlineAssembly;
 	forEachDefinedFunction(_contract, [&](auto const* _function) {
-		if (!asmDetector.found && _function->isImplemented())
-			_function->body().accept(asmDetector);
+		if (_function->isImplemented() && asmCallables.count(_function->id()))
+			result.containsInlineAssembly = true;
 	});
-	result.containsInlineAssembly = asmDetector.found;
-	result.requiresSparseSlots = asmDetector.found;
+	for (auto const* base: _contract.annotation().linearizedBaseContracts)
+		if (base)
+			for (auto const* modifier: base->functionModifiers())
+				if (modifier && modifier->isImplemented()
+					&& asmCallables.count(modifier->id()))
+					result.containsInlineAssembly = true;
+	result.requiresSparseSlots = result.containsInlineAssembly;
 
 	// Packed addresses use a keccak-derived shadow slot for their high bytes.
 	for (auto const& variable: result.layout.variables())

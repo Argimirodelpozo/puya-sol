@@ -2,7 +2,7 @@
 /// Migrated from InlineAssemblyBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
-#include "builder/sol-ast/AsmScan.h"
+#include "builder/ProgramAnalysis.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/SolcConstFold.h"
@@ -13,7 +13,6 @@
 #include "builder/storage/StorageMapper.h"
 
 #include <libsolutil/Keccak256.h>
-#include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "Logger.h"
 
@@ -237,8 +236,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				if (fd && !fd->returnParameters().empty()
 					&& fd->returnParameters()[0]->referenceLocation()
 						== VariableDeclaration::Location::Storage
-					&& fd->isImplemented()
-					&& builder::containsInlineAssembly(fd->body()))
+					&& m_blk.typeMapper().analysis().callablesWithInlineAssembly.count(
+						fd->id()))
 					structRefSlotLocals[yulId->name.str()] = ptr->name();
 			}
 			break;
@@ -266,8 +265,15 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 
 		if (contractDef)
 		{
-			StorageLayout layout;
-			layout.computeLayout(*contractDef, m_blk.typeMapper());
+			StorageLayout fallbackLayout;
+			auto const* layout = m_blk.builderCtx().currentContract == contractDef
+				? m_blk.builderCtx().storageLayout
+				: nullptr;
+			if (!layout)
+			{
+				fallbackLayout.computeLayout(*contractDef, m_blk.typeMapper());
+				layout = &fallbackLayout;
+			}
 
 			// Compile-time slot routes: connect CONSTANT-slot asm sload/sstore to the
 			// named vars' real storage (see AssemblyBuilder::SlotRoute). Scalars route
@@ -279,7 +285,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				if (m_blk.typeMapper().profile().evmStorageLayout) return;   // no named-cell routes in slot space
 				if (!svDecl || svDecl->isConstant() || svDecl->immutable()) return;
 				if (svDecl->referenceLocation() == VariableDeclaration::Location::Transient) return;
-				auto const* vi = layout.getVarInfo(svDecl->name());
+				auto const* vi = layout->getVarInfo(svDecl->name());
 				if (!vi) return;
 				auto const* arrT = dynamic_cast<solidity::frontend::ArrayType const*>(svDecl->type());
 				if (arrT && arrT->isDynamicallySized() && !arrT->isByteArrayOrString()
@@ -345,7 +351,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				auto* arc4Elem = m_blk.typeMapper().mapSolTypeToARC4(localArrT->baseType());
 				if (builder::StorageMapper::computeEncodedElementSize(arc4Elem) != 32) continue;
 
-				auto const* vi = layout.getVarInfo(structVar->name());
+				auto const* vi = layout->getVarInfo(structVar->name());
 				if (!vi) continue;
 				auto memberOff = structType->storageOffsetsOfMember(fieldName);
 				if (memberOff.second != 0) continue;   // arrays always start a fresh slot
@@ -413,7 +419,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				}
 				else
 				{
-					if (auto const* varInfo = layout.getVarInfo(varDecl->name()))
+					if (auto const* varInfo = layout->getVarInfo(varDecl->name()))
 					{
 						slotStr = varInfo->slot.str();
 						byteOffset = varInfo->byteOffset;

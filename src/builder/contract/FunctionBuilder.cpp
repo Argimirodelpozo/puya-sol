@@ -1,11 +1,11 @@
 #include "builder/contract/ContractBuilder.h"
+#include "builder/ProgramAnalysis.h"
 #include "builder/itxn/InnerCallHandlers.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "awst/Termination.h"
 #include "awst/StatementWalk.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/NatSpecTags.h"
-#include "builder/sol-ast/AsmScan.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/contract/ParamABIValidator.h"
 #include "builder/contract/ReturnRewriter.h"
@@ -287,6 +287,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 )
 {
 	awst::ContractMethod method;
+	bool const funcHasInlineAssembly =
+		m_typeMapper.analysis().callablesWithInlineAssembly.count(_func.id()) != 0;
 	method.sourceLocation = makeLoc(_func.location());
 	method.cref = m_sourceFile + "." + _contractName;
 	if (!_nameOverride.empty())
@@ -361,8 +363,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			method.returnType = awst::WType::biguintType();
 		// .slot assembly storage ref: return biguint (slot number).
 		else if (returnParams[0]->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-			&& _func.isImplemented()
-			&& containsInlineAssembly(_func.body()))
+			&& funcHasInlineAssembly)
 			method.returnType = awst::WType::biguintType();
 		// Storage-ref pointer (`return _pools[id]`): return uint64 index or bytes box-key.
 		// Box-keyed when the holder is a mapping (storageRefReturnIsBytesKeyed),
@@ -465,9 +466,6 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	std::vector<ParamDecode> paramDecodes;
 	// Detect inline assembly (at ANY depth — `unchecked { assembly {..} }` counts):
 	// skip ARC4 param wrapping (would break asm var refs).
-	bool funcHasInlineAssembly =
-		_func.isImplemented() && containsInlineAssembly(_func.body());
-
 	// Self-recursive callsubs are rewritten post-translation to wrap biguint args
 	// in ARC4Encode (see wrap pass below) — self-recursion no longer gates the remap.
 	if (method.arc4MethodConfig.has_value())
@@ -868,7 +866,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 		// Asm bodies handle param data directly via calldataload; skip ARC4 decode.
 		// Any-depth scan — must agree with funcHasInlineAssembly (remap gate).
-		bool hasInlineAssembly = containsInlineAssembly(_func.body());
+		bool hasInlineAssembly = funcHasInlineAssembly;
 
 		// Decode ARC4-remapped params: rename arg to __arc4_<name> and stash decodes.
 		// Deferred until after modifier inlining: inlineModifiers replaces method.body
@@ -1035,7 +1033,9 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			// method reachable by internal callsub. Blanket use cost ~6
 			// opcodes on every method and blew the 8 KB cap.
 			std::string sel;
-			if (m_currentContract && _isCalledInternally(*m_currentContract, _func))
+			if (m_currentContract
+				&& m_typeMapper.analysis().isCalledInternally(
+					m_currentContract->id(), _func.id()))
 			{
 				try { sel = eb::InnerCallHandlers::buildMethodSelector(*m_exprBuilder, &_func); }
 				catch (...) { sel.clear(); }

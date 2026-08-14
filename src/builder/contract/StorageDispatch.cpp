@@ -19,26 +19,13 @@
 namespace puyasol::builder
 {
 
-bool evmContractNeedsSparseSlots(
-	solidity::frontend::ContractDefinition const& _contract,
-	TypeMapper& _typeMapper,
-	unsigned long long& _denseSlotsOut)
-{
-	auto plan = StorageRuntimePlan::analyze(_contract, _typeMapper);
-	_denseSlotsOut = plan.layout.totalSlots();
-	return plan.requiresSparseSlots;
-}
-
 void ContractBuilder::buildEvmSlotStorageDispatch(
-	solidity::frontend::ContractDefinition const& _contract,
+	StorageRuntimePlan const& _storagePlan,
 	awst::Contract* _contractNode,
 	std::string const& _contractName
 )
 {
-	auto runtimePlan = StorageRuntimePlan::analyze(_contract, m_typeMapper);
-	auto const& layout = runtimePlan.layout;
-	if (!runtimePlan.needsDispatch())
-		return;
+	auto const& layout = _storagePlan.layout;
 
 	// Dense-only: every runtime slot is provably < 2^16 — no mapping / dynamic
 	// array / bytes / string anywhere in the persistent layout (their slots are
@@ -1112,21 +1099,18 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 
 void ContractBuilder::buildStorageDispatch(
 	solidity::frontend::ContractDefinition const& _contract,
+	StorageRuntimePlan const& _storagePlan,
 	awst::Contract* _contractNode,
 	std::string const& _contractName
 )
 {
 	if (m_typeMapper.profile().evmStorageLayout)
 	{
-		buildEvmSlotStorageDispatch(_contract, _contractNode, _contractName);
+		buildEvmSlotStorageDispatch(_storagePlan, _contractNode, _contractName);
 		return;
 	}
 
-	auto runtimePlan = StorageRuntimePlan::analyze(_contract, m_typeMapper);
-	auto const& layout = runtimePlan.layout;
-	if (!runtimePlan.needsDispatch())
-		return;
-
+	auto const& layout = _storagePlan.layout;
 	std::string cref = m_sourceFile + "." + _contractName;
 	awst::SourceLocation loc;
 	loc.file = m_sourceFile;

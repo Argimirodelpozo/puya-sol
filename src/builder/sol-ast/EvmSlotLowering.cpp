@@ -284,7 +284,7 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolve(Expression const& 
 std::optional<EvmSlotLowering::Addr> EvmSlotLowering::addrForStateVar(
 	VariableDeclaration const& _vd)
 {
-	auto const* layout = m_ctx.evmSlotLayout;
+	auto const* layout = m_ctx.storageLayout;
 	if (!layout)
 	{
 		Logger::instance().error(

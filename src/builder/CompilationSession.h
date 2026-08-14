@@ -4,6 +4,7 @@
 #include "builder/SourceLocConvert.h"
 #include "builder/BuildArtifacts.h"
 #include "builder/TargetProfile.h"
+#include "builder/storage/StorageRuntimePlan.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "awst/NameGen.h"
@@ -33,6 +34,7 @@ public:
 		awst::NameGen::resetAll();
 		functionPointers.reset();
 		artifacts.clear();
+		storagePlans.clear();
 		sourceMap.clear();
 		for (auto const& sourceName: _compiler.sourceNames())
 			sourceMap.registerCharStream(
@@ -48,10 +50,27 @@ public:
 		typeMapper.reset();
 	}
 
+	/// Return the canonical storage facts for `_contract`, computing them at
+	/// most once during this compiler invocation. The unit-wide EVM storage
+	/// pre-scan, expression lowering, and runtime-dispatch generation must all
+	/// consume this same plan; recomputing it used to walk solc's inheritance
+	/// layout and every inline-assembly body three times per concrete contract.
+	StorageRuntimePlan const& storagePlan(
+		solidity::frontend::ContractDefinition const& _contract)
+	{
+		auto const found = storagePlans.find(_contract.id());
+		if (found != storagePlans.end())
+			return found->second;
+		auto inserted = storagePlans.emplace(
+			_contract.id(), StorageRuntimePlan::analyze(_contract, typeMapper));
+		return inserted.first->second;
+	}
+
 	TargetProfile profile;
 	ProgramAnalysis analysis;
 	SourceMap sourceMap;
 	BuildArtifacts artifacts;
+	std::map<int64_t, StorageRuntimePlan> storagePlans;
 	TypeMapper typeMapper;
 	eb::FunctionPointerRegistry functionPointers;
 };

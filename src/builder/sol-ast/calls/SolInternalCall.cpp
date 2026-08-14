@@ -3,6 +3,7 @@
 /// Migrated from FunctionCallBuilder.cpp lines 3324-4390.
 
 #include "builder/sol-ast/calls/SolInternalCall.h"
+#include "builder/ProgramAnalysis.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "awst/NameGen.h"
@@ -88,8 +89,8 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 			return awst::WType::biguintType();
 		// Storage reference return with .slot assembly → biguint (slot number)
 		if (_funcDef->returnParameters()[0]->referenceLocation() == VariableDeclaration::Location::Storage
-			&& _funcDef->isImplemented()
-			&& builder::containsInlineAssembly(_funcDef->body()))
+			&& m_ctx.typeMapper.analysis().callablesWithInlineAssembly.count(
+				_funcDef->id()))
 			return awst::WType::biguintType();
 		// Storage-ref pointer: subroutine returns uint64 index;
 		// buildSubroutineCall wraps in IndexExpression to reconstitute the ref.

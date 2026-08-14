@@ -1,7 +1,5 @@
 #include <unordered_set>
-#include <variant>
 #include "builder/SourceLocConvert.h"
-#include <libsolidity/ast/CallGraph.h>
 #include "builder/AWSTBuilder.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-types/SolIntType.h"
@@ -92,112 +90,11 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 }
 
 
-namespace
-{
-using FunctionSet = std::unordered_set<solidity::frontend::FunctionDefinition const*>;
-
-struct FunctionReferenceScanner: solidity::frontend::ASTConstVisitor
-{
-	FunctionSet references;
-
-	void add(solidity::frontend::Declaration const* _decl)
-	{
-		if (auto const* fn = dynamic_cast<solidity::frontend::FunctionDefinition const*>(_decl))
-			references.insert(fn);
-	}
-
-	bool visit(solidity::frontend::Identifier const& _id) override
-	{
-		add(_id.annotation().referencedDeclaration);
-		return true;
-	}
-
-	bool visit(solidity::frontend::MemberAccess const& _member) override
-	{
-		add(_member.annotation().referencedDeclaration);
-		return true;
-	}
-
-	bool visit(solidity::frontend::IdentifierPath const& _path) override
-	{
-		add(_path.annotation().referencedDeclaration);
-		return true;
-	}
-};
-
-struct LibraryReachability
-{
-	bool hasGraphs = false;
-	FunctionSet functions;
-};
-
-/// Collect functions reachable from every non-library contract's creation and
-/// deployed roots. solc's contract call graphs can stop at a library entrypoint,
-/// so close the set over AST-resolved function references as well; otherwise a
-/// live entrypoint can retain a call to a helper we mistakenly pruned.
-LibraryReachability collectLibraryReachability(
-	std::vector<solidity::frontend::ContractDefinition const*> const& _contracts)
-{
-	LibraryReachability result;
-	std::vector<solidity::frontend::FunctionDefinition const*> pending;
-	auto addCallable = [&](solidity::frontend::CallableDeclaration const* _callable) {
-		auto const* fn = dynamic_cast<solidity::frontend::FunctionDefinition const*>(_callable);
-		if (fn && result.functions.insert(fn).second)
-			pending.push_back(fn);
-	};
-	auto addGraph = [&](solidity::frontend::CallGraph const* _graph) {
-		if (!_graph)
-			return;
-		result.hasGraphs = true;
-		for (auto const& [from, tos]: _graph->edges)
-		{
-			if (auto const* const* fn = std::get_if<
-					solidity::frontend::CallableDeclaration const*>(&from))
-				addCallable(*fn);
-			for (auto const& to: tos)
-				if (auto const* const* fn = std::get_if<
-						solidity::frontend::CallableDeclaration const*>(&to))
-					addCallable(*fn);
-		}
-	};
-
-	for (auto const* c: _contracts)
-	{
-		if (!c)
-			continue;
-		if (c->annotation().creationCallGraph.set())
-			addGraph((*c->annotation().creationCallGraph).get());
-		if (c->annotation().deployedCallGraph.set())
-			addGraph((*c->annotation().deployedCallGraph).get());
-	}
-
-	for (size_t i = 0; i < pending.size(); ++i)
-	{
-		FunctionReferenceScanner scanner;
-		pending[i]->accept(scanner);
-		for (auto const* referenced: scanner.references)
-			if (result.functions.insert(referenced).second)
-				pending.push_back(referenced);
-	}
-	return result;
-}
-} // namespace
-
 void AWSTBuilder::translateLibraryFunctions(
 	solidity::frontend::CompilerStack& _compiler,
 	std::string const& _sourceFile,
 	std::vector<std::shared_ptr<awst::RootNode>>& roots)
 {
-	// Every non-library contract in the unit contributes creation/deployed roots
-	// for early library-function reachability pruning below.
-	std::vector<solidity::frontend::ContractDefinition const*> allContracts;
-	for (auto const& sn: _compiler.sourceNames())
-		for (auto const* c: solidity::frontend::ASTNode::filteredNodes<
-				solidity::frontend::ContractDefinition>(_compiler.ast(sn).nodes()))
-			if (c && !c->isLibrary())
-				allContracts.push_back(c);
-	auto const reachable = collectLibraryReachability(allContracts);
-
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
@@ -246,7 +143,8 @@ void AWSTBuilder::translateLibraryFunctions(
 					}
 				}
 
-				if (reachable.hasGraphs && !reachable.functions.count(func))
+				if (m_session.analysis.hasReachabilityGraphs
+					&& !m_session.analysis.reachableFunctionIds.count(func->id()))
 				{
 					Logger::instance().debug(
 						"skipping library function `" + qualifiedName + "`: no "
@@ -309,6 +207,14 @@ void AWSTBuilder::translateFreeFunctions(
 		{
 			if (!func->isImplemented() || !func->isFree())
 				continue;
+			if (m_session.analysis.hasReachabilityGraphs
+				&& !m_session.analysis.reachableFunctionIds.count(func->id()))
+			{
+				Logger::instance().debug(
+					"skipping free function `" + func->name()
+					+ "`: no contract call graph reaches it");
+				continue;
+			}
 
 			std::string qualifiedName = func->name();
 			std::string subroutineId;
@@ -934,6 +840,7 @@ void AWSTBuilder::translateContracts(
 	bool _viaYulBehavior,
 	std::vector<std::shared_ptr<awst::RootNode>>& roots)
 {
+	bool evmStorageRuntimeNeeded = false;
 	// Slot-mode unit pre-scan: the storage runtime subroutines share one
 	// SubroutineID across the whole unit, so their bodies must be IDENTICAL for
 	// every contract — decide dense-only / single-page globally BEFORE any
@@ -949,11 +856,26 @@ void AWSTBuilder::translateContracts(
 			{
 				if (!contract || contract->isInterface())
 					continue;
-				unsigned long long slots = 0;
-				if (builder::evmContractNeedsSparseSlots(*contract, m_session.typeMapper, slots))
+				auto const& storagePlan = m_session.storagePlan(*contract);
+				auto const slots = storagePlan.layout.totalSlots();
+				if (storagePlan.needsDispatch())
+					evmStorageRuntimeNeeded = true;
+				if (storagePlan.requiresSparseSlots)
 					anySparse = true;
 				if (slots > maxSlots)
 					maxSlots = slots;
+			}
+		// Free/library subroutines are outside every contract's defined-function
+		// walk. A reachable assembly sload/sstore still needs the unit runtime even
+		// when every contract has zero declared state.
+		for (auto const callableId:
+			m_session.analysis.callablesWithInlineAssembly)
+			if (!m_session.analysis.hasReachabilityGraphs
+				|| m_session.analysis.reachableCallableIds.count(callableId))
+			{
+				evmStorageRuntimeNeeded = true;
+				anySparse = true;
+				break;
 			}
 		m_session.profile.denseOnlyStorage = !anySparse;
 		m_session.profile.singlePageStorage =
@@ -964,6 +886,7 @@ void AWSTBuilder::translateContracts(
 	}
 
 	bool emittedDeployable = false;
+	bool emittedEvmStorageRuntime = false;
 	std::vector<solidity::frontend::ContractDefinition const*> deployableLibraries;
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
@@ -1010,7 +933,13 @@ void AWSTBuilder::translateContracts(
 				_opupBudget, m_freeFunctionById, _ensureBudget, _viaYulBehavior,
 				m_internalizableLibFuncs
 			);
-			auto awstContract = translator.build(*contract);
+			auto const& storagePlan = m_session.storagePlan(*contract);
+			auto const emitEvmStorageRuntime = evmStorageRuntimeNeeded
+				&& !emittedEvmStorageRuntime;
+			auto awstContract = translator.build(
+				*contract, storagePlan, emitEvmStorageRuntime);
+			if (m_session.profile.evmStorageLayout && emitEvmStorageRuntime)
+				emittedEvmStorageRuntime = true;
 
 			// Collect dispatch subroutines as root nodes so library
 			// subroutines can resolve them via SubroutineID.
@@ -1153,7 +1082,13 @@ void AWSTBuilder::translateContracts(
 				_opupBudget, m_freeFunctionById, _ensureBudget, _viaYulBehavior,
 				m_internalizableLibFuncs
 			);
-			auto awstContract = translator.build(*lib);
+			auto const& storagePlan = m_session.storagePlan(*lib);
+			auto const emitEvmStorageRuntime = evmStorageRuntimeNeeded
+				&& !emittedEvmStorageRuntime;
+			auto awstContract = translator.build(
+				*lib, storagePlan, emitEvmStorageRuntime);
+			if (m_session.profile.evmStorageLayout && emitEvmStorageRuntime)
+				emittedEvmStorageRuntime = true;
 			for (auto& sub : translator.takeDispatchSubroutines())
 				roots.push_back(std::move(sub));
 			bool hasPublicMethod = false;

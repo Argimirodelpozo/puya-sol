@@ -879,8 +879,8 @@ def test_nested_asm_param_gate(harness):
     plain block flipped them: the ARC4 param remap ran, the asm switch compared
     an arc4.uint256-typed `i` against biguint case constants -- never equal, so
     every call silently took the default branch (wrong slot 0). FIX: one shared
-    recursive containsInlineAssembly (sol-ast/AsmScan.h) used by all five gates
-    (param remap + decode + storage-ref-return x callee/caller/collection).
+    recursive ProgramAnalysis body scan feeds all five gates (param remap +
+    decode + storage-ref-return x callee/caller/collection).
     """
     app = harness.compile_and_deploy("puyasolRegression/contracts/nested_asm_param_gate.sol")
     for i in [0, 1, 2]:
@@ -3676,6 +3676,30 @@ def _evm_layout_app(harness):
     # Box MBR: pages are 2048 B (~0.83 ALGO each) and sparse slots ~0.029
     # ALGO each — fund generously.
     return harness.deploy(arts, extra_funding_microalgos=30_000_000)
+
+
+def test_evm_layout_runtime_for_library_assembly_only(harness):
+    """A reachable library sload/sstore needs the unit-level slot runtime even
+    when the host contract declares no state and contains no assembly itself."""
+    arts = harness.compile(
+        "puyasolRegression/contracts/evm_layout_library_asm_only.sol",
+        extra_args=_EVM_LAYOUT)
+    app = harness.deploy(arts, "C", extra_funding_microalgos=3_000_000)
+    got = harness.call(
+        app, "roundtrip(uint256)", 0x123456789ABC, extra_fee=10_000).abi_return
+    assert as_int(got) == 0x123456789ABC
+
+
+def test_evm_layout_runtime_for_modifier_assembly_only(harness):
+    """Modifier bodies are call-graph callables too; their assembly must
+    participate in unit storage-runtime planning independently of the wrapped
+    function body."""
+    arts = harness.compile(
+        "puyasolRegression/contracts/evm_layout_modifier_asm_only.sol",
+        extra_args=_EVM_LAYOUT)
+    app = harness.deploy(arts, "C", extra_funding_microalgos=3_000_000)
+    got = harness.call(app, "run()", extra_fee=10_000).abi_return
+    assert as_int(got) == 1
 
 
 def test_evm_layout_scalars_and_packing(harness):

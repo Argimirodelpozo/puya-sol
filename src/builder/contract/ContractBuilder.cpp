@@ -1,5 +1,5 @@
-#include <libsolidity/ast/CallGraph.h>
 #include "builder/SourceLocConvert.h"
+#include "builder/ProgramAnalysis.h"
 #include <variant>
 #include "builder/contract/ContractBuilder.h"
 #include "awst/NameGen.h"
@@ -185,33 +185,6 @@ static bool _bufferPointerEscapes(
 	return _yulBlockEscapes(_asm.operations().root(), targets);
 }
 
-// True iff `_func` is called INTERNALLY (plain `f(...)`, not `this.f(...)` and
-// not a cross-contract member call) anywhere in `_contract`. Only such methods
-// need the selector-gated non-payable guard; every other externally-callable
-// method keeps the cheap unconditional one, which matters because the gated
-// form costs ~6 extra opcodes on EVERY method and pushed a contract over the
-// 8 KB cap when applied blanket.
-class InternalCallScanner: public solidity::frontend::ASTConstVisitor
-{
-public:
-	int64_t targetId;
-	bool found = false;
-	explicit InternalCallScanner(int64_t _id): targetId(_id) {}
-
-	bool visit(solidity::frontend::FunctionCall const& _call) override
-	{
-		using namespace solidity::frontend;
-		// An Identifier callee is an internal call; a MemberAccess is
-		// `this.f()` or `other.f()`, which really does re-enter the router.
-		if (auto const* id = dynamic_cast<Identifier const*>(&_call.expression()))
-			if (id->annotation().referencedDeclaration
-				&& id->annotation().referencedDeclaration->id() == targetId)
-				found = true;
-		return true;
-	}
-};
-
-
 // Collect the Identifiers that are ASSIGNMENT TARGETS (`x := …`) anywhere in a
 // Yul block, including nested control flow.
 static void _yulAssignTargets(
@@ -319,90 +292,31 @@ public:
 	}
 };
 
-} // namespace
-
-bool _isCalledInternally(
-	solidity::frontend::ContractDefinition const& _contract,
-	solidity::frontend::FunctionDefinition const& _func)
-{
-	InternalCallScanner sc{_func.id()};
-	for (auto const* base: _contract.annotation().linearizedBaseContracts)
-	{
-		if (!base) continue;
-		base->accept(sc);
-		if (sc.found) return true;
-	}
-	return false;
-}
-
-
-namespace
-{
-/// True when `_fn` performs a `.delegatecall(...)`.
-class DelegatecallScanner: public solidity::frontend::ASTConstVisitor
-{
-public:
-	bool found = false;
-	bool visit(solidity::frontend::FunctionCall const& _c) override
-	{
-		auto const* ft = dynamic_cast<solidity::frontend::FunctionType const*>(
-			_c.expression().annotation().type);
-		if (ft && ft->kind() == solidity::frontend::FunctionType::Kind::BareDelegateCall)
-			found = true;
-		if (auto const* ma = dynamic_cast<solidity::frontend::MemberAccess const*>(
-				&_c.expression()))
-			if (ma->memberName() == "delegatecall")
-				found = true;
-		return !found;
-	}
-};
-
-/// Functions reachable from this contract's external interface / constructor,
-/// per solc's own call graphs (populated during analysis).
-std::set<solidity::frontend::CallableDeclaration const*> reachableCallables(
-	solidity::frontend::ContractDefinition const& _contract)
-{
-	std::set<solidity::frontend::CallableDeclaration const*> out;
-	auto absorb = [&](solidity::frontend::CallGraph const* g) {
-		if (!g)
-			return;
-		for (auto const& [from, tos]: g->edges)
-		{
-			if (auto const* const* f =
-					std::get_if<solidity::frontend::CallableDeclaration const*>(&from))
-				if (*f)
-					out.insert(*f);
-			for (auto const& to: tos)
-				if (auto const* const* t =
-						std::get_if<solidity::frontend::CallableDeclaration const*>(&to))
-					if (*t)
-						out.insert(*t);
-		}
-	};
-	if (_contract.annotation().creationCallGraph.set())
-		absorb((*_contract.annotation().creationCallGraph).get());
-	if (_contract.annotation().deployedCallGraph.set())
-		absorb((*_contract.annotation().deployedCallGraph).get());
-	return out;
-}
-
-/// A delegatecall we may ignore: it sits in a function that is NOT part of the
-/// contract per solc's call graphs — vendored-dead library code (OZ
-/// Address.functionDelegateCall) that solc itself prunes from the bytecode.
-/// Reachable delegatecalls are left alone and still hard-error downstream.
-bool isDeadDelegatecallFunction(
+/// Internal/private code outside solc's creation + deployed call graphs is not
+/// part of the contract bytecode. Public/external methods are deliberately
+/// retained even if an absent/malformed graph ever omits one: the ABI surface
+/// is a stronger contract than this optimization.
+bool isUnreachableInternalFunction(
 	solidity::frontend::FunctionDefinition const& _fn,
 	solidity::frontend::ContractDefinition const& _contract,
-	std::set<solidity::frontend::CallableDeclaration const*> const& _reachable)
+	ProgramAnalysis const& _analysis)
 {
-	if (!_contract.annotation().creationCallGraph.set()
-		&& !_contract.annotation().deployedCallGraph.set())
-		return false;   // no graph → never skip
-	if (_reachable.count(&_fn))
+	if (!_analysis.hasContractReachability(_contract.id()))
 		return false;
-	DelegatecallScanner sc;
-	_fn.accept(sc);
-	return sc.found;
+	// LogicSig entry selection happens after contract translation and is not an
+	// EVM call-graph root. Keep an explicitly marked entry even when it is
+	// internal/private so reachability pruning cannot remove the AVM program.
+	for (auto const& modifier: _fn.modifiers())
+	{
+		auto const& path = modifier->name().path();
+		if (!path.empty() && path.back() == "logicsig")
+			return false;
+	}
+	using solidity::frontend::Visibility;
+	if (_fn.visibility() != Visibility::Internal
+		&& _fn.visibility() != Visibility::Private)
+		return false;
+	return !_analysis.isFunctionReachable(_contract.id(), _fn.id());
 }
 } // namespace
 
@@ -941,7 +855,9 @@ void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method,
 }
 
 std::shared_ptr<awst::Contract> ContractBuilder::build(
-	solidity::frontend::ContractDefinition const& _contract
+	solidity::frontend::ContractDefinition const& _contract,
+	StorageRuntimePlan const& _storagePlan,
+	bool _emitEvmStorageRuntime
 )
 {
 	m_currentContract = &_contract;
@@ -1007,14 +923,10 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_exprBuilder->currentContract = &_contract;
 	m_exprBuilder->viaIRSequencing = m_viaIR;
 
-	// --evm-storage-layout: expose the solc-exact layout to expression builders
-	// so state access lowers to slot addresses (EvmSlotLowering).
-	if (m_typeMapper.profile().evmStorageLayout)
-	{
-		m_evmLayout = std::make_unique<StorageLayout>();
-		m_evmLayout->computeLayout(_contract, m_typeMapper);
-		m_exprBuilder->evmSlotLayout = m_evmLayout.get();
-	}
+	// One session-owned layout feeds state access, inline-assembly slot routing,
+	// and runtime-dispatch generation. In EVM mode it is solc's exact linearized
+	// layout; default mode uses the compiler's physical AVM layout.
+	m_exprBuilder->storageLayout = &_storagePlan.layout;
 
 	// Pre-populate internalized library func map before translation so the call
 	// resolver routes them as InstanceMethodTargets.
@@ -1106,23 +1018,18 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	}
 
 
-	// solc's call graphs answer "is this function part of the contract?".
-	// Used only to skip DEAD delegatecall-bearing library code (see
-	// isDeadDelegatecallFunction) — nothing else consults it.
-	auto const reachableFns = reachableCallables(_contract);
-
 	std::set<std::string> translatedFunctions;
 	for (auto const* func: _contract.definedFunctions())
 	{
 		if (func->isConstructor())
 			continue;
 
-		if (isDeadDelegatecallFunction(*func, _contract, reachableFns))
+		if (isUnreachableInternalFunction(
+				*func, _contract, m_typeMapper.analysis()))
 		{
 			Logger::instance().debug(
-				"skipping unreachable `" + func->name() + "`: it contains a "
-				"delegatecall but is not in solc's call graph (vendored-dead "
-				"library code, pruned from the deployed bytecode too)",
+				"skipping unreachable internal/private function `"
+				+ func->name() + "` (absent from solc's call graphs)",
 				makeLoc(func->location()));
 			continue;
 		}
@@ -1176,7 +1083,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 			if (!func->isImplemented())
 				continue;
-			if (isDeadDelegatecallFunction(*func, _contract, reachableFns))
+			if (isUnreachableInternalFunction(
+					*func, _contract, m_typeMapper.analysis()))
 				continue;
 
 			translatedFunctions.insert(key);
@@ -1220,7 +1128,14 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	// Generate __storage_read/__storage_write dispatch subroutines
 	// for assembly sload/sstore support
-	buildStorageDispatch(_contract, contract.get(), contractName);
+	// EVM-layout runtime helpers have unit-global SubroutineIDs and bodies that
+	// are specialized from unit-global profile flags. Emit them once for the
+	// whole unit; generating a copy per concrete contract inflated multi-contract
+	// AWST by hundreds of kilobytes and made duplicate-ID resolution ambiguous.
+	// Default-layout dispatch remains contract-specific and is always emitted.
+	if (_emitEvmStorageRuntime
+		|| (!m_typeMapper.profile().evmStorageLayout && _storagePlan.needsDispatch()))
+		buildStorageDispatch(_contract, _storagePlan, contract.get(), contractName);
 
 	// Generate function pointer dispatch tables
 	{

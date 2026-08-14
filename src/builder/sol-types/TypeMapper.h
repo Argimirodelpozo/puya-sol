@@ -10,6 +10,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace puyasol::builder
@@ -42,7 +43,11 @@ public:
 	void reset()
 	{
 		m_inProgressStructs.clear();
-		m_cache.clear();
+		m_solTypeCache.clear();
+		m_namedTypeCache.clear();
+		m_arc4Cache.clear();
+		m_solArc4Cache.clear();
+		m_arc4ByteType = nullptr;
 		m_ownedTypes.clear();
 	}
 
@@ -80,8 +85,20 @@ private:
 	/// Owns all dynamically-created WTypes.
 	std::vector<std::unique_ptr<awst::WType>> m_ownedTypes;
 
-	/// Cache: Solidity type string → WType.
-	std::map<std::string, awst::WType const*> m_cache;
+	/// solc owns and interns Type objects for the CompilerStack lifetime. Keying
+	/// by the object avoids conflating distinct declarations whose display
+	/// strings happen to match across source units/scopes.
+	std::unordered_map<solidity::frontend::Type const*, awst::WType const*>
+		m_solTypeCache;
+	/// Synthetic keys used only for struct recursion projections.
+	std::map<std::string, awst::WType const*> m_namedTypeCache;
+
+	/// Session-local interning for the two ARC4 conversion entry points.
+	/// Input WType and solc Type objects are stable for the compiler session.
+	std::unordered_map<awst::WType const*, awst::WType const*> m_arc4Cache;
+	std::unordered_map<solidity::frontend::Type const*, awst::WType const*>
+		m_solArc4Cache;
+	awst::WType const* m_arc4ByteType = nullptr;
 
 	/// Recursion guard for mapStruct: holds AST IDs of structs that are
 	/// currently being mapped, so a recursive struct field returns a

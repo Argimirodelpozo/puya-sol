@@ -15,8 +15,8 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 		return awst::WType::voidType();
 
 	std::string const typeStr = _solType->toString(true);
-	auto it = m_cache.find(typeStr);
-	if (it != m_cache.end())
+	auto it = m_solTypeCache.find(_solType);
+	if (it != m_solTypeCache.end())
 		return it->second;
 
 	awst::WType const* result = nullptr;
@@ -186,7 +186,7 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	}
 
 	if (result)
-		m_cache[typeStr] = result;
+		m_solTypeCache[_solType] = result;
 	else
 		result = awst::WType::voidType();
 
@@ -211,20 +211,33 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 		break;
 	}
 
-	auto const* arc4Byte = createType<awst::ARC4UIntN>(8);
+	if (auto const found = m_arc4Cache.find(_type); found != m_arc4Cache.end())
+		return found->second;
+	auto remember = [&](awst::WType const* _result) {
+		m_arc4Cache.emplace(_type, _result);
+		return _result;
+	};
+	auto arc4Byte = [&]() {
+		if (!m_arc4ByteType)
+			m_arc4ByteType = createType<awst::ARC4UIntN>(8);
+		return m_arc4ByteType;
+	};
 
 	if (_type == awst::WType::uint64Type())
-		return createType<awst::ARC4UIntN>(64);
+		return remember(createType<awst::ARC4UIntN>(64));
 	if (_type == awst::WType::biguintType())
-		return createType<awst::ARC4UIntN>(256);
+		return remember(createType<awst::ARC4UIntN>(256));
 	if (_type == awst::WType::boolType())
-		return awst::WType::arc4BoolType();
+		return remember(awst::WType::arc4BoolType());
 	if (_type == awst::WType::accountType())
-		return createType<awst::ARC4StaticArray>(arc4Byte, 32, std::string("address"));
+		return remember(createType<awst::ARC4StaticArray>(
+			arc4Byte(), 32, std::string("address")));
 	if (_type == awst::WType::bytesType())
-		return createType<awst::ARC4DynamicArray>(arc4Byte, std::string("byte[]"));
+		return remember(createType<awst::ARC4DynamicArray>(
+			arc4Byte(), std::string("byte[]")));
 	if (_type == awst::WType::stringType())
-		return createType<awst::ARC4DynamicArray>(arc4Byte, std::string("string"));
+		return remember(createType<awst::ARC4DynamicArray>(
+			arc4Byte(), std::string("string")));
 
 	if (_type->kind() == awst::WTypeKind::Bytes)
 	{
@@ -232,10 +245,10 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 		if (bytesType->length().has_value())
 		{
 			auto len = bytesType->length().value();
-			return createType<awst::ARC4StaticArray>(
-				arc4Byte, len, "byte[" + std::to_string(len) + "]");
+			return remember(createType<awst::ARC4StaticArray>(
+				arc4Byte(), len, "byte[" + std::to_string(len) + "]"));
 		}
-		return createType<awst::ARC4DynamicArray>(arc4Byte);
+		return remember(createType<awst::ARC4DynamicArray>(arc4Byte()));
 	}
 
 	// ReferenceArray → ARC4StaticArray (if sized) or ARC4DynamicArray
@@ -244,8 +257,9 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 		auto const* refArr = static_cast<awst::ReferenceArray const*>(_type);
 		auto const* arc4Elem = mapToARC4Type(refArr->elementType());
 		if (refArr->arraySize().has_value())
-			return createType<awst::ARC4StaticArray>(arc4Elem, refArr->arraySize().value());
-		return createType<awst::ARC4DynamicArray>(arc4Elem);
+			return remember(createType<awst::ARC4StaticArray>(
+				arc4Elem, refArr->arraySize().value()));
+		return remember(createType<awst::ARC4DynamicArray>(arc4Elem));
 	}
 
 	// WTuple → ARC4Tuple
@@ -255,10 +269,10 @@ awst::WType const* TypeMapper::mapToARC4Type(awst::WType const* _type)
 		std::vector<awst::WType const*> arc4Types;
 		for (auto const* t: tupleType->types())
 			arc4Types.push_back(mapToARC4Type(t));
-		return createType<awst::ARC4Tuple>(std::move(arc4Types));
+		return remember(createType<awst::ARC4Tuple>(std::move(arc4Types)));
 	}
 
-	return _type; // best effort
+	return remember(_type); // best effort
 }
 
 awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _structType)
@@ -271,8 +285,8 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 
 	// Cache by AST ID to disambiguate same-named structs from different scopes.
 	std::string cacheKey = "struct:" + std::to_string(structDef.id());
-	auto it = m_cache.find(cacheKey);
-	if (it != m_cache.end())
+	auto it = m_namedTypeCache.find(cacheKey);
+	if (it != m_namedTypeCache.end())
 		return it->second;
 
 	// Recursion guard for `struct R { R[] children; }` cycles (ARC4 has no cycle
@@ -285,8 +299,8 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 	if (m_inProgressStructs.count(structDef.id()))
 	{
 		std::string projKey = "structproj:" + std::to_string(structDef.id());
-		auto pit = m_cache.find(projKey);
-		if (pit != m_cache.end())
+		auto pit = m_namedTypeCache.find(projKey);
+		if (pit != m_namedTypeCache.end())
 			return pit->second;
 		std::vector<std::pair<std::string, awst::WType const*>> projFields;
 		for (auto const& member: structDef.members())
@@ -306,7 +320,7 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 		}
 		auto* proj = createType<awst::ARC4Struct>(name + "__rec", std::move(projFields),
 			/*_frozen=*/false);
-		m_cache[projKey] = proj;
+		m_namedTypeCache[projKey] = proj;
 		return proj;
 	}
 	m_inProgressStructs.insert(structDef.id());
@@ -334,15 +348,23 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 		                   // copy-on-write handlers, not this flag.
 	);
 
-	m_cache[cacheKey] = result;
+	m_namedTypeCache[cacheKey] = result;
 	m_inProgressStructs.erase(structDef.id());
 	return result;
 }
 
 awst::WType const* TypeMapper::mapSolTypeToARC4(solidity::frontend::Type const* _solType)
 {
+	if (!_solType)
+		return nullptr;
+	auto const* cacheKey = _solType;
+	if (auto const found = m_solArc4Cache.find(cacheKey);
+		found != m_solArc4Cache.end())
+		return found->second;
+
 	if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(_solType))
 		_solType = &udvt->underlyingType();
+	awst::WType const* result = nullptr;
 
 	// Preserve exact bit width (don't upcast uint8→uint64).
 	if (auto const* intType = dynamic_cast<solidity::frontend::IntegerType const*>(_solType))
@@ -351,16 +373,31 @@ awst::WType const* TypeMapper::mapSolTypeToARC4(solidity::frontend::Type const* 
 		if (intType->isSigned())
 		{
 			std::string alias = "int" + std::to_string(bits);
-			return createType<awst::ARC4UIntN>(static_cast<int>(bits), alias);
+			result = createType<awst::ARC4UIntN>(static_cast<int>(bits), alias);
 		}
-		return createType<awst::ARC4UIntN>(static_cast<int>(bits));
+		else
+		{
+			if (bits == 8 && m_arc4ByteType)
+				result = m_arc4ByteType;
+			else
+				result = createType<awst::ARC4UIntN>(static_cast<int>(bits));
+			if (bits == 8)
+				m_arc4ByteType = result;
+		}
 	}
 
 	// Enums → ARC4UIntN(8) (always uint8 in Solidity ABI).
-	if (dynamic_cast<solidity::frontend::EnumType const*>(_solType))
-		return createType<awst::ARC4UIntN>(8);
+	else if (dynamic_cast<solidity::frontend::EnumType const*>(_solType))
+	{
+		if (!m_arc4ByteType)
+			m_arc4ByteType = createType<awst::ARC4UIntN>(8);
+		result = m_arc4ByteType;
+	}
+	else
+		result = mapToARC4Type(map(_solType));
 
-	return mapToARC4Type(map(_solType));
+	m_solArc4Cache.emplace(cacheKey, result);
+	return result;
 }
 
 } // namespace puyasol::builder

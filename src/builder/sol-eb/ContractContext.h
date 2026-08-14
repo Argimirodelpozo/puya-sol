@@ -1,9 +1,6 @@
 #pragma once
 
 #include "awst/Node.h"
-#include "builder/SourceLocConvert.h"
-#include "awst/WType.h"
-#include "builder/sol-ast/Context.h"
 
 #include <libsolidity/ast/Types.h>
 #include <liblangutil/Token.h>
@@ -34,7 +31,6 @@ class StorageLayout;
 class TransientStorage;
 namespace sol_ast {
 class Context;
-struct ParamRemap;
 }
 }
 
@@ -44,9 +40,6 @@ namespace puyasol::builder::eb
 class InstanceBuilder;
 class BuilderRegistry;
 struct FunctionPointerRegistry;
-
-// Re-exported from sol_ast::Context for legacy callers (e.g. ModifierInliner).
-using ParamRemap = sol_ast::ParamRemap;
 
 /// Central context for expression/statement builders: owns pending-statement buffers,
 /// references compiler services (TypeMapper, StorageMapper), and holds the builder
@@ -112,9 +105,10 @@ public:
 	TransientStorage* transientStorage = nullptr;
 	/// Unified AppGlobal/Box/Transient dispatch; populated alongside transientStorage.
 	StorageBackend* storageBackend = nullptr;
-	/// --evm-storage-layout: the contract's solc-exact storage layout (set by
-	/// ContractBuilder when the mode is on; null otherwise / for free functions).
-	StorageLayout const* evmSlotLayout = nullptr;
+	/// Canonical layout for the contract currently being translated. Both the
+	/// EVM slot lowerer and inline-assembly routing consume the session-owned
+	/// instance; null for free/library subroutines without a concrete host.
+	StorageLayout const* storageLayout = nullptr;
 	std::string const& sourceFile;
 	std::string const& contractName;
 	/// Current contract (nullptr during free-function translation).
@@ -326,10 +320,7 @@ public:
 	/// the LHS; SolArrayMethod::push() consumes it as the element (not the default).
 	std::shared_ptr<awst::Expression> pendingArrayPushValue;
 
-	awst::SourceLocation makeLoc(int _start, int _end) const
-	{
-		return typeMapper.sourceMap().toAwstLoc(sourceFile, _start, _end);
-	}
+	awst::SourceLocation makeLoc(int _start, int _end) const;
 
 };
 

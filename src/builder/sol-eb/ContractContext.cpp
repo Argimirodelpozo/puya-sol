@@ -37,6 +37,11 @@ ContractContext::ContractContext(
 
 ContractContext::~ContractContext() = default;
 
+awst::SourceLocation ContractContext::makeLoc(int _start, int _end) const
+{
+	return typeMapper.sourceMap().toAwstLoc(sourceFile, _start, _end);
+}
+
 std::shared_ptr<awst::Expression> ContractContext::build(
 	solidity::frontend::Expression const& _expr)
 {
