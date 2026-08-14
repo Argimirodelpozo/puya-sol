@@ -28,9 +28,9 @@ void ContractBuilder::inlineModifiers(
 	std::shared_ptr<awst::Block>& _body
 )
 {
-	// Delegate to the free inlineModifiers in ModifierBodyInliner.cpp via makeFunctionCtx().
-	auto ctx = makeFunctionCtx();
-	::puyasol::builder::inlineModifiers(ctx, _func, _body);
+	// Delegate to the shared free/library implementation using the same owned
+	// per-function state as buildBlock.
+	::puyasol::builder::inlineModifiers(m_functionCtx.value(), _func, _body);
 }
 
 void ContractBuilder::buildModifierChain(

@@ -72,6 +72,8 @@ struct FunctionTranslationCtx
 	// multi-slot blob (pointer model). `buildBlock` registers each as a blob
 	// aggregate so `p.field[i]` in the body lowers to blob word access.
 	std::vector<solidity::frontend::VariableDeclaration const*> blobAggParams;
+	/// Modifier body substituted for `_` while translating an inline modifier.
+	std::shared_ptr<awst::Block> placeholder;
 
 	// Enclosing contract for modifier virtual-override lookup; nullable.
 	solidity::frontend::ContractDefinition const* currentContract = nullptr;
@@ -93,7 +95,9 @@ struct FunctionTranslationCtx
 	bool returnAsmWrap = false;
 	std::vector<ReturnWireElem> returnWirePlan;
 	// Live-calldata-pointer set (see FunctionContext::seededCalldataPointers).
-	std::set<std::string>* seededCalldataPointers = nullptr;
+	// Owned here so it survives the temporary FunctionContext created by
+	// buildBlock and remains available to implicit-return synthesis.
+	std::set<std::string> seededCalldataPointers;
 	/// --evm-storage-layout: storage-ref params + named storage returns,
 	/// carried as biguint slot handles; `buildBlock` registers each as a
 	/// slot-storage ref.
@@ -229,36 +233,15 @@ private:
 	/// Per-contract translation context; constructed in build() once m_exprBuilder exists.
 	std::optional<sol_ast::TranslationContext> m_tr;
 
-	// ── Per-function scratch (set by setFunctionContext, used by buildBlock) ──
-	bool m_currentInConstructor = false;
-	bool m_currentFrameIsProgram = false;
-	std::vector<std::pair<std::string, awst::WType const*>> m_currentParams;
-	std::map<std::string, solidity::frontend::Type const*> m_currentParamSolTypes;
-	awst::WType const* m_currentReturnType = nullptr;
-	std::map<std::string, unsigned> m_currentBitWidths;
-	std::shared_ptr<awst::Block> m_currentPlaceholder;
-	std::vector<solidity::frontend::VariableDeclaration const*> m_currentNamedReturns;
-	std::vector<solidity::frontend::VariableDeclaration const*> m_currentMappingKeyParams;
-	std::vector<solidity::frontend::VariableDeclaration const*> m_currentBlobAggParams;
-	std::vector<solidity::frontend::VariableDeclaration const*> m_currentSlotRefParams;
-	// Build-time ABI return encoding (D2): plan + flags flow into FunctionContext so
-	// SolReturnStatement encodes each return value as it builds it.
-	bool m_currentEncodeReturnsAtBuildTime = false;
-	bool m_currentReturnAsmWrap = false;
-	std::vector<ReturnWireElem> m_currentReturnWirePlan;
-	// Live-calldata-pointer set: OUTLIVES buildBlock (the implicit-return synth in
-	// FunctionBuilder consults it after body translation) — hence scratch here, with
-	// FunctionContext holding a pointer.
-	std::set<std::string> m_currentSeededCalldataPointers;
+	/// The sole owner of per-function translation state. Keeping this context
+	/// alive for the whole contract lets buildBlock's short-lived FunctionContext
+	/// report state (notably seeded calldata pointers) back to FunctionBuilder
+	/// without mirroring every field on ContractBuilder.
+	std::optional<FunctionTranslationCtx> m_functionCtx;
 
 	/// Build a function body block with function context set.
 	std::shared_ptr<awst::Block> buildBlock(
 		solidity::frontend::Block const& _block);
-
-	/// Snapshot of the current per-function state as a `FunctionTranslationCtx`,
-	/// so the contract-method path can share the free-function `buildBlock` /
-	/// `inlineModifiers` implementations with the library/free-function path.
-	FunctionTranslationCtx makeFunctionCtx();
 
 	/// Set function context for inline assembly.
 	void setFunctionContext(
@@ -277,18 +260,18 @@ private:
 		std::vector<solidity::frontend::VariableDeclaration const*> const& _namedReturns
 	)
 	{
-		m_currentNamedReturns = _namedReturns;
+		m_functionCtx->namedReturns = _namedReturns;
 	}
 
 	/// Enable build-time ABI return encoding for the current function (D2).
 	/// `buildBlock` forwards the plan to the FunctionContext; SolReturnStatement
 	/// then ARC4-encodes each return value in place instead of the ReturnRewriter
-	/// post-pass. Cleared per function by resetFunctionContext.
+	/// post-pass. Cleared for each function by setFunctionContext.
 	void setReturnWirePlan(std::vector<ReturnWireElem> _plan, bool _asmWrap)
 	{
-		m_currentReturnWirePlan = std::move(_plan);
-		m_currentReturnAsmWrap = _asmWrap;
-		m_currentEncodeReturnsAtBuildTime = true;
+		m_functionCtx->returnWirePlan = std::move(_plan);
+		m_functionCtx->returnAsmWrap = _asmWrap;
+		m_functionCtx->encodeReturnsAtBuildTime = true;
 	}
 
 	/// Set the mapping-storage-ref param decls for the current function.
@@ -298,7 +281,7 @@ private:
 		std::vector<solidity::frontend::VariableDeclaration const*> const& _params
 	)
 	{
-		m_currentMappingKeyParams = _params;
+		m_functionCtx->mappingKeyParams = _params;
 	}
 
 	/// --evm-storage-layout: storage-ref params/named-returns of the current
@@ -307,7 +290,7 @@ private:
 		std::vector<solidity::frontend::VariableDeclaration const*> const& _params
 	)
 	{
-		m_currentSlotRefParams = _params;
+		m_functionCtx->slotRefParams = _params;
 	}
 
 	/// Set the blob-backed (>4KB) memory aggregate param decls for the current
@@ -317,7 +300,7 @@ private:
 		std::vector<solidity::frontend::VariableDeclaration const*> const& _params
 	)
 	{
-		m_currentBlobAggParams = _params;
+		m_functionCtx->blobAggParams = _params;
 	}
 
 	/// Prepend assert(incoming_amount==0,"not payable") to externally-callable non-payable methods.

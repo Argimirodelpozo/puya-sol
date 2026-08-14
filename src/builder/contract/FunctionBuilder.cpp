@@ -626,13 +626,13 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				blobAggParamDecls.push_back(p.get());
 		setBlobAggParams(blobAggParamDecls);
 
-		m_currentInConstructor = _func.isConstructor();
-		m_currentFrameIsProgram =
+		m_functionCtx->inConstructor = _func.isConstructor();
+		m_functionCtx->frameIsProgram =
 			_func.visibility() == solidity::frontend::Visibility::Internal
 			|| _func.visibility() == solidity::frontend::Visibility::Private;
 		method.body = buildBlock(_func.body());
-		m_currentInConstructor = false;
-		m_currentFrameIsProgram = false;
+		m_functionCtx->inConstructor = false;
+		m_functionCtx->frameIsProgram = false;
 
 		// Zero-init named return vars (Solidity implicit init); bump free-memory pointer
 		// for every memory-typed return (EVM allocates at entry; tests probe FMP movement).
@@ -761,7 +761,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					// A named CALLDATA return whose pointer locals are live (an asm
 					// block wrote x.offset/x.length — calldata_assign_from_nowhere)
 					// reads through the pointer, not the (zero-init) local.
-					if (m_currentSeededCalldataPointers.count(retParams[0]->name()))
+					if (m_functionCtx->seededCalldataPointers.count(
+							retParams[0]->name()))
 						retStmt->value = TypeCoercion::calldataPointerValueRead(
 							retParams[0]->name(), method.sourceLocation);
 					else if (m_typeMapper.profile().evmMemoryLayout

@@ -749,9 +749,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				if (baseCtor->body().statements().empty())
 					continue;
 
-				m_currentInConstructor = true;
-			auto baseBody = buildBlock(baseCtor->body());
-			m_currentInConstructor = false;
+				m_functionCtx->inConstructor = true;
+				auto baseBody = buildBlock(baseCtor->body());
+				m_functionCtx->inConstructor = false;
 				inlineModifiers(*baseCtor, baseBody);
 				for (auto& stmt: baseBody->body)
 					postInitBody->body.push_back(std::move(stmt));
@@ -761,9 +761,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			if (constructor && constructor->body().statements().size() > 0)
 			{
 				m_tr->setInConstructor(true);
-				m_currentInConstructor = true;
-			auto ctorBody = buildBlock(constructor->body());
-			m_currentInConstructor = false;
+				m_functionCtx->inConstructor = true;
+				auto ctorBody = buildBlock(constructor->body());
+				m_functionCtx->inConstructor = false;
 				inlineModifiers(*constructor, ctorBody);
 				m_tr->setInConstructor(false);
 				for (auto& stmt: ctorBody->body)
@@ -803,8 +803,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// Inline ctor into the bool-returning approval program.
 		// Assembly return() must emit bool (AssemblyBuilder::handleReturn when
 		// m_returnType is bool) — set returnType accordingly.
-		auto const* savedReturnType = m_currentReturnType;
-		m_currentReturnType = awst::WType::boolType();
+		auto const* savedReturnType = m_functionCtx->returnType;
+		m_functionCtx->returnType = awst::WType::boolType();
 
 		// Legacy (compileViaYul:false): all state var inits before any ctor arg eval.
 		// `constructor_inheritance_init_order_3_legacy`: A's `uint x = 2` runs first,
@@ -955,9 +955,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			}
 
 			// Translate the base constructor body and inline its modifiers
-			m_currentInConstructor = true;
+			m_functionCtx->inConstructor = true;
 			auto baseBody = buildBlock(baseCtor->body());
-			m_currentInConstructor = false;
+			m_functionCtx->inConstructor = false;
 			inlineModifiers(*baseCtor, baseBody);
 			for (auto& stmt: baseBody->body)
 				createBlock->body.push_back(std::move(stmt));
@@ -975,16 +975,16 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						m_tr->setSuperTarget(targetId, superName);
 			}
 			m_tr->setInConstructor(true);
-			m_currentInConstructor = true;
+			m_functionCtx->inConstructor = true;
 			auto ctorBody = buildBlock(constructor->body());
-			m_currentInConstructor = false;
+			m_functionCtx->inConstructor = false;
 			inlineModifiers(*constructor, ctorBody);
 			m_tr->setInConstructor(false);
 			m_tr->clearSuperTargets();
 			for (auto& stmt: ctorBody->body)
 				createBlock->body.push_back(std::move(stmt));
 		}
-		m_currentReturnType = savedReturnType;
+		m_functionCtx->returnType = savedReturnType;
 		} // end else (no postInit needed)
 
 		// Return true to complete the create transaction

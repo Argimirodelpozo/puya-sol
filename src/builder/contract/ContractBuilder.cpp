@@ -644,8 +644,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	fn.encodeReturnsAtBuildTime = _ctx.encodeReturnsAtBuildTime;
 	fn.returnAsmWrap = _ctx.returnAsmWrap;
 	fn.returnWirePlan = _ctx.returnWirePlan;
-	if (_ctx.seededCalldataPointers)
-		fn.seededCalldataPointers = _ctx.seededCalldataPointers;
+	fn.seededCalldataPointers = &_ctx.seededCalldataPointers;
 	auto fnGuard = _ctx.exprBuilder.pushScopeRaii(&fn);
 	auto blk = _placeholder
 		? sol_ast::BlockContext::top(fn).withPlaceholder(_placeholder)
@@ -724,33 +723,11 @@ awst::SourceLocation ContractBuilder::makeLoc(
 	return ::puyasol::builder::makeLoc(m_typeMapper, m_sourceFile, _solLoc);
 }
 
-FunctionTranslationCtx ContractBuilder::makeFunctionCtx()
-{
-	auto ctx = FunctionTranslationCtx{
-		m_typeMapper, *m_exprBuilder, *m_tr, m_sourceFile};
-	ctx.params = m_currentParams;
-	ctx.returnType = m_currentReturnType;
-	ctx.paramBitWidths = m_currentBitWidths;
-	ctx.namedReturns = m_currentNamedReturns;
-	ctx.mappingKeyParams = m_currentMappingKeyParams;
-	ctx.blobAggParams = m_currentBlobAggParams;
-	ctx.currentContract = m_currentContract;
-	ctx.inConstructor = m_currentInConstructor;
-	ctx.frameIsProgram = m_currentFrameIsProgram;
-	ctx.encodeReturnsAtBuildTime = m_currentEncodeReturnsAtBuildTime;
-	ctx.returnAsmWrap = m_currentReturnAsmWrap;
-	ctx.returnWirePlan = m_currentReturnWirePlan;
-	ctx.seededCalldataPointers = &m_currentSeededCalldataPointers;
-	ctx.paramSolTypes = m_currentParamSolTypes;
-	ctx.slotRefParams = m_currentSlotRefParams;
-	return ctx;
-}
-
 std::shared_ptr<awst::Block> ContractBuilder::buildBlock(
 	solidity::frontend::Block const& _block)
 {
-	auto ctx = makeFunctionCtx();
-	return ::puyasol::builder::buildBlock(ctx, _block, m_currentPlaceholder);
+	auto& ctx = m_functionCtx.value();
+	return ::puyasol::builder::buildBlock(ctx, _block, ctx.placeholder);
 }
 
 void ContractBuilder::setFunctionContext(
@@ -759,22 +736,27 @@ void ContractBuilder::setFunctionContext(
 	std::map<std::string, unsigned> const& _bitWidths,
 	std::map<std::string, solidity::frontend::Type const*> const& _paramSolTypes)
 {
-	m_currentParams = _params;
-	m_currentReturnType = _returnType;
-	m_currentBitWidths = _bitWidths;
-	m_currentParamSolTypes = _paramSolTypes;
-	// Per-function reset: build-time return encoding is opt-in per function
-	// (setReturnWirePlan). Clear here so a function that does NOT opt in never
-	// inherits the previous function's plan.
-	m_currentEncodeReturnsAtBuildTime = false;
-	m_currentReturnAsmWrap = false;
-	m_currentReturnWirePlan.clear();
-	m_currentSeededCalldataPointers.clear();
+	auto& ctx = m_functionCtx.value();
+	ctx.params = _params;
+	ctx.returnType = _returnType;
+	ctx.paramBitWidths = _bitWidths;
+	ctx.paramSolTypes = _paramSolTypes;
+	ctx.namedReturns.clear();
+	ctx.mappingKeyParams.clear();
+	ctx.blobAggParams.clear();
+	ctx.placeholder.reset();
+	ctx.inConstructor = false;
+	ctx.frameIsProgram = false;
+	ctx.encodeReturnsAtBuildTime = false;
+	ctx.returnAsmWrap = false;
+	ctx.returnWirePlan.clear();
+	ctx.seededCalldataPointers.clear();
+	ctx.slotRefParams.clear();
 }
 
 void ContractBuilder::setPlaceholderBody(std::shared_ptr<awst::Block> _body)
 {
-	m_currentPlaceholder = std::move(_body);
+	m_functionCtx->placeholder = std::move(_body);
 }
 
 void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method,
@@ -944,14 +926,8 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// copy/move construction would dangle that pointer.
 	m_tr.emplace(*m_exprBuilder, m_typeMapper, m_sourceFile);
 	m_exprBuilder->currentScope = &*m_tr;
-	m_currentParams.clear();
-	m_currentReturnType = nullptr;
-	m_currentBitWidths.clear();
-	m_currentPlaceholder.reset();
-	m_currentNamedReturns.clear();
-	m_currentMappingKeyParams.clear();
-	m_currentBlobAggParams.clear();
-	m_currentSlotRefParams.clear();
+	m_functionCtx.emplace(m_typeMapper, *m_exprBuilder, *m_tr, m_sourceFile);
+	m_functionCtx->currentContract = &_contract;
 
 	m_exprBuilder->transientStorage =
 		m_transientStorage.hasTransientVars() ? &m_transientStorage : nullptr;
