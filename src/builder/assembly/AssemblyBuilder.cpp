@@ -199,8 +199,8 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	{
 		for (auto const& s: stmts)
 		{
-			if (auto const* fd = std::get_if<solidity::yul::FunctionDefinition>(&s))
-				scanStmts(fd->body.statements, _out);
+			if (std::get_if<solidity::yul::FunctionDefinition>(&s))
+				continue; // declarations do not execute in the enclosing body
 			else if (auto const* blk = std::get_if<solidity::yul::Block>(&s))
 				scanStmts(blk->statements, _out);
 			else if (auto const* iff = std::get_if<solidity::yul::If>(&s))
@@ -241,9 +241,27 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		scanStmts(def->body.statements, callees);
 		yulDirectCalls[name] = std::move(callees);
 	}
+	// Functions are declarations, not entry points. Close the graph only from
+	// calls made by the executable assembly body; unused recursive helpers must
+	// not become speculative AWST roots.
+	std::set<std::string> reachableYulFuncs;
+	scanStmts(_block.statements, reachableYulFuncs);
+	std::vector<std::string> reachableWorklist(
+		reachableYulFuncs.begin(), reachableYulFuncs.end());
+	for (size_t i = 0; i < reachableWorklist.size(); ++i)
+	{
+		auto const found = yulDirectCalls.find(reachableWorklist[i]);
+		if (found == yulDirectCalls.end())
+			continue;
+		for (auto const& callee: found->second)
+			if (reachableYulFuncs.insert(callee).second)
+				reachableWorklist.push_back(callee);
+	}
 	// Mark each function recursive iff it reaches itself.
 	for (auto const& [name, _]: m_asmFunctions)
 	{
+		if (!reachableYulFuncs.count(name))
+			continue;
 		std::set<std::string> visited;
 		std::function<bool(std::string const&)> reaches = [&](std::string const& n) -> bool
 		{

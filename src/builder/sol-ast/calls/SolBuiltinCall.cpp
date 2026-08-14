@@ -1,5 +1,6 @@
 #include "builder/sol-ast/calls/SolBuiltinCall.h"
 #include "builder/builtin/Ripemd160Builder.h"
+#include "builder/BuildArtifacts.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -92,7 +93,8 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 					m_ctx.typeMapper.createType<awst::BytesWType>(20));
 			}
 		}
-		// Call __builtin_ripemd160; AWSTBuilder emits body, DCE drops if unused.
+		// Request the helper only after constant folding has declined.
+		m_ctx.typeMapper.artifacts().needsRipemd160 = true;
 		auto arg = buildExpr(*m_call.arguments()[0]);
 		auto* bytes20Type = m_ctx.typeMapper.createType<awst::BytesWType>(20);
 		auto call = awst::makeSubroutineCall(awst::SubroutineID{builtin::ripemd160SubroutineId()}, awst::WType::bytesType(), m_loc);

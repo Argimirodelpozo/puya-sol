@@ -5,7 +5,7 @@
 #include "builder/sol-types/SolIntType.h"
 #include "awst/Termination.h"
 #include "builder/FunctionIdRegistry.h"
-#include "builder/SubroutineReachability.h"
+#include "builder/SubroutineRegistry.h"
 #include "builder/builtin/Ripemd160Builder.h"
 #include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/sol-ast/StorageRefPointer.h"
@@ -69,6 +69,7 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	m_session.begin(_compiler, _sourceAliases, std::move(_targetProfile));
 	m_storageMapper = std::make_unique<StorageMapper>(m_session.typeMapper);
 	m_libraryFunctionIds.clear();
+	m_hostBoundFunctions.clear();
 	std::vector<std::shared_ptr<awst::RootNode>> roots;
 
 	registerFunctionIds(_compiler, _sourceFile, m_libraryFunctionIds, m_freeFunctionById);
@@ -77,16 +78,17 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	translateFreeFunctions(_compiler, _sourceFile, roots);
 	translateContracts(_compiler, _sourceFile, _opupBudget, _ensureBudget, _viaYulBehavior, roots);
 
-	// Inject the synthetic RIPEMD-160 subroutine. Always emitted; the
-	// reachability filter below drops it when no contract calls it.
+	// Builtin helpers are requested by their lowering sites, so unused
+	// algorithms never enter the root set.
+	if (m_session.artifacts.needsRipemd160)
 	{
 		awst::SourceLocation builtinLoc;
 		builtinLoc.file = _sourceFile;
 		roots.push_back(builder::builtin::buildRipemd160Subroutine(builtinLoc));
 	}
 
-	// Drop any subroutine root not reachable from a contract method.
-	return filterToReachableSubroutines(std::move(roots));
+	validateRootSubroutines(roots);
+	return roots;
 }
 
 
@@ -166,9 +168,12 @@ void AWSTBuilder::translateLibraryFunctions(
 						break;
 					}
 				}
-				if (hasFnParam)
+				bool const needsStorageHost = !m_session.profile.evmStorageLayout
+					&& m_session.analysis.callablesWithStorageAssembly.count(func->id());
+				if (hasFnParam || needsStorageHost)
 				{
-					if (func->visibility() == solidity::frontend::Visibility::External)
+					if (hasFnParam
+						&& func->visibility() == solidity::frontend::Visibility::External)
 					{
 						awst::SourceLocation warnLoc;
 						warnLoc.file = _sourceFile;
@@ -179,8 +184,9 @@ void AWSTBuilder::translateLibraryFunctions(
 							"equivalent. Behaviour may diverge for storage-mutating bodies.",
 							warnLoc);
 					}
-					Logger::instance().debug("Registering internalizable library function: " + qualifiedName);
-					m_internalizableLibFuncs.push_back(func);
+					Logger::instance().debug(
+						"Registering host-bound library function: " + qualifiedName);
+					m_hostBoundFunctions.push_back(func);
 					continue;
 				}
 
@@ -217,6 +223,14 @@ void AWSTBuilder::translateFreeFunctions(
 			}
 
 			std::string qualifiedName = func->name();
+			if (!m_session.profile.evmStorageLayout
+				&& m_session.analysis.callablesWithStorageAssembly.count(func->id()))
+			{
+				Logger::instance().debug(
+					"Registering host-bound free function: " + qualifiedName);
+				m_hostBoundFunctions.push_back(func);
+				continue;
+			}
 			std::string subroutineId;
 			auto byId = m_freeFunctionById.find(func->id());
 			if (byId != m_freeFunctionById.end())
@@ -394,6 +408,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	sol_ast::TranslationContext tr{exprBuilder, m_session.typeMapper, _sourceFile};
 	auto trGuard = exprBuilder.pushScopeRaii(&tr);
 	sol_ast::FunctionContext fnCtx{tr, {}, sub->returnType, {}};
+	fnCtx.callableId = _func.id();
 	auto fnGuard = exprBuilder.pushScopeRaii(&fnCtx);
 
 	// Register mapping-storage-ref params (must be after FunctionContext push;
@@ -541,6 +556,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		ftCtx.mappingKeyParams = std::move(mappingKeyList);
 		ftCtx.blobAggParams = std::move(blobAggList);
 		ftCtx.currentContract = nullptr;
+		ftCtx.callableId = _func.id();
 		inlineModifiers(ftCtx, _func, sub->body);
 	}
 
@@ -869,7 +885,7 @@ void AWSTBuilder::translateContracts(
 		// walk. A reachable assembly sload/sstore still needs the unit runtime even
 		// when every contract has zero declared state.
 		for (auto const callableId:
-			m_session.analysis.callablesWithInlineAssembly)
+			m_session.analysis.callablesWithStorageAssembly)
 			if (!m_session.analysis.hasReachabilityGraphs
 				|| m_session.analysis.reachableCallableIds.count(callableId))
 			{
@@ -931,7 +947,7 @@ void AWSTBuilder::translateContracts(
 				m_session.typeMapper, *m_storageMapper, m_session.functionPointers,
 				_sourceFile, m_libraryFunctionIds,
 				_opupBudget, m_freeFunctionById, _ensureBudget, _viaYulBehavior,
-				m_internalizableLibFuncs
+				m_hostBoundFunctions
 			);
 			auto const& storagePlan = m_session.storagePlan(*contract);
 			auto const emitEvmStorageRuntime = evmStorageRuntimeNeeded
@@ -1080,7 +1096,7 @@ void AWSTBuilder::translateContracts(
 				m_session.typeMapper, *m_storageMapper, m_session.functionPointers,
 				_sourceFile, m_libraryFunctionIds,
 				_opupBudget, m_freeFunctionById, _ensureBudget, _viaYulBehavior,
-				m_internalizableLibFuncs
+				m_hostBoundFunctions
 			);
 			auto const& storagePlan = m_session.storagePlan(*lib);
 			auto const emitEvmStorageRuntime = evmStorageRuntimeNeeded

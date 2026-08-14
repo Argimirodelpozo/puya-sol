@@ -374,6 +374,8 @@ struct FunctionContext: Context
 	std::vector<std::pair<std::string, awst::WType const*>> params;
 	awst::WType const* returnType = nullptr;
 	std::map<std::string, unsigned> paramBitWidths;
+	/// solc callable AST identity, used to scope synthesized helpers.
+	int64_t callableId = 0;
 	/// Declared solc param types by BARE name (possible_solc item 2); feeds
 	/// AssemblyBuilder's EVM-ABI calldata layout. Assigned after construction.
 	std::map<std::string, solidity::frontend::Type const*> paramSolTypes;

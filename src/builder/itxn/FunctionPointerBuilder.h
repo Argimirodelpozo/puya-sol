@@ -14,6 +14,7 @@
 #include <libsolidity/ast/Types.h>
 
 #include <map>
+#include <set>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -38,6 +39,7 @@ struct FunctionPointerRegistry
 	std::map<std::pair<int64_t, std::string>, FuncPtrEntry> targets;
 	unsigned nextId = 1;
 	std::map<std::string, solidity::frontend::FunctionType const*> neededDispatches;
+	std::set<std::string> neededRootDispatches;
 	std::string currentCref;
 
 	void reset()
@@ -45,6 +47,7 @@ struct FunctionPointerRegistry
 		targets.clear();
 		nextId = 1;
 		neededDispatches.clear();
+		neededRootDispatches.clear();
 		currentCref.clear();
 	}
 };

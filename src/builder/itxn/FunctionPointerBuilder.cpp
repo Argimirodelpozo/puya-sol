@@ -43,8 +43,11 @@ std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDis
 	auto& registry = _ctx.functionPointers;
 	std::string dname = dispatchName(_funcType);
 	registry.neededDispatches[dname] = _funcType;
+	bool const rootContext = inLibraryContext(_ctx, registry.currentCref);
+	if (rootContext)
+		registry.neededRootDispatches.insert(dname);
 
-	awst::SubroutineTarget target = inLibraryContext(_ctx, registry.currentCref)
+	awst::SubroutineTarget target = rootContext
 		? awst::SubroutineTarget{awst::SubroutineID{registry.currentCref + "." + dname}}
 		: awst::SubroutineTarget{awst::InstanceMethodTarget{dname}};
 	auto call = awst::makeSubroutineCall(
@@ -140,6 +143,13 @@ void FunctionPointerBuilder::setSubroutineIds(
 {
 	for (auto& [key, entry] : _ctx.functionPointers.targets)
 	{
+		if (auto const hostBound = _ctx.internalizedFunctionNames.find(key.first);
+			hostBound != _ctx.internalizedFunctionNames.end())
+		{
+			entry.name = hostBound->second;
+			entry.subroutineId.clear();
+			continue;
+		}
 		auto it = _idMap.find(key.first);
 		if (it != _idMap.end())
 			entry.subroutineId = it->second;
@@ -286,9 +296,13 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		// Map selector → internal id via __sel_to_id_<sig> (generated in generateDispatchMethods).
 		std::string selToIdName = "__sel_to_id_" + dispatchName(_funcType);
 		auto& registry = _ctx.functionPointers;
-		registry.neededDispatches[dispatchName(_funcType)] = _funcType;
+		std::string const dname = dispatchName(_funcType);
+		registry.neededDispatches[dname] = _funcType;
+		bool const rootContext = inLibraryContext(_ctx, registry.currentCref);
+		if (rootContext)
+			registry.neededRootDispatches.insert(dname);
 
-		awst::SubroutineTarget selToIdTarget = inLibraryContext(_ctx, registry.currentCref)
+		awst::SubroutineTarget selToIdTarget = rootContext
 			? awst::SubroutineTarget{awst::SubroutineID{registry.currentCref + "." + selToIdName}}
 			: awst::SubroutineTarget{awst::InstanceMethodTarget{selToIdName}};
 		auto selToIdCall = awst::makeSubroutineCall(
@@ -426,7 +440,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 	std::vector<awst::ContractMethod> methods;
 	auto const& registry = _ctx.functionPointers;
 
-	if (registry.targets.empty() && registry.neededDispatches.empty())
+	if (registry.neededDispatches.empty())
 		return methods;
 
 	auto funcScopeContract = [](FunctionDefinition const* fd) -> ContractDefinition const* {
@@ -441,6 +455,11 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 	std::map<std::string, std::vector<FuncPtrEntry const*>> groups;
 	for (auto const& [key, entry] : registry.targets)
 	{
+		std::string dname = dispatchName(entry.funcType);
+		// Taking a function's address does not require a dispatcher. A dynamic
+		// call or external self-call records the signature in neededDispatches.
+		if (!registry.neededDispatches.count(dname))
+			continue;
 		// Skip foreign targets (different non-library, non-base contract).
 		// Keep if: awstName starts with __super_, subroutineId is set,
 		// or the function is in the current contract or a library.
@@ -459,7 +478,6 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		}
 		if (foreignNonResolvable)
 			continue;
-		std::string dname = dispatchName(entry.funcType);
 		groups[dname].push_back(&entry);
 	}
 	// Ensure needed signatures have entries, even if empty.
@@ -675,7 +693,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 		// Also emit as root-level Subroutine: library subroutines can't use
 		// InstanceMethodTarget outside the contract scope.
-		if (_outRootSubs)
+		if (_outRootSubs && registry.neededRootDispatches.count(dname))
 		{
 			auto sub = awst::makeSubroutine(
 				_cref + "." + dispatch.memberName, dispatch.memberName,
@@ -743,7 +761,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 				selBody->body.push_back(std::move(stmt));
 			selToId.body = selBody;
 
-			if (_outRootSubs)
+			if (_outRootSubs && registry.neededRootDispatches.count(dname))
 			{
 				auto sub = awst::makeSubroutine(
 					_cref + "." + selToId.memberName, selToId.memberName,

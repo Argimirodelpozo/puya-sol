@@ -750,8 +750,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					continue;
 
 				m_functionCtx->inConstructor = true;
+				m_functionCtx->callableId = baseCtor->id();
 				auto baseBody = buildBlock(baseCtor->body());
 				m_functionCtx->inConstructor = false;
+				m_functionCtx->callableId = 0;
 				inlineModifiers(*baseCtor, baseBody);
 				for (auto& stmt: baseBody->body)
 					postInitBody->body.push_back(std::move(stmt));
@@ -762,8 +764,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			{
 				m_tr->setInConstructor(true);
 				m_functionCtx->inConstructor = true;
+				m_functionCtx->callableId = constructor->id();
 				auto ctorBody = buildBlock(constructor->body());
 				m_functionCtx->inConstructor = false;
+				m_functionCtx->callableId = 0;
 				inlineModifiers(*constructor, ctorBody);
 				m_tr->setInConstructor(false);
 				for (auto& stmt: ctorBody->body)
@@ -956,8 +960,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 			// Translate the base constructor body and inline its modifiers
 			m_functionCtx->inConstructor = true;
+			m_functionCtx->callableId = baseCtor->id();
 			auto baseBody = buildBlock(baseCtor->body());
 			m_functionCtx->inConstructor = false;
+			m_functionCtx->callableId = 0;
 			inlineModifiers(*baseCtor, baseBody);
 			for (auto& stmt: baseBody->body)
 				createBlock->body.push_back(std::move(stmt));
@@ -976,8 +982,10 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 			}
 			m_tr->setInConstructor(true);
 			m_functionCtx->inConstructor = true;
+			m_functionCtx->callableId = constructor->id();
 			auto ctorBody = buildBlock(constructor->body());
 			m_functionCtx->inConstructor = false;
+			m_functionCtx->callableId = 0;
 			inlineModifiers(*constructor, ctorBody);
 			m_tr->setInConstructor(false);
 			m_tr->clearSuperTargets();

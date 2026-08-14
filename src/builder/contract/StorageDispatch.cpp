@@ -1638,7 +1638,7 @@ void ContractBuilder::buildStorageDispatch(
 		if (m.memberName == "__storage_read" || m.memberName == "__storage_write")
 		{
 			auto sub = awst::makeSubroutine(
-				std::string("__puyasol_") + m.memberName, m.memberName,
+				cref + "." + m.memberName, m.memberName,
 				m.args, m.returnType, m.body, /*pure=*/false, m.sourceLocation);
 			m_dispatchSubroutines.push_back(std::move(sub));
 		}

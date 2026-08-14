@@ -3,6 +3,7 @@
 #include <variant>
 #include "builder/contract/ContractBuilder.h"
 #include "awst/NameGen.h"
+#include "awst/Visit.h"
 #include "builder/NatSpecTags.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-ast/calls/SolNewExpression.h"
@@ -48,7 +49,7 @@ ContractBuilder::ContractBuilder(
 	FreeFunctionIdMap const& _freeFunctionById,
 	std::map<std::string, uint64_t> const& _ensureBudget,
 	bool _viaIR,
-	std::vector<solidity::frontend::FunctionDefinition const*> const& _internalizableLibFuncs
+	std::vector<solidity::frontend::FunctionDefinition const*> const& _hostBoundFunctions
 )
 	: m_typeMapper(_typeMapper),
 	  m_storageMapper(_storageMapper),
@@ -59,7 +60,7 @@ ContractBuilder::ContractBuilder(
 	  m_freeFunctionById(_freeFunctionById),
 	  m_ensureBudget(_ensureBudget),
 	  m_viaIR(_viaIR),
-	  m_internalizableLibFuncs(_internalizableLibFuncs)
+	  m_hostBoundFunctions(_hostBoundFunctions)
 {
 }
 
@@ -638,6 +639,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	std::shared_ptr<awst::Block> _placeholder)
 {
 	sol_ast::FunctionContext fn{_ctx.tr, _ctx.params, _ctx.returnType, _ctx.paramBitWidths};
+	fn.callableId = _ctx.callableId;
 	fn.paramSolTypes = _ctx.paramSolTypes;
 	fn.inConstructor = _ctx.inConstructor;
 	fn.frameIsProgram = _ctx.frameIsProgram;
@@ -645,6 +647,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	fn.returnAsmWrap = _ctx.returnAsmWrap;
 	fn.returnWirePlan = _ctx.returnWirePlan;
 	fn.seededCalldataPointers = &_ctx.seededCalldataPointers;
+	fn.boxKeyStructParams = _ctx.boxKeyStructParams;
 	auto fnGuard = _ctx.exprBuilder.pushScopeRaii(&fn);
 	auto blk = _placeholder
 		? sol_ast::BlockContext::top(fn).withPlaceholder(_placeholder)
@@ -743,6 +746,7 @@ void ContractBuilder::setFunctionContext(
 	ctx.paramSolTypes = _paramSolTypes;
 	ctx.namedReturns.clear();
 	ctx.mappingKeyParams.clear();
+	ctx.boxKeyStructParams.clear();
 	ctx.blobAggParams.clear();
 	ctx.placeholder.reset();
 	ctx.inConstructor = false;
@@ -910,16 +914,16 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// layout; default mode uses the compiler's physical AVM layout.
 	m_exprBuilder->storageLayout = &_storagePlan.layout;
 
-	// Pre-populate internalized library func map before translation so the call
+	// Pre-populate host-bound function map before translation so the call
 	// resolver routes them as InstanceMethodTargets.
-	for (auto const* libFunc : m_internalizableLibFuncs)
+	for (auto const* function: m_hostBoundFunctions)
 	{
-		if (!libFunc) continue;
-		auto const* libContract = libFunc->annotation().contract;
-		std::string methodName = "__intlib_"
-			+ (libContract ? libContract->name() : std::string("L"))
-			+ "_" + libFunc->name();
-		m_exprBuilder->internalizedLibFuncNames[libFunc->id()] = methodName;
+		if (!function) continue;
+		auto const* scope = function->annotation().contract;
+		std::string methodName = "__hostfn_"
+			+ (scope ? scope->name() : std::string("free"))
+			+ "_" + function->name() + "_" + std::to_string(function->id());
+		m_exprBuilder->internalizedFunctionNames[function->id()] = methodName;
 	}
 
 	// In-place emplace — TranslationContext caches a pointer to its own scopeState_;
@@ -1084,18 +1088,16 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// regular method bodies are translated.
 	emitSuperSubroutines(*contract, contractName);
 
-	// Emit internalized library functions as internal methods of this contract.
-	// These are library funcs with internal function-pointer params: their body
-	// invokes the funcptr dispatcher which case-branches to contract instance
-	// methods, so they must live in the contract's scope (puya rejects calling
-	// instance methods from root-level subroutines).
-	for (auto const* libFunc : m_internalizableLibFuncs)
+	// Emit functions whose lowering requires a concrete contract host. This
+	// includes function-pointer dispatch and default-layout storage assembly.
+	for (auto const* function: m_hostBoundFunctions)
 	{
-		if (!libFunc || !libFunc->isImplemented()) continue;
-		auto nameIt = m_exprBuilder->internalizedLibFuncNames.find(libFunc->id());
-		if (nameIt == m_exprBuilder->internalizedLibFuncNames.end()) continue;
+		if (!function || !function->isImplemented()) continue;
+		auto nameIt = m_exprBuilder->internalizedFunctionNames.find(function->id());
+		if (nameIt == m_exprBuilder->internalizedFunctionNames.end()) continue;
 		clearSuperOverrides();
-		auto method = buildFunction(*libFunc, contractName, nameIt->second);
+		auto method = buildFunction(
+			*function, contractName, nameIt->second, /*asInternalCopy=*/true);
 		contract->methods.push_back(std::move(method));
 		for (auto& sub: m_modifierSubroutines)
 			contract->methods.push_back(std::move(sub));
@@ -1158,6 +1160,33 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 					abi->chunk = "shell";
 			}
 		}
+	}
+
+	// Default-layout dispatch bodies are contract-specific because they route
+	// logical slots to this contract's named AVM cells. Scope every generated
+	// call to the same contract-specific root ID. EVM-layout runtime helpers are
+	// compilation-unit singletons and retain their stable global IDs.
+	if (!m_typeMapper.profile().evmStorageLayout && _storagePlan.needsDispatch())
+	{
+		auto const scopeStorageCall = [&](awst::Expression& expression) {
+			auto* call = dynamic_cast<awst::SubroutineCallExpression*>(&expression);
+			if (!call)
+				return;
+			auto* id = std::get_if<awst::SubroutineID>(&call->target);
+			if (!id)
+				return;
+			if (id->target == "__puyasol___storage_read")
+				id->target = contractId + ".__storage_read";
+			else if (id->target == "__puyasol___storage_write")
+				id->target = contractId + ".__storage_write";
+		};
+		awst::visitExpressions(contract->approvalProgram, scopeStorageCall);
+		awst::visitExpressions(contract->clearProgram, scopeStorageCall);
+		for (auto& method: contract->methods)
+			awst::visitExpressions(method, scopeStorageCall);
+		for (auto& subroutine: m_dispatchSubroutines)
+			if (subroutine && subroutine->body)
+				awst::visitExpressions(*subroutine->body, scopeStorageCall);
 	}
 
 	return contract;

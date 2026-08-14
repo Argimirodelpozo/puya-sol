@@ -4,6 +4,7 @@
 #include "builder/storage/EvmLayoutMode.h"
 #include "awst/Termination.h"
 #include "awst/StatementWalk.h"
+#include "awst/Visit.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/NatSpecTags.h"
 #include "builder/assembly/AssemblyBuilder.h"
@@ -25,130 +26,6 @@ namespace puyasol::builder
 {
 
 using awst::blockAlwaysTerminates;
-
-namespace {
-
-/// Walk all SubroutineCallExpression nodes in a body tree; used to
-/// retarget self-recursive callsubs after biguint→ARC4 param remapping.
-class SubroutineCallVisitor
-{
-public:
-	using Callback = std::function<void(awst::SubroutineCallExpression&)>;
-
-	explicit SubroutineCallVisitor(Callback _cb): m_cb(std::move(_cb)) {}
-
-	void visitStmt(awst::Statement& _s)
-	{
-		if (auto* b = dynamic_cast<awst::Block*>(&_s))
-			for (auto& sub: b->body) if (sub) visitStmt(*sub);
-		else if (auto* es = dynamic_cast<awst::ExpressionStatement*>(&_s))
-			{ if (es->expr) visitExpr(*es->expr); }
-		else if (auto* rs = dynamic_cast<awst::ReturnStatement*>(&_s))
-			{ if (rs->value) visitExpr(*rs->value); }
-		else if (auto* ie = dynamic_cast<awst::IfElse*>(&_s))
-		{
-			if (ie->condition) visitExpr(*ie->condition);
-			if (ie->ifBranch) visitStmt(*ie->ifBranch);
-			if (ie->elseBranch) visitStmt(*ie->elseBranch);
-		}
-		else if (auto* wl = dynamic_cast<awst::WhileLoop*>(&_s))
-		{
-			if (wl->condition) visitExpr(*wl->condition);
-			if (wl->loopBody) visitStmt(*wl->loopBody);
-		}
-		else if (auto* as = dynamic_cast<awst::AssignmentStatement*>(&_s))
-		{
-			if (as->target) visitExpr(*as->target);
-			if (as->value) visitExpr(*as->value);
-		}
-		else if (auto* sw = dynamic_cast<awst::Switch*>(&_s))
-		{
-			if (sw->value) visitExpr(*sw->value);
-			for (auto& c: sw->cases)
-			{
-				if (c.first) visitExpr(*c.first);
-				if (c.second) visitStmt(*c.second);
-			}
-			if (sw->defaultCase) visitStmt(*sw->defaultCase);
-		}
-		else if (auto* fl = dynamic_cast<awst::ForInLoop*>(&_s))
-		{
-			if (fl->sequence) visitExpr(*fl->sequence);
-			if (fl->items) visitExpr(*fl->items);
-			if (fl->loopBody) visitStmt(*fl->loopBody);
-		}
-		else if (auto* aa = dynamic_cast<awst::UInt64AugmentedAssignment*>(&_s))
-		{
-			if (aa->target) visitExpr(*aa->target);
-			if (aa->value) visitExpr(*aa->value);
-		}
-		else if (auto* aa = dynamic_cast<awst::BigUIntAugmentedAssignment*>(&_s))
-		{
-			if (aa->target) visitExpr(*aa->target);
-			if (aa->value) visitExpr(*aa->value);
-		}
-		// Goto, LoopExit, LoopContinue have no children.
-	}
-
-	void visitExpr(awst::Expression& _e)
-	{
-		if (auto* call = dynamic_cast<awst::SubroutineCallExpression*>(&_e))
-		{
-			m_cb(*call);
-			for (auto& a: call->args) if (a.value) visitExpr(*a.value);
-			return;
-		}
-		if (auto* op = dynamic_cast<awst::UInt64BinaryOperation*>(&_e))
-			{ if (op->left) visitExpr(*op->left); if (op->right) visitExpr(*op->right); }
-		else if (auto* op = dynamic_cast<awst::BigUIntBinaryOperation*>(&_e))
-			{ if (op->left) visitExpr(*op->left); if (op->right) visitExpr(*op->right); }
-		else if (auto* op = dynamic_cast<awst::BytesBinaryOperation*>(&_e))
-			{ if (op->left) visitExpr(*op->left); if (op->right) visitExpr(*op->right); }
-		else if (auto* op = dynamic_cast<awst::BooleanBinaryOperation*>(&_e))
-			{ if (op->left) visitExpr(*op->left); if (op->right) visitExpr(*op->right); }
-		else if (auto* op = dynamic_cast<awst::BytesUnaryOperation*>(&_e))
-			{ if (op->expr) visitExpr(*op->expr); }
-		else if (auto* op = dynamic_cast<awst::Not*>(&_e))
-			{ if (op->expr) visitExpr(*op->expr); }
-		else if (auto* cmp = dynamic_cast<awst::NumericComparisonExpression*>(&_e))
-			{ if (cmp->lhs) visitExpr(*cmp->lhs); if (cmp->rhs) visitExpr(*cmp->rhs); }
-		else if (auto* cmp = dynamic_cast<awst::BytesComparisonExpression*>(&_e))
-			{ if (cmp->lhs) visitExpr(*cmp->lhs); if (cmp->rhs) visitExpr(*cmp->rhs); }
-		else if (auto* a = dynamic_cast<awst::AssertExpression*>(&_e))
-			{ if (a->condition) visitExpr(*a->condition); }
-		else if (auto* a = dynamic_cast<awst::AssignmentExpression*>(&_e))
-			{ if (a->target) visitExpr(*a->target); if (a->value) visitExpr(*a->value); }
-		else if (auto* c = dynamic_cast<awst::ConditionalExpression*>(&_e))
-		{
-			if (c->condition) visitExpr(*c->condition);
-			if (c->trueExpr) visitExpr(*c->trueExpr);
-			if (c->falseExpr) visitExpr(*c->falseExpr);
-		}
-		else if (auto* ic = dynamic_cast<awst::IntrinsicCall*>(&_e))
-			for (auto& a: ic->stackArgs) if (a) visitExpr(*a);
-		else if (auto* enc = dynamic_cast<awst::ARC4Encode*>(&_e))
-			{ if (enc->value) visitExpr(*enc->value); }
-		else if (auto* dec = dynamic_cast<awst::ARC4Decode*>(&_e))
-			{ if (dec->value) visitExpr(*dec->value); }
-		else if (auto* tup = dynamic_cast<awst::TupleExpression*>(&_e))
-			for (auto& it: tup->items) if (it) visitExpr(*it);
-		else if (auto* ti = dynamic_cast<awst::TupleItemExpression*>(&_e))
-			{ if (ti->base) visitExpr(*ti->base); }
-		else if (auto* fe = dynamic_cast<awst::FieldExpression*>(&_e))
-			{ if (fe->base) visitExpr(*fe->base); }
-		else if (auto* ix = dynamic_cast<awst::IndexExpression*>(&_e))
-			{ if (ix->base) visitExpr(*ix->base); if (ix->index) visitExpr(*ix->index); }
-		else if (auto* ca = dynamic_cast<awst::CommaExpression*>(&_e))
-			for (auto& it: ca->expressions) if (it) visitExpr(*it);
-		// Other expressions (constants, var refs, type-info nodes, etc.)
-		// have no children we care about for recursive-call rewriting.
-	}
-
-private:
-	Callback m_cb;
-};
-
-} // namespace
 
 awst::ContractMethod ContractBuilder::buildClearProgram(
 	solidity::frontend::ContractDefinition const& _contract,
@@ -289,6 +166,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	awst::ContractMethod method;
 	bool const funcHasInlineAssembly =
 		m_typeMapper.analysis().callablesWithInlineAssembly.count(_func.id()) != 0;
+	std::set<int64_t> asmSlotParamIds;
+	for (auto const& param: _func.parameters())
+		if (m_typeMapper.analysis().asmSlotReferenceDeclarations.count(param->id()))
+			asmSlotParamIds.insert(param->id());
 	method.sourceLocation = makeLoc(_func.location());
 	method.cref = m_sourceFile + "." + _contractName;
 	if (!_nameOverride.empty())
@@ -321,6 +202,11 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		if (m_typeMapper.profile().evmStorageLayout
 			&& param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
 			arg.wtype = awst::WType::biguintType();
+		else if (param->referenceLocation()
+				== solidity::frontend::VariableDeclaration::Location::Storage
+			&& (isBoxKeyedStorageRef(param->type(), m_typeMapper.analysis())
+				|| asmSlotParamIds.count(param->id())))
+			arg.wtype = awst::WType::bytesType();
 		// Memory aggregate >4KB: pass as uint64 base offset (blob pointer model).
 		// Callee re-registers via setBlobAggParams so p.field[i] hits blob word access.
 		if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
@@ -584,7 +470,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		auto isMappingStorageRef = [&](solidity::frontend::VariableDeclaration const* p) {
 			return !m_typeMapper.profile().evmStorageLayout   // slot handles replace box-key prefixes
 				&& p->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-				&& isBoxKeyedStorageRef(p->type(), m_typeMapper.analysis()) // widened: plain structs too
+				&& (isBoxKeyedStorageRef(p->type(), m_typeMapper.analysis())
+					|| asmSlotParamIds.count(p->id()))
 				&& !p->name().empty();
 		};
 		for (auto const& p: _func.parameters())
@@ -600,6 +487,11 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					&& !rp->name().empty() && storageRefReturnIsBytesKeyed(&_func)))
 				mappingKeyParamDecls.push_back(rp.get());
 		setMappingKeyParams(mappingKeyParamDecls);
+		for (auto const& p: _func.parameters())
+			if (asmSlotParamIds.count(p->id()) && !p->name().empty()
+				&& !m_typeMapper.profile().evmStorageLayout)
+				m_functionCtx->boxKeyStructParams[p->name()] =
+					m_typeMapper.map(p->type());
 
 		// --evm-storage-layout: storage params + named storage returns are
 		// biguint slot handles; register so body access resolves through them.
@@ -627,11 +519,13 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		setBlobAggParams(blobAggParamDecls);
 
 		m_functionCtx->inConstructor = _func.isConstructor();
+		m_functionCtx->callableId = _func.id();
 		m_functionCtx->frameIsProgram =
 			_func.visibility() == solidity::frontend::Visibility::Internal
 			|| _func.visibility() == solidity::frontend::Visibility::Private;
 		method.body = buildBlock(_func.body());
 		m_functionCtx->inConstructor = false;
+		m_functionCtx->callableId = 0;
 		m_functionCtx->frameIsProgram = false;
 
 		// Zero-init named return vars (Solidity implicit init); bump free-memory pointer
@@ -979,15 +873,18 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			for (auto const& pd: paramDecodes)
 				arc4ByOrig[pd.name] = pd.arc4Type;
 
-			SubroutineCallVisitor wrapper([&](awst::SubroutineCallExpression& _call) {
-				auto const* tgt = std::get_if<awst::InstanceMethodTarget>(&_call.target);
+			awst::visitExpressions(*method.body, [&](awst::Expression& expression) {
+				auto* call = dynamic_cast<awst::SubroutineCallExpression*>(&expression);
+				if (!call)
+					return;
+				auto const* tgt = std::get_if<awst::InstanceMethodTarget>(&call->target);
 				if (!tgt || tgt->memberName != thisName)
 					return;
 				size_t argI = 0;
 				for (auto const& pd: paramDecodes)
 				{
-					if (argI >= _call.args.size()) break;
-					auto& a = _call.args[argI++];
+					if (argI >= call->args.size()) break;
+					auto& a = call->args[argI++];
 					if (!a.value || a.value->wtype == pd.arc4Type)
 						continue;
 					if (a.value->wtype != awst::WType::biguintType())
@@ -996,7 +893,6 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					a.value = std::move(enc);
 				}
 			});
-			wrapper.visitStmt(*method.body);
 		}
 
 		// ensure_budget: per-function map first, then global opup budget.

@@ -121,7 +121,7 @@ public:
 	FunctionPointerRegistry& functionPointers;
 	/// funcDef.id() → synthesized method name; CallResolver returns InstanceMethodTarget
 	/// instead of SubroutineID when the funcDef appears here.
-	std::unordered_map<int64_t, std::string> internalizedLibFuncNames;
+	std::unordered_map<int64_t, std::string> internalizedFunctionNames;
 
 	// ── Side-effect statement buffers (owned) ──
 	std::vector<std::shared_ptr<awst::Statement>> pendingStatements;

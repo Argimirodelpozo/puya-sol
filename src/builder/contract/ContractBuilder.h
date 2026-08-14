@@ -61,6 +61,7 @@ struct FunctionTranslationCtx
 	eb::ContractContext& exprBuilder;
 	sol_ast::TranslationContext& tr;
 	std::string sourceFile;
+	int64_t callableId = 0;
 
 	// Per-function state.
 	std::vector<std::pair<std::string, awst::WType const*>> params;
@@ -68,6 +69,10 @@ struct FunctionTranslationCtx
 	std::map<std::string, unsigned> paramBitWidths;
 	std::vector<solidity::frontend::VariableDeclaration const*> namedReturns;
 	std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParams;
+	/// Default-layout struct storage refs exposed as `.slot` in assembly. The
+	/// runtime value is a bytes box key while this retains the struct payload
+	/// type needed by AssemblyBuilder's slot routing.
+	std::map<std::string, awst::WType const*> boxKeyStructParams;
 	// Memory aggregate params >4KB: passed as their uint64 base offset into the
 	// multi-slot blob (pointer model). `buildBlock` registers each as a blob
 	// aggregate so `p.field[i]` in the body lowers to blob word access.
@@ -199,7 +204,7 @@ public:
 		FreeFunctionIdMap const& _freeFunctionById = {},
 		std::map<std::string, uint64_t> const& _ensureBudget = {},
 		bool _viaIR = false,
-		std::vector<solidity::frontend::FunctionDefinition const*> const& _internalizableLibFuncs = {}
+		std::vector<solidity::frontend::FunctionDefinition const*> const& _hostBoundFunctions = {}
 	);
 
 	/// Build AWST from a full contract definition.
@@ -226,7 +231,7 @@ private:
 	FreeFunctionIdMap const& m_freeFunctionById;
 	std::map<std::string, uint64_t> m_ensureBudget;
 	bool m_viaIR = false;
-	std::vector<solidity::frontend::FunctionDefinition const*> m_internalizableLibFuncs;
+	std::vector<solidity::frontend::FunctionDefinition const*> m_hostBoundFunctions;
 
 	std::unique_ptr<eb::ContractContext> m_exprBuilder;
 

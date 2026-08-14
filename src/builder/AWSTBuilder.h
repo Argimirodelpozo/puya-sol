@@ -56,7 +56,9 @@ private:
 	/// into each using-contract rather than emitted as root Subroutines.
 	/// The fn-ptr dispatcher may invoke contract instance methods, which puya
 	/// rejects from a root Subroutine scope.
-	std::vector<solidity::frontend::FunctionDefinition const*> m_internalizableLibFuncs;
+	/// Free/library functions whose lowering needs a concrete host contract
+	/// (function-pointer dispatch or default-layout inline storage assembly).
+	std::vector<solidity::frontend::FunctionDefinition const*> m_hostBoundFunctions;
 
 	// ── Build phases (executed in order from build()) ──
 	// Phase 1: registerFunctionIds → m_libraryFunctionIds + m_freeFunctionById.

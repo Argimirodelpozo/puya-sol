@@ -75,8 +75,12 @@ public:
 		case VirtualLookup::Static:
 		{
 			// Only explicit-base calls where the base is a contract TypeType;
-			// excludes Lib.f() and other static member accesses (same filter
-			// as the previous resolver).
+			// exclude Lib.f() explicitly: solc models libraries as ContractType
+			// too, so checking only the type category misclassified every static
+			// library call as a base call and emitted a duplicate __impl method.
+			if (auto const* scope = funcDecl->annotation().contract;
+				scope && scope->isLibrary())
+				break;
 			auto const* baseType = _node.expression().annotation().type;
 			if (!baseType
 				|| baseType->category() != solidity::frontend::Type::Category::TypeType)

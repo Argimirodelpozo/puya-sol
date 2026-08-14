@@ -38,13 +38,25 @@ StorageRuntimePlan StorageRuntimePlan::analyze(
 	TypeMapper& _typeMapper)
 {
 	StorageRuntimePlan result;
+	result.evmLayout = _typeMapper.profile().evmStorageLayout;
 	result.layout.computeLayout(_contract, _typeMapper);
 
-	auto const& asmCallables = _typeMapper.analysis().callablesWithInlineAssembly;
+	auto const& asmCallables = _typeMapper.analysis().callablesWithStorageAssembly;
 	forEachDefinedFunction(_contract, [&](auto const* _function) {
 		if (_function->isImplemented() && asmCallables.count(_function->id()))
 			result.containsInlineAssembly = true;
 	});
+	// solc's per-contract graph also reaches free/library functions that are
+	// emitted as host-bound methods. Their assembly accesses this contract's
+	// storage and therefore requires this contract's default-layout dispatcher.
+	if (_typeMapper.analysis().hasContractReachability(_contract.id()))
+		for (int64_t callableId: asmCallables)
+			if (_typeMapper.analysis().isFunctionReachable(
+				_contract.id(), callableId))
+			{
+				result.containsInlineAssembly = true;
+				break;
+			}
 	for (auto const* base: _contract.annotation().linearizedBaseContracts)
 		if (base)
 			for (auto const* modifier: base->functionModifiers())

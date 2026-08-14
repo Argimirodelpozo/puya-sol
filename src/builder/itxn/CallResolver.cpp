@@ -104,6 +104,15 @@ bool CallResolver::tryResolveLibraryOrFree(
 {
 	if (!_funcDef)
 		return false;
+	// Some free/library functions need a concrete host contract. They are
+	// emitted as instance methods and keyed by solc declaration identity.
+	auto const hostBound = _ctx.internalizedFunctionNames.find(_funcDef->id());
+	if (hostBound != _ctx.internalizedFunctionNames.end())
+	{
+		_result.target = awst::InstanceMethodTarget{hostBound->second};
+		_result.funcDef = _funcDef;
+		return true;
+	}
 
 	// solc Scoper populates annotation().contract with the enclosing
 	// ContractDefinition (nullptr for free functions in SourceUnit scope).
@@ -111,15 +120,6 @@ bool CallResolver::tryResolveLibraryOrFree(
 	{
 		if (contractDef->isLibrary())
 		{
-				// Internalized library fn → per-contract copy via InstanceMethodTarget.
-				auto internalIt = _ctx.internalizedLibFuncNames.find(_funcDef->id());
-				if (internalIt != _ctx.internalizedLibFuncNames.end())
-				{
-					_result.target = awst::InstanceMethodTarget{internalIt->second};
-					_result.funcDef = _funcDef;
-					return true;
-				}
-
 				// Prefer AST ID for precise overload resolution.
 				auto byId = _ctx.freeFunctionById.find(_funcDef->id());
 				if (byId != _ctx.freeFunctionById.end())

@@ -22,6 +22,13 @@ struct ProgramAnalysis
 	std::set<int64_t> reassignedMemoryLocals;
 	std::set<int64_t> structRefOffsetParams;
 	std::set<int64_t> callablesWithInlineAssembly;
+	/// Callables whose parsed Yul contains sload/sstore or exposes a `.slot`
+	/// handle that can be dereferenced by later Solidity expressions.
+	std::set<int64_t> callablesWithStorageAssembly;
+	/// Declaration AST ids referenced through a Yul `.slot` external reference.
+	/// Centralizing this avoids rescanning individual function bodies when
+	/// planning storage-reference parameter representations.
+	std::set<int64_t> asmSlotReferenceDeclarations;
 	/// Contract AST id → function ids reached through an internal call edge.
 	/// Entry-only public methods are absent; internal-dispatch targets are present.
 	std::map<int64_t, std::set<int64_t>> internallyCalledFunctions;

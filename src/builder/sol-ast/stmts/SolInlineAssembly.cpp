@@ -47,13 +47,11 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 {
 	Logger::instance().debug("translating inline assembly block", m_loc);
 
-	std::string contextName = m_blk.sourceFile();
-	auto lastDot = contextName.rfind('.');
-	if (lastDot != std::string::npos)
-		contextName = contextName.substr(0, lastDot);
-	auto lastSlash = contextName.rfind('/');
-	if (lastSlash != std::string::npos)
-		contextName = contextName.substr(lastSlash + 1);
+	std::string contextName = m_blk.builderCtx().contractName;
+	if (contextName.empty())
+		contextName = "free";
+	contextName += "_" + std::to_string(m_blk.fn.callableId)
+		+ "_asm_" + std::to_string(m_node.id());
 
 	// Extract constant values from external references
 	std::map<std::string, std::string> constants;

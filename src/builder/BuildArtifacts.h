@@ -15,11 +15,13 @@ struct BuildArtifacts
 {
 	std::vector<std::shared_ptr<awst::Subroutine>> pendingYulSubroutines;
 	std::set<std::string> childContracts;
+	bool needsRipemd160 = false;
 
 	void clear()
 	{
 		pendingYulSubroutines.clear();
 		childContracts.clear();
+		needsRipemd160 = false;
 	}
 };
 

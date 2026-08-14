@@ -41,6 +41,7 @@ set(SOURCES
 	src/Logger.cpp
 	src/awst/WType.cpp
 	src/awst/Node.cpp
+	src/awst/Visit.cpp
 	src/awst/Clone.cpp
 	src/awst/Termination.cpp
 	# Builder core
@@ -48,7 +49,7 @@ set(SOURCES
 	src/builder/ProgramAnalysis.cpp
 	src/builder/SourceLocConvert.cpp
 	src/builder/FunctionIdRegistry.cpp
-	src/builder/SubroutineReachability.cpp
+	src/builder/SubroutineRegistry.cpp
 	src/builder/contract/ContractBuilder.cpp
 	src/builder/contract/StorageDispatch.cpp
 	src/builder/contract/ModifierBodyInliner.cpp

@@ -5,6 +5,8 @@ These pin behaviour for bugs fixed in the puya-sol AVM backend itself that the
 upstream Solidity semantic-test corpus does not exercise. Kept deliberately
 separate from the ported `tests/<cat>/` suites.
 """
+import json
+
 import pytest
 
 from framework import as_int, as_bytes, as_signed_int
@@ -3669,6 +3671,48 @@ def test_mapping_key_collision(harness):
 
 _EVM_LAYOUT = ["--evm-storage-layout"]
 _EVM_SOL = "puyasolRegression/contracts/evm_storage_layout.sol"
+
+
+def test_default_storage_dispatch_is_contract_scoped(harness):
+    """Two contracts in one compilation unit must not share a named-storage
+    dispatcher ID: each slot zero routes to that contract's own AVM state."""
+    arts = harness.compile(
+        "puyasolRegression/contracts/default_storage_dispatch_scoped.sol")
+    app_a = harness.deploy(arts, "A")
+    app_b = harness.deploy(arts, "B")
+    harness.call(app_a, "set(uint256)", 111)
+    harness.call(app_b, "set(uint256)", 222)
+    assert as_int(harness.call(app_a, "raw()").abi_return) == 111
+    assert as_int(harness.call(app_b, "raw()").abi_return) == 222
+
+
+def test_default_storage_functions_are_bound_to_each_host(harness):
+    """Free/library sload bodies are copied into each default-layout host so
+    their storage calls resolve against that host's scoped dispatcher."""
+    arts = harness.compile(
+        "puyasolRegression/contracts/default_storage_host_bound_functions.sol")
+    app_a = harness.deploy(arts, "HostA")
+    app_b = harness.deploy(arts, "HostB")
+    harness.call(app_a, "set(uint256)", 333)
+    harness.call(app_b, "set(uint256)", 444)
+    assert as_int(harness.call(app_a, "readLibrary()").abi_return) == 333
+    assert as_int(harness.call(app_a, "readFree()").abi_return) == 333
+    assert as_int(harness.call(app_b, "readLibrary()").abi_return) == 444
+    assert as_int(harness.call(app_b, "readFree()").abi_return) == 444
+
+
+def test_synthetic_subroutine_roots_are_emitted_on_demand(harness):
+    """Folded RIPEMD, an uncalled recursive Yul declaration, and a function
+    pointer whose address is only taken must not create root subroutines."""
+    harness.compile("puyasolRegression/contracts/on_demand_subroutine_roots.sol")
+    roots = json.loads((harness.out_dir / "awst.json").read_text())
+    assert not [root for root in roots if root.get("_type") == "Subroutine"]
+    methods = [
+        method.get("member_name", "")
+        for root in roots if root.get("_type") == "Contract"
+        for method in root.get("methods", [])
+    ]
+    assert not [name for name in methods if name.startswith("__funcptr_dispatch")]
 
 
 def _evm_layout_app(harness):

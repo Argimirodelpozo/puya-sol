@@ -5,7 +5,12 @@
 #include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/interface/CompilerStack.h>
+#include <libyul/AST.h>
+#include <libyul/optimiser/ASTWalker.h>
+#include <libyul/backends/evm/EVMDialect.h>
 
+#include <optional>
+#include <variant>
 #include <vector>
 
 namespace puyasol::builder
@@ -15,6 +20,48 @@ using namespace solidity::frontend;
 
 namespace
 {
+
+bool usesStorageAssembly(InlineAssembly const& _assembly)
+{
+	// A `.slot` reference can manufacture an EVM-style slot handle even when
+	// the assembly block itself does not execute sload/sstore. Later Solidity
+	// expressions that dereference that handle still require the dispatcher.
+	for (auto const& [_, reference]: _assembly.annotation().externalReferences)
+		if (reference.suffix == "slot")
+			return true;
+
+	class StorageOpcodeWalker: public solidity::yul::ASTWalker
+	{
+	public:
+		using solidity::yul::ASTWalker::operator();
+
+		StorageOpcodeWalker()
+		{
+			auto const& dialect = solidity::yul::EVMDialect::strictAssemblyForEVMObjects(
+				solidity::langutil::EVMVersion::cancun(), std::nullopt);
+			sload = dialect.findBuiltin("sload");
+			sstore = dialect.findBuiltin("sstore");
+		}
+
+		void operator()(solidity::yul::FunctionCall const& _call) override
+		{
+			if (auto const* builtin = std::get_if<solidity::yul::BuiltinName>(
+					&_call.functionName);
+				builtin && ((sload && builtin->handle == *sload)
+					|| (sstore && builtin->handle == *sstore)))
+				usesStorage = true;
+			solidity::yul::ASTWalker::operator()(_call);
+		}
+
+		std::optional<solidity::yul::BuiltinHandle> sload;
+		std::optional<solidity::yul::BuiltinHandle> sstore;
+		bool usesStorage = false;
+	};
+
+	StorageOpcodeWalker walker;
+	walker(_assembly.operations().root());
+	return walker.usesStorage;
+}
 
 void collectMappingValueStructs(
 	Type const* _type,
@@ -208,16 +255,22 @@ ProgramAnalysis ProgramAnalysis::analyze(
 	{
 		std::set<int64_t>& reassignedMemoryLocals;
 		std::set<int64_t>& callablesWithInlineAssembly;
+		std::set<int64_t>& callablesWithStorageAssembly;
+		std::set<int64_t>& asmSlotReferenceDeclarations;
 		std::set<int64_t>& structRefOffsetParams;
 		bool collectOffsets;
 		int64_t callableId = 0;
 		BodyFactsWalker(
 			std::set<int64_t>& _reassignedMemoryLocals,
 			std::set<int64_t>& _callablesWithInlineAssembly,
+			std::set<int64_t>& _callablesWithStorageAssembly,
+			std::set<int64_t>& _asmSlotReferenceDeclarations,
 			std::set<int64_t>& _structRefOffsetParams,
 			bool _collectOffsets)
 			: reassignedMemoryLocals(_reassignedMemoryLocals),
 			  callablesWithInlineAssembly(_callablesWithInlineAssembly),
+			  callablesWithStorageAssembly(_callablesWithStorageAssembly),
+			  asmSlotReferenceDeclarations(_asmSlotReferenceDeclarations),
 			  structRefOffsetParams(_structRefOffsetParams),
 			  collectOffsets(_collectOffsets)
 		{}
@@ -245,9 +298,14 @@ ProgramAnalysis ProgramAnalysis::analyze(
 			return true;
 		}
 
-		bool visit(InlineAssembly const&) override
+		bool visit(InlineAssembly const& _assembly) override
 		{
 			callablesWithInlineAssembly.insert(callableId);
+			if (usesStorageAssembly(_assembly))
+				callablesWithStorageAssembly.insert(callableId);
+			for (auto const& [_, reference]: _assembly.annotation().externalReferences)
+				if (reference.suffix == "slot" && reference.declaration)
+					asmSlotReferenceDeclarations.insert(reference.declaration->id());
 			return false;
 		}
 
@@ -281,6 +339,8 @@ ProgramAnalysis ProgramAnalysis::analyze(
 		}
 	} bodyFactsWalker(
 		result.reassignedMemoryLocals, result.callablesWithInlineAssembly,
+		result.callablesWithStorageAssembly,
+		result.asmSlotReferenceDeclarations,
 		result.structRefOffsetParams, !_evmStorageLayout);
 
 	forEachFunction(_compiler, [&](FunctionDefinition const* function,
