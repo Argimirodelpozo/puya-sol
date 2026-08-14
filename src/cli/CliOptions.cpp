@@ -38,6 +38,22 @@ unsigned long long parseNumber(std::string const& _opt, std::string const& _val)
 		std::exit(2);
 	}
 }
+
+int parseBoundedInt(
+	std::string const& _opt,
+	std::string const& _val,
+	unsigned long long _min,
+	unsigned long long _max)
+{
+	auto const value = parseNumber(_opt, _val);
+	if (value < _min || value > _max)
+	{
+		std::cerr << "Error: " << _opt << " expects a value in [" << _min
+			<< ", " << _max << "], got '" << _val << "'" << std::endl;
+		std::exit(2);
+	}
+	return static_cast<int>(value);
+}
 } // namespace
 
 void printUsage(char const* _progName)
@@ -131,7 +147,16 @@ Options parseArgs(int _argc, char* _argv[])
 		else if (arg == "--puya-path" && i + 1 < _argc)
 			opts.puyaPath = _argv[++i];
 		else if (arg == "--log-level" && i + 1 < _argc)
+		{
 			opts.logLevel = _argv[++i];
+			if (opts.logLevel != "debug" && opts.logLevel != "info"
+				&& opts.logLevel != "warning" && opts.logLevel != "error")
+			{
+				std::cerr << "Error: --log-level expects debug, info, warning, or "
+					"error; got '" << opts.logLevel << "'" << std::endl;
+				std::exit(2);
+			}
+		}
 		else if (arg == "--dump-awst")
 			opts.dumpAwst = true;
 		else if (arg == "--no-puya")
@@ -143,16 +168,21 @@ Options parseArgs(int _argc, char* _argv[])
 			// Format: func_name:budget
 			std::string spec = _argv[++i];
 			auto colon = spec.find(':');
-			if (colon != std::string::npos)
-				opts.ensureBudget[spec.substr(0, colon)] =
-					parseNumber("--ensure-budget", spec.substr(colon + 1));
+			if (colon == std::string::npos || colon == 0)
+			{
+				std::cerr << "Error: --ensure-budget expects <function>:<budget>, got '"
+					<< spec << "'" << std::endl;
+				std::exit(2);
+			}
+			opts.ensureBudget[spec.substr(0, colon)] =
+				parseNumber("--ensure-budget", spec.substr(colon + 1));
 		}
 		else if (arg == "--optimization-level" && i + 1 < _argc)
-			opts.optimizationLevel = static_cast<int>(
-				parseNumber("--optimization-level", _argv[++i]));
+			opts.optimizationLevel = parseBoundedInt(
+				"--optimization-level", _argv[++i], 0, 2);
 		else if (arg == "--evm-memory-slots" && i + 1 < _argc)
-			opts.evmMemorySlots = static_cast<int>(
-				parseNumber("--evm-memory-slots", _argv[++i]));
+			opts.evmMemorySlots = parseBoundedInt(
+				"--evm-memory-slots", _argv[++i], 1, 240);
 		else if (arg == "--evm-storage-layout")
 			opts.evmStorageLayout = true;
 		else if (arg == "--evm-memory-layout")

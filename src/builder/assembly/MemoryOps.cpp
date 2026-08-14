@@ -51,7 +51,7 @@ std::shared_ptr<awst::Statement> AssemblyBuilder::memBoundsAssert(
 {
 	// assert(off + 32 <= cap): spilling into non-memory scratch slots corrupts silently.
 	uint64_t cap = static_cast<uint64_t>(SLOT_SIZE)
-		* static_cast<uint64_t>(MEMORY_SLOT_LAST + 1);
+		* static_cast<uint64_t>(memorySlotCount());
 	auto end = awst::makeUInt64BinOp(std::move(_off), awst::UInt64BinaryOperator::Add,
 		awst::makeIntegerConstant(static_cast<uint64_t>(32), _loc), _loc);
 	auto cond = awst::makeNumericCompare(std::move(end), awst::NumericComparison::Lte,
@@ -70,7 +70,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordConst(
 	// No slot-0 special case: slot 0 is plain scratch (no local cache), and
 	// the old fast path also SKIPPED the straddle stitch for offsets in
 	// [SLOT_SIZE-31, SLOT_SIZE) — the general paths below cover both.
-	if (slot > MEMORY_SLOT_LAST)
+	if (slot >= memorySlotCount())
 		Logger::instance().error("EVM memory read beyond the reserved scratch slots (raise --evm-memory-slots)", _loc);
 
 	if (sub + 32 <= static_cast<uint64_t>(SLOT_SIZE))
@@ -95,7 +95,7 @@ void AssemblyBuilder::writeMemWordConst(
 
 	// No slot-0 special case (see readMemWordConst) — the general in-slot and
 	// straddle paths below cover slot 0 as plain scratch.
-	if (slot > MEMORY_SLOT_LAST)
+	if (slot >= memorySlotCount())
 		Logger::instance().error("EVM memory write beyond the reserved scratch slots (raise --evm-memory-slots)", _loc);
 
 	if (sub + 32 <= static_cast<uint64_t>(SLOT_SIZE))
@@ -168,6 +168,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDirect(
 {
 	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
 	auto slot = awst::makeUInt64BinOp(_offset, awst::UInt64BinaryOperator::FloorDiv, ss(), _loc);
+	if (MEMORY_SLOT_FIRST != 0)
+		slot = awst::makeUInt64BinOp(std::move(slot),
+			awst::UInt64BinaryOperator::Add,
+			awst::makeIntegerConstant(
+				static_cast<uint64_t>(MEMORY_SLOT_FIRST), _loc), _loc);
 	auto sub = awst::makeUInt64BinOp(std::move(_offset), awst::UInt64BinaryOperator::Mod, ss(), _loc);
 	auto loadsCall = awst::makeIntrinsicCall("loads", awst::WType::bytesType(), _loc);
 	loadsCall->stackArgs.push_back(std::move(slot));
@@ -277,9 +282,16 @@ void AssemblyBuilder::writeMemWordDirect(
 
 	std::string slotN = "__blobw_slot_" + std::to_string(id);
 	std::string valN = "__blobw_val_" + std::to_string(id);
+	auto physicalSlot = awst::makeUInt64BinOp(
+		_offset, awst::UInt64BinaryOperator::FloorDiv, ss(), _loc);
+	if (MEMORY_SLOT_FIRST != 0)
+		physicalSlot = awst::makeUInt64BinOp(std::move(physicalSlot),
+			awst::UInt64BinaryOperator::Add,
+			awst::makeIntegerConstant(
+				static_cast<uint64_t>(MEMORY_SLOT_FIRST), _loc), _loc);
 	_out.push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(slotN, awst::WType::uint64Type(), _loc),
-		awst::makeUInt64BinOp(_offset, awst::UInt64BinaryOperator::FloorDiv, ss(), _loc), _loc));
+		std::move(physicalSlot), _loc));
 	_out.push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(valN, awst::WType::bytesType(), _loc),
 		std::move(_value32), _loc));

@@ -24,9 +24,9 @@ namespace puyasol::builder
 /// Translates EVM Yul opcodes to equivalent AVM operations using biguint arithmetic
 /// (EVM uint256 ↔ AVM biguint), a scratch-slot-backed memory blob, and calldata mapping.
 ///
-/// Memory model: EVM linear memory is simulated using AVM scratch slots
-/// MEMORY_SLOT_FIRST..MEMORY_SLOT_LAST (default 0-4 = 20KB; raise with
-/// --evm-memory-slots N). Each slot holds a bytes blob of up to 4096 bytes.
+/// Memory model: EVM linear memory is simulated using AVM scratch slots.
+/// The default five blobs use 0..4; extended configurations move the whole
+/// region above the compiler-reserved 5..15 range. Each blob holds 4096 bytes.
 /// mload/mstore translate to extract3/replace3 on the holding slot, supporting
 /// dynamic offsets. Every slot (incl. slot 0) is read/written directly in
 /// scratch via loads/stores — there is no __evm_memory local cache.
@@ -147,12 +147,29 @@ public:
 
 	// ── Memory blob constants ──────────────────────────────────────────
 
-	/// Scratch slots for EVM memory. Default 5 (0..4 = 20KB).
+	/// Scratch slots for EVM memory. Default 5 (0..4 = 20KB). Configurations
+	/// larger than five use 16 upward so they cannot overwrite transient slot 5
+	/// or the AVM.sol flash-accounting range 6..15.
 	/// Raise via `--evm-memory-slots N` for memory-hungry contracts
 	/// (UltraHonk verify needs ~32 slots / 128KB for FrLib.invert / shplemini).
-	static constexpr int MEMORY_SLOT_FIRST = 0;
+	static inline int MEMORY_SLOT_FIRST = 0;
 	static inline int MEMORY_SLOT_LAST = 4;
+	static constexpr int EXTENDED_MEMORY_SLOT_FIRST = 16;
+	static constexpr int MAX_SCRATCH_SLOT = 255;
+	static constexpr int MAX_MEMORY_SLOTS =
+		MAX_SCRATCH_SLOT - EXTENDED_MEMORY_SLOT_FIRST + 1;
 	static constexpr int SLOT_SIZE = 4096;
+
+	static int memorySlotCount()
+	{
+		return MEMORY_SLOT_LAST - MEMORY_SLOT_FIRST + 1;
+	}
+
+	static void configureMemorySlots(int _count)
+	{
+		MEMORY_SLOT_FIRST = _count <= 5 ? 0 : EXTENDED_MEMORY_SLOT_FIRST;
+		MEMORY_SLOT_LAST = MEMORY_SLOT_FIRST + _count - 1;
+	}
 
 	/// Scratch slot for EIP-1153 transient storage. 4096-byte zeroed blob; persists across
 	/// callsub within one app call; cleared per-txn (matches Solidity transient semantics).
@@ -160,7 +177,7 @@ public:
 
 	/// Scratch slots for the AVM.sol `Scratch` library (flash-accounting deltas; later
 	/// group txns read them via gload). Reserved so puya's allocator never reuses them.
-	/// Placed above memory/transient blobs; callers must use [FIRST, LAST] (0–5 off-limits).
+	/// Fixed ABI-visible range; extended memory is placed above it.
 	static constexpr int FLASH_SCRATCH_FIRST = 6;
 	static constexpr int FLASH_SCRATCH_LAST = 15;
 

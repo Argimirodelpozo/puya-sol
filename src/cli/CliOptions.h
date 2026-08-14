@@ -29,8 +29,8 @@ struct Options
 	bool outputLogs = true;
 	bool viaYulBehavior = false;
 	std::string evmVersion;     // empty = compiler default (cancun)
-	// --evm-memory-slots <N>: sets MEMORY_SLOT_LAST=N-1. 0=default (5 slots=20KB).
-	// UltraHonk needs 32.
+	// --evm-memory-slots <N>: 0 means unspecified/default (5 slots=20KB).
+	// UltraHonk needs 32; extended memory is placed above reserved slots 5..15.
 	int evmMemorySlots = 0;
 	// --evm-memory-layout: universal blob memory — every asm-touched memory
 	// aggregate is pointer-modeled (EVM layout) regardless of allocation shape.

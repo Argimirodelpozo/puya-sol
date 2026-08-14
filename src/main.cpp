@@ -38,7 +38,7 @@ int main(int _argc, char* _argv[])
 
 	// --evm-memory-slots: N scratch slots for EVM memory (default 5 = 20KB).
 	if (opts.evmMemorySlots > 0)
-		puyasol::builder::AssemblyBuilder::MEMORY_SLOT_LAST = opts.evmMemorySlots - 1;
+		puyasol::builder::AssemblyBuilder::configureMemorySlots(opts.evmMemorySlots);
 
 	if (opts.sourceFiles.empty())
 	{

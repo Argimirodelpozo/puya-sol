@@ -3702,6 +3702,17 @@ def test_evm_layout_runtime_for_modifier_assembly_only(harness):
     assert as_int(got) == 1
 
 
+def test_extended_evm_memory_does_not_overlap_transient_scratch(harness):
+    """Memory configurations larger than the default five blobs must skip the
+    fixed transient/flash-accounting scratch range 5..15."""
+    arts = harness.compile(
+        "puyasolRegression/contracts/evm_memory_extended_scratch_isolation.sol",
+        extra_args=["--evm-layout", "--evm-memory-slots", "7"])
+    app = harness.deploy(arts, "C")
+    got = harness.call(app, "probe()", extra_fee=10_000).abi_return
+    assert [as_int(value) for value in got] == [111, 222]
+
+
 def test_evm_layout_scalars_and_packing(harness):
     """Value vars (full + packed sub-word + signed + bool + address) via slot
     words; ctor initializers; ++/--/compound/delete; and the packed slot's raw
