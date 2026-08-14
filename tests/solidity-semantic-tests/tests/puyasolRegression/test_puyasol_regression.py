@@ -4295,3 +4295,18 @@ def test_blob_offset_arms(harness):
 
     # the element the old off-by-one never wrote
     assert as_int(harness.call(app, "lastElemBlob()", extra_fee=15_000).abi_return) == 4
+
+
+def test_unreachable_library_function_is_not_translated(harness):
+    """puyasolRegression/contracts/dead_library_precompile.sol — NOT o.g.
+
+    Vendored libraries often contain helpers unused by the selected contract.
+    The late AWST reachability pass removed their output but only after lowering
+    every body, so memview-sol's dead hash160 helper still hard-failed on its
+    unsupported RIPEMD-160 precompile. Prune functions absent from solc's own
+    creation/deployed call graphs before translating their bodies.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/dead_library_precompile.sol",
+        contract_name="C")
+    assert as_int(harness.call(app, "f(uint256)", 21).abi_return) == 42
