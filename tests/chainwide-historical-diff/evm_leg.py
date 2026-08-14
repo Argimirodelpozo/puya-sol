@@ -341,6 +341,7 @@ def main():
     mf = case.get("multifile")
     settings = {"evmVersion": "paris",
                 "outputSelection": {"*": {"*": ["abi", "evm.bytecode.object",
+                                               "evm.bytecode.linkReferences",
                                                "storageLayout"]}}}
     if mf:
         # Real file tree + the verification's own remappings — solc consumes
@@ -396,7 +397,54 @@ def main():
             if cname == case["name"]:
                 target = cdata
     assert target, f"contract {case['name']} not in solc output"
-    bytecode = target["evm"]["bytecode"]["object"]
+    target_bytecode = target["evm"]["bytecode"]
+    bytecode = target_bytecode["object"]
+    target_link_refs = target_bytecode.get("linkReferences") or {}
+
+    # Verified flattened sources can retain externally-linked Solidity
+    # libraries. solc leaves 20-byte ``__$...$__`` placeholders in creation
+    # bytecode; web3 quite reasonably rejects that as non-hex. Keep the exact
+    # link-reference offsets so each fresh eth-tester run can deploy the
+    # libraries first and patch in their local addresses.
+    link_libraries = {}
+
+    def collect_link_library(source_name, library_name):
+        key = (source_name, library_name)
+        if key in link_libraries:
+            return
+        lib = out["contracts"][source_name][library_name]
+        lib_bytecode = lib["evm"]["bytecode"]
+        lib_refs = lib_bytecode.get("linkReferences") or {}
+        link_libraries[key] = {
+            "abi": lib.get("abi") or [],
+            "bytecode": lib_bytecode["object"],
+            "link_refs": lib_refs,
+        }
+        for nested_source, nested_libraries in lib_refs.items():
+            for nested_library in nested_libraries:
+                collect_link_library(nested_source, nested_library)
+
+    for source_name, libraries in target_link_refs.items():
+        for library_name in libraries:
+            collect_link_library(source_name, library_name)
+
+    def link_bytecode(obj, refs, addresses):
+        linked = obj
+        for source_name, libraries in refs.items():
+            for library_name, positions in libraries.items():
+                key = (source_name, library_name)
+                if key not in addresses:
+                    raise RuntimeError(
+                        f"linked library not deployed: {source_name}:{library_name}")
+                address_hex = addresses[key].removeprefix("0x")
+                for pos in positions:
+                    start = int(pos["start"]) * 2
+                    length = int(pos["length"]) * 2
+                    if length != len(address_hex):
+                        raise RuntimeError(
+                            f"unexpected link width for {source_name}:{library_name}")
+                    linked = linked[:start] + address_hex + linked[start + length:]
+        return linked
 
     # Event topic map for log decoding — over EVERY unit in the compilation,
     # not just the target contract's ABI: events emitted from LIBRARY helpers
@@ -742,6 +790,38 @@ def main():
             _dep_local[d["addr"]] = drc["contractAddress"]
             print(f"[evm] dep {d['case'].get('name')} @ {drc['contractAddress'][:10]}…")
 
+        # Deploy solc-linked libraries in dependency order. CCTP's Message
+        # library is the motivating case, but the loop also handles libraries
+        # linked against other libraries in the same compilation.
+        library_addresses = {}
+        pending_libraries = dict(link_libraries)
+        while pending_libraries:
+            progressed = False
+            for key, spec in list(pending_libraries.items()):
+                required = {
+                    (source_name, library_name)
+                    for source_name, libraries in spec["link_refs"].items()
+                    for library_name in libraries
+                }
+                if not required.issubset(library_addresses):
+                    continue
+                lib_code = link_bytecode(
+                    spec["bytecode"], spec["link_refs"], library_addresses)
+                Lib = w3.eth.contract(abi=spec["abi"], bytecode=lib_code)
+                ltx = Lib.constructor().transact({"from": a0, "gas": 30_000_000})
+                lrc = w3.eth.get_transaction_receipt(ltx)
+                if not lrc.get("contractAddress"):
+                    raise SystemExit(
+                        f"linked library {key[0]}:{key[1]} failed to deploy")
+                library_addresses[key] = lrc["contractAddress"]
+                del pending_libraries[key]
+                progressed = True
+                print(f"[evm] linked library {key[1]} @ "
+                      f"{lrc['contractAddress'][:10]}…")
+            if not progressed:
+                unresolved = ", ".join(f"{s}:{n}" for s, n in pending_libraries)
+                raise SystemExit(f"cyclic or missing linked libraries: {unresolved}")
+
         # TWO-PHASE tape load: every stub (ctor- and arg-level) must exist
         # before answers are translated, because answers can NAME other deps.
         # mapping20: historical 20-byte content → this leg's full 32-byte word.
@@ -791,7 +871,9 @@ def main():
                 _sk[_i] = _carry
             _dep_seek[d["addr"].lower()] = (_ca, _sk)
 
-        C = w3.eth.contract(abi=abi, bytecode=bytecode)
+        linked_target_bytecode = link_bytecode(
+            bytecode, target_link_refs, library_addresses)
+        C = w3.eth.contract(abi=abi, bytecode=linked_target_bytecode)
         txh = C.constructor(*[resolve(m) for m in meta["ctor_args"]]).transact(
             {"from": a0, "gas": 30_000_000})
         rc = w3.eth.get_transaction_receipt(txh)
@@ -827,7 +909,11 @@ def main():
                         # NOTE: a distinct name — assigning `bytecode` here
                         # would make it a local of run_once and turn the
                         # earlier read into an UnboundLocalError.
-                        _bc2 = _t2["evm"]["bytecode"]["object"]
+                        _bc2_data = _t2["evm"]["bytecode"]
+                        _bc2 = link_bytecode(
+                            _bc2_data["object"],
+                            _bc2_data.get("linkReferences") or {},
+                            library_addresses)
                         print(f"[evm] ctor out of gas at 30M (EIP-170 shape) — "
                               f"recompiled with verified settings "
                               f"(optimizer={bool(_st2.get('optimizer'))}, "

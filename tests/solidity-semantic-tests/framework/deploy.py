@@ -123,15 +123,24 @@ def deploy(
     # algod caps the SUM of approval + clear at (1 + extra_pages) * 2048,
     # not the max of the two individually. snark.sol hits this: approval=6142
     # + clear=4 = 6146, which needs extra_pages=3 (budget 8192), not 2 (6144).
-    extra_pages = max(0, (len(approval_bin) + len(clear_bin) - 1) // 2048)
-    # AVM hard cap: MaxExtraAppProgramPages = 3 → 8192 bytes total. Fail with a
-    # clear platform-limit message instead of algod's raw txn-dump rejection
-    # (fuzz campaigns misread that as a compiler finding). Splitting oversized
-    # contracts is what --uros-splitter / --fn-split exist for.
-    if extra_pages > 3:
+    page_size = 2048
+    total_program_bytes = len(approval_bin) + len(clear_bin)
+    extra_pages = max(0, (total_program_bytes - 1) // page_size)
+
+    # Consensus v42 raises the absolute limit from 3 to 7 extra pages: 16 KiB
+    # total. Bytes above the old four-page allowance are charged a small fee
+    # and count against the create transaction's box-I/O write budget. The fee
+    # below already has ample headroom; empty box refs contribute 2048 bytes of
+    # I/O budget apiece and do not grant access to any actual box.
+    max_extra_pages = 7
+    free_program_bytes = 4 * page_size
+    charged_program_bytes = max(0, total_program_bytes - free_program_bytes)
+    write_budget_refs = (charged_program_bytes + page_size - 1) // page_size
+    if extra_pages > max_extra_pages:
         raise DeployError(
-            f"program exceeds AVM 8KB cap: approval={len(approval_bin)}B + "
-            f"clear={len(clear_bin)}B needs extra_pages={extra_pages} (max 3); "
+            f"program exceeds AVM 16KB cap: approval={len(approval_bin)}B + "
+            f"clear={len(clear_bin)}B needs extra_pages={extra_pages} "
+            f"(max {max_extra_pages}); "
             "not a compiler bug — split the contract (uros splitter)")
 
     # Encode constructor args (if any) into ApplicationArgs.
@@ -152,6 +161,7 @@ def deploy(
         global_schema=StateSchema(num_uints=16, num_byte_slices=16),
         local_schema=StateSchema(num_uints=0, num_byte_slices=0),
         extra_pages=extra_pages,
+        boxes=[(0, b"")] * write_budget_refs,
         app_args=app_args,
         # Unique note: two xdist workers deploying the SAME fixture bytecode
         # in the same round would otherwise build IDENTICAL create txns —
