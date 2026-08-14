@@ -18,6 +18,7 @@ import base64
 import re
 
 from Crypto.Hash import keccak as _keccak_mod
+from chd_common import bytes32_mapping_key_candidates
 
 
 def _kec(b: bytes) -> bytes:
@@ -55,7 +56,8 @@ def read_slot_map(algod, app_id) -> dict:
     return out
 
 
-def read_slot_storage(slotmap: dict, layout: dict, syms: dict, fold, calls):
+def read_slot_storage(slotmap: dict, layout: dict, syms: dict, fold, calls,
+                      fns=None):
     """Mirror evm_leg's read_scalars/read_maps over the slot map.
 
     `syms` is {symbol: 32-byte AVM address content} (senders as real account
@@ -145,12 +147,7 @@ def read_slot_storage(slotmap: dict, layout: dict, syms: dict, fold, calls):
             return ("scalar", vt)
         return (None, vt)
 
-    b32_keys = []
-    for c in calls:
-        for a in c.get("args") or []:
-            if isinstance(a, dict) and set(a) == {"__b__"} and len(a["__b__"]) == 64:
-                if a["__b__"] not in b32_keys:
-                    b32_keys.append(a["__b__"])
+    b32_keys = bytes32_mapping_key_candidates(calls, fns or {}, _kec)
 
     maps = []
     declared = []

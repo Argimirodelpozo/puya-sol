@@ -115,6 +115,19 @@ the modes — `storage_packed_array_copy` (stage 2), `storage_layout_struct`,
 `slot_access` and `storage_ref_returned`.** builder remains the one memory
 target that cannot ship: 6× `codesize()` (no AVM equivalent).
 
+**TypedMemView / CCTP certification (2026-08-13):** the standalone memview-sol
+isolate exercises `ref`, type/loc/len extraction, indexing, slicing, and the
+packed bytes29 pointer arithmetic over 119 oracle calls. Native memory produced
+8 divergences, all on nonempty ref/slice pointer shapes; full `--evm-layout`
+(including universal blob memory) produced **119/119 matches**. CCTP v1
+TokenMinter then compiled unsplit at O2 to **6,432 B** and replayed 8 historical
+mints plus 4 burns through a scripted USDC stand-in: **33/41 transactions**, 8
+failed empty-calldata skips, zero divergences/platform limits/blind slots. Its
+burn-limit entry and 10 live `keccak256(abi.encodePacked(uint32,bytes32))` token
+map entries were compared slot-for-slot. This certifies TypedMemView only under
+the full layout mode; the native-memory lane remains a known pointer-semantics
+gap.
+
 **Constructor-dependency fetching landed in the differ** (`fetch.py`):
 ctor-arg addresses AND hardcoded source literals are probed for verified
 single-file ^0.8 contracts, fetched recursively (depth 2, light — no

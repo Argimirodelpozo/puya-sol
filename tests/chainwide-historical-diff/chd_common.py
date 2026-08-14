@@ -204,6 +204,59 @@ def tape_chunks(words):
     return out
 
 
+def bytes32_mapping_key_candidates(calls, fns, keccak_fn):
+    """bytes32 mapping keys evidenced by replay calldata.
+
+    Besides literal bytes32 arguments, include the common Solidity helper
+    ``keccak256(abi.encodePacked(uintN, bytes32))``.  CCTP's TokenMinter uses
+    exactly that shape for ``remoteTokensToLocalTokens``: probing only the raw
+    remote-token argument leaves every written entry invisible on both legs.
+
+    ``keccak_fn`` is injected because the EVM venv and the system/AVM Python
+    expose Keccak through different packages.  Results are ordered, lowercase
+    32-byte hex strings without a ``0x`` prefix.
+    """
+    out = []
+
+    def add(h):
+        h = str(h or "").removeprefix("0x").lower()
+        if len(h) == 64 and h not in out:
+            out.append(h)
+
+    for c in calls or []:
+        args = c.get("args") or []
+        for a in args:
+            if isinstance(a, dict) and set(a) == {"__b__"}:
+                add(a["__b__"])
+
+        inputs = ((fns or {}).get(c.get("sig")) or {}).get("inputs") or []
+        for i in range(min(len(args), len(inputs)) - 1):
+            uint_t = str(inputs[i].get("type") or "")
+            b32_t = str(inputs[i + 1].get("type") or "")
+            m = re.fullmatch(r"uint(\d*)", uint_t)
+            b = args[i + 1]
+            if (not m or b32_t != "bytes32" or not isinstance(args[i], int)
+                    or not isinstance(b, dict) or set(b) != {"__b__"}
+                    or len(b["__b__"]) != 64):
+                continue
+            bits = int(m.group(1) or 256)
+            n = args[i]
+            if bits <= 0 or bits % 8 or not (0 <= n < (1 << bits)):
+                continue
+            packed = n.to_bytes(bits // 8, "big") + bytes.fromhex(b["__b__"])
+            add(bytes(keccak_fn(packed)).hex())
+    return out
+
+
+def should_intercept_dependency_call(tape, selector, passthrough_selectors):
+    """Whether the EVM oracle should serve this call from its answer tape.
+
+    Selectors implemented by the dependency stand-in must execute its bytecode;
+    the tape contains only fallback answers and intentionally omits them.
+    """
+    return tape is not None and selector not in passthrough_selectors
+
+
 def load_json(p: Path):
     with open(p) as fh:
         return json.load(fh)
@@ -221,7 +274,7 @@ def _json_default(o):
     raise TypeError(f"not JSON-serialisable: {type(o).__name__}")
 
 
-def relax_pragma(src: str) -> str:
+def relax_pragma(src: str, *, pre08: bool = False) -> str:
     """Normalise pragmas so BOTH legs' compilers accept the same source.
 
     Two forms need rewriting, for opposite reasons:
@@ -233,7 +286,23 @@ def relax_pragma(src: str) -> str:
       prereleases from a plain `<` range, so these are rejected there while the
       EVM leg's release solc accepts them — 27 of Polymarket CTFExchange's 46
       files are written this way.
+    With ``pre08=True``, any Solidity version range is deliberately replaced
+    by ``^0.8.0``. This is an opt-in differential-corpus escape hatch for
+    verified pre-0.8 contracts: both legs compile the identical transformed
+    source, preserving oracle validity while explicitly giving up byte-level
+    fidelity to the deployed compiler's unchecked-arithmetic semantics.
     """
+    if pre08:
+        src = re.sub(r"pragma solidity\s+[^;]+;",
+                     "pragma solidity ^0.8.0;", src)
+        # In 0.7, msg.sender was implicitly address payable; in 0.8 it is
+        # address. The old OZ Context signature therefore stops the relaxed
+        # source at type checking even though none of CCTP's call sites needs
+        # the payable qualifier. Keep genuinely payable parameters untouched.
+        src = re.sub(
+            r"(function\s+_msgSender\s*\(\s*\)\s+internal\s+view\s+virtual\s+"
+            r"returns\s*\(\s*)address\s+payable(\s*\))",
+            r"\1address\2", src)
     src = re.sub(r"pragma solidity\s+(=)?0\.8\.(\d+)\s*;",
                  r"pragma solidity ^0.8.\2;", src)
     # ANY range with an explicit <0.9.0 upper bound (bare, or `>=0.8.x <0.9.0`)

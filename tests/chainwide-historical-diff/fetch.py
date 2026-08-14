@@ -2,7 +2,7 @@
 """Fetch a verified contract's source + ABI + constructor args + ASCENDING txn
 history from a Blockscout instance (keyless) into cases/<tag>/.
 
-  python3 fetch.py <host> <address> <tag> [--max-txns N]
+  python3 fetch.py <host> <address> <tag> [--max-txns N] [--relax-pre08]
 
 Sources:
   /api/v2/smart-contracts/{addr}   verified source, ABI, compiler, ctor args
@@ -114,6 +114,11 @@ def harvest_dep_answers(host: str, address: str, case_dir, txns, dep_addrs,
     deployed and loaded on both legs exactly like ctor deps. Addresses that
     also SEND txns are excluded — the legs need a signable account for them.
     """
+    # A refetch must not silently reuse stand-ins/tapes from a previous wider
+    # window when this pass observes no such dependency.
+    for stale in (case_dir / "arg_deps.json", case_dir / "dep_tape.json"):
+        stale.unlink(missing_ok=True)
+
     addr = address.lower()
     deps = {d.lower() for d in dep_addrs}
     senders = {(t.get("from") or "").lower() for t in txns}
@@ -199,7 +204,9 @@ def harvest_dep_answers(host: str, address: str, case_dir, txns, dep_addrs,
 def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
                          direct_hashes: set, max_parents: int = 200,
                          max_calls: int = 400, callee_sink: dict | None = None,
-                         tape_sink: dict | None = None) -> list:
+                         tape_sink: dict | None = None,
+                         parent_hints: list | None = None,
+                         coverage_sink: dict | None = None) -> list:
     """Calls INTO `address` made by other CONTRACTS (internal transactions).
 
     The address-level internal-txn APIs strip calldata (`input: "0x"` on the
@@ -221,7 +228,17 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
     # `transfer`/`transferFrom` does emit a Transfer event though, and those
     # ARE indexed with their parent tx: take the parents in our block window
     # that aren't already direct txns, and read their traces.
+    # Some systems have a known parent contract whose direct window is already
+    # fetched (CCTP MessageTransmitter/TokenMessenger -> TokenMinter). Seeding
+    # those hashes avoids relying on event/token indexes that cannot see a
+    # value-free call into a contract which emits no event of its own.
     parents, seen_p = [], set()
+    for h, blk, txi, ts in parent_hints or []:
+        h = (h or "").lower()
+        if not h or h in seen_p or not (block_lo <= int(blk or 0) <= block_hi):
+            continue
+        seen_p.add(h)
+        parents.append((h, int(blk or 0), int(txi or 0), int(ts or 0)))
     page = 1
     while len(parents) < max_parents:
         try:
@@ -289,10 +306,12 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
             page += 1
             time.sleep(0.4)
     parents.sort(key=lambda p: (p[1], p[2]))
+    parents = parents[:max_parents]
 
     out = []
     dropped = 0
-    for h, blk, txi, ts in parents:
+    processed = 0
+    for processed, (h, blk, txi, ts) in enumerate(parents, 1):
         if len(out) >= max_calls:
             break
         # Public Blockscout rate-limits hard: a burst of raw-trace requests
@@ -302,10 +321,15 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
         tr = None
         for attempt in range(3):
             try:
-                tr = http_json(f"https://{host}/api/v2/transactions/{h}/raw-trace")
+                tr = http_json(
+                    f"https://{host}/api/v2/transactions/{h}/raw-trace",
+                    timeout=15)
                 break
             except Exception:
                 time.sleep(1.0 * (2 ** attempt))
+        if processed % 10 == 0 or processed == len(parents):
+            print(f"[fetch] internal parents: {processed}/{len(parents)} traced, "
+                  f"{len(out)} call(s) into target", flush=True)
         if tr is None:
             dropped += 1
             continue
@@ -386,6 +410,15 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
     if dropped:
         print(f"[fetch] internal calls: {dropped}/{len(parents)} parent trace(s) "
               f"unavailable after retries — those calls are NOT in the replay")
+    if coverage_sink is not None:
+        coverage_sink.update({
+            "parents_selected": len(parents),
+            "parents_processed": processed,
+            "parent_traces_unavailable": dropped,
+            "calls_into_target": len(out),
+            "max_parents": max_parents,
+            "max_calls": max_calls,
+        })
     return out
 
 
@@ -438,10 +471,11 @@ contract StubERC20 {
         return true;
     }
 
-    function mint(address t, uint256 v) external {
+    function mint(address t, uint256 v) external returns (bool) {
         balanceOf[t] += v;
         totalSupply += v;
         emit Transfer(address(0), t, v);
+        return true;
     }
 
     function setApprovalForAll(address op, bool ok) external {
@@ -533,6 +567,11 @@ _STUB_ABI = [
     {"type": "function", "name": "setApprovalForAll",
      "inputs": [{"type": "address", "name": "op"}, {"type": "bool", "name": "ok"}],
      "outputs": [], "stateMutability": "nonpayable"},
+    {"type": "function", "name": "mint",
+     "inputs": [{"type": "address", "name": "to"},
+                {"type": "uint256", "name": "value"}],
+     "outputs": [{"type": "bool", "name": ""}],
+     "stateMutability": "nonpayable"},
 ]
 
 
@@ -629,7 +668,10 @@ def fetch_dep(host: str, address: str, dep_dir, depth: int, seen: set) -> dict |
 
 def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                internal: bool = False, internal_parents: int = 200,
-               stub_deps: bool = False, script_deps: bool = False) -> dict:
+               stub_deps: bool = False, script_deps: bool = False,
+               script_traces: int = 200,
+               relax_pre08: bool = False,
+               parent_hints: list | None = None) -> dict:
     case_dir = CASES / tag
     addr = address.lower()
 
@@ -638,7 +680,7 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
     if not sc.get("source_code"):
         sys.exit(f"[fetch] {tag}: contract not verified on {host}")
     comp = sc.get("compiler_version") or ""
-    if "0.8." not in comp:
+    if "0.8." not in comp and not relax_pre08:
         sys.exit(f"[fetch] {tag}: compiler {comp} — v1 supports ^0.8.x only")
     abi = sc.get("abi") or []
     ctor_hex = (sc.get("constructor_args") or "").removeprefix("0x")
@@ -673,6 +715,7 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                             and t.get("isError") == "0"),
                 "ts": int(t.get("timeStamp") or 0),
                 "block": int(t.get("blockNumber") or 0),
+                "txindex": int(t.get("transactionIndex") or 0),
             })
             if len(txns) >= max_txns:
                 break
@@ -712,17 +755,25 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                or (txns[0]["block"] if txns else 0))
         _hi = txns[-1]["block"] if txns else 99_999_999
         internal_tapes = {}
+        internal_coverage = {}
         ic = fetch_internal_calls(
             host, address, _lo, _hi,
             {t["hash"].lower() for t in txns}, max_parents=internal_parents,
             callee_sink=callees,
-            tape_sink=internal_tapes if script_deps else None)
+            tape_sink=internal_tapes if script_deps else None,
+            parent_hints=parent_hints,
+            coverage_sink=internal_coverage)
         if ic:
             txns.extend(ic)
             txns.sort(key=lambda t: (t["block"], t.get("txindex", 0),
                                      t.get("trace_pos", -1)))
             txns = txns[:max_txns]
             n_ic = sum(1 for t in txns if t.get("internal"))
+            internal_coverage.update({
+                "calls_retained": n_ic,
+                "transactions_retained": len(txns),
+                "transaction_limit": max_txns,
+            })
             print(f"[fetch] {tag}: +{n_ic} internal call(s) merged "
                   f"(router-driven traffic that txlist alone can't see)")
 
@@ -742,6 +793,13 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
         "abi": abi,
         "txns": txns,
     }
+    if "0.8." not in comp:
+        case["pragma_relaxed_from"] = comp
+    if internal:
+        case["fetch_coverage"] = {
+            "internal": locals().get("internal_coverage") or {},
+            "script_direct_trace_limit": script_traces if script_deps else None,
+        }
     # Source layout. Single-file → prepared.sol. Multi-file (the majority of
     # modern verifications: ~86% of Base's popular ERC-20s) → materialise the
     # real file TREE plus the verification's remappings, which both legs can
@@ -749,16 +807,18 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
     # --source per file + --import-path + --remapping).
     case_dir.mkdir(parents=True, exist_ok=True)
     (case_dir / "source.sol").write_text(sc["source_code"])
-    (case_dir / "prepared.sol").write_text(relax_pragma(sc["source_code"]))
+    (case_dir / "prepared.sol").write_text(
+        relax_pragma(sc["source_code"], pre08=relax_pre08))
     extra = sc.get("additional_sources") or []
     if extra:
         main_rel = sc.get("file_path") or "Main.sol"
         def _rel(p):                     # may be absolute in the API payload
             return str(p).lstrip("/") or "Main.sol"
         main_rel = _rel(main_rel)
-        tree = {main_rel: relax_pragma(sc["source_code"])}
+        tree = {main_rel: relax_pragma(sc["source_code"], pre08=relax_pre08)}
         for f in extra:
-            tree[_rel(f["file_path"])] = relax_pragma(f.get("source_code", ""))
+            tree[_rel(f["file_path"])] = relax_pragma(
+                f.get("source_code", ""), pre08=relax_pre08)
         src_root = case_dir / "src"
         shutil.rmtree(src_root, ignore_errors=True)
         for rel, content in tree.items():
@@ -779,7 +839,10 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
     seen = {addr}
     # The contract's own outgoing calls, sampled from direct txns. Skipped when
     # internal-call fetching is off — both share the same rate-limited API.
-    if internal and txns:
+    # Scripted dependency harvesting below walks these same traces and also
+    # discovers callees.  Running both passes doubled the slowest Blockscout
+    # work without adding evidence.
+    if internal and txns and not script_deps:
         try:
             harvest_callees(host, address,
                             [t["hash"] for t in txns if not t.get("internal")],
@@ -829,10 +892,18 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                       f"identical on both legs, fidelity to chain NOT claimed")
     if ctor_deps:
         case["ctor_deps"] = ctor_deps
-    if script_deps and ctor_deps:
+    # Runtime dependencies do not imply constructor dependencies.  Contracts
+    # such as CCTP's TokenMinter take the token address in calldata and call it
+    # later; requiring a ctor dependency here observes USDC in the trace and
+    # then silently throws that evidence away.  Always run scripted discovery
+    # when requested.  ``harvest_dep_answers`` code-probes observed callees and
+    # excludes senders, so a plain address argument cannot accidentally become
+    # a deployed stand-in.
+    if script_deps:
         try:
             harvest_dep_answers(host, address, case_dir, txns,
                                 [d["addr"] for d in ctor_deps],
+                                max_traces=script_traces,
                                 extra_tapes=locals().get("internal_tapes") or {})
             _adp = case_dir / "arg_deps.json"
             if _adp.exists():
@@ -864,15 +935,66 @@ def main():
     script_deps = "--script-deps" in argv
     if script_deps:
         argv.remove("--script-deps")
+    script_traces = 200
+    if "--script-traces" in argv:
+        i = argv.index("--script-traces")
+        script_traces = int(argv[i + 1]); del argv[i:i + 2]
+    relax_pre08 = "--relax-pre08" in argv
+    if relax_pre08:
+        argv.remove("--relax-pre08")
+    parent_case_tags = []
+    while "--parent-case" in argv:
+        i = argv.index("--parent-case")
+        parent_case_tags.append(argv[i + 1])
+        del argv[i:i + 2]
+    parent_case_selectors = []
+    while "--parent-case-selector" in argv:
+        i = argv.index("--parent-case-selector")
+        spec = argv[i + 1]
+        del argv[i:i + 2]
+        parts = spec.rsplit(":", 2)
+        limit = None
+        if len(parts) == 3 and parts[2].isdigit():
+            parent_tag, selector, limit_s = parts
+            limit = int(limit_s)
+        elif len(parts) == 2:
+            parent_tag, selector = parts
+        else:
+            sys.exit("[fetch] --parent-case-selector expects "
+                     "TAG:0xSELECTOR[:LIMIT]")
+        selector = selector.lower()
+        if len(selector) != 10 or not selector.startswith("0x"):
+            sys.exit("[fetch] parent selector must be a 4-byte 0x selector")
+        parent_case_selectors.append((parent_tag, selector, limit))
     internal_parents = 200
     if "--internal-parents" in argv:
         i = argv.index("--internal-parents")
         internal_parents = int(argv[i + 1]); del argv[i:i + 2]
     if len(argv) != 3:
         sys.exit(__doc__)
+    parent_hints = []
+    for parent_tag, selector, limit in ([(t, None, None) for t in parent_case_tags]
+                                        + parent_case_selectors):
+        parent = load_json(CASES / parent_tag / "case.json") or {}
+        if not parent.get("txns"):
+            sys.exit(f"[fetch] --parent-case {parent_tag}: no fetched txns")
+        matched = 0
+        for order, txn in enumerate(parent["txns"]):
+            if txn.get("internal"):
+                continue
+            if selector and not (txn.get("input") or "").lower().startswith(selector):
+                continue
+            parent_hints.append((
+                txn.get("hash"), int(txn.get("block") or 0),
+                int(txn.get("txindex", order)), int(txn.get("ts") or 0)))
+            matched += 1
+            if limit is not None and matched >= limit:
+                break
     fetch_case(argv[0], argv[1], argv[2], max_txns, internal,
                internal_parents=internal_parents, stub_deps=stub_deps,
-               script_deps=script_deps)
+               script_deps=script_deps, script_traces=script_traces,
+               relax_pre08=relax_pre08,
+               parent_hints=parent_hints)
 
 
 if __name__ == "__main__":

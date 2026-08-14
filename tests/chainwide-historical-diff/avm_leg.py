@@ -30,9 +30,10 @@ sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parents[0] / "solidity-semantic-tests"))
 sys.path.insert(0, str(HERE.parents[0] / "WIP" / "tiny-fuzzing-oracle"))
 
-from chd_common import (ZERO, algo_sender_seed, arg_content20, build_dep_tapes, tape_chunks,
-                        canon_value, clock_target, dump_json, is_platform_limit,
-                        load_json, replay_epoch, symbol)
+from chd_common import (ZERO, algo_sender_seed, arg_content20, build_dep_tapes,
+                        bytes32_mapping_key_candidates, tape_chunks, canon_value,
+                        clock_target, dump_json, is_platform_limit, load_json,
+                        replay_epoch, symbol)
 
 from algosdk import encoding
 from algosdk.transaction import PaymentTxn, wait_for_confirmation
@@ -872,13 +873,20 @@ def main():
         syms[symbol(_i)] = encoding.decode_address(_a.address)
     for _ad, _i in reg["args"].items():
         syms[symbol(_i)] = bytes(12) + arg_content20(_i)
-    # bytes32 keys this window's calls actually used (OZ AccessControl role
-    # hashes). Derived from calls.json exactly as the EVM leg does, so the two
-    # candidate sets — and hence the compared key names — are identical.
-    for c in calls:
-        for a in c.get("args") or []:
-            if isinstance(a, dict) and set(a) == {"__b__"} and len(a["__b__"]) == 64:
-                syms["0x" + a["__b__"]] = bytes.fromhex(a["__b__"])
+    for _ad, _i in (reg.get("deps") or {}).items():
+        if _ad in dep_local:
+            syms[symbol(f"D{_i}")] = encoding.decode_address(dep_local[_ad])
+    # bytes32 keys this window evidenced, including common
+    # keccak256(abi.encodePacked(uintN,bytes32)) composite keys. Derived from
+    # calls.json exactly as the EVM leg does, so the compared labels align.
+    from Crypto.Hash import keccak as _keccak_mod
+    def _keccak(data):
+        h = _keccak_mod.new(digest_bits=256)
+        h.update(data)
+        return h.digest()
+    for kh in bytes32_mapping_key_candidates(calls, meta.get("fns") or {},
+                                               _keccak):
+        syms["0x" + kh] = bytes.fromhex(kh)
     # The zero word, labeled in hex like the EVM leg's b32 arm (ctor-granted
     # DEFAULT_ADMIN_ROLE state must compare under the SAME key string).
     syms.setdefault("0x" + "0" * 64, bytes(32))
@@ -888,7 +896,8 @@ def main():
         from chd_slot_reader import read_slot_map, read_slot_storage
         slot_layout = load_json(case_dir / "storage_layout.json")
         storage = read_slot_storage(
-            read_slot_map(algod, app.app_id), slot_layout, syms, fold, calls)
+            read_slot_map(algod, app.app_id), slot_layout, syms, fold, calls,
+            meta.get("fns") or {})
     else:
         storage = read_avm_storage(algod, app.app_id, arc56, fold)
         storage["maps"] = read_avm_maps(algod, app.app_id, arc56, syms, fold, calls)

@@ -22,10 +22,11 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from chd_common import (ZERO, arg_content20, build_dep_tapes, build_registry, tape_chunks,
-                        canon_value, clock_target, dump_json, evm_sender_privkey,
-                        load_json, marker_for, replay_epoch, scale_value, sender_marker,
-                        symbol)
+from chd_common import (ZERO, arg_content20, build_dep_tapes, build_registry,
+                        bytes32_mapping_key_candidates, tape_chunks, canon_value,
+                        clock_target, dump_json, evm_sender_privkey, load_json,
+                        marker_for, replay_epoch, scale_value, sender_marker,
+                        should_intercept_dependency_call, symbol)
 
 import solcx
 from eth_abi import decode as _abi_decode_strict
@@ -544,12 +545,11 @@ def main():
     # — plus the zero word: OZ's DEFAULT_ADMIN_ROLE is granted in constructors
     # and never appears in calldata, leaving real role-member state unprobed
     # (pol's «Z» false divergence: AVM read it, this leg never looked).
+    from eth_utils import keccak
     b32_keys = ["0" * 64]
-    for c in calls:
-        for a in c.get("args") or []:
-            if isinstance(a, dict) and set(a) == {"__b__"} and len(a["__b__"]) == 64:
-                if a["__b__"] not in b32_keys:
-                    b32_keys.append(a["__b__"])
+    for kh in bytes32_mapping_key_candidates(calls, fns, keccak):
+        if kh not in b32_keys:
+            b32_keys.append(kh)
 
     maps = []
     for e in layout.get("storage") or []:
@@ -642,20 +642,27 @@ def main():
         # tape (no staticcall there; writes are legal).
         _vm_tape = {}      # code_address bytes20 -> list[bytes] answers
         _vm_cursor = {}    # code_address bytes20 -> int
+        _vm_passthrough = {}  # code_address bytes20 -> selectors stub handles
         _backend = tester.backend
         _vmclass = _backend.chain.get_vm().__class__
         _compclass = _vmclass._state_class.computation_class
         # dicts live ON the class so convergence re-runs (fresh backend,
         # already-patched class) rebind cleanly instead of serving the first
         # run's closures
-        _compclass._chd_tape_dicts = (_vm_tape, _vm_cursor)
+        _compclass._chd_tape_dicts = (_vm_tape, _vm_cursor, _vm_passthrough)
         if not getattr(_compclass, "_chd_tape_patched", False):
             _orig_apply = _compclass.apply_computation.__func__
             def _tape_apply(cls, state, message, tc, **kw):
-                _t, _k = getattr(cls, "_chd_tape_dicts", ({}, {}))
+                _t, _k, _p = getattr(cls, "_chd_tape_dicts", ({}, {}, {}))
                 ca = bytes(getattr(message, "code_address", b"") or b"")
                 tape = _t.get(ca)
-                if tape is not None:
+                sel = bytes(message.data[:4])
+                # The tape builder deliberately omits selectors implemented
+                # by StubERC20.  Let those execute normally; intercepting all
+                # calls made mint() consume the next void burn() answer and
+                # manufactured empty-data closed-world reverts on CCTP.
+                if should_intercept_dependency_call(
+                        tape, sel, _p.get(ca, set())):
                     k = _k.get(ca, 0)
                     ans = tape[k] if k < len(tape) else bytes(12) + ca
                     _k[ca] = k + 1
@@ -753,6 +760,13 @@ def main():
         # reverted one's answers and one bad txn desyncs the whole suffix.
         dep_tapes, dep_pos = build_dep_tapes(case_dir, set(), _m20,
                                              calls=calls, with_positions=True)
+        _tape_doc = (load_json(case_dir / "dep_tape.json")
+                     if (case_dir / "dep_tape.json").exists() else {})
+        _stub_selectors = {
+            bytes.fromhex(s.removeprefix("0x"))
+            for s in (_tape_doc.get("stub_selectors") or [])
+            if len(s.removeprefix("0x")) == 8
+        }
         _dep_seek = {}
         for d in deps:
             _tape = dep_tapes.get(d["addr"].lower())
@@ -760,6 +774,7 @@ def main():
                 continue
             _ca = bytes.fromhex(_dep_local[d["addr"]][2:].lower())
             _vm_tape[_ca] = _tape
+            _vm_passthrough[_ca] = _stub_selectors
             print(f"[evm] dep tape ARMED at VM: {len(_tape)} answer(s) "
                   f"@ {d['addr'][:10]}…")
             import os as _os
@@ -857,6 +872,14 @@ def main():
         def decode_logs(receipt):
             outl = []
             for lg in receipt.get("logs", []):
+                # The AVM result decoder observes logs from the target app,
+                # not logs emitted by inner dependency apps.  Ethereum puts
+                # both in one receipt; comparing all of them manufactured
+                # CCTP mint divergences from the USDC stand-in's Transfer
+                # event.  Keep the differential scoped to the contract under
+                # test.  Internal-library events still use caddr and remain.
+                if str(lg.get("address") or "").lower() != caddr.lower():
+                    continue
                 topics = lg.get("topics", [])
                 if not topics:
                     continue
@@ -948,6 +971,9 @@ def main():
             syms = [(symbol("C"), a0), (symbol("Z"), ZERO)]
             syms += [(symbol(i), sender_acct[i][0]) for i in sender_acct]
             syms += [(symbol(i), "0x" + arg_content20(i).hex()) for i in reg["args"].values()]
+            syms += [(symbol(f"D{i}"), _dep_local[a])
+                     for a, i in (reg.get("deps") or {}).items()
+                     if a in _dep_local]
             sym_addr = dict(syms)
             out = {}
             for name, slot, depth, vshape in maps:

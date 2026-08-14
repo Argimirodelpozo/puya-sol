@@ -58,6 +58,16 @@ algokit localnet reset
 # router-traded token this is most of the real traffic (see below).
 python3 fetch.py eth.blockscout.com 0x6982...1933 pepe --max-txns 200 --internal
 
+# Known router/parent cases can seed value-free internal calls directly.
+# The optional final number caps matches from each case/selector, and coverage
+# (including unavailable parent traces) is persisted in case.json. Fetch the
+# named parent cases first; their cached transaction lists supply the hashes.
+python3 fetch.py eth.blockscout.com 0xc492...e907 cctp_minter \
+    --max-txns 200 --internal --internal-parents 12 \
+    --script-deps --script-traces 0 --relax-pre08 \
+    --parent-case-selector cctp_messenger:0x6fd3504e:4 \
+    --parent-case-selector cctp_transmitter:0x57ecfd28:8
+
 # candidate harvesting: by holders (default) or by protocol TVL
 python3 harvest.py --tokens ERC-20
 python3 harvest.py --tvl 40
@@ -112,7 +122,9 @@ chd_slot_reader.py
 differ.py    per-txn status/return/event diff + periodic zero-arg-getter state
              snapshots + final snapshot; address values canonicalised to
              registry symbols («i», «C»=creator, «Z»=zero, «self»); known-noise
-             whitelist (e.g. DOMAIN_SEPARATOR()).
+             whitelist (e.g. DOMAIN_SEPARATOR()). Events are scoped to the
+             contract under test on both legs; dependency-app logs are not
+             mixed into the target contract's result.
 replay.py    orchestrator: evm_leg ⇄ avm_leg loop (an AVM platform-limit skip
              re-runs the EVM leg with that txn excluded so states stay in
              lockstep) → differ → cases/<tag>/report.json
@@ -197,9 +209,12 @@ side). Candidates come from three places, in confidence order:
 3. Hardcoded address literals in the source (the memecoin pattern: factory and
    router baked in, zero constructor args).
 
-Only verified, single-file, ^0.8 dependencies are usable — otherwise the EVM
-*oracle* cannot deploy them either — and the AVM leg additionally needs the
-dependency to compile with puya-sol (it reports and continues when it doesn't).
+Verified, single-file, ^0.8 dependencies can be deployed directly. With
+`--script-deps`, an observed runtime callee can instead become a stand-in even
+when the main constructor has no dependencies (TokenMinter's USDC shape), with
+historical return data served from a selector-aware tape on both legs. The AVM
+leg additionally needs a directly deployed dependency to compile with puya-sol
+(it reports and continues when it doesn't).
 
 **A deployed dependency supplies code, not history.** This is the real boundary
 of the closed-world filter, and it limits how much discovery can ever buy.
@@ -224,7 +239,11 @@ preconditions came from router traffic the replay never saw.
 (viaIR + optimizer) are used as a **fallback** when a default oracle compile
 fails — modern stack-heavy contracts (Permit2) don't compile without them, and
 making it a fallback keeps the existing corpus on the exact oracle it was
-validated against.
+validated against. Pre-0.8 sources may opt into `--relax-pre08`: both legs then
+compile the identical ^0.8-relaxed source, preserving differential-oracle
+validity while explicitly giving up bytecode fidelity and pre-0.8 unchecked-
+arithmetic fidelity. Any resulting historical-status flips remain closed-world
+skips and must be reported separately.
 
 **Architecturally out of reach** (no compiler work changes these):
 
@@ -239,7 +258,9 @@ validated against.
   `ACLManager`, `AaveProtocolDataProvider` are all non-proxy and verified, and
   the gateway replays. Worth re-probing a protocol per contract rather than
   writing off the whole name.
-- **Pre-0.8 Solidity**, and Vyper (Curve, Yearn).
+- **Vyper** (Curve, Yearn). Pre-0.8 Solidity is only source-differential via
+  explicit pragma relaxation; it is not a byte-faithful replay of the deployed
+  compiler's arithmetic semantics.
 - **Unmodellable opcodes** — `codesize`, `extcodehash`/`.codehash` for a
   non-`this` address (its EVM value is a hash of EVM bytecode, meaningless
   across VMs), `tx.origin`. `extcodesize` is NOT among them: both it and
@@ -340,11 +361,11 @@ this table twice (see below).
 
 | | |
 |---|---|
-| contracts replayed | **74** |
-| zero divergences | **74** |
+| contracts replayed | **75** |
+| zero divergences | **75** |
 | with divergences | 0 |
-| transactions replayed on both legs | **20,190** of 28,483 in-window (71%) |
-| skipped, by cause | closed-world 7,101, avm-platform-limit 1,128, no-calldata 27, value 25, unknown-selector 12 |
+| transactions replayed on both legs | **20,223** of 28,524 in-window (71%) |
+| skipped, by cause | closed-world 7,101, avm-platform-limit 1,128, no-calldata 35, value 25, unknown-selector 12 |
 
 ### Headline runs
 
@@ -359,6 +380,13 @@ this table twice (see below).
   compiler-friendliness.
 - **Permit2** — the first DeFi-infrastructure singleton under the program cap,
   66/200 clean and now with **no** timestamp values absorbed as noise.
+- **CCTP v1 TokenMinter** — solc 0.7.6 source relaxed identically on both legs,
+  full `--evm-layout`, O2 AVM size **6,432 B**. A selector-bounded parent set
+  exercised **8 historical mints + 4 burns** through a taped USDC stand-in;
+  **33/41 replayed**, 8 failed empty-calldata transactions skipped, zero
+  pragma-induced status flips, zero divergences, platform limits, blind slots,
+  or unattributed boxes. The burn-limit entry and 10 live composite-key token
+  mappings were compared slot-for-slot.
 
 ### Open
 
@@ -465,6 +493,7 @@ Nothing in the corpus currently shows a divergence. What remains is structural:
 | `xerc20` XERC20 | gnosis | 44/200 | ✅ | closed-world 156 |
 | `friendtech` FriendtechSharesV1 | base | 43/400 | ✅ | closed-world 357 |
 | `strk` StarkNetToken | ethereum | 42/400 | ✅ | avm-platform-limit 349, value 7, no-calldata 2 |
+| `cctp_minter` TokenMinter | ethereum | 33/41 | ✅ | no-calldata 8 |
 | `etherfi` EtherFiGovernanceToken | ethereum | 33/200 | ✅ | closed-world 163, value 2, avm-platform-limit 2 |
 | `selftest` StorageShapes | synthetic | 10/10 | ✅ | — |
 | `vanry` VANRY | polygon | 9/200 | ✅ | closed-world 191 |
@@ -494,8 +523,9 @@ compiler bug on the way in — `switch returndatasize()` in Gnosis
 ### What these numbers do not cover
 
 The corpus is what the constraints above admit, and the selection is visibly
-biased by them: no proxies (so no Aave/Lido/Compound), no pre-0.8, nothing over
-the 8 KB program cap without the splitter. Coverage per case varies by two
+biased by them: no proxies (so no Aave/Lido/Compound), only opt-in source-level
+coverage for pre-0.8, and nothing over the 8 KB program cap without the splitter.
+Coverage per case varies by two
 orders of magnitude (1/200 to 1441/1500) and is dominated by how much of a
 contract's traffic depends on external state we cannot reconstruct — deploying
 a dependency supplies its code, not its history.
