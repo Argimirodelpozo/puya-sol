@@ -92,6 +92,66 @@ bool isIdentifierToken(LexToken const& _token)
 	return _token.token == Token::Identifier;
 }
 
+std::string eventFingerprint(
+	std::string const& _source,
+	std::vector<LexToken> const& _tokens,
+	size_t _event,
+	size_t* _end = nullptr)
+{
+	if (_event >= _tokens.size() || _tokens[_event].token != Token::Event)
+		return {};
+	std::string result;
+	for (size_t i = _event; i < _tokens.size(); ++i)
+	{
+		if (_tokens[i].token == Token::EOS)
+			return {};
+		auto text = tokenText(_source, _tokens[i]);
+		result += std::to_string(static_cast<int>(_tokens[i].token));
+		result += ':';
+		result += text;
+		result += ';';
+		if (_tokens[i].token == Token::Semicolon)
+		{
+			if (_end) *_end = i;
+			return result;
+		}
+	}
+	return {};
+}
+
+InterfaceEventMap collectInterfaces(std::string const& _source)
+{
+	InterfaceEventMap result;
+	auto tokens = lex(_source);
+	for (size_t i = 0; i + 1 < tokens.size(); ++i)
+	{
+		if (tokens[i].token != Token::Interface || !isIdentifierToken(tokens[i + 1]))
+			continue;
+		auto const interfaceName = tokens[i + 1].literal;
+		size_t open = i + 2;
+		while (open < tokens.size() && tokens[open].token != Token::LBrace
+			&& tokens[open].token != Token::Semicolon)
+			++open;
+		if (open >= tokens.size() || tokens[open].token != Token::LBrace)
+			continue;
+		int depth = 1;
+		for (size_t j = open + 1; j < tokens.size() && depth > 0; ++j)
+		{
+			if (tokens[j].token == Token::LBrace) ++depth;
+			else if (tokens[j].token == Token::RBrace) --depth;
+			else if (depth == 1 && tokens[j].token == Token::Event)
+			{
+				size_t end = j;
+				auto fingerprint = eventFingerprint(_source, tokens, j, &end);
+				if (!fingerprint.empty())
+					result[interfaceName].insert(std::move(fingerprint));
+				j = end;
+			}
+		}
+	}
+	return result;
+}
+
 } // namespace
 
 std::string transformSource(std::string const& _source)
@@ -211,45 +271,104 @@ std::set<std::string> collectEventSignatures(std::string const& _source)
 {
 	std::set<std::string> result;
 	auto tokens = lex(_source);
-	for (size_t i = 0; i + 1 < tokens.size(); ++i)
-		if (tokens[i].token == Token::Event && isIdentifierToken(tokens[i + 1]))
-			result.insert(tokens[i + 1].literal);
+	for (size_t i = 0; i < tokens.size(); ++i)
+		if (tokens[i].token == Token::Event)
+		{
+			size_t end = i;
+			auto fingerprint = eventFingerprint(_source, tokens, i, &end);
+			if (!fingerprint.empty())
+				result.insert(std::move(fingerprint));
+			i = end;
+		}
 	return result;
 }
 
 std::string removeInheritedEvents(
-	std::string const& _source, std::set<std::string> const& _interfaceEvents)
+	std::string const& _source, InterfaceEventMap const& _interfaceEvents)
 {
 	if (_interfaceEvents.empty())
 		return _source;
 
 	auto tokens = lex(_source);
-	bool hasInheritance = false;
-	for (auto const& token: tokens)
-		if (token.token == Token::Is) { hasInheritance = true; break; }
-	if (!hasInheritance)
-		return _source; // no inheritance
-
 	std::vector<Replacement> replacements;
 	for (size_t i = 0; i + 1 < tokens.size(); ++i)
 	{
-		if (tokens[i].token != Token::Event || !isIdentifierToken(tokens[i + 1])
-			|| !_interfaceEvents.count(tokens[i + 1].literal))
+		if (tokens[i].token != Token::Contract && tokens[i].token != Token::Interface)
 			continue;
-		size_t end = i + 2;
-		while (end < tokens.size() && tokens[end].token != Token::Semicolon)
-			++end;
-		if (end < tokens.size())
-			replacements.push_back({tokens[i].start, tokens[end].end, ""});
+		size_t open = i + 1;
+		while (open < tokens.size() && tokens[open].token != Token::LBrace
+			&& tokens[open].token != Token::Semicolon)
+			++open;
+		if (open >= tokens.size() || tokens[open].token != Token::LBrace)
+			continue;
+
+		std::set<std::string> inheritedEvents;
+		bool inBases = false;
+		bool expectBase = false;
+		int parenDepth = 0;
+		for (size_t j = i + 1; j < open; ++j)
+		{
+			if (tokens[j].token == Token::Is)
+			{
+				inBases = true;
+				expectBase = true;
+				continue;
+			}
+			if (!inBases)
+				continue;
+			if (tokens[j].token == Token::LParen)
+			{
+				++parenDepth;
+				continue;
+			}
+			if (tokens[j].token == Token::RParen)
+			{
+				--parenDepth;
+				continue;
+			}
+			if (parenDepth == 0 && tokens[j].token == Token::Comma)
+			{
+				expectBase = true;
+				continue;
+			}
+			if (!expectBase || !isIdentifierToken(tokens[j]))
+				continue;
+			expectBase = false;
+			// Qualified/aliased bases are intentionally unsupported here: leave
+			// them for strict solc analysis rather than guessing their identity.
+			if (j + 1 < open && tokens[j + 1].token == Token::Period)
+				continue;
+			auto found = _interfaceEvents.find(tokens[j].literal);
+			if (found != _interfaceEvents.end())
+				inheritedEvents.insert(found->second.begin(), found->second.end());
+		}
+		if (inheritedEvents.empty())
+			continue;
+
+		int depth = 1;
+		for (size_t j = open + 1; j < tokens.size() && depth > 0; ++j)
+		{
+			if (tokens[j].token == Token::LBrace) ++depth;
+			else if (tokens[j].token == Token::RBrace) --depth;
+			else if (depth == 1 && tokens[j].token == Token::Event)
+			{
+				size_t end = j;
+				auto fingerprint = eventFingerprint(_source, tokens, j, &end);
+				if (inheritedEvents.count(fingerprint))
+					replacements.push_back({tokens[j].start, tokens[end].end, ""});
+				j = end;
+			}
+		}
+		i = open;
 	}
 
 	return applyReplacements(_source, std::move(replacements));
 }
 
-std::set<std::string> collectInterfaceEventsFromImports(
+InterfaceEventMap collectInterfaceEventsFromImports(
 	std::string const& _mainSource, fs::path const& _sourceDir)
 {
-	std::set<std::string> interfaceEvents;
+	InterfaceEventMap interfaceEvents;
 
 	// Scan imports with solc's lexer. This covers alias/from forms and never
 	// mistakes commented-out imports for dependencies.
@@ -273,22 +392,16 @@ std::set<std::string> collectInterfaceEventsFromImports(
 				std::ostringstream ss;
 				ss << impFile.rdbuf();
 				std::string impContent = ss.str();
-				// Only collect from actual interface declarations.
-				auto importedTokens = lex(impContent);
-				bool hasInterface = std::any_of(importedTokens.begin(), importedTokens.end(),
-					[](LexToken const& token) { return token.token == Token::Interface; });
-				if (hasInterface)
-				{
-					auto events = collectEventSignatures(impContent);
-					interfaceEvents.insert(events.begin(), events.end());
-				}
+				auto interfaces = collectInterfaces(impContent);
+				for (auto& [name, events]: interfaces)
+					interfaceEvents[name].insert(events.begin(), events.end());
 			}
 		}
 	}
 	if (!interfaceEvents.empty())
 		puyasol::Logger::instance().debug(
-			"Found " + std::to_string(interfaceEvents.size()) +
-			" event(s) in interfaces to dedup");
+			"Found events in " + std::to_string(interfaceEvents.size()) +
+			" imported interface(s) eligible for exact deduplication");
 
 	return interfaceEvents;
 }

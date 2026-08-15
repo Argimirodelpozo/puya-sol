@@ -2,12 +2,12 @@
 
 /// @file FunctionIdRegistry.h
 /// Pre-pass routines run by AWSTBuilder before translating any function body:
-///   1. registerFunctionIds: build qualifiedName→subroutineId and AST-id→subroutineId
-///      maps for resolving library / operator-overload calls.
+///   1. registerFunctionIds: build opaque declaration-ID symbols for root
+///      free/library subroutines and contract-local internal/private methods.
 ///   2. presetDispatchCref: set the fn-ptr dispatch cref to the first deployable
 ///      contract so library subroutines can construct SubroutineIDs early.
 
-#include "builder/contract/ContractBuilder.h"  // LibraryFunctionIdMap, FreeFunctionIdMap
+#include "builder/FunctionSymbolTable.h"
 
 #include <libsolidity/interface/CompilerStack.h>
 
@@ -16,11 +16,11 @@
 namespace puyasol::builder
 {
 
+namespace eb { struct FunctionPointerRegistry; }
+
 void registerFunctionIds(
 	solidity::frontend::CompilerStack& _compiler,
-	std::string const& _sourceFile,
-	LibraryFunctionIdMap& _libraryFunctionIds,
-	FreeFunctionIdMap& _freeFunctionById);
+	FunctionSymbolTable& _functionSymbols);
 
 void presetDispatchCref(
 	solidity::frontend::CompilerStack& _compiler,

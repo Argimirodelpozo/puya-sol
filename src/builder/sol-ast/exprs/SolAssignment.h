@@ -119,7 +119,7 @@ private:
 	/// pads rhs to 32 B, emits writeMemWordDirect via prePendingStatements.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleBlobAggregateWrite();
 
-	/// `arr.push() = v`: stash RHS as pendingArrayPushValue before LHS build;
+	/// `arr.push() = v`: scope RHS as the LHS push call's explicit value;
 	/// SolArrayMethod folds it into ArrayExtend. Returns ArrayExtend or nullopt.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandlePushAssignRewrite(
 		solidity::frontend::Token _op);

@@ -1,16 +1,11 @@
 #include "builder/ProgramAnalysis.h"
+#include "builder/SolcFacts.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/CallGraph.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolidity/interface/CompilerStack.h>
-#include <libyul/AST.h>
-#include <libyul/optimiser/ASTWalker.h>
-#include <libyul/backends/evm/EVMDialect.h>
-
-#include <optional>
-#include <variant>
 #include <vector>
 
 namespace puyasol::builder
@@ -20,48 +15,6 @@ using namespace solidity::frontend;
 
 namespace
 {
-
-bool usesStorageAssembly(InlineAssembly const& _assembly)
-{
-	// A `.slot` reference can manufacture an EVM-style slot handle even when
-	// the assembly block itself does not execute sload/sstore. Later Solidity
-	// expressions that dereference that handle still require the dispatcher.
-	for (auto const& [_, reference]: _assembly.annotation().externalReferences)
-		if (reference.suffix == "slot")
-			return true;
-
-	class StorageOpcodeWalker: public solidity::yul::ASTWalker
-	{
-	public:
-		using solidity::yul::ASTWalker::operator();
-
-		StorageOpcodeWalker()
-		{
-			auto const& dialect = solidity::yul::EVMDialect::strictAssemblyForEVMObjects(
-				solidity::langutil::EVMVersion::cancun(), std::nullopt);
-			sload = dialect.findBuiltin("sload");
-			sstore = dialect.findBuiltin("sstore");
-		}
-
-		void operator()(solidity::yul::FunctionCall const& _call) override
-		{
-			if (auto const* builtin = std::get_if<solidity::yul::BuiltinName>(
-					&_call.functionName);
-				builtin && ((sload && builtin->handle == *sload)
-					|| (sstore && builtin->handle == *sstore)))
-				usesStorage = true;
-			solidity::yul::ASTWalker::operator()(_call);
-		}
-
-		std::optional<solidity::yul::BuiltinHandle> sload;
-		std::optional<solidity::yul::BuiltinHandle> sstore;
-		bool usesStorage = false;
-	};
-
-	StorageOpcodeWalker walker;
-	walker(_assembly.operations().root());
-	return walker.usesStorage;
-}
 
 void collectMappingValueStructs(
 	Type const* _type,
@@ -301,7 +254,7 @@ ProgramAnalysis ProgramAnalysis::analyze(
 		bool visit(InlineAssembly const& _assembly) override
 		{
 			callablesWithInlineAssembly.insert(callableId);
-			if (usesStorageAssembly(_assembly))
+			if (SolcFacts::usesStorage(_assembly))
 				callablesWithStorageAssembly.insert(callableId);
 			for (auto const& [_, reference]: _assembly.annotation().externalReferences)
 				if (reference.suffix == "slot" && reference.declaration)

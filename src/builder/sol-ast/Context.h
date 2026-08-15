@@ -404,6 +404,16 @@ struct FunctionContext: Context
 	bool returnAsmWrap = false;
 	std::vector<ReturnWireElem> returnWirePlan;
 
+	// Translation inputs previously held by a second translation context. Keeping
+	// them on the actual function scope makes one object the source of truth for
+	// body translation, modifier expansion, and implicit-return synthesis.
+	std::vector<solidity::frontend::VariableDeclaration const*> namedReturns;
+	std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParams;
+	std::vector<solidity::frontend::VariableDeclaration const*> blobAggParams;
+	std::vector<solidity::frontend::VariableDeclaration const*> slotRefParams;
+	std::shared_ptr<awst::Block> placeholder;
+	solidity::frontend::ContractDefinition const* currentContract = nullptr;
+
 	/// Calldata params whose mutable (__cd_off_x, __cd_len_x) pointer locals are
 	/// LIVE — seeded at an assembly block's entry or written via `x.offset := V`.
 	/// Shared across the function's per-block AssemblyBuilders (else every block
@@ -411,10 +421,8 @@ struct FunctionContext: Context
 	/// calldata_offset_read_write) AND consulted by value reads of the param
 	/// (SolIdentifier / the implicit-return synth read `extract3(__cd_blob, off,
 	/// len)` instead of the decoded param). Points at ContractBuilder's per-function
-	/// scratch so it OUTLIVES buildBlock (the implicit-return synth runs after);
-	/// falls back to the owned set on freestanding paths.
-	std::set<std::string>* seededCalldataPointers = &ownSeededCalldataPointers;
-	std::set<std::string> ownSeededCalldataPointers;
+	/// function context itself outlives buildBlock, so no external mirror is needed.
+	mutable std::set<std::string> seededCalldataPointers;
 
 
 	FunctionContext(
@@ -431,7 +439,10 @@ struct FunctionContext: Context
 	{}
 
 	bool isInConstructor() const override { return inConstructor; }
-	std::set<std::string>* liveCalldataPointers() const override { return seededCalldataPointers; }
+	std::set<std::string>* liveCalldataPointers() const override
+	{
+		return &seededCalldataPointers;
+	}
 };
 
 /// Control-flow targets for continue inside a loop.

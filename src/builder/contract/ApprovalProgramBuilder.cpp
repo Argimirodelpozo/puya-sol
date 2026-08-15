@@ -82,7 +82,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 							method.sourceLocation);
 						auto aggAddr = aggLow.addrForStateVar(*var);
 						auto aggVal = aggAddr
-							? m_exprBuilder->build(*var->value()) : nullptr;
+							? m_exprBuilder->buildExpr(*var->value()) : nullptr;
 						bool done = false;
 						if (aggAddr && aggVal)
 						{
@@ -140,7 +140,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					auto addr = low.addrForStateVar(*var);
 					if (!addr)
 						continue;
-					auto initVal = m_exprBuilder->build(*var->value());
+					auto initVal = m_exprBuilder->buildExpr(*var->value());
 					if (!initVal)
 						continue;
 					initVal = TypeCoercion::coerceForAssignment(
@@ -172,7 +172,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						&& wtype->kind() == awst::WTypeKind::ARC4Struct;
 					if (!isStructBox)
 						continue;
-					auto initVal = m_exprBuilder->build(*var->value());
+					auto initVal = m_exprBuilder->buildExpr(*var->value());
 					if (!initVal)
 						continue;
 					initVal = TypeCoercion::coerceForAssignment(
@@ -223,7 +223,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 							awst::makeExpressionStatement(std::move(prePut), method.sourceLocation));
 					}
 
-					defaultVal = m_exprBuilder->build(*var->value());
+					defaultVal = m_exprBuilder->buildExpr(*var->value());
 					if (defaultVal)
 						defaultVal = TypeCoercion::coerceForAssignment(
 							std::move(defaultVal), wtype, method.sourceLocation);
@@ -693,7 +693,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						continue;   // resolve failure already logged
 					}
 
-					auto argExpr = m_exprBuilder->build(*args[i]);
+					auto argExpr = m_exprBuilder->buildExpr(*args[i]);
 					if (!argExpr)
 						continue;
 
@@ -856,7 +856,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				auto const& params = baseCtor->parameters();
 				for (size_t i = 0; i < args.size() && i < params.size(); ++i)
 				{
-					auto argExpr = m_exprBuilder->build(*args[i]);
+					auto argExpr = m_exprBuilder->buildExpr(*args[i]);
 					if (!argExpr)
 						continue;
 					auto* targetType = m_typeMapper.map(params[i]->type());
@@ -901,7 +901,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				// Assign these params into createBlock NOW (so deeper transitives can see them)
 				for (size_t i = 0; i < args.size() && i < params.size(); ++i)
 				{
-					auto argExpr = m_exprBuilder->build(*args[i]);
+					auto argExpr = m_exprBuilder->buildExpr(*args[i]);
 					if (!argExpr)
 						continue;
 					auto* targetType = m_typeMapper.map(params[i]->type());
@@ -1021,19 +1021,19 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		// `T memory t;` locals (FMP bumps on slot 0) see a valid blob.
 		// Uninitialised scratch reads as uint64 0 — must bzero every slot per call.
 		{
-			for (int s = AssemblyBuilder::MEMORY_SLOT_FIRST;
-				s <= AssemblyBuilder::MEMORY_SLOT_LAST; ++s)
+			auto const& scratch = m_typeMapper.profile().scratchLayout;
+			for (int s = scratch.memoryFirst(); s <= scratch.memoryLast(); ++s)
 			{
 				auto storeOp = awst::makeStoreSlot(
 					s,
-					awst::makeBzero(AssemblyBuilder::SLOT_SIZE, method.sourceLocation),
+					awst::makeBzero(ScratchLayout::slotSize, method.sourceLocation),
 					method.sourceLocation);
 				body->body.push_back(awst::makeExpressionStatement(std::move(storeOp), method.sourceLocation));
 			}
 
 			// Write the free memory pointer (FMP) at offset 0x40 = 0x80.
 			auto loadBlob = awst::makeLoadSlot(
-				AssemblyBuilder::MEMORY_SLOT_FIRST, method.sourceLocation);
+				scratch.memoryFirst(), method.sourceLocation);
 
 			auto fmpOffset = awst::makeIntegerConstant("64", method.sourceLocation); // 0x40
 
@@ -1044,7 +1044,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 			auto replaceOp = awst::makeReplace3(std::move(loadBlob), std::move(fmpOffset), std::move(fmpBytes), method.sourceLocation);
 			auto storeFmpOp = awst::makeStoreSlot(
-				AssemblyBuilder::MEMORY_SLOT_FIRST, std::move(replaceOp), method.sourceLocation);
+				scratch.memoryFirst(), std::move(replaceOp), method.sourceLocation);
 
 			auto fmpStmt = awst::makeExpressionStatement(std::move(storeFmpOp), method.sourceLocation);
 			body->body.push_back(std::move(fmpStmt));
@@ -1184,7 +1184,7 @@ void ContractBuilder::emitBoxCreateForStateVars(
 					boxSizeVal = static_cast<unsigned>(lit->value().size());
 				if (boxSizeVal > 0)
 				{
-					boxInitVal = m_exprBuilder->build(*var->value());
+					boxInitVal = m_exprBuilder->buildExpr(*var->value());
 					if (boxInitVal && boxInitVal->wtype == awst::WType::stringType())
 					{
 						auto cast = awst::makeAsBytes(std::move(boxInitVal), _loc);
@@ -1197,7 +1197,7 @@ void ContractBuilder::emitBoxCreateForStateVars(
 			else if (arrType && arrType->isDynamicallySized()
 				&& !arrType->isByteArrayOrString())
 			{
-				auto initVal = m_exprBuilder->build(*var->value());
+				auto initVal = m_exprBuilder->buildExpr(*var->value());
 				if (initVal)
 				{
 					auto* tgtWtype = m_typeMapper.map(arrType);

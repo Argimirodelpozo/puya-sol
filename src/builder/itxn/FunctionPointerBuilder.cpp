@@ -5,6 +5,7 @@
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "awst/NameGen.h"
 #include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/itxn/CallResolver.h"
 #include "builder/itxn/FunctionPointerDispatchTypes.h"
 #include "builder/sol-types/FunctionPointerKind.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -122,11 +123,20 @@ void FunctionPointerBuilder::registerTarget(
 {
 	auto& registry = _ctx.functionPointers;
 	if (!_funcDef) return;
+	if (_awstName.empty()
+		&& _funcType
+		&& _funcType->kind() == FunctionType::Kind::Internal)
+		_funcDef = &CallResolver::resolveVirtualTarget(_ctx, *_funcDef);
 	int64_t id = _funcDef->id();
 	std::pair<int64_t, std::string> key{id, _awstName};
 	if (registry.targets.count(key)) return; // already registered for this caller context
 
-	std::string name = _awstName.empty() ? _funcDef->name() : _awstName;
+	std::string name = std::move(_awstName);
+	if (name.empty())
+		if (auto const* symbol = _ctx.functionSymbols.resolve(id))
+			name = *symbol;
+	if (name.empty())
+		name = _funcDef->name();
 	registry.targets[key] = FuncPtrEntry{
 		id,
 		name,
@@ -139,7 +149,7 @@ void FunctionPointerBuilder::registerTarget(
 
 void FunctionPointerBuilder::setSubroutineIds(
 	ContractContext& _ctx,
-	std::unordered_map<int64_t, std::string> const& _idMap)
+	FunctionSymbolTable const& _symbols)
 {
 	for (auto& [key, entry] : _ctx.functionPointers.targets)
 	{
@@ -150,9 +160,13 @@ void FunctionPointerBuilder::setSubroutineIds(
 			entry.subroutineId.clear();
 			continue;
 		}
-		auto it = _idMap.find(key.first);
-		if (it != _idMap.end())
-			entry.subroutineId = it->second;
+		if (auto const* symbol = _symbols.resolve(key.first))
+		{
+			if (_symbols.isRootSubroutine(key.first))
+				entry.subroutineId = *symbol;
+			else
+				entry.name = *symbol;
+		}
 	}
 }
 
@@ -250,8 +264,11 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 	}
 
 	// Internal: return the function's unique ID
+	auto const* targetFunc = _funcDef;
+	if (_awstName.empty())
+		targetFunc = &CallResolver::resolveVirtualTarget(_ctx, *_funcDef);
 	auto const& targets = _ctx.functionPointers.targets;
-	auto it = targets.find({_funcDef->id(), _awstName});
+	auto it = targets.find({targetFunc->id(), _awstName});
 	unsigned funcId = (it != targets.end()) ? it->second.id : 0;
 
 	auto idConst = awst::makeIntegerConstant(funcId, _loc);

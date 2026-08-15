@@ -2,6 +2,7 @@
 
 #include "awst/Node.h"
 #include "builder/sol-eb/ContractContext.h"
+#include "builder/FunctionSymbolTable.h"
 #include "builder/sol-ast/Context.h"
 #include "builder/sol-ast/SolStatement.h"
 #include "builder/storage/StorageLayout.h"
@@ -26,88 +27,8 @@
 namespace puyasol::builder
 {
 
-/// Maps "LibraryName.functionName" → subroutine ID string.
-using LibraryFunctionIdMap = std::unordered_map<std::string, std::string>;
-
-/// Maps AST node ID → subroutine ID for free functions (used by operator overloading).
-using FreeFunctionIdMap = std::unordered_map<int64_t, std::string>;
-
 /// Set of function names that have overloads (multiple definitions with same name).
 using OverloadedNamesSet = std::unordered_set<std::string>;
-
-/// Per-function translation state. Bundles everything `buildBlock` and
-/// `inlineModifiers` need so the contract-method path (`ContractBuilder`)
-/// and the library/free-function path (`AWSTBuilder`) can share the same
-/// implementations instead of each carrying its own copy.
-///
-/// `currentContract` may be null when there is no enclosing contract
-/// (libraries, file-level free functions). In that case the modifier
-/// inliner skips virtual-override resolution, which is the only thing
-/// it needs `currentContract` for.
-struct FunctionTranslationCtx
-{
-	FunctionTranslationCtx(
-		TypeMapper& _typeMapper,
-		eb::ContractContext& _exprBuilder,
-		sol_ast::TranslationContext& _tr,
-		std::string _sourceFile)
-		: typeMapper(_typeMapper),
-		  exprBuilder(_exprBuilder),
-		  tr(_tr),
-		  sourceFile(std::move(_sourceFile))
-	{}
-
-	TypeMapper& typeMapper;
-	eb::ContractContext& exprBuilder;
-	sol_ast::TranslationContext& tr;
-	std::string sourceFile;
-	int64_t callableId = 0;
-
-	// Per-function state.
-	std::vector<std::pair<std::string, awst::WType const*>> params;
-	awst::WType const* returnType = nullptr;
-	std::map<std::string, unsigned> paramBitWidths;
-	std::vector<solidity::frontend::VariableDeclaration const*> namedReturns;
-	std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyParams;
-	/// Default-layout struct storage refs exposed as `.slot` in assembly. The
-	/// runtime value is a bytes box key while this retains the struct payload
-	/// type needed by AssemblyBuilder's slot routing.
-	std::map<std::string, awst::WType const*> boxKeyStructParams;
-	// Memory aggregate params >4KB: passed as their uint64 base offset into the
-	// multi-slot blob (pointer model). `buildBlock` registers each as a blob
-	// aggregate so `p.field[i]` in the body lowers to blob word access.
-	std::vector<solidity::frontend::VariableDeclaration const*> blobAggParams;
-	/// Modifier body substituted for `_` while translating an inline modifier.
-	std::shared_ptr<awst::Block> placeholder;
-
-	// Enclosing contract for modifier virtual-override lookup; nullable.
-	solidity::frontend::ContractDefinition const* currentContract = nullptr;
-
-	// True while building a constructor body (incl. base ctors and the
-	// __postInit-deferred copy): flows into FunctionContext::inConstructor
-	// so ctor-only semantics (e.g. msg.data is EMPTY during construction)
-	// apply wherever the body ends up.
-	bool inConstructor = false;
-	// Mirrors FunctionContext::frameIsProgram (internal/private function =>
-	// assembly return() halts the program).
-	bool frameIsProgram = false;
-	/// Declared solc param types by BARE name (possible_solc item 2): the
-	/// synthetic-calldata blob derives the EVM-ABI head layout + value
-	/// widening (sign extension, static-aggregate inlining) from these.
-	std::map<std::string, solidity::frontend::Type const*> paramSolTypes;
-	// Build-time ABI return encoding (D2) — mirror FunctionContext's fields.
-	bool encodeReturnsAtBuildTime = false;
-	bool returnAsmWrap = false;
-	std::vector<ReturnWireElem> returnWirePlan;
-	// Live-calldata-pointer set (see FunctionContext::seededCalldataPointers).
-	// Owned here so it survives the temporary FunctionContext created by
-	// buildBlock and remains available to implicit-return synthesis.
-	std::set<std::string> seededCalldataPointers;
-	/// --evm-storage-layout: storage-ref params + named storage returns,
-	/// carried as biguint slot handles; `buildBlock` registers each as a
-	/// slot-storage ref.
-	std::vector<solidity::frontend::VariableDeclaration const*> slotRefParams;
-};
 
 /// Make an `awst::SourceLocation` from a Solidity `SourceLocation`.
 awst::SourceLocation makeLoc(
@@ -121,7 +42,7 @@ awst::SourceLocation makeLoc(
 /// block gets replaced by it. Used during modifier body translation, where
 /// `_` stands for the wrapped function body.
 std::shared_ptr<awst::Block> buildBlock(
-	FunctionTranslationCtx& ctx,
+	sol_ast::FunctionContext& ctx,
 	solidity::frontend::Block const& block,
 	std::shared_ptr<awst::Block> placeholder = nullptr);
 
@@ -185,7 +106,7 @@ void markAssemblyAggregates(
 /// `placeholder`, so `_` inside the modifier expands to the wrapped body.
 /// The accumulator becomes the new body for the next iteration.
 void inlineModifiers(
-	FunctionTranslationCtx& ctx,
+	sol_ast::FunctionContext& ctx,
 	solidity::frontend::FunctionDefinition const& func,
 	std::shared_ptr<awst::Block>& body);
 
@@ -199,9 +120,8 @@ public:
 		StorageMapper& _storageMapper,
 		eb::FunctionPointerRegistry& _functionPointers,
 		std::string const& _sourceFile,
-		LibraryFunctionIdMap const& _libraryFunctionIds,
+		FunctionSymbolTable const& _functionSymbols,
 		uint64_t _opupBudget = 0,
-		FreeFunctionIdMap const& _freeFunctionById = {},
 		std::map<std::string, uint64_t> const& _ensureBudget = {},
 		bool _viaIR = false,
 		std::vector<solidity::frontend::FunctionDefinition const*> const& _hostBoundFunctions = {}
@@ -226,9 +146,8 @@ private:
 	StorageMapper& m_storageMapper;
 	eb::FunctionPointerRegistry& m_functionPointers;
 	std::string m_sourceFile;
-	LibraryFunctionIdMap const& m_libraryFunctionIds;
+	FunctionSymbolTable const& m_functionSymbols;
 	uint64_t m_opupBudget = 0;
-	FreeFunctionIdMap const& m_freeFunctionById;
 	std::map<std::string, uint64_t> m_ensureBudget;
 	bool m_viaIR = false;
 	std::vector<solidity::frontend::FunctionDefinition const*> m_hostBoundFunctions;
@@ -238,11 +157,8 @@ private:
 	/// Per-contract translation context; constructed in build() once m_exprBuilder exists.
 	std::optional<sol_ast::TranslationContext> m_tr;
 
-	/// The sole owner of per-function translation state. Keeping this context
-	/// alive for the whole contract lets buildBlock's short-lived FunctionContext
-	/// report state (notably seeded calldata pointers) back to FunctionBuilder
-	/// without mirroring every field on ContractBuilder.
-	std::optional<FunctionTranslationCtx> m_functionCtx;
+	/// The sole owner of per-function translation and lexical function state.
+	std::optional<sol_ast::FunctionContext> m_functionCtx;
 
 	/// Build a function body block with function context set.
 	std::shared_ptr<awst::Block> buildBlock(

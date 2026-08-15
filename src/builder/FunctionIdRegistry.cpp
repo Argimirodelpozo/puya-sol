@@ -1,21 +1,17 @@
 #include "builder/FunctionIdRegistry.h"
-#include "builder/sol-types/OverloadSuffix.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "Logger.h"
 
 #include <libsolidity/ast/AST.h>
-
-#include <unordered_map>
 
 namespace puyasol::builder
 {
 
 void registerFunctionIds(
 	solidity::frontend::CompilerStack& _compiler,
-	std::string const& _sourceFile,
-	LibraryFunctionIdMap& m_libraryFunctionIds,
-	FreeFunctionIdMap& m_freeFunctionById)
+	FunctionSymbolTable& _functionSymbols)
 {
+	_functionSymbols.clear();
 	for (auto const& sourceName: _compiler.sourceNames())
 	{
 		auto const& sourceUnit = _compiler.ast(sourceName);
@@ -23,94 +19,34 @@ void registerFunctionIds(
 		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
 			solidity::frontend::ContractDefinition>(sourceUnit.nodes()))
 		{
-			if (!contract->isLibrary())
-				continue;
-
-			std::string libraryName = contract->name();
-
-			// Detect overloaded function names and name+paramcount collisions.
-			std::unordered_map<std::string, int> nameCount;
-			std::unordered_map<std::string, int> nameParamCount;
-			for (auto const* func: contract->definedFunctions())
+			for (auto const* function: contract->definedFunctions())
 			{
-				if (!func->isImplemented())
+				if (!function->isImplemented() || function->isConstructor())
 					continue;
-				std::string baseName = libraryName + "." + func->name();
-				nameCount[baseName]++;
-				nameParamCount[baseName + paramCountSuffix(*func)]++;
-			}
-
-			// Track sequence numbers for same-name-same-paramcount overloads.
-			std::unordered_map<std::string, int> nameParamSeq;
-
-			for (auto const* func: contract->definedFunctions())
-			{
-				if (!func->isImplemented())
+				bool const rootSubroutine = contract->isLibrary();
+				bool const internalMethod =
+					function->visibility() == solidity::frontend::Visibility::Internal
+					|| function->visibility() == solidity::frontend::Visibility::Private;
+				if (!rootSubroutine && !internalMethod)
 					continue;
-
-				std::string baseName = libraryName + "." + func->name();
-				std::string qualifiedName = baseName;
-				std::string subroutineId = _sourceFile + "." + baseName;
-				// Disambiguate by parameter count.
-				if (nameCount[baseName] > 1)
-				{
-					std::string paramKey = baseName + paramCountSuffix(*func);
-					qualifiedName = paramKey;
-					subroutineId = _sourceFile + "." + paramKey;
-					// Further disambiguate: same name + same param count.
-					if (nameParamCount[paramKey] > 1)
-					{
-						int seq = nameParamSeq[paramKey]++;
-						qualifiedName += "_" + std::to_string(seq);
-						subroutineId += "_" + std::to_string(seq);
-					}
-				}
-				// Cross-file collision: two libraries with the SAME name in
-				// different source units produce the identical subroutineId
-				// (`_sourceFile` is the constant main source). Disambiguate by
-				// AST id — same rule the free-function path below uses — so two
-				// vendored `Math`/`SafeCast` copies don't map to one subroutine.
-				for (auto const& [otherId, otherSid]: m_freeFunctionById)
-				{
-					if (otherSid == subroutineId && otherId != func->id())
-					{
-						subroutineId += "_" + std::to_string(func->id());
-						qualifiedName += "_" + std::to_string(func->id());
-						break;
-					}
-				}
-				m_libraryFunctionIds[qualifiedName] = subroutineId;
-				// Also index by AST ID for precise overload resolution.
-				m_freeFunctionById[func->id()] = subroutineId;
-				Logger::instance().debug("[REG] lib func id=" + std::to_string(func->id()) + " name=" + qualifiedName + " => " + subroutineId);
+				auto const& subroutineId = _functionSymbols.registerDeclaration(
+					function->id(), rootSubroutine);
+				Logger::instance().debug(
+					"[REG] Solidity function declaration=" +
+					std::to_string(function->id()) + " => " + subroutineId);
 			}
 		}
 
-		for (auto const* func: solidity::frontend::ASTNode::filteredNodes<
+		for (auto const* function: solidity::frontend::ASTNode::filteredNodes<
 			solidity::frontend::FunctionDefinition>(sourceUnit.nodes()))
 		{
-			if (!func->isImplemented() || !func->isFree())
+			if (!function->isImplemented() || !function->isFree())
 				continue;
-
-			std::string qualifiedName = func->name();
-			std::string subroutineId = _sourceFile + "." + qualifiedName;
-			// Disambiguate same-name free functions (e.g. UD60x18.powu vs SD59x18.powu)
-			// by appending the AST ID when the name is already registered by another function.
-			auto existingIt = m_freeFunctionById.find(func->id());
-			if (existingIt == m_freeFunctionById.end())
-			{
-				for (auto const& [otherId, otherSid]: m_freeFunctionById)
-				{
-					if (otherSid == subroutineId && otherId != func->id())
-					{
-						subroutineId += "_" + std::to_string(func->id());
-						break;
-					}
-				}
-			}
-			m_libraryFunctionIds[qualifiedName] = subroutineId;
-			m_freeFunctionById[func->id()] = subroutineId;
-			Logger::instance().debug("[REG] free func id=" + std::to_string(func->id()) + " name=" + qualifiedName + " => " + subroutineId);
+			auto const& subroutineId = _functionSymbols.registerDeclaration(
+				function->id(), /*_rootSubroutine=*/true);
+			Logger::instance().debug(
+				"[REG] free function declaration=" +
+				std::to_string(function->id()) + " => " + subroutineId);
 		}
 	}
 }

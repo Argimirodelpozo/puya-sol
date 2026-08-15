@@ -400,7 +400,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			{
 				// Compile-time constant: return directly.
 				if (var->value())
-					readExpr = m_exprBuilder->build(*var->value());
+					readExpr = m_exprBuilder->buildExpr(*var->value());
 				if (!readExpr)
 					readExpr = StorageMapper::makeDefaultValue(getter.returnType, loc);
 				if (readExpr && readExpr->wtype != getter.returnType)

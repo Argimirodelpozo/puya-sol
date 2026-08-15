@@ -129,7 +129,8 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 				// count = low 8 bytes of the 32-byte count word at the buffer offset
 				auto count = awst::makeEvalOnce(
 					awst::makeExtractUInt64(
-						AB::readMemWordDirect(offRead(), m_loc),
+						AB::readMemWordDirect(
+							m_ctx.typeMapper.profile().scratchLayout, offRead(), m_loc),
 						awst::makeIntegerConstant("24", m_loc), m_loc),
 					m_loc);
 				auto dataStart = awst::makeUInt64BinOp(offRead(),
@@ -139,7 +140,8 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 					awst::UInt64BinaryOperator::Mult,
 					awst::makeIntegerConstant("32", m_loc), m_loc);
 				auto data = awst::makeExtract3(
-					awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, m_loc),
+					awst::makeLoadSlot(
+						m_ctx.typeMapper.profile().scratchLayout.memoryFirst(), m_loc),
 					std::move(dataStart), std::move(byteLen), m_loc);
 				// ARC4 dynamic array = uint16 count ++ elements
 				auto hdr = awst::makeExtract3(awst::makeItob(count, m_loc),
@@ -163,13 +165,15 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 			};
 			// length = low 8 bytes of the 32-byte length word at the buffer offset.
 			auto length = awst::makeExtractUInt64(
-				AB::readMemWordDirect(offRead(), m_loc),
+				AB::readMemWordDirect(
+					m_ctx.typeMapper.profile().scratchLayout, offRead(), m_loc),
 				awst::makeIntegerConstant("24", m_loc), m_loc);
 			// data = extract3(blob, offset + 32, length).
 			auto dataStart = awst::makeUInt64BinOp(offRead(),
 				awst::UInt64BinaryOperator::Add, awst::makeIntegerConstant("32", m_loc), m_loc);
 			auto data = awst::makeExtract3(
-				awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, m_loc),
+				awst::makeLoadSlot(
+					m_ctx.typeMapper.profile().scratchLayout.memoryFirst(), m_loc),
 				std::move(dataStart), std::move(length), m_loc);
 			if (vt == awst::WType::stringType())
 				return awst::makeReinterpretCast(std::move(data), awst::WType::stringType(), m_loc);

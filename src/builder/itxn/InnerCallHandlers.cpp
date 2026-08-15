@@ -7,10 +7,10 @@
 #include "builder/sol-types/SolIntType.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/itxn/InnerCallInternal.h"
+#include "builder/itxn/CallResolver.h"
 #include "builder/sol-eb/SolBoolBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
-#include "builder/sol-types/OverloadSuffix.h"
 #include "Logger.h"
 
 namespace puyasol::builder::eb
@@ -700,12 +700,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								return awst::makeAsBytes(std::move(enc), _loc);
 							};
 
-							// Overload-suffixed target name: the emitted method for an
-							// overloaded function is name+suffix, so a bare-name
-							// InstanceMethodTarget is unresolvable by puya.
-							std::string targetName = target->name();
-							if (_ctx.overloadedNames.count(targetName))
-								appendOverloadSuffix(targetName, *target);
+							std::string targetName =
+								CallResolver::resolveMethodName(_ctx, *target);
 							size_t nReturns = target->returnParameters().size();
 							if (nReturns == 0)
 							{

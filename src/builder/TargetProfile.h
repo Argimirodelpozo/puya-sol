@@ -1,5 +1,7 @@
 #pragma once
 
+#include "builder/ScratchLayout.h"
+
 #include <liblangutil/EVMVersion.h>
 
 #include <optional>
@@ -18,6 +20,7 @@ struct TargetProfile
 	bool denseOnlyStorage = false;
 	bool singlePageStorage = false;
 	std::optional<solidity::langutil::EVMVersion> evmVersion;
+	ScratchLayout scratchLayout;
 };
 
 } // namespace puyasol::builder

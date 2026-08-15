@@ -46,11 +46,8 @@ private:
 	CompilationSession m_session;
 	std::unique_ptr<StorageMapper> m_storageMapper;
 
-	/// Registry of library function IDs, populated during the library translation pass.
-	LibraryFunctionIdMap m_libraryFunctionIds;
-
-	/// Maps free function AST ID → subroutine ID, for operator overload resolution.
-	std::unordered_map<int64_t, std::string> m_freeFunctionById;
+	/// Canonical solc declaration ID → opaque AWST function identity.
+	FunctionSymbolTable m_functionSymbols;
 
 	/// Library functions with function-pointer parameters that must be inlined
 	/// into each using-contract rather than emitted as root Subroutines.
@@ -61,7 +58,7 @@ private:
 	std::vector<solidity::frontend::FunctionDefinition const*> m_hostBoundFunctions;
 
 	// ── Build phases (executed in order from build()) ──
-	// Phase 1: registerFunctionIds → m_libraryFunctionIds + m_freeFunctionById.
+	// Phase 1: registerFunctionIds → m_functionSymbols.
 	// Phase 1.5: presetDispatchCref → fn-ptr dispatch cref (first deployable contract).
 	// Both defined in builder/FunctionIdRegistry.h.
 

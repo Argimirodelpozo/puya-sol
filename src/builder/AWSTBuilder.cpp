@@ -68,11 +68,10 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	_targetProfile.viaIRSequencing = _viaYulBehavior;
 	m_session.begin(_compiler, _sourceAliases, std::move(_targetProfile));
 	m_storageMapper = std::make_unique<StorageMapper>(m_session.typeMapper);
-	m_libraryFunctionIds.clear();
 	m_hostBoundFunctions.clear();
 	std::vector<std::shared_ptr<awst::RootNode>> roots;
 
-	registerFunctionIds(_compiler, _sourceFile, m_libraryFunctionIds, m_freeFunctionById);
+	registerFunctionIds(_compiler, m_functionSymbols);
 	presetDispatchCref(_compiler, _sourceFile, m_session.functionPointers);
 	translateLibraryFunctions(_compiler, _sourceFile, roots);
 	translateFreeFunctions(_compiler, _sourceFile, roots);
@@ -116,34 +115,16 @@ void AWSTBuilder::translateLibraryFunctions(
 				if (!func->isImplemented())
 					continue;
 
-				// AST-id-first lookup (precise overload resolution), name-based fallback.
 				std::string qualifiedName = libraryName + "." + func->name();
-				std::string subroutineId;
-				auto byId = m_freeFunctionById.find(func->id());
-				if (byId != m_freeFunctionById.end())
+				auto const* symbol = m_functionSymbols.resolve(func->id());
+				if (!symbol)
 				{
-					subroutineId = byId->second;
+					Logger::instance().error(
+						"missing declaration identity for library function " +
+						qualifiedName);
+					continue;
 				}
-				else
-				{
-					auto it = m_libraryFunctionIds.find(qualifiedName);
-					if (it != m_libraryFunctionIds.end())
-					{
-						subroutineId = it->second;
-					}
-					else
-					{
-						std::string overloadName = qualifiedName + paramCountSuffix(*func);
-						auto it2 = m_libraryFunctionIds.find(overloadName);
-						if (it2 != m_libraryFunctionIds.end())
-						{
-							qualifiedName = overloadName;
-							subroutineId = it2->second;
-						}
-						else
-							subroutineId = _sourceFile + "." + qualifiedName;
-					}
-				}
+				auto const& subroutineId = *symbol;
 
 				if (m_session.analysis.hasReachabilityGraphs
 					&& !m_session.analysis.reachableFunctionIds.count(func->id()))
@@ -231,21 +212,17 @@ void AWSTBuilder::translateFreeFunctions(
 				m_hostBoundFunctions.push_back(func);
 				continue;
 			}
-			std::string subroutineId;
-			auto byId = m_freeFunctionById.find(func->id());
-			if (byId != m_freeFunctionById.end())
-				subroutineId = byId->second;
-			else
+			auto const* symbol = m_functionSymbols.resolve(func->id());
+			if (!symbol)
 			{
-				auto it = m_libraryFunctionIds.find(qualifiedName);
-				subroutineId = (it != m_libraryFunctionIds.end())
-					? it->second
-					: _sourceFile + "." + qualifiedName;
+				Logger::instance().error(
+					"missing declaration identity for free function " + qualifiedName);
+				continue;
 			}
 
 			Logger::instance().debug("Translating free function: " + qualifiedName);
 			roots.push_back(buildFreestandingSubroutine(
-				*func, _sourceFile, qualifiedName, subroutineId, /*libraryName=*/""));
+				*func, _sourceFile, qualifiedName, *symbol, /*libraryName=*/""));
 		}
 	}
 }
@@ -401,8 +378,8 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// pass a long-lived object (a temporary `{}` would dangle → SIGSEGV).
 	static std::unordered_set<std::string> const EMPTY_OVERLOAD_NAMES;
 	eb::ContractContext exprBuilder(
-		m_session.typeMapper, *m_storageMapper, _sourceFile, _libraryName, m_libraryFunctionIds,
-		EMPTY_OVERLOAD_NAMES, m_freeFunctionById, m_session.functionPointers
+		m_session.typeMapper, *m_storageMapper, _sourceFile, _libraryName,
+		EMPTY_OVERLOAD_NAMES, m_functionSymbols, m_session.functionPointers
 	);
 
 	sol_ast::TranslationContext tr{exprBuilder, m_session.typeMapper, _sourceFile};
@@ -547,17 +524,11 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		for (size_t idx: blobAggParams)
 			blobAggList.push_back(_func.parameters()[idx].get());
 
-		FunctionTranslationCtx ftCtx{
-			m_session.typeMapper, exprBuilder, tr, _sourceFile};
-		ftCtx.params = fnCtx.params;
-		ftCtx.returnType = sub->returnType;
-		ftCtx.paramBitWidths = fnCtx.paramBitWidths;
-		ftCtx.namedReturns = std::move(namedReturnList);
-		ftCtx.mappingKeyParams = std::move(mappingKeyList);
-		ftCtx.blobAggParams = std::move(blobAggList);
-		ftCtx.currentContract = nullptr;
-		ftCtx.callableId = _func.id();
-		inlineModifiers(ftCtx, _func, sub->body);
+		fnCtx.namedReturns = std::move(namedReturnList);
+		fnCtx.mappingKeyParams = std::move(mappingKeyList);
+		fnCtx.blobAggParams = std::move(blobAggList);
+		fnCtx.currentContract = nullptr;
+		inlineModifiers(fnCtx, _func, sub->body);
 	}
 
 	// Zero-initialize named return variables (Solidity implicit init).
@@ -632,13 +603,16 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			if (szC <= AssemblyBuilder::SLOT_SIZE)
 				continue;
 			std::string offN = "__blobagg_off_" + std::to_string(rp->id());
-			auto blobLoad = awst::makeLoadSlot(AssemblyBuilder::MEMORY_SLOT_FIRST, loc);
+			auto blobLoad = awst::makeLoadSlot(
+				m_session.profile.scratchLayout.memoryFirst(), loc);
 			auto base = awst::makeExtractUInt64(std::move(blobLoad),
 				awst::makeIntegerConstant("88", loc), loc);
 			inits.push_back(awst::makeAssignmentStatement(
 				awst::makeVarExpression(offN, awst::WType::uint64Type(), loc),
 				std::move(base), loc));
-			for (auto& s: AssemblyBuilder::emitFreeMemoryBump(szC, loc, static_cast<int>(rp->id())))
+			for (auto& s: AssemblyBuilder::emitFreeMemoryBump(
+					m_session.profile.scratchLayout, szC, loc,
+					static_cast<int>(rp->id())))
 				inits.push_back(std::move(s));
 		}
 
@@ -783,6 +757,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			{
 				implicitReturn->value =
 					builder::AssemblyBuilder::materializeBlobBytesValue(
+						m_session.profile.scratchLayout,
 						"__blobagg_off_" + std::to_string(returnParams[0]->id()),
 						dynamic_cast<solidity::frontend::ArrayType const*>(
 							returnParams[0]->type())->isString(), loc);
@@ -945,8 +920,8 @@ void AWSTBuilder::translateContracts(
 
 			ContractBuilder translator(
 				m_session.typeMapper, *m_storageMapper, m_session.functionPointers,
-				_sourceFile, m_libraryFunctionIds,
-				_opupBudget, m_freeFunctionById, _ensureBudget, _viaYulBehavior,
+				_sourceFile, m_functionSymbols,
+				_opupBudget, _ensureBudget, _viaYulBehavior,
 				m_hostBoundFunctions
 			);
 			auto const& storagePlan = m_session.storagePlan(*contract);
@@ -1094,8 +1069,8 @@ void AWSTBuilder::translateContracts(
 			Logger::instance().info("Translating library as deployable contract: " + lib->name());
 			ContractBuilder translator(
 				m_session.typeMapper, *m_storageMapper, m_session.functionPointers,
-				_sourceFile, m_libraryFunctionIds,
-				_opupBudget, m_freeFunctionById, _ensureBudget, _viaYulBehavior,
+				_sourceFile, m_functionSymbols,
+				_opupBudget, _ensureBudget, _viaYulBehavior,
 				m_hostBoundFunctions
 			);
 			auto const& storagePlan = m_session.storagePlan(*lib);

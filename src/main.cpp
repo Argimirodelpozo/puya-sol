@@ -5,7 +5,7 @@
 
 #include "Logger.h"
 #include "builder/AWSTBuilder.h"
-#include "builder/assembly/AssemblyBuilder.h"
+#include "builder/ScratchLayout.h"
 #include "cli/AwstPostPasses.h"
 #include "cli/CliOptions.h"
 #include "cli/CompilerSetup.h"
@@ -35,10 +35,6 @@ int main(int _argc, char* _argv[])
 	Options opts = parseArgs(_argc, _argv);
 	configureLogger(opts);
 	auto& logger = puyasol::Logger::instance();
-
-	// --evm-memory-slots: N scratch slots for EVM memory (default 5 = 20KB).
-	if (opts.evmMemorySlots > 0)
-		puyasol::builder::AssemblyBuilder::configureMemorySlots(opts.evmMemorySlots);
 
 	if (opts.sourceFiles.empty())
 	{
@@ -160,11 +156,13 @@ int main(int _argc, char* _argv[])
 
 	logger.info("Parsing and type-checking...");
 
-	// Parse and analyze. On failure, 0.5.x-compat errors are suppressed;
-	// if only those remain, push past the failure (AST still usable).
+	// Builder consumes solc's completed semantic annotations as an invariant.
+	// An AST from failed analysis is not safe to lower: types, referenced
+	// declarations, virtual targets, and call graphs may be unset or partial.
 	bool success = compiler.parseAndAnalyze();
-	if (!success && !reportCompilationErrors(compiler))
+	if (!success)
 	{
+		reportCompilationErrors(compiler);
 		logger.error("Compilation failed.");
 		return 1;
 	}
@@ -192,6 +190,10 @@ int main(int _argc, char* _argv[])
 		.evmMemoryLayout = opts.evmMemoryLayout,
 		.viaIRSequencing = opts.viaYulBehavior,
 		.evmVersion = evmVer,
+		.scratchLayout = puyasol::builder::ScratchLayout(
+			opts.evmMemorySlots > 0
+				? opts.evmMemorySlots
+				: puyasol::builder::ScratchLayout::defaultMemorySlots),
 	};
 	auto roots = builder.build(
 		compiler, sourceFile, opts.opupBudget, opts.ensureBudget,

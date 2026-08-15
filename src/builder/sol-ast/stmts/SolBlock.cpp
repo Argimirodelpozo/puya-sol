@@ -157,7 +157,7 @@ public:
 			loc);
 
 		ResultT out;
-		auto call = m_blk.builderCtx().build(_n.externalCall());
+		auto call = m_blk.builderCtx().buildExpr(_n.externalCall());
 		if (!call)
 			return out;
 		auto const& clauses = _n.clauses();
@@ -269,26 +269,8 @@ std::shared_ptr<awst::Block> SolBlock::toAwstBlock()
 		}
 		else
 		{
-			SolStatementVisitor visitor(m_blk);
-			for (auto& s: visitor.visit(*stmt))
+			for (auto& s: buildStatementMulti(m_blk, *stmt))
 				if (s) awstBlock->body.push_back(std::move(s));
-			// T1 (fable-review-3): every statement handler must drain the
-			// shared pending buffers into its own output — leftovers execute
-			// with the NEXT statement (or leak into another function), the
-			// bug class behind the emit/if/do-while/ctor-arg fixes. Salvage
-			// by draining here, but warn loudly so the hole gets fixed.
-			auto& bcLeak = m_blk.builderCtx();
-			if (!bcLeak.prePendingStatements.empty() || !bcLeak.pendingStatements.empty())
-			{
-				Logger::instance().warning(
-					"internal: statement handler left "
-					+ std::to_string(bcLeak.prePendingStatements.size()
-						+ bcLeak.pendingStatements.size())
-					+ " pending statement(s) undrained — sequencing may be wrong "
-					  "(fable-review-3 T1; report this)",
-					m_blk.makeLoc(stmt->location()));
-				bcLeak.appendPendingTo(awstBlock->body);
-			}
 		}
 	}
 
@@ -308,7 +290,18 @@ std::vector<std::shared_ptr<awst::Statement>> buildStatementMulti(
 	solidity::frontend::Statement const& _stmt)
 {
 	SolStatementVisitor visitor(_blk);
-	return visitor.visit(_stmt);
+	auto lowered = _blk.builderCtx().lowerOperand(
+		[&] { return visitor.visit(_stmt); }, false);
+	std::vector<std::shared_ptr<awst::Statement>> result;
+	result.reserve(lowered.effects.pre.size() + lowered.value.size()
+		+ lowered.effects.post.size());
+	for (auto& statement: lowered.effects.pre)
+		result.push_back(std::move(statement));
+	for (auto& statement: lowered.value)
+		result.push_back(std::move(statement));
+	for (auto& statement: lowered.effects.post)
+		result.push_back(std::move(statement));
+	return result;
 }
 
 std::shared_ptr<awst::Statement> buildStatement(

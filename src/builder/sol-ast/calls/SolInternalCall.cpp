@@ -22,6 +22,7 @@
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/ConversionPlan.h"
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"
 
@@ -343,13 +344,6 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	{
 		awst::CallArg ca;
 		size_t paramIdx = _isUsingForCall ? (i + 1) : i;
-		// Tripwire (possible_solc item 6): each arg→param pair must be a
-		// solc-legal implicit conversion; a trip = wrong annotation plumbing.
-		if (_funcDef && paramIdx < _funcDef->parameters().size()
-			&& sortedArgs[i]->annotation().type)
-			builder::TypeCoercion::assertImplicitlyConvertible(
-				sortedArgs[i]->annotation().type,
-				_funcDef->parameters()[paramIdx]->type(), m_loc, "internal-call arg");
 		auto lowered = m_ctx.lowerOperand([&]() -> std::shared_ptr<awst::Expression> {
 			if (evmSlotRefParamIndices.count(paramIdx))
 			{
@@ -360,15 +354,17 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			if (mappingStorageParamIndices.count(paramIdx))
 				return extractMappingKeyPrefix(*sortedArgs[i]);
 			auto v = buildExpr(*sortedArgs[i]);
-			if (paramIdx < paramTypes.size())
+			if (_funcDef && paramIdx < _funcDef->parameters().size()
+				&& paramIdx < paramTypes.size())
+				v = builder::ConversionPlan{
+					sortedArgs[i]->annotation().type,
+					_funcDef->parameters()[paramIdx]->type(),
+					paramTypes[paramIdx],
+					builder::ConversionPlan::Context::Argument}.emit(
+						std::move(v), m_loc);
+			else if (paramIdx < paramTypes.size())
 				v = builder::TypeCoercion::implicitNumericCast(
 					std::move(v), paramTypes[paramIdx], m_loc);
-			// Signed sub-word → wider-signed implicit widen (e.g. `f(someInt8)` into int16 param):
-			// implicitNumericCast is a uint64→uint64 no-op that drops the sign. Re-extend.
-			if (_funcDef && paramIdx < _funcDef->parameters().size())
-				v = builder::TypeCoercion::signExtendSignedWiden(
-					std::move(v), sortedArgs[i]->annotation().type,
-					_funcDef->parameters()[paramIdx]->type(), m_loc);
 			return v;
 		}, /*_conditional=*/false);
 		ca.value = std::move(lowered.value);
@@ -1068,34 +1064,11 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 			return true;
 		};
 
-		// Try AST ID lookup
-		auto byId = m_ctx.freeFunctionById.find(funcDef->id());
-		if (byId != m_ctx.freeFunctionById.end())
+		if (auto const* symbol = m_ctx.functionSymbols.resolve(funcDef->id()))
 		{
 			isUsingForCall = classifyUsingFor();
 			return buildSubroutineCall(
-				awst::SubroutineID{byId->second}, retType, funcDef, isUsingForCall);
-		}
-
-		// Try library function map
-		if (auto const* contractDef = funcDef->annotation().contract)
-		{
-			if (contractDef->isLibrary())
-			{
-				std::string key = contractDef->name() + "." + funcDef->name();
-				auto it = m_ctx.libraryFunctionIds.find(key);
-				if (it == m_ctx.libraryFunctionIds.end())
-				{
-					key += paramCountSuffix(*funcDef);
-					it = m_ctx.libraryFunctionIds.find(key);
-				}
-				if (it != m_ctx.libraryFunctionIds.end())
-				{
-					isUsingForCall = classifyUsingFor();
-					return buildSubroutineCall(
-						awst::SubroutineID{it->second}, retType, funcDef, isUsingForCall);
-				}
-			}
+				awst::SubroutineID{*symbol}, retType, funcDef, isUsingForCall);
 		}
 	}
 

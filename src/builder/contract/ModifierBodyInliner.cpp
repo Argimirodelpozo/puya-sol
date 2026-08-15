@@ -113,17 +113,17 @@ bool isZeroConstantExpr(awst::Expression const* val)
 /// "deserialization failed: 'ARC4Decode'" — `s.v++` with storage-pointer
 /// modifier args produces an ARC4Decode assignment target that puya rejects.
 void inlineModifiers(
-	FunctionTranslationCtx& _ctx,
+	sol_ast::FunctionContext& _ctx,
 	solidity::frontend::FunctionDefinition const& _func,
 	std::shared_ptr<awst::Block>& _body
 )
 {
-	auto& m_typeMapper = _ctx.typeMapper;
-	auto& m_exprBuilder = _ctx.exprBuilder;
+	auto& m_typeMapper = _ctx.tr.typeMapper;
+	auto& m_exprBuilder = _ctx.tr.contractCtx;
 	auto& m_tr = _ctx.tr;
 	auto const* m_currentContract = _ctx.currentContract;
 	auto makeLocFree = [&](solidity::langutil::SourceLocation const& loc) {
-		return makeLoc(_ctx.typeMapper, _ctx.sourceFile, loc);
+		return makeLoc(_ctx.tr.typeMapper, _ctx.tr.sourceFile, loc);
 	};
 	std::shared_ptr<awst::Block> __placeholder;
 	auto setPlaceholderBody = [&](std::shared_ptr<awst::Block> p) {
@@ -287,7 +287,7 @@ void inlineModifiers(
 					continue;   // error already logged
 				}
 
-				auto argExpr = m_exprBuilder.build(*(*args)[i]);
+				auto argExpr = m_exprBuilder.buildExpr(*(*args)[i]);
 				if (!argExpr)
 					continue;
 

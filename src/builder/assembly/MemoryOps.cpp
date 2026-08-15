@@ -47,11 +47,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleMload(
 // unaligned straddling words are stitched/split across the two adjacent slots.
 
 std::shared_ptr<awst::Statement> AssemblyBuilder::memBoundsAssert(
+	ScratchLayout const& _scratch,
 	std::shared_ptr<awst::Expression> _off, awst::SourceLocation const& _loc)
 {
 	// assert(off + 32 <= cap): spilling into non-memory scratch slots corrupts silently.
 	uint64_t cap = static_cast<uint64_t>(SLOT_SIZE)
-		* static_cast<uint64_t>(memorySlotCount());
+		* static_cast<uint64_t>(_scratch.memoryCount());
 	auto end = awst::makeUInt64BinOp(std::move(_off), awst::UInt64BinaryOperator::Add,
 		awst::makeIntegerConstant(static_cast<uint64_t>(32), _loc), _loc);
 	auto cond = awst::makeNumericCompare(std::move(end), awst::NumericComparison::Lte,
@@ -74,14 +75,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordConst(
 		Logger::instance().error("EVM memory read beyond the reserved scratch slots (raise --evm-memory-slots)", _loc);
 
 	if (sub + 32 <= static_cast<uint64_t>(SLOT_SIZE))
-		return awst::makeExtract3(awst::makeLoadSlot(MEMORY_SLOT_FIRST + slot, _loc),
+		return awst::makeExtract3(awst::makeLoadSlot(memorySlotFirst() + slot, _loc),
 			awst::makeIntegerConstant(sub, _loc), awst::makeIntegerConstant("32", _loc), _loc);
 
 	// Straddles the slot boundary: tail of `slot` ++ head of `slot+1`.
 	uint64_t firstLen = static_cast<uint64_t>(SLOT_SIZE) - sub;
-	auto part1 = awst::makeExtract3(awst::makeLoadSlot(MEMORY_SLOT_FIRST + slot, _loc),
+	auto part1 = awst::makeExtract3(awst::makeLoadSlot(memorySlotFirst() + slot, _loc),
 		awst::makeIntegerConstant(sub, _loc), awst::makeIntegerConstant(firstLen, _loc), _loc);
-	auto part2 = awst::makeExtract3(awst::makeLoadSlot(MEMORY_SLOT_FIRST + slot + 1, _loc),
+	auto part2 = awst::makeExtract3(awst::makeLoadSlot(memorySlotFirst() + slot + 1, _loc),
 		awst::makeIntegerConstant("0", _loc), awst::makeIntegerConstant(32 - firstLen, _loc), _loc);
 	return awst::makeConcat(std::move(part1), std::move(part2), _loc);
 }
@@ -100,7 +101,7 @@ void AssemblyBuilder::writeMemWordConst(
 
 	if (sub + 32 <= static_cast<uint64_t>(SLOT_SIZE))
 	{
-		auto rep = awst::makeReplace3(awst::makeLoadSlot(MEMORY_SLOT_FIRST + slot, _loc),
+		auto rep = awst::makeReplace3(awst::makeLoadSlot(memorySlotFirst() + slot, _loc),
 			awst::makeIntegerConstant(sub, _loc), std::move(_value32), _loc);
 		storeMemoryBlob(std::move(rep), _loc, _out, slot);
 		return;
@@ -116,13 +117,13 @@ void AssemblyBuilder::writeMemWordConst(
 
 	auto valPart1 = awst::makeExtract3(tmpRead(), awst::makeIntegerConstant("0", _loc),
 		awst::makeIntegerConstant(firstLen, _loc), _loc);
-	auto rep1 = awst::makeReplace3(awst::makeLoadSlot(MEMORY_SLOT_FIRST + slot, _loc),
+	auto rep1 = awst::makeReplace3(awst::makeLoadSlot(memorySlotFirst() + slot, _loc),
 		awst::makeIntegerConstant(sub, _loc), std::move(valPart1), _loc);
 	storeMemoryBlob(std::move(rep1), _loc, _out, slot);
 
 	auto valPart2 = awst::makeExtract3(tmpRead(), awst::makeIntegerConstant(firstLen, _loc),
 		awst::makeIntegerConstant(32 - firstLen, _loc), _loc);
-	auto rep2 = awst::makeReplace3(awst::makeLoadSlot(MEMORY_SLOT_FIRST + slot + 1, _loc),
+	auto rep2 = awst::makeReplace3(awst::makeLoadSlot(memorySlotFirst() + slot + 1, _loc),
 		awst::makeIntegerConstant("0", _loc), std::move(valPart2), _loc);
 	storeMemoryBlob(std::move(rep2), _loc, _out, slot + 1);
 }
@@ -135,13 +136,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDyn(
 	// a side-effecting mload(q) would otherwise re-run each time (makeEvalOnce =
 	// OperandPlan primitive; a var/constant offset is duplicated as-is).
 	off = awst::makeEvalOnce(std::move(off), _loc);
-	m_pendingStatements.push_back(memBoundsAssert(off, _loc));
+	m_pendingStatements.push_back(memBoundsAssert(scratchLayout(), off, _loc));
 	// ONE path for every slot. Slot 0 is plain scratch since the __evm_memory
 	// cache removal, so the old `off < SLOT_SIZE ? slot-0-fast : slow`
 	// conditional selected between two IDENTICAL computations — paying an SE
 	// fan-out, a compare, a branch and a duplicated extract on every dynamic
 	// mload. Dyn is now Direct plus the bounds assert + eval-once wrapper.
-	return readMemWordDirect(std::move(off), _loc);
+	return readMemWordDirect(scratchLayout(), std::move(off), _loc);
 }
 
 void AssemblyBuilder::writeMemWordDyn(
@@ -158,21 +159,22 @@ void AssemblyBuilder::writeMemWordDyn(
 	_out.push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
 		offsetToUint64(std::move(_offset), _loc), _loc));
-	writeMemWordDirect(
+	writeMemWordDirect(scratchLayout(),
 		awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
 		std::move(_value32), _loc, _out);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDirect(
+	ScratchLayout const& _scratch,
 	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc)
 {
 	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
 	auto slot = awst::makeUInt64BinOp(_offset, awst::UInt64BinaryOperator::FloorDiv, ss(), _loc);
-	if (MEMORY_SLOT_FIRST != 0)
+	if (_scratch.memoryFirst() != 0)
 		slot = awst::makeUInt64BinOp(std::move(slot),
 			awst::UInt64BinaryOperator::Add,
 			awst::makeIntegerConstant(
-				static_cast<uint64_t>(MEMORY_SLOT_FIRST), _loc), _loc);
+				static_cast<uint64_t>(_scratch.memoryFirst()), _loc), _loc);
 	auto sub = awst::makeUInt64BinOp(std::move(_offset), awst::UInt64BinaryOperator::Mod, ss(), _loc);
 	auto loadsCall = awst::makeIntrinsicCall("loads", awst::WType::bytesType(), _loc);
 	loadsCall->stackArgs.push_back(std::move(slot));
@@ -181,6 +183,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDirect(
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDirect(
+	ScratchLayout const& _scratch,
 	std::shared_ptr<awst::Expression> _offset, int _byteLen, awst::SourceLocation const& _loc)
 {
 	// Concat ceil(_byteLen/32) successive words; each re-derives its slot
@@ -193,7 +196,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDirect(
 			? _offset
 			: awst::makeUInt64BinOp(_offset, awst::UInt64BinaryOperator::Add,
 				awst::makeIntegerConstant(static_cast<uint64_t>(i * 32), _loc), _loc);
-		auto word = readMemWordDirect(std::move(wordOff), _loc);
+		auto word = readMemWordDirect(_scratch, std::move(wordOff), _loc);
 		acc = acc ? awst::makeConcat(std::move(acc), std::move(word), _loc) : std::move(word);
 	}
 	// Trim to the exact byte length when not word-aligned.
@@ -204,6 +207,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDirect(
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::materializeBlobBytesValue(
+	ScratchLayout const& _scratch,
 	std::string const& _offVar,
 	bool _isString,
 	awst::SourceLocation const& _loc)
@@ -212,13 +216,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::materializeBlobBytesValue(
 		return awst::makeVarExpression(_offVar, awst::WType::uint64Type(), _loc);
 	};
 	auto length = awst::makeExtractUInt64(
-		readMemWordDirect(offRead(), _loc),
+		readMemWordDirect(_scratch, offRead(), _loc),
 		awst::makeIntegerConstant("24", _loc), _loc);
 	auto dataStart = awst::makeUInt64BinOp(offRead(),
 		awst::UInt64BinaryOperator::Add,
 		awst::makeIntegerConstant("32", _loc), _loc);
 	auto data = awst::makeExtract3(
-		awst::makeLoadSlot(MEMORY_SLOT_FIRST, _loc),
+		awst::makeLoadSlot(_scratch.memoryFirst(), _loc),
 		std::move(dataStart), std::move(length), _loc);
 	if (_isString)
 		return awst::makeReinterpretCast(std::move(data),
@@ -227,6 +231,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::materializeBlobBytesValue(
 }
 
 void AssemblyBuilder::writeMemBytesDirect(
+	ScratchLayout const& _scratch,
 	std::shared_ptr<awst::Expression> _offU64,
 	std::shared_ptr<awst::Expression> _bytesValue,
 	int _uniqueId,
@@ -259,7 +264,7 @@ void AssemblyBuilder::writeMemBytesDirect(
 	auto word = awst::makeExtract3(bytesv(), u64v("i"),
 		awst::makeIntegerConstant("32", _loc), _loc);
 	std::vector<std::shared_ptr<awst::Statement>> ws;
-	writeMemWordDirect(
+	writeMemWordDirect(_scratch,
 		awst::makeUInt64BinOp(u64v("off"), awst::UInt64BinaryOperator::Add,
 			u64v("i"), _loc),
 		std::move(word), _loc, ws);
@@ -272,23 +277,24 @@ void AssemblyBuilder::writeMemBytesDirect(
 }
 
 void AssemblyBuilder::writeMemWordDirect(
+	ScratchLayout const& _scratch,
 	std::shared_ptr<awst::Expression> _offset, std::shared_ptr<awst::Expression> _value32,
 	awst::SourceLocation const& _loc, std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
 	int id = awst::NameGen::next("MemoryOps.dynamicStore");
 	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
 
-	_out.push_back(memBoundsAssert(_offset, _loc));
+	_out.push_back(memBoundsAssert(_scratch, _offset, _loc));
 
 	std::string slotN = "__blobw_slot_" + std::to_string(id);
 	std::string valN = "__blobw_val_" + std::to_string(id);
 	auto physicalSlot = awst::makeUInt64BinOp(
 		_offset, awst::UInt64BinaryOperator::FloorDiv, ss(), _loc);
-	if (MEMORY_SLOT_FIRST != 0)
+	if (_scratch.memoryFirst() != 0)
 		physicalSlot = awst::makeUInt64BinOp(std::move(physicalSlot),
 			awst::UInt64BinaryOperator::Add,
 			awst::makeIntegerConstant(
-				static_cast<uint64_t>(MEMORY_SLOT_FIRST), _loc), _loc);
+				static_cast<uint64_t>(_scratch.memoryFirst()), _loc), _loc);
 	_out.push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(slotN, awst::WType::uint64Type(), _loc),
 		std::move(physicalSlot), _loc));
@@ -747,7 +753,7 @@ void AssemblyBuilder::handleMstore8(
 	// instead of the old slot-0-only replace3, which panicked / mis-wrote for
 	// any offset >= 4096 in an --evm-memory-slots contract (FMP reaches ~18KB).
 	auto offsetU64 = awst::makeEvalOnce(offsetToUint64(_args[0], _loc), _loc);
-	_out.push_back(memBoundsAssert(offsetU64, _loc));
+	_out.push_back(memBoundsAssert(scratchLayout(), offsetU64, _loc));
 	auto padded = padTo32Bytes(ensureBiguint(_args[1], _loc), _loc);
 	auto lowByte = awst::makeExtract3(
 		std::move(padded), awst::makeIntegerConstant("31", _loc), awst::makeOne(_loc), _loc);

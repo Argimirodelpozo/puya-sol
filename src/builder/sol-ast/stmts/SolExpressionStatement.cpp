@@ -38,7 +38,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolExpressionStatement::toAwst()
 	bool isTypeType = dynamic_cast<solidity::frontend::TypeType const*>(
 		m_node.expression().annotation().type) != nullptr;
 
-	auto expr = m_blk.builderCtx().build(m_node.expression());
+	auto expr = m_blk.builderCtx().buildExpr(m_node.expression());
 
 	for (auto& p: m_blk.builderCtx().takePrePending())
 		result.push_back(std::move(p));
@@ -167,7 +167,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 			voidRet && voidRet->functionReturnParameters
 			&& voidRet->functionReturnParameters->parameters().empty())
 		{
-			auto call = m_blk.builderCtx().build(*m_node.expression());
+			auto call = m_blk.builderCtx().buildExpr(*m_node.expression());
 			for (auto& p: m_blk.builderCtx().takePrePending())
 				result.push_back(std::move(p));
 			if (call)
@@ -240,7 +240,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							}
 							else
 							{
-								v = m_blk.builderCtx().build(compExpr);
+								v = m_blk.builderCtx().buildExpr(compExpr);
 								if (v)
 									v = builder::TypeCoercion::coerceForAssignment(
 										std::move(v),
@@ -282,7 +282,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 		if (storageRefMapReturn
 			&& dynamic_cast<solidity::frontend::IndexAccess const*>(m_node.expression()))
 		{
-			auto built = m_blk.builderCtx().build(*m_node.expression());
+			auto built = m_blk.builderCtx().buildExpr(*m_node.expression());
 			built = awst::unwrapStateGet(std::move(built));
 			if (auto* box = dynamic_cast<awst::BoxValueExpression*>(built.get()))
 				stmt->value = awst::makeReinterpretCast(
@@ -294,7 +294,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 			return result;
 		}
 
-		stmt->value = m_blk.builderCtx().build(*m_node.expression());
+		stmt->value = m_blk.builderCtx().buildExpr(*m_node.expression());
 		if (!stmt->value)
 			return result;   // build errored (already logged) — don't deref
 

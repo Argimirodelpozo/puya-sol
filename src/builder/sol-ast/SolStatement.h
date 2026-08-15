@@ -4,7 +4,7 @@
 /// Base class for Solidity statement wrappers + buildStatement/buildBlock entry points.
 ///
 /// Wrappers take a BlockContext& (enclosing loop, placeholder body, etc.).
-/// Expression children route through m_blk.builderCtx().build(...).
+/// Expression children compose through m_blk.builderCtx().buildExpr(...).
 
 #include "awst/Node.h"
 #include "builder/sol-ast/Context.h"

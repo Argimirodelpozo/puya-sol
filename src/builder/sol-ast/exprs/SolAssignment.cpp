@@ -13,6 +13,7 @@
 #include "builder/sol-types/Arc4ArrayWidening.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/ConversionPlan.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-ast/EffectScan.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
@@ -260,7 +261,7 @@ std::shared_ptr<awst::Expression> SolAssignment::emitGenericAssignment(
 std::optional<std::shared_ptr<awst::Expression>>
 SolAssignment::tryHandlePushAssignRewrite(Token _op)
 {
-	// `arr.push() = value`: stash RHS as pendingArrayPushValue before LHS build so
+	// `arr.push() = value`: scope the RHS while lowering the LHS call so
 	// SolArrayMethod::push folds it into ArrayExtend (we don't model Solidity refs).
 	if (_op != Token::Assign) return std::nullopt;
 	auto const* lhsCall = dynamic_cast<FunctionCall const*>(&m_assignment.leftHandSide());
@@ -268,9 +269,9 @@ SolAssignment::tryHandlePushAssignRewrite(Token _op)
 	auto const* member = dynamic_cast<MemberAccess const*>(&lhsCall->expression());
 	if (!member || member->memberName() != "push") return std::nullopt;
 
-	m_ctx.pendingArrayPushValue = buildExpr(m_assignment.rightHandSide());
+	auto pushValue = buildExpr(m_assignment.rightHandSide());
+	auto pushScope = m_ctx.pushArrayAssignmentValue(std::move(pushValue));
 	auto target = buildExpr(m_assignment.leftHandSide());
-	m_ctx.pendingArrayPushValue.reset();
 	return target; // ArrayExtend emitted by SolArrayMethod
 }
 
@@ -315,6 +316,7 @@ SolAssignment::tryHandleBlobAggregateWrite()
 				awst::makeIntegerConstant(static_cast<uint64_t>(i * 32), m_loc),
 				awst::makeIntegerConstant("32", m_loc), m_loc);
 			builder::AssemblyBuilder::writeMemWordDirect(
+				m_ctx.typeMapper.profile().scratchLayout,
 				std::move(wordOff), std::move(word), m_loc, m_ctx.prePendingStatements);
 		}
 		return std::optional<std::shared_ptr<awst::Expression>>(
@@ -347,6 +349,7 @@ SolAssignment::tryHandleBlobAggregateWrite()
 		awst::makeLeftPad(awst::makeAsBytes(
 			awst::makeVarExpression(vN, awst::WType::biguintType(), m_loc), m_loc), 32, m_loc), 32, m_loc);
 	builder::AssemblyBuilder::writeMemWordDirect(
+		m_ctx.typeMapper.profile().scratchLayout,
 		std::move(off), std::move(vbytes), m_loc, m_ctx.prePendingStatements);
 
 	return std::optional<std::shared_ptr<awst::Expression>>(
@@ -1472,15 +1475,16 @@ SolAssignment::applyAssignmentTypeCoercion(
 	std::shared_ptr<awst::Expression> _value,
 	std::shared_ptr<awst::Expression> const& _target)
 {
-	// int→bytes[N], string→bytes, numeric casts.
-	_value = builder::TypeCoercion::coerceForAssignment(std::move(_value), _target->wtype, m_loc);
-	// Signed sub-word → wider-signed implicit widen (`b = someInt8;` b:int16): coerceForAssignment
-	// is a uint64→uint64 no-op that drops the sign. Re-extend from the RHS width. Plain `=` only
-	// (compound `+=` coerces a same-typed computed value, not the raw RHS).
 	if (m_assignment.assignmentOperator() == Token::Assign)
-		_value = builder::TypeCoercion::signExtendSignedWiden(
-			std::move(_value), m_assignment.rightHandSide().annotation().type,
-			m_assignment.leftHandSide().annotation().type, m_loc);
+		_value = builder::ConversionPlan{
+			m_assignment.rightHandSide().annotation().type,
+			m_assignment.leftHandSide().annotation().type,
+			_target->wtype,
+			builder::ConversionPlan::Context::Assignment}.emit(
+				std::move(_value), m_loc);
+	else
+		_value = builder::TypeCoercion::coerceForAssignment(
+			std::move(_value), _target->wtype, m_loc);
 	if (_value->wtype != _target->wtype && _target->wtype
 		&& _target->wtype->kind() == awst::WTypeKind::Bytes)
 	{

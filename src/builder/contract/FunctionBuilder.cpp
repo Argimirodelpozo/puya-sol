@@ -178,9 +178,17 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	}
 	else
 	{
-		method.memberName = _func.name();
-		if (m_overloadedNames.count(_func.name()))
-			appendOverloadSuffix(method.memberName, _func);
+		using solidity::frontend::Visibility;
+		auto const* symbol = m_functionSymbols.resolve(_func.id());
+		if (symbol && (_func.visibility() == Visibility::Internal
+				|| _func.visibility() == Visibility::Private))
+			method.memberName = *symbol;
+		else
+		{
+			method.memberName = _func.name();
+			if (m_overloadedNames.count(_func.name()))
+				appendOverloadSuffix(method.memberName, _func);
+		}
 	}
 
 	// Documentation
@@ -587,7 +595,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				{
 					std::string offN = "__blobagg_off_" + std::to_string(rp->id());
 					auto blob = awst::makeLoadSlot(
-						AssemblyBuilder::MEMORY_SLOT_FIRST, method.sourceLocation);
+						m_typeMapper.profile().scratchLayout.memoryFirst(),
+						method.sourceLocation);
 					auto base = awst::makeExtractUInt64(std::move(blob),
 						awst::makeIntegerConstant("88", method.sourceLocation), method.sourceLocation);
 					inits.push_back(awst::makeAssignmentStatement(
@@ -595,7 +604,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						std::move(base), method.sourceLocation));
 				}
 				for (auto& s: AssemblyBuilder::emitFreeMemoryBump(
-						sz, method.sourceLocation, static_cast<int>(rp->id())))
+						m_typeMapper.profile().scratchLayout, sz,
+						method.sourceLocation, static_cast<int>(rp->id())))
 					inits.push_back(std::move(s));
 			}
 			if (!inits.empty())
@@ -671,6 +681,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 						// have REPOINTED it (solady toHexString) — materialise
 						// from the (possibly moved) offset var.
 						retStmt->value = AssemblyBuilder::materializeBlobBytesValue(
+							m_typeMapper.profile().scratchLayout,
 							"__blobagg_off_" + std::to_string(retParams[0]->id()),
 							dynamic_cast<solidity::frontend::ArrayType const*>(
 								retParams[0]->type())->isString(),

@@ -248,7 +248,7 @@ void ContractBuilder::buildModifierChain(
 					continue;
 				}
 
-				auto argExpr = m_exprBuilder->build(*(*args)[pi]);
+				auto argExpr = m_exprBuilder->buildExpr(*(*args)[pi]);
 				if (!argExpr) continue;
 
 				// Storage-POINTER modifier param (`modifier m(uint256[] storage a, ...)`

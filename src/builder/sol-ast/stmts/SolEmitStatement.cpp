@@ -87,7 +87,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 	// sha512_256-selector model). See memory asm/indexed-event-params.
 	for (size_t i = 0; i < callArgs.size(); ++i)
 	{
-		auto translated = m_blk.builderCtx().build(*callArgs[i]);
+		auto translated = m_blk.builderCtx().buildExpr(*callArgs[i]);
 
 		// Enum range validation: EVM panics (0x21) on invalid enum values in events
 		if (i < params.size())

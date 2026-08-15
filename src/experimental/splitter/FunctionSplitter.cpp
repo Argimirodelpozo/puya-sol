@@ -695,17 +695,18 @@ std::vector<std::shared_ptr<awst::Statement>> makeScratchLoadStmts(
 	return out;
 }
 
-// Restore EVM-memory blob (scratch slots MEMORY_SLOT_FIRST..LAST) from
+// Restore the EVM-memory blob from the configured scratch slots in
 // the prior piece's scratch via gload, so memory a prior piece wrote
 // (e.g. loadProof) is visible to later pieces. State threads SCRATCHSPACE.
 // No slot-0 local cache (see AssemblyBuilder::memoryVar/assignMemoryVar):
 // all slots, including 0, restore straight to scratch.
 std::vector<std::shared_ptr<awst::Statement>> makeBlobCarryLoadStmts(
-	int _prevCallTxnIndex, awst::SourceLocation const& _loc)
+	int _prevCallTxnIndex,
+	std::vector<int> const& _memorySlots,
+	awst::SourceLocation const& _loc)
 {
-	using AB = builder::AssemblyBuilder;
 	std::vector<std::shared_ptr<awst::Statement>> out;
-	for (int slot = AB::MEMORY_SLOT_FIRST; slot <= AB::MEMORY_SLOT_LAST; ++slot)
+	for (int slot : _memorySlots)
 	{
 		auto gload = awst::makeIntrinsicCall("gload", awst::WType::bytesType(), _loc);
 		gload->immediates = {_prevCallTxnIndex, slot};
@@ -719,12 +720,14 @@ std::vector<std::shared_ptr<awst::Statement>> makeBlobCarryLoadStmts(
 // No slot-0 local cache (see AssemblyBuilder::memoryVar/assignMemoryVar):
 // writes go straight to scratch, so this is a no-op store-from-itself.
 // Without it, the old `__evm_memory` local (uint64 0) would poison the gload.
-std::shared_ptr<awst::Statement> makeBlobFlushStmt(awst::SourceLocation const& _loc)
+std::shared_ptr<awst::Statement> makeBlobFlushStmt(
+	std::vector<int> const& _memorySlots,
+	awst::SourceLocation const& _loc)
 {
-	using AB = builder::AssemblyBuilder;
-	auto val = awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, _loc);
+	auto first = _memorySlots.front();
+	auto val = awst::makeLoadSlot(first, _loc);
 	return awst::makeExpressionStatement(
-		awst::makeStoreSlot(AB::MEMORY_SLOT_FIRST, std::move(val), _loc), _loc);
+		awst::makeStoreSlot(first, std::move(val), _loc), _loc);
 }
 
 } // anonymous namespace
@@ -739,6 +742,7 @@ struct SplitTarget
 	std::shared_ptr<awst::Subroutine> sub;
 	awst::ContractMethod* method = nullptr;
 	awst::Contract* parentContract = nullptr;
+	std::vector<int> memorySlots;
 	awst::SourceLocation loc;
 
 	std::shared_ptr<awst::Block>& body() {
@@ -769,6 +773,21 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 {
 	auto& logger = Logger::instance();
 	SplitResult result;
+	std::vector<int> programMemorySlots;
+	for (auto const& root : _roots)
+	{
+		auto contract = std::dynamic_pointer_cast<awst::Contract>(root);
+		if (!contract)
+			continue;
+		for (int slot : contract->reservedScratchSpace)
+			if (slot < builder::ScratchLayout::transientSlot ||
+				slot > builder::ScratchLayout::flashLast)
+				programMemorySlots.push_back(slot);
+		if (!programMemorySlots.empty())
+			break;
+	}
+	if (programMemorySlots.empty())
+		programMemorySlots = builder::ScratchLayout{}.memorySlots();
 
 	// Build name → SplitTarget for both Subroutines and ContractMethods.
 	std::map<std::string, SplitTarget> byName;
@@ -779,6 +798,7 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			SplitTarget st;
 			st.sub = sub;
 			st.loc = sub->sourceLocation;
+			st.memorySlots = programMemorySlots;
 			byName[sub->name] = st;
 		}
 		else if (auto contract =
@@ -790,6 +810,12 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				st.method = &m;
 				st.parentContract = contract.get();
 				st.loc = m.sourceLocation;
+				for (int slot : contract->reservedScratchSpace)
+					if (slot < builder::ScratchLayout::transientSlot ||
+						slot > builder::ScratchLayout::flashLast)
+						st.memorySlots.push_back(slot);
+				if (st.memorySlots.empty())
+					st.memorySlots = programMemorySlots;
 				// Name lookup uses the bare member name.
 				byName[m.memberName] = st;
 			}
@@ -941,7 +967,8 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				// Also restore EVM-memory blob for cross-chunk pieces
 				// (fresh scratch per program; gload from prior piece's scratch).
 				if (spec.crossChunk)
-					for (auto& s : makeBlobCarryLoadStmts(prevCallTxnIdx, origLoc))
+					for (auto& s : makeBlobCarryLoadStmts(
+						prevCallTxnIdx, tgt.memorySlots, origLoc))
 						pieceBody->body.push_back(std::move(s));
 			}
 
@@ -955,7 +982,8 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 			if (!isLast)
 			{
 				if (spec.crossChunk)
-					pieceBody->body.push_back(makeBlobFlushStmt(origLoc));
+					pieceBody->body.push_back(makeBlobFlushStmt(
+						tgt.memorySlots, origLoc));
 				for (auto& s : makeScratchStoreStmts(liveAt[pi], origLoc))
 					pieceBody->body.push_back(std::move(s));
 				pieceBody->body.push_back(awst::makeReturnStatement(

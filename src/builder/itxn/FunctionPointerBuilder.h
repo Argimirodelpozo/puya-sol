@@ -9,6 +9,7 @@
 /// Calling one dispatches through an inner application call.
 
 #include "builder/sol-eb/NodeBuilder.h"
+#include "builder/FunctionSymbolTable.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
@@ -102,10 +103,10 @@ public:
 	static std::string dispatchName(
 		solidity::frontend::FunctionType const* _funcType);
 
-	/// Set subroutine IDs for registered targets; call after all library/free fns are registered.
+	/// Bind registered targets to root-subroutine or contract-method symbols.
 	static void setSubroutineIds(
 		ContractContext& _ctx,
-		std::unordered_map<int64_t, std::string> const& _idMap);
+		FunctionSymbolTable const& _symbols);
 
 	/// Set current contract cref before translating function bodies
 	/// (library subroutines need it to construct SubroutineIDs).

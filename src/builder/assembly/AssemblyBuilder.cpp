@@ -2,6 +2,7 @@
 #include "builder/SourceLocConvert.h"
 #include "builder/CompilationSession.h"
 #include "builder/BuildArtifacts.h"
+#include "builder/SolcFacts.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "Logger.h"
 
@@ -89,6 +90,7 @@ AssemblyBuilder::AssemblyBuilder(
 
 std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	solidity::yul::Block const& _block,
+	solidity::yul::Dialect const& _dialect,
 	std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 	awst::WType const* _returnType,
 	std::map<std::string, std::string> const& _constants,
@@ -108,7 +110,8 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_locals.clear();
 	m_localConstants.clear();
 	m_reassignedLocals.clear();
-	collectReassignedLocals(_block);
+	auto const yulFacts = SolcFacts::analyzeYul(_block, _dialect);
+	m_reassignedLocals = yulFacts.assignedVariables;
 	m_calldataParamNames.clear();
 	m_calldataMap.clear();
 	m_asmFunctions.clear();
@@ -159,125 +162,11 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 		}
 	}
 
-	// First pass: collect assembly function definitions (Yul allows nesting)
-	std::function<void(std::vector<solidity::yul::Statement> const&)> collectFunctions =
-		[&](std::vector<solidity::yul::Statement> const& stmts)
-	{
-		for (auto const& stmt: stmts)
-		{
-			if (auto const* funcDef = std::get_if<solidity::yul::FunctionDefinition>(&stmt))
-			{
-				m_asmFunctions[funcDef->name.str()] = funcDef;
-				collectFunctions(funcDef->body.statements);
-			}
-			else if (auto const* block = std::get_if<solidity::yul::Block>(&stmt))
-			{
-				collectFunctions(block->statements);
-			}
-		}
-	};
-	collectFunctions(_block.statements);
-
-	// Build direct-call graph (user-defined Yul calls only; builtins irrelevant for recursion).
+	// solc owns Yul function discovery, reachability, and recursion semantics.
+	m_asmFunctions = yulFacts.functions;
 	m_recursiveYulFuncs.clear();
 	m_yulFuncSubroutineIds.clear();
-	std::map<std::string, std::set<std::string>> yulDirectCalls;
-	std::function<void(solidity::yul::Expression const&, std::set<std::string>&)> scanExpr;
-	std::function<void(std::vector<solidity::yul::Statement> const&, std::set<std::string>&)> scanStmts;
-	scanExpr = [&](solidity::yul::Expression const& _expr, std::set<std::string>& _out)
-	{
-		if (auto const* call = std::get_if<solidity::yul::FunctionCall>(&_expr))
-		{
-			std::string n = getFunctionName(call->functionName);
-			if (m_asmFunctions.count(n))
-				_out.insert(n);
-			for (auto const& a: call->arguments)
-				scanExpr(a, _out);
-		}
-	};
-	scanStmts = [&](std::vector<solidity::yul::Statement> const& stmts, std::set<std::string>& _out)
-	{
-		for (auto const& s: stmts)
-		{
-			if (std::get_if<solidity::yul::FunctionDefinition>(&s))
-				continue; // declarations do not execute in the enclosing body
-			else if (auto const* blk = std::get_if<solidity::yul::Block>(&s))
-				scanStmts(blk->statements, _out);
-			else if (auto const* iff = std::get_if<solidity::yul::If>(&s))
-			{
-				scanExpr(*iff->condition, _out);
-				scanStmts(iff->body.statements, _out);
-			}
-			else if (auto const* sw = std::get_if<solidity::yul::Switch>(&s))
-			{
-				scanExpr(*sw->expression, _out);
-				for (auto const& c: sw->cases)
-					scanStmts(c.body.statements, _out);
-			}
-			else if (auto const* fl = std::get_if<solidity::yul::ForLoop>(&s))
-			{
-				scanStmts(fl->pre.statements, _out);
-				scanExpr(*fl->condition, _out);
-				scanStmts(fl->post.statements, _out);
-				scanStmts(fl->body.statements, _out);
-			}
-			else if (auto const* vd = std::get_if<solidity::yul::VariableDeclaration>(&s))
-			{
-				if (vd->value) scanExpr(*vd->value, _out);
-			}
-			else if (auto const* as = std::get_if<solidity::yul::Assignment>(&s))
-			{
-				if (as->value) scanExpr(*as->value, _out);
-			}
-			else if (auto const* es = std::get_if<solidity::yul::ExpressionStatement>(&s))
-			{
-				scanExpr(es->expression, _out);
-			}
-		}
-	};
-	for (auto const& [name, def]: m_asmFunctions)
-	{
-		std::set<std::string> callees;
-		scanStmts(def->body.statements, callees);
-		yulDirectCalls[name] = std::move(callees);
-	}
-	// Functions are declarations, not entry points. Close the graph only from
-	// calls made by the executable assembly body; unused recursive helpers must
-	// not become speculative AWST roots.
-	std::set<std::string> reachableYulFuncs;
-	scanStmts(_block.statements, reachableYulFuncs);
-	std::vector<std::string> reachableWorklist(
-		reachableYulFuncs.begin(), reachableYulFuncs.end());
-	for (size_t i = 0; i < reachableWorklist.size(); ++i)
-	{
-		auto const found = yulDirectCalls.find(reachableWorklist[i]);
-		if (found == yulDirectCalls.end())
-			continue;
-		for (auto const& callee: found->second)
-			if (reachableYulFuncs.insert(callee).second)
-				reachableWorklist.push_back(callee);
-	}
-	// Mark each function recursive iff it reaches itself.
-	for (auto const& [name, _]: m_asmFunctions)
-	{
-		if (!reachableYulFuncs.count(name))
-			continue;
-		std::set<std::string> visited;
-		std::function<bool(std::string const&)> reaches = [&](std::string const& n) -> bool
-		{
-			auto it = yulDirectCalls.find(n);
-			if (it == yulDirectCalls.end()) return false;
-			for (auto const& c: it->second)
-			{
-				if (c == name) return true;
-				if (visited.insert(c).second)
-					if (reaches(c)) return true;
-			}
-			return false;
-		};
-		if (reaches(name))
-			m_recursiveYulFuncs.insert(name);
-	}
+	m_recursiveYulFuncs = yulFacts.recursiveFunctions;
 	for (auto const& name: m_recursiveYulFuncs)
 	{
 		std::string safeCtx = m_contextName;
@@ -385,19 +274,8 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 
 // ─── Memory blob model ──────────────────────────────────────────────────────
 
-std::vector<int> AssemblyBuilder::reservedScratchSlots()
-{
-	std::vector<int> slots;
-	for (int i = MEMORY_SLOT_FIRST; i <= MEMORY_SLOT_LAST; ++i)
-		slots.push_back(i);
-	slots.push_back(TRANSIENT_SLOT);
-	// AVM.sol Scratch library slots (flash-accounting deltas) — reserved so puya never reuses them.
-	for (int i = FLASH_SCRATCH_FIRST; i <= FLASH_SCRATCH_LAST; ++i)
-		slots.push_back(i);
-	return slots;
-}
-
 std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitFreeMemoryBump(
+	ScratchLayout const& _scratch,
 	int _size, awst::SourceLocation const& _loc, int _uniqueId)
 {
 	std::vector<std::shared_ptr<awst::Statement>> out;
@@ -406,7 +284,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitFreeMemoryBum
 
 	std::string blobTmp = "__fmp_blob_" + std::to_string(_uniqueId);
 
-	auto loadOp = awst::makeLoadSlot(MEMORY_SLOT_FIRST, _loc);
+	auto loadOp = awst::makeLoadSlot(_scratch.memoryFirst(), _loc);
 	auto blobTarget = awst::makeVarExpression(blobTmp, awst::WType::bytesType(), _loc);
 	out.push_back(awst::makeAssignmentStatement(blobTarget, std::move(loadOp), _loc));
 
@@ -426,13 +304,14 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitFreeMemoryBum
 	auto blobRead2 = awst::makeVarExpression(blobTmp, awst::WType::bytesType(), _loc);
 	auto offset40 = awst::makeIntegerConstant("64", _loc);
 	auto replaceCall = awst::makeReplace3(std::move(blobRead2), std::move(offset40), std::move(concat), _loc);
-	auto storeOp = awst::makeStoreSlot(MEMORY_SLOT_FIRST, std::move(replaceCall), _loc);
+	auto storeOp = awst::makeStoreSlot(_scratch.memoryFirst(), std::move(replaceCall), _loc);
 
 	out.push_back(awst::makeExpressionStatement(std::move(storeOp), _loc));
 	return out;
 }
 
 std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitBytesBlobAlloc(
+	ScratchLayout const& _scratch,
 	std::shared_ptr<awst::Expression> _lenU64, std::string const& _offVar,
 	int _uniqueId, awst::SourceLocation const& _loc)
 {
@@ -448,13 +327,13 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitBytesBlobAllo
 
 	out.push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(_offVar, u64, _loc),
-		awst::makeExtractUInt64(awst::makeLoadSlot(MEMORY_SLOT_FIRST, _loc), k("88"), _loc), _loc));
+		awst::makeExtractUInt64(awst::makeLoadSlot(_scratch.memoryFirst(), _loc), k("88"), _loc), _loc));
 	auto offRead = [&]() { return awst::makeVarExpression(_offVar, u64, _loc); };
 
 	// Write the 32-byte length word at the buffer offset: replace3(blob, off, pad32(len)).
 	auto lenWord = awst::makeLeftPad(awst::makeItob(lenRead(), _loc), 24, _loc);
-	out.push_back(awst::makeExpressionStatement(awst::makeStoreSlot(MEMORY_SLOT_FIRST,
-		awst::makeReplace3(awst::makeLoadSlot(MEMORY_SLOT_FIRST, _loc), offRead(),
+	out.push_back(awst::makeExpressionStatement(awst::makeStoreSlot(_scratch.memoryFirst(),
+		awst::makeReplace3(awst::makeLoadSlot(_scratch.memoryFirst(), _loc), offRead(),
 			std::move(lenWord), _loc), _loc), _loc));
 
 	// newFMP = off + 32 + ceil(len/32)*32.
@@ -467,8 +346,8 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitBytesBlobAllo
 		awst::makeUInt64BinOp(offRead(), awst::UInt64BinaryOperator::Add, k("32"), _loc),
 		awst::UInt64BinaryOperator::Add, std::move(ceil32), _loc);
 	auto fmpWord = awst::makeLeftPad(awst::makeItob(std::move(newFmp), _loc), 24, _loc);
-	out.push_back(awst::makeExpressionStatement(awst::makeStoreSlot(MEMORY_SLOT_FIRST,
-		awst::makeReplace3(awst::makeLoadSlot(MEMORY_SLOT_FIRST, _loc), k("64"),
+	out.push_back(awst::makeExpressionStatement(awst::makeStoreSlot(_scratch.memoryFirst(),
+		awst::makeReplace3(awst::makeLoadSlot(_scratch.memoryFirst(), _loc), k("64"),
 			std::move(fmpWord), _loc), _loc), _loc));
 	return out;
 }
@@ -485,7 +364,7 @@ void AssemblyBuilder::initializeMemoryBlob(
 	// MEMORY_VAR declared as vestigial; memoryVar()/assignMemoryVar() go straight to scratch slot 0.
 	m_locals[MEMORY_VAR] = awst::WType::bytesType();
 	{
-		auto blob = loadMemoryBlob(loc, MEMORY_SLOT_FIRST);
+		auto blob = loadMemoryBlob(loc, memorySlotFirst());
 		assignMemoryVar(std::move(blob), loc, _out);
 	}
 
@@ -528,7 +407,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::memoryVar(awst::SourceLocatio
 	// Read slot 0 straight from scratch — no __evm_memory local cache.
 	// The cached form caused puya to miscount the dig in large split pieces,
 	// storing uint64 into slot 0; direct scratch loads/stores avoid that.
-	return awst::makeLoadSlot(MEMORY_SLOT_FIRST, _loc);
+	return awst::makeLoadSlot(memorySlotFirst(), _loc);
 }
 
 void AssemblyBuilder::assignMemoryVar(
@@ -538,7 +417,7 @@ void AssemblyBuilder::assignMemoryVar(
 )
 {
 	_out.push_back(awst::makeExpressionStatement(
-		awst::makeStoreSlot(MEMORY_SLOT_FIRST, std::move(_value), _loc), _loc));
+		awst::makeStoreSlot(memorySlotFirst(), std::move(_value), _loc), _loc));
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::loadMemoryBlob(
@@ -546,7 +425,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::loadMemoryBlob(
 	int _slot
 )
 {
-	return awst::makeLoadSlot(MEMORY_SLOT_FIRST + _slot, _loc);
+	return awst::makeLoadSlot(memorySlotFirst() + _slot, _loc);
 }
 
 void AssemblyBuilder::storeMemoryBlob(
@@ -556,7 +435,7 @@ void AssemblyBuilder::storeMemoryBlob(
 	int _slot
 )
 {
-	auto storeOp = awst::makeStoreSlot(MEMORY_SLOT_FIRST + _slot, std::move(_blob), _loc);
+	auto storeOp = awst::makeStoreSlot(memorySlotFirst() + _slot, std::move(_blob), _loc);
 	auto exprStmt = awst::makeExpressionStatement(std::move(storeOp), _loc);
 	_out.push_back(std::move(exprStmt));
 }
@@ -580,37 +459,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::offsetToUint64(
 
 	// biguint → bytes → btoi (safe for offsets that fit in uint64)
 	return safeBtoi(ensureBiguint(std::move(_offset), _loc), _loc);
-}
-
-
-void AssemblyBuilder::collectReassignedLocals(solidity::yul::Block const& _block)
-{
-	using namespace solidity::yul;
-	std::function<void(Block const&)> walk = [&](Block const& blk)
-	{
-		for (auto const& s: blk.statements)
-		{
-			if (auto const* assign = std::get_if<Assignment>(&s))
-				for (auto const& var: assign->variableNames)
-					m_reassignedLocals.insert(var.name.str());
-			else if (auto const* b = std::get_if<Block>(&s))
-				walk(*b);
-			else if (auto const* iff = std::get_if<If>(&s))
-				walk(iff->body);
-			else if (auto const* sw = std::get_if<Switch>(&s))
-				for (auto const& c: sw->cases)
-					walk(c.body);
-			else if (auto const* fl = std::get_if<ForLoop>(&s))
-			{
-				walk(fl->pre);
-				walk(fl->post);
-				walk(fl->body);
-			}
-			else if (auto const* fn = std::get_if<FunctionDefinition>(&s))
-				walk(fn->body);
-		}
-	};
-	walk(_block);
 }
 
 
