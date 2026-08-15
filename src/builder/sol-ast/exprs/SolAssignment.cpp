@@ -1537,8 +1537,8 @@ SolAssignment::applyArc4EncodeIfNeeded(
 
 	// Skip encode if types match structurally (TypeMapper may not intern pointers;
 	// double-encoding would corrupt an ARC4 aggregate).
-	bool sameShape = _value->wtype->kind() == _target->wtype->kind()
-		&& _value->wtype->name() == _target->wtype->name();
+	bool sameShape = awst::structurallyEquivalent(
+		_value->wtype, _target->wtype);
 	if (sameShape) return _value;
 
 	_value = builder::TypeCoercion::stringToBytes(std::move(_value), m_loc);

@@ -522,7 +522,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				}
 				else
 				{
-					if (elemARC4 != nativeElem && elemARC4->name() != nativeElem->name())
+					if (!awst::structurallyEquivalent(elemARC4, nativeElem))
 					{
 						auto decode = awst::makeARC4Decode(std::move(result), nativeElem, loc);
 						result = std::move(decode);

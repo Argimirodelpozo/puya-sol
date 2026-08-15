@@ -202,8 +202,8 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 
 	auto valForEncode = awst::makeVarExpression(valVarName, valVar->wtype, m_loc);
 	std::shared_ptr<awst::Expression> valueBytes;
-	bool valueIsNative = valForEncode->wtype != elemArc4Type
-		&& valForEncode->wtype->name() != elemArc4Type->name();
+	bool valueIsNative = !awst::structurallyEquivalent(
+		valForEncode->wtype, elemArc4Type);
 	if (valueIsNative)
 	{
 		auto encode = awst::makeARC4Encode(
@@ -311,7 +311,7 @@ SolAssignment::tryHandleBoxedArrayElemWrite()
 	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(vv, std::move(rhs), m_loc));
 	auto valForEnc = awst::makeVarExpression(vn, vv->wtype, m_loc);
 	std::shared_ptr<awst::Expression> valBytes =
-		(valForEnc->wtype != slotArc4 && valForEnc->wtype->name() != slotArc4->name())
+		!awst::structurallyEquivalent(valForEnc->wtype, slotArc4)
 			? awst::makeAsBytes(awst::makeARC4Encode(
 				std::move(valForEnc), const_cast<awst::WType*>(slotArc4), m_loc), m_loc)
 			: awst::makeAsBytes(std::move(valForEnc), m_loc);
@@ -380,7 +380,7 @@ SolAssignment::tryHandleOffsetStructRefFieldWrite()
 	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(vv, std::move(rhs), m_loc));
 	auto valForEnc = awst::makeVarExpression(vn, vv->wtype, m_loc);
 	std::shared_ptr<awst::Expression> valBytes =
-		(valForEnc->wtype != slotArc4 && valForEnc->wtype->name() != slotArc4->name())
+		!awst::structurallyEquivalent(valForEnc->wtype, slotArc4)
 			? awst::makeAsBytes(awst::makeARC4Encode(
 				std::move(valForEnc), const_cast<awst::WType*>(slotArc4), m_loc), m_loc)
 			: awst::makeAsBytes(std::move(valForEnc), m_loc);

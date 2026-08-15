@@ -912,7 +912,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// One session-owned layout feeds state access, inline-assembly slot routing,
 	// and runtime-dispatch generation. In EVM mode it is solc's exact linearized
 	// layout; default mode uses the compiler's physical AVM layout.
-	m_exprBuilder->storageLayout = &_storagePlan.layout;
+	m_exprBuilder->storageLayout = &_storagePlan.dispatchLayout;
 
 	// Pre-populate host-bound function map before translation so the call
 	// resolver routes them as InstanceMethodTargets.

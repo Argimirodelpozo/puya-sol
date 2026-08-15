@@ -1,6 +1,6 @@
 /// @file SourceCompat.h
-/// 0.5.x/0.6.x → 0.8.x Solidity source compatibility shims, applied as text
-/// transforms before the vendored 0.8.x compiler parses anything: pragma
+/// 0.5.x/0.6.x → 0.8.x Solidity source compatibility shims, applied over
+/// tokens from solc's lexer before the vendored parser runs: pragma
 /// relaxation, constructor-visibility removal, `uint(-1)` → `type(...).max`,
 /// bare Yul `chainid` → `chainid()`, and duplicate-interface-event removal.
 #pragma once

@@ -14,10 +14,40 @@
 #include "Logger.h"
 
 #include <algorithm>
+#include <initializer_list>
 #include <set>
+#include <string_view>
 
 namespace puyasol::builder
 {
+
+namespace
+{
+
+void promoteStorageMethods(
+	awst::Contract& _contract,
+	std::vector<std::shared_ptr<awst::Subroutine>>& _destination,
+	std::string const& _idPrefix,
+	std::initializer_list<std::string_view> _names)
+{
+	std::vector<awst::ContractMethod> remainingMethods;
+	for (auto& method: _contract.methods)
+	{
+		auto const selected = std::find(
+			_names.begin(), _names.end(), method.memberName) != _names.end();
+		if (selected)
+			_destination.push_back(awst::makeSubroutine(
+				_idPrefix + method.memberName, method.memberName,
+				std::move(method.args), method.returnType, std::move(method.body),
+				/*pure=*/false,
+				method.sourceLocation));
+		else
+			remainingMethods.push_back(std::move(method));
+	}
+	_contract.methods = std::move(remainingMethods);
+}
+
+} // namespace
 
 void ContractBuilder::buildEvmSlotStorageDispatch(
 	StorageRuntimePlan const& _storagePlan,
@@ -25,7 +55,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	std::string const& _contractName
 )
 {
-	auto const& layout = _storagePlan.layout;
+	auto const& layout = _storagePlan.dispatchLayout;
 
 	// Dense-only: every runtime slot is provably < 2^16 — no mapping / dynamic
 	// array / bytes / string anywhere in the persistent layout (their slots are
@@ -126,7 +156,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	};
 
 	// ── __storage_read(slot: biguint) -> biguint ──
-	{
+	auto buildStorageRead = [&]() {
 		awst::ContractMethod readSub;
 		readSub.sourceLocation = loc;
 		readSub.cref = cref;
@@ -186,10 +216,11 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 
 		readSub.body = body;
 		_contractNode->methods.push_back(std::move(readSub));
-	}
+	};
+	buildStorageRead();
 
 	// ── __storage_write(slot: biguint, value: biguint) -> void ──
-	{
+	auto buildStorageWrite = [&]() {
 		awst::ContractMethod writeSub;
 		writeSub.sourceLocation = loc;
 		writeSub.cref = cref;
@@ -267,7 +298,8 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 
 		writeSub.body = body;
 		_contractNode->methods.push_back(std::move(writeSub));
-	}
+	};
+	buildStorageWrite();
 
 	// ── EVM bytes/string storage codec ──────────────────────────────────────
 	// Solidity storage format: short (len<32) = data left-aligned ++ 2*len in
@@ -315,7 +347,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	};
 
 	// ── __evm_bytes_read(slot: biguint) -> bytes ──
-	{
+	auto buildBytesRead = [&]() {
 		awst::ContractMethod sub;
 		sub.sourceLocation = loc;
 		sub.cref = cref;
@@ -396,10 +428,11 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 
 		sub.body = body;
 		_contractNode->methods.push_back(std::move(sub));
-	}
+	};
+	buildBytesRead();
 
 	// ── __evm_bytes_write(slot: biguint, val: bytes) -> void ──
-	{
+	auto buildBytesWrite = [&]() {
 		awst::ContractMethod sub;
 		sub.sourceLocation = loc;
 		sub.cref = cref;
@@ -535,13 +568,14 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 
 		sub.body = body;
 		_contractNode->methods.push_back(std::move(sub));
-	}
+	};
+	buildBytesWrite();
 
 	// ── __evm_dynarr_read(slot: biguint) -> bytes ──
 	// Materialise a dynamic array of 32-byte-encoded elements as its ARC4
 	// form [u16 count][elems]: count word at the slot, elements at
 	// keccak256(slot32)+i. Callers cap/validate element width.
-	{
+	auto buildDynamicArrayRead = [&]() {
 		awst::ContractMethod sub;
 		sub.sourceLocation = loc;
 		sub.cref = cref;
@@ -676,14 +710,15 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 
 		sub.body = body;
 		_contractNode->methods.push_back(std::move(sub));
-	}
+	};
+	buildDynamicArrayRead();
 
 	// ── __evm_dynarr_write(slot: biguint, val: bytes) -> void ──
 	// Inverse of __evm_dynarr_read: val is the ARC4 form [u16 count][32B
 	// elems]. Writes the length word at the slot, elements at
 	// keccak256(slot32)+i, and CLEARS the old tail when the array shrinks —
 	// EVM assignment semantics, and a later push must see zeroed slots.
-	{
+	auto buildDynamicArrayWrite = [&]() {
 		awst::ContractMethod sub;
 		sub.sourceLocation = loc;
 		sub.cref = cref;
@@ -865,7 +900,8 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		}
 		sub.body = body;
 		_contractNode->methods.push_back(std::move(sub));
-	}
+	};
+	buildDynamicArrayWrite();
 
 	// ── __evm_dynarr2_read / __evm_dynarr2_write ──
 	// Dynamic array OF dynamic arrays (uint[][], S[][]): outer count at the
@@ -875,7 +911,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	// (__size/__aw/__per/__mul/__bp)
 	// verbatim. ARC4 form: u16 count ++ u16 heads (offsets relative to the
 	// tuple start, i.e. byte 2) ++ inner tails.
-	{
+	auto buildNestedDynamicArrayMethods = [&]() {
 		auto metricArgs = [&](std::vector<awst::CallArg>& _args) {
 			for (char const* an: {"__size", "__aw", "__per", "__mul", "__bp"})
 				awst::pushCallArg(_args, an, u64Var(an));
@@ -1068,28 +1104,16 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			sub.body = body;
 			_contractNode->methods.push_back(std::move(sub));
 		}
-	}
+	};
+	buildNestedDynamicArrayMethods();
 
-	// Promote to root-level Subroutines (see buildStorageDispatch's tail).
-	std::vector<awst::ContractMethod> remainingMethods;
-	for (auto& m: _contractNode->methods)
-	{
-		if (m.memberName == "__storage_read" || m.memberName == "__storage_write"
-			|| m.memberName == "__evm_bytes_read" || m.memberName == "__evm_bytes_write"
-			|| m.memberName == "__evm_dynarr_read"
-			|| m.memberName == "__evm_dynarr_write"
-			|| m.memberName == "__evm_dynarr2_read"
-			|| m.memberName == "__evm_dynarr2_write")
-		{
-			auto sub = awst::makeSubroutine(
-				std::string("__puyasol_") + m.memberName, m.memberName,
-				m.args, m.returnType, m.body, /*pure=*/false, m.sourceLocation);
-			m_dispatchSubroutines.push_back(std::move(sub));
-		}
-		else
-			remainingMethods.push_back(std::move(m));
-	}
-	_contractNode->methods = std::move(remainingMethods);
+	// Library/free-function callers cannot use InstanceMethodTarget, so runtime
+	// helpers are roots rather than contract methods.
+	promoteStorageMethods(*_contractNode, m_dispatchSubroutines, "__puyasol_",
+		{"__storage_read", "__storage_write",
+			"__evm_bytes_read", "__evm_bytes_write",
+			"__evm_dynarr_read", "__evm_dynarr_write",
+			"__evm_dynarr2_read", "__evm_dynarr2_write"});
 
 	Logger::instance().debug(
 		"Generated EVM-slot __storage_read/__storage_write (paged<"
@@ -1110,7 +1134,7 @@ void ContractBuilder::buildStorageDispatch(
 		return;
 	}
 
-	auto const& layout = _storagePlan.layout;
+	auto const& layout = _storagePlan.dispatchLayout;
 	std::string cref = m_sourceFile + "." + _contractName;
 	awst::SourceLocation loc;
 	loc.file = m_sourceFile;
@@ -1630,24 +1654,8 @@ void ContractBuilder::buildStorageDispatch(
 		_contractNode->methods.push_back(std::move(writeSub));
 	}
 
-	// Promote to root-level Subroutines: library/free-function callers can't use
-	// InstanceMethodTarget (puya rejects it outside a contract method).
-	std::vector<awst::ContractMethod> remainingMethods;
-	for (auto& m: _contractNode->methods)
-	{
-		if (m.memberName == "__storage_read" || m.memberName == "__storage_write")
-		{
-			auto sub = awst::makeSubroutine(
-				cref + "." + m.memberName, m.memberName,
-				m.args, m.returnType, m.body, /*pure=*/false, m.sourceLocation);
-			m_dispatchSubroutines.push_back(std::move(sub));
-		}
-		else
-		{
-			remainingMethods.push_back(std::move(m));
-		}
-	}
-	_contractNode->methods = std::move(remainingMethods);
+	promoteStorageMethods(*_contractNode, m_dispatchSubroutines, cref + ".",
+		{"__storage_read", "__storage_write"});
 
 	Logger::instance().debug(
 		"Generated __storage_read/__storage_write dispatch for "

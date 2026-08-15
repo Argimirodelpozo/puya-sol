@@ -92,6 +92,7 @@ set(SOURCES
 
 	# Storage, type, and intrinsic mappers
 	src/builder/storage/StorageMapper.cpp
+	src/builder/storage/StoragePlace.cpp
 	src/builder/storage/StorageLayout.cpp
 	src/builder/storage/StorageRuntimePlan.cpp
 	src/builder/storage/SlotHandleAccess.cpp
@@ -224,4 +225,25 @@ if(BUILD_TESTING)
 	)
 	target_include_directories(puya-sol-runner-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 	add_test(NAME puya-sol-runner-paths COMMAND puya-sol-runner-tests)
+
+	add_executable(puya-sol-source-compat-tests
+		tests/cpp/SourceCompatTests.cpp
+		src/cli/SourceCompat.cpp
+		src/Logger.cpp
+	)
+	target_include_directories(puya-sol-source-compat-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	target_link_libraries(puya-sol-source-compat-tests
+		${SOLIDITY_BUILD_DIR}/liblangutil/liblangutil.a
+		${SOLIDITY_BUILD_DIR}/libsolutil/libsolutil.a
+		${Boost_LIBRARIES}
+		pthread
+	)
+	add_test(NAME puya-sol-source-compat COMMAND puya-sol-source-compat-tests)
+
+	add_executable(puya-sol-wtype-tests
+		tests/cpp/WTypeTests.cpp
+		src/awst/WType.cpp
+	)
+	target_include_directories(puya-sol-wtype-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	add_test(NAME puya-sol-wtype-equivalence COMMAND puya-sol-wtype-tests)
 endif()

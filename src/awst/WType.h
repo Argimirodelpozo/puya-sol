@@ -68,6 +68,13 @@ protected:
 	bool m_immutable;
 };
 
+/// Physical AWST type equality. Parameterized WTypes are owned by a compiler
+/// session but are not globally interned: two independently mapped Solidity
+/// annotations may therefore describe the same AWST type at different
+/// addresses. Use this at representation/lvalue boundaries; pointer equality
+/// remains appropriate for the basic singleton types.
+bool structurallyEquivalent(WType const* _lhs, WType const* _rhs);
+
 class BytesWType: public WType
 {
 public:

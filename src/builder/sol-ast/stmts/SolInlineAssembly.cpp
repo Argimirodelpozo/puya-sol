@@ -269,7 +269,11 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				: nullptr;
 			if (!layout)
 			{
-				fallbackLayout.computeLayout(*contractDef, m_blk.typeMapper());
+				fallbackLayout.computeLayout(
+					*contractDef, m_blk.typeMapper(),
+					m_blk.typeMapper().profile().evmStorageLayout
+						? StorageLayoutSource::SolidityCanonical
+						: StorageLayoutSource::LegacyDispatch);
 				layout = &fallbackLayout;
 			}
 

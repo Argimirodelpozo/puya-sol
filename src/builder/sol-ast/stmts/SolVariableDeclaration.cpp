@@ -8,6 +8,7 @@
 #include "builder/AWSTBuilder.h" // containsMappingType
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/storage/StoragePlace.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -292,46 +293,16 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					return result;
 				}
 
-				// Classify a branch to (key expr, box?/app-global?, value wtype).
-				struct Root
-				{
-					std::shared_ptr<awst::Expression> key;
-					bool isBox = false;
-					awst::WType const* wtype = nullptr;
-				};
-				auto classify = [&](std::shared_ptr<awst::Expression> _e)
-					-> std::optional<Root>
-				{
-					_e = awst::unwrapStateGet(std::move(_e));
-					// bytes/string roots arrive as ReinterpretCast(bytes) of the
-					// raw box-key constant — peel to the key.
-					while (auto const* rc = dynamic_cast<awst::ReinterpretCast const*>(_e.get()))
-						_e = rc->expr;
-					if (auto const* bv = dynamic_cast<awst::BoxValueExpression const*>(_e.get()))
-					{
-						if (bv->key)
-							return Root{bv->key, true, bv->wtype};
-						return std::nullopt;
-					}
-					if (auto const* as = dynamic_cast<awst::AppStateExpression const*>(_e.get()))
-					{
-						if (as->key)
-							return Root{as->key, false, as->wtype};
-						return std::nullopt;
-					}
-					if (auto const* kc = dynamic_cast<awst::BytesConstant const*>(_e.get());
-						kc && kc->wtype == awst::WType::boxKeyType())
-						return Root{_e, true, awst::WType::bytesType()};
-					return std::nullopt;
-				};
-				auto tR = classify(condE->trueExpr);
-				auto fR = classify(condE->falseExpr);
-				if (tR && fR && tR->isBox == fR->isBox && tR->wtype == fR->wtype)
+				auto truePlace = StoragePlace::fromRead(condE->trueExpr);
+				auto falsePlace = StoragePlace::fromRead(condE->falseExpr);
+				if (truePlace && falsePlace && truePlace->hasSameShape(*falsePlace))
 				{
 					std::string keyName = decl.name() + "__selkey" + std::to_string(decl.id());
 					auto keySel = awst::makeConditional(condE->condition,
-						awst::makeReinterpretCast(tR->key, awst::WType::bytesType(), m_loc),
-						awst::makeReinterpretCast(fR->key, awst::WType::bytesType(), m_loc),
+						awst::makeReinterpretCast(
+							truePlace->key, awst::WType::bytesType(), m_loc),
+						awst::makeReinterpretCast(
+							falsePlace->key, awst::WType::bytesType(), m_loc),
 						awst::WType::bytesType(), m_loc);
 					result.push_back(awst::makeAssignmentStatement(
 						awst::makeVarExpression(keyName, awst::WType::bytesType(), m_loc),
@@ -340,19 +311,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 						return awst::makeVarExpression(
 							keyName, awst::WType::bytesType(), m_loc);
 					};
-					std::shared_ptr<awst::Expression> aliasExpr;
-					if (tR->isBox)
+					auto aliasExpr = truePlace->makeField(keyRead(), m_loc);
+					if (truePlace->kind == StoragePlaceKind::Box)
 						aliasExpr = StorageMapper::makeStateGetWithDefault(
-							awst::makeBoxValueExpression(
-								awst::makeReinterpretCast(
-									keyRead(), awst::WType::boxKeyType(), m_loc),
-								tR->wtype, m_loc),
-							tR->wtype, m_loc);
-					else
-						aliasExpr = awst::makeAppStateExpression(
-							awst::makeReinterpretCast(
-								keyRead(), awst::WType::stateKeyType(), m_loc),
-							tR->wtype, m_loc);
+							std::move(aliasExpr), truePlace->valueType, m_loc);
 					m_blk.setStorageAlias(decl.id(),
 						StorageAlias::stateRead(std::move(aliasExpr)));
 					m_blk.builderCtx().appendPendingTo(result);

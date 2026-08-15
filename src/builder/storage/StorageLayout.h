@@ -14,6 +14,17 @@
 namespace puyasol::builder
 {
 
+/// Which slot assignment a StorageLayout describes. SolidityCanonical is the
+/// language-level layout reported by solc. LegacyDispatch is only the bridge
+/// used by default-mode sload/sstore routing to the frontend's named AVM cells.
+/// Keeping these explicit prevents physical AVM placement from being mistaken
+/// for Solidity's logical slot space.
+enum class StorageLayoutSource
+{
+	SolidityCanonical,
+	LegacyDispatch,
+};
+
 /// Describes a single state variable's position in the EVM-compatible storage layout.
 struct SlotVariable
 {
@@ -44,10 +55,11 @@ struct SlotInfo
 class StorageLayout
 {
 public:
-	/// Compute the storage layout for a contract (walks linearized base contracts).
+	/// Compute the selected slot assignment for a contract.
 	void computeLayout(
 		solidity::frontend::ContractDefinition const& _contract,
-		TypeMapper& _typeMapper
+		TypeMapper& _typeMapper,
+		StorageLayoutSource _source
 	);
 
 	/// The contract this layout was computed for (nullptr before compute).

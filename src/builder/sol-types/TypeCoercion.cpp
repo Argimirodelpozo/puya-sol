@@ -27,7 +27,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::implicitNumericCast(
 	awst::SourceLocation const& _loc
 )
 {
-	if (!_expr || !_targetType || _expr->wtype == _targetType)
+	if (!_expr || !_targetType
+		|| awst::structurallyEquivalent(_expr->wtype, _targetType))
 		return _expr;
 
 	// application → account: encode the app id into a fake address of the
@@ -855,7 +856,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::relabelUnsizedBytes(
 {
 	if (!_expr || !_expr->wtype || !_targetType)
 		return _expr;
-	if (_expr->wtype == _targetType)
+	if (awst::structurallyEquivalent(_expr->wtype, _targetType))
 		return _expr;
 	auto const* dst = dynamic_cast<awst::BytesWType const*>(_targetType);
 	auto const* src = dynamic_cast<awst::BytesWType const*>(_expr->wtype);
@@ -1087,10 +1088,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	{
 		if (auto const* statArr = dynamic_cast<awst::ARC4StaticArray const*>(_expr->wtype))
 		{
-			// Element types aren't interned between TypeMapper calls, so we
-			// compare structurally on the element name rather than pointer.
-			if (statArr->elementType() && dynArr->elementType()
-				&& statArr->elementType()->name() == dynArr->elementType()->name())
+			if (awst::structurallyEquivalent(
+					statArr->elementType(), dynArr->elementType()))
 				return prependArc4LengthHeader(std::move(_expr), statArr->arraySize(), _targetType, _loc);
 
 			// Narrower inline array literal (e.g. `[7,8,9]` typed uint8[3])
@@ -1204,8 +1203,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	{
 		if (auto const* srcStat = dynamic_cast<awst::ARC4StaticArray const*>(_expr->wtype))
 		{
-			if (srcStat->elementType() && targetStat->elementType()
-				&& srcStat->elementType()->name() == targetStat->elementType()->name()
+			if (awst::structurallyEquivalent(
+					srcStat->elementType(), targetStat->elementType())
 				&& srcStat->arraySize() < targetStat->arraySize())
 			{
 				int elemSize = computeEncodedElementSize(srcStat->elementType());

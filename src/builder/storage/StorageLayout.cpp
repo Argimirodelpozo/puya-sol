@@ -20,7 +20,8 @@ using namespace solidity::frontend;
 
 void StorageLayout::computeLayout(
 	ContractDefinition const& _contract,
-	TypeMapper& _typeMapper
+	TypeMapper& _typeMapper,
+	StorageLayoutSource _source
 )
 {
 	m_variables.clear();
@@ -39,7 +40,7 @@ void StorageLayout::computeLayout(
 	solidity::u256 currentSlot = baseSlot;
 	unsigned currentOffset = 0; // bytes used in current slot
 
-	// ── --evm-storage-layout ONLY: take solc's canonical assignment ────────
+	// ── Solidity logical layout: take solc's canonical assignment ─────────
 	// `linearizedStateVariables(DataLocation::Storage)` returns solc's own
 	// (declaration, slot, byteOffset) — precisely what the hand-rolled walk
 	// below tries to reproduce and what the item-7 tripwire polices. Using it
@@ -48,11 +49,9 @@ void StorageLayout::computeLayout(
 	// `ShortString _name`), and inherits solc's exclusion rules for
 	// constants/immutables/transients.
 	//
-	// STRICTLY gated: StorageLayout also backs inline-assembly `.slot`/`sload`
-	// resolution in DEFAULT mode, whose expectations the walk below encodes —
-	// applying this unconditionally broke 229 default-mode tests. Default mode
-	// keeps the original walk untouched.
-	if (_typeMapper.profile().evmStorageLayout)
+	// Default-mode inline assembly still needs the compatibility bridge below;
+	// callers select that dispatch assignment explicitly.
+	if (_source == StorageLayoutSource::SolidityCanonical)
 	{
 		auto const* ct = solidity::frontend::TypeProvider::contract(_contract);
 		for (auto const& [decl, slot, offset]:
@@ -104,15 +103,12 @@ void StorageLayout::computeLayout(
 					? std::numeric_limits<unsigned>::max()
 					: static_cast<unsigned>(end);
 		}
-		if (!m_variables.empty())
-		{
-			Logger::instance().debug(
-				"Storage layout (solc canonical): "
-				+ std::to_string(m_variables.size()) + " variables in "
-				+ std::to_string(m_totalSlots) + " slots",
-				awst::SourceLocation{});
-			return;
-		}
+		Logger::instance().debug(
+			"Storage layout (solc canonical): "
+			+ std::to_string(m_variables.size()) + " variables in "
+			+ std::to_string(m_totalSlots) + " slots",
+			awst::SourceLocation{});
+		return;
 	}
 
 	// Collect state vars base-first (reverse of linearization).

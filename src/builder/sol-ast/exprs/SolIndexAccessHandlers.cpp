@@ -139,7 +139,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	if (m_indexAccess.annotation().willBeWrittenTo)
 		return indexExpr;
 
-	bool needsDecode = rawElemType != elemType && rawElemType->name() != elemType->name();
+	bool needsDecode = !awst::structurallyEquivalent(rawElemType, elemType);
 	if (needsDecode)
 		return signExtendSignedElement(
 			awst::makeARC4Decode(std::move(indexExpr), rawElemType, m_loc));
@@ -717,7 +717,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 
 	// Decode ARC4 element to native type if needed (for rvalue usage)
 	// Only decode when element is ARC4 and expected type is native (not ARC4)
-	if (actualElemType->name() != expectedType->name())
+	if (!awst::structurallyEquivalent(actualElemType, expectedType))
 	{
 		bool elemIsArc4 = false;
 		switch (actualElemType->kind())
@@ -824,8 +824,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 	auto* elemArc4 = const_cast<awst::WType*>(elemArc4Type);
 	auto cast = awst::makeReinterpretCast(std::move(extract), elemArc4, m_loc);
 
-	if (expectedType && expectedType != elemArc4
-		&& expectedType->name() != elemArc4->name())
+	if (expectedType && !awst::structurallyEquivalent(expectedType, elemArc4))
 	{
 		bool elemIsArc4 = false;
 		switch (elemArc4->kind())
@@ -1027,7 +1026,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 
 	auto indexExpr = awst::makeIndexExpression(awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc), std::move(effective), arc4ElemType, m_loc);
 
-	bool needsDecode = rawElemType != arc4ElemType && rawElemType->name() != arc4ElemType->name();
+	bool needsDecode = !awst::structurallyEquivalent(rawElemType, arc4ElemType);
 	if (needsDecode)
 	{
 		auto decode = awst::makeARC4Decode(std::move(indexExpr), rawElemType, m_loc);
