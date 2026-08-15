@@ -196,6 +196,8 @@ ProgramAnalysis ProgramAnalysis::analyze(
 
 	forEachFunction(_compiler, [&](FunctionDefinition const* function,
 		ContractDefinition const* contract) {
+		if (function)
+			result.functionDeclarations[function->id()] = function;
 		if (!function || !contract || contract->isLibrary())
 			return;
 		for (auto const& param: function->parameters())

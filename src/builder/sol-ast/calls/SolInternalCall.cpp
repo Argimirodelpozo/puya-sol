@@ -10,7 +10,6 @@
 #include "builder/sol-types/SolIntType.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/sol-ast/EffectScan.h"
-#include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/itxn/AsaIntrinsics.h"
@@ -57,6 +56,30 @@ std::string referableVarName(awst::Expression const* e)
 		break;
 	}
 	return "";
+}
+
+int64_t enclosingCallableId(Context const& context)
+{
+	for (auto const* scope = &context; scope; scope = scope->parent())
+		if (auto const* function = dynamic_cast<FunctionContext const*>(scope))
+			return function->callableId;
+	return 0;
+}
+
+bool syntaxReferencesFunction(FunctionCall const& call)
+{
+	Expression const* callee = &call.expression();
+	if (auto const* options = dynamic_cast<FunctionCallOptions const*>(callee))
+		callee = &options->expression();
+	if (auto const* tuple = dynamic_cast<TupleExpression const*>(callee);
+		tuple && tuple->components().size() == 1 && tuple->components()[0])
+		callee = tuple->components()[0].get();
+	Declaration const* declaration = nullptr;
+	if (auto const* identifier = dynamic_cast<Identifier const*>(callee))
+		declaration = identifier->annotation().referencedDeclaration;
+	else if (auto const* member = dynamic_cast<MemberAccess const*>(callee))
+		declaration = member->annotation().referencedDeclaration;
+	return dynamic_cast<FunctionDefinition const*>(declaration) != nullptr;
 }
 } // namespace
 
@@ -162,6 +185,18 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	// External fn-ptr params: bytes[12] (appId+selector); dispatch handles them.
 
 	auto call = awst::makeSubroutineCall(std::move(_target), _returnType, m_loc);
+	ParameterMutationSummary const* mutations = nullptr;
+	if (_funcDef)
+	{
+		mutations = m_ctx.typeMapper.analysis().parameterMutationsForCall(
+			m_ctx.currentContract, enclosingCallableId(m_scope), m_call);
+		// A locally resolved function-pointer target is not visible in the call
+		// expression's solc declaration. In that case `_funcDef` is already the
+		// exact implementation selected by the translation scope.
+		if (!mutations && !syntaxReferencesFunction(m_call))
+			mutations = &m_ctx.typeMapper.analysis().parameterMutations(
+				m_ctx.currentContract, *_funcDef);
+	}
 
 	// Collect param types for coercion; detect mapping storage-ref params.
 	std::vector<awst::WType const*> paramTypes;
@@ -455,19 +490,12 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	// aliasing is live → leave the puya error rather than silently wrong-lower.
 	if (_funcDef)
 	{
-		// Which params does the callee mutate?
-		ParamMutationDetector mutDet{m_ctx.typeMapper.analysis()};
-		for (auto const& p : _funcDef->parameters())
-			mutDet.paramIds.insert(p->id());
-		if (_funcDef->isImplemented())
-			_funcDef->body().accept(mutDet);
-
 		// Map arg position → param index (using-for receiver → param 0) → mutated?
 		auto paramMutatedForArg = [&](size_t argIdx) -> bool {
 			size_t pIdx = argIdx; // using-for receiver already occupies arg 0 == param 0
 			if (pIdx >= _funcDef->parameters().size())
 				return false;
-			return mutDet.mutated.count(_funcDef->parameters()[pIdx]->id()) != 0;
+			return mutations && mutations->mutates(pIdx);
 		};
 
 		// Group arg positions by aliased variable; note if any hits a mutated param.
@@ -567,11 +595,6 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				return !arr->isByteArrayOrString();
 			return dynamic_cast<StructType const*>(t) != nullptr;
 		};
-		// Use-def: collect mutated params (ParamMutationDetector, same as AWSTBuilder).
-		ParamMutationDetector detector{m_ctx.typeMapper.analysis()};
-		for (auto const& p : _funcDef->parameters())
-			detector.paramIds.insert(p->id());
-		_funcDef->body().accept(detector);
 		for (size_t pi = 0; pi < _funcDef->parameters().size() && pi < call->args.size(); ++pi)
 		{
 			auto const& p = _funcDef->parameters()[pi];
@@ -579,7 +602,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				continue;
 			if (!p->type() || !isMemRefType(p->type()))
 				continue;
-			if (!detector.mutated.count(p->id()))
+			if (!mutations || !mutations->mutates(pi))
 				continue;  // read-only — callee didn't augment it either
 			memoryRefParamIndices.push_back(pi);
 		}

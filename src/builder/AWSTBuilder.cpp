@@ -7,7 +7,6 @@
 #include "builder/FunctionIdRegistry.h"
 #include "builder/SubroutineRegistry.h"
 #include "builder/builtin/Ripemd160Builder.h"
-#include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
@@ -327,17 +326,15 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				return !arr->isByteArrayOrString();
 			return dynamic_cast<solidity::frontend::StructType const*>(t) != nullptr;
 		};
-		ParamMutationDetector detector{m_session.analysis};
-		for (auto const& p : _func.parameters())
-			detector.paramIds.insert(p->id());
-		_func.body().accept(detector);
+		auto const& mutations = m_session.analysis.parameterMutations(
+			nullptr, _func);
 		memoryRefParamIndices = collectParamIndices(_func, [&](size_t pi) {
 			auto const& p = _func.parameters()[pi];
 			return p->referenceLocation()
 					== solidity::frontend::VariableDeclaration::Location::Memory
 				&& !blobAggParams.count(pi) // blob-backed via multi-slot blob; caller sees mutations directly
 				&& p->type() && isMemRefType(p->type())
-				&& detector.mutated.count(p->id()); // skip read-only — no need to thread post-call value back
+				&& mutations.mutates(pi); // skip read-only — no need to thread post-call value back
 		});
 	}
 

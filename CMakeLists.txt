@@ -47,6 +47,7 @@ set(SOURCES
 	# Builder core
 	src/builder/AWSTBuilder.cpp
 	src/builder/ProgramAnalysis.cpp
+	src/builder/ParameterMutationAnalysis.cpp
 	src/builder/SolcFacts.cpp
 	src/builder/SourceLocConvert.cpp
 	src/builder/FunctionIdRegistry.cpp
