@@ -19,20 +19,20 @@ ContractContext::ContractContext(
 	StorageMapper& _storageMapper,
 	std::string const& _sourceFile,
 	std::string const& _contractName,
-	std::unordered_map<std::string, std::string> const& _libraryFunctionIds,
 	std::unordered_set<std::string> const& _overloadedNames,
-	std::unordered_map<int64_t, std::string> const& _freeFunctionById,
+	FunctionSymbolTable const& _functionSymbols,
 	FunctionPointerRegistry& _functionPointers
 )
 	: typeMapper(_typeMapper),
 	  storageMapper(_storageMapper),
 	  sourceFile(_sourceFile),
 	  contractName(_contractName),
-	  libraryFunctionIds(_libraryFunctionIds),
 	  overloadedNames(_overloadedNames),
-	  freeFunctionById(_freeFunctionById),
+	  functionSymbols(_functionSymbols),
 	  functionPointers(_functionPointers),
-	  registry(std::make_unique<BuilderRegistry>())
+	  registry(std::make_unique<BuilderRegistry>()),
+	  pendingStatements(*this, false),
+	  prePendingStatements(*this, true)
 {}
 
 ContractContext::~ContractContext() = default;
@@ -42,10 +42,27 @@ awst::SourceLocation ContractContext::makeLoc(int _start, int _end) const
 	return typeMapper.sourceMap().toAwstLoc(sourceFile, _start, _end);
 }
 
-std::shared_ptr<awst::Expression> ContractContext::build(
+std::shared_ptr<awst::Expression> ContractContext::buildValue(
 	solidity::frontend::Expression const& _expr)
 {
 	return sol_ast::buildExpression(*this, _expr);
+}
+
+ContractContext::LoweredExpression ContractContext::build(
+	solidity::frontend::Expression const& _expr,
+	bool _conditional)
+{
+	auto result = lowerOperand([&] { return buildValue(_expr); }, _conditional);
+	return {std::move(result.value), std::move(result.effects),
+		_expr.annotation().type};
+}
+
+std::shared_ptr<awst::Expression> ContractContext::buildExpr(
+	solidity::frontend::Expression const& _expr)
+{
+	auto lowered = build(_expr, false);
+	restoreOperandDeltas(std::move(lowered.effects));
+	return std::move(lowered.value);
 }
 
 std::shared_ptr<awst::Expression> ContractContext::buildBinaryOp(
@@ -70,14 +87,14 @@ std::unique_ptr<InstanceBuilder> ContractContext::builderForInstance(
 std::vector<std::shared_ptr<awst::Statement>> ContractContext::takePending()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
-	result.swap(pendingStatements);
+	result.swap(activeEffects().post);
 	return result;
 }
 
 std::vector<std::shared_ptr<awst::Statement>> ContractContext::takePrePending()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
-	result.swap(prePendingStatements);
+	result.swap(activeEffects().pre);
 	return result;
 }
 
@@ -88,6 +105,12 @@ void ContractContext::appendPendingTo(
 		_out.push_back(std::move(p));
 	for (auto& p: takePending())
 		_out.push_back(std::move(p));
+}
+
+ContractContext::EffectBuffer::Statements&
+ContractContext::EffectBuffer::statements() const
+{
+	return m_pre ? m_ctx.activeEffects().pre : m_ctx.activeEffects().post;
 }
 
 std::shared_ptr<awst::Expression> ContractContext::emitSequencedOperand(

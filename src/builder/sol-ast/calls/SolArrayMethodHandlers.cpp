@@ -156,14 +156,14 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	{
 		// push() with no args: ArrayExtend with a zero-valued element (puya
 		// handles ARC4 length header; manual box_resize doesn't). When
-		// SolAssignment left a pendingArrayPushValue, use it and return the
+		// SolAssignment scoped an explicit push-assignment value; use it and return the
 		// extend directly (VoidConstant as assignment target is rejected by puya).
 		std::shared_ptr<awst::Expression> elem;
-		bool fromAssign = static_cast<bool>(m_ctx.pendingArrayPushValue);
+		bool fromAssign = m_ctx.hasArrayAssignmentValue();
 		if (fromAssign)
 		{
 			auto coerced = builder::TypeCoercion::coerceForAssignment(
-				std::move(m_ctx.pendingArrayPushValue), rawElemType, m_loc);
+				m_ctx.takeArrayAssignmentValue(), rawElemType, m_loc);
 			elem = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
 		}
 		else

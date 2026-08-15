@@ -47,6 +47,7 @@ set(SOURCES
 	# Builder core
 	src/builder/AWSTBuilder.cpp
 	src/builder/ProgramAnalysis.cpp
+	src/builder/SolcFacts.cpp
 	src/builder/SourceLocConvert.cpp
 	src/builder/FunctionIdRegistry.cpp
 	src/builder/SubroutineRegistry.cpp
@@ -89,6 +90,7 @@ set(SOURCES
 	src/builder/sol-types/SolIntType.cpp
 	src/builder/sol-types/SolcConstFold.cpp
 	src/builder/sol-types/TypeCoercion.cpp
+	src/builder/sol-types/ConversionPlan.cpp
 
 	# Storage, type, and intrinsic mappers
 	src/builder/storage/StorageMapper.cpp
@@ -246,4 +248,16 @@ if(BUILD_TESTING)
 	)
 	target_include_directories(puya-sol-wtype-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 	add_test(NAME puya-sol-wtype-equivalence COMMAND puya-sol-wtype-tests)
+
+	add_executable(puya-sol-scratch-layout-tests
+		tests/cpp/ScratchLayoutTests.cpp
+	)
+	target_include_directories(puya-sol-scratch-layout-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	add_test(NAME puya-sol-scratch-layout COMMAND puya-sol-scratch-layout-tests)
+
+	add_executable(puya-sol-function-symbol-table-tests
+		tests/cpp/FunctionSymbolTableTests.cpp
+	)
+	target_include_directories(puya-sol-function-symbol-table-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	add_test(NAME puya-sol-function-symbol-table COMMAND puya-sol-function-symbol-table-tests)
 endif()

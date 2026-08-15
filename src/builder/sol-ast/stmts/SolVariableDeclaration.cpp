@@ -12,6 +12,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/ConversionPlan.h"
 #include "builder/assembly/AssemblyBuilder.h"
 
 namespace puyasol::builder::sol_ast
@@ -60,7 +61,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 							{
 								auto loc = m_blk.makeLoc(decl.location());
 								auto idxVal = builder::TypeCoercion::implicitNumericCast(
-									m_blk.builderCtx().build(*idx->indexExpression()),
+									m_blk.builderCtx().buildExpr(*idx->indexExpression()),
 									awst::WType::biguintType(), loc);
 								auto scaled = awst::makeBigUIntBinOp(std::move(idxVal),
 									awst::BigUIntBinaryOperator::Mult,
@@ -140,7 +141,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 						m_blk.setFuncPtrTarget(decl.id(), funcDef);
 			}
 
-			value = m_blk.builderCtx().build(*initialValue);
+			value = m_blk.builderCtx().buildExpr(*initialValue);
 
 			// --evm-storage-layout: a storage-typed initializer builds to its
 			// biguint slot handle; a MEMORY struct local needs the VALUE —
@@ -186,35 +187,15 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				}
 			}
 
-			// Tripwire (possible_solc item 6): the init must be a solc-legal
-			// implicit conversion; a trip = wrong src/target annotation
-			// plumbing. Tuple inits (destructure) compare element-wise — skip.
-			if (initialValue && initialValue->annotation().type
-				&& !dynamic_cast<solidity::frontend::TupleType const*>(
+			if (initialValue && !dynamic_cast<TupleType const*>(
 					initialValue->annotation().type))
-				builder::TypeCoercion::assertImplicitlyConvertible(
-					initialValue->annotation().type, decl.type(), m_loc,
-					"variable-declaration init");
-			value = builder::TypeCoercion::coerceForAssignment(std::move(value), type, m_loc);
-
-			// Signed sub-word → wider-int implicit widen (e.g. `int128 x = someInt24;`).
-			// coerceForAssignment zero-extends uint64→biguint, dropping the sign; re-extend
-			// from the source width when srcInt(N≤64) → tgtInt(M>64).
-			if (auto const* srcInt = dynamic_cast<IntegerType const*>(
-					initialValue->annotation().type))
-				if (auto const* tgtInt = dynamic_cast<IntegerType const*>(decl.type()))
-					if (srcInt->isSigned() && srcInt->numBits() <= 64
-						&& tgtInt->numBits() > 64
-						&& value->wtype == awst::WType::biguintType())
-						value = builder::TypeCoercion::signExtendToUint256(
-							std::move(value), srcInt->numBits(), m_loc);
-					else if (srcInt->isSigned() && tgtInt->isSigned()
-						&& srcInt->numBits() < tgtInt->numBits()
-						&& value->wtype == awst::WType::uint64Type())
-						// Signed sub-word -> WIDER sub-word implicit widen (e.g. `int16 b = someInt8;`):
-						// coerceForAssignment is a uint64->uint64 no-op (drops the sign). Re-extend from src.
-						value = builder::TypeCoercion::signExtendToUint64(
-							std::move(value), srcInt->numBits(), m_loc);
+				value = builder::ConversionPlan{
+					initialValue->annotation().type, decl.type(), type,
+					builder::ConversionPlan::Context::Initialization}.emit(
+						std::move(value), m_loc);
+			else
+				value = builder::TypeCoercion::coerceForAssignment(
+					std::move(value), type, m_loc);
 		}
 		else
 			value = StorageMapper::makeDefaultValue(type, m_loc);
@@ -414,7 +395,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				{
 					// re-resolve the PEELED source (value was built from the
 					// cast); relabel to the declared wtype so uses type-check.
-					auto srcRead = m_blk.builderCtx().build(*aliasSrc);
+					auto srcRead = m_blk.builderCtx().buildExpr(*aliasSrc);
 					if (srcRead)
 					{
 						if (srcRead->wtype != type)
@@ -470,7 +451,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			if (!newCall && m_blk.typeMapper().profile().evmMemoryLayout)
 			{
 				auto loc2 = m_blk.makeLoc(decl.location());
-				auto v0 = m_blk.builderCtx().build(*initialValue);
+				auto v0 = m_blk.builderCtx().buildExpr(*initialValue);
 				if (!v0)
 					return result;
 				m_blk.builderCtx().appendPendingTo(result);
@@ -493,9 +474,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				if (at && at->isByteArrayOrString() && !newCall->arguments().empty())
 				{
 					auto lenU64 = builder::TypeCoercion::implicitNumericCast(
-						m_blk.builderCtx().build(*newCall->arguments()[0]),
+						m_blk.builderCtx().buildExpr(*newCall->arguments()[0]),
 						awst::WType::uint64Type(), m_loc);
 					for (auto& s: AB::emitBytesBlobAlloc(
+							m_blk.typeMapper().profile().scratchLayout,
 							std::move(lenU64), offN, static_cast<int>(decl.id()), m_loc))
 						result.push_back(std::move(s));
 					m_blk.setBlobAggregate(decl.id(), offN);
@@ -504,12 +486,15 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				}
 				result.push_back(awst::makeAssignmentStatement(
 					awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
-					awst::makeExtractUInt64(awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, m_loc),
+					awst::makeExtractUInt64(awst::makeLoadSlot(
+						m_blk.typeMapper().profile().scratchLayout.memoryFirst(), m_loc),
 						awst::makeIntegerConstant("88", m_loc), m_loc),
 					m_loc));
 				int sz = builder::computeEncodedElementSize(type);
 				if (sz > 0)
-					for (auto& s: AB::emitFreeMemoryBump(sz, m_loc, static_cast<int>(decl.id())))
+					for (auto& s: AB::emitFreeMemoryBump(
+							m_blk.typeMapper().profile().scratchLayout, sz, m_loc,
+							static_cast<int>(decl.id())))
 						result.push_back(std::move(s));
 				m_blk.setBlobAggregate(decl.id(), offN);
 				m_blk.builderCtx().appendPendingTo(result);
@@ -537,14 +522,16 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			{
 				std::string offN = "__blobagg_off_" + std::to_string(decl.id());
 				// base = current FMP (uint64) = extractUInt64(load(slot0), 88)
-				auto blob = awst::makeLoadSlot(builder::AssemblyBuilder::MEMORY_SLOT_FIRST, m_loc);
+				auto blob = awst::makeLoadSlot(
+					m_blk.typeMapper().profile().scratchLayout.memoryFirst(), m_loc);
 				auto base = awst::makeExtractUInt64(
 					std::move(blob), awst::makeIntegerConstant("88", m_loc), m_loc);
 				result.push_back(awst::makeAssignmentStatement(
 					awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
 					std::move(base), m_loc));
 				for (auto& s: builder::AssemblyBuilder::emitFreeMemoryBump(
-						sz, m_loc, static_cast<int>(decl.id())))
+						m_blk.typeMapper().profile().scratchLayout, sz, m_loc,
+						static_cast<int>(decl.id())))
 					result.push_back(std::move(s));
 				m_blk.setBlobAggregate(decl.id(), offN);
 				return result; // skip the normal (oversized) target = bzero(sz) assignment
@@ -552,7 +539,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 
 			if (sz > 0)
 				for (auto& s: builder::AssemblyBuilder::emitFreeMemoryBump(
-						sz, m_loc, static_cast<int>(decl.id())))
+						m_blk.typeMapper().profile().scratchLayout, sz, m_loc,
+						static_cast<int>(decl.id())))
 					result.push_back(std::move(s));
 		}
 
@@ -564,7 +552,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		// SingleEvaluation is inlined per-consumer in AWST JSON, causing puya
 		// to re-emit the call for each TupleItemExpression. Assign RHS to a
 		// synthetic temp and extract items from it. (polymarket-experiment 271d85851)
-		auto rhsExpr = m_blk.builderCtx().build(*initialValue);
+		auto rhsExpr = m_blk.builderCtx().buildExpr(*initialValue);
 		m_blk.builderCtx().appendPendingTo(result);
 
 		auto const* tupleType = rhsExpr->wtype;

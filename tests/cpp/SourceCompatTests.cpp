@@ -50,21 +50,52 @@ contract Legacy {
 interface I { event Kept(address indexed who); }
 )";
 	auto names = puyasol::cli::collectEventSignatures(interfaceSource);
-	ok &= require(names == std::set<std::string>({"Kept"}),
-		"event collection did not follow lexer tokens");
+	ok &= require(names.size() == 1,
+		"event collection did not retain one exact lexer signature");
 	std::string const contractSource = R"(
 // event Commented(uint value);
 contract C is I {
     event Kept(address indexed who);
     event Local(uint value);
 })";
-	auto removed = puyasol::cli::removeInheritedEvents(contractSource, names);
+	puyasol::cli::InterfaceEventMap interfaces{{"I", names}};
+	auto removed = puyasol::cli::removeInheritedEvents(contractSource, interfaces);
 	ok &= require(removed.find("event Local") != std::string::npos,
 		"unrelated event was removed");
 	ok &= require(removed.find("event Kept") == std::string::npos,
 		"inherited event redeclaration was retained");
 	ok &= require(removed.find("// event Commented") != std::string::npos,
 		"commented event was modified");
+
+	std::string const overloadSource = R"(
+contract D is I {
+    event Kept(uint value);
+})";
+	auto overloadKept = puyasol::cli::removeInheritedEvents(overloadSource, interfaces);
+	ok &= require(overloadKept.find("event Kept(uint value)") != std::string::npos,
+		"same-name event overload was removed");
+	std::string const unrelatedSource = R"(
+contract J { event Kept(address indexed who); }
+contract D is J { event Kept(address indexed who); }
+)";
+	auto unrelatedKept = puyasol::cli::removeInheritedEvents(unrelatedSource, interfaces);
+	ok &= require(unrelatedKept.find("contract D is J { event Kept") != std::string::npos,
+		"event was removed from a contract that does not inherit the interface");
+	std::string const constructorArgSource = R"(
+contract J { constructor(address) {} }
+contract D is J(I) { event Kept(address indexed who); }
+)";
+	auto constructorArgKept = puyasol::cli::removeInheritedEvents(
+		constructorArgSource, interfaces);
+	ok &= require(constructorArgKept.find("event Kept") != std::string::npos,
+		"constructor-argument identifier was mistaken for an inherited interface");
+	std::string const aliasedBaseSource = R"(
+contract D is Namespace.I { event Kept(address indexed who); }
+)";
+	auto aliasedBaseKept = puyasol::cli::removeInheritedEvents(
+		aliasedBaseSource, interfaces);
+	ok &= require(aliasedBaseKept.find("event Kept") != std::string::npos,
+		"qualified base was rewritten without resolving its import alias");
 
 	return ok ? 0 : 1;
 }

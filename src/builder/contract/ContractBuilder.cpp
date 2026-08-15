@@ -44,9 +44,8 @@ ContractBuilder::ContractBuilder(
 	StorageMapper& _storageMapper,
 	eb::FunctionPointerRegistry& _functionPointers,
 	std::string const& _sourceFile,
-	LibraryFunctionIdMap const& _libraryFunctionIds,
+	FunctionSymbolTable const& _functionSymbols,
 	uint64_t _opupBudget,
-	FreeFunctionIdMap const& _freeFunctionById,
 	std::map<std::string, uint64_t> const& _ensureBudget,
 	bool _viaIR,
 	std::vector<solidity::frontend::FunctionDefinition const*> const& _hostBoundFunctions
@@ -55,9 +54,8 @@ ContractBuilder::ContractBuilder(
 	  m_storageMapper(_storageMapper),
 	  m_functionPointers(_functionPointers),
 	  m_sourceFile(_sourceFile),
-	  m_libraryFunctionIds(_libraryFunctionIds),
+	  m_functionSymbols(_functionSymbols),
 	  m_opupBudget(_opupBudget),
-	  m_freeFunctionById(_freeFunctionById),
 	  m_ensureBudget(_ensureBudget),
 	  m_viaIR(_viaIR),
 	  m_hostBoundFunctions(_hostBoundFunctions)
@@ -352,6 +350,7 @@ std::shared_ptr<awst::Expression> materializeBlobStructValue(
 			return nullptr;
 		// one EVM word per field (the layout emitBlobBackValue wrote)
 		auto word = AB::readMemWordDirect(
+			_typeMapper.profile().scratchLayout,
 			awst::makeUInt64BinOp(
 				awst::makeVarExpression(_offVar, awst::WType::uint64Type(), _loc),
 				awst::UInt64BinaryOperator::Add,
@@ -495,10 +494,10 @@ bool emitBlobBackValue(
 			awst::makeAsBytes(std::move(value), loc), loc));
 		auto vRef = [&]() { return awst::makeVarExpression(
 			vn, awst::WType::bytesType(), loc); };
-		for (auto& s2: AB::emitBytesBlobAlloc(
+		for (auto& s2: AB::emitBytesBlobAlloc(typeMapper.profile().scratchLayout,
 				awst::makeLen(vRef(), loc), offVar, uniqueId, loc))
 			out.push_back(std::move(s2));
-		AB::writeMemBytesDirect(
+		AB::writeMemBytesDirect(typeMapper.profile().scratchLayout,
 			awst::makeUInt64BinOp(
 				awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
 				awst::UInt64BinaryOperator::Add,
@@ -517,9 +516,10 @@ bool emitBlobBackValue(
 		out.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
 			awst::makeExtractUInt64(
-				awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, loc),
+				awst::makeLoadSlot(typeMapper.profile().scratchLayout.memoryFirst(), loc),
 				awst::makeIntegerConstant("88", loc), loc), loc));
-		for (auto& s2: AB::emitFreeMemoryBump(sz2, loc, uniqueId))
+		for (auto& s2: AB::emitFreeMemoryBump(
+				typeMapper.profile().scratchLayout, sz2, loc, uniqueId))
 			out.push_back(std::move(s2));
 		unsigned mi = 0;
 		for (auto const& m2: members)
@@ -553,7 +553,7 @@ bool emitBlobBackValue(
 				w32 = awst::makeLeftPadToN(
 					awst::makeAsBytes(std::move(field), loc), 32, loc);
 			std::vector<std::shared_ptr<awst::Statement>> ws2;
-			AB::writeMemWordDirect(
+			AB::writeMemWordDirect(typeMapper.profile().scratchLayout,
 				awst::makeUInt64BinOp(
 					awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
 					awst::UInt64BinaryOperator::Add,
@@ -578,14 +578,14 @@ bool emitBlobBackValue(
 		{
 			auto count = awst::makeExtractUInt16(vRef(),
 				awst::makeIntegerConstant("0", loc), loc);
-			for (auto& s2: AB::emitBytesBlobAlloc(
+			for (auto& s2: AB::emitBytesBlobAlloc(typeMapper.profile().scratchLayout,
 					awst::makeUInt64BinOp(std::move(count),
 						awst::UInt64BinaryOperator::Mult,
 						awst::makeIntegerConstant("32", loc), loc),
 					offVar, uniqueId, loc))
 				out.push_back(std::move(s2));
 			std::vector<std::shared_ptr<awst::Statement>> ws2;
-			AB::writeMemWordDirect(
+			AB::writeMemWordDirect(typeMapper.profile().scratchLayout,
 				awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
 				awst::makeLeftPadToN(awst::makeItob(
 					awst::makeExtractUInt16(vRef(),
@@ -593,7 +593,7 @@ bool emitBlobBackValue(
 				loc, ws2);
 			for (auto& st3: ws2)
 				out.push_back(std::move(st3));
-			AB::writeMemBytesDirect(
+			AB::writeMemBytesDirect(typeMapper.profile().scratchLayout,
 				awst::makeUInt64BinOp(
 					awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
 					awst::UInt64BinaryOperator::Add,
@@ -605,12 +605,13 @@ bool emitBlobBackValue(
 			out.push_back(awst::makeAssignmentStatement(
 				awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
 				awst::makeExtractUInt64(
-					awst::makeLoadSlot(AB::MEMORY_SLOT_FIRST, loc),
+					awst::makeLoadSlot(typeMapper.profile().scratchLayout.memoryFirst(), loc),
 					awst::makeIntegerConstant("88", loc), loc), loc));
 			int sz3 = computeEncodedElementSize(wtype);
-			for (auto& s2: AB::emitFreeMemoryBump(sz3 > 0 ? sz3 : 32, loc, uniqueId))
+			for (auto& s2: AB::emitFreeMemoryBump(typeMapper.profile().scratchLayout,
+					sz3 > 0 ? sz3 : 32, loc, uniqueId))
 				out.push_back(std::move(s2));
-			AB::writeMemBytesDirect(
+			AB::writeMemBytesDirect(typeMapper.profile().scratchLayout,
 				awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
 				vRef(), uniqueId, loc, out);
 		}
@@ -634,25 +635,19 @@ void markAssemblyAggregates(
 }
 
 std::shared_ptr<awst::Block> buildBlock(
-	FunctionTranslationCtx& _ctx,
+	sol_ast::FunctionContext& _ctx,
 	solidity::frontend::Block const& _block,
 	std::shared_ptr<awst::Block> _placeholder)
 {
-	sol_ast::FunctionContext fn{_ctx.tr, _ctx.params, _ctx.returnType, _ctx.paramBitWidths};
-	fn.callableId = _ctx.callableId;
-	fn.paramSolTypes = _ctx.paramSolTypes;
-	fn.inConstructor = _ctx.inConstructor;
-	fn.frameIsProgram = _ctx.frameIsProgram;
-	fn.encodeReturnsAtBuildTime = _ctx.encodeReturnsAtBuildTime;
-	fn.returnAsmWrap = _ctx.returnAsmWrap;
-	fn.returnWirePlan = _ctx.returnWirePlan;
-	fn.seededCalldataPointers = &_ctx.seededCalldataPointers;
-	fn.boxKeyStructParams = _ctx.boxKeyStructParams;
-	auto fnGuard = _ctx.exprBuilder.pushScopeRaii(&fn);
+	auto& fn = _ctx;
+	auto& exprBuilder = _ctx.tr.contractCtx;
+	auto& typeMapper = _ctx.tr.typeMapper;
+	auto const& sourceFile = _ctx.tr.sourceFile;
+	auto fnGuard = exprBuilder.pushScopeRaii(&fn);
 	auto blk = _placeholder
 		? sol_ast::BlockContext::top(fn).withPlaceholder(_placeholder)
 		: sol_ast::BlockContext::top(fn);
-	auto blkGuard = _ctx.exprBuilder.pushScopeRaii(&blk);
+	auto blkGuard = exprBuilder.pushScopeRaii(&blk);
 
 	// Mapping storage-ref params: `m[k]` resolves the dynamic box-key prefix at runtime.
 	for (auto const* mp: _ctx.mappingKeyParams)
@@ -672,7 +667,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	// (FunctionBuilder) and supplied by the caller (SolInternalCall).
 	for (auto const* mp: _ctx.mappingKeyParams)
 		if (mp && !mp->name().empty()
-			&& _ctx.typeMapper.analysis().structRefOffsetParams.count(mp->id()))
+			&& typeMapper.analysis().structRefOffsetParams.count(mp->id()))
 			fn.setStructRefOffset(mp->id(), mp->name() + "__off");
 
 	// Named returns >4 KB: blob-backed aggregates (pointer model) so `p.field[i]`
@@ -683,7 +678,7 @@ std::shared_ptr<awst::Block> buildBlock(
 		if (!rp || rp->name().empty()
 			|| rp->referenceLocation() != solidity::frontend::VariableDeclaration::Location::Memory)
 			continue;
-		auto const* rpType = _ctx.typeMapper.map(rp->type());
+		auto const* rpType = typeMapper.map(rp->type());
 		if (memoryUsesBlob(rpType))
 			fn.setBlobAggregate(rp->id(), "__blobagg_off_" + std::to_string(rp->id()));
 	}
@@ -707,7 +702,7 @@ std::shared_ptr<awst::Block> buildBlock(
 	// blob-backed, so asm gets a real offset and value uses read it back.
 	std::vector<std::shared_ptr<awst::Statement>> paramSpills;
 	if (!_placeholder)
-		emitAsmParamSpills(_ctx.typeMapper, fn, _block, _ctx.sourceFile, paramSpills);
+		emitAsmParamSpills(typeMapper, fn, _block, sourceFile, paramSpills);
 
 	auto body = sol_ast::buildBlock(blk, _block);
 	if (!paramSpills.empty())
@@ -903,7 +898,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	m_exprBuilder = std::make_unique<eb::ContractContext>(
 		m_typeMapper, m_storageMapper, m_sourceFile, contractName,
-		m_libraryFunctionIds, m_overloadedNames, m_freeFunctionById,
+		m_overloadedNames, m_functionSymbols,
 		m_functionPointers
 	);
 	m_exprBuilder->currentContract = &_contract;
@@ -930,7 +925,9 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// copy/move construction would dangle that pointer.
 	m_tr.emplace(*m_exprBuilder, m_typeMapper, m_sourceFile);
 	m_exprBuilder->currentScope = &*m_tr;
-	m_functionCtx.emplace(m_typeMapper, *m_exprBuilder, *m_tr, m_sourceFile);
+	m_functionCtx.emplace(*m_tr,
+		std::vector<std::pair<std::string, awst::WType const*>>{},
+		nullptr, std::map<std::string, unsigned>{});
 	m_functionCtx->currentContract = &_contract;
 
 	m_exprBuilder->transientStorage =
@@ -967,9 +964,9 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	if (!m_typeMapper.profile().evmStorageLayout)
 		contract->appState = m_storageMapper.mapStateVariables(_contract, m_sourceFile);
 
-	// EVM-memory scratch slots 0..MEMORY_SLOT_LAST (default 0-4; raisable via
+	// EVM-memory scratch slots (default 0-4; raisable via
 	// --evm-memory-slots) plus transient + flash-accounting slots.
-	contract->reservedScratchSpace = AssemblyBuilder::reservedScratchSlots();
+	contract->reservedScratchSpace = m_typeMapper.profile().scratchLayout.reservedSlots();
 
 	collectSuperCallMetadata(_contract);
 
@@ -1120,7 +1117,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		// Set subroutine IDs for library/free function targets so dispatch
 		// uses SubroutineID (resolvable by puya) instead of InstanceMethodTarget.
 		eb::FunctionPointerBuilder::setSubroutineIds(
-			*m_exprBuilder, m_freeFunctionById);
+			*m_exprBuilder, m_functionSymbols);
 
 		std::string cref = m_sourceFile + "." + contractName;
 		awst::SourceLocation loc;

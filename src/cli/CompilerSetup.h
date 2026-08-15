@@ -1,7 +1,7 @@
 /// @file CompilerSetup.h
 /// CompilerStack environment plumbing moved out of main.cpp: FileReader
 /// allowlist/include-path setup, EVM-version name resolution, Foundry-style
-/// remapping application, and the 0.5.x-compat error-leniency filter.
+/// remapping application, and compiler diagnostic reporting.
 #pragma once
 
 #include "cli/CliOptions.h"
@@ -41,9 +41,9 @@ void applyRemappings(
 	solidity::frontend::FileReader& _fileReader,
 	std::vector<std::string> const& _remappings);
 
-/// Walk compiler errors after parseAndAnalyze, suppressing 0.5.x→0.8.x compat
-/// classes (duplicate events, implicit diamond override). Returns true when
-/// only suppressed/warning diagnostics remain (compilation may proceed).
+/// Report every non-warning diagnostic after parseAndAnalyze. Returns true
+/// only when no errors remain; builder must never consume a partially analyzed
+/// solc AST.
 bool reportCompilationErrors(solidity::frontend::CompilerStack const& _compiler);
 
 } // namespace puyasol::cli

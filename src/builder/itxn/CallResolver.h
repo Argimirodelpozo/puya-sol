@@ -72,6 +72,13 @@ public:
 		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const& _func);
 
+	/// Apply solc's virtual lookup for the contract currently being lowered.
+	/// Non-virtual, free, library, constructor, and non-contract functions are
+	/// returned unchanged.
+	static solidity::frontend::FunctionDefinition const& resolveVirtualTarget(
+		ContractContext const& _ctx,
+		solidity::frontend::FunctionDefinition const& _func);
+
 private:
 	/// Resolve library or free function by AST ID and name.
 	static bool tryResolveLibraryOrFree(

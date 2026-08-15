@@ -1,6 +1,7 @@
 #pragma once
 
 #include "awst/Node.h"
+#include "builder/FunctionSymbolTable.h"
 
 #include <libsolidity/ast/Types.h>
 #include <liblangutil/Token.h>
@@ -41,21 +42,33 @@ class InstanceBuilder;
 class BuilderRegistry;
 struct FunctionPointerRegistry;
 
-/// Central context for expression/statement builders: owns pending-statement buffers,
-/// references compiler services (TypeMapper, StorageMapper), and holds the builder
-/// registry. Expression and type-operation dispatch are ordinary methods so
-/// their availability and lifetime follow the context itself.
+/// Central context for expression/statement builders: owns structurally scoped
+/// effect frames, references compiler services (TypeMapper, StorageMapper), and
+/// holds the builder registry. Expression and type-operation dispatch are
+/// ordinary methods so their availability and lifetime follow the context itself.
 class ContractContext
 {
 public:
+	struct OperandDeltas
+	{
+		std::vector<std::shared_ptr<awst::Statement>> pre, post;
+		bool empty() const { return pre.empty() && post.empty(); }
+	};
+
+	struct LoweredExpression
+	{
+		std::shared_ptr<awst::Expression> value;
+		OperandDeltas effects;
+		solidity::frontend::Type const* solType = nullptr;
+	};
+
 	ContractContext(
 		TypeMapper& _typeMapper,
 		StorageMapper& _storageMapper,
 		std::string const& _sourceFile,
 		std::string const& _contractName,
-		std::unordered_map<std::string, std::string> const& _libraryFunctionIds,
 		std::unordered_set<std::string> const& _overloadedNames,
-		std::unordered_map<int64_t, std::string> const& _freeFunctionById,
+		FunctionSymbolTable const& _functionSymbols,
 		FunctionPointerRegistry& _functionPointers
 	);
 
@@ -66,12 +79,17 @@ public:
 	ContractContext(ContractContext&&) = delete;
 	ContractContext& operator=(ContractContext&&) = delete;
 
-	/// Build an AWST expression from a Solidity expression. Primary entry point.
-	std::shared_ptr<awst::Expression> build(solidity::frontend::Expression const& _expr);
-	std::shared_ptr<awst::Expression> buildExpr(solidity::frontend::Expression const& _expr)
-	{
-		return build(_expr);
-	}
+	/// Lower one Solidity expression to a value plus structurally owned effects
+	/// and its source solc type. This is the primary expression API.
+	LoweredExpression build(
+		solidity::frontend::Expression const& _expr,
+		bool _conditional = true);
+
+	/// Compatibility composition point for expression-builder implementations:
+	/// lower the child structurally, then attach its effects to the active parent
+	/// frame at the exact evaluation position.
+	std::shared_ptr<awst::Expression> buildExpr(
+		solidity::frontend::Expression const& _expr);
 
 	/// Fallback binary operation when the type-specific builder does not handle it.
 	std::shared_ptr<awst::Expression> buildBinaryOp(
@@ -115,17 +133,48 @@ public:
 	solidity::frontend::ContractDefinition const* currentContract = nullptr;
 
 	// ── Function resolution tables (external, by reference) ──
-	std::unordered_map<std::string, std::string> const& libraryFunctionIds;
 	std::unordered_set<std::string> const& overloadedNames;
-	std::unordered_map<int64_t, std::string> const& freeFunctionById;
+	/// Canonical solc declaration ID → opaque AWST symbol table.
+	FunctionSymbolTable const& functionSymbols;
 	FunctionPointerRegistry& functionPointers;
 	/// funcDef.id() → synthesized method name; CallResolver returns InstanceMethodTarget
 	/// instead of SubroutineID when the funcDef appears here.
 	std::unordered_map<int64_t, std::string> internalizedFunctionNames;
 
-	// ── Side-effect statement buffers (owned) ──
-	std::vector<std::shared_ptr<awst::Statement>> pendingStatements;
-	std::vector<std::shared_ptr<awst::Statement>> prePendingStatements;
+	// ── Structurally scoped expression effects ──
+	/// Compatibility view for helpers that still append effects while lowering.
+	/// It targets the innermost expression/statement frame, rather than a flat
+	/// context-wide vector, so an undrained effect cannot reach a later statement.
+	class EffectBuffer
+	{
+	public:
+		using Statements = std::vector<std::shared_ptr<awst::Statement>>;
+		using iterator = Statements::iterator;
+
+		EffectBuffer(ContractContext& _ctx, bool _pre): m_ctx(_ctx), m_pre(_pre) {}
+		operator Statements&() { return statements(); }
+		operator Statements const&() const { return statements(); }
+		void push_back(std::shared_ptr<awst::Statement> _stmt)
+		{
+			statements().push_back(std::move(_stmt));
+		}
+		bool empty() const { return statements().empty(); }
+		size_t size() const { return statements().size(); }
+		iterator begin() { return statements().begin(); }
+		iterator end() { return statements().end(); }
+		iterator erase(iterator _first, iterator _last)
+		{
+			return statements().erase(_first, _last);
+		}
+
+	private:
+		Statements& statements() const;
+		ContractContext& m_ctx;
+		bool m_pre;
+	};
+
+	EffectBuffer pendingStatements;
+	EffectBuffer prePendingStatements;
 
 	/// Append expr as a post-statement side effect (after current expression evaluates).
 	void queueStmt(std::shared_ptr<awst::Expression> expr, awst::SourceLocation loc)
@@ -153,8 +202,8 @@ public:
 
 	// ── OperandPlan: scoped effect sequencing (fable-review item 7) ──
 	// Pre-statements (overflow/zero asserts, `**` loops, box materializations,
-	// inner-txn side effects) are normally pushed to the flat prePendingStatements
-	// list and flushed UNCONDITIONALLY before the current statement. That is wrong
+	// inner-txn side effects) are accumulated in the active structural frame.
+	// Flushing them unconditionally before the current statement would be wrong
 	// for an operand that only executes CONDITIONALLY — a ternary branch, a
 	// short-circuit RHS — where its pre-statements must be gated behind the same
 	// condition. Every such site used to hand-roll a snapshot/extract/erase of the
@@ -186,24 +235,12 @@ public:
 	/// legacy order; true (--via-yul-behavior) keeps build order untouched.
 	bool viaIRSequencing = false;
 
-	/// The pre- and post-pending statements one operand's build queued
-	/// (OperandPlan). `pre` must run before the operand's value is produced,
-	/// `post` right after (write-backs) — i.e. before any LATER-evaluated
-	/// sibling operand, not at the statement boundary.
-	struct OperandDeltas
-	{
-		std::vector<std::shared_ptr<awst::Statement>> pre, post;
-		bool empty() const { return pre.empty() && post.empty(); }
-	};
-
 	template <typename Value>
 	struct LoweredValue
 	{
 		Value value;
 		OperandDeltas effects;
 	};
-
-	using LoweredExpression = LoweredValue<std::shared_ptr<awst::Expression>>;
 
 	/// Put a captured operand's deltas back exactly where they came from
 	/// (pre → prePending, post → pending) — the no-reorder path.
@@ -215,8 +252,8 @@ public:
 			pendingStatements.push_back(std::move(s));
 	}
 
-	/// Build an operand via `_build`, then return its value together with the
-	/// pre/post pending statements it produced. Pass
+	/// Build an operand in its own effect frame, then return its value together
+	/// with the pre/post statements it produced. Pass
 	/// `_conditional = true` when the operand executes conditionally (ternary
 	/// branch, short-circuit RHS) — it marks a ConditionalRegion and the caller
 	/// gates the effects behind the condition. `false` for pure re-ORDERING to
@@ -233,19 +270,19 @@ public:
 		std::optional<ConditionalRegion> region;
 		if (_conditional)
 			region.emplace(*this);
-		auto preBefore = prePendingStatements.size();
-		auto postBefore = pendingStatements.size();
-		result.value = _build();
-		auto moveTail = [](auto& _buf, size_t _from, auto& _outVec) {
-			if (_buf.size() <= _from)
-				return;
-			_outVec.insert(_outVec.end(),
-				std::make_move_iterator(_buf.begin() + _from),
-				std::make_move_iterator(_buf.end()));
-			_buf.erase(_buf.begin() + _from, _buf.end());
-		};
-		moveTail(prePendingStatements, preBefore, result.effects.pre);
-		moveTail(pendingStatements, postBefore, result.effects.post);
+		OperandDeltas effects;
+		m_effectFrames.push_back(&effects);
+		try
+		{
+			result.value = _build();
+		}
+		catch (...)
+		{
+			m_effectFrames.pop_back();
+			throw;
+		}
+		m_effectFrames.pop_back();
+		result.effects = std::move(effects);
 		return result;
 	}
 
@@ -253,7 +290,7 @@ public:
 		solidity::frontend::Expression const& _expr,
 		bool _conditional = true)
 	{
-		return lowerOperand([&] { return build(_expr); }, _conditional);
+		return build(_expr, _conditional);
 	}
 
 	/// Re-emit a captured operand at its evaluation position: its pre-effects,
@@ -316,11 +353,65 @@ public:
 		return ScopePush(*this, _scope);
 	}
 
-	/// RHS stash for `arr.push() = value`: SolAssignment writes here before building
-	/// the LHS; SolArrayMethod::push() consumes it as the element (not the default).
-	std::shared_ptr<awst::Expression> pendingArrayPushValue;
+	/// Lexically scoped translation parameter for `arr.push() = value`.
+	/// SolAssignment installs it while lowering the LHS call and SolArrayMethod
+	/// consumes it. The RAII scope prevents a failed/throwing LHS from leaking the
+	/// value into an unrelated later push.
+	class ArrayPushAssignmentScope
+	{
+	public:
+		ArrayPushAssignmentScope(
+			ContractContext& _ctx,
+			std::shared_ptr<awst::Expression> _value)
+			: m_ctx(_ctx)
+		{
+			m_ctx.m_arrayPushAssignmentValues.push_back(std::move(_value));
+		}
+		~ArrayPushAssignmentScope()
+		{
+			m_ctx.m_arrayPushAssignmentValues.pop_back();
+		}
+		ArrayPushAssignmentScope(ArrayPushAssignmentScope const&) = delete;
+		ArrayPushAssignmentScope& operator=(ArrayPushAssignmentScope const&) = delete;
+	private:
+		ContractContext& m_ctx;
+	};
+
+	[[nodiscard]] ArrayPushAssignmentScope pushArrayAssignmentValue(
+		std::shared_ptr<awst::Expression> _value)
+	{
+		return ArrayPushAssignmentScope(*this, std::move(_value));
+	}
+
+	bool hasArrayAssignmentValue() const
+	{
+		return !m_arrayPushAssignmentValues.empty()
+			&& static_cast<bool>(m_arrayPushAssignmentValues.back());
+	}
+
+	std::shared_ptr<awst::Expression> takeArrayAssignmentValue()
+	{
+		if (m_arrayPushAssignmentValues.empty())
+			return nullptr;
+		return std::move(m_arrayPushAssignmentValues.back());
+	}
 
 	awst::SourceLocation makeLoc(int _start, int _end) const;
+
+private:
+	std::shared_ptr<awst::Expression> buildValue(
+		solidity::frontend::Expression const& _expr);
+
+	OperandDeltas& activeEffects() const
+	{
+		return m_effectFrames.empty() ? m_rootEffects : *m_effectFrames.back();
+	}
+
+	mutable OperandDeltas m_rootEffects;
+	std::vector<OperandDeltas*> m_effectFrames;
+	std::vector<std::shared_ptr<awst::Expression>> m_arrayPushAssignmentValues;
+
+	friend class EffectBuffer;
 
 };
 

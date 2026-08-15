@@ -140,27 +140,13 @@ bool reportCompilationErrors(solidity::frontend::CompilerStack const& _compiler)
 {
 	auto& logger = puyasol::Logger::instance();
 
-	bool hasError = false; // some 0.5.x→0.8.x compat errors are suppressed below
+	bool hasError = false;
 	for (auto const& error: _compiler.errors())
 	{
 		if (error->type() == solidity::langutil::Error::Type::Warning)
 			continue;
 
 		std::string msg = error->what();
-
-		// 0.5.x compat: re-declared interface events are errors in 0.8.x.
-		if (msg.find("Event with same name and parameter types defined twice") != std::string::npos)
-		{
-			logger.debug("[suppressed] " + msg);
-			continue;
-		}
-
-		// 0.5.x compat: implicit diamond override allowed in 0.5.x; explicit required in 0.8.x.
-		if (msg.find("Derived contract must override function") != std::string::npos)
-		{
-			logger.debug("[suppressed] " + msg);
-			continue;
-		}
 
 		// Include source location in the error message.
 		std::string detail = msg;

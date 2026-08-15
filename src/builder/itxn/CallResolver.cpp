@@ -91,10 +91,32 @@ std::string CallResolver::resolveMethodName(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionDefinition const& _func)
 {
+	using solidity::frontend::Visibility;
+	if (_func.visibility() == Visibility::Internal
+		|| _func.visibility() == Visibility::Private)
+		if (auto const* symbol = _ctx.functionSymbols.resolve(
+				resolveVirtualTarget(_ctx, _func).id()))
+			return *symbol;
 	std::string name = _func.name();
 	if (_ctx.overloadedNames.count(name))
 		appendOverloadSuffix(name, _func);
 	return name;
+}
+
+solidity::frontend::FunctionDefinition const& CallResolver::resolveVirtualTarget(
+	ContractContext const& _ctx,
+	solidity::frontend::FunctionDefinition const& _func)
+{
+	auto const* scope = _func.annotation().contract;
+	if (!_ctx.currentContract
+		|| !scope
+		|| scope->isLibrary()
+		|| _func.isFree()
+		|| _func.isConstructor()
+		|| !_func.isOrdinary()
+		|| _func.name().empty())
+		return _func;
+	return _func.resolveVirtual(*_ctx.currentContract);
 }
 
 bool CallResolver::tryResolveLibraryOrFree(
@@ -114,45 +136,13 @@ bool CallResolver::tryResolveLibraryOrFree(
 		return true;
 	}
 
-	// solc Scoper populates annotation().contract with the enclosing
-	// ContractDefinition (nullptr for free functions in SourceUnit scope).
-	if (auto const* contractDef = _funcDef->annotation().contract)
+	auto const* contractDef = _funcDef->annotation().contract;
+	bool const isLibrary = contractDef && contractDef->isLibrary();
+	if (isLibrary || _funcDef->isFree())
 	{
-		if (contractDef->isLibrary())
+		if (auto const* symbol = _ctx.functionSymbols.resolve(_funcDef->id()))
 		{
-				// Prefer AST ID for precise overload resolution.
-				auto byId = _ctx.freeFunctionById.find(_funcDef->id());
-				if (byId != _ctx.freeFunctionById.end())
-				{
-					_result.target = awst::SubroutineID{byId->second};
-					_result.funcDef = _funcDef;
-					return true;
-				}
-
-				// Fallback: name-based lookup.
-				std::string key = contractDef->name() + "." + _funcDef->name();
-				auto it = _ctx.libraryFunctionIds.find(key);
-				if (it == _ctx.libraryFunctionIds.end())
-				{
-					key += paramCountSuffix(*_funcDef);
-					it = _ctx.libraryFunctionIds.find(key);
-				}
-				if (it != _ctx.libraryFunctionIds.end())
-				{
-					_result.target = awst::SubroutineID{it->second};
-					_result.funcDef = _funcDef;
-					return true;
-				}
-			}
-	}
-
-	// Free function?
-	if (_funcDef->isFree())
-	{
-		auto it = _ctx.freeFunctionById.find(_funcDef->id());
-		if (it != _ctx.freeFunctionById.end())
-		{
-			_result.target = awst::SubroutineID{it->second};
+			_result.target = awst::SubroutineID{*symbol};
 			_result.funcDef = _funcDef;
 			return true;
 		}

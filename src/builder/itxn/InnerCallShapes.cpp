@@ -7,6 +7,7 @@
 #include "builder/itxn/InnerCallHandlers.h"
 #include "awst/NameGen.h"
 #include "builder/itxn/InnerCallInternal.h"
+#include "builder/itxn/CallResolver.h"
 #include "builder/sol-eb/SolBoolBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -84,7 +85,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 		if (!retType)
 			retType = awst::WType::voidType();
 		auto call = awst::makeSubroutineCall(
-			awst::InstanceMethodTarget{targetFuncDef->name()}, retType, _loc);
+			awst::InstanceMethodTarget{
+				CallResolver::resolveMethodName(_ctx, *targetFuncDef)}, retType, _loc);
 		for (auto const& arg : callArgs)
 			awst::pushCallArg(call->args, _ctx.buildExpr(*arg));
 

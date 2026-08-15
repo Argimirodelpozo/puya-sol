@@ -161,8 +161,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				std::shared_ptr<awst::Expression> value;
 				if (!m_call.arguments().empty())
 					value = buildExpr(*m_call.arguments()[0]);
-				else if (m_ctx.pendingArrayPushValue)
-					value = std::move(m_ctx.pendingArrayPushValue);
+				else if (m_ctx.hasArrayAssignmentValue())
+					value = m_ctx.takeArrayAssignmentValue();
 				if (mappingElem)
 				{
 					// push() on a mapping element: nothing to write — its
@@ -379,11 +379,11 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				{
 					emitEnsureBox();
 					std::shared_ptr<awst::Expression> elem;
-					bool fromAssign = static_cast<bool>(m_ctx.pendingArrayPushValue);
+					bool fromAssign = m_ctx.hasArrayAssignmentValue();
 					if (fromAssign)
 					{
 						auto coerced = builder::TypeCoercion::coerceForAssignment(
-							std::move(m_ctx.pendingArrayPushValue), rawElemType, m_loc);
+							m_ctx.takeArrayAssignmentValue(), rawElemType, m_loc);
 						elem = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
 					}
 					else
@@ -542,11 +542,11 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 							{
 								emitEnsureAliasBox();
 								std::shared_ptr<awst::Expression> elem;
-								bool fromAssign = static_cast<bool>(m_ctx.pendingArrayPushValue);
+								bool fromAssign = m_ctx.hasArrayAssignmentValue();
 								if (fromAssign)
 								{
 									auto coerced = builder::TypeCoercion::coerceForAssignment(
-										std::move(m_ctx.pendingArrayPushValue), rawElemType, m_loc);
+										m_ctx.takeArrayAssignmentValue(), rawElemType, m_loc);
 									elem = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
 								}
 								else
@@ -802,11 +802,11 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				if (memberName == "push" && m_call.arguments().empty())
 				{
 					std::shared_ptr<awst::Expression> elem;
-					bool fromAssign = static_cast<bool>(m_ctx.pendingArrayPushValue);
+					bool fromAssign = m_ctx.hasArrayAssignmentValue();
 					if (fromAssign)
 					{
 						auto coerced = builder::TypeCoercion::coerceForAssignment(
-							std::move(m_ctx.pendingArrayPushValue), rawElemType, m_loc);
+							m_ctx.takeArrayAssignmentValue(), rawElemType, m_loc);
 						elem = awst::makeARC4Encode(std::move(coerced), elemType, m_loc);
 					}
 					else

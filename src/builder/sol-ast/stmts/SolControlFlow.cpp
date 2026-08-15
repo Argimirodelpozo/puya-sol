@@ -24,7 +24,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 	std::vector<std::shared_ptr<awst::Statement>> result;
 	auto& bc = m_blk.builderCtx();
 
-	auto cond = bc.build(m_node.condition());
+	auto cond = bc.buildExpr(m_node.condition());
 
 	auto prePending = bc.takePrePending();
 	auto postPending = bc.takePending();
@@ -85,7 +85,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 	{
 		auto body = awst::makeBlock(m_blk.makeLoc(m_node.body().location()));
 
-		auto cond = bc.build(m_node.condition());
+		auto cond = bc.buildExpr(m_node.condition());
 		// Capture the condition build's pendings NOW (bounds asserts, index
 		// temps, write-backs): un-captured they were drained by the first
 		// BODY statement — executing at the TOP of the body while the test
@@ -148,7 +148,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 	}
 	else
 	{
-		auto cond = bc.build(m_node.condition());
+		auto cond = bc.buildExpr(m_node.condition());
 
 		// Drain statements emitted while building the condition (e.g. a nested-array
 		// `a[i].length` bounds-check) — same orphaning as the for-loop: a WhileLoop
@@ -212,7 +212,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 	// The init above runs once, straight-line, and stays outside it.
 	eb::ContractContext::ConditionalRegion region(bc);
 	auto cond = m_node.condition()
-		? bc.build(*m_node.condition())
+		? bc.buildExpr(*m_node.condition())
 		: std::shared_ptr<awst::Expression>(awst::makeTrue(m_loc));
 
 	// Capture statements emitted while building the condition (e.g. the bounds-check

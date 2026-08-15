@@ -527,7 +527,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 
 	AssemblyBuilder asmTranslator(m_blk.typeMapper(), m_blk.sourceFile(), contextName);
 	asmTranslator.setFrameIsProgram(m_blk.fn.frameIsProgram);
-	asmTranslator.setSeededCalldataPointers(m_blk.fn.seededCalldataPointers);
+	asmTranslator.setSeededCalldataPointers(&m_blk.fn.seededCalldataPointers);
 	asmTranslator.setCalldataSolTypes(m_blk.fn.paramSolTypes);
 	asmTranslator.setBoxKeyStructParams(m_blk.fn.boxKeyStructParams);
 	asmTranslator.setCalldataPointerNames(std::move(calldataPointerNames));
@@ -536,6 +536,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	asmTranslator.setSignedParamBits(std::move(signedParamBits));
 	auto stmts = asmTranslator.buildBlock(
 		m_node.operations().root(),
+		m_node.dialect(),
 		augmentedParams,
 		m_blk.fn.returnType,
 		constants,

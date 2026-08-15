@@ -35,29 +35,15 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::tryUserDefinedOp()
 	auto const* userFunc = *m_binOp.annotation().userDefinedFunction;
 	if (!userFunc) return nullptr;
 
-	std::string subroutineId;
-	auto it = m_ctx.freeFunctionById.find(userFunc->id());
-	if (it != m_ctx.freeFunctionById.end())
-		subroutineId = it->second;
-	else
-	{
-		auto const* libContract = userFunc->annotation().contract;
-		if (libContract && libContract->isLibrary())
-		{
-			std::string qualifiedName = libContract->name() + "." + userFunc->name();
-			auto libIt = m_ctx.libraryFunctionIds.find(qualifiedName);
-			if (libIt != m_ctx.libraryFunctionIds.end())
-				subroutineId = libIt->second;
-		}
-		if (subroutineId.empty())
-			subroutineId = m_ctx.sourceFile + "." + userFunc->name();
-	}
+	auto const* symbol = m_ctx.functionSymbols.resolve(userFunc->id());
+	if (!symbol)
+		return nullptr;
 
 	auto left = buildExpr(m_binOp.leftExpression());
 	auto right = buildExpr(m_binOp.rightExpression());
 	auto* resultType = m_ctx.typeMapper.map(m_binOp.annotation().type);
 
-	auto call = awst::makeSubroutineCall(awst::SubroutineID{subroutineId}, resultType, m_loc);
+	auto call = awst::makeSubroutineCall(awst::SubroutineID{*symbol}, resultType, m_loc);
 	awst::pushCallArg(call->args, userFunc->parameters()[0]->name(), std::move(left));
 	awst::pushCallArg(call->args, userFunc->parameters()[1]->name(), std::move(right));
 	return call;

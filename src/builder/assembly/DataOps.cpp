@@ -317,7 +317,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 			// Slot-routed exact-length read (M7); offset pinned — the range
 			// read references it once per word.
 			auto offsetU64 = awst::makeEvalOnce(offsetToUint64(_args[0], _loc), _loc);
-			auto data = readMemRangeDirect(
+			auto data = readMemRangeDirect(scratchLayout(),
 				std::move(offsetU64), static_cast<int>(*length), _loc);
 			return awst::makeAsBiguint(awst::makeKeccak256(std::move(data), _loc), _loc);
 		}
@@ -396,7 +396,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 		Logger::instance().warning("keccak256 with sub-32-byte input, using partial slot", _loc);
 		{
 			// Slot-routed exact-length read (M7).
-			auto data = readMemRangeDirect(
+			auto data = readMemRangeDirect(scratchLayout(),
 				awst::makeIntegerConstant(*offset, _loc),
 				static_cast<int>(*length), _loc);
 			auto keccak = awst::makeKeccak256(std::move(data), _loc);
@@ -475,7 +475,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleKeccak256(
 	// hashed 32 bytes — wrong-but-plausible digests for packed-encoding
 	// idioms). Slot-routed (M7): offsets ≥ SLOT_SIZE read the right slot.
 	return awst::makeAsBiguint(
-		awst::makeKeccak256(readMemRangeDirect(
+		awst::makeKeccak256(readMemRangeDirect(scratchLayout(),
 			awst::makeIntegerConstant(*offset, _loc),
 			static_cast<int>(*length), _loc), _loc), _loc);
 }
@@ -561,7 +561,7 @@ void AssemblyBuilder::handleLog(
 	if (*lenConst > 0)
 	{
 		auto off = awst::makeEvalOnce(offsetToUint64(_args[0], _loc), _loc);
-		auto data = readMemRangeDirect(std::move(off), static_cast<int>(*lenConst), _loc);
+		auto data = readMemRangeDirect(scratchLayout(), std::move(off), static_cast<int>(*lenConst), _loc);
 		logBytes = logBytes ? awst::makeConcat(std::move(logBytes), std::move(data), _loc)
 			: std::move(data);
 	}
@@ -622,7 +622,7 @@ void AssemblyBuilder::handleRevert(
 			if (lenC)
 			{
 				// Constant length: exact multi-slot range read.
-				payload = readMemRangeDirect(
+				payload = readMemRangeDirect(scratchLayout(),
 					offsetToUint64(_args[0], _loc),
 					static_cast<int>(std::stoull(lenC->value)), _loc);
 			}

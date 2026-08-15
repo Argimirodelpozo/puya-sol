@@ -1,11 +1,13 @@
 #pragma once
 
 #include "awst/Node.h"
+#include "builder/ScratchLayout.h"
 #include "builder/sol-types/TypeMapper.h"
 
 #include <liblangutil/EVMVersion.h>
 #include <libyul/AST.h>
 #include <libyul/ASTForward.h>
+#include <libyul/Dialect.h>
 #include <libsolidity/ast/ASTAnnotations.h>
 
 #include <functional>
@@ -115,6 +117,7 @@ public:
 
 	std::vector<std::shared_ptr<awst::Statement>> buildBlock(
 		solidity::yul::Block const& _block,
+		solidity::yul::Dialect const& _dialect,
 		std::vector<std::pair<std::string, awst::WType const*>> const& _params,
 		awst::WType const* _returnType,
 		std::map<std::string, std::string> const& _constants = {},
@@ -145,44 +148,19 @@ public:
 		std::string const& _bareName,
 		std::function<std::string(solidity::frontend::VariableDeclaration const&)> const& _declName);
 
-	// ── Memory blob constants ──────────────────────────────────────────
+	// ── Memory scratch layout ──────────────────────────────────────────
 
-	/// Scratch slots for EVM memory. Default 5 (0..4 = 20KB). Configurations
-	/// larger than five use 16 upward so they cannot overwrite transient slot 5
-	/// or the AVM.sol flash-accounting range 6..15.
-	/// Raise via `--evm-memory-slots N` for memory-hungry contracts
-	/// (UltraHonk verify needs ~32 slots / 128KB for FrLib.invert / shplemini).
-	static inline int MEMORY_SLOT_FIRST = 0;
-	static inline int MEMORY_SLOT_LAST = 4;
-	static constexpr int EXTENDED_MEMORY_SLOT_FIRST = 16;
-	static constexpr int MAX_SCRATCH_SLOT = 255;
-	static constexpr int MAX_MEMORY_SLOTS =
-		MAX_SCRATCH_SLOT - EXTENDED_MEMORY_SLOT_FIRST + 1;
-	static constexpr int SLOT_SIZE = 4096;
-
-	static int memorySlotCount()
-	{
-		return MEMORY_SLOT_LAST - MEMORY_SLOT_FIRST + 1;
-	}
-
-	static void configureMemorySlots(int _count)
-	{
-		MEMORY_SLOT_FIRST = _count <= 5 ? 0 : EXTENDED_MEMORY_SLOT_FIRST;
-		MEMORY_SLOT_LAST = MEMORY_SLOT_FIRST + _count - 1;
-	}
+	static constexpr int SLOT_SIZE = ScratchLayout::slotSize;
 
 	/// Scratch slot for EIP-1153 transient storage. 4096-byte zeroed blob; persists across
 	/// callsub within one app call; cleared per-txn (matches Solidity transient semantics).
-	static constexpr int TRANSIENT_SLOT = 5;
+	static constexpr int TRANSIENT_SLOT = ScratchLayout::transientSlot;
 
 	/// Scratch slots for the AVM.sol `Scratch` library (flash-accounting deltas; later
 	/// group txns read them via gload). Reserved so puya's allocator never reuses them.
 	/// Fixed ABI-visible range; extended memory is placed above it.
-	static constexpr int FLASH_SCRATCH_FIRST = 6;
-	static constexpr int FLASH_SCRATCH_LAST = 15;
-
-	/// Get the set of scratch slots to reserve on the Contract node.
-	static std::vector<int> reservedScratchSlots();
+	static constexpr int FLASH_SCRATCH_FIRST = ScratchLayout::flashFirst;
+	static constexpr int FLASH_SCRATCH_LAST = ScratchLayout::flashLast;
 
 	/// Share the enclosing FUNCTION's seeded-calldata-pointer set across this
 	/// function's per-block AssemblyBuilders (each block constructs a fresh
@@ -212,10 +190,11 @@ public:
 		m_calldataStaticPtrNames = std::move(_names);
 	}
 
-	/// Advance the FMP (scratch-slot 0, offset 0x40) by `_size` bytes.
+	/// Advance the FMP (configured first memory slot, offset 0x40) by `_size` bytes.
 	/// Mirrors EVM allocation semantics for `T memory t;` locals so mload(0x40) is correct.
 	/// `_uniqueId` namespaces the temporary blob-handle local.
 	static std::vector<std::shared_ptr<awst::Statement>> emitFreeMemoryBump(
+		ScratchLayout const& _scratch,
 		int _size, awst::SourceLocation const& _loc, int _uniqueId);
 
 	/// Allocate a `new bytes(len)` / `new string(len)` in the memory blob for asm use:
@@ -225,12 +204,14 @@ public:
 	/// `_offVar + 32`, matching EVM string/bytes memory layout, so `add(buf, 32)` in
 	/// asm points at the data and value-reads materialise [len word][data].
 	static std::vector<std::shared_ptr<awst::Statement>> emitBytesBlobAlloc(
+		ScratchLayout const& _scratch,
 		std::shared_ptr<awst::Expression> _lenU64, std::string const& _offVar,
 		int _uniqueId, awst::SourceLocation const& _loc);
 
 	/// Read a 32-byte EVM-memory word at a DYNAMIC offset via direct scratch
 	/// (`extract3(loads(off/SLOT_SIZE), off%SLOT_SIZE, 32)`). Static so sol-ast can call it.
 	static std::shared_ptr<awst::Expression> readMemWordDirect(
+		ScratchLayout const& _scratch,
 		std::shared_ptr<awst::Expression> _offset,
 		awst::SourceLocation const& _loc
 	);
@@ -239,6 +220,7 @@ public:
 	/// (slot-routed via readMemWordDirect). For materialising a small (<=SLOT_SIZE)
 	/// aggregate value from the blob. `_byteLen` assumed 32-aligned; trimmed if not.
 	static std::shared_ptr<awst::Expression> readMemRangeDirect(
+		ScratchLayout const& _scratch,
 		std::shared_ptr<awst::Expression> _offset,
 		int _byteLen,
 		awst::SourceLocation const& _loc
@@ -247,6 +229,7 @@ public:
 	/// Materialise a blob-backed bytes/string VALUE from its offset var:
 	/// length = low 8 bytes of the word at `off`, data = blob[off+32 .. +len].
 	static std::shared_ptr<awst::Expression> materializeBlobBytesValue(
+		ScratchLayout const& _scratch,
 		std::string const& _offVar,
 		bool _isString,
 		awst::SourceLocation const& _loc
@@ -256,6 +239,7 @@ public:
 	/// (a word-loop over writeMemWordDirect; the value is zero-padded to a
 	/// whole word at the tail). `_uniqueId` namespaces the loop temps.
 	static void writeMemBytesDirect(
+		ScratchLayout const& _scratch,
 		std::shared_ptr<awst::Expression> _offU64,
 		std::shared_ptr<awst::Expression> _bytesValue,
 		int _uniqueId,
@@ -266,6 +250,7 @@ public:
 	/// Write a 32-byte word at a DYNAMIC offset via direct scratch
 	/// (`stores(slot, replace3(loads(slot), sub, value))`).
 	static void writeMemWordDirect(
+		ScratchLayout const& _scratch,
 		std::shared_ptr<awst::Expression> _offset,
 		std::shared_ptr<awst::Expression> _value32,
 		awst::SourceLocation const& _loc,
@@ -276,11 +261,19 @@ public:
 	/// on overflow rather than silently corrupting non-memory scratch or hitting an
 	/// opaque AVM error (slot>255). Raise `--evm-memory-slots` if more memory is needed.
 	static std::shared_ptr<awst::Statement> memBoundsAssert(
+		ScratchLayout const& _scratch,
 		std::shared_ptr<awst::Expression> _off,
 		awst::SourceLocation const& _loc
 	);
 
 private:
+	ScratchLayout const& scratchLayout() const
+	{
+		return m_typeMapper.profile().scratchLayout;
+	}
+	int memorySlotFirst() const { return scratchLayout().memoryFirst(); }
+	int memorySlotCount() const { return scratchLayout().memoryCount(); }
+
 	// ── Expression translation ──────────────────────────────────────────
 
 	std::shared_ptr<awst::Expression> buildExpression(
@@ -913,10 +906,10 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
-	/// Read EVM-memory slot 0 directly from scratch (loads(MEMORY_SLOT_FIRST)).
+	/// Read EVM-memory slot 0 directly from the configured first scratch slot.
 	std::shared_ptr<awst::Expression> memoryVar(awst::SourceLocation const& _loc);
 
-	/// Write EVM-memory slot 0 directly to scratch (stores(MEMORY_SLOT_FIRST, value)).
+	/// Write EVM-memory slot 0 directly to the configured first scratch slot.
 	void assignMemoryVar(
 		std::shared_ptr<awst::Expression> _value,
 		awst::SourceLocation const& _loc,
@@ -1111,10 +1104,6 @@ private:
 	/// so a reassigned local's initializer constant would go stale (`let p := 0x80 …
 	/// p := add(p, 0x20)` folded every mstore(p, …) to offset 0x80).
 	std::set<std::string> m_reassignedLocals;
-
-	/// Populate m_reassignedLocals from a Yul AST (recursive over blocks/ifs/switches/
-	/// for-loops and function definitions).
-	void collectReassignedLocals(solidity::yul::Block const& _block);
 
 	/// Drop all "mem_0x<off>" content constants + m_lastMstoreValue. Called on memory
 	/// writes that can't be tracked precisely (non-constant mstore offset, mstore8,

@@ -16,7 +16,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemSlot(
 	// Slot-routed (M7): offsets ≥ SLOT_SIZE read the right scratch slot
 	// instead of running off the end of slot 0.
 	return awst::makeAsBiguint(
-		readMemWordDirect(awst::makeIntegerConstant(_offset, _loc), _loc), _loc);
+		readMemWordDirect(scratchLayout(), awst::makeIntegerConstant(_offset, _loc), _loc), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::padTo32Bytes(
@@ -37,7 +37,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlots(
 	// Slot-routed range read (M7): words straddling SLOT_SIZE are handled.
 	uint64_t byteOffset = _baseOffset + static_cast<uint64_t>(_startSlot) * 0x20;
 	int byteLen = _count * 0x20;
-	return readMemRangeDirect(
+	return readMemRangeDirect(scratchLayout(),
 		awst::makeIntegerConstant(byteOffset, _loc), byteLen, _loc);
 }
 
@@ -56,7 +56,7 @@ void AssemblyBuilder::storeResultToMemory(
 		auto cond = awst::makeConditional(std::move(_result),
 			awst::makeBiguintConstant("1", _loc), awst::makeBiguintConstant("0", _loc),
 			awst::WType::biguintType(), _loc);
-		writeMemWordDirect(awst::makeIntegerConstant(_outputOffset, _loc),
+		writeMemWordDirect(scratchLayout(), awst::makeIntegerConstant(_outputOffset, _loc),
 			padTo32Bytes(std::move(cond), _loc), _loc, _out);
 		return;
 	}
@@ -66,7 +66,7 @@ void AssemblyBuilder::storeResultToMemory(
 		std::shared_ptr<awst::Expression> storeVal = std::move(_result);
 		if (storeVal->wtype == awst::WType::bytesType())
 			storeVal = awst::makeAsBiguint(std::move(storeVal), _loc);
-		writeMemWordDirect(awst::makeIntegerConstant(_outputOffset, _loc),
+		writeMemWordDirect(scratchLayout(), awst::makeIntegerConstant(_outputOffset, _loc),
 			padTo32Bytes(std::move(storeVal), _loc), _loc, _out);
 		return;
 	}
@@ -86,7 +86,7 @@ void AssemblyBuilder::storeResultToMemory(
 			awst::makeVarExpression(resultVar, awst::WType::bytesType(), _loc),
 			awst::makeIntegerConstant(i * 32, _loc),
 			awst::makeIntegerConstant("32", _loc), _loc);
-		writeMemWordDirect(awst::makeIntegerConstant(outOff, _loc),
+		writeMemWordDirect(scratchLayout(), awst::makeIntegerConstant(outOff, _loc),
 			std::move(extractSlot), _loc, _out);
 	}
 }

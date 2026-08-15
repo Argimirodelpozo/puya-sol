@@ -492,7 +492,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::readBlobValue(
 	// Scalar leaf (Fr / uintN / bool / address) → one 32-byte word as biguint.
 	if (!isAggregate)
 		return awst::makeAsBiguint(
-			builder::AssemblyBuilder::readMemWordDirect(std::move(_off), _loc), _loc);
+			builder::AssemblyBuilder::readMemWordDirect(
+				_ctx.typeMapper.profile().scratchLayout, std::move(_off), _loc), _loc);
 
 	// Struct / static-array leaf: the blob holds the ARC4 (flat ABI) encoding —
 	// each field/element is a 32-byte big-endian word, exactly the ARC4 layout —
@@ -502,7 +503,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::readBlobValue(
 	if (sz <= 0 || sz > builder::AssemblyBuilder::SLOT_SIZE)
 		return nullptr;  // too large to hold as a single value — caller falls back
 	return awst::makeReinterpretCast(
-		builder::AssemblyBuilder::readMemRangeDirect(std::move(_off), sz, _loc), mapped, _loc);
+		builder::AssemblyBuilder::readMemRangeDirect(
+			_ctx.typeMapper.profile().scratchLayout, std::move(_off), sz, _loc), mapped, _loc);
 }
 
 // ── IndexRangeAccess ──
