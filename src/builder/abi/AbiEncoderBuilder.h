@@ -71,9 +71,9 @@ public:
 		awst::SourceLocation const& _loc);
 
 	/// ARC4-encode a list of call arguments coerced to the callee's DECLARED
-	/// parameter types (NOT the value wtypes): each arg is coerced via
-	/// coerceForAssignment(buildExpr(arg), map(paramType_i)) then encoded (single →
-	/// bare value bytes; multiple → ARC4 tuple). Used where the encoding must match
+	/// parameter types (NOT the value wtypes): `ConversionPlan` applies the
+	/// Solidity implicit conversion before encoding (single → bare value bytes;
+	/// multiple → ARC4 tuple). Used where the encoding must match
 	/// a known callee signature — abi.encodeCall and custom-error revert payloads —
 	/// so e.g. a literal `7` to a uint256 param rides at arc4.uint256 (32B), not
 	/// the value's arc4.uint64. `_paramTypes` is matched by index; args past its

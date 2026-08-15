@@ -125,9 +125,11 @@ private:
 public:
 	/// Encode one call argument to its ApplicationArgs bytes. THE single ARC4
 	/// arg encoder for BOTH the typed `c.f(...)` path (SolExternalCall) and the
-	/// `.call(abi.encodeCall/encodeWith*)` inner-call shapes. `_paramSolType`
-	/// is the callee's DECLARED param type when known (drives exact biguint
-	/// width, uint64 pad-to-width, dynamic-bytes length header); nullptr for
+	/// `.call(abi.encodeCall/encodeWith*)` inner-call shapes. When both are
+	/// known, `_sourceSolType` and `_paramSolType` select the Solidity implicit
+	/// conversion before transport encoding. `_paramSolType` then drives exact
+	/// biguint width, uint64 pad-to-width, and the dynamic-bytes length header;
+	/// it is nullptr for
 	/// type-less shapes (encodeWithSelector/Signature), which fall back to
 	/// backing-width encoding. The two paths used to carry separate copies that
 	/// DRIFTED (inner: biguint always 32B, bare itob, no array/struct encode) —
@@ -135,10 +137,11 @@ public:
 	static std::shared_ptr<awst::Expression> encodeArgToBytes(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _arg,
+		solidity::frontend::Type const* _sourceSolType,
 		solidity::frontend::Type const* _paramSolType,
 		awst::SourceLocation const& _loc);
 
-	/// Submit-then-CAPTURE: push `__itxn_log_N = itxn LastLog` into prePending
+	/// Submit-then-CAPTURE: push `__itxn_log_N = itxn LastLog` into pre-effects
 	/// right after a submit and return the temp var. Result reads MUST go through
 	/// this, never a live `itxn LastLog` — the itxn context is a single register,
 	/// so several inner calls built inside ONE statement (a tuple of calls,

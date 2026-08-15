@@ -343,7 +343,7 @@ std::unique_ptr<InstanceBuilder> TypeConversionRegistry::convertToEnum(
 	unsigned numMembers = enumType->numberOfMembers();
 	auto argOnce = awst::makeEvalOnce(std::move(_arg), _loc);
 	auto numConst = awst::makeIntegerConstant(numMembers, _loc, argOnce->wtype);
-	_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+	_ctx.preEffects().push_back(awst::makeExpressionStatement(
 		awst::makeAssert(
 			awst::makeNumericCompare(argOnce, awst::NumericComparison::Lt,
 				std::move(numConst), _loc),

@@ -75,7 +75,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 	// tmp = structRead
 	std::string tmpName = "__struct_arr_tmp_" + std::to_string(awst::NameGen::next("SolArrayMethodHandlers.structPushCounter"));
 	auto tmpTarget = awst::makeVarExpression(tmpName, structWType, loc);
-	m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget, std::move(structRead), loc));
+	m_ctx.queuePostEffect(awst::makeAssignmentStatement(tmpTarget, std::move(structRead), loc));
 
 	// tmp.field (FieldExpression)
 	auto tmpRead = awst::makeVarExpression(tmpName, structWType, loc);
@@ -100,10 +100,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 		else
 			val = builder::TypeCoercion::makeDefaultValue(elemType, loc);
 
-		m_ctx.queueStmt(awst::makeArrayPushOne(fieldExpr, std::move(val), rawFieldType, loc), loc);
+		m_ctx.queuePostExpression(awst::makeArrayPushOne(fieldExpr, std::move(val), rawFieldType, loc), loc);
 	}
 	else // pop
-		m_ctx.queueStmt(awst::makeArrayPop(fieldExpr, elemType ? elemType : rawFieldType, loc), loc);
+		m_ctx.queuePostExpression(awst::makeArrayPop(fieldExpr, elemType ? elemType : rawFieldType, loc), loc);
 
 	// Write the struct back (box_put or app_global_put)
 	auto tmpWriteRead = awst::makeVarExpression(tmpName, structWType, loc);
@@ -111,7 +111,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 	auto writeExpr = m_ctx.storageMapper.createStateWrite(
 		varName, std::move(tmpWriteRead), structWType, kind, loc);
 	if (writeExpr)
-		m_ctx.queueStmt(std::move(writeExpr), loc);
+		m_ctx.queuePostExpression(std::move(writeExpr), loc);
 
 	return awst::makeVoidConstant(loc);
 }
@@ -176,7 +176,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		if (fromAssign)
 			return e;
 
-		m_ctx.queueStmt(std::move(e), m_loc);
+		m_ctx.queuePostExpression(std::move(e), m_loc);
 		return awst::makeVoidConstant(m_loc);
 	}
 	else if (_memberName == "pop")
@@ -306,7 +306,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengt
 
 	auto extract = awst::makeUInt16Bytes(std::move(newLen), m_loc);
 	// box_put(arrayVarName, len_bytes)
-	m_ctx.queueStmt(awst::makeBoxPut(boxKey, std::move(extract), m_loc), m_loc);
+	m_ctx.queuePostExpression(awst::makeBoxPut(boxKey, std::move(extract), m_loc), m_loc);
 	return awst::makeVoidConstant(m_loc);
 }
 

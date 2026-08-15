@@ -102,7 +102,7 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 				{
 					// Selector is branch-independent; run the condition only
 					// for its side effects.
-					m_ctx.prePendingStatements.push_back(
+					m_ctx.preEffects().push_back(
 						awst::makeExpressionStatement(std::move(condition), m_loc));
 					return makeSelectorExpr(trueSig);
 				}
@@ -121,7 +121,7 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 			if (innerVal && innerVal->wtype != awst::WType::voidType())
 			{
 				auto stmt = awst::makeExpressionStatement(std::move(innerVal), m_loc);
-				m_ctx.prePendingStatements.push_back(std::move(stmt));
+				m_ctx.preEffects().push_back(std::move(stmt));
 			}
 		}
 	}

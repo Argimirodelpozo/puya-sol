@@ -53,7 +53,7 @@ private:
 	// Biguint promotion is the shared eb::promoteToBiguint (BigUIntMathHelpers).
 
 	/// Emit overflow check for narrow integer types.
-	/// Adds assert(result <= max) to prePendingStatements.
+	/// Adds assert(result <= max) to the current pre-effect frame.
 	/// Returns the (possibly temp-var-wrapped) result expression.
 	std::shared_ptr<awst::Expression> emitOverflowCheck(
 		std::shared_ptr<awst::Expression> _result,

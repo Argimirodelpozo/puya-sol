@@ -413,21 +413,21 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveIndexAccess(
 				std::string nm = "__evm_idx_"
 					+ std::to_string(awst::NameGen::next("EvmSlotLowering.idx"));
 				auto const* idxWt = idx->wtype;   // read BEFORE the move (arg eval order)
-				m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+				m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 					awst::makeVarExpression(nm, idxWt, m_loc), std::move(idx), m_loc));
 				idx = awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc);
 			}
 			auto len = readSlotWord(base->slot, m_loc);
 			auto cmp = awst::makeNumericCompare(
 				idx, awst::NumericComparison::Lt, std::move(len), m_loc);
-			m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+			m_ctx.preEffects().push_back(awst::makeExpressionStatement(
 				awst::makeAssert(std::move(cmp), m_loc, "array index out of bounds"), m_loc));
 			dataBase = dynDataBase(base->slot, m_loc);
 		}
 		else
 		{
 			idx = SlotHandleAccess::boundsCheckIndex(
-				m_ctx.prePendingStatements, std::move(idx), at, m_loc);
+				m_ctx.preEffects(), std::move(idx), at, m_loc);
 			dataBase = base->slot;
 		}
 

@@ -199,7 +199,7 @@ public:
 			out.push_back(awst::makeExpressionStatement(std::move(call), loc));
 		else
 			out.push_back(awst::makeExpressionStatement(std::move(call), loc));
-		m_blk.builderCtx().appendPendingTo(out);
+		m_blk.builderCtx().appendEffectsTo(out);
 
 		if (success)
 		{

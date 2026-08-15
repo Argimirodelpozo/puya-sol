@@ -688,7 +688,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 
 		auto assignTemp = awst::makeAssignmentStatement(
 			tempVar, std::shared_ptr<awst::Expression>(call), m_loc);
-		m_ctx.prePendingStatements.push_back(std::move(assignTemp));
+		m_ctx.preEffects().push_back(std::move(assignTemp));
 
 		// Single bare-type: tempVar IS the value; no TupleItemExpression.
 		size_t totalAugmented = roots.size() + memoryRefParamIndices.size();
@@ -797,7 +797,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				auto writeBack = awst::makeAssignmentExpression(
 					std::move(writeTarget), std::move(writeValue), m_loc, sr.rootType);
 
-				m_ctx.queueStmt(std::move(writeBack), m_loc);
+				m_ctx.queuePostExpression(std::move(writeBack), m_loc);
 			}
 		}
 
@@ -823,7 +823,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			auto writeBack = awst::makeAssignmentExpression(
 				std::move(target), std::move(modifiedArg), m_loc);
 
-			m_ctx.queueStmt(std::move(writeBack), m_loc);
+			m_ctx.queuePostExpression(std::move(writeBack), m_loc);
 		}
 
 		return wrapStorageRef(origRet);
@@ -904,7 +904,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 			// emit assert(false) to revert (matches EVM behavior for uninitialized pointers)
 			Logger::instance().warning(
 				"call to function pointer '" + name + "' (state var / unsupported), emitting assert(false)", m_loc);
-			m_ctx.queueStmt(awst::makeAssert(
+			m_ctx.queuePostExpression(awst::makeAssert(
 				awst::makeFalse(m_loc), m_loc, "uninitialized function pointer"), m_loc);
 
 			auto vc = awst::makeVoidConstant(m_loc);

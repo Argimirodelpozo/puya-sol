@@ -98,7 +98,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 			"__app_program_result_" + std::to_string((awst::NameGen::next("SolAddressProperty.s_appProgramTmpCounter") + 1));
 		auto tmpTarget = awst::makeVarExpression(tmpName, tupleType, m_loc);
 		auto assign = awst::makeAssignmentStatement(tmpTarget, std::move(appParamsGet), m_loc);
-		m_ctx.prePendingStatements.push_back(std::move(assign));
+		m_ctx.preEffects().push_back(std::move(assign));
 
 		// Branch on the exists flag rather than reading element 0 blind. For a
 		// non-existent app the AVM pushes a uint64 zero as the VALUE whatever
@@ -176,7 +176,7 @@ std::shared_ptr<awst::Expression> SolAddressProperty::toAwst()
 					auto addrTmpTarget = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
 					auto addrAssign = awst::makeAssignmentStatement(
 						addrTmpTarget, std::move(appParamsGet), m_loc);
-					m_ctx.prePendingStatements.push_back(std::move(addrAssign));
+					m_ctx.preEffects().push_back(std::move(addrAssign));
 
 					auto addrTupleRead = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
 					auto addrBytesItem = awst::makeTupleItem(std::move(addrTupleRead), 0, awst::WType::bytesType(), m_loc);

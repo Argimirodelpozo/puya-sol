@@ -14,7 +14,7 @@ namespace puyasol::builder
 class ConversionPlan
 {
 public:
-	enum class Context { Assignment, Initialization, Argument, Return };
+	enum class Context { Assignment, Initialization, Argument, Return, AbiArgument };
 
 	ConversionPlan(
 		solidity::frontend::Type const* _source,

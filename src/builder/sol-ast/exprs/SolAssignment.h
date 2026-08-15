@@ -116,7 +116,7 @@ private:
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleOffsetStructRefFieldWrite();
 
 	/// `a[i] = v` for a >4KB blob-backed aggregate. Computes base+i*elemSize,
-	/// pads rhs to 32 B, emits writeMemWordDirect via prePendingStatements.
+	/// pads rhs to 32 B, emits writeMemWordDirect through the pre-effect frame.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleBlobAggregateWrite();
 
 	/// `arr.push() = v`: scope RHS as the LHS push call's explicit value;

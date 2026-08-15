@@ -123,7 +123,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	// (a later inner txn built in the same statement — tuple of calls — clobbers
 	// the itxn context; a live LastLog read would see the LAST submit's log).
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), m_loc);
-	m_ctx.prePendingStatements.push_back(std::move(submitStmt));
+	m_ctx.preEffects().push_back(std::move(submitStmt));
 
 	auto readLog = eb::InnerCallHandlers::captureLastLog(m_ctx, m_loc);
 
@@ -354,7 +354,8 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 		// and signed elements and emitted no uint16 length header for dynamic
 		// (`uint[]`) params, so the callee's ARC4 decode read garbage.
 		auto argExpr = buildExpr(*arg);
-		argsTuple->items.push_back(eb::InnerCallHandlers::encodeArgToBytes(m_ctx, std::move(argExpr), paramType, m_loc));
+		argsTuple->items.push_back(eb::InnerCallHandlers::encodeArgToBytes(
+			m_ctx, std::move(argExpr), arg->annotation().type, paramType, m_loc));
 	}
 
 	// Build WTuple type for args

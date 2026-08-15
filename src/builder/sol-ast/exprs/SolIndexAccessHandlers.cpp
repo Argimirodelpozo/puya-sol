@@ -68,7 +68,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	// Index → uint64 with an out-of-bounds pre-check (a wide index >= 2^64 reverts instead of
 	// silently truncating its high bits and reading arr[low-64-bits]).
 	auto idx = builder::TypeCoercion::checkedIndexToUint64(
-		m_ctx.prePendingStatements, buildExpr(*m_indexAccess.indexExpression()), m_loc);
+		m_ctx.preEffects(), buildExpr(*m_indexAccess.indexExpression()), m_loc);
 
 	// DYNAMIC-element box arrays (struct-with-mapping elements → the mapping
 	// member maps to dynamic bytes): puya's IndexExpression reads the uint16
@@ -95,13 +95,13 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 					return awst::makeVarExpression(
 						tmpName, awst::WType::uint64Type(), m_loc);
 				};
-				m_ctx.prePendingStatements.push_back(
+				m_ctx.preEffects().push_back(
 					awst::makeAssignmentStatement(tmpVar(), std::move(idx), m_loc));
 				auto cmp = awst::makeNumericCompare(
 					tmpVar(), awst::NumericComparison::Lt,
 					SolLengthAccess::stateDynArrayLength(m_ctx, ident->name(), arrType, m_loc),
 					m_loc);
-				m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+				m_ctx.preEffects().push_back(awst::makeExpressionStatement(
 					awst::makeAssert(std::move(cmp), m_loc, "array index out of bounds"),
 					m_loc));
 				idx = tmpVar();
@@ -119,7 +119,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 		std::string tempName = "__sol_widx_" + std::to_string(
 			awst::NameGen::next("SolIndexAccessHandlers.writeIdxCounter"));
 		auto tempVar = awst::makeVarExpression(tempName, idx->wtype, m_loc);
-		m_ctx.prePendingStatements.push_back(
+		m_ctx.preEffects().push_back(
 			awst::makeAssignmentStatement(tempVar, std::move(idx), m_loc));
 		idx = tempVar;
 	}
@@ -260,7 +260,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 				auto tempVar = awst::makeVarExpression(tempName, translated->wtype, m_loc);
 				auto saveStmt = awst::makeAssignmentStatement(
 					tempVar, std::move(translated), m_loc);
-				m_ctx.prePendingStatements.push_back(std::move(saveStmt));
+				m_ctx.preEffects().push_back(std::move(saveStmt));
 				translated = tempVar;
 			}
 
@@ -290,7 +290,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 							awst::NameGen::next("SolIndexAccessHandlers.idxTempCounter"));
 						auto tempVar = awst::makeVarExpression(
 							tempName, translated->wtype, m_loc);
-						m_ctx.prePendingStatements.push_back(
+						m_ctx.preEffects().push_back(
 							awst::makeAssignmentStatement(
 								tempVar, std::move(translated), m_loc));
 						translated = tempVar;
@@ -309,7 +309,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 								std::move(bound), idxRef->wtype, m_loc);
 						auto cmp = awst::makeNumericCompare(std::move(idxRef),
 							awst::NumericComparison::Lt, std::move(bound), m_loc);
-						m_ctx.prePendingStatements.push_back(
+						m_ctx.preEffects().push_back(
 							awst::makeExpressionStatement(
 								awst::makeAssert(std::move(cmp), m_loc,
 									"array index out of bounds"),
@@ -446,7 +446,7 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 				auto tmpVar = [&]() {
 					return awst::makeVarExpression(tmpName, awst::WType::uint64Type(), m_loc);
 				};
-				m_ctx.prePendingStatements.push_back(
+				m_ctx.preEffects().push_back(
 					awst::makeAssignmentStatement(tmpVar(), std::move(idx), m_loc));
 
 				// EVM bounds check: arr[arr.length].m[k] must revert, not
@@ -464,7 +464,7 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 				{
 					auto cmp = awst::makeNumericCompare(
 						tmpVar(), awst::NumericComparison::Lt, std::move(bound), m_loc);
-					m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+					m_ctx.preEffects().push_back(awst::makeExpressionStatement(
 						awst::makeAssert(std::move(cmp), m_loc, "array index out of bounds"),
 						m_loc));
 				}
@@ -624,7 +624,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 			std::string nm = "__sol_ixpin_" + std::to_string(
 				awst::NameGen::next("SolIndexAccess.indexPin"));
 			auto tmp = awst::makeVarExpression(nm, index->wtype, m_loc);
-			m_ctx.prePendingStatements.push_back(
+			m_ctx.preEffects().push_back(
 				awst::makeAssignmentStatement(tmp, std::move(index), m_loc));
 			index = awst::makeVarExpression(nm, tmp->wtype, m_loc);
 		}
@@ -645,7 +645,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 				auto idxExpr = index;
 				if (idxExpr->wtype == awst::WType::biguintType())
 					idxExpr = builder::TypeCoercion::checkedIndexToUint64(
-						m_ctx.prePendingStatements, std::move(idxExpr), m_loc);
+						m_ctx.preEffects(), std::move(idxExpr), m_loc);
 				idxBuilder = m_ctx.builderForInstance(
 					TypeProvider::uint256(), idxExpr);
 			}
@@ -673,12 +673,12 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 			std::string tempName = "__sol_ixc_" + std::to_string(
 				awst::NameGen::next("SolIndexAccess.coercedIndex"));
 			auto tempVar = awst::makeVarExpression(tempName, index->wtype, m_loc);
-			m_ctx.prePendingStatements.push_back(
+			m_ctx.preEffects().push_back(
 				awst::makeAssignmentStatement(tempVar, std::move(index), m_loc));
 			index = tempVar;
 		}
 		index = builder::TypeCoercion::checkedIndexToUint64(
-			m_ctx.prePendingStatements, std::move(index), m_loc);
+			m_ctx.preEffects(), std::move(index), m_loc);
 	}
 
 	// bytes/bytesN index: puya rejects IndexExpression on bytes; use extract3.
@@ -769,12 +769,12 @@ std::shared_ptr<awst::Expression> SolIndexAccess::buildMultiBoxAccess(
 
 	// Coerce index to uint64 for arithmetic.
 	_idxExpr = builder::TypeCoercion::checkedIndexToUint64(
-		m_ctx.prePendingStatements, std::move(_idxExpr), m_loc);
+		m_ctx.preEffects(), std::move(_idxExpr), m_loc);
 
 	// Pin idx to a temp local so we can reference it twice (page + offset).
 	std::string idxVarName = "__mb_idx_" + std::to_string(awst::NameGen::next("SolIndexAccessHandlers.s_mbCounter"));
 	auto idxVar = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
-	m_ctx.prePendingStatements.push_back(
+	m_ctx.preEffects().push_back(
 		awst::makeAssignmentStatement(idxVar, std::move(_idxExpr), m_loc));
 
 	// page = idx / elemsPerBox
@@ -892,7 +892,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 	std::string idSuffix = std::to_string(m_indexAccess.id());
 	std::string rootVarName = "__slice_root_" + idSuffix;
 	auto rootVar = awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc);
-	m_ctx.prePendingStatements.push_back(
+	m_ctx.preEffects().push_back(
 		awst::makeAssignmentStatement(rootVar, rootBase, m_loc));
 
 	auto makeLen = [&](std::shared_ptr<awst::Expression> arr) -> std::shared_ptr<awst::Expression> {
@@ -908,7 +908,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 	// Stash length in temp for end-default and bounds check.
 	std::string lenVarName = "__slice_rootlen_" + idSuffix;
 	auto lenVar = awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), m_loc);
-	m_ctx.prePendingStatements.push_back(
+	m_ctx.preEffects().push_back(
 		awst::makeAssignmentStatement(lenVar, cumLength, m_loc));
 	cumLength = awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), m_loc);
 
@@ -925,7 +925,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 		else
 			startExpr = awst::makeZero(m_loc);
 		startExpr = builder::TypeCoercion::checkedIndexToUint64(
-			m_ctx.prePendingStatements, std::move(startExpr), m_loc);
+			m_ctx.preEffects(), std::move(startExpr), m_loc);
 
 		std::shared_ptr<awst::Expression> endExpr;
 		if (rg->endExpression())
@@ -933,14 +933,14 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 		else
 			endExpr = cumLength;
 		endExpr = builder::TypeCoercion::checkedIndexToUint64(
-			m_ctx.prePendingStatements, std::move(endExpr), m_loc);
+			m_ctx.preEffects(), std::move(endExpr), m_loc);
 
 		// Stash start/end in temps.
 		auto startVar = awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc);
-		m_ctx.prePendingStatements.push_back(
+		m_ctx.preEffects().push_back(
 			awst::makeAssignmentStatement(startVar, startExpr, m_loc));
 		auto endVar = awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc);
-		m_ctx.prePendingStatements.push_back(
+		m_ctx.preEffects().push_back(
 			awst::makeAssignmentStatement(endVar, endExpr, m_loc));
 
 		// assert(start <= end)
@@ -950,7 +950,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 				awst::NumericComparison::Lte,
 				awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc),
 				m_loc);
-			m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+			m_ctx.preEffects().push_back(awst::makeExpressionStatement(
 				awst::makeAssert(std::move(cmp), m_loc, "slice: start > end"), m_loc));
 		}
 
@@ -961,7 +961,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 				awst::NumericComparison::Lte,
 				cumLength,
 				m_loc);
-			m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+			m_ctx.preEffects().push_back(awst::makeExpressionStatement(
 				awst::makeAssert(std::move(cmp), m_loc, "slice: end > length"), m_loc));
 		}
 
@@ -982,13 +982,13 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 		// bounds check / end-default can reference it symbolically.
 		std::string nextLenName = "__slice_l_" + sIx;
 		auto nextLenVar = awst::makeVarExpression(nextLenName, awst::WType::uint64Type(), m_loc);
-		m_ctx.prePendingStatements.push_back(
+		m_ctx.preEffects().push_back(
 			awst::makeAssignmentStatement(nextLenVar, cumLength, m_loc));
 		cumLength = awst::makeVarExpression(nextLenName, awst::WType::uint64Type(), m_loc);
 
 		std::string nextOffName = "__slice_o_" + sIx;
 		auto nextOffVar = awst::makeVarExpression(nextOffName, awst::WType::uint64Type(), m_loc);
-		m_ctx.prePendingStatements.push_back(
+		m_ctx.preEffects().push_back(
 			awst::makeAssignmentStatement(nextOffVar, cumOffset, m_loc));
 		cumOffset = awst::makeVarExpression(nextOffName, awst::WType::uint64Type(), m_loc);
 	}
@@ -996,11 +996,11 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 	// Now the index access: bounds-check i < cumLength, then access root[cumOffset + i].
 	auto idx = buildExpr(*m_indexAccess.indexExpression());
 	idx = builder::TypeCoercion::checkedIndexToUint64(
-		m_ctx.prePendingStatements, std::move(idx), m_loc);
+		m_ctx.preEffects(), std::move(idx), m_loc);
 
 	std::string idxName = "__slice_i_" + idSuffix;
 	auto idxVar = awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc);
-	m_ctx.prePendingStatements.push_back(
+	m_ctx.preEffects().push_back(
 		awst::makeAssignmentStatement(idxVar, idx, m_loc));
 
 	// assert(index < slice_length)
@@ -1010,7 +1010,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleSlicedIndex()
 			awst::NumericComparison::Lt,
 			cumLength,
 			m_loc);
-		m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+		m_ctx.preEffects().push_back(awst::makeExpressionStatement(
 			awst::makeAssert(std::move(cmp), m_loc, "slice index out of bounds"), m_loc));
 	}
 

@@ -71,7 +71,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 			std::string idSuffix = std::to_string(m_memberAccess.id());
 			std::string rootVarName = "__slice_root_" + idSuffix;
 			auto rootVar = awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc);
-			m_ctx.prePendingStatements.push_back(
+			m_ctx.preEffects().push_back(
 				awst::makeAssignmentStatement(rootVar, rootBase, m_loc));
 
 			auto makeLen = [&](std::shared_ptr<awst::Expression> arr) -> std::shared_ptr<awst::Expression> {
@@ -82,7 +82,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 			auto lenSeed = makeLen(
 				awst::makeVarExpression(rootVarName, rootBase->wtype, m_loc));
 			auto lenVar = awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), m_loc);
-			m_ctx.prePendingStatements.push_back(
+			m_ctx.preEffects().push_back(
 				awst::makeAssignmentStatement(lenVar, lenSeed, m_loc));
 			std::shared_ptr<awst::Expression> cumLength
 				= awst::makeVarExpression(lenVarName, awst::WType::uint64Type(), m_loc);
@@ -111,10 +111,10 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 					std::move(endExpr), awst::WType::uint64Type(), m_loc);
 
 				auto startVar = awst::makeVarExpression(startName, awst::WType::uint64Type(), m_loc);
-				m_ctx.prePendingStatements.push_back(
+				m_ctx.preEffects().push_back(
 					awst::makeAssignmentStatement(startVar, startExpr, m_loc));
 				auto endVar = awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc);
-				m_ctx.prePendingStatements.push_back(
+				m_ctx.preEffects().push_back(
 					awst::makeAssignmentStatement(endVar, endExpr, m_loc));
 
 				{
@@ -123,7 +123,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 						awst::NumericComparison::Lte,
 						awst::makeVarExpression(endName, awst::WType::uint64Type(), m_loc),
 						m_loc);
-					m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+					m_ctx.preEffects().push_back(awst::makeExpressionStatement(
 						awst::makeAssert(std::move(cmp), m_loc, "slice: start > end"), m_loc));
 				}
 				{
@@ -132,7 +132,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 						awst::NumericComparison::Lte,
 						cumLength,
 						m_loc);
-					m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+					m_ctx.preEffects().push_back(awst::makeExpressionStatement(
 						awst::makeAssert(std::move(cmp), m_loc, "slice: end > length"), m_loc));
 				}
 
@@ -144,7 +144,7 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 
 				std::string nextLenName = "__slice_l_" + sIx;
 				auto nextLenVar = awst::makeVarExpression(nextLenName, awst::WType::uint64Type(), m_loc);
-				m_ctx.prePendingStatements.push_back(
+				m_ctx.preEffects().push_back(
 					awst::makeAssignmentStatement(nextLenVar, diff, m_loc));
 				cumLength = awst::makeVarExpression(nextLenName, awst::WType::uint64Type(), m_loc);
 			}

@@ -30,9 +30,7 @@ ContractContext::ContractContext(
 	  overloadedNames(_overloadedNames),
 	  functionSymbols(_functionSymbols),
 	  functionPointers(_functionPointers),
-	  registry(std::make_unique<BuilderRegistry>()),
-	  pendingStatements(*this, false),
-	  prePendingStatements(*this, true)
+	  registry(std::make_unique<BuilderRegistry>())
 {}
 
 ContractContext::~ContractContext() = default;
@@ -84,33 +82,27 @@ std::unique_ptr<InstanceBuilder> ContractContext::builderForInstance(
 	return registry->tryBuildInstance(*this, _solType, std::move(_expr));
 }
 
-std::vector<std::shared_ptr<awst::Statement>> ContractContext::takePending()
+std::vector<std::shared_ptr<awst::Statement>> ContractContext::takePostEffects()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
 	result.swap(activeEffects().post);
 	return result;
 }
 
-std::vector<std::shared_ptr<awst::Statement>> ContractContext::takePrePending()
+std::vector<std::shared_ptr<awst::Statement>> ContractContext::takePreEffects()
 {
 	std::vector<std::shared_ptr<awst::Statement>> result;
 	result.swap(activeEffects().pre);
 	return result;
 }
 
-void ContractContext::appendPendingTo(
+void ContractContext::appendEffectsTo(
 	std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
-	for (auto& p: takePrePending())
+	for (auto& p: takePreEffects())
 		_out.push_back(std::move(p));
-	for (auto& p: takePending())
+	for (auto& p: takePostEffects())
 		_out.push_back(std::move(p));
-}
-
-ContractContext::EffectBuffer::Statements&
-ContractContext::EffectBuffer::statements() const
-{
-	return m_pre ? m_ctx.activeEffects().pre : m_ctx.activeEffects().post;
 }
 
 std::shared_ptr<awst::Expression> ContractContext::emitSequencedOperand(
@@ -120,7 +112,7 @@ std::shared_ptr<awst::Expression> ContractContext::emitSequencedOperand(
 	awst::SourceLocation const& _loc)
 {
 	for (auto& s: _d.pre)
-		prePendingStatements.push_back(std::move(s));
+		preEffects().push_back(std::move(s));
 	bool isConstant = !_value
 		|| dynamic_cast<awst::IntegerConstant const*>(_value.get())
 		|| dynamic_cast<awst::BoolConstant const*>(_value.get())
@@ -133,12 +125,12 @@ std::shared_ptr<awst::Expression> ContractContext::emitSequencedOperand(
 		auto var = awst::makeVarExpression(
 			"__seq_" + std::to_string(awst::NameGen::next("ContractContext.seqCounter")),
 			_value->wtype, _loc);
-		prePendingStatements.push_back(
+		preEffects().push_back(
 			awst::makeAssignmentStatement(var, std::move(_value), _loc));
 		_value = var;
 	}
 	for (auto& s: _d.post)
-		prePendingStatements.push_back(std::move(s));
+		preEffects().push_back(std::move(s));
 	return _value;
 }
 

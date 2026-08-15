@@ -57,7 +57,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					cur = awst::makeAsBytes(std::move(cur), m_loc);
 				std::string nm = "__evm_bp_" + std::to_string(
 					awst::NameGen::next("SolArrayMethod.bytesPP"));
-				m_ctx.queuePrePending(awst::makeAssignmentStatement(
+				m_ctx.queuePreEffect(awst::makeAssignmentStatement(
 					awst::makeVarExpression(nm, awst::WType::bytesType(), m_loc),
 					std::move(cur), m_loc));
 				auto curVar = [&]() {
@@ -99,7 +99,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						awst::makeLen(curVar(), m_loc),
 						awst::NumericComparison::Gt,
 						awst::makeIntegerConstant(uint64_t{0}, m_loc), m_loc);
-					m_ctx.queuePrePending(awst::makeExpressionStatement(
+					m_ctx.queuePreEffect(awst::makeExpressionStatement(
 						awst::makeAssert(std::move(nonEmptyB), m_loc,
 							"pop from empty bytes"), m_loc));
 					auto newLen = awst::makeUInt64BinOp(
@@ -114,7 +114,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						writesB);
 				}
 				for (auto& stB: writesB)
-					m_ctx.queuePrePending(std::move(stB));
+					m_ctx.queuePreEffect(std::move(stB));
 				return awst::makeZero(m_loc, awst::WType::biguintType());
 			}
 			auto const* elemType = arrT->baseType();
@@ -147,7 +147,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				std::string nm = std::string("__evm_") + tag + "_"
 					+ std::to_string(awst::NameGen::next("SolArrayMethod.evmPin"));
 				auto const* wt = e->wtype;   // read BEFORE the move (arg eval order)
-				m_ctx.queuePrePending(awst::makeAssignmentStatement(
+				m_ctx.queuePreEffect(awst::makeAssignmentStatement(
 					awst::makeVarExpression(nm, wt, m_loc), std::move(e), m_loc));
 				return std::shared_ptr<awst::Expression>(
 					awst::makeVarExpression(nm, wt, m_loc));
@@ -172,7 +172,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						awst::BigUIntBinaryOperator::Add,
 						awst::makeIntegerConstant("1", m_loc,
 							awst::WType::biguintType()), m_loc);
-					m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+					m_ctx.queuePreEffect(builder::SlotHandleAccess::writeSlot(
 						rootSlot, std::move(newLenM), m_loc));
 					return awst::makeZero(m_loc, awst::WType::biguintType());
 				}
@@ -205,12 +205,12 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						}
 					}
 					for (auto& stA: writesA)
-						m_ctx.queuePrePending(std::move(stA));
+						m_ctx.queuePreEffect(std::move(stA));
 					auto newLenA = awst::makeBigUIntBinOp(len,
 						awst::BigUIntBinaryOperator::Add,
 						awst::makeIntegerConstant("1", m_loc,
 							awst::WType::biguintType()), m_loc);
-					m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+					m_ctx.queuePreEffect(builder::SlotHandleAccess::writeSlot(
 						rootSlot, std::move(newLenA), m_loc));
 					// no-arg push() returns a REFERENCE to the new element —
 					// its slot (addr uses the pre-bump length). `push(v)`
@@ -226,7 +226,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					builder::SlotHandleAccess::writeStructElem(
 						writes, addr.slot, structElem, structW, std::move(value), m_loc);
 					for (auto& st: writes)
-						m_ctx.queuePrePending(std::move(st));
+						m_ctx.queuePreEffect(std::move(st));
 				}
 				else if (value)
 				{
@@ -236,13 +236,13 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					std::vector<std::shared_ptr<awst::Statement>> writes;
 					low.writeValue(addr, std::move(value), writes);
 					for (auto& st: writes)
-						m_ctx.queuePrePending(std::move(st));
+						m_ctx.queuePreEffect(std::move(st));
 				}
 				auto newLen = awst::makeBigUIntBinOp(len,
 					awst::BigUIntBinaryOperator::Add,
 					awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType()),
 					m_loc);
-				m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+				m_ctx.queuePreEffect(builder::SlotHandleAccess::writeSlot(
 					rootSlot, std::move(newLen), m_loc));
 				if (m_call.arguments().empty())
 					return addr.slot;
@@ -254,7 +254,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				awst::NumericComparison::Gt,
 				awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()),
 				m_loc);
-			m_ctx.queuePrePending(awst::makeExpressionStatement(
+			m_ctx.queuePreEffect(awst::makeExpressionStatement(
 				awst::makeAssert(std::move(nonEmpty), m_loc, "pop from empty array"),
 				m_loc));
 			auto lastIdx = pin(awst::makeBigUIntBinOp(len,
@@ -265,7 +265,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 			{
 				// pop: mapping content becomes unreachable, which is what EVM
 				// does too (it cannot clear a mapping element either)
-				m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+				m_ctx.queuePreEffect(builder::SlotHandleAccess::writeSlot(
 					rootSlot, lastIdx, m_loc));
 				return awst::makeZero(m_loc, awst::WType::biguintType());
 			}
@@ -278,8 +278,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				if (!low.clearAggregate(addr, elemType, writesA))
 					return nullptr;
 				for (auto& stA: writesA)
-					m_ctx.queuePrePending(std::move(stA));
-				m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+					m_ctx.queuePreEffect(std::move(stA));
+				m_ctx.queuePreEffect(builder::SlotHandleAccess::writeSlot(
 					rootSlot, lastIdx, m_loc));
 				return awst::makeZero(m_loc, awst::WType::biguintType());
 			}
@@ -301,8 +301,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 							awst::WType::biguintType()), m_loc));
 				}
 				for (auto& st2: writes)
-					m_ctx.queuePrePending(std::move(st2));
-				m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+					m_ctx.queuePreEffect(std::move(st2));
+				m_ctx.queuePreEffect(builder::SlotHandleAccess::writeSlot(
 					rootSlot, lastIdx, m_loc));
 				return awst::makeZero(m_loc, awst::WType::biguintType());
 			}
@@ -324,8 +324,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 			std::vector<std::shared_ptr<awst::Statement>> writes;
 			low.writeValue(addr, std::move(zero), writes);
 			for (auto& st: writes)
-				m_ctx.queuePrePending(std::move(st));
-			m_ctx.queuePrePending(builder::SlotHandleAccess::writeSlot(
+				m_ctx.queuePreEffect(std::move(st));
+			m_ctx.queuePreEffect(builder::SlotHandleAccess::writeSlot(
 				rootSlot, lastIdx, m_loc));
 			return awst::makeZero(m_loc, awst::WType::biguintType());
 		}
@@ -365,7 +365,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					// with maybePrePopulateBox / SolAssignmentStructField via makeEnsureRootBoxForWrite.
 					if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
 							m_ctx.typeMapper, baseAwst, /*isResize=*/true, m_loc))
-						m_ctx.queuePrePending(std::move(stmt));
+						m_ctx.queuePreEffect(std::move(stmt));
 				};
 
 				if (memberName == "push" && !m_call.arguments().empty())
@@ -394,9 +394,9 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					if (fromAssign)
 						return e;
 
-					// queuePreStmt: extend runs before the enclosing statement.
+					// queuePreExpression: extend runs before the enclosing statement.
 					// `arr.push().field = v` reads ArrayLength-1 post-extend.
-					m_ctx.queuePreStmt(std::move(e), m_loc);
+					m_ctx.queuePreExpression(std::move(e), m_loc);
 
 					// `arr.push()` returns a ref to the new element as
 					// IndexExpression(arr, ArrayLength(arr)-1).
@@ -471,7 +471,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								}
 								else
 									pushVal = awst::makeBytesConstant({0}, loc);
-								m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget,
+								m_ctx.queuePostEffect(awst::makeAssignmentStatement(tmpTarget,
 									awst::makeConcat(std::move(readVal), std::move(pushVal), loc),
 									loc));
 							}
@@ -480,13 +480,13 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								auto newLen = awst::makeUInt64BinOp(
 									awst::makeLen(readVal, loc),
 									awst::UInt64BinaryOperator::Sub, awst::makeOne(loc), loc);
-								m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget,
+								m_ctx.queuePostEffect(awst::makeAssignmentStatement(tmpTarget,
 									awst::makeExtract3(readVal, awst::makeZero(loc),
 										std::move(newLen), loc),
 									loc));
 							}
-							m_ctx.queueStmt(awst::makeBoxDel(bv->key, loc), loc);
-							m_ctx.queueStmt(awst::makeBoxPut(bv->key,
+							m_ctx.queuePostExpression(awst::makeBoxDel(bv->key, loc), loc);
+							m_ctx.queuePostExpression(awst::makeBoxPut(bv->key,
 								awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc),
 								loc), loc);
 							return awst::makeVoidConstant(loc);
@@ -527,7 +527,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 									std::move(createCall), m_loc);
 								auto ifBranch = awst::makeBlock(m_loc);
 								ifBranch->body.push_back(std::move(createStmt));
-								m_ctx.queuePrePending(awst::makeIfElse(
+								m_ctx.queuePreEffect(awst::makeIfElse(
 									std::move(notExists), std::move(ifBranch), nullptr, m_loc));
 							};
 
@@ -557,7 +557,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 								if (fromAssign)
 									return e;
 
-								m_ctx.queueStmt(std::move(e), m_loc);
+								m_ctx.queuePostExpression(std::move(e), m_loc);
 								return awst::makeVoidConstant(m_loc);
 							}
 							if (memberName == "pop")
@@ -634,18 +634,18 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						std::string tmpName = "__bytes_pop_tmp_" + std::to_string(awst::NameGen::next("SolArrayMethod.popTmpCounter"));
 
 						auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-						m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget, std::move(extract), loc));
+						m_ctx.queuePostEffect(awst::makeAssignmentStatement(tmpTarget, std::move(extract), loc));
 
-						m_ctx.queueStmt(awst::makeBoxDel(awst::makeUtf8BytesConstant(varName, loc), loc), loc);
+						m_ctx.queuePostExpression(awst::makeBoxDel(awst::makeUtf8BytesConstant(varName, loc), loc), loc);
 
 						auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-						m_ctx.queueStmt(awst::makeBoxPut(
+						m_ctx.queuePostExpression(awst::makeBoxPut(
 							awst::makeUtf8BytesConstant(varName, loc),
 							std::move(tmpRead), loc), loc);
 					}
 					else
 					{
-						m_ctx.queueStmt(awst::makeAppGlobalPut(
+						m_ctx.queuePostExpression(awst::makeAppGlobalPut(
 							awst::makeUtf8BytesConstant(varName, loc),
 							std::move(extract), loc), loc);
 					}
@@ -711,18 +711,18 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 						std::string tmpName = "__bytes_push_tmp_" + std::to_string(awst::NameGen::next("SolArrayMethod.tmpCounter"));
 
 						auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-						m_ctx.queuePending(awst::makeAssignmentStatement(tmpTarget, std::move(cat), loc));
+						m_ctx.queuePostEffect(awst::makeAssignmentStatement(tmpTarget, std::move(cat), loc));
 
-						m_ctx.queueStmt(awst::makeBoxDel(awst::makeUtf8BytesConstant(varName, loc), loc), loc);
+						m_ctx.queuePostExpression(awst::makeBoxDel(awst::makeUtf8BytesConstant(varName, loc), loc), loc);
 
 						auto tmpRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), loc);
-						m_ctx.queueStmt(awst::makeBoxPut(
+						m_ctx.queuePostExpression(awst::makeBoxPut(
 							awst::makeUtf8BytesConstant(varName, loc),
 							std::move(tmpRead), loc), loc);
 					}
 					else
 					{
-						m_ctx.queueStmt(awst::makeAppGlobalPut(
+						m_ctx.queuePostExpression(awst::makeAppGlobalPut(
 							awst::makeUtf8BytesConstant(varName, loc),
 							std::move(cat), loc), loc);
 					}
@@ -790,7 +790,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				// "no such box". Same prologue as the m[k].push() branch above.
 				if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
 						m_ctx.typeMapper, baseAwst, /*isResize=*/true, m_loc))
-					m_ctx.queuePrePending(std::move(stmt));
+					m_ctx.queuePreEffect(std::move(stmt));
 
 				if (memberName == "push" && !m_call.arguments().empty())
 				{
@@ -819,7 +819,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					if (fromAssign)
 						return extend;
 
-					m_ctx.queuePreStmt(std::move(extend), m_loc);
+					m_ctx.queuePreExpression(std::move(extend), m_loc);
 					return awst::makeVoidConstant(m_loc);
 				}
 				if (memberName == "pop")

@@ -37,7 +37,7 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 	auto index = _idx.resolve();
 
 	if (index->wtype == awst::WType::biguintType())
-		index = TypeCoercion::checkedIndexToUint64(m_ctx.prePendingStatements, std::move(index), _loc);
+		index = TypeCoercion::checkedIndexToUint64(m_ctx.preEffects(), std::move(index), _loc);
 
 	auto* elemType = elementType();
 	if (!elemType)
@@ -62,14 +62,14 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 		auto tmpVar = [&]() {
 			return awst::makeVarExpression(tmpName, awst::WType::uint64Type(), _loc);
 		};
-		m_ctx.prePendingStatements.push_back(
+		m_ctx.preEffects().push_back(
 			awst::makeAssignmentStatement(tmpVar(), std::move(index), _loc));
 		auto len = awst::makeExtractUInt16(
 			awst::makeReinterpretCast(base, awst::WType::bytesType(), _loc),
 			awst::makeZero(_loc), _loc);
 		auto cmp = awst::makeNumericCompare(
 			tmpVar(), awst::NumericComparison::Lt, std::move(len), _loc);
-		m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+		m_ctx.preEffects().push_back(awst::makeExpressionStatement(
 			awst::makeAssert(std::move(cmp), _loc, "array index out of bounds"), _loc));
 		index = tmpVar();
 	}
@@ -114,13 +114,13 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 		auto tmpVar = awst::makeVarExpression(tmpName, result->wtype, _loc);
 
 		auto assignTmp = awst::makeAssignmentStatement(tmpVar, result, _loc);
-		m_ctx.prePendingStatements.push_back(std::move(assignTmp));
+		m_ctx.preEffects().push_back(std::move(assignTmp));
 
 		auto cmpLhs = TypeCoercion::implicitNumericCast(
 			tmpVar, awst::WType::uint64Type(), _loc);
 		auto assertStmt = awst::makeExpressionStatement(
 			awst::makeEnumRangeAssert(std::move(cmpLhs), numMembers, _loc, "Enum out of range"), _loc);
-		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+		m_ctx.preEffects().push_back(std::move(assertStmt));
 
 		result = tmpVar;
 	}

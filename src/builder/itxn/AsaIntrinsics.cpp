@@ -279,7 +279,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaCreate(
 	submit->itxns.push_back(std::move(create));
 
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
-	_ctx.prePendingStatements.push_back(std::move(submitStmt));
+	_ctx.preEffects().push_back(std::move(submitStmt));
 
 	// Stash CreatedAssetID in a temp — subsequent itxn submissions clobber itxn fields.
 	auto createdAsaCall = awst::makeItxn(
@@ -288,7 +288,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaCreate(
 	std::string tmpName = "__new_asa_id_" + std::to_string(awst::NameGen::next("AsaIntrinsics.s_counter"));
 	auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::uint64Type(), _loc);
 	auto assign = awst::makeAssignmentStatement(tmpTarget, std::move(createdAsaCall), _loc);
-	_ctx.prePendingStatements.push_back(std::move(assign));
+	_ctx.preEffects().push_back(std::move(assign));
 
 	return awst::makeVarExpression(tmpName, awst::WType::uint64Type(), _loc);
 }
@@ -403,7 +403,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTransfer(
 	// AVM.asaTransfer declares `uint256 amount`; assert it fits in the
 	// uint64 AssetAmount field instead of silently sending `amount mod 2^64`.
 	auto amount = builder::TypeCoercion::checkedAmountToUint64(
-		_ctx.prePendingStatements, std::move(_args[3]), _loc);
+		_ctx.preEffects(), std::move(_args[3]), _loc);
 
 	static awst::WInnerTransactionFields s_axferFieldsType(4);
 	auto create = awst::makeCreateInnerTransaction(&s_axferFieldsType, _loc);
@@ -420,7 +420,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaTransfer(
 	submit->itxns.push_back(std::move(create));
 
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
-	_ctx.prePendingStatements.push_back(std::move(submitStmt));
+	_ctx.preEffects().push_back(std::move(submitStmt));
 
 	auto vc = awst::makeVoidConstant(_loc);
 	return vc;
@@ -455,7 +455,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaOptIn(
 	static awst::WInnerTransaction s_axferTxn(4);
 	auto submit = awst::makeSubmitInnerTransaction(&s_axferTxn, _loc);
 	submit->itxns.push_back(std::move(create));
-	_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(std::move(submit), _loc));
+	_ctx.preEffects().push_back(awst::makeExpressionStatement(std::move(submit), _loc));
 	return awst::makeVoidConstant(_loc);
 }
 
@@ -481,7 +481,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaDestroy(
 	static awst::WInnerTransaction s_acfgTxn(3);
 	auto submit = awst::makeSubmitInnerTransaction(&s_acfgTxn, _loc);
 	submit->itxns.push_back(std::move(create));
-	_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(std::move(submit), _loc));
+	_ctx.preEffects().push_back(awst::makeExpressionStatement(std::move(submit), _loc));
 	return awst::makeVoidConstant(_loc);
 }
 
@@ -511,7 +511,7 @@ std::shared_ptr<awst::Expression> AsaIntrinsics::handleAsaFreeze(
 	static awst::WInnerTransaction s_afrzTxn(5);
 	auto submit = awst::makeSubmitInnerTransaction(&s_afrzTxn, _loc);
 	submit->itxns.push_back(std::move(create));
-	_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(std::move(submit), _loc));
+	_ctx.preEffects().push_back(awst::makeExpressionStatement(std::move(submit), _loc));
 	return awst::makeVoidConstant(_loc);
 }
 

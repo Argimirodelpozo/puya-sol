@@ -143,7 +143,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 
 		auto stmt = awst::makeExpressionStatement(logCall, m_loc);
 		std::vector<std::shared_ptr<awst::Statement>> result;
-		m_blk.builderCtx().appendPendingTo(result); // defensive: no args, but never leak
+		m_blk.builderCtx().appendEffectsTo(result); // defensive: no args, but never leak
 		result.push_back(std::move(stmt));
 		return result;
 	}
@@ -168,7 +168,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 	// emit's argument values reference. This handler previously never drained
 	// — the leftovers leaked into whichever statement translated next
 	// (potentially in a different function) and temps were read unassigned.
-	m_blk.builderCtx().appendPendingTo(result);
+	m_blk.builderCtx().appendEffectsTo(result);
 	for (auto& s: preStatements)
 		result.push_back(std::move(s));
 	result.push_back(std::move(stmt));

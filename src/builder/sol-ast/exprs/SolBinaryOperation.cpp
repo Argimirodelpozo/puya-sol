@@ -105,10 +105,10 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolShortCircuit()
 		{}, tempVar(), awst::makeBoolConstant(op == Token::Or, m_loc), m_loc);
 
 	if (op == Token::And)
-		m_ctx.prePendingStatements.push_back(
+		m_ctx.preEffects().push_back(
 			awst::makeIfElse(std::move(left), std::move(rhsBlock), std::move(shortBlock), m_loc));
 	else
-		m_ctx.prePendingStatements.push_back(
+		m_ctx.preEffects().push_back(
 			awst::makeIfElse(std::move(left), std::move(shortBlock), std::move(rhsBlock), m_loc));
 
 	return tempVar();
@@ -299,9 +299,9 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 		// write-backs stay at the statement boundary (nothing later in this
 		// expression).
 		for (auto& s: ld.pre)
-			m_ctx.prePendingStatements.push_back(std::move(s));
+			m_ctx.preEffects().push_back(std::move(s));
 		for (auto& s: ld.post)
-			m_ctx.pendingStatements.push_back(std::move(s));
+			m_ctx.postEffects().push_back(std::move(s));
 	}
 	auto* resultType = m_ctx.typeMapper.map(m_binOp.annotation().type);
 
@@ -366,7 +366,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 			{
 				auto smulVar = awst::makeVarExpression(
 					"__smul_l_" + std::to_string(m_binOp.id()), left->wtype, m_loc);
-				m_ctx.prePendingStatements.push_back(
+				m_ctx.preEffects().push_back(
 					awst::makeAssignmentStatement(smulVar, std::move(left), m_loc));
 				left = smulVar;
 			}
@@ -436,7 +436,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::toAwst()
 			auto padded = awst::makeLeftPad(asBytes, n, m_loc);
 			std::string varName = "__bytes_shift_" + std::to_string(awst::NameGen::next("SolBinaryOperation.shCounter"));
 			auto var = awst::makeVarExpression(varName, bytesT, m_loc);
-			m_ctx.prePendingStatements.push_back(
+			m_ctx.preEffects().push_back(
 				awst::makeAssignmentStatement(var, std::move(padded), m_loc));
 
 			auto lenCall = awst::makeLen(var, m_loc);
@@ -552,7 +552,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 			awst::WType::boolType(), m_loc);
 
 		auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(rangeOk), m_loc, "signed exp overflow"), m_loc);
-		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+		m_ctx.preEffects().push_back(std::move(assertStmt));
 	}
 
 	// Negate result when base was negative and exp is odd: (pow2N - absResult) mod pow2N

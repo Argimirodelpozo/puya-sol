@@ -26,8 +26,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 
 	auto cond = bc.buildExpr(m_node.condition());
 
-	auto prePending = bc.takePrePending();
-	auto postPending = bc.takePending();
+	auto preEffects = bc.takePreEffects();
+	auto postPending = bc.takePostEffects();
 
 	auto buildBranch = [&](Statement const& body) -> std::shared_ptr<awst::Block> {
 		// Conditionally-executed region: compile-time-only rebinds (storage
@@ -60,7 +60,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolIfStatement::toAwst()
 	// push/pop box writes) — they must complete before either branch runs.
 	// Emitting them after the IfElse read pre-mutation state in the branches
 	// and LOST the effect entirely when a branch returned/halted.
-	for (auto& p: prePending) result.push_back(std::move(p));
+	for (auto& p: preEffects) result.push_back(std::move(p));
 	for (auto& p: postPending) result.push_back(std::move(p));
 	result.push_back(awst::makeIfElse(std::move(cond), std::move(ifBranch), std::move(elseBranch), m_loc));
 	return result;
@@ -93,8 +93,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		// loop entirely for bodies that never drain). They re-run with the
 		// test each iteration, bundled in one block so the `continue` splice
 		// (doWhileCondBreak) carries them too.
-		auto condPre = bc.takePrePending();
-		{ auto cp = bc.takePending(); for (auto& p: cp) condPre.push_back(std::move(p)); }
+		auto condPre = bc.takePreEffects();
+		{ auto cp = bc.takePostEffects(); for (auto& p: cp) condPre.push_back(std::move(p)); }
 		auto notCond = awst::makeNot(std::move(cond), m_loc);
 
 		auto breakBlock = awst::makeBlock(m_loc);
@@ -154,8 +154,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolWhileStatement::toAwst()
 		// `a[i].length` bounds-check) — same orphaning as the for-loop: a WhileLoop
 		// condition is a pure expression, so they must re-run each iteration before the
 		// test, else the condition reads an undefined temp and reverts.
-		auto condPre = bc.takePrePending();
-		{ auto cp = bc.takePending(); for (auto& p: cp) condPre.push_back(std::move(p)); }
+		auto condPre = bc.takePreEffects();
+		{ auto cp = bc.takePostEffects(); for (auto& p: cp) condPre.push_back(std::move(p)); }
 
 		// Empty LoopContext (no for-post / doWhile break); still needed so
 		// continue/break inside the body know they're in a loop.
@@ -221,8 +221,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolForStatement::toAwst()
 	// that consumes them → the condition reads undefined temps and reverts. Run them each
 	// iteration BEFORE the test (mirrors the do-while lowering below):
 	//   while (true) { <cond-pre>; if (!cond) break; <body>; <post> }
-	auto condPre = bc.takePrePending();
-	{ auto cp = bc.takePending(); for (auto& p: cp) condPre.push_back(std::move(p)); }
+	auto condPre = bc.takePreEffects();
+	{ auto cp = bc.takePostEffects(); for (auto& p: cp) condPre.push_back(std::move(p)); }
 
 	std::shared_ptr<awst::Statement> postStmt;
 	if (m_node.loopExpression())

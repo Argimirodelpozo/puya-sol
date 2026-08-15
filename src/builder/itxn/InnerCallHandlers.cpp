@@ -9,6 +9,7 @@
 #include "builder/itxn/InnerCallInternal.h"
 #include "builder/itxn/CallResolver.h"
 #include "builder/sol-eb/SolBoolBuilder.h"
+#include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "Logger.h"
@@ -115,7 +116,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::captureLastLog(
 {
 	std::string tmp = "__itxn_log_"
 		+ std::to_string(awst::NameGen::next("InnerCallHandlers.itxnLogCounter"));
-	_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+	_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(tmp, awst::WType::bytesType(), _loc),
 		awst::makeItxn("LastLog", awst::WType::bytesType(), _loc), _loc));
 	return awst::makeVarExpression(tmp, awst::WType::bytesType(), _loc);
@@ -124,10 +125,19 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::captureLastLog(
 std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _argExpr,
+	solidity::frontend::Type const* _sourceSolType,
 	solidity::frontend::Type const* _paramSolType,
 	awst::SourceLocation const& _loc)
 {
 	using namespace solidity::frontend;
+	if (_paramSolType)
+		_argExpr = builder::ConversionPlan{
+			_sourceSolType,
+			_paramSolType,
+			_ctx.typeMapper.map(_paramSolType),
+			builder::ConversionPlan::Context::AbiArgument}.emit(
+				std::move(_argExpr), _loc);
+
 	bool isDynamicBytes = false;
 	if (_paramSolType)
 	{
@@ -362,7 +372,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleTransfer(
 	submit->itxns.push_back(std::move(create));
 
 	auto stmt = awst::makeExpressionStatement(submit, _loc);
-	_ctx.pendingStatements.push_back(std::move(stmt));
+	_ctx.postEffects().push_back(std::move(stmt));
 
 	auto vc = awst::makeVoidConstant(_loc);
 	return std::make_unique<GenericResultBuilder>(_ctx, std::move(vc));
@@ -378,7 +388,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleSend(
 	submit->itxns.push_back(std::move(create));
 
 	auto stmt = awst::makeExpressionStatement(submit, _loc);
-	_ctx.pendingStatements.push_back(std::move(stmt));
+	_ctx.postEffects().push_back(std::move(stmt));
 
 	return std::make_unique<SolBoolBuilder>(_ctx, awst::makeTrue(_loc));
 }
@@ -393,7 +403,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithValue(
 	submit->itxns.push_back(std::move(create));
 
 	auto stmt = awst::makeExpressionStatement(submit, _loc);
-	_ctx.pendingStatements.push_back(std::move(stmt));
+	_ctx.postEffects().push_back(std::move(stmt));
 
 	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
 }
@@ -429,7 +439,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
 	auto neverTrue = awst::makeNumericCompare(std::move(round),
 		awst::NumericComparison::Eq,
 		awst::makeIntegerConstant(uint64_t{0}, _loc), _loc);
-	_ctx.queuePreStmt(awst::makeAssert(std::move(neverTrue), _loc,
+	_ctx.queuePreExpression(awst::makeAssert(std::move(neverTrue), _loc,
 		"delegatecall is not supported on AVM"), _loc);
 	return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
 }
@@ -451,7 +461,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	if (_memberName == "transfer" && _callNode.arguments().size() == 1)
 	{
 		auto amount = _ctx.buildExpr(*_callNode.arguments()[0]);
-		amount = TypeCoercion::checkedAmountToUint64(_ctx.prePendingStatements, std::move(amount), _loc);
+		amount = TypeCoercion::checkedAmountToUint64(_ctx.preEffects(), std::move(amount), _loc);
 		return handleTransfer(_ctx, std::move(_receiver), std::move(amount), _loc);
 	}
 
@@ -459,7 +469,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	if (_memberName == "send" && _callNode.arguments().size() == 1)
 	{
 		auto amount = _ctx.buildExpr(*_callNode.arguments()[0]);
-		amount = TypeCoercion::checkedAmountToUint64(_ctx.prePendingStatements, std::move(amount), _loc);
+		amount = TypeCoercion::checkedAmountToUint64(_ctx.preEffects(), std::move(amount), _loc);
 		return handleSend(_ctx, std::move(_receiver), std::move(amount), _loc);
 	}
 
@@ -711,7 +721,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								for (auto const& a : resolvedArgs)
 									awst::pushCallArg(call->args, _ctx.buildExpr(*a));
 								auto stmt = awst::makeExpressionStatement(call, _loc);
-								_ctx.prePendingStatements.push_back(std::move(stmt));
+								_ctx.preEffects().push_back(std::move(stmt));
 								return std::make_unique<GenericResultBuilder>(_ctx,
 									makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc));
 							}
@@ -853,7 +863,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				std::string tmpName = "__fallback_ret_" + std::to_string((awst::NameGen::next("InnerCallHandlers.s_tmpCounter") + 1));
 				auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
 				auto assign = awst::makeAssignmentStatement(tmpTarget, std::move(call), _loc);
-				_ctx.prePendingStatements.push_back(std::move(assign));
+				_ctx.preEffects().push_back(std::move(assign));
 
 				auto retRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
 				return std::make_unique<GenericResultBuilder>(_ctx,
@@ -861,7 +871,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			}
 
 			auto stmt = awst::makeExpressionStatement(call, _loc);
-			_ctx.prePendingStatements.push_back(std::move(stmt));
+			_ctx.preEffects().push_back(std::move(stmt));
 
 			return std::make_unique<GenericResultBuilder>(_ctx,
 				makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc));
@@ -942,7 +952,7 @@ void InnerCallHandlers::fundCreatedApp(
 	submit->itxns.push_back(std::move(create));
 
 	auto stmt = awst::makeExpressionStatement(std::move(submit), _loc);
-	_ctx.prePendingStatements.push_back(std::move(stmt));
+	_ctx.preEffects().push_back(std::move(stmt));
 }
 
 } // namespace puyasol::builder::eb

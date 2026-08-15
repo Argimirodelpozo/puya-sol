@@ -98,7 +98,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		{
 			auto cmp = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst(halfNStr), m_loc);
 
-			m_ctx.queuePreStmt(awst::makeAssert(std::move(cmp), m_loc, "signed negation overflow"), m_loc);
+			m_ctx.queuePreExpression(awst::makeAssert(std::move(cmp), m_loc, "signed negation overflow"), m_loc);
 		}
 
 		// -x = (2^N - x) mod 2^N
@@ -110,7 +110,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::biguintType(), m_loc);
 
 			auto initStmt = awst::makeAssignmentStatement(tmpVar, makeBiguintConst("0"), m_loc);
-			m_ctx.prePendingStatements.push_back(std::move(initStmt));
+			m_ctx.preEffects().push_back(std::move(initStmt));
 
 			auto isNonZero = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst("0"), m_loc);
 
@@ -123,7 +123,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 			auto ifBody = awst::makeBlock(m_loc);
 			ifBody->body.push_back(std::move(assignTmp));
 
-			m_ctx.prePendingStatements.push_back(awst::makeIfElse(
+			m_ctx.preEffects().push_back(awst::makeIfElse(
 				std::move(isNonZero), std::move(ifBody), nullptr, m_loc));
 
 			negated = tmpVar;
@@ -289,13 +289,13 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 					return _operand;
 				if (isPrefix)
 				{
-					m_ctx.prePendingStatements.push_back(std::move(writeStmt));
+					m_ctx.preEffects().push_back(std::move(writeStmt));
 					// Re-read for the expression value (post-update)
 					return m_ctx.transientStorage->buildRead(varDecl->name(), wt, m_loc);
 				}
 				else
 				{
-					m_ctx.pendingStatements.push_back(std::move(writeStmt));
+					m_ctx.postEffects().push_back(std::move(writeStmt));
 					return _operand;
 				}
 			}
@@ -387,7 +387,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 
 				auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Ne, makeBConst(limitStr), m_loc);
 
-				m_ctx.queuePreStmt(awst::makeAssert(std::move(cmp), m_loc, "signed inc/dec overflow"), m_loc);
+				m_ctx.queuePreExpression(awst::makeAssert(std::move(cmp), m_loc, "signed inc/dec overflow"), m_loc);
 			}
 
 			std::shared_ptr<awst::Expression> added;
@@ -544,8 +544,8 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 			auto nv = makeNewValue(_operand);
 			auto* nvType = nv->wtype;
 			auto nvVar = awst::makeVarExpression(pName, nvType, m_loc);
-			m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(nvVar, std::move(nv), m_loc));
-			m_ctx.prePendingStatements.push_back(buildStructFieldCowWrite(writeTarget, structType,
+			m_ctx.preEffects().push_back(awst::makeAssignmentStatement(nvVar, std::move(nv), m_loc));
+			m_ctx.preEffects().push_back(buildStructFieldCowWrite(writeTarget, structType,
 				awst::makeVarExpression(pName, nvType, m_loc)));
 			return awst::makeVarExpression(pName, nvType, m_loc);
 		}
@@ -555,26 +555,26 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	}
 	else
 	{
-		// Post-inc: save old value, emit write as prePending (not pending) so
+		// Post-inc: save old value, emit the write as a pre-effect so
 		// `a++ + a` reads updated `a`; pending only fires at statement end.
 		std::string tempName = "__postinc_" + std::to_string(awst::NameGen::next("SolUnaryOperation.postIncCounter"));
 
 		auto tempVar = awst::makeVarExpression(tempName, _operand->wtype, m_loc);
 
 		auto saveStmt = awst::makeAssignmentStatement(tempVar, _operand, m_loc);
-		m_ctx.prePendingStatements.push_back(std::move(saveStmt));
+		m_ctx.preEffects().push_back(std::move(saveStmt));
 
 		auto writeTarget = makeWriteTarget(_operand);
 		if (auto const* structType = structFieldTypeOf(writeTarget))
 		{
-			m_ctx.prePendingStatements.push_back(buildStructFieldCowWrite(writeTarget, structType,
+			m_ctx.preEffects().push_back(buildStructFieldCowWrite(writeTarget, structType,
 				makeNewValue(tempVar)));
 			return tempVar;
 		}
 		auto newValue = maybeEncode(writeTarget, makeNewValue(tempVar));
 
 		auto incrStmt = awst::makeAssignmentStatement(std::move(writeTarget), std::move(newValue), m_loc);
-		m_ctx.prePendingStatements.push_back(std::move(incrStmt));
+		m_ctx.preEffects().push_back(std::move(incrStmt));
 
 		return tempVar;
 	}
@@ -599,7 +599,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 				auto zero = builder::StorageMapper::makeDefaultValue(wt, m_loc);
 				if (auto stmt = m_ctx.transientStorage->buildWrite(
 						varDecl->name(), std::move(zero), m_loc))
-					m_ctx.pendingStatements.push_back(std::move(stmt));
+					m_ctx.postEffects().push_back(std::move(stmt));
 				m_scope.eraseFuncPtrTarget(varDecl->id());
 				return _operand;
 			}
@@ -625,11 +625,11 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 		{
 			auto def = builder::StorageMapper::makeDefaultValue(boxExpr->wtype, m_loc);
 			auto put = awst::makeAssignmentExpression(target, std::move(def), m_loc, boxExpr->wtype);
-			m_ctx.queueStmt(std::move(put), m_loc);
+			m_ctx.queuePostExpression(std::move(put), m_loc);
 			return _operand;
 		}
 		auto stateDelete = awst::makeStateDelete(target, m_loc);
-		m_ctx.queueStmt(std::move(stateDelete), m_loc);
+		m_ctx.queuePostExpression(std::move(stateDelete), m_loc);
 		return _operand;
 	}
 
@@ -663,7 +663,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 			if (auto const* sg = dynamic_cast<awst::StateGet const*>(base.get()))
 				writeTarget = sg->field;
 
-			m_ctx.queuePending(awst::makeAssignmentStatement(std::move(writeTarget), std::move(newStruct), m_loc));
+			m_ctx.queuePostEffect(awst::makeAssignmentStatement(std::move(writeTarget), std::move(newStruct), m_loc));
 			return _operand;
 		}
 	}
@@ -707,12 +707,12 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 			awst::pushCallArg(call->args, "__slot", std::move(btoi));
 			awst::pushCallArg(call->args, "__value", std::move(zeroVal));
 
-			m_ctx.queueStmt(std::move(call), m_loc);
+			m_ctx.queuePostExpression(std::move(call), m_loc);
 		}
 		return _operand;
 	}
 
-	m_ctx.queuePending(awst::makeAssignmentStatement(target, std::move(defaultVal), m_loc));
+	m_ctx.queuePostEffect(awst::makeAssignmentStatement(target, std::move(defaultVal), m_loc));
 	return _operand;
 }
 
@@ -746,7 +746,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 			// NAMED temp (cross-statement idiom; SingleEvaluation is unsound).
 			std::string nm = "__evm_del_"
 				+ std::to_string(awst::NameGen::next("SolUnaryOperation.evmDel"));
-			m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+			m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 				awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc),
 				addr->slot, m_loc));
 			std::vector<std::shared_ptr<awst::Statement>> writes;
@@ -766,7 +766,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 						awst::WType::biguintType()), m_loc));
 			}
 			for (auto& st: writes)
-				m_ctx.queuePending(std::move(st));
+				m_ctx.queuePostEffect(std::move(st));
 			return awst::makeZero(m_loc, awst::WType::biguintType());
 		}
 	}
@@ -781,7 +781,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 		low.writeBytesValue(*addr,
 			awst::makeBytesConstant({}, m_loc), writes);
 		for (auto& st: writes)
-			m_ctx.queuePending(std::move(st));
+			m_ctx.queuePostEffect(std::move(st));
 		return awst::makeZero(m_loc, awst::WType::biguintType());
 	}
 	if (m_unaryOp.getOperator() == Token::Delete
@@ -797,7 +797,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 		if (low.clearAggregate(*addr, solType, writes))
 		{
 			for (auto& st: writes)
-				m_ctx.queuePending(std::move(st));
+				m_ctx.queuePostEffect(std::move(st));
 			return awst::makeZero(m_loc, awst::WType::biguintType());
 		}
 		return nullptr;
@@ -823,7 +823,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 			return;
 		std::string nm = std::string("__evm_") + _tag + "_"
 			+ std::to_string(awst::NameGen::next("SolUnaryOperation.evmPin"));
-		m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(nm, _e->wtype, m_loc), _e, m_loc));
 		_e = awst::makeVarExpression(nm, _e->wtype, m_loc);
 	};
@@ -853,7 +853,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 			zero = builder::StorageMapper::makeDefaultValue(addr->wtype, m_loc);
 		low.writeValue(*addr, std::move(zero), writes);
 		for (auto& st: writes)
-			m_ctx.queuePending(std::move(st));
+			m_ctx.queuePostEffect(std::move(st));
 		return awst::makeZero(m_loc, awst::WType::biguintType());
 	}
 
@@ -869,7 +869,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 	{
 		std::string onm = "__evm_old_"
 			+ std::to_string(awst::NameGen::next("SolUnaryOperation.evmOld"));
-		m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(onm, current->wtype, m_loc), current, m_loc));
 		oldPin = awst::makeVarExpression(onm, current->wtype, m_loc);
 		current = awst::makeVarExpression(onm, current->wtype, m_loc);
@@ -894,11 +894,11 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 	if (!newValue)
 		return nullptr;
 	low.writeValue(*addr, std::move(newValue), writes);
-	// Both forms write via prePending (after the postfix old-pin above, so
-	// ordering inside prePending is pin -> write). Prefix returns a fresh
+	// Both forms write via pre-effects (after the postfix old-pin above, so
+	// ordering is pin -> write). Prefix returns a fresh
 	// read (sees the new value); postfix returns the pinned old value.
 	for (auto& st: writes)
-		m_ctx.prePendingStatements.push_back(std::move(st));
+		m_ctx.preEffects().push_back(std::move(st));
 	if (isPrefix)
 		return low.readValue(*addr);
 	return oldPin;

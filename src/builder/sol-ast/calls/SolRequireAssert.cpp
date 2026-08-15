@@ -77,7 +77,7 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 							m_loc);
 					std::string tmpName = "__require_err_blob_"
 						+ std::to_string((awst::NameGen::next("SolRequireAssert.s_reqErrBlobCounter") + 1));
-					m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+					m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 						awst::makeVarExpression(tmpName, awst::WType::bytesType(), m_loc),
 						std::move(blob), m_loc));
 					revertBlob = awst::makeVarExpression(
@@ -91,7 +91,7 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 						if (argExpr && argExpr->wtype && argExpr->wtype != awst::WType::voidType())
 						{
 							auto stmt = awst::makeExpressionStatement(std::move(argExpr), m_loc);
-							m_ctx.prePendingStatements.push_back(std::move(stmt));
+							m_ctx.preEffects().push_back(std::move(stmt));
 						}
 					}
 			}
@@ -120,7 +120,7 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 		revertBlob = awst::makeBytesConstant(panicRevertBlobBytes(0x01), m_loc);
 
 	// With a structured payload:
-	//   if (!cond) { log(blob) }   // prePending
+	//   if (!cond) { log(blob) }   // pre-effect
 	//   assert(cond, msg)
 	// Assert stays on the native node — assert inside if-branch broke puya's
 	// explicit-assert accounting on constant-folded conditions. SE-wrap the
@@ -135,7 +135,7 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 				// require(true, E(args)): args already evaluated; nothing to check.
 				return awst::makeVoidConstant(m_loc);
 			// require(false, E(args)): unconditional log + fail.
-			m_ctx.prePendingStatements.push_back(
+			m_ctx.preEffects().push_back(
 				makeRevertLogStmt(std::move(revertBlob), m_loc));
 			auto failNode = awst::makeAssert(
 				awst::makeFalse(m_loc), m_loc, std::move(message));
@@ -155,7 +155,7 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 			condition = awst::makeEvalOnce(std::move(condition), m_loc);
 		auto logBlock = awst::makeBlock(m_loc);
 		logBlock->body.push_back(makeRevertLogStmt(std::move(revertBlob), m_loc));
-		m_ctx.prePendingStatements.push_back(awst::makeIfElse(
+		m_ctx.preEffects().push_back(awst::makeIfElse(
 			awst::makeNot(condition, m_loc), std::move(logBlock), nullptr, m_loc));
 		auto assertNode = awst::makeAssert(
 			std::move(condition), m_loc, std::move(message));
@@ -165,7 +165,7 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 	if (revertBlob)
 	{
 		// Condition-less (always-fail) shape with a payload.
-		m_ctx.prePendingStatements.push_back(
+		m_ctx.preEffects().push_back(
 			makeRevertLogStmt(std::move(revertBlob), m_loc));
 		auto failNode = awst::makeAssert(
 			std::move(condition), m_loc, std::move(message));

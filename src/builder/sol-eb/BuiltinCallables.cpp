@@ -91,7 +91,7 @@ static std::shared_ptr<awst::Expression> materializeNow(
 	std::string nm = "__modarg_"
 		+ std::to_string(awst::NameGen::next("BuiltinCallables.s_modArgCounter") + 1);
 	auto const* wt = _e->wtype;
-	_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+	_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(nm, wt, _loc), std::move(_e), _loc));
 	return awst::makeVarExpression(nm, wt, _loc);
 }
@@ -107,7 +107,7 @@ static void emitModByZeroCheck(
 	auto cmp = awst::makeNumericCompare(_modulus, awst::NumericComparison::Ne, std::move(zero), _loc);
 
 	auto stmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "modulo by zero"), _loc);
-	_ctx.prePendingStatements.push_back(std::move(stmt));
+	_ctx.preEffects().push_back(std::move(stmt));
 }
 
 std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleMulmod(
@@ -186,12 +186,12 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleSelfdestruct(
 		submit->itxns.push_back(std::move(create));
 
 		auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
-		_ctx.prePendingStatements.push_back(std::move(submitStmt));
+		_ctx.preEffects().push_back(std::move(submitStmt));
 	}
 
 	// EVM selfdestruct halts — emit return so subsequent statements don't execute.
 	auto retStmt = awst::makeReturnStatement(nullptr, _loc);
-	_ctx.prePendingStatements.push_back(std::move(retStmt));
+	_ctx.preEffects().push_back(std::move(retStmt));
 
 	auto vc = awst::makeVoidConstant(_loc);
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(vc));
@@ -251,14 +251,14 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 		vUint = awst::makeBtoi(std::move(vBytes), _loc);
 	}
 
-	// Names must be unique per call: all prePending statements flush before any
+	// Names must be unique per call: all pre-effects flush before any
 	// reads lower, so `ecrecover(a)==ecrecover(b)` with a shared name would have
 	// both sides read the SECOND call's v/result.
 	int ecTmpId = (awst::NameGen::next("BuiltinCallables.s_ecrecoverTmpCounter") + 1);
 	std::string vTmpName = "__ecrecover_v_" + std::to_string(ecTmpId);
 	auto vTmpTarget = awst::makeVarExpression(vTmpName, awst::WType::uint64Type(), _loc);
 	auto vAssign = awst::makeAssignmentStatement(vTmpTarget, std::move(vUint), _loc);
-	_ctx.prePendingStatements.push_back(std::move(vAssign));
+	_ctx.preEffects().push_back(std::move(vAssign));
 
 	auto readV = [&]() -> std::shared_ptr<awst::Expression> {
 		auto r = awst::makeVarExpression(vTmpName, awst::WType::uint64Type(), _loc);
@@ -273,9 +273,9 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	// Persist r/s in temps: each is read by the validity checks AND the recover call.
 	std::string rTmpName = "__ecrecover_r_" + std::to_string(ecTmpId);
 	std::string sTmpName = "__ecrecover_s_" + std::to_string(ecTmpId);
-	_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+	_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(rTmpName, awst::WType::bytesType(), _loc), std::move(r), _loc));
-	_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+	_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(sTmpName, awst::WType::bytesType(), _loc), std::move(s), _loc));
 	auto readR = [&]() { return awst::makeVarExpression(rTmpName, awst::WType::bytesType(), _loc); };
 	auto readS = [&]() { return awst::makeVarExpression(sTmpName, awst::WType::bytesType(), _loc); };

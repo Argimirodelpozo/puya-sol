@@ -60,17 +60,21 @@ from EVM slot placement, then use solc metadata for both modes.
 
 ## Useful follow-ups
 
-- `StorageDispatch.cpp` remains large even after extracting runtime analysis.
-  Its generated methods can next be split into dense-page, sparse-slot,
-  bytes/string, and dynamic-array emitters.
-- Expression effects are now statement-scoped structural results. Individual
-  legacy helpers still append through `EffectBuffer` compatibility views;
-  converting those helpers to return effects directly would remove the final
-  adapter and local snapshot/tail logic.
-- `ConversionPlan` now covers plain assignment, variable initialization, and
-  internal-call arguments. Return/ABI-boundary representation paths can migrate
-  incrementally where they express a Solidity implicit conversion rather than a
-  transport encoding.
+- **Done — separate native and EVM storage-dispatch emitters.** The named-cell
+  dispatcher remains in `StorageDispatch.cpp`; the dense-page/sparse-slot word
+  runtime and its bytes/string and dynamic-array codecs now live in
+  `EvmSlotStorageDispatch.cpp`. Shared root-method promotion is a small support
+  helper instead of being duplicated between the two modes.
+- **Done — remove the expression-effect compatibility adapter.** Legacy
+  emitters now append explicitly to the active structural frame's pre- or
+  post-effects. Tuple assignment captures its writes in a child frame and
+  reverses that owned list directly, removing the last snapshot/tail mutation
+  of a shared queue.
+- **Done — use `ConversionPlan` at return and ABI call boundaries.** Solidity
+  source/target types now select implicit return and declared-parameter
+  conversions before ARC-4 transport encoding. Fixed-bytes resizing is shared
+  by assignment, initialization, return, and argument lowering instead of
+  being duplicated in return handling.
 
 ## Additional design review — 2026-08-15
 
@@ -185,8 +189,8 @@ from EVM slot placement, then use solc metadata for both modes.
   semantic `ConversionPlan(sourceSolType, targetSolType, context)` and keep AWST
   representation emission separate instead of reconstructing Solidity intent
   from `WType` after lowering. The plan is active for assignment,
-  initialization, and internal-call arguments; other representation-only
-  coercions intentionally remain outside it.
+  initialization, internal-call arguments, returns, and declared ABI-call
+  arguments; representation-only transport coercions remain outside it.
 - [x] Put direct use of solc internal APIs behind a small `SolcFacts` facade. This
   keeps the builder concise while localizing coupling to the vendored solc
   version.
@@ -201,7 +205,8 @@ library, and free-function symbols use resolved solc declaration identity.
 
 The smaller changes add a session-owned `ScratchLayout`, consolidate the
 function translation state into `sol_ast::FunctionContext`, preserve source
-solc types in lowered expressions and use `ConversionPlan` at the first three
-implicit-conversion sites, isolate the selected solc Yul APIs behind the
-facade, and make parameter-mutation summaries contract-aware. Items 4, 7, 8,
-and 9 remain proposals only.
+solc types in lowered expressions and use `ConversionPlan` through return and
+ABI-call boundaries, isolate the selected solc Yul APIs behind the facade, and
+make parameter-mutation summaries contract-aware. The optional cleanup also
+split native/EVM storage dispatch and removed the final effect-buffer adapter.
+Items 4, 7, 8, and 9 remain proposals only.

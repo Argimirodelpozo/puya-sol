@@ -50,7 +50,7 @@ public:
 	};
 
 	/// Resolve a storage expression to its word address. Bounds asserts are
-	/// queued to ctx.prePendingStatements. On unsupported shapes: loud error +
+	/// queued to ctx.preEffects(). On unsupported shapes: loud error +
 	/// nullopt (NEVER fall back to the named-cell model — split-brain state).
 	std::optional<Addr> resolve(solidity::frontend::Expression const& _e);
 
@@ -115,7 +115,7 @@ public:
 
 	/// Materialise a whole STRUCT at `_a.slot` as a NewStruct value (per-slot
 	/// word reads via SlotHandleAccess::readStructElem; temps go to
-	/// ctx.prePendingStatements). Null + loud error when `_a` isn't a struct.
+	/// ctx.preEffects()). Null + loud error when `_a` isn't a struct.
 	std::shared_ptr<awst::Expression> readStructValue(Addr const& _a);
 
 	/// Materialise a FIXED array at `_a.slot` as a NewArray value (unrolled

@@ -42,7 +42,7 @@ std::shared_ptr<awst::Expression> SolFunctionCall::extractCallValue()
 			// {value: X}: assert X fits in uint64 before truncating (a >2^64
 			// value would silently send `X mod 2^64` microAlgos).
 			return TypeCoercion::checkedAmountToUint64(
-				m_ctx.prePendingStatements, std::move(val), m_loc);
+				m_ctx.preEffects(), std::move(val), m_loc);
 		}
 	}
 	return nullptr;

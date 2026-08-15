@@ -126,12 +126,12 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _
 	}
 	if (!anyNested)
 		return SlotHandleAccess::readStructElem(
-			m_ctx.prePendingStatements, _a.slot, st, structW, m_loc);
+			m_ctx.preEffects(), _a.slot, st, structW, m_loc);
 
 	// pin the base once — members read in separate sub-expressions
 	std::string nm = "__evm_stv_"
 		+ std::to_string(awst::NameGen::next("EvmSlotLowering.structVal"));
-	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc),
 		_a.slot, m_loc));
 	auto baseVar = [&]() {
@@ -523,7 +523,7 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 
 	std::string tmp = "__evmarr_"
 		+ std::to_string(awst::NameGen::next("EvmSlotLowering.arr"));
-	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(tmp, awst::WType::biguintType(), m_loc),
 		_a.slot, m_loc));
 	auto baseVar = [&]() {
@@ -544,7 +544,7 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 				awst::makeIntegerConstant((stride * j).str(), m_loc,
 					awst::WType::biguintType()), m_loc);
 			arr->values.push_back(SlotHandleAccess::readStructElem(
-				m_ctx.prePendingStatements, std::move(elemBase), structElem,
+				m_ctx.preEffects(), std::move(elemBase), structElem,
 				structW, m_loc));
 		}
 		return arr;

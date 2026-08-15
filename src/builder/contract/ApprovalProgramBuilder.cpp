@@ -115,9 +115,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 									*aggAddr, std::move(aggVal), aggOut);
 							if (done)
 							{
-								for (auto& preStmt: m_exprBuilder->takePrePending())
+								for (auto& preStmt: m_exprBuilder->takePreEffects())
 									targetBody.push_back(std::move(preStmt));
-								for (auto& postStmt: m_exprBuilder->takePending())
+								for (auto& postStmt: m_exprBuilder->takePostEffects())
 									targetBody.push_back(std::move(postStmt));
 								for (auto& st3: aggOut)
 									targetBody.push_back(std::move(st3));
@@ -145,9 +145,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						continue;
 					initVal = TypeCoercion::coerceForAssignment(
 						std::move(initVal), addr->wtype, method.sourceLocation);
-					for (auto& preStmt: m_exprBuilder->takePrePending())
+					for (auto& preStmt: m_exprBuilder->takePreEffects())
 						targetBody.push_back(std::move(preStmt));
-					for (auto& postStmt: m_exprBuilder->takePending())
+					for (auto& postStmt: m_exprBuilder->takePostEffects())
 						targetBody.push_back(std::move(postStmt));
 					std::vector<std::shared_ptr<awst::Statement>> writes;
 					low.writeValue(*addr, std::move(initVal), writes);
@@ -177,9 +177,9 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						continue;
 					initVal = TypeCoercion::coerceForAssignment(
 						std::move(initVal), wtype, method.sourceLocation);
-					for (auto& preStmt: m_exprBuilder->takePrePending())
+					for (auto& preStmt: m_exprBuilder->takePreEffects())
 						targetBody.push_back(std::move(preStmt));
-					for (auto& postStmt: m_exprBuilder->takePending())
+					for (auto& postStmt: m_exprBuilder->takePostEffects())
 						targetBody.push_back(std::move(postStmt));
 					auto boxKey = awst::makeUtf8BytesConstant(
 						var->name(), method.sourceLocation);
@@ -227,11 +227,11 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					if (defaultVal)
 						defaultVal = TypeCoercion::coerceForAssignment(
 							std::move(defaultVal), wtype, method.sourceLocation);
-					// Flush prePending (e.g. new C() inner-txn create+fund)
+					// Flush pre-effects (e.g. new C() inner-txn create+fund)
 					// before the state-var assignment uses __new_app_id_N.
-					for (auto& preStmt: m_exprBuilder->takePrePending())
+					for (auto& preStmt: m_exprBuilder->takePreEffects())
 						targetBody.push_back(std::move(preStmt));
-					for (auto& postStmt: m_exprBuilder->takePending())
+					for (auto& postStmt: m_exprBuilder->takePostEffects())
 						targetBody.push_back(std::move(postStmt));
 				}
 				if (!defaultVal)
@@ -681,7 +681,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 							makeLoc(args[i]->location()));
 						if (auto addr = low.resolve(*args[i]))
 						{
-							for (auto& pst: m_exprBuilder->takePrePending())
+							for (auto& pst: m_exprBuilder->takePreEffects())
 								postInitBody->body.push_back(std::move(pst));
 							postInitBody->body.push_back(
 								awst::makeAssignmentStatement(
@@ -726,7 +726,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 					// Drain the build's pre-statements (ternary/short-circuit temp
 					// assignments) before the binding (see the create-path twin).
-					m_exprBuilder->appendPendingTo(postInitBody->body);
+					m_exprBuilder->appendEffectsTo(postInitBody->body);
 
 					auto assignment = awst::makeAssignmentStatement(target, std::move(argExpr), target->sourceLocation);
 					postInitBody->body.push_back(std::move(assignment));
@@ -866,7 +866,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 					// Drain the build's pre-statements (ternary/short-circuit temp
 					// assignments) BEFORE the param binding — same fix as the
 					// modifier-arg twin (ModifierInliner), which this site missed.
-					m_exprBuilder->appendPendingTo(createBlock->body);
+					m_exprBuilder->appendEffectsTo(createBlock->body);
 
 					auto target = awst::makeVarExpression(params[i]->name(), targetType, makeLoc(args[i]->location()));
 
@@ -909,7 +909,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 						std::move(argExpr), targetType, makeLoc(args[i]->location()));
 
 					// Drain pre-statements before the binding (see Phase 1).
-					m_exprBuilder->appendPendingTo(createBlock->body);
+					m_exprBuilder->appendEffectsTo(createBlock->body);
 
 					auto target = awst::makeVarExpression(params[i]->name(), targetType, makeLoc(args[i]->location()));
 

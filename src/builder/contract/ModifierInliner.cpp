@@ -262,7 +262,7 @@ void ContractBuilder::buildModifierChain(
 				if (param->referenceLocation()
 					== solidity::frontend::VariableDeclaration::Location::Storage)
 				{
-					m_exprBuilder->appendPendingTo(modBody->body);
+					m_exprBuilder->appendEffectsTo(modBody->body);
 					sol_ast::StorageAlias alias = [&]() -> sol_ast::StorageAlias {
 						if (dynamic_cast<awst::BytesConstant const*>(argExpr.get()))
 							return sol_ast::StorageAlias::mappingHolder(std::move(argExpr));
@@ -294,7 +294,7 @@ void ContractBuilder::buildModifierChain(
 				// BEFORE the binding, else `__mod_arg = …(temp)` runs before the if/else
 				// assigns the temp (the ternary collapsed to its false branch, reverting
 				// every call). Found by coverage-guided fuzzing (modifier inliner cold).
-				m_exprBuilder->appendPendingTo(modBody->body);
+				m_exprBuilder->appendEffectsTo(modBody->body);
 
 				auto target = awst::makeVarExpression(uniqueName, paramType, modLoc);
 

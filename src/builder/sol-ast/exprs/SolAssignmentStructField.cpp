@@ -136,7 +136,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 	// exist before box_replace. Shared with maybePrePopulateBox / SolArrayMethod::emitEnsureBox.
 	if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
 			m_ctx.typeMapper, assignTarget2, /*isResize=*/false, m_loc))
-		m_ctx.queuePrePending(std::move(stmt));
+		m_ctx.queuePreEffect(std::move(stmt));
 
 	auto e = awst::makeAssignmentExpression(
 		std::move(assignTarget2), std::move(assignValue2), m_loc);
@@ -146,7 +146,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 	// type, which is meaningless here).
 	if (_emitAsStatement)
 	{
-		m_ctx.queueStmt(e, m_loc);
+		m_ctx.queuePostExpression(e, m_loc);
 		return e;
 	}
 

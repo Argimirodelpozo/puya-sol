@@ -60,7 +60,7 @@ std::shared_ptr<awst::Expression> buildBigUIntArithmeticShiftRight(
 	std::shared_ptr<awst::Expression> _shiftAmt,
 	awst::SourceLocation const& _loc);
 
-/// Square-and-multiply exponentiation; appends init+loop to prePendingStatements.
+/// Square-and-multiply exponentiation; appends init+loop to the pre-effect sink.
 /// Unchecked mode wraps intermediate products mod 2^256.
 std::shared_ptr<awst::Expression> buildBigUIntExp(
 	ContractContext& _ctx,
@@ -82,7 +82,7 @@ std::shared_ptr<awst::Expression> buildWrappingSubtract(
 /// absolute values then re-applies the sign (dividend sign for mod, XOR of signs
 /// for div), emits the `intN.min / -1` overflow guard (div + checked only), and
 /// narrows the result to the result type's native width. Self-contained: the
-/// guard rides in a comma expression, so it composes anywhere (no prePending).
+/// guard rides in a comma expression, so it composes anywhere (no pre-effect).
 ///
 /// PRECONDITION: `_left` / `_right` are canonical 256-bit two's-complement biguint
 /// values — callers sign-extend each operand from ITS OWN width first
