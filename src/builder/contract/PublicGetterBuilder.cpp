@@ -382,9 +382,9 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					}
 				}
 				// flush anything the lowering queued (index pins etc.)
-				for (auto& st2: m_exprBuilder->takePrePending())
+				for (auto& st2: m_exprBuilder->takePreEffects())
 					body->body.push_back(std::move(st2));
-				for (auto& st2: m_exprBuilder->takePending())
+				for (auto& st2: m_exprBuilder->takePostEffects())
 					body->body.push_back(std::move(st2));
 				if (!readExpr)
 				{

@@ -86,7 +86,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 								// a type mismatch puya rejects, and EVM semantics are the
 								// pointer anyway). A value use of the slice would hit an
 								// undefined local — loud, not silently wrong.
-								m_blk.builderCtx().appendPendingTo(result);
+								m_blk.builderCtx().appendEffectsTo(result);
 								return result;
 							}
 
@@ -105,12 +105,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			m_blk.setSlotStorageRef(decl.id(), awst::makeVarExpression(
 				decl.name(), awst::WType::biguintType(), loc));
 			// pre-statements (bounds asserts, key pins) BEFORE the binding
-			for (auto& st: m_blk.builderCtx().takePrePending())
+			for (auto& st: m_blk.builderCtx().takePreEffects())
 				result.push_back(std::move(st));
 			result.push_back(awst::makeAssignmentStatement(
 				awst::makeVarExpression(decl.name(), awst::WType::biguintType(), loc),
 				addr->slot, loc));
-			for (auto& st: m_blk.builderCtx().takePending())
+			for (auto& st: m_blk.builderCtx().takePostEffects())
 				result.push_back(std::move(st));
 			return result;
 		}
@@ -210,7 +210,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				&& decl.type()->category() == solidity::frontend::Type::Category::Mapping)
 			{
 				m_blk.setStorageAlias(decl.id(), StorageAlias::mappingHolder(value));
-				m_blk.builderCtx().appendPendingTo(result);
+				m_blk.builderCtx().appendEffectsTo(result);
 				return result;
 			}
 
@@ -223,7 +223,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					? StorageMapper::makeStateGetWithDefault(value, value->wtype, m_loc)
 					: value;
 				m_blk.setStorageAlias(decl.id(), StorageAlias::stateRead(std::move(aliasExpr)));
-				m_blk.builderCtx().appendPendingTo(result);
+				m_blk.builderCtx().appendEffectsTo(result);
 				return result;
 			}
 
@@ -233,13 +233,13 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			if (dynamic_cast<awst::IndexExpression const*>(value.get()))
 			{
 				m_blk.setStorageAlias(decl.id(), StorageAlias::indexedPath(value));
-				m_blk.builderCtx().appendPendingTo(result);
+				m_blk.builderCtx().appendEffectsTo(result);
 				return result;
 			}
 			if (dynamic_cast<awst::FieldExpression const*>(value.get()))
 			{
 				m_blk.setStorageAlias(decl.id(), StorageAlias::fieldPath(value));
-				m_blk.builderCtx().appendPendingTo(result);
+				m_blk.builderCtx().appendEffectsTo(result);
 				return result;
 			}
 
@@ -270,7 +270,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 						decl.name(), awst::WType::bytesType(), m_loc);
 					result.push_back(awst::makeAssignmentStatement(
 						std::move(var), value, m_loc));
-					m_blk.builderCtx().appendPendingTo(result);
+					m_blk.builderCtx().appendEffectsTo(result);
 					return result;
 				}
 
@@ -298,7 +298,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 							std::move(aliasExpr), truePlace->valueType, m_loc);
 					m_blk.setStorageAlias(decl.id(),
 						StorageAlias::stateRead(std::move(aliasExpr)));
-					m_blk.builderCtx().appendPendingTo(result);
+					m_blk.builderCtx().appendEffectsTo(result);
 					return result;
 				}
 			}
@@ -326,7 +326,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					auto assign = awst::makeAssignmentStatement(std::move(var), std::move(value), m_loc);
 					result.push_back(std::move(assign));
 
-					m_blk.builderCtx().appendPendingTo(result);
+					m_blk.builderCtx().appendEffectsTo(result);
 					return result;
 				}
 
@@ -338,7 +338,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				auto assign = awst::makeAssignmentStatement(std::move(slotVar), std::move(value), m_loc);
 				result.push_back(std::move(assign));
 
-				m_blk.builderCtx().appendPendingTo(result);
+				m_blk.builderCtx().appendEffectsTo(result);
 				return result;
 			}
 		}
@@ -402,14 +402,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 							srcRead = awst::makeReinterpretCast(
 								std::move(srcRead), type, m_loc);
 						m_blk.setMemoryAlias(decl.id(), std::move(srcRead));
-						m_blk.builderCtx().appendPendingTo(result);
+						m_blk.builderCtx().appendEffectsTo(result);
 						return result;
 					}
 				}
 				else
 				{
 					m_blk.setMemoryAlias(decl.id(), value); // value = buildExpr(a) = a's (resolved) local read
-					m_blk.builderCtx().appendPendingTo(result);
+					m_blk.builderCtx().appendEffectsTo(result);
 					return result;
 				}
 			}
@@ -429,7 +429,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 					std::move(value), awst::WType::uint64Type(), m_loc),
 				m_loc));
 			m_blk.setBlobAggregate(decl.id(), offN);
-			m_blk.builderCtx().appendPendingTo(result);
+			m_blk.builderCtx().appendEffectsTo(result);
 			return result;
 		}
 
@@ -454,7 +454,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				auto v0 = m_blk.builderCtx().buildExpr(*initialValue);
 				if (!v0)
 					return result;
-				m_blk.builderCtx().appendPendingTo(result);
+				m_blk.builderCtx().appendEffectsTo(result);
 				std::string offN = "__blobagg_off_" + std::to_string(decl.id());
 				if (builder::emitBlobBackValue(m_blk.typeMapper(), decl.type(),
 						type, std::move(v0), offN,
@@ -481,7 +481,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 							std::move(lenU64), offN, static_cast<int>(decl.id()), m_loc))
 						result.push_back(std::move(s));
 					m_blk.setBlobAggregate(decl.id(), offN);
-					m_blk.builderCtx().appendPendingTo(result);
+					m_blk.builderCtx().appendEffectsTo(result);
 					return result;
 				}
 				result.push_back(awst::makeAssignmentStatement(
@@ -497,14 +497,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 							static_cast<int>(decl.id())))
 						result.push_back(std::move(s));
 				m_blk.setBlobAggregate(decl.id(), offN);
-				m_blk.builderCtx().appendPendingTo(result);
+				m_blk.builderCtx().appendEffectsTo(result);
 				return result;
 			}
 		}
 
 		auto assign = awst::makeAssignmentStatement(std::move(target), std::move(value), m_loc);
 
-		m_blk.builderCtx().appendPendingTo(result);
+		m_blk.builderCtx().appendEffectsTo(result);
 
 		// `T memory t;` (no initializer): allocate fresh memory and bump mload(0x40)
 		// so contracts reading mload(0x40) see the expected advance. Initialised
@@ -553,7 +553,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 		// to re-emit the call for each TupleItemExpression. Assign RHS to a
 		// synthetic temp and extract items from it. (polymarket-experiment 271d85851)
 		auto rhsExpr = m_blk.builderCtx().buildExpr(*initialValue);
-		m_blk.builderCtx().appendPendingTo(result);
+		m_blk.builderCtx().appendEffectsTo(result);
 
 		auto const* tupleType = rhsExpr->wtype;
 		std::string tempName = "__tuple_destruct_" + std::to_string(m_node.id());

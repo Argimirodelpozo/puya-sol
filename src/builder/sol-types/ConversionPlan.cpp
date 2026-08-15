@@ -15,6 +15,7 @@ std::shared_ptr<awst::Expression> ConversionPlan::emit(
 	case Context::Initialization: site = "variable-declaration init"; break;
 	case Context::Argument: site = "internal-call arg"; break;
 	case Context::Return: site = "return"; break;
+	case Context::AbiArgument: site = "ABI-call arg"; break;
 	}
 	TypeCoercion::assertImplicitlyConvertible(m_source, m_target, _loc, site);
 	_value = TypeCoercion::coerceForAssignment(

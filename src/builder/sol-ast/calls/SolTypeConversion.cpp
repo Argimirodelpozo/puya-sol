@@ -175,7 +175,7 @@ std::shared_ptr<awst::Expression> SolTypeConversion::handleEnumConversion()
 	// uint256->int136).
 	auto argOnce = awst::makeEvalOnce(std::move(argExpr), m_loc);
 	auto numConst = awst::makeIntegerConstant(numMembers, m_loc, argOnce->wtype);
-	m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+	m_ctx.preEffects().push_back(awst::makeExpressionStatement(
 		awst::makeAssert(
 			awst::makeNumericCompare(argOnce, awst::NumericComparison::Lt,
 				std::move(numConst), m_loc),

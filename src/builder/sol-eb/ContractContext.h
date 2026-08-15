@@ -104,14 +104,14 @@ public:
 		solidity::frontend::Type const* _solType,
 		std::shared_ptr<awst::Expression> _expr);
 
-	/// Consume any pending statements generated during expression translation.
-	std::vector<std::shared_ptr<awst::Statement>> takePending();
+	/// Consume effects that execute after the translated expression value.
+	std::vector<std::shared_ptr<awst::Statement>> takePostEffects();
 
-	/// Consume any pre-pending statements (must execute before the expression).
-	std::vector<std::shared_ptr<awst::Statement>> takePrePending();
+	/// Consume effects that must execute before the translated expression value.
+	std::vector<std::shared_ptr<awst::Statement>> takePreEffects();
 
-	/// Drain pre-pending then pending into `_out` (execution order).
-	void appendPendingTo(std::vector<std::shared_ptr<awst::Statement>>& _out);
+	/// Drain pre- then post-effects into `_out` in execution order.
+	void appendEffectsTo(std::vector<std::shared_ptr<awst::Statement>>& _out);
 
 	/// Owned type-builder registry — populated on construction.
 	std::unique_ptr<BuilderRegistry> registry;
@@ -142,62 +142,36 @@ public:
 	std::unordered_map<int64_t, std::string> internalizedFunctionNames;
 
 	// ── Structurally scoped expression effects ──
-	/// Compatibility view for helpers that still append effects while lowering.
-	/// It targets the innermost expression/statement frame, rather than a flat
-	/// context-wide vector, so an undrained effect cannot reach a later statement.
-	class EffectBuffer
+	using EffectStatements = std::vector<std::shared_ptr<awst::Statement>>;
+
+	/// Direct access to the innermost structural frame. Helpers that need to
+	/// receive a statement sink use these references; no context-wide adapter
+	/// or implicit vector conversion remains.
+	EffectStatements& preEffects() { return activeEffects().pre; }
+	EffectStatements& postEffects() { return activeEffects().post; }
+
+	/// Append an expression as a post-effect (after the current value is consumed).
+	void queuePostExpression(std::shared_ptr<awst::Expression> expr, awst::SourceLocation loc)
 	{
-	public:
-		using Statements = std::vector<std::shared_ptr<awst::Statement>>;
-		using iterator = Statements::iterator;
-
-		EffectBuffer(ContractContext& _ctx, bool _pre): m_ctx(_ctx), m_pre(_pre) {}
-		operator Statements&() { return statements(); }
-		operator Statements const&() const { return statements(); }
-		void push_back(std::shared_ptr<awst::Statement> _stmt)
-		{
-			statements().push_back(std::move(_stmt));
-		}
-		bool empty() const { return statements().empty(); }
-		size_t size() const { return statements().size(); }
-		iterator begin() { return statements().begin(); }
-		iterator end() { return statements().end(); }
-		iterator erase(iterator _first, iterator _last)
-		{
-			return statements().erase(_first, _last);
-		}
-
-	private:
-		Statements& statements() const;
-		ContractContext& m_ctx;
-		bool m_pre;
-	};
-
-	EffectBuffer pendingStatements;
-	EffectBuffer prePendingStatements;
-
-	/// Append expr as a post-statement side effect (after current expression evaluates).
-	void queueStmt(std::shared_ptr<awst::Expression> expr, awst::SourceLocation loc)
-	{
-		pendingStatements.push_back(awst::makeExpressionStatement(std::move(expr), std::move(loc)));
+		postEffects().push_back(awst::makeExpressionStatement(std::move(expr), std::move(loc)));
 	}
 
-	/// Append a Statement directly to pendingStatements (no ExpressionStatement wrapper).
-	void queuePending(std::shared_ptr<awst::Statement> stmt)
+	/// Append a statement directly as a post-effect.
+	void queuePostEffect(std::shared_ptr<awst::Statement> stmt)
 	{
-		pendingStatements.push_back(std::move(stmt));
+		postEffects().push_back(std::move(stmt));
 	}
 
-	/// Append expr as a pre-statement side effect (before LHS evaluates, e.g. arr.push()).
-	void queuePreStmt(std::shared_ptr<awst::Expression> expr, awst::SourceLocation loc)
+	/// Append an expression as a pre-effect (before the current value is consumed).
+	void queuePreExpression(std::shared_ptr<awst::Expression> expr, awst::SourceLocation loc)
 	{
-		prePendingStatements.push_back(awst::makeExpressionStatement(std::move(expr), std::move(loc)));
+		preEffects().push_back(awst::makeExpressionStatement(std::move(expr), std::move(loc)));
 	}
 
-	/// Append a Statement directly to prePendingStatements.
-	void queuePrePending(std::shared_ptr<awst::Statement> stmt)
+	/// Append a statement directly as a pre-effect.
+	void queuePreEffect(std::shared_ptr<awst::Statement> stmt)
 	{
-		prePendingStatements.push_back(std::move(stmt));
+		preEffects().push_back(std::move(stmt));
 	}
 
 	// ── OperandPlan: scoped effect sequencing (fable-review item 7) ──
@@ -243,13 +217,13 @@ public:
 	};
 
 	/// Put a captured operand's deltas back exactly where they came from
-	/// (pre → prePending, post → pending) — the no-reorder path.
+	/// (pre → pre-effects, post → post-effects) — the no-reorder path.
 	void restoreOperandDeltas(OperandDeltas&& _d)
 	{
 		for (auto& s: _d.pre)
-			prePendingStatements.push_back(std::move(s));
+			preEffects().push_back(std::move(s));
 		for (auto& s: _d.post)
-			pendingStatements.push_back(std::move(s));
+			postEffects().push_back(std::move(s));
 	}
 
 	/// Build an operand in its own effect frame, then return its value together
@@ -410,8 +384,6 @@ private:
 	mutable OperandDeltas m_rootEffects;
 	std::vector<OperandDeltas*> m_effectFrames;
 	std::vector<std::shared_ptr<awst::Expression>> m_arrayPushAssignmentValues;
-
-	friend class EffectBuffer;
 
 };
 

@@ -225,9 +225,9 @@ std::shared_ptr<awst::Expression> buildBigUIntExp(
 		return b;
 	};
 
-	m_ctx.prePendingStatements.push_back(makeAssign(resultVar, makeConst("1")));
-	m_ctx.prePendingStatements.push_back(makeAssign(baseVar, std::move(_base)));
-	m_ctx.prePendingStatements.push_back(makeAssign(expVar, std::move(_exp)));
+	m_ctx.preEffects().push_back(makeAssign(resultVar, makeConst("1")));
+	m_ctx.preEffects().push_back(makeAssign(baseVar, std::move(_base)));
+	m_ctx.preEffects().push_back(makeAssign(expVar, std::move(_exp)));
 
 	// while exp > 0:
 	auto loopCond = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
@@ -268,7 +268,7 @@ std::shared_ptr<awst::Expression> buildBigUIntExp(
 		body->body.push_back(makeAssign(baseVar, std::move(baseSq)));
 	}
 
-	m_ctx.prePendingStatements.push_back(
+	m_ctx.preEffects().push_back(
 		awst::makeWhileLoop(std::move(loopCond), std::move(body), _loc));
 
 	return makeVar(resultVar);
@@ -292,7 +292,7 @@ std::shared_ptr<awst::Expression> buildWrappingSubtract(
 		auto cmp = awst::makeNumericCompare(_left, awst::NumericComparison::Gte, _right, _loc);
 
 		auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "underflow"), _loc);
-		m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+		m_ctx.preEffects().push_back(std::move(assertStmt));
 	}
 
 	// (a + 2^256 - b) % 2^256
@@ -531,7 +531,7 @@ std::shared_ptr<awst::Expression> buildSignedArithmetic(
 			overflowCond = awst::makeBoolBinOp(std::move(bZero), awst::BinaryBooleanOperator::Or, std::move(rangeCheck), _loc);
 		}
 		if (overflowCond)
-			_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+			_ctx.preEffects().push_back(awst::makeExpressionStatement(
 				awst::makeAssert(std::move(overflowCond), _loc, "signed arithmetic overflow"), _loc));
 	}
 

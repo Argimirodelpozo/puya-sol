@@ -67,7 +67,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			auto srcLoc = _value->sourceLocation;
 			auto tmpVar = awst::makeVarExpression(tmpName, tupleWtype, srcLoc);
 			auto tmpAssign = awst::makeAssignmentExpression(tmpVar, _value, srcLoc);
-			m_ctx.prePendingStatements.push_back(
+			m_ctx.preEffects().push_back(
 				awst::makeExpressionStatement(std::move(tmpAssign), srcLoc));
 			_value = awst::makeVarExpression(tmpName, tupleWtype, srcLoc);
 		}
@@ -221,11 +221,11 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 					tmpTarget, rhsItem, _value->sourceLocation);
 
 				auto stmt = awst::makeExpressionStatement(std::move(tmpAssign), _value->sourceLocation);
-				// Must use prePendingStatements (not pendingStatements): pending
+				// Must use a pre-effect (not a post-effect): post-effects
 				// inserts AFTER the current statement, leaving temps unassigned
 				// when the bare tuple reads them — puya DCEs the assignments and
 				// leaks raw call return values on the stack.
-				m_ctx.prePendingStatements.push_back(std::move(stmt));
+				m_ctx.preEffects().push_back(std::move(stmt));
 
 				auto tmpRead = awst::makeVarExpression(tmpName, rhsItem->wtype, _value->sourceLocation);
 				newTuple->items.push_back(std::move(tmpRead));
@@ -237,9 +237,10 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		}
 	}
 
-	// Collect then reverse (right-to-left) to match Solidity viaYul tuple semantics.
-	auto pendingBefore = m_ctx.pendingStatements.size();
-
+	// Build tuple writes in their own structural effect frame. Only the writes
+	// produced by this destructure are reversed; unrelated parent effects never
+	// participate in snapshot/tail arithmetic.
+	auto writes = m_ctx.lowerOperand([&]() -> bool {
 	for (size_t i = 0; i < items.size(); ++i)
 	{
 		auto item = items[i];
@@ -277,11 +278,9 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 							? valueTuple2->types()[i] : nullptr;
 						if (compW == awst::WType::biguintType())
 						{
-							// pendingStatements, NOT a local vector: the tail
-							// reverses pendingStatements[pendingBefore:] for the
-							// right-to-left tuple order, and only that queue is
-							// ever emitted.
-							m_ctx.pendingStatements.push_back(
+							// This post-effect joins the other component writes in
+							// the scoped frame and is reversed with them below.
+							m_ctx.postEffects().push_back(
 								awst::makeAssignmentStatement(
 									awst::makeVarExpression(lhsDecl->name(),
 										awst::WType::biguintType(), m_loc),
@@ -294,7 +293,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 							"--evm-storage-layout: tuple component for storage "
 							"pointer '" + lhsDecl->name()
 							+ "' is not a slot handle", m_loc);
-						return nullptr;
+						return false;
 					}
 					// Prefer the RHS tuple's i-th item directly: it carries the
 					// BoxValueExpression/AppStateExpression needed for downstream
@@ -372,12 +371,12 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 							int swpId = awst::NameGen::next("SolAssignmentTuple.swp");
 							std::string lname = "__swp_l_" + std::to_string(swpId);
 							std::string rname = "__swp_r_" + std::to_string(swpId);
-							m_ctx.prePendingStatements.push_back(
+							m_ctx.preEffects().push_back(
 								awst::makeAssignmentStatement(
 									awst::makeVarExpression(lname,
 										awst::WType::biguintType(), m_loc),
 									la->slot, m_loc));
-							m_ctx.prePendingStatements.push_back(
+							m_ctx.preEffects().push_back(
 								awst::makeAssignmentStatement(
 									awst::makeVarExpression(rname,
 										awst::WType::biguintType(), m_loc),
@@ -396,7 +395,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 									awst::BigUIntBinaryOperator::Add, jc(), m_loc);
 								auto src = awst::makeBigUIntBinOp(rslot,
 									awst::BigUIntBinaryOperator::Add, jc(), m_loc);
-								m_ctx.pendingStatements.push_back(
+								m_ctx.postEffects().push_back(
 									builder::SlotHandleAccess::writeSlot(std::move(dst),
 										builder::SlotHandleAccess::readSlot(
 											std::move(src), m_loc), m_loc));
@@ -477,7 +476,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 					auto srcAsBytes = awst::makeAsBytes(assignValue, m_loc);
 					auto tmpVar = awst::makeVarExpression(
 						tmpName, awst::WType::bytesType(), m_loc);
-					m_ctx.prePendingStatements.push_back(
+					m_ctx.preEffects().push_back(
 						awst::makeAssignmentStatement(tmpVar, std::move(srcAsBytes), m_loc));
 					auto const* sourceType = assignValue->wtype;
 					auto mkSrc = [&]() {
@@ -495,7 +494,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 						widened = builder::tryWidenArc4DynamicArrayInt(
 							sourceType, assignTarget->wtype, mkSrc,
 							[this](std::shared_ptr<awst::Statement> _s) {
-								m_ctx.prePendingStatements.push_back(std::move(_s));
+								m_ctx.preEffects().push_back(std::move(_s));
 							},
 							m_loc);
 					}
@@ -578,7 +577,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 						std::move(assignValue), varType, m_loc);
 					auto stmt = m_ctx.transientStorage->buildWrite(srcIdent->name(), coerced, m_loc);
 					if (stmt)
-						m_ctx.pendingStatements.push_back(std::move(stmt));
+						m_ctx.postEffects().push_back(std::move(stmt));
 					continue;
 				}
 			}
@@ -604,7 +603,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 					if (low.writeAny(*addr, compType, assignValue, slotOut))
 					{
 						for (auto& st: slotOut)
-							m_ctx.pendingStatements.push_back(std::move(st));
+							m_ctx.postEffects().push_back(std::move(st));
 						continue;
 					}
 				}
@@ -612,15 +611,16 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		}
 		auto e = awst::makeAssignmentExpression(
 			std::move(assignTarget), std::move(assignValue), m_loc);
-		m_ctx.queueStmt(e, m_loc);
+		m_ctx.queuePostExpression(e, m_loc);
 	}
+	return true;
+	}, false);
+	if (!writes.value)
+		return nullptr;
 
 	// Reverse to right-to-left (Solidity viaYul: last element stored first).
-	auto pendingAfter = m_ctx.pendingStatements.size();
-	if (pendingAfter > pendingBefore + 1)
-		std::reverse(
-			m_ctx.pendingStatements.begin() + static_cast<long>(pendingBefore),
-			m_ctx.pendingStatements.end());
+	std::reverse(writes.effects.post.begin(), writes.effects.post.end());
+	m_ctx.restoreOperandDeltas(std::move(writes.effects));
 
 	return _value;
 }

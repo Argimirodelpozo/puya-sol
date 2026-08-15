@@ -301,7 +301,7 @@ void inlineModifiers(
 				// bound value is garbage — `mod(a > 0 ? a : -a)` collapsed to `-a`,
 				// reverting on EVERY call. Found by coverage-guided fuzzing (this inliner
 				// was 39.9% line-covered; modifier args with side-effecting exprs unhit).
-				m_exprBuilder.appendPendingTo(modBody->body);
+				m_exprBuilder.appendEffectsTo(modBody->body);
 
 				// Storage-pointer params: alias to the original storage location;
 				// writes must mutate storage, not a local copy.

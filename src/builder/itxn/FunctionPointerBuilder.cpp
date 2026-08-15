@@ -8,6 +8,7 @@
 #include "builder/itxn/CallResolver.h"
 #include "builder/itxn/FunctionPointerDispatchTypes.h"
 #include "builder/sol-types/FunctionPointerKind.h"
+#include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
@@ -73,10 +74,14 @@ std::shared_ptr<awst::SubroutineCallExpression> FunctionPointerBuilder::buildDis
 		arg.value = _args[i];
 		if (i < _funcType->parameterTypes().size())
 		{
-			auto* expectedType = _ctx.typeMapper.map(_funcType->parameterTypes()[i]);
-			if (arg.value->wtype != expectedType)
-				arg.value = builder::TypeCoercion::implicitNumericCast(
-					std::move(arg.value), expectedType, _loc);
+			auto const* parameterType = _funcType->parameterTypes()[i];
+			auto* expectedType = _ctx.typeMapper.map(parameterType);
+			arg.value = builder::ConversionPlan{
+				nullptr,
+				parameterType,
+				expectedType,
+				builder::ConversionPlan::Context::Argument}.emit(
+					std::move(arg.value), _loc);
 		}
 		call->args.push_back(std::move(arg));
 	}
@@ -344,7 +349,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			// (callee len-assert revert) and aggregates skipped ARC4 entirely
 			// — the fourth copy the AbiCodec consolidation missed.
 			argsTuple->items.push_back(
-				InnerCallHandlers::encodeArgToBytes(_ctx, _args[i], paramSolType, _loc));
+				InnerCallHandlers::encodeArgToBytes(
+					_ctx, _args[i], nullptr, paramSolType, _loc));
 		}
 		{
 			std::vector<awst::WType const*> argTypes;
@@ -392,7 +398,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		{
 			ifStmt->ifBranch->body.push_back(awst::makeExpressionStatement(selfCall, _loc));
 			ifStmt->elseBranch->body.push_back(awst::makeExpressionStatement(submit, _loc));
-			_ctx.prePendingStatements.push_back(std::move(ifStmt));
+			_ctx.preEffects().push_back(std::move(ifStmt));
 			auto vc = awst::makeVoidConstant(_loc);
 			return vc;
 		}
@@ -406,7 +412,7 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		ifStmt->ifBranch->body.push_back(writeTmp(selfCall));
 		ifStmt->elseBranch->body.push_back(awst::makeExpressionStatement(submit, _loc));
 		ifStmt->elseBranch->body.push_back(writeTmp(buildInnerTxnResult()));
-		_ctx.prePendingStatements.push_back(std::move(ifStmt));
+		_ctx.preEffects().push_back(std::move(ifStmt));
 
 		return awst::makeVarExpression(tmpName, retType, _loc);
 	}

@@ -59,7 +59,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::materializeSlotArray(
 
 	// bind the base slot once (read per element)
 	std::string tmp = "__slotarr_" + std::to_string(m_indexAccess.id());
-	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(tmp, awst::WType::biguintType(), m_loc),
 		std::move(_baseSlot), m_loc));
 	auto baseVar = [&]() {
@@ -80,7 +80,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::materializeSlotArray(
 				awst::makeIntegerConstant((stride * j).str(), m_loc, awst::WType::biguintType()),
 				m_loc);
 			arr->values.push_back(builder::SlotHandleAccess::readStructElem(
-				m_ctx.prePendingStatements, std::move(elemBase), structElem, structW, m_loc));
+				m_ctx.preEffects(), std::move(elemBase), structElem, structW, m_loc));
 		}
 		return arr;
 	}
@@ -142,7 +142,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 				whole = awst::makeAsBytes(std::move(whole), m_loc);
 			std::string nm = "__evm_bi_" + std::to_string(
 				awst::NameGen::next("SolIndexAccess.bytesElem"));
-			m_ctx.queuePrePending(awst::makeAssignmentStatement(
+			m_ctx.queuePreEffect(awst::makeAssignmentStatement(
 				awst::makeVarExpression(nm, awst::WType::bytesType(), m_loc),
 				std::move(whole), m_loc));
 			auto wv = [&]() {
@@ -156,12 +156,12 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 				std::vector<std::shared_ptr<awst::Statement>> idxPre;
 				idx = TypeCoercion::checkedIndexToUint64(idxPre, std::move(idx), m_loc);
 				for (auto& ps: idxPre)
-					m_ctx.queuePrePending(std::move(ps));
+					m_ctx.queuePreEffect(std::move(ps));
 			}
 			idx = awst::makeEvalOnce(std::move(idx), m_loc);
 			auto inBounds = awst::makeNumericCompare(idx,
 				awst::NumericComparison::Lt, awst::makeLen(wv(), m_loc), m_loc);
-			m_ctx.queuePrePending(awst::makeExpressionStatement(
+			m_ctx.queuePreEffect(awst::makeExpressionStatement(
 				awst::makeAssert(std::move(inBounds), m_loc,
 					"bytes index out of range"), m_loc));
 			auto one = awst::makeExtract3(wv(), idx,
@@ -237,7 +237,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 				// slot-handle access would silently hit a NEIGHBORING state
 				// variable's slot. Also pins idx for the multi-use math below.
 				indexExpr = builder::SlotHandleAccess::boundsCheckIndex(
-					m_ctx.prePendingStatements, std::move(indexExpr), arrType, m_loc);
+					m_ctx.preEffects(), std::move(indexExpr), arrType, m_loc);
 				if (arrType && arrType->baseType()->category() == Type::Category::Array)
 				{
 					// Outer dim: slot ref for the inner array. EVM stride = the
@@ -303,7 +303,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 					// FIXED arrays: assert idx < length (EVM Panic 0x32) —
 					// OOB would silently address a neighboring slot.
 					indexExpr = builder::SlotHandleAccess::boundsCheckIndex(
-						m_ctx.prePendingStatements, std::move(indexExpr), baseArrayType, m_loc);
+						m_ctx.preEffects(), std::move(indexExpr), baseArrayType, m_loc);
 
 					bool written = m_indexAccess.annotation().willBeWrittenTo;
 					auto const* elemType = baseArrayType->baseType();
@@ -344,7 +344,7 @@ std::shared_ptr<awst::Expression> SolIndexAccess::toAwst()
 						if (!structW)
 							return nullptr;
 						return builder::SlotHandleAccess::readStructElem(
-							m_ctx.prePendingStatements, std::move(add), structElem, structW, m_loc);
+							m_ctx.preEffects(), std::move(add), structElem, structW, m_loc);
 					}
 
 					// Scalar element.
@@ -548,7 +548,7 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 
 	// Bounds checks for explicit `arr[start:end]` — Solidity reverts on
 	// start > end or end > arr.length even if the slice result is unused.
-	// Stash bounds in temps and emit asserts via prePendingStatements so
+	// Stash bounds in temps and emit asserts via pre-effects so
 	// they survive DCE when the slice expression is discarded. Only applied
 	// when the user supplied at least one explicit bound; default `[:]`
 	// slices are by construction in-range and keep the old semantics.
@@ -562,11 +562,11 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 		std::string endVarName = "__slice_end_" + idSuffix;
 
 		auto startVar = awst::makeVarExpression(startVarName, awst::WType::uint64Type(), m_loc);
-		m_ctx.prePendingStatements.push_back(
+		m_ctx.preEffects().push_back(
 			awst::makeAssignmentStatement(startVar, start, m_loc));
 
 		auto endVar = awst::makeVarExpression(endVarName, awst::WType::uint64Type(), m_loc);
-		m_ctx.prePendingStatements.push_back(
+		m_ctx.preEffects().push_back(
 			awst::makeAssignmentStatement(endVar, end, m_loc));
 
 		// assert(start <= end)
@@ -576,7 +576,7 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 				awst::NumericComparison::Lte,
 				awst::makeVarExpression(endVarName, awst::WType::uint64Type(), m_loc),
 				m_loc);
-			m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+			m_ctx.preEffects().push_back(awst::makeExpressionStatement(
 				awst::makeAssert(std::move(cmp), m_loc, "slice: start > end"), m_loc));
 		}
 
@@ -599,7 +599,7 @@ std::shared_ptr<awst::Expression> SolIndexRangeAccess::toAwst()
 				awst::NumericComparison::Lte,
 				std::move(lenExpr),
 				m_loc);
-			m_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+			m_ctx.preEffects().push_back(awst::makeExpressionStatement(
 				awst::makeAssert(std::move(cmp), m_loc, "slice: end > length"), m_loc));
 		}
 	}

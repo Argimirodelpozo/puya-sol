@@ -50,7 +50,7 @@ std::shared_ptr<awst::Expression> SolRevert::toAwst()
 		awst::makeFalse(m_loc), m_loc, std::move(errorMessage));
 	if (revertBlob)
 	{
-		m_ctx.prePendingStatements.push_back(
+		m_ctx.preEffects().push_back(
 			makeRevertLogStmt(std::move(revertBlob), m_loc));
 		// isExplicit=false: let puya optimizer strip provably-unreachable fail.
 		failNode->isExplicit = false;

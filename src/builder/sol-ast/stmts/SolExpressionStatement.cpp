@@ -9,6 +9,7 @@
 #include "builder/abi/AbiEncoderBuilder.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/storage/StorageMapper.h"
+#include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -40,7 +41,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolExpressionStatement::toAwst()
 
 	auto expr = m_blk.builderCtx().buildExpr(m_node.expression());
 
-	for (auto& p: m_blk.builderCtx().takePrePending())
+	for (auto& p: m_blk.builderCtx().takePreEffects())
 		result.push_back(std::move(p));
 
 	// If buildExpr couldn't produce a value expression, or the expression
@@ -48,7 +49,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolExpressionStatement::toAwst()
 	// avoid a null dereference or invalid AWST.
 	if (!expr || isTypeType)
 	{
-		for (auto& p: m_blk.builderCtx().takePending())
+		for (auto& p: m_blk.builderCtx().takePostEffects())
 			result.push_back(std::move(p));
 		return result;
 	}
@@ -56,7 +57,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolExpressionStatement::toAwst()
 	auto stmt = awst::makeExpressionStatement(std::move(expr), m_loc);
 	result.push_back(stmt);
 
-	for (auto& p: m_blk.builderCtx().takePending())
+	for (auto& p: m_blk.builderCtx().takePostEffects())
 		result.push_back(std::move(p));
 
 	return result;
@@ -100,8 +101,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 					m_blk.builderCtx(), errorArgs,
 					errorDef->functionType(true)->parameterTypes(), m_loc),
 				m_loc);
-		// Arg builds may hoist side effects / loop encoders to prePending.
-		for (auto& pstmt: m_blk.builderCtx().takePrePending())
+		// Arg builds may hoist side effects / loop encoders to pre-effects.
+		for (auto& pstmt: m_blk.builderCtx().takePreEffects())
 			result.push_back(std::move(pstmt));
 		result.push_back(makeRevertLogStmt(std::move(blob), m_loc));
 	}
@@ -168,11 +169,11 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 			&& voidRet->functionReturnParameters->parameters().empty())
 		{
 			auto call = m_blk.builderCtx().buildExpr(*m_node.expression());
-			for (auto& p: m_blk.builderCtx().takePrePending())
+			for (auto& p: m_blk.builderCtx().takePreEffects())
 				result.push_back(std::move(p));
 			if (call)
 				result.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
-			for (auto& p: m_blk.builderCtx().takePending())
+			for (auto& p: m_blk.builderCtx().takePostEffects())
 				result.push_back(std::move(p));
 			result.push_back(awst::makeReturnStatement(nullptr, m_loc));
 			return result;
@@ -196,7 +197,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 						if (!addr)
 							return result;   // error already logged
 						stmt->value = addr->slot;
-						m_blk.builderCtx().appendPendingTo(result);
+						m_blk.builderCtx().appendEffectsTo(result);
 						result.push_back(std::move(stmt));
 						return result;
 					}
@@ -242,10 +243,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							{
 								v = m_blk.builderCtx().buildExpr(compExpr);
 								if (v)
-									v = builder::TypeCoercion::coerceForAssignment(
-										std::move(v),
+									v = builder::ConversionPlan{
+										compExpr.annotation().type,
+										rps[ri]->type(),
 										m_blk.typeMapper().map(rps[ri]->type()),
-										m_loc);
+										builder::ConversionPlan::Context::Return}.emit(
+											std::move(v), m_loc);
 							}
 							if (!v)
 								return result;
@@ -255,7 +258,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 						tup->wtype = m_blk.typeMapper()
 							.createType<awst::WTuple>(std::move(wts), std::nullopt);
 						stmt->value = std::move(tup);
-						m_blk.builderCtx().appendPendingTo(result);
+						m_blk.builderCtx().appendEffectsTo(result);
 						result.push_back(std::move(stmt));
 						return result;
 					}
@@ -289,7 +292,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 					box->key, awst::WType::bytesType(), m_loc);
 			else
 				stmt->value = std::move(built);
-			m_blk.builderCtx().appendPendingTo(result); // pending before the return
+			m_blk.builderCtx().appendEffectsTo(result); // pending before the return
 			result.push_back(std::move(stmt));
 			return result;
 		}
@@ -318,222 +321,78 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 			auto const& retParams = retAnnotation.functionReturnParameters->parameters();
 			if (retParams.size() == 1)
 			{
-				auto* expectedType = m_blk.typeMapper().map(retParams[0]->type());
-				stmt->value = TypeCoercion::implicitNumericCast(
-					std::move(stmt->value), expectedType, m_loc);
-
-				// Sign-extend if returning a narrow signed integer as a wider signed type.
-				// e.g. int8 result returned as int256: value 128 (int8 -128) needs
-				// to become 2^256-128 (int256 -128 in two's complement).
-				auto const* exprSolType = m_node.expression()->annotation().type;
-				auto const* retSolType = retParams[0]->type();
-				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(exprSolType))
-					exprSolType = &udvt->underlyingType();
-				if (auto const* udvt = dynamic_cast<solidity::frontend::UserDefinedValueType const*>(retSolType))
-					retSolType = &udvt->underlyingType();
-				auto const* exprInt = dynamic_cast<solidity::frontend::IntegerType const*>(exprSolType);
-				auto const* retInt = dynamic_cast<solidity::frontend::IntegerType const*>(retSolType);
-				if (exprInt && retInt && exprInt->isSigned() && retInt->isSigned()
-					&& exprInt->numBits() < retInt->numBits())
-				{
-					stmt->value = TypeCoercion::signExtendToUint256(
-						std::move(stmt->value), exprInt->numBits(), m_loc);
-				}
-
-				// Array type conversion: dynamic↔static
-				if (stmt->value->wtype && expectedType
-					&& stmt->value->wtype != expectedType
-					&& ((stmt->value->wtype->kind() == awst::WTypeKind::ARC4DynamicArray
-						&& expectedType->kind() == awst::WTypeKind::ARC4StaticArray)
-					|| (stmt->value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
-						&& expectedType->kind() == awst::WTypeKind::ARC4DynamicArray)))
-				{
-					stmt->value = awst::makeConvertArray(std::move(stmt->value), expectedType, m_loc);
-				}
-
-				// IntegerConstant → BytesConstant for bytes[N] returns
-				if (expectedType && expectedType->kind() == awst::WTypeKind::Bytes
-					&& stmt->value->wtype != expectedType)
-				{
-					auto const* bytesType = dynamic_cast<awst::BytesWType const*>(expectedType);
-					auto const* intConst = dynamic_cast<awst::IntegerConstant const*>(stmt->value.get());
-					if (bytesType && intConst && bytesType->length().value_or(0) > 0)
-					{
-						int numBytes = bytesType->length().value();
-						uint64_t val = std::stoull(intConst->value);
-						std::vector<unsigned char> bytes(numBytes, 0);
-						for (int i = numBytes - 1; i >= 0 && val > 0; --i)
-						{
-							bytes[i] = static_cast<unsigned char>(val & 0xFF);
-							val >>= 8;
-						}
-						stmt->value = awst::makeBytesConstant(
-							std::move(bytes), m_loc, awst::BytesEncoding::Base16, expectedType);
-					}
-					else if (auto const* strConst = dynamic_cast<awst::StringConstant const*>(stmt->value.get()))
-					{
-						// StringConstant → BytesConstant(bytes[N]): right-pad with zeros
-						int numBytes = bytesType ? bytesType->length().value_or(0) : 0;
-						if (numBytes > 0)
-						{
-							std::vector<unsigned char> bytes(numBytes, 0);
-							auto const& s = strConst->value;
-							for (size_t i = 0; i < s.size() && i < bytes.size(); ++i)
-								bytes[i] = static_cast<unsigned char>(s[i]);
-							stmt->value = awst::makeBytesConstant(
-								std::move(bytes), m_loc, awst::BytesEncoding::Base16, expectedType);
-						}
-					}
-					else if (stmt->value->wtype && stmt->value->wtype->kind() == awst::WTypeKind::Bytes)
-					{
-						// bytes[M] → bytes[N]: right-pad (M<N) or truncate (M>N).
-						auto const* srcBytes = dynamic_cast<awst::BytesWType const*>(stmt->value->wtype);
-						int srcLen = (srcBytes && srcBytes->length()) ? *srcBytes->length() : 0;
-						// If the source type has no length info (generic bytes)
-						// but the expression is a BytesConstant, use its actual
-						// byte count. Hex-string literals `hex"aabb00ff"` arrive
-						// as unsized BytesConstants even when they need to be
-						// right-padded into a fixed bytes32 return.
-						if (srcLen == 0)
-						{
-							auto const* byteConst = dynamic_cast<awst::BytesConstant const*>(
-								stmt->value.get());
-							if (byteConst)
-								srcLen = static_cast<int>(byteConst->value.size());
-						}
-						int dstLen = (bytesType && bytesType->length()) ? *bytesType->length() : 0;
-						if (srcLen > 0 && dstLen > 0 && srcLen != dstLen)
-						{
-							auto expr = std::move(stmt->value);
-							auto toBytes = awst::makeAsBytes(std::move(expr), m_loc);
-							std::shared_ptr<awst::Expression> result;
-							if (dstLen > srcLen)
-							{
-								result = awst::makeRightPad(std::move(toBytes), dstLen - srcLen, m_loc);
-							}
-							else
-							{
-								auto zero = awst::makeZero(m_loc);
-								auto width = awst::makeIntegerConstant(dstLen, m_loc);
-								auto extract = awst::makeExtract3(std::move(toBytes), std::move(zero), std::move(width), m_loc);
-								result = std::move(extract);
-							}
-							auto finalCast = awst::makeReinterpretCast(std::move(result), expectedType, m_loc);
-							stmt->value = std::move(finalCast);
-						}
-						else
-						{
-							auto cast = awst::makeReinterpretCast(std::move(stmt->value), expectedType, m_loc);
-							stmt->value = std::move(cast);
-						}
-					}
-					else if (stmt->value->wtype == awst::WType::stringType())
-					{
-						// String → bytes[N]: right-pad
-						int numBytes = bytesType ? bytesType->length().value_or(0) : 0;
-						if (numBytes > 0)
-						{
-							auto padded = builder::TypeCoercion::stringToBytesN(
-								stmt->value.get(), expectedType, numBytes, m_loc);
-							if (padded)
-								stmt->value = std::move(padded);
-						}
-					}
-				}
+				auto const* targetSolType = retParams[0]->type();
+				auto const* targetWType = m_blk.typeMapper().map(targetSolType);
+				stmt->value = builder::ConversionPlan{
+					m_node.expression()->annotation().type,
+					targetSolType,
+					targetWType,
+					builder::ConversionPlan::Context::Return}.emit(
+						std::move(stmt->value), m_loc);
 			}
 			else if (retParams.size() > 1)
 			{
-				auto* tupleExpr = dynamic_cast<awst::TupleExpression*>(stmt->value.get());
-				if (tupleExpr && tupleExpr->items.size() == retParams.size())
+				std::vector<solidity::frontend::Type const*> sourceTypes;
+				if (auto const* sourceTuple = dynamic_cast<
+					solidity::frontend::TupleType const*>(
+						m_node.expression()->annotation().type))
+					sourceTypes.assign(
+						sourceTuple->components().begin(),
+						sourceTuple->components().end());
+
+				// A tuple literal retains each component's pre-conversion source
+				// annotation, which is more precise than the tuple's common type.
+				if (auto const* sourceTupleExpr = dynamic_cast<
+					solidity::frontend::TupleExpression const*>(
+						m_node.expression()))
 				{
-					std::vector<awst::WType const*> expectedTypes;
+					sourceTypes.clear();
+					for (auto const& component: sourceTupleExpr->components())
+						sourceTypes.push_back(
+							component ? component->annotation().type : nullptr);
+				}
+
+				auto convertTuple = [&](awst::TupleExpression* tuple) {
+					if (!tuple || tuple->items.size() != retParams.size())
+						return;
+					std::vector<awst::WType const*> targetTypes;
 					for (size_t i = 0; i < retParams.size(); ++i)
 					{
-						auto* expectedElemType = m_blk.typeMapper().map(retParams[i]->type());
-						tupleExpr->items[i] = TypeCoercion::implicitNumericCast(
-							std::move(tupleExpr->items[i]), expectedElemType, m_loc);
-						// Bytes type widening/narrowing: e.g. bytes2 → bytes32.
-						// Solidity right-pads on widening and truncates on
-						// narrowing; a bare ReinterpretCast mislabels the
-						// underlying width, leaving the ARC4 encoder to emit
-						// too few bytes at the call boundary.
-						if (tupleExpr->items[i]->wtype != expectedElemType
-							&& tupleExpr->items[i]->wtype
-							&& tupleExpr->items[i]->wtype->kind() == awst::WTypeKind::Bytes
-							&& expectedElemType->kind() == awst::WTypeKind::Bytes)
-						{
-							auto const* srcBytes = dynamic_cast<awst::BytesWType const*>(tupleExpr->items[i]->wtype);
-							auto const* dstBytes = dynamic_cast<awst::BytesWType const*>(expectedElemType);
-							int srcLen = (srcBytes && srcBytes->length()) ? *srcBytes->length() : 0;
-							int dstLen = (dstBytes && dstBytes->length()) ? *dstBytes->length() : 0;
-							if (srcLen > 0 && dstLen > 0 && srcLen != dstLen)
-							{
-								auto toBytes = awst::makeAsBytes(std::move(tupleExpr->items[i]), m_loc);
-								std::shared_ptr<awst::Expression> widened;
-								if (dstLen > srcLen)
-								{
-									widened = awst::makeRightPad(std::move(toBytes), dstLen - srcLen, m_loc);
-								}
-								else
-								{
-									auto zero = awst::makeZero(m_loc);
-									auto width = awst::makeIntegerConstant(dstLen, m_loc);
-									auto extract = awst::makeExtract3(std::move(toBytes), std::move(zero), std::move(width), m_loc);
-									widened = std::move(extract);
-								}
-								tupleExpr->items[i] = awst::makeReinterpretCast(std::move(widened), expectedElemType, m_loc);
-							}
-							else
-							{
-								auto cast = awst::makeReinterpretCast(std::move(tupleExpr->items[i]), expectedElemType, m_loc);
-								tupleExpr->items[i] = std::move(cast);
-							}
-						}
-						expectedTypes.push_back(tupleExpr->items[i]->wtype);
+						auto const* targetSolType = retParams[i]->type();
+						auto const* targetWType =
+							m_blk.typeMapper().map(targetSolType);
+						auto const* sourceSolType =
+							i < sourceTypes.size() ? sourceTypes[i] : nullptr;
+						tuple->items[i] = builder::ConversionPlan{
+							sourceSolType,
+							targetSolType,
+							targetWType,
+							builder::ConversionPlan::Context::Return}.emit(
+								std::move(tuple->items[i]), m_loc);
+						targetTypes.push_back(tuple->items[i]->wtype);
 					}
-					tupleExpr->wtype = m_blk.typeMapper().createType<awst::WTuple>(
-						std::move(expectedTypes), std::nullopt);
-				}
-				else if (stmt->value->wtype
-					&& stmt->value->wtype->kind() == awst::WTypeKind::WTuple)
-				{
-					// Non-tuple-literal returning a tuple (e.g., conditional expression).
-					// Coerce branches of conditional expressions element-by-element.
-					auto* condExpr = dynamic_cast<awst::ConditionalExpression*>(stmt->value.get());
-					if (condExpr)
-					{
-						std::vector<awst::WType const*> expectedTypes;
-						for (size_t i = 0; i < retParams.size(); ++i)
-							expectedTypes.push_back(m_blk.typeMapper().map(retParams[i]->type()));
-						auto* expectedTupleType = m_blk.typeMapper().createType<awst::WTuple>(
-							std::vector<awst::WType const*>(expectedTypes), std::nullopt);
+					tuple->wtype = m_blk.typeMapper().createType<awst::WTuple>(
+						std::move(targetTypes), std::nullopt);
+				};
 
-						// Coerce true branch
-						auto* trueTuple = dynamic_cast<awst::TupleExpression*>(condExpr->trueExpr.get());
-						if (trueTuple && trueTuple->items.size() == retParams.size())
-						{
-							for (size_t i = 0; i < retParams.size(); ++i)
-								trueTuple->items[i] = TypeCoercion::implicitNumericCast(
-									std::move(trueTuple->items[i]), expectedTypes[i], m_loc);
-							trueTuple->wtype = expectedTupleType;
-						}
-						// Coerce false branch
-						auto* falseTuple = dynamic_cast<awst::TupleExpression*>(condExpr->falseExpr.get());
-						if (falseTuple && falseTuple->items.size() == retParams.size())
-						{
-							for (size_t i = 0; i < retParams.size(); ++i)
-								falseTuple->items[i] = TypeCoercion::implicitNumericCast(
-									std::move(falseTuple->items[i]), expectedTypes[i], m_loc);
-							falseTuple->wtype = expectedTupleType;
-						}
-						condExpr->wtype = expectedTupleType;
-					}
+				if (auto* tuple = dynamic_cast<awst::TupleExpression*>(
+					stmt->value.get()))
+					convertTuple(tuple);
+				else if (auto* conditional =
+					dynamic_cast<awst::ConditionalExpression*>(stmt->value.get()))
+				{
+					convertTuple(dynamic_cast<awst::TupleExpression*>(
+						conditional->trueExpr.get()));
+					convertTuple(dynamic_cast<awst::TupleExpression*>(
+						conditional->falseExpr.get()));
+					if (conditional->trueExpr)
+						conditional->wtype = conditional->trueExpr->wtype;
 				}
 			}
 		}
 	}
 
-	m_blk.builderCtx().appendPendingTo(result);
+	m_blk.builderCtx().appendEffectsTo(result);
 
 	// Enum range validation on return: EVM panics (0x21) on invalid enum return values
 	if (stmt->value)

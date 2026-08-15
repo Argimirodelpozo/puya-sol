@@ -54,6 +54,7 @@ set(SOURCES
 	src/builder/SubroutineRegistry.cpp
 	src/builder/contract/ContractBuilder.cpp
 	src/builder/contract/StorageDispatch.cpp
+	src/builder/contract/EvmSlotStorageDispatch.cpp
 	src/builder/contract/ModifierBodyInliner.cpp
 	src/builder/contract/ModifierInliner.cpp
 	src/builder/contract/FunctionBuilder.cpp

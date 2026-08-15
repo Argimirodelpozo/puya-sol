@@ -68,12 +68,12 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	// build (their element-wise handler owns sequencing).
 	std::shared_ptr<awst::Expression> target, value;
 	// Slot mode, tuple LHS: building a storage-element component (arrayData[3])
-	// eagerly queues its bounds assert into prePending — BEFORE the RHS
+	// eagerly queues its bounds assert as a pre-effect — BEFORE the RHS
 	// snapshot the tuple handler emits, so `(.., arrayData[3]) = (.., grow(),
 	// ..)` asserts on the PRE-grow length. EVM checks lvalues after the RHS:
 	// capture the LHS build's effects and flush them after the tuple handler
 	// has queued its snapshot (asserts still precede every store, which the
-	// handler puts in pendingStatements).
+	// handler puts in post-effects).
 	eb::ContractContext::OperandDeltas tupleLhsD;
 	bool deferTupleLhsEffects = false;
 	if (dynamic_cast<TupleType const*>(m_assignment.leftHandSide().annotation().type))
@@ -127,9 +127,9 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 			bool reorder = !lhsD.empty() || !rhsD.post.empty() || staticNeed;
 			value = m_ctx.emitSequencedOperand(std::move(rhsD), std::move(value), reorder, m_loc);
 			for (auto& s: lhsD.pre)
-				m_ctx.prePendingStatements.push_back(std::move(s));
+				m_ctx.preEffects().push_back(std::move(s));
 			for (auto& s: lhsD.post)
-				m_ctx.pendingStatements.push_back(std::move(s));
+				m_ctx.postEffects().push_back(std::move(s));
 		}
 	}
 
@@ -301,9 +301,9 @@ SolAssignment::tryHandleBlobAggregateWrite()
 		auto aggBytes = awst::makeAsBytes(std::move(agg), m_loc);
 		std::string offN = "__blobwa_off_" + std::to_string(m_assignment.id());
 		std::string vN = "__blobwa_v_" + std::to_string(m_assignment.id());
-		m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc), std::move(off), m_loc));
-		m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(vN, awst::WType::bytesType(), m_loc), std::move(aggBytes), m_loc));
 		for (int i = 0; i * 32 < sz; ++i)
 		{
@@ -317,7 +317,7 @@ SolAssignment::tryHandleBlobAggregateWrite()
 				awst::makeIntegerConstant("32", m_loc), m_loc);
 			builder::AssemblyBuilder::writeMemWordDirect(
 				m_ctx.typeMapper.profile().scratchLayout,
-				std::move(wordOff), std::move(word), m_loc, m_ctx.prePendingStatements);
+				std::move(wordOff), std::move(word), m_loc, m_ctx.preEffects());
 		}
 		return std::optional<std::shared_ptr<awst::Expression>>(
 			awst::makeVarExpression(vN, awst::WType::bytesType(), m_loc));
@@ -341,7 +341,7 @@ SolAssignment::tryHandleBlobAggregateWrite()
 			|| (v->wtype && v->wtype->kind() == awst::WTypeKind::Bytes)))
 		v = awst::makeAsBiguint(awst::makeAsBytes(std::move(v), m_loc), m_loc);
 	std::string vN = "__blobassign_v_" + std::to_string(m_assignment.id());
-	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(vN, awst::WType::biguintType(), m_loc), std::move(v), m_loc));
 
 	// Pad to exactly 32 big-endian bytes and write the blob word.
@@ -350,7 +350,7 @@ SolAssignment::tryHandleBlobAggregateWrite()
 			awst::makeVarExpression(vN, awst::WType::biguintType(), m_loc), m_loc), 32, m_loc), 32, m_loc);
 	builder::AssemblyBuilder::writeMemWordDirect(
 		m_ctx.typeMapper.profile().scratchLayout,
-		std::move(off), std::move(vbytes), m_loc, m_ctx.prePendingStatements);
+		std::move(off), std::move(vbytes), m_loc, m_ctx.preEffects());
 
 	return std::optional<std::shared_ptr<awst::Expression>>(
 		awst::makeVarExpression(vN, awst::WType::biguintType(), m_loc));
@@ -371,7 +371,7 @@ SolAssignment::applyEnumRangeCheck(std::shared_ptr<awst::Expression> _value, Tok
 	// SolExpressionStatement/SolEmitStatement already carry this fix).
 	_value = awst::makeEvalOnce(std::move(_value), m_loc);
 	auto val = builder::TypeCoercion::implicitNumericCast(_value, awst::WType::uint64Type(), m_loc);
-	m_ctx.queuePreStmt(awst::makeEnumRangeAssert(val, numMembers, m_loc), m_loc);
+	m_ctx.queuePreExpression(awst::makeEnumRangeAssert(val, numMembers, m_loc), m_loc);
 	return val;
 }
 
@@ -422,7 +422,7 @@ SolAssignment::tryHandleBlobRespill()
 			static_cast<int>(awst::NameGen::next("SolAssignment.respill")),
 			m_loc, out))
 		for (auto& st: out)
-			m_ctx.queuePending(std::move(st));
+			m_ctx.queuePostEffect(std::move(st));
 	return std::shared_ptr<awst::Expression>{
 		awst::makeZero(m_loc, awst::WType::biguintType())};
 }
@@ -462,7 +462,7 @@ SolAssignment::tryHandleEvmStorageWrite()
 						// `(m = m2)[2] = 21` indexes the assignment's value —
 						// makeZero here sent the write to SLOT 0 (= the first
 						// mapping!), and a post-queued rebind ran after it.
-						m_ctx.prePendingStatements.push_back(
+						m_ctx.preEffects().push_back(
 							awst::makeAssignmentStatement(
 								awst::makeVarExpression(lvd->name(),
 									awst::WType::biguintType(), m_loc),
@@ -498,7 +498,7 @@ SolAssignment::tryHandleEvmStorageWrite()
 					whole = awst::makeAsBytes(std::move(whole), m_loc);
 				std::string nm = "__evm_bw_" + std::to_string(
 					awst::NameGen::next("SolAssignment.bytesElemW"));
-				m_ctx.queuePending(awst::makeAssignmentStatement(
+				m_ctx.queuePostEffect(awst::makeAssignmentStatement(
 					awst::makeVarExpression(nm, awst::WType::bytesType(), m_loc),
 					std::move(whole), m_loc));
 				auto wv = [&]() {
@@ -512,13 +512,13 @@ SolAssignment::tryHandleEvmStorageWrite()
 					std::vector<std::shared_ptr<awst::Statement>> idxPre;
 					idx = TypeCoercion::checkedIndexToUint64(idxPre, std::move(idx), m_loc);
 					for (auto& ps: idxPre)
-						m_ctx.queuePending(std::move(ps));
+						m_ctx.queuePostEffect(std::move(ps));
 				}
 				idx = awst::makeEvalOnce(std::move(idx), m_loc);
 				auto inBounds = awst::makeNumericCompare(idx,
 					awst::NumericComparison::Lt,
 					awst::makeLen(wv(), m_loc), m_loc);
-				m_ctx.queuePending(awst::makeExpressionStatement(
+				m_ctx.queuePostEffect(awst::makeExpressionStatement(
 					awst::makeAssert(std::move(inBounds), m_loc,
 						"bytes index out of range"), m_loc));
 				auto value = buildExpr(m_assignment.rightHandSide());
@@ -532,7 +532,7 @@ SolAssignment::tryHandleEvmStorageWrite()
 				low.writeBytesValue(*baseAddr,
 					awst::makeReplace3(wv(), idx, value, m_loc), writesE);
 				for (auto& stE: writesE)
-					m_ctx.queuePending(std::move(stE));
+					m_ctx.queuePostEffect(std::move(stE));
 				return std::shared_ptr<awst::Expression>{value};
 			}
 	// Whole FIXED-array assignment: resolve the LHS slot and delegate to the
@@ -577,7 +577,7 @@ SolAssignment::tryHandleEvmStorageWrite()
 					auto pinB = [&](std::shared_ptr<awst::Expression> e, char const* tag) {
 						std::string nm = std::string("__evm_cpy") + tag + "_"
 							+ std::to_string(awst::NameGen::next("SolAssignment.evmCpy"));
-						m_ctx.queuePending(awst::makeAssignmentStatement(
+						m_ctx.queuePostEffect(awst::makeAssignmentStatement(
 							awst::makeVarExpression(nm, awst::WType::biguintType(), m_loc),
 							std::move(e), m_loc));
 						return nm;
@@ -626,7 +626,7 @@ SolAssignment::tryHandleEvmStorageWrite()
 							low.writeValue(la, awst::makeIntegerConstant(
 								"0", m_loc, awst::WType::biguintType()), ws);
 						for (auto& st: ws)
-							m_ctx.queuePending(std::move(st));
+							m_ctx.queuePostEffect(std::move(st));
 					}
 					return std::shared_ptr<awst::Expression>{
 						awst::makeZero(m_loc, awst::WType::biguintType())};
@@ -653,7 +653,7 @@ SolAssignment::tryHandleEvmStorageWrite()
 				if (lowFD.writeArrayValue(la2, lat, std::move(value), wsFD))
 				{
 					for (auto& st: wsFD)
-						m_ctx.queuePending(std::move(st));
+						m_ctx.queuePostEffect(std::move(st));
 					return std::shared_ptr<awst::Expression>{
 						awst::makeZero(m_loc, awst::WType::biguintType())};
 				}
@@ -701,7 +701,7 @@ SolAssignment::tryHandleEvmStorageWrite()
 			std::vector<std::shared_ptr<awst::Statement>> out;
 			if (low.writeStructValue(*laddr, std::move(value), out))
 				for (auto& st2: out)
-					m_ctx.queuePending(std::move(st2));
+					m_ctx.queuePostEffect(std::move(st2));
 			return std::shared_ptr<awst::Expression>{
 				awst::makeZero(m_loc, awst::WType::biguintType())};
 		}
@@ -720,13 +720,13 @@ SolAssignment::tryHandleEvmStorageWrite()
 		std::string valNm = "__evm_aval_"
 			+ std::to_string(awst::NameGen::next("SolAssignment.evmAssignVal"));
 		auto const* valW = value->wtype;
-		m_ctx.queuePending(awst::makeAssignmentStatement(
+		m_ctx.queuePostEffect(awst::makeAssignmentStatement(
 			awst::makeVarExpression(valNm, valW, m_loc), std::move(value), m_loc));
 		std::vector<std::shared_ptr<awst::Statement>> out;
 		low.writeBytesValue(*addr,
 			awst::makeVarExpression(valNm, valW, m_loc), out);
 		for (auto& st: out)
-			m_ctx.queuePending(std::move(st));
+			m_ctx.queuePostEffect(std::move(st));
 		return std::shared_ptr<awst::Expression>{
 			awst::makeVarExpression(valNm, valW, m_loc)};
 	}
@@ -772,11 +772,11 @@ SolAssignment::tryHandleEvmStorageWrite()
 			&& (value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
 				|| value->wtype->kind() == awst::WTypeKind::ARC4DynamicArray))
 		{
-			// Pin FIRST: the dynamic widen emits its loop via prePending during
+			// Pin FIRST: the dynamic widen emits its loop via pre-effects during
 			// the call, and those statements read the pinned source var.
 			std::string wn = "__evm_wsrc_"
 				+ std::to_string(awst::NameGen::next("SolAssignment.evmWidenSrc"));
-			m_ctx.prePendingStatements.push_back(
+			m_ctx.preEffects().push_back(
 				awst::makeAssignmentStatement(
 					awst::makeVarExpression(wn, awst::WType::bytesType(), m_loc),
 					awst::makeAsBytes(value, m_loc), m_loc));
@@ -791,7 +791,7 @@ SolAssignment::tryHandleEvmStorageWrite()
 				widened = builder::tryWidenArc4DynamicArrayInt(
 					value->wtype, tgtW, mkSrc,
 					[this](std::shared_ptr<awst::Statement> _s) {
-						m_ctx.prePendingStatements.push_back(std::move(_s));
+						m_ctx.preEffects().push_back(std::move(_s));
 					},
 					m_loc);
 			if (widened)
@@ -804,7 +804,7 @@ SolAssignment::tryHandleEvmStorageWrite()
 		std::vector<std::shared_ptr<awst::Statement>> out;
 		if (low.writeArrayValue(*addr, lat, std::move(value), out))
 			for (auto& st2: out)
-				m_ctx.queuePending(std::move(st2));
+				m_ctx.queuePostEffect(std::move(st2));
 		return std::shared_ptr<awst::Expression>{
 			awst::makeZero(m_loc, awst::WType::biguintType())};
 	}
@@ -832,7 +832,7 @@ SolAssignment::tryHandleEvmStorageWrite()
 	std::string rhsNm = "__evm_arhs_"
 		+ std::to_string(awst::NameGen::next("SolAssignment.evmAssignRhs"));
 	auto const* rhsW = rhsBuilt->wtype;
-	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(rhsNm, rhsW, m_loc), std::move(rhsBuilt), m_loc));
 
 	EvmSlotLowering low(m_ctx, m_scope, m_loc);
@@ -862,17 +862,17 @@ SolAssignment::tryHandleEvmStorageWrite()
 	// sentinel here wrote 0 through the outer link; storage_packed_array_copy
 	// ctor's `_y[8] = _y[9] = ...`). Single-use pins are copy-propagated by
 	// the backend. PREpending, not pending: the OUTER link of a chain pins
-	// its RHS (this var) via prePending, which flushes before the statement —
+	// its RHS (this var) via pre-effects, which flush before the statement —
 	// a post-queued assignment here left that read undefined.
 	std::string valNm = "__evm_aval_"
 		+ std::to_string(awst::NameGen::next("SolAssignment.evmAssignVal"));
 	auto const* valW = value->wtype;
-	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(valNm, valW, m_loc), std::move(value), m_loc));
 	std::vector<std::shared_ptr<awst::Statement>> out;
 	low.writeValue(*addr, awst::makeVarExpression(valNm, valW, m_loc), out);
 	for (auto& st: out)
-		m_ctx.prePendingStatements.push_back(std::move(st));
+		m_ctx.preEffects().push_back(std::move(st));
 	return std::shared_ptr<awst::Expression>{
 		awst::makeVarExpression(valNm, valW, m_loc)};
 }
@@ -926,7 +926,7 @@ SolAssignment::tryHandleSlotHandleElemWrite()
 	// FIXED array (guaranteed by the gate above): assert idx < length before
 	// the address math (EVM Panic 0x32; OOB would clobber a neighboring slot).
 	idx = builder::SlotHandleAccess::boundsCheckIndex(
-		m_ctx.prePendingStatements, std::move(idx), arrType, m_loc);
+		m_ctx.preEffects(), std::move(idx), arrType, m_loc);
 
 	std::vector<std::shared_ptr<awst::Statement>> out;
 	if (structElem)
@@ -990,7 +990,7 @@ SolAssignment::tryHandleSlotHandleElemWrite()
 			out, std::move(base), std::move(idx), layout, std::move(value), m_loc);
 	}
 	for (auto& st: out)
-		m_ctx.queuePending(std::move(st));
+		m_ctx.queuePostEffect(std::move(st));
 	return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc, awst::WType::biguintType())};
 }
 
@@ -1070,7 +1070,7 @@ SolAssignment::tryHandleSlotHandleFieldWrite()
 			awst::makeAsBiguint(std::move(newWord), m_loc), m_loc));
 	}
 	for (auto& st: out)
-		m_ctx.queuePending(std::move(st));
+		m_ctx.queuePostEffect(std::move(st));
 	return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc, awst::WType::biguintType())};
 }
 
@@ -1140,7 +1140,7 @@ SolAssignment::trySlotBasedArrayWrite(
 					awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()), m_loc));
 		}
 		for (auto& st: out)
-			m_ctx.queuePending(std::move(st));
+			m_ctx.queuePostEffect(std::move(st));
 		return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc, awst::WType::biguintType())};
 	}
 
@@ -1283,7 +1283,7 @@ SolAssignment::trySlotBasedArrayWrite(
 			out, baseVar(), jConst(), layout, std::move(elemVal), m_loc);
 	}
 	for (auto& st: out)
-		m_ctx.queuePending(std::move(st));
+		m_ctx.queuePostEffect(std::move(st));
 	return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc, awst::WType::biguintType())};
 }
 
@@ -1322,7 +1322,7 @@ SolAssignment::trySlotBasedScalarWrite(
 		awst::SubroutineID{"__puyasol___storage_write"}, awst::WType::voidType(), m_loc);
 	awst::pushCallArg(call->args, "__slot", std::move(btoi));
 	awst::pushCallArg(call->args, "__value", std::move(_value));
-	m_ctx.queueStmt(std::move(call), m_loc);
+	m_ctx.queuePostExpression(std::move(call), m_loc);
 	return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc, awst::WType::biguintType())};
 }
 
@@ -1560,7 +1560,7 @@ SolAssignment::applyArc4EncodeIfNeeded(
 		std::string tmpName = "__widen_src_" + std::to_string(awst::NameGen::next("SolAssignment.s_widCounter"));
 		auto srcAsBytes = awst::makeAsBytes(_value, m_loc);
 		auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::bytesType(), m_loc);
-		m_ctx.prePendingStatements.push_back(
+		m_ctx.preEffects().push_back(
 			awst::makeAssignmentStatement(tmpVar, std::move(srcAsBytes), m_loc));
 		auto const* sourceType = _value->wtype;
 		auto mkSrc = [&]() {
@@ -1574,7 +1574,7 @@ SolAssignment::applyArc4EncodeIfNeeded(
 			widened = builder::tryWidenArc4DynamicArrayInt(
 				sourceType, _target->wtype, mkSrc,
 				[this](std::shared_ptr<awst::Statement> _s) {
-					m_ctx.prePendingStatements.push_back(std::move(_s));
+					m_ctx.preEffects().push_back(std::move(_s));
 				},
 				m_loc);
 		if (widened) return widened;
@@ -1617,7 +1617,7 @@ void SolAssignment::maybePrePopulateBox(
 	// path in SolArrayMethod and the mapping-entry field write in SolAssignmentStructField).
 	if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
 			m_ctx.typeMapper, _target, /*isResize=*/false, m_loc))
-		m_ctx.queuePrePending(std::move(stmt));
+		m_ctx.queuePreEffect(std::move(stmt));
 }
 
 } // namespace puyasol::builder::sol_ast

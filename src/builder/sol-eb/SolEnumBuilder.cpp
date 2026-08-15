@@ -28,9 +28,9 @@ std::unique_ptr<InstanceBuilder> SolEnumBuilder::compare(
 			std::string tmpName = "__enum_cmp_" + std::to_string(
 				awst::NameGen::next("SolEnumBuilder.compare"));
 			auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::uint64Type(), _loc);
-			m_ctx.prePendingStatements.push_back(
+			m_ctx.preEffects().push_back(
 				awst::makeAssignmentStatement(tmpVar, std::move(val), _loc));
-			m_ctx.prePendingStatements.push_back(
+			m_ctx.preEffects().push_back(
 				awst::makeExpressionStatement(
 					awst::makeEnumRangeAssert(tmpVar, numMembers, _loc), _loc));
 			return tmpVar;

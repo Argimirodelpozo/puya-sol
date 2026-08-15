@@ -66,7 +66,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleTransie
 
 	auto stmt = sb->emitWriteForVar(*lhsDecl, name, newValue, m_loc);
 	if (stmt)
-		m_ctx.pendingStatements.push_back(std::move(stmt));
+		m_ctx.postEffects().push_back(std::move(stmt));
 
 	// Yield the ASSIGNED value directly, not a storage re-read: the write is
 	// queued POST-pending, so `uint a = (t = 5)` re-read t BEFORE the write and
@@ -159,10 +159,10 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 
 	// Pin idx to a temp so page and offset can reference it without re-evaluating side effects.
 	auto idxExpr = builder::TypeCoercion::checkedIndexToUint64(
-		m_ctx.prePendingStatements, buildExpr(*lhsIdx->indexExpression()), m_loc);
+		m_ctx.preEffects(), buildExpr(*lhsIdx->indexExpression()), m_loc);
 	std::string idxVarName = "__mb_widx_" + std::to_string(awst::NameGen::next("SolAssignmentEarlyOuts.s_mbWCounter"));
 	auto idxVar = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
-	m_ctx.prePendingStatements.push_back(
+	m_ctx.preEffects().push_back(
 		awst::makeAssignmentStatement(idxVar, std::move(idxExpr), m_loc));
 
 	// page = idx / elemsPerBox
@@ -197,7 +197,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 	// Pin rhs to a temp so we can encode it for box_replace and also return it as the result.
 	std::string valVarName = "__mb_val_" + std::to_string(awst::NameGen::next("SolAssignmentEarlyOuts.s_mbVCounter"));
 	auto valVar = awst::makeVarExpression(valVarName, rhs->wtype, m_loc);
-	m_ctx.prePendingStatements.push_back(
+	m_ctx.preEffects().push_back(
 		awst::makeAssignmentStatement(valVar, std::move(rhs), m_loc));
 
 	auto valForEncode = awst::makeVarExpression(valVarName, valVar->wtype, m_loc);
@@ -222,7 +222,7 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 	replace->stackArgs.push_back(std::move(boxKey));
 	replace->stackArgs.push_back(std::move(offsetExpr));
 	replace->stackArgs.push_back(std::move(valueBytes));
-	m_ctx.pendingStatements.push_back(
+	m_ctx.postEffects().push_back(
 		awst::makeExpressionStatement(std::move(replace), m_loc));
 
 	return awst::makeVarExpression(valVarName, valVar->wtype, m_loc); // assignment-as-expression
@@ -295,7 +295,7 @@ SolAssignment::tryHandleBoxedArrayElemWrite()
 		awst::makeVarExpression(keyParam, awst::WType::bytesType(), m_loc),
 		awst::WType::boxKeyType(), m_loc);
 	auto idx = builder::TypeCoercion::checkedIndexToUint64(
-		m_ctx.prePendingStatements, buildExpr(*ia->indexExpression()), m_loc);
+		m_ctx.preEffects(), buildExpr(*ia->indexExpression()), m_loc);
 	auto offset = awst::makeUInt64BinOp(
 		awst::makeUInt64BinOp(std::move(idx), awst::UInt64BinaryOperator::Mult,
 			awst::makeIntegerConstant(static_cast<uint64_t>(elemSize), m_loc), m_loc),
@@ -308,7 +308,7 @@ SolAssignment::tryHandleBoxedArrayElemWrite()
 	std::string vn = "__bae_val_" + std::to_string(
 		awst::NameGen::next("SolAssignment.boxedArrayElement"));
 	auto vv = awst::makeVarExpression(vn, rhs->wtype, m_loc);
-	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(vv, std::move(rhs), m_loc));
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(vv, std::move(rhs), m_loc));
 	auto valForEnc = awst::makeVarExpression(vn, vv->wtype, m_loc);
 	std::shared_ptr<awst::Expression> valBytes =
 		!awst::structurallyEquivalent(valForEnc->wtype, slotArc4)
@@ -316,7 +316,7 @@ SolAssignment::tryHandleBoxedArrayElemWrite()
 				std::move(valForEnc), const_cast<awst::WType*>(slotArc4), m_loc), m_loc)
 			: awst::makeAsBytes(std::move(valForEnc), m_loc);
 
-	m_ctx.pendingStatements.push_back(awst::makeExpressionStatement(
+	m_ctx.postEffects().push_back(awst::makeExpressionStatement(
 		awst::makeBoxReplace(std::move(boxKey), std::move(offset), std::move(valBytes), m_loc),
 		m_loc));
 	return awst::makeVarExpression(vn, vv->wtype, m_loc);
@@ -377,7 +377,7 @@ SolAssignment::tryHandleOffsetStructRefFieldWrite()
 	std::string vn = "__osref_val_" + std::to_string(
 		awst::NameGen::next("SolAssignment.offsetStructRef"));
 	auto vv = awst::makeVarExpression(vn, rhs->wtype, m_loc);
-	m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(vv, std::move(rhs), m_loc));
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(vv, std::move(rhs), m_loc));
 	auto valForEnc = awst::makeVarExpression(vn, vv->wtype, m_loc);
 	std::shared_ptr<awst::Expression> valBytes =
 		!awst::structurallyEquivalent(valForEnc->wtype, slotArc4)
@@ -385,7 +385,7 @@ SolAssignment::tryHandleOffsetStructRefFieldWrite()
 				std::move(valForEnc), const_cast<awst::WType*>(slotArc4), m_loc), m_loc)
 			: awst::makeAsBytes(std::move(valForEnc), m_loc);
 
-	m_ctx.pendingStatements.push_back(awst::makeExpressionStatement(
+	m_ctx.postEffects().push_back(awst::makeExpressionStatement(
 		awst::makeBoxReplace(std::move(boxKey), std::move(offset), std::move(valBytes), m_loc),
 		m_loc));
 	return awst::makeVarExpression(vn, vv->wtype, m_loc);

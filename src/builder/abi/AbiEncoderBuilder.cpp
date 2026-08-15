@@ -5,6 +5,7 @@
 #include "awst/NameGen.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/abi/AbiSelectorCalldataBuilder.h"
+#include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 
@@ -327,7 +328,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 					};
 					std::string src = "__pkd_src_" + uniq, out = "__pkd_out_" + uniq,
 						iN = "__pkd_i_" + uniq, nN = "__pkd_n_" + uniq;
-					auto& pre = _ctx.prePendingStatements;
+					auto& pre = _ctx.preEffects();
 					pre.push_back(awst::makeAssignmentStatement(
 						bytesVar(src), std::move(arc4), _loc));
 					pre.push_back(awst::makeAssignmentStatement(
@@ -629,7 +630,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 		{
 			int uid = awst::NameGen::next("AbiEncoderBuilder.dualDecode");
 			std::string bnm = "__abidec_b_" + std::to_string(uid);
-			_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+			_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 				awst::makeVarExpression(bnm, awst::WType::bytesType(), _loc),
 				std::move(dataExpr), _loc));
 			auto blob = [&, bnm]() {
@@ -663,7 +664,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 				arcBlk->body.push_back(awst::makeAssignmentStatement(
 					compVar(0), buildArc4Decode(blob()), _loc));
 
-			_ctx.prePendingStatements.push_back(awst::makeIfElse(
+			_ctx.preEffects().push_back(awst::makeIfElse(
 				evmLayoutSniff(blob, comps, _loc),
 				std::move(evmBlk), std::move(arcBlk), _loc));
 
@@ -772,7 +773,12 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(
 			i < _paramTypes.size() ? _paramTypes[i] : nullptr;
 		if (pt)
 			if (auto const* pw = _ctx.typeMapper.map(pt))
-				expr = builder::TypeCoercion::coerceForAssignment(std::move(expr), pw, _loc);
+				expr = builder::ConversionPlan{
+					_args[i]->annotation().type,
+					pt,
+					pw,
+					builder::ConversionPlan::Context::AbiArgument}.emit(
+						std::move(expr), _loc);
 		vals.push_back(std::move(expr));
 	}
 	return arc4EncodeValues(_ctx, std::move(vals), _loc);
@@ -826,7 +832,7 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::tryHandle(
 // below cover the cases that need runtime loops over array elements:
 //   (b) per-element padding for small static elements (uint8[], etc.)
 //   (c) head/tail re-encoding for nested dynamic elements (uint256[][], etc.)
-// Both emit `while` loops into `_ctx.prePendingStatements` and return a
+// Both emit `while` loops into `_ctx.preEffects()` and return a
 // fresh local var holding the EVM-ABI-encoded bytes.
 
 

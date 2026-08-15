@@ -119,12 +119,12 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 				std::string idxName = "__rt_idx_" + std::to_string(tc);
 
 				auto arrVar = awst::makeVarExpression(arrName, resultType, m_loc);
-				m_ctx.prePendingStatements.push_back(
+				m_ctx.preEffects().push_back(
 					awst::makeAssignmentStatement(arrVar, e, m_loc));
 
 				auto idxVar = awst::makeVarExpression(
 					idxName, awst::WType::uint64Type(), m_loc);
-				m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+				m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 					idxVar, awst::makeIntegerConstant("0", m_loc), m_loc));
 
 				auto cond = awst::makeNumericCompare(
@@ -142,7 +142,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 					awst::makeIntegerConstant("1", m_loc), m_loc);
 				loopBody->body.push_back(awst::makeAssignmentStatement(idxVar, incr, m_loc));
 
-				m_ctx.prePendingStatements.push_back(
+				m_ctx.preEffects().push_back(
 					awst::makeWhileLoop(std::move(cond), std::move(loopBody), m_loc));
 
 				return arrVar;
@@ -167,7 +167,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 				&& !dynamic_cast<awst::IntegerConstant const*>(sizeExpr.get()))
 			{
 				std::string sizeName = "__rt_size_" + std::to_string(tc);
-				m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+				m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 					awst::makeVarExpression(sizeName, awst::WType::uint64Type(), m_loc),
 					std::move(sizeExpr), m_loc));
 				sizeExpr = awst::makeVarExpression(
@@ -200,12 +200,12 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 			auto arrVar = awst::makeVarExpression(arrName, resultType, m_loc);
 
 			auto initArr = awst::makeAssignmentStatement(arrVar, e, m_loc);
-			m_ctx.prePendingStatements.push_back(std::move(initArr));
+			m_ctx.preEffects().push_back(std::move(initArr));
 
 			// __i = 0
 			auto idxVar = awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc);
 
-			m_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+			m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 				idxVar, awst::makeIntegerConstant("0", m_loc), m_loc));
 
 			// while (__i < n)
@@ -225,7 +225,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::handleNewArray()
 				awst::makeIntegerConstant("1", m_loc), m_loc);
 			loopBody->body.push_back(awst::makeAssignmentStatement(idxVar, incr, m_loc));
 
-			m_ctx.prePendingStatements.push_back(
+			m_ctx.preEffects().push_back(
 				awst::makeWhileLoop(std::move(cond), std::move(loopBody), m_loc));
 
 			return arrVar;
@@ -471,7 +471,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			submit->itxns.push_back(std::move(create));
 
 			auto submitStmt = awst::makeExpressionStatement(std::move(submit), m_loc);
-			m_ctx.prePendingStatements.push_back(std::move(submitStmt));
+			m_ctx.preEffects().push_back(std::move(submitStmt));
 
 			// Read CreatedApplicationID via itxn intrinsic and save to temp var
 			// because subsequent fund txn would clobber the itxn context.
@@ -482,7 +482,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			std::string newAppIdVarName = "__new_app_id_" + std::to_string(newAppId);
 			auto newAppIdTarget = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
 			auto newAppIdAssign = awst::makeAssignmentStatement(newAppIdTarget, std::move(createdAppIdCall), m_loc);
-			m_ctx.prePendingStatements.push_back(std::move(newAppIdAssign));
+			m_ctx.preEffects().push_back(std::move(newAppIdAssign));
 
 			// Use the stored app ID from now on
 			auto createdAppId = awst::makeVarExpression(newAppIdVarName, awst::WType::uint64Type(), m_loc);
@@ -501,7 +501,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				std::string fundTmpName = "__fund_app_result";
 				auto fundTmpTarget = awst::makeVarExpression(fundTmpName, fundTupleType, m_loc);
 				auto fundAssign = awst::makeAssignmentStatement(fundTmpTarget, std::move(fundAppParams), m_loc);
-				m_ctx.prePendingStatements.push_back(std::move(fundAssign));
+				m_ctx.preEffects().push_back(std::move(fundAssign));
 
 				auto fundTupleRead = awst::makeVarExpression(fundTmpName, fundTupleType, m_loc);
 				auto fundAddrBytes = awst::makeTupleItem(std::move(fundTupleRead), 0, awst::WType::bytesType(), m_loc);
@@ -548,7 +548,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				fundSubmit->itxns.push_back(std::move(fundCreate));
 
 				auto fundStmt = awst::makeExpressionStatement(std::move(fundSubmit), m_loc);
-				m_ctx.prePendingStatements.push_back(std::move(fundStmt));
+				m_ctx.preEffects().push_back(std::move(fundStmt));
 			}
 
 			if (childHasPostInit)
@@ -611,7 +611,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				std::string addrTmp = "__postinit_addr_" + std::to_string(newAppId + 1);
 				auto addrTmpTarget = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
 				auto addrAssign = awst::makeAssignmentStatement(addrTmpTarget, std::move(postAddrCall), m_loc);
-				m_ctx.prePendingStatements.push_back(std::move(addrAssign));
+				m_ctx.preEffects().push_back(std::move(addrAssign));
 
 				auto addrRead = awst::makeVarExpression(addrTmp, addrTupleType, m_loc);
 				auto addrBytes = awst::makeTupleItem(std::move(addrRead), 0, awst::WType::bytesType(), m_loc);
@@ -641,7 +641,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				postSubmit->itxns.push_back(std::move(postCall));
 
 				auto postStmt = awst::makeExpressionStatement(std::move(postSubmit), m_loc);
-				m_ctx.prePendingStatements.push_back(std::move(postStmt));
+				m_ctx.preEffects().push_back(std::move(postStmt));
 			}
 
 			// Return as applicationType (avoids address-hash conversion for calls).

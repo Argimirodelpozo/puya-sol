@@ -40,7 +40,7 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 		// 20/cnt=2 (verified).
 		e->condition = awst::makeEvalOnce(e->condition, m_loc);
 		auto stmt = awst::makeExpressionStatement(e->condition, m_loc);
-		m_ctx.prePendingStatements.push_back(std::move(stmt));
+		m_ctx.preEffects().push_back(std::move(stmt));
 	}
 
 	// Each branch only executes conditionally, so its pre-statements (a `**`
@@ -130,7 +130,7 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 		auto falseBlock = eb::ContractContext::makeScopedResultBlock(
 			std::move(falseD.pre), tempVar(), e->falseExpr, m_loc, std::move(falseD.post));
 
-		m_ctx.prePendingStatements.push_back(awst::makeIfElse(
+		m_ctx.preEffects().push_back(awst::makeIfElse(
 			e->condition, std::move(trueBlock), std::move(falseBlock), m_loc));
 
 		return tempVar();

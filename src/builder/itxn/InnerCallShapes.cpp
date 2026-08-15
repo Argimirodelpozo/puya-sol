@@ -96,7 +96,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 		if (retType == awst::WType::voidType())
 		{
 			auto stmt = awst::makeExpressionStatement(call, _loc);
-			_ctx.prePendingStatements.push_back(std::move(stmt));
+			_ctx.preEffects().push_back(std::move(stmt));
 			dataBytes = awst::makeBytesConstant({}, _loc);
 		}
 		else
@@ -120,7 +120,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 			{
 				// Unknown return type — emit as statement, empty data.
 				auto stmt = awst::makeExpressionStatement(call, _loc);
-				_ctx.prePendingStatements.push_back(std::move(stmt));
+				_ctx.preEffects().push_back(std::move(stmt));
 				dataBytes = awst::makeBytesConstant({}, _loc);
 			}
 		}
@@ -158,7 +158,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 				? targetFuncDef->parameters()[ai]->type()
 				: nullptr;
 		argsTuple->items.push_back(
-			encodeArgToBytes(_ctx, std::move(argExpr), paramType, _loc));
+			encodeArgToBytes(_ctx, std::move(argExpr),
+				callArgs[ai]->annotation().type, paramType, _loc));
 	}
 
 	return submitTypedAppCall(_ctx, std::move(_receiver), std::move(argsTuple), std::move(_callValue), _loc);
@@ -206,7 +207,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitTypedAppCall(
 	submit->itxns.push_back(std::move(create));
 
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
-	_ctx.prePendingStatements.push_back(std::move(submitStmt));
+	_ctx.preEffects().push_back(std::move(submitStmt));
 
 	// Capture THIS submit's log (see captureLastLog: tuple-of-calls clobbering).
 	auto readLog = captureLastLog(_ctx, _loc);
@@ -258,7 +259,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
 		// encodeWithSelector/Signature is TYPE-LESS (no declared params); the shared
 		// encoder's nullptr path keeps backing-width encoding (biguint→32B, bare itob).
 		argsTuple->items.push_back(
-			encodeArgToBytes(_ctx, _ctx.buildExpr(*args[i]), nullptr, _loc));
+			encodeArgToBytes(_ctx, _ctx.buildExpr(*args[i]),
+				args[i]->annotation().type, nullptr, _loc));
 
 	return submitTypedAppCall(_ctx, std::move(_receiver), std::move(argsTuple), std::move(_callValue), _loc);
 }
@@ -290,7 +292,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	std::string tmpName = "__rawcall_data_" + std::to_string((awst::NameGen::next("InnerCallShapes.s_rawCallTmpCounter") + 1));
 	auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
 	auto tmpAssign = awst::makeAssignmentStatement(tmpTarget, std::move(_dataBytes), _loc);
-	_ctx.prePendingStatements.push_back(std::move(tmpAssign));
+	_ctx.preEffects().push_back(std::move(tmpAssign));
 
 	auto tmpRead = [&]() {
 		return awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
@@ -353,7 +355,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	submit->itxns.push_back(std::move(create));
 
 	auto submitStmt = awst::makeExpressionStatement(std::move(submit), _loc);
-	_ctx.prePendingStatements.push_back(std::move(submitStmt));
+	_ctx.preEffects().push_back(std::move(submitStmt));
 
 	// Capture THIS submit's log (see captureLastLog: tuple-of-calls clobbering).
 	auto readLog = captureLastLog(_ctx, _loc);
@@ -417,7 +419,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		std::string tupleVar = "__ecrecover_result_" + std::to_string((awst::NameGen::next("InnerCallShapes.s_ecRecoverTmpCounter") + 1));
 		auto tupleTarget = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
 		auto assignTuple = awst::makeAssignmentStatement(tupleTarget, std::move(ecdsaRecover), _loc);
-		_ctx.prePendingStatements.push_back(std::move(assignTuple));
+		_ctx.preEffects().push_back(std::move(assignTuple));
 
 		auto tupleRead0 = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
 		auto pubkeyX = awst::makeTupleItem(std::move(tupleRead0), 0, awst::WType::bytesType(), _loc);
@@ -467,7 +469,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		// so anything else is a loud revert instead of a wrong pairing result.
 		std::string inVar = "__ecpairing_in_"
 			+ std::to_string((awst::NameGen::next("InnerCallShapes.s_ecPairingTmpCounter") + 1));
-		_ctx.prePendingStatements.push_back(awst::makeAssignmentStatement(
+		_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(inVar, awst::WType::bytesType(), _loc),
 			std::move(_inputData), _loc));
 		auto inRead = [&]() {
@@ -476,7 +478,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		auto lenOk = awst::makeNumericCompare(
 			awst::makeLen(inRead(), _loc), awst::NumericComparison::Eq,
 			awst::makeIntegerConstant("384", _loc), _loc);
-		_ctx.prePendingStatements.push_back(awst::makeExpressionStatement(
+		_ctx.preEffects().push_back(awst::makeExpressionStatement(
 			awst::makeAssert(std::move(lenOk), _loc,
 				"ecPairing input must be exactly 2 pairs (384 bytes); k-pair "
 				"pairing is not supported on AVM"), _loc));

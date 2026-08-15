@@ -1343,12 +1343,27 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					if (auto const* sw = dynamic_cast<awst::BytesWType const*>(_expr->wtype))
 						if (sw->length().has_value())
 							sourceWidth = static_cast<int>(*sw->length());
-					if (sourceWidth > 0 && sourceWidth < targetWidth)
+					// Hex/string literals can carry the generic bytes representation
+					// even though their concrete byte count is known. Preserve that
+					// width for the same fixed-bytes conversion used by assignment,
+					// return, initialization, and call arguments.
+					if (sourceWidth == 0)
+						if (auto const* bytes = dynamic_cast<awst::BytesConstant const*>(
+							_expr.get()))
+							sourceWidth = static_cast<int>(bytes->value.size());
+					if (sourceWidth > 0 && sourceWidth != targetWidth)
 					{
 						auto srcBytes = awst::makeAsBytes(std::move(_expr), _loc);
-						int padBytes = targetWidth - sourceWidth;
-						auto cat = awst::makeRightPad(std::move(srcBytes), padBytes, _loc);
-						return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
+						std::shared_ptr<awst::Expression> resized;
+						if (sourceWidth < targetWidth)
+							resized = awst::makeRightPad(
+								std::move(srcBytes), targetWidth - sourceWidth, _loc);
+						else
+							resized = awst::makeExtract3(
+								std::move(srcBytes), awst::makeZero(_loc),
+								awst::makeIntegerConstant(targetWidth, _loc), _loc);
+						return awst::makeReinterpretCast(
+							std::move(resized), _targetType, _loc);
 					}
 				}
 			}

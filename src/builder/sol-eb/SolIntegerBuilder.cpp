@@ -478,7 +478,7 @@ std::unique_ptr<InstanceBuilder> SolIntegerBuilder::unary_op(
 			auto cmp = awst::makeNumericCompare(std::move(cmpOperand), awst::NumericComparison::Ne, std::move(halfConst), _loc);
 
 			auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(std::move(cmp), _loc, "signed negation overflow"), _loc);
-			m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+			m_ctx.preEffects().push_back(std::move(assertStmt));
 		}
 
 		if (m_int.biguintBacked())
@@ -652,7 +652,7 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::emitOverflowCheck(
 	// Biguint-backed (65..256): emit the check INLINE as a comma expression,
 	// not as pre-statements. These ops reach emitOverflowCheck in modifier-arg
 	// / constructor / return-expression contexts that don't flush
-	// prePendingStatements at the right point, so a pre-statement check is
+	// the current pre-effect frame at the right point, so a pre-statement check is
 	// mis-placed there (regressed g()'s `r+r` modifier args etc.). A comma
 	// `(t=res, assert, t)` is a pure value expression and composes anywhere.
 	// Was gated on bits==256 only; uint65..255 had the same mis-placement.
@@ -670,9 +670,9 @@ std::shared_ptr<awst::Expression> SolIntegerBuilder::emitOverflowCheck(
 
 	auto tmpVar = awst::makeVarExpression(tmpName, resType, _loc);
 	auto assign = awst::makeAssignmentStatement(tmpVar, std::move(_result), _loc);
-	m_ctx.prePendingStatements.push_back(std::move(assign));
+	m_ctx.preEffects().push_back(std::move(assign));
 	auto assertStmt = awst::makeExpressionStatement(awst::makeAssert(mkCmp(), _loc, "overflow"), _loc);
-	m_ctx.prePendingStatements.push_back(std::move(assertStmt));
+	m_ctx.preEffects().push_back(std::move(assertStmt));
 	return tmpVar;
 }
 
