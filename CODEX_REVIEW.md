@@ -193,7 +193,7 @@ from EVM slot placement, then use solc metadata for both modes.
 
 ### Selected implementation status — 2026-08-15
 
-Items 1, 2, 3, and 5 above are implemented on `codex-new-review-stuff`, along
+Items 1, 2, 3, 5, and 6 above are implemented on `codex-new-review-stuff`, along
 with the four smaller design improvements. The compatibility pass now either
 produces a solc-valid source tree or compilation stops; expression effects are
 scoped structural results; Yul facts come through `SolcFacts`; and internal,
@@ -202,5 +202,6 @@ library, and free-function symbols use resolved solc declaration identity.
 The smaller changes add a session-owned `ScratchLayout`, consolidate the
 function translation state into `sol_ast::FunctionContext`, preserve source
 solc types in lowered expressions and use `ConversionPlan` at the first three
-implicit-conversion sites, and isolate the selected solc Yul APIs behind the
-facade. Items 4, 6, 7, 8, and 9 remain proposals only.
+implicit-conversion sites, isolate the selected solc Yul APIs behind the
+facade, and make parameter-mutation summaries contract-aware. Items 4, 7, 8,
+and 9 remain proposals only.
