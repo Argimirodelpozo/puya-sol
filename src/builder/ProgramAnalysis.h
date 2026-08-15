@@ -1,16 +1,34 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <map>
 #include <set>
+#include <utility>
 
 namespace solidity::frontend
 {
 class CompilerStack;
+class ContractDefinition;
+class FunctionCall;
+class FunctionDefinition;
 }
 
 namespace puyasol::builder
 {
+
+/// Source-level reference effects for one callable body in one concrete
+/// contract context. Parameter POSITIONS are stable across virtual overrides;
+/// their declaration IDs are not.
+struct ParameterMutationSummary
+{
+	std::set<size_t> mutatedParameterIndices;
+
+	bool mutates(size_t _index) const
+	{
+		return mutatedParameterIndices.count(_index) != 0;
+	}
+};
 
 /// Immutable whole-program facts computed once before AWST translation.
 /// Keeping these in a build-owned value avoids reset-order dependencies and
@@ -57,10 +75,29 @@ struct ProgramAnalysis
 			&& contract->second.count(_functionId) != 0;
 	}
 
-	// Memo used by ParamMutationDetector. It belongs to this program rather
-	// than to the process; mutable because detection is demand-driven.
-	mutable std::map<int64_t, std::set<int64_t>> transitivelyMutatedParams;
-	mutable std::set<int64_t> mutationAnalysisInProgress;
+	/// Function declarations indexed by globally unique solc ID. Mutation
+	/// analysis uses the caller to give `super.f()` its lexical search start.
+	std::map<int64_t, solidity::frontend::FunctionDefinition const*>
+		functionDeclarations;
+
+	/// `(mostDerivedContractId, exactFunctionBodyId)` → fixed-point summary.
+	/// Mutable because summaries are demand-computed from the roots that the
+	/// selected contract actually lowers; completed values are immutable.
+	mutable std::map<std::pair<int64_t, int64_t>, ParameterMutationSummary>
+		parameterMutationSummaries;
+
+	/// Effects of one EXACT implementation body. `_mostDerived` controls
+	/// virtual calls made by that body; `_function` itself is not re-resolved.
+	ParameterMutationSummary const& parameterMutations(
+		solidity::frontend::ContractDefinition const* _mostDerived,
+		solidity::frontend::FunctionDefinition const& _function) const;
+
+	/// Effects of the concrete function reached by a reference-preserving
+	/// internal `_call`. Returns null for indirect and ABI-boundary calls.
+	ParameterMutationSummary const* parameterMutationsForCall(
+		solidity::frontend::ContractDefinition const* _mostDerived,
+		int64_t _callerCallableId,
+		solidity::frontend::FunctionCall const& _call) const;
 
 	static ProgramAnalysis analyze(
 		solidity::frontend::CompilerStack& _compiler,

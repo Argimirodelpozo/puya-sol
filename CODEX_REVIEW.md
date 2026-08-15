@@ -126,13 +126,22 @@ from EVM slot placement, then use solc metadata for both modes.
    declaration, preserving most-derived dispatch without source-name collision
    machinery. Public ARC-4 route names remain readable transport identities.
 
-6. **Outstanding — make parameter-mutation summaries contract-aware.** The
-   current analysis follows the declared virtual target, so an override that
-   mutates more reference parameters can lose a required caller write-back.
-   Summaries should be keyed by `(mostDerivedContractId, functionId)`, use
-   `FunctionDefinition::resolveVirtual`, use solc's `willBeWrittenTo` annotation
-   and `FunctionType::Kind::ArrayPush/ArrayPop`, and solve recursive call-graph
-   components to a fixed point.
+6. **Done — parameter-mutation summaries are contract-aware.**
+   `ParameterMutationAnalysis` keys completed summaries by
+   `(mostDerivedContractId, exactFunctionBodyId)`, resolves Virtual, Static, and
+   Super call sites with solc's lookup annotations and `resolveVirtual`, records
+   direct lvalues through solc's `willBeWrittenTo`, recognizes array mutation by
+   `FunctionType::Kind::ArrayPush/ArrayPop`, and propagates parameter-position
+   effects to a least fixed point across recursive call components. Callee
+   return augmentation, caller write-back, and the mutable-alias guard now
+   consume the same summary instead of rescanning bodies independently.
+
+   Modifier memory-reference arguments remain a separate lowering limitation:
+   the modifier chain currently copies them into modifier locals and does not
+   thread those locals back. Folding modifier effects into these summaries
+   before fixing that transport would only add a return slot containing the
+   unchanged outer value, so this analysis intentionally summarizes function
+   bodies until modifier arguments become true aliases.
 
 ### Solidity semantics versus AVM transport
 

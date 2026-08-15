@@ -2373,6 +2373,24 @@ def test_param_mutation_incdec_writeback(harness):
     assert as_int(harness.call(app, "runStruct()").abi_return) == 42
 
 
+def test_contract_aware_param_mutation_summaries(harness):
+    """Mutation summaries follow virtual/super calls and recursive SCCs."""
+    source = "puyasolRegression/contracts/contract_aware_param_mutation.sol"
+
+    derived = harness.compile_and_deploy(source, "MutationDerived")
+    assert as_int(harness.call(derived, "runVirtual()").abi_return) == 77
+
+    base = harness.compile_and_deploy(source, "MutationBase")
+    assert as_int(harness.call(base, "runVirtual()").abi_return) == 5
+
+    super_leaf = harness.compile_and_deploy(source, "SuperLeaf")
+    assert as_int(harness.call(super_leaf, "runSuper()").abi_return) == 5
+
+    recursive = harness.compile_and_deploy(source, "RecursiveMutation")
+    assert as_int(harness.call(recursive, "runReadOnlyCycle()").abi_return) == 8
+    assert as_int(harness.call(recursive, "runMutatingCycle()").abi_return) == 51
+
+
 def test_slot_handle_array_bounds_and_packed_compound(harness):
     """puyasolRegression/contracts/slot_handle_array_bounds.sol — NOT an o.g. test.
 

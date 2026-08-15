@@ -12,7 +12,6 @@
 #include "builder/contract/ReturnRewriter.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-ast/StorageRefPointer.h"
-#include "builder/sol-ast/ParamMutationDetector.h"
 #include "builder/itxn/CallResolver.h"
 #include "builder/sol-types/OverloadSuffix.h"
 #include "builder/sol-types/SolIntType.h"
@@ -60,7 +59,8 @@ namespace {
 void augmentMethodForMutatedMemoryParams(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& func,
-	TypeMapper& typeMapper)
+	TypeMapper& typeMapper,
+	solidity::frontend::ContractDefinition const* mostDerived)
 {
 	using namespace solidity::frontend;
 	if (!func.isImplemented() || !method.body) return;
@@ -73,9 +73,8 @@ void augmentMethodForMutatedMemoryParams(
 		if (auto const* arr = dynamic_cast<ArrayType const*>(t)) return !arr->isByteArrayOrString();
 		return dynamic_cast<StructType const*>(t) != nullptr;
 	};
-	ParamMutationDetector detector{typeMapper.analysis()};
-	for (auto const& p : func.parameters()) detector.paramIds.insert(p->id());
-	func.body().accept(detector);
+	auto const& mutations = typeMapper.analysis().parameterMutations(
+		mostDerived, func);
 
 	std::vector<size_t> memIdx;
 	for (size_t pi = 0; pi < func.parameters().size() && pi < method.args.size(); ++pi)
@@ -83,7 +82,7 @@ void augmentMethodForMutatedMemoryParams(
 		auto const& p = func.parameters()[pi];
 		if (p->referenceLocation() != VariableDeclaration::Location::Memory) continue;
 		if (!p->type() || !isMemRefType(p->type())) continue;
-		if (!detector.mutated.count(p->id())) continue;
+		if (!mutations.mutates(pi)) continue;
 		memIdx.push_back(pi);
 	}
 	if (memIdx.empty()) return;
@@ -960,7 +959,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 
 	// Write-back augmentation for mutated MEMORY-ref params (Solidity passes memory by ref).
 	// No-op unless the method mutates a memory struct/array param; the internal caller writes back.
-	augmentMethodForMutatedMemoryParams(method, _func, m_typeMapper);
+	augmentMethodForMutatedMemoryParams(
+		method, _func, m_typeMapper, m_currentContract);
 
 	return method;
 }
