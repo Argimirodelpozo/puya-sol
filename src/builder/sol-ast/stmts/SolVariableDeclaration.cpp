@@ -123,7 +123,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			// in SolInternalCall::processFromIdent). EXCEPT a FOREIGN contract's
 			// external fn (`Other(addr).g`): the static shortcut direct-callsubs
 			// the target, which cannot cross apps — those must stay dynamic
-			// (12-byte appId++selector, inner-txn path). `this.f` keeps the
+			// (profile-sized appId+selector fields, inner-txn path). `this.f` keeps the
 			// shortcut (self-calls ARE direct subroutine calls by design).
 			if (auto const* declFt = dynamic_cast<FunctionType const*>(decl.type()))
 			{

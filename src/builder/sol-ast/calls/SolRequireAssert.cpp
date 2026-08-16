@@ -1,5 +1,6 @@
 #include "builder/sol-ast/calls/SolRequireAssert.h"
 #include "awst/NameGen.h"
+#include "builder/SelectorSemantics.h"
 #include "builder/sol-ast/calls/RevertBlob.h"
 #include "builder/abi/AbiEncoderBuilder.h"
 #include "builder/sol-types/SolcConstFold.h"
@@ -60,11 +61,11 @@ std::shared_ptr<awst::Expression> SolRequireAssert::toAwst()
 							errorCall->expression()));
 				if (errorDef)
 				{
-					// AVM-convention selector (sha512_256, like events/methods)
-					// via MethodConstant — see SolRevertStatement.
-					auto sig = errorDef->functionType(true)->externalSignature();
+					auto const* errorType = errorDef->functionType(true);
+					auto sig = errorType->externalSignature();
 					std::shared_ptr<awst::Expression> blob =
-						awst::makeMethodConstant(sig, awst::WType::bytesType(), m_loc);
+						builder::SelectorSemantics::functionSelector(
+							m_ctx, *errorType, sig, m_loc);
 					auto const errorArgs = errorCall->sortedArguments();
 					if (!errorArgs.empty())
 						// selector ++ ARC4(args) at declared param types ([[abi-arc4-migration]]);

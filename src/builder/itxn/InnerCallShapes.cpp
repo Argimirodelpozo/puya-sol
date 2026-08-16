@@ -251,7 +251,43 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
 		}
 	}
 	else
-		selector = awst::makeAsBytes(_ctx.buildExpr(*args[0]), _loc);
+	{
+		// Explicit Solidity→ARC-4 transport boundary. In --evm-selectors mode
+		// `C.f.selector` is keccak-derived and must not be forwarded directly to
+		// the AVM router. When the selector expression names a declaration, retain
+		// the router identity here; genuinely opaque runtime selectors remain
+		// untranslatable without the target ABI.
+		FunctionDefinition const* target = nullptr;
+		VariableDeclaration const* getter = nullptr;
+		FunctionType const* targetType = nullptr;
+		if (auto const* selectorAccess =
+				dynamic_cast<MemberAccess const*>(args[0].get()))
+			if (selectorAccess->memberName() == "selector")
+			{
+				auto const& functionExpr = selectorAccess->expression();
+				targetType = dynamic_cast<FunctionType const*>(
+					functionExpr.annotation().type);
+				if (targetType && targetType->hasDeclaration())
+				{
+					target = dynamic_cast<FunctionDefinition const*>(
+						&targetType->declaration());
+					getter = dynamic_cast<VariableDeclaration const*>(
+						&targetType->declaration());
+				}
+				if (!target)
+					target = dynamic_cast<FunctionDefinition const*>(
+						ASTNode::referencedDeclaration(functionExpr));
+			}
+		if (target)
+			selector = awst::makeMethodConstant(
+				buildMethodSelector(_ctx, target), awst::WType::bytesType(), _loc);
+		else if (getter && targetType)
+			selector = awst::makeMethodConstant(
+				buildMethodSelector(_ctx, getter->name(), *targetType),
+				awst::WType::bytesType(), _loc);
+		else
+			selector = awst::makeAsBytes(_ctx.buildExpr(*args[0]), _loc);
+	}
 
 	auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
 	argsTuple->items.push_back(std::move(selector));

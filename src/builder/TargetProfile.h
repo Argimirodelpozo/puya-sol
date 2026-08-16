@@ -16,6 +16,7 @@ struct TargetProfile
 {
 	bool evmStorageLayout = false;
 	bool evmMemoryLayout = false;
+	bool evmSelectors = false;
 	bool viaIRSequencing = false;
 	bool denseOnlyStorage = false;
 	bool singlePageStorage = false;

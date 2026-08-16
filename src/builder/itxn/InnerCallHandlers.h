@@ -152,7 +152,8 @@ public:
 		ContractContext& _ctx, awst::SourceLocation const& _loc);
 
 	/// Canonical ARC4 selector string from a FunctionDefinition
-	/// (routers dispatch on this; fn-pointer slots and f.selector expose it).
+	/// (routers always dispatch on this; compatibility-mode selector expressions
+	/// and the routing field of external function pointers also expose it).
 	static std::string buildMethodSelector(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionDefinition const* _func);

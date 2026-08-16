@@ -2,9 +2,12 @@
 /// msg.sender, block.timestamp, block.prevrandao, block.difficulty, etc.
 
 #include "builder/sol-ast/members/SolIntrinsicAccess.h"
+#include "builder/SelectorSemantics.h"
 #include "builder/sol-intrinsics/IntrinsicMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "Logger.h"
+
+#include <vector>
 
 namespace puyasol::builder::sol_ast
 {
@@ -106,10 +109,29 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		return awst::makeAsBiguint(std::move(itob), m_loc);
 	}
 
-	// msg.sig → ApplicationArgs[0] (ARC4 selector, already 4 bytes), typed bytes4.
+	// msg.sig is the routed ARC-4 selector in compatibility mode. Under
+	// --evm-selectors the explicit transport map recovers the corresponding
+	// Solidity selector while preserving the outer selector across internal calls.
 	if (baseName == "msg" && member == "sig")
-		return awst::makeAppArg(
-			0, m_loc, m_ctx.typeMapper.createType<awst::BytesWType>(4));
+	{
+		if (!builder::SelectorSemantics::enabled(m_ctx.typeMapper))
+			return awst::makeAppArg(
+				0, m_loc, m_ctx.typeMapper.createType<awst::BytesWType>(4));
+
+		auto hasSelector = awst::makeNumericCompare(
+			awst::makeTxn(
+				std::string("NumAppArgs"), awst::WType::uint64Type(), m_loc),
+			awst::NumericComparison::Gt, awst::makeZero(m_loc), m_loc);
+		auto raw = awst::makeConditional(
+			std::move(hasSelector), awst::makeAppArg(0, m_loc),
+			awst::makeBytesConstant(std::vector<uint8_t>(4, 0), m_loc),
+			awst::WType::bytesType(), m_loc);
+		auto selector = builder::SelectorSemantics::runtimeSelector(
+			m_ctx, std::move(raw), m_loc);
+		return awst::makeReinterpretCast(
+			std::move(selector),
+			m_ctx.typeMapper.createType<awst::BytesWType>(4), m_loc);
+	}
 
 	// msg.data → concatenate ApplicationArgs[0..15] (selector + ARC4 args).
 	// ARC4 args are already left-padded; result approximates EVM head encoding
@@ -140,7 +162,11 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 
 			auto slotPresent = awst::makeNumericCompare(std::move(numArgsCheck), awst::NumericComparison::Gt, std::move(slotIdxCmp), m_loc);
 
-			auto slotBytes = awst::makeAppArg(slot, m_loc);
+			std::shared_ptr<awst::Expression> slotBytes =
+				awst::makeAppArg(slot, m_loc);
+			if (slot == 0)
+				slotBytes = builder::SelectorSemantics::runtimeSelector(
+					m_ctx, std::move(slotBytes), m_loc);
 
 			auto slotChoice = awst::makeConditional(
 				std::move(slotPresent), std::move(slotBytes),

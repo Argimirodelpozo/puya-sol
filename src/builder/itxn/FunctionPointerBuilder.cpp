@@ -4,6 +4,7 @@
 
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "awst/NameGen.h"
+#include "builder/SelectorSemantics.h"
 #include "builder/abi/AbiEncoderBuilder.h"
 #include "builder/itxn/CallResolver.h"
 #include "builder/itxn/FunctionPointerDispatchTypes.h"
@@ -102,17 +103,14 @@ void FunctionPointerBuilder::reset(ContractContext& _ctx)
 // ── Type mapping ──
 
 awst::WType const* FunctionPointerBuilder::mapFunctionType(
+	ContractContext& _ctx,
 	FunctionType const* _funcType)
 {
 	if (!_funcType)
 		return awst::WType::uint64Type();
 
 	if (isExternalFunctionPointer(_funcType))
-	{
-			// 12 bytes: itob(appId)[8] ++ selector[4]
-		static awst::BytesWType s_extFnPtrType(12);
-		return &s_extFnPtrType;
-	}
+		return _ctx.typeMapper.map(_funcType);
 
 	// Internal function pointers: uint64 ID
 	return awst::WType::uint64Type();
@@ -208,14 +206,16 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 
 	if (isExternal)
 	{
-		// External fn-ptr = itob(appId)[8] ++ selector[4] = 12 bytes.
-		// `this.f` → (itob(CurrentApplicationID), f.ARC4-selector): dispatch site
+		// Compatibility layout: appId[8] ++ ARC4-selector[4]. Under
+		// --evm-selectors the pointer carries appId[8] ++ Solidity-selector[4]
+		// ++ ARC4-selector[4], keeping language and transport identities distinct.
+		// `this.f` → CurrentApplicationID + selectors: dispatch site
 		//   compares appId == CurrentApplicationID and takes internal-dispatch shortcut.
-		// `C(addr).f` → (8-byte appId from addr, selector): issues inner app txn.
-		static awst::BytesWType s_bytes12(12);
+		// `C(addr).f` uses the ARC-4 field when issuing an inner app txn.
+		auto const* pointerType = _ctx.typeMapper.map(funcType);
 
 		std::shared_ptr<awst::Expression> appIdBytes;
-		std::shared_ptr<awst::Expression> selectorBytes;
+		std::shared_ptr<awst::Expression> routeSelector;
 
 		if (_receiverAddress)
 		{
@@ -234,11 +234,11 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 				appIdBytes = awst::makeExtract(std::move(addr), 24, 8, _loc);
 			}
 
-			// selector slot: used as ApplicationArgs[0] for cross-contract calls.
+			// Routing selector: used as ApplicationArgs[0].
 			auto selectorConst = awst::makeMethodConstant(
 				InnerCallHandlers::buildMethodSelector(_ctx, _funcDef),
 				awst::WType::bytesType(), _loc);
-			selectorBytes = std::move(selectorConst);
+			routeSelector = std::move(selectorConst);
 		}
 		else
 		{
@@ -259,12 +259,27 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 			auto selectorConst = awst::makeMethodConstant(
 				InnerCallHandlers::buildMethodSelector(_ctx, _funcDef),
 				awst::WType::bytesType(), _loc);
-			selectorBytes = std::move(selectorConst);
+			routeSelector = std::move(selectorConst);
 		}
 
-		auto packed = awst::makeIntrinsicCall("concat", &s_bytes12, _loc);
-		packed->stackArgs.push_back(std::move(appIdBytes));
-		packed->stackArgs.push_back(std::move(selectorBytes));
+		std::shared_ptr<awst::Expression> left = std::move(appIdBytes);
+		if (_ctx.typeMapper.profile().evmSelectors)
+		{
+			auto const* externalType = funcType;
+			if (!externalType || !isExternalFunctionPointer(externalType))
+				externalType = _funcDef->functionType(false);
+			if (!externalType)
+				return nullptr;
+			auto semanticSelector = builder::SelectorSemantics::functionSelector(
+				_ctx, *externalType,
+				InnerCallHandlers::buildMethodSelector(_ctx, _funcDef), _loc);
+			left = awst::makeConcat(
+				std::move(left), std::move(semanticSelector), _loc);
+		}
+
+		auto packed = awst::makeIntrinsicCall("concat", pointerType, _loc);
+		packed->stackArgs.push_back(std::move(left));
+		packed->stackArgs.push_back(std::move(routeSelector));
 		return packed;
 	}
 
@@ -314,8 +329,11 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 				awst::WType::uint64Type(), _loc),
 			_loc);
 
-		// Selector slot holds the ARC4 selector (for .selector accessor consistency).
-		// Map selector → internal id via __sel_to_id_<sig> (generated in generateDispatchMethods).
+		auto const routeSelectorOffset = static_cast<int>(
+			externalFunctionPointerRouteSelectorOffset(
+				_ctx.typeMapper.profile()));
+
+		// Map the routing selector → internal id via __sel_to_id_<sig>.
 		std::string selToIdName = "__sel_to_id_" + dispatchName(_funcType);
 		auto& registry = _ctx.functionPointers;
 		std::string const dname = dispatchName(_funcType);
@@ -329,13 +347,14 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 			: awst::SubroutineTarget{awst::InstanceMethodTarget{selToIdName}};
 		auto selToIdCall = awst::makeSubroutineCall(
 			std::move(selToIdTarget), awst::WType::uint64Type(), _loc);
-		awst::pushCallArg(selToIdCall->args, "__sel", extractSlice(8, 4));
+		awst::pushCallArg(selToIdCall->args, "__sel",
+			extractSlice(routeSelectorOffset, 4));
 
 		auto selfCall = buildDispatchCall(_ctx, _funcType, std::move(selToIdCall), _args, _loc);
 		awst::WType const* retType = selfCall->wtype;
 
-		// Cross-contract: selector (bytes[8:12]) → ApplicationArgs[0].
-		auto sel4 = extractSlice(8, 4);
+		// Cross-contract: the explicit ARC-4 field → ApplicationArgs[0].
+		auto sel4 = extractSlice(routeSelectorOffset, 4);
 
 		auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
 		argsTuple->items.push_back(std::move(sel4));

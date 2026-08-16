@@ -3,9 +3,16 @@
 #include <libsolidity/ast/ASTForward.h>
 #include <libyul/ASTForward.h>
 
+#include <cstdint>
 #include <map>
 #include <set>
 #include <string>
+#include <vector>
+
+namespace solidity::frontend
+{
+class FunctionType;
+}
 
 namespace solidity::yul
 {
@@ -45,6 +52,20 @@ public:
 	/// reachable Yul code reads/writes EVM storage.
 	static bool usesStorage(
 		solidity::frontend::InlineAssembly const& _assembly);
+
+	/// Solidity's canonical four-byte function/error selector. The FunctionType
+	/// overload delegates to solc's externalIdentifier(); the signature overload
+	/// is for language constructs such as abi.encodeWithSignature.
+	static std::vector<uint8_t> externalSelector(
+		solidity::frontend::FunctionType const& _function);
+	static std::vector<uint8_t> externalSelector(std::string const& _signature);
+
+	/// Full keccak256 signature hash used by Solidity event selectors.
+	static std::vector<uint8_t> signatureHash(std::string const& _signature);
+
+	/// solc's EIP-165 interface ID for the exact interface declaration.
+	static std::vector<uint8_t> interfaceId(
+		solidity::frontend::ContractDefinition const& _contract);
 };
 
 } // namespace puyasol::builder

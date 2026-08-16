@@ -1,6 +1,9 @@
 #include "builder/SolcFacts.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolutil/CommonData.h>
+#include <libsolutil/Keccak256.h>
+#include <libsolutil/Numeric.h>
 #include <libyul/AST.h>
 #include <libyul/SideEffects.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
@@ -86,6 +89,36 @@ bool SolcFacts::usesStorage(solidity::frontend::InlineAssembly const& _assembly)
 			return true;
 	return analyzeYul(
 		_assembly.operations().root(), _assembly.dialect()).usesStorage;
+}
+
+std::vector<uint8_t> SolcFacts::externalSelector(
+	solidity::frontend::FunctionType const& _function)
+{
+	auto bytes = solidity::toBigEndian(_function.externalIdentifier());
+	return {bytes.end() - 4, bytes.end()};
+}
+
+std::vector<uint8_t> SolcFacts::externalSelector(std::string const& _signature)
+{
+	auto hash = solidity::util::keccak256(_signature).asBytes();
+	return {hash.begin(), hash.begin() + 4};
+}
+
+std::vector<uint8_t> SolcFacts::signatureHash(std::string const& _signature)
+{
+	return solidity::util::keccak256(_signature).asBytes();
+}
+
+std::vector<uint8_t> SolcFacts::interfaceId(
+	solidity::frontend::ContractDefinition const& _contract)
+{
+	auto id = _contract.interfaceId();
+	return {
+		static_cast<uint8_t>((id >> 24) & 0xff),
+		static_cast<uint8_t>((id >> 16) & 0xff),
+		static_cast<uint8_t>((id >> 8) & 0xff),
+		static_cast<uint8_t>(id & 0xff),
+	};
 }
 
 } // namespace puyasol::builder

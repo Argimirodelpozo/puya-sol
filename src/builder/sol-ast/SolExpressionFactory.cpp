@@ -36,9 +36,8 @@ namespace puyasol::builder::sol_ast
 {
 
 /// `.address` on an external function pointer value.
-/// Extracts the 8-byte appId from the 12-byte fn-ptr layout and left-pads
-/// to 32 bytes. For `this.f.address` the appId is 0 (self-sentinel) →
-/// folds to CurrentApplicationAddress.
+/// Extracts the 8-byte appId prefix from either profile-selected fn-ptr layout
+/// and left-pads it to 32 bytes.
 class SolFunctionAddressAccess : public SolMemberAccess
 {
 public:

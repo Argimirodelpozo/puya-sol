@@ -35,7 +35,7 @@ awst::WType const* dispatchPublicArgArc4Type(
 	if (_nativeType && _nativeType->kind() == awst::WTypeKind::Bytes
 		&& dynamic_cast<FunctionType const*>(_paramSolType))
 	{
-		// External fn-ptr bytes[12] → arc4.static_array<arc4.uint8, 12>.
+		// External fn-ptr bytes[N] → arc4.static_array<arc4.uint8, N>.
 		// Mirrors ContractBuilder's rule: ARC4-remap bytes[N] only for FunctionType params.
 		auto const* bytesType = static_cast<awst::BytesWType const*>(_nativeType);
 		if (bytesType->length().has_value())

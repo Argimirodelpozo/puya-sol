@@ -28,6 +28,11 @@ struct Options
 	bool outputIr = false;
 	bool outputLogs = true;
 	bool viaYulBehavior = false;
+	// --evm-selectors: expose Solidity/EVM keccak selectors to Solidity code
+	// while retaining ARC-4 selectors at the AVM application-call boundary.
+	// Opt-in because external function-pointer representation grows to carry
+	// both identities and observable selector values change.
+	bool evmSelectors = false;
 	std::string evmVersion;     // empty = compiler default (cancun)
 	// --evm-memory-slots <N>: 0 means unspecified/default (5 slots=20KB).
 	// UltraHonk needs 32; extended memory is placed above reserved slots 5..15.

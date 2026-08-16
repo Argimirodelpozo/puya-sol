@@ -2,6 +2,7 @@
 
 #include "awst/Node.h"
 #include "builder/ScratchLayout.h"
+#include "builder/SelectorSemantics.h"
 #include "builder/sol-types/TypeMapper.h"
 
 #include <liblangutil/EVMVersion.h>
@@ -106,6 +107,13 @@ public:
 	void setSignedParamBits(std::map<std::string, unsigned> _m)
 	{
 		m_signedParamBits = std::move(_m);
+	}
+
+	/// ARC-4 router selector → Solidity selector mappings for msg.data-style
+	/// synthetic calldata inside inline assembly.
+	void setSelectorRoutes(std::vector<SelectorRoute> _routes)
+	{
+		m_selectorRoutes = std::move(_routes);
 	}
 
 	/// True when the block emitted an unconditional halt at top level
@@ -942,6 +950,7 @@ private:
 
 	/// True when dynamic calldataload/copy/size detected; materialise __cd_blob.
 	bool m_useSyntheticCalldata = false;
+	std::vector<SelectorRoute> m_selectorRoutes;
 	std::set<std::string>* m_seededCalldataPointers = nullptr;
 	std::set<std::string> m_calldataPointerNames;
 	std::set<std::string> m_calldataStaticPtrNames;

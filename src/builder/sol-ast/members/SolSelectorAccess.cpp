@@ -1,8 +1,9 @@
 /// @file SolSelectorAccess.cpp
-/// f.selector, E.selector → keccak256("Name(type1,...)")[:4].
+/// Policy-selected function/error/event selector lowering.
 /// Migrated from MemberAccessBuilder.cpp lines 139-360.
 
 #include "builder/sol-ast/members/SolSelectorAccess.h"
+#include "builder/SelectorSemantics.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/itxn/InnerCallHandlers.h"
 #include "Logger.h"
@@ -16,17 +17,19 @@ using namespace solidity::frontend;
 
 std::shared_ptr<awst::Expression> SolSelectorAccess::makeSelectorExpr(std::string const& _sig)
 {
-	// ARC-4 sha512_256 selector (TEAL `method "sig"`); was keccak256(sig)[0:4].
-	// type(I).interfaceId stays keccak (EVM XOR) so `f.selector ^ g.selector == interfaceId`
-	// no longer holds, but ERC-165 comparisons of interfaceId constants are unaffected.
-	return awst::makeMethodConstant(_sig, awst::WType::bytesType(), m_loc);
+	return builder::SelectorSemantics::signatureSelector(m_ctx, _sig, m_loc);
 }
 
-// Function selectors use the ARC-4 canonical sig (ARC4 type names + return, "void" if none),
-// matching the router and fn-pointer slots (InnerCallHandlers::buildMethodSelector).
-// Events/errors use their no-return form (ARC-28 emit prefix / custom-error revert payload).
+// Compatibility mode exposes the ARC-4 canonical signature (ARC4 type names +
+// return) so selector values match the router. --evm-selectors instead retains
+// solc's external signature here; makeSelectorExpr hashes it with keccak.
 std::string SolSelectorAccess::canonicalSelectorSig(FunctionType const& _ft)
 {
+	if (builder::SelectorSemantics::enabled(m_ctx.typeMapper))
+	{
+		try { return _ft.externalSignature(); }
+		catch (...) { return {}; }
+	}
 	if (_ft.kind() == FunctionType::Kind::Error)
 	{
 		try { return _ft.externalSignature(); }
@@ -57,7 +60,12 @@ std::string SolSelectorAccess::resolveSignature(Expression const& _expr)
 	{
 		if (auto const* fd = dynamic_cast<FunctionDefinition const*>(
 				id->annotation().referencedDeclaration))
+		{
+			if (builder::SelectorSemantics::enabled(m_ctx.typeMapper))
+				if (auto const* ft = fd->functionType(false))
+					return ft->externalSignature();
 			return eb::InnerCallHandlers::buildMethodSelector(m_ctx, fd);
+		}
 	}
 	if (auto const* ma = dynamic_cast<MemberAccess const*>(&_expr))
 	{
@@ -136,20 +144,8 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 	{
 		if (funcType->kind() == FunctionType::Kind::Event)
 		{
-			auto const* eventDef = dynamic_cast<EventDefinition const*>(
-				&funcType->declaration());
-			if (eventDef)
-			{
-				sig = eventDef->name() + "(";
-				bool first = true;
-				for (auto const& param: eventDef->parameters())
-				{
-					if (!first) sig += ",";
-					sig += param->type()->canonicalName();
-					first = false;
-				}
-				sig += ")";
-			}
+			try { sig = funcType->externalSignature(); }
+			catch (...) {}
 		}
 		else
 		{
@@ -204,7 +200,8 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 
 	if (sig.empty())
 	{
-		// External fn-pointer: 12-byte encoding = itob(appId,8) ++ selector(4).
+		// External fn-pointer: the public selector is bytes 8..12 in both
+		// layouts; --evm-selectors appends a separate ARC-4 routing field.
 		if (funcType && funcType->kind() == FunctionType::Kind::External)
 		{
 			auto base = buildExpr(baseExpr);
@@ -230,18 +227,18 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 	auto* targetType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
 	auto const* bytesWType = dynamic_cast<awst::BytesWType const*>(targetType);
 
-	// Event selectors are bytes32 (EVM topic shape): full 32-byte sha512_256(sig).
-	// First 4 bytes match the ARC-28 log prefix, so prefix comparisons stay coherent.
+	// Event emission remains ARC-28. The observable Event.selector value is
+	// sha512_256 in compatibility mode and Solidity's keccak topic under the flag.
 	if (bytesWType && bytesWType->length().has_value() && *bytesWType->length() == 32)
-	{
-		auto hash = awst::makeIntrinsicCall(
-			"sha512_256", awst::WType::bytesType(), m_loc);
-		hash->stackArgs.push_back(awst::makeUtf8BytesConstant(sig, m_loc));
-		return awst::makeReinterpretCast(std::move(hash), targetType, m_loc);
-	}
+		return builder::SelectorSemantics::eventSelector(
+			m_ctx, sig, targetType, m_loc);
 
-	// Function selectors: 4-byte ARC-4 sha512_256 (see makeSelectorExpr).
-	auto selector = awst::makeMethodConstant(sig, awst::WType::bytesType(), m_loc);
+	// Prefer solc's externalIdentifier when the FunctionType survives; signature
+	// hashing remains only for distributed/fallback selector shapes.
+	auto selector = funcType
+		? builder::SelectorSemantics::functionSelector(
+			m_ctx, *funcType, sig, m_loc)
+		: makeSelectorExpr(sig);
 	if (targetType && targetType != awst::WType::bytesType())
 		return awst::makeReinterpretCast(std::move(selector), targetType, m_loc);
 	return selector;

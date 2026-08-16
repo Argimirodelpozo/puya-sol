@@ -3,6 +3,8 @@
 /// Migrated from MemberAccessBuilder.cpp lines 380-687.
 
 #include "builder/sol-ast/members/SolMetaTypeAccess.h"
+#include "builder/SelectorSemantics.h"
+#include "builder/SolcFacts.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/itxn/InnerCallHandlers.h"
@@ -75,15 +77,20 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 		return awst::makeBytesConstant(std::vector<uint8_t>(32, 0), m_loc);
 	}
 
-	// type(I).interfaceId → XOR of MethodConstants (sha512_256 selectors).
-	// EVM XORs keccak selectors; ours use sha512_256, so the byte value diverges
-	// from EVM, but supportsInterface XOR-comparisons stay consistent on-chain.
-	// (See EVM_DIVERGENCE.md "Encoding model".)
+	// type(I).interfaceId uses solc's EIP-165 value under --evm-selectors.
+	// Compatibility mode XORs ARC-4 MethodConstants so interface IDs remain
+	// consistent with the selector values exposed by that mode.
 	if (member == "interfaceId")
 	{
 		auto* targetType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
 		if (auto const* contractType = dynamic_cast<ContractType const*>(typeArg))
 		{
+			if (builder::SelectorSemantics::enabled(m_ctx.typeMapper))
+				return awst::makeBytesConstant(
+					builder::SolcFacts::interfaceId(
+						contractType->contractDefinition()),
+					m_loc, awst::BytesEncoding::Base16, targetType);
+
 			std::shared_ptr<awst::Expression> acc;
 			// interfaceFunctionList(false) = own functions only, no inherited (mirrors solc).
 			for (auto const& it: contractType->contractDefinition().interfaceFunctionList(false))

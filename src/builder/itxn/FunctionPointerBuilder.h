@@ -5,7 +5,8 @@
 /// Internal function pointers are stored as uint64 IDs. Calling one dispatches
 /// through a generated __funcptr_dispatch subroutine with a switch table.
 ///
-/// External function pointers are stored as bytes (address + selector).
+/// External function pointers are stored as bytes (address + public selector,
+/// plus a distinct ARC-4 routing selector under --evm-selectors).
 /// Calling one dispatches through an inner application call.
 
 #include "builder/sol-eb/NodeBuilder.h"
@@ -56,12 +57,13 @@ struct FunctionPointerRegistry
 class FunctionPointerBuilder
 {
 public:
-	/// Internal → uint64, External → bytes[12].
+	/// Internal → uint64. External → the profile-selected dual-identity layout.
 	static awst::WType const* mapFunctionType(
+		ContractContext& _ctx,
 		solidity::frontend::FunctionType const* _funcType);
 
 	/// Build a function reference expression (internal: IntegerConstant id;
-	/// external: bytes[12] = itob(appId) ++ selector).
+	/// external: appId ++ Solidity selector (flagged mode) ++ ARC-4 selector.
 	/// @param _callerFuncType  Determines Internal vs External when both exist
 	///                         (e.g. `this.g` is External). Derived from _funcDef if null.
 	/// @param _awstName        For super refs in diamond MRO: distinct entries

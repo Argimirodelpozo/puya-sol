@@ -49,6 +49,7 @@ set(SOURCES
 	src/builder/ProgramAnalysis.cpp
 	src/builder/ParameterMutationAnalysis.cpp
 	src/builder/SolcFacts.cpp
+	src/builder/SelectorSemantics.cpp
 	src/builder/SourceLocConvert.cpp
 	src/builder/FunctionIdRegistry.cpp
 	src/builder/SubroutineRegistry.cpp

@@ -9,7 +9,7 @@
 > - **Not officially supported** by the Algorand Foundation or any other organization. This is a personal side project.
 > - **Maintained on a best-effort basis.** No guaranteed release cadence. Identified bugs may sit unfixed for long periods of time. That said, Pull requests, issue reports, feature requests, questions, etc. are welcome and encouraged!
 > - **A research/PoC effort**, not a stable release. APIs, AWST shapes, codegen patterns, output formats, and even successful test counts can change between commits without notice.
-> - **Likely to mis-compile contracts in subtle ways.** ~18% of the upstream Solidity semantic tests still fail or compile-error, and some real-world ports rely on workarounds, in-tree test patches, or features that diverge from EVM semantics (e.g., ARC4 selectors instead of keccak256, AVM box layout instead of EVM storage slots, no try/catch).
+> - **Likely to mis-compile contracts in subtle ways.** ~18% of the upstream Solidity semantic tests still fail or compile-error, and some real-world ports rely on workarounds, in-tree test patches, or features that diverge from EVM semantics (e.g., ARC4 selectors by default and always at the AVM routing boundary, AVM box layout instead of EVM storage slots, no try/catch).
 > - **Not production money safe.** Do not deploy compiler output to MainNet, do not handle real funds with anything emitted by this tool, and do not assume security properties of the original Solidity contracts carry over to the TEAL output.
 >
 > Use at your own risk. Use this for experimentation, prototyping, or research. Do not use it for anything that touches user funds, real assets, or production systems.
@@ -80,6 +80,13 @@ build/puya-sol \
 ```
 
 For multi-source projects (e.g., contracts with imports), pass each `--source` repeatedly. Outputs land in the `--output-dir` as `<Contract>.approval.teal`, `<Contract>.clear.teal`, `<Contract>.arc56.json`, plus `awst.json` for debugging.
+
+Add `--evm-selectors` when Solidity-visible selector values must match solc/EVM
+keccak semantics. ARC-4 selectors remain the AVM application-call routing
+identity, and the compiler translates them at Solidity-visible boundaries such
+as `msg.sig`. This mode changes the internal external-function-pointer encoding
+from 12 to 16 bytes so it can retain both the Solidity selector and ARC-4 route;
+all contracts that exchange such pointers must be compiled with the same mode.
 
 For contracts that exceed the 8 KB AVM program-size limit, add `--split-contracts --allow-mid-function-split`.
 
