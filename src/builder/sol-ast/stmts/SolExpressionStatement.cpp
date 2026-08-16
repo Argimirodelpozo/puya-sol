@@ -2,6 +2,7 @@
 /// ExpressionStatement, RevertStatement, ReturnStatement.
 
 #include "builder/sol-ast/stmts/SolExpressionStatement.h"
+#include "builder/SelectorSemantics.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/AWSTBuilder.h" // containsMappingType
@@ -85,14 +86,14 @@ std::vector<std::shared_ptr<awst::Statement>> SolRevertStatement::toAwst()
 	{
 		errorName = errorDef->name();
 
-		// Custom-error payload, logged before the failing `err` so clients read it via
-		// simulate: sha512_256(canonicalSignature)[:4] ++ abi.encode(args…). Selector
-		// uses the AVM convention (same sha512_256 as ARC-28 events / ARC-4 methods via
-		// MethodConstant), NOT EVM keccak — matching abi.encodeCall. Only the fixed
-		// Error(string)/Panic magics stay EVM-literal.
-		auto sig = errorDef->functionType(true)->externalSignature();
+		// Custom-error payload, logged before the failing `err` so clients read it
+		// via simulate. Selector policy follows Error.selector; argument transport
+		// remains ARC-4 until a full EVM ABI mode exists.
+		auto const* errorType = errorDef->functionType(true);
+		auto sig = errorType->externalSignature();
 		std::shared_ptr<awst::Expression> blob =
-			awst::makeMethodConstant(sig, awst::WType::bytesType(), m_loc);
+			builder::SelectorSemantics::functionSelector(
+				m_blk.builderCtx(), *errorType, sig, m_loc);
 		auto const errorArgs = m_node.errorCall().sortedArguments();
 		if (!errorArgs.empty())
 			blob = awst::makeConcat(

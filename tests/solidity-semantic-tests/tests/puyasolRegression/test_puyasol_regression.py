@@ -4407,3 +4407,78 @@ def test_unreachable_library_function_is_not_translated(harness):
         "puyasolRegression/contracts/dead_library_precompile.sol",
         contract_name="C")
     assert as_int(harness.call(app, "f(uint256)", 21).abi_return) == 42
+
+
+def test_evm_selectors_default_compatibility(harness):
+    """The selector redesign is opt-in: existing ARC-4-visible values remain
+    byte-for-byte unchanged when --evm-selectors is absent."""
+    from framework import arc4_selector
+
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/evm_selector_semantics.sol",
+        contract_name="EvmSelectorSemantics")
+
+    alpha_route = arc4_selector("alpha(uint256)bool")
+    assert bytes(harness.call(app, "functionSelector()").abi_return) == alpha_route
+    assert bytes(harness.call(app, "pointerSelector()").abi_return) == alpha_route
+    assert bytes(harness.call(app, "encodedCallSelector()").abi_return) == alpha_route
+    assert bytes(harness.call(app, "encodedSignatureSelector()").abi_return) \
+        == arc4_selector("alpha(uint256)")
+    assert bytes(harness.call(app, "directMsgSig()").abi_return) \
+        == arc4_selector("directMsgSig()byte[4]")
+    assert bytes(harness.call(app, "outerMsgSig()").abi_return) \
+        == arc4_selector("outerMsgSig()byte[4]")
+    assert bytes(harness.call(
+        app, "assemblyMsgSig(uint256)", 0).abi_return) \
+        == arc4_selector("assemblyMsgSig(uint256)byte[4]")
+
+
+def test_evm_selectors_separate_language_values_from_arc4_routes(harness):
+    """--evm-selectors exposes solc/EVM identities while calls still enter
+    through the unchanged ARC-4 router. Covers functions, events, errors,
+    EIP-165, ABI selector encoders, msg.sig, synthetic calldata, and the dual
+    selector representation used by external function pointers."""
+    from Crypto.Hash import keccak
+
+    def evm_hash(signature: str) -> bytes:
+        h = keccak.new(digest_bits=256)
+        h.update(signature.encode())
+        return h.digest()
+
+    def evm_selector(signature: str) -> bytes:
+        return evm_hash(signature)[:4]
+
+    artifacts = harness.compile(
+        "puyasolRegression/contracts/evm_selector_semantics.sol",
+        extra_args=["--evm-selectors"])
+    app = harness.deploy(artifacts, "EvmSelectorSemantics")
+
+    alpha = evm_selector("alpha(uint256)")
+    assert bytes(harness.call(app, "functionSelector()").abi_return) == alpha
+    assert bytes(harness.call(app, "pointerSelector()").abi_return) == alpha
+    assert bytes(harness.call(app, "encodedCallSelector()").abi_return) == alpha
+    assert bytes(harness.call(app, "encodedSignatureSelector()").abi_return) == alpha
+    assert bytes(harness.call(app, "eventSelector()").abi_return) \
+        == evm_hash("Seen(uint256)")
+    assert bytes(harness.call(app, "errorSelector()").abi_return) \
+        == evm_selector("Boom(uint256)")
+
+    expected_interface = int.from_bytes(evm_selector("alpha(uint256)"), "big") \
+        ^ int.from_bytes(evm_selector("noReturn(bytes32)"), "big")
+    assert bytes(harness.call(app, "interfaceId()").abi_return) \
+        == expected_interface.to_bytes(4, "big")
+
+    # The app was invoked by its ARC-4 selector, but Solidity observes the
+    # keccak selector. Internal calls preserve the outer transaction selector.
+    assert bytes(harness.call(app, "directMsgSig()").abi_return) \
+        == evm_selector("directMsgSig()")
+    assert bytes(harness.call(app, "outerMsgSig()").abi_return) \
+        == evm_selector("outerMsgSig()")
+    assert bytes(harness.call(
+        app, "assemblyMsgSig(uint256)", 0).abi_return) \
+        == evm_selector("assemblyMsgSig(uint256)")
+
+    # Calling through the flagged 16-byte pointer uses its separate ARC-4
+    # routing field, not the Solidity-visible selector field.
+    assert harness.call(app, "pointerCall(uint256)", 7).abi_return is True
+    assert harness.call(app, "pointerCall(uint256)", 8).abi_return is False

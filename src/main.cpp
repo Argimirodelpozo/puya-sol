@@ -188,6 +188,7 @@ int main(int _argc, char* _argv[])
 	puyasol::builder::TargetProfile targetProfile{
 		.evmStorageLayout = opts.evmStorageLayout,
 		.evmMemoryLayout = opts.evmMemoryLayout,
+		.evmSelectors = opts.evmSelectors,
 		.viaIRSequencing = opts.viaYulBehavior,
 		.evmVersion = evmVer,
 		.scratchLayout = puyasol::builder::ScratchLayout(

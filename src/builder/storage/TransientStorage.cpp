@@ -60,8 +60,8 @@ void TransientStorage::collectVars(
 		auto* mappedType = _typeMapper.map(solType);
 		if (dynamic_cast<AddressType const*>(solType))
 			byteSize = 32;
-		// Function pointers: Solidity says 24B but AWST is bytes[12] (external)
-		// or uint64 (internal); use AWST width so read/write sizes match.
+		// Function pointers: Solidity says 24B but AWST uses a profile-sized byte
+		// layout (external) or uint64 (internal); use AWST width so reads/writes match.
 		if (dynamic_cast<FunctionType const*>(solType))
 		{
 			if (auto const* bwt = dynamic_cast<awst::BytesWType const*>(mappedType))

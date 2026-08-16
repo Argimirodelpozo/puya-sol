@@ -556,20 +556,19 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 		headTotal += headSizes.back();
 	}
 
-	// __cd_blob selector slot: the RUNTIME selector that routed this call —
-	// txna ApplicationArgs 0, the 4-byte sha512_256-based ARC-4 selector. AVM
-	// selectors are sha512_256 BY DESIGN project-wide (router dispatch, encodeCall,
-	// MethodConstant, ARC-28 events; accepted design divergence from EVM keccak —
-	// only the Error/Panic revert magics stay EVM-literal), so asm reads of
-	// calldata bytes 0-3 must see the SAME selector the router matched, not a
-	// keccak value nothing else in the system uses. Guarded by NumAppArgs > 0
-	// (bzero(4) during construction / bare calls where no args exist).
+	// __cd_blob selector slot starts with the runtime ARC-4 selector. The opt-in
+	// selector policy translates known routes to their Solidity keccak selector
+	// before inline assembly observes calldata bytes 0..3. Guarded by
+	// NumAppArgs > 0 (bzero(4) during construction / bare calls).
 	auto numArgs = awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), _loc);
 	auto hasArgs = awst::makeNumericCompare(
 		std::move(numArgs), awst::NumericComparison::Gt, u64Const(0), _loc);
-	auto selectorBytes = awst::makeConditional(
+	std::shared_ptr<awst::Expression> selectorBytes = awst::makeConditional(
 		std::move(hasArgs), awst::makeAppArg(0, _loc), bzeroOf(u64Const(4)),
 		awst::WType::bytesType(), _loc);
+	if (m_typeMapper.profile().evmSelectors)
+		selectorBytes = SelectorSemantics::translateRuntimeSelector(
+			std::move(selectorBytes), m_selectorRoutes, _loc);
 	_out.push_back(awst::makeAssignmentStatement(
 		bytesVar(CD_BLOB_VAR), std::move(selectorBytes), _loc));
 

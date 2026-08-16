@@ -5,8 +5,8 @@
 namespace puyasol::builder::sol_ast
 {
 
-/// f.selector, E.selector → keccak256("Name(type1,...)")[:4].
-/// Handles function selectors, event selectors, and ternary distribution.
+/// f.selector, Error.selector, and Event.selector. Compatibility mode exposes
+/// ARC-4/ARC-28 identities; --evm-selectors exposes Solidity keccak identities.
 class SolSelectorAccess: public SolMemberAccess
 {
 public:
@@ -14,7 +14,7 @@ public:
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:
-	/// ARC-4 sha512_256 selector (TEAL `method "sig"`) as bytes4.
+	/// Policy-selected selector as bytes4.
 	std::shared_ptr<awst::Expression> makeSelectorExpr(std::string const& _sig);
 
 	/// Resolve canonical sig from a sub-expression (for ternary distribution).

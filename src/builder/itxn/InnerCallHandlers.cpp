@@ -307,7 +307,7 @@ std::string solTypeToArc4ParamName(
 	// Aggregates AND exotics (fn pointers, contracts): nestedArc4Name recurses the
 	// former and falls back to the callee-published ARC4 mapping for the latter —
 	// `toString(true)` here produced "function () external" where puya registers
-	// "byte[12]", an unroutable selector.
+	// the profile-selected function-pointer byte array, an unroutable selector.
 	return nestedArc4Name(_ctx, _type);
 }
 

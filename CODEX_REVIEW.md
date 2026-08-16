@@ -149,13 +149,17 @@ from EVM slot placement, then use solc metadata for both modes.
 
 ### Solidity semantics versus AVM transport
 
-7. **Outstanding — separate Solidity selectors from ARC-4 routing selectors.**
-   Solidity-visible function/event selectors and interface IDs currently use
-   ARC-4 identities because the AVM router uses them. solc already exposes
-   `externalSignature`, `externalIdentifier`, and keccak interface selectors.
-   Solidity expressions should retain Solidity/EVM values while an explicit
-   transport layer maps them to ARC-4 routing. This is migration-sensitive but
-   improves replay fidelity and removes manual signature fallbacks.
+7. **Done behind `--evm-selectors` — separate Solidity selectors from ARC-4
+   routing selectors.** The default selector behavior remains compatible. With the
+   flag, function/error selectors, full event selectors, interface IDs,
+   `abi.encodeCall`, `abi.encodeWithSignature`, `msg.sig`, and synthetic
+   calldata use solc/keccak identities, while `ApplicationArgs[0]` continues to
+   use the ARC-4 route. A contract-local transport map translates inbound
+   routes at Solidity-observable boundaries. External function pointers carry
+   both selectors in the flagged profile (16 bytes instead of 12), so typed
+   calls still route correctly. Opaque low-level selector values cannot be
+   translated without the callee ABI and retain their existing best-effort
+   behavior.
 
 8. **Outstanding — centralize unsupported-feature policy.** Some unsupported
    EVM values still compile to plausible constants
@@ -209,4 +213,5 @@ solc types in lowered expressions and use `ConversionPlan` through return and
 ABI-call boundaries, isolate the selected solc Yul APIs behind the facade, and
 make parameter-mutation summaries contract-aware. The optional cleanup also
 split native/EVM storage dispatch and removed the final effect-buffer adapter.
-Items 4, 7, 8, and 9 remain proposals only.
+Item 7 is now implemented behind the compatibility-preserving
+`--evm-selectors` flag. Items 4, 8, and 9 remain proposals only.

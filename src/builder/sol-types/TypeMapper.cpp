@@ -153,9 +153,11 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	case Type::Category::Function:
 	{
 		auto const* funcType = dynamic_cast<FunctionType const*>(_solType);
-		// External/DelegateCall → 12-byte (appId, selector); else → uint64 dispatch ID.
+		// External/DelegateCall carries appId + routing selector. The opt-in
+		// selector mode adds the Solidity selector as a separate field.
 		if (isExternalFunctionPointer(funcType))
-			result = createType<awst::BytesWType>(12);
+			result = createType<awst::BytesWType>(
+				externalFunctionPointerWidth(m_profile));
 		else
 			result = awst::WType::uint64Type();
 		break;

@@ -86,6 +86,9 @@ void printUsage(char const* _progName)
 		<< "  --no-output-logs       Disable writing compilation logs to output directory\n"
 		<< "  --via-yul-behavior     Emulate Solidity's viaIR/compileViaYul codegen semantics\n"
 		<< "                         (separate subroutines per modifier, fresh vars per _ invocation)\n"
+		<< "  --evm-selectors        Expose keccak-based Solidity function/event selectors,\n"
+		<< "                         interface IDs, msg.sig, and selector-bearing ABI values.\n"
+		<< "                         ARC-4 selectors remain the AVM routing identity.\n"
 		<< "  --evm-version <name>   EVM version for the Solidity parser. Accepts the same\n"
 		<< "                         names solc supports: homestead..osaka. Default: cancun.\n"
 		<< "  --fn-split <spec>      Slice a subroutine's body into pieces. Repeatable.\n"
@@ -203,6 +206,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.outputLogs = false;
 		else if (arg == "--via-yul-behavior")
 			opts.viaYulBehavior = true;
+		else if (arg == "--evm-selectors")
+			opts.evmSelectors = true;
 		else if (arg == "--evm-version" && i + 1 < _argc)
 			opts.evmVersion = _argv[++i];
 		else if (arg == "--deploy-pure-helpers")

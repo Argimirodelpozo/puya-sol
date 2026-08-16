@@ -182,7 +182,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			std::move(base), std::move(_result), elemType, m_loc);
 	};
 
-	// External fn-ptr params: bytes[12] (appId+selector); dispatch handles them.
+	// External fn-ptr params use the profile-selected dual-purpose byte layout;
+	// dispatch handles them.
 
 	auto call = awst::makeSubroutineCall(std::move(_target), _returnType, m_loc);
 	ParameterMutationSummary const* mutations = nullptr;
@@ -853,11 +854,9 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveIdentifierCall(
 
 			if (isInternal || isExternal)
 			{
-				// External fn-ptrs: bytes[12] (appId 8 + selector 4)
-				static awst::BytesWType s_extFnPtrType(12);
 				awst::WType const* ptrWType = isInternal
 					? awst::WType::uint64Type()
-					: &s_extFnPtrType;
+					: m_ctx.typeMapper.map(funcType);
 
 				std::shared_ptr<awst::Expression> ptrExpr;
 				if (varDecl->isStateVariable())
@@ -1108,7 +1107,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 			if (funcType && isStructField)
 			{
 				auto baseExpr = m_ctx.buildExpr(_memberAccess.expression());
-				auto* ptrNativeType = eb::FunctionPointerBuilder::mapFunctionType(funcType);
+				auto* ptrNativeType = eb::FunctionPointerBuilder::mapFunctionType(
+					m_ctx, funcType);
 				std::shared_ptr<awst::Expression> ptrExpr;
 				if (baseExpr->wtype && baseExpr->wtype->kind() == awst::WTypeKind::ARC4Struct)
 				{
@@ -1201,7 +1201,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 				|| isExternalFunctionPointer(funcType)))
 		{
 			auto ptrExpr = m_ctx.buildExpr(funcExpr);
-			auto* wantedType = eb::FunctionPointerBuilder::mapFunctionType(funcType);
+			auto* wantedType = eb::FunctionPointerBuilder::mapFunctionType(
+				m_ctx, funcType);
 			// Shape-compare (not pointer): TypeMapper/FunctionPointerBuilder
 			// may create distinct BytesWType instances for the same shape.
 			auto shapeMatches = [](awst::WType const* _a, awst::WType const* _b) {
@@ -1218,7 +1219,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::toAwst()
 			};
 			if (ptrExpr && !shapeMatches(ptrExpr->wtype, wantedType))
 			{
-				// Coerce ARC4-encoded fn-ptr to native ptr type (uint64 or bytes[12]).
+				// Coerce ARC4-encoded fn-ptr to its native profile-selected type.
 				auto const* srcKind = ptrExpr->wtype;
 				bool srcIsArc4 = srcKind
 					&& (srcKind->kind() == awst::WTypeKind::ARC4UIntN

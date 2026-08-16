@@ -2,6 +2,7 @@
 /// Yul statement translation: variable declarations, assignments, expression statements, function definitions.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/sol-types/FunctionPointerKind.h"
 #include "awst/NameGen.h"
 #include "Logger.h"
 
@@ -255,7 +256,7 @@ void AssemblyBuilder::buildAssignment(
 	}
 
 	// fn-ptr writes: fp.selector := expr / fp.address := expr
-	// → replace3 the 4- or 8-byte slice of the 12-byte fn-ptr local.
+	// → replace3 the public selector/address slice of the profile-selected layout.
 	{
 		auto dotIdx = name.rfind('.');
 		if (dotIdx != std::string::npos && _assign.value)
@@ -293,7 +294,9 @@ void AssemblyBuilder::buildAssignment(
 				if (fullIt != m_locals.end())
 				{
 					auto const* bwt = dynamic_cast<awst::BytesWType const*>(fullIt->second);
-					if (bwt && bwt->length().has_value() && *bwt->length() == 12)
+					if (bwt && bwt->length().has_value()
+						&& *bwt->length() == externalFunctionPointerWidth(
+							m_typeMapper.profile()))
 					{
 						auto rhs = buildExpression(*_assign.value);
 						drainPendingStatements(_out);
@@ -302,6 +305,14 @@ void AssemblyBuilder::buildAssignment(
 
 						int sliceWidth = (suffix == "selector") ? 4 : 8;
 						int sliceOffset = (suffix == "selector") ? 8 : 0;
+						if (suffix == "selector"
+							&& m_typeMapper.profile().evmSelectors)
+							Logger::instance().warning(
+								"inline assembly assignment to an external function "
+								"pointer selector updates its Solidity selector but "
+								"retains the original ARC-4 routing selector; an "
+								"arbitrary selector cannot be mapped without the "
+								"callee ABI", loc);
 
 						// Slice to exactly sliceWidth bytes:
 						// - bytes/account: take low sliceWidth bytes (EVM right-aligns addresses).

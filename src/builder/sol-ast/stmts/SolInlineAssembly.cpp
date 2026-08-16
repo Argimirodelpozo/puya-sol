@@ -2,6 +2,7 @@
 /// Migrated from InlineAssemblyBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
+#include "builder/SelectorSemantics.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/assembly/AssemblyBuilder.h"
@@ -534,6 +535,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	asmTranslator.setCalldataStaticPtrNames(std::move(calldataStaticPtrNames));
 	asmTranslator.setSlotRoutes(std::move(slotRoutes), std::move(slotDataRegions));
 	asmTranslator.setSignedParamBits(std::move(signedParamBits));
+	asmTranslator.setSelectorRoutes(
+		builder::SelectorSemantics::routes(m_blk.builderCtx()));
 	auto stmts = asmTranslator.buildBlock(
 		m_node.operations().root(),
 		m_node.dialect(),

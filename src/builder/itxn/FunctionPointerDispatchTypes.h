@@ -19,7 +19,7 @@ awst::WType const* computeReturnType(ContractContext& _ctx, solidity::frontend::
 /// For a public/external target, compute the ARC4 WType for the AWST parameter,
 /// mirroring ContractBuilder's param remap:
 ///   - biguint → arc4.uintN (preserving bit width)
-///   - bytes[12] FunctionType param → arc4.static_array<arc4.uint8, 12>
+///   - bytes[N] FunctionType param → arc4.static_array<arc4.uint8, N>
 ///   - other → nullptr (no wrapping).
 awst::WType const* dispatchPublicArgArc4Type(
 	TypeMapper& _typeMapper,

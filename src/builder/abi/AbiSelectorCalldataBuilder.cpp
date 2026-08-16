@@ -1,5 +1,6 @@
 #include "builder/abi/AbiSelectorCalldataBuilder.h"
 #include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/SelectorSemantics.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/itxn/InnerCallHandlers.h"
@@ -25,24 +26,28 @@ std::unique_ptr<InstanceBuilder> handleEncodeCall(
 		targetFuncDef = dynamic_cast<FunctionDefinition const*>(&fnType->declaration());
 
 	// Compile-time selector when we have a function definition; otherwise
-	// runtime-extract from the fn-ptr value (external fn-ptrs are encoded
-	// as 12 bytes: itob(appId, 8) ++ selector(4)).
+	// runtime-extract the Solidity-visible selector from the fn-ptr value. It is
+	// always bytes 8..12; the flagged 16-byte layout appends an ARC-4 route.
 	std::shared_ptr<awst::Expression> selector;
 	if (targetFuncDef)
 	{
-		selector = awst::makeMethodConstant(
-			InnerCallHandlers::buildMethodSelector(_ctx, targetFuncDef), awst::WType::bytesType(), _loc);
+		auto const* externalType = fnType
+			? fnType : targetFuncDef->functionType(false);
+		if (!externalType)
+			return nullptr;
+		selector = builder::SelectorSemantics::functionSelector(
+			_ctx, *externalType,
+			InnerCallHandlers::buildMethodSelector(_ctx, targetFuncDef), _loc);
 	}
 	else if (fnType && fnType->kind() == FunctionType::Kind::External)
 	{
 		auto fnVal = _ctx.buildExpr(targetFnExpr);
 		if (!fnVal)
 			return nullptr;
-		// Coerce fn-ptr value to plain bytes (it's typed as bytes[12] at the
-		// AWST level for external fn-ptrs).
+		// Coerce the profile-sized external fn-ptr value to plain bytes.
 		if (fnVal->wtype && fnVal->wtype->kind() == awst::WTypeKind::Bytes)
 			fnVal = awst::makeAsBytes(std::move(fnVal), _loc);
-		// Extract bytes 8..12 (the 4-byte selector at the tail).
+		// Extract the public Solidity selector field at bytes 8..12.
 		selector = awst::makeExtract(std::move(fnVal), 8, 4, _loc);
 	}
 	else
@@ -145,22 +150,21 @@ std::unique_ptr<InstanceBuilder> handleEncodeWithSignature(
 
 	std::vector<std::shared_ptr<awst::Expression>> parts;
 
-	// sha512_256 ARC-4 selector, matching what puya-sol routers dispatch on
-	// (and encodeCall/f.selector/events/custom errors). EVM Solidity uses
-	// keccak256 here — on the AVM that selector matches nothing; see
-	// EVM_DIVERGENCE.md "Encoding model". Literal signatures fold to a
-	// compile-time MethodConstant; runtime signature strings hash with the
-	// native sha512_256 opcode (same first-4-bytes rule).
+	// Compatibility mode preserves the ARC-4 selector. --evm-selectors gives
+	// abi.encodeWithSignature its Solidity keccak header; recognised low-level
+	// call shapes translate back to ARC-4 at the transport boundary.
 	if (auto const* sigLit = dynamic_cast<solidity::frontend::Literal const*>(args[0].get()))
 	{
-		parts.push_back(awst::makeMethodConstant(
-			sigLit->value(), awst::WType::bytesType(), _loc));
+		parts.push_back(builder::SelectorSemantics::signatureSelector(
+			_ctx, sigLit->value(), _loc));
 	}
 	else
 	{
 		auto sigExpr = _ctx.buildExpr(*args[0]);
 		auto hash = awst::makeIntrinsicCall(
-			"sha512_256", awst::WType::bytesType(), _loc);
+			builder::SelectorSemantics::enabled(_ctx.typeMapper)
+				? "keccak256" : "sha512_256",
+			awst::WType::bytesType(), _loc);
 		hash->stackArgs.push_back(std::move(sigExpr));
 		parts.push_back(awst::makeExtract(std::move(hash), 0, 4, _loc));
 	}

@@ -388,14 +388,14 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				continue;
 			}
 
-			// Remap aggregate types and external fn-ptr bytes[12] to ARC4.
+			// Remap aggregate types and profile-sized external fn-ptrs to ARC4.
 			// General bytes/bytes[N] params are NOT remapped.
 			bool isAggregate = arg.wtype
 				&& (arg.wtype->kind() == awst::WTypeKind::ReferenceArray
 					|| arg.wtype->kind() == awst::WTypeKind::ARC4StaticArray
 					|| arg.wtype->kind() == awst::WTypeKind::ARC4DynamicArray
 					|| arg.wtype->kind() == awst::WTypeKind::WTuple);
-			if (!isAggregate && pi < solParams.size()) // external fn-ptr bytes[12]
+			if (!isAggregate && pi < solParams.size()) // external fn-ptr bytes[N]
 			{
 				if (dynamic_cast<solidity::frontend::FunctionType const*>(solParams[pi]->type())
 					&& arg.wtype && arg.wtype->kind() == awst::WTypeKind::Bytes)
