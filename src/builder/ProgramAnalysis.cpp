@@ -178,6 +178,7 @@ ProgramAnalysis ProgramAnalysis::analyze(
 
 	std::set<Type const*> seen;
 	for (auto const& sourceName: _compiler.sourceNames())
+	{
 		for (auto const* contract:
 			ASTNode::filteredNodes<ContractDefinition>(_compiler.ast(sourceName).nodes()))
 		{
@@ -193,6 +194,7 @@ ProgramAnalysis ProgramAnalysis::analyze(
 					*contract, (*contract->annotation().deployedCallGraph).get(),
 					result);
 		}
+	}
 
 	forEachFunction(_compiler, [&](FunctionDefinition const* function,
 		ContractDefinition const* contract) {

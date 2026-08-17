@@ -6,6 +6,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
+#include <string_view>
 
 namespace fs = boost::filesystem;
 
@@ -54,6 +55,54 @@ int parseBoundedInt(
 	}
 	return static_cast<int>(value);
 }
+
+std::string parseUint256Decimal(
+	std::string const& _opt, std::string const& _value)
+{
+	if (_value.empty()
+		|| _value.find_first_not_of("0123456789") != std::string::npos)
+	{
+		std::cerr << "Error: " << _opt << " expects a decimal uint256, got '"
+			<< _value << "'" << std::endl;
+		std::exit(2);
+	}
+	auto first = _value.find_first_not_of('0');
+	std::string normalized = first == std::string::npos ? "0" : _value.substr(first);
+	static constexpr std::string_view maxU256 =
+		"115792089237316195423570985008687907853269984665640564039457584007913129639935";
+	if (normalized.size() > maxU256.size()
+		|| (normalized.size() == maxU256.size() && normalized > maxU256))
+	{
+		std::cerr << "Error: " << _opt << " value exceeds uint256: '"
+			<< _value << "'" << std::endl;
+		std::exit(2);
+	}
+	return normalized;
+}
+
+std::string parseAddressHex(std::string const& _opt, std::string value)
+{
+	if (value.starts_with("0x") || value.starts_with("0X"))
+		value.erase(0, 2);
+	if (value.size() != 40)
+	{
+		std::cerr << "Error: " << _opt
+			<< " expects exactly 20 address bytes (40 hex digits), got '"
+			<< value << "'" << std::endl;
+		std::exit(2);
+	}
+	for (char& c: value)
+	{
+		if (!std::isxdigit(static_cast<unsigned char>(c)))
+		{
+			std::cerr << "Error: " << _opt << " expects a hex address, got '"
+				<< value << "'" << std::endl;
+			std::exit(2);
+		}
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	}
+	return value;
+}
 } // namespace
 
 void printUsage(char const* _progName)
@@ -91,6 +140,12 @@ void printUsage(char const* _progName)
 		<< "                         ARC-4 selectors remain the AVM routing identity.\n"
 		<< "  --evm-version <name>   EVM version for the Solidity parser. Accepts the same\n"
 		<< "                         names solc supports: homestead..osaka. Default: cancun.\n"
+		<< "  --evm-chain-id <N>     Compile-time uint256 returned by block.chainid. Without\n"
+		<< "                         it, GenesisHash is used as an AVM network identity.\n"
+		<< "  --evm-block-gas-limit <N> Compile-time uint256 returned by block.gaslimit.\n"
+		<< "                         Without it, current OpcodeBudget is used.\n"
+		<< "  --evm-coinbase <addr>  Compile-time 20-byte hex block.coinbase value. Required\n"
+		<< "                         by sources that read coinbase; AVM has no native analog.\n"
 		<< "  --fn-split <spec>      Slice a subroutine's body into pieces. Repeatable.\n"
 		<< "                         Format: <SubName>:<idx>,<idx>,...:g<N>[:cross]\n"
 		<< "                           SubName  — name of the awst::Subroutine to split\n"
@@ -210,6 +265,12 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.evmSelectors = true;
 		else if (arg == "--evm-version" && i + 1 < _argc)
 			opts.evmVersion = _argv[++i];
+		else if (arg == "--evm-chain-id" && i + 1 < _argc)
+			opts.evmChainId = parseUint256Decimal(arg, _argv[++i]);
+		else if (arg == "--evm-block-gas-limit" && i + 1 < _argc)
+			opts.evmBlockGasLimit = parseUint256Decimal(arg, _argv[++i]);
+		else if (arg == "--evm-coinbase" && i + 1 < _argc)
+			opts.evmCoinbase = parseAddressHex(arg, _argv[++i]);
 		else if (arg == "--deploy-pure-helpers")
 			opts.deployPureHelpers = true;
 		else if (arg == "--force-inline-sub" && i + 1 < _argc)

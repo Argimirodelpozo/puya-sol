@@ -9,8 +9,8 @@ namespace puyasol::builder::sol_ast
 /// Built-in function calls: keccak256, sha256, addmod, mulmod, gasleft,
 /// selfdestruct, blockhash, ecrecover.
 ///
-/// Delegates to BuiltinCallableRegistry for most, handles blockhash inline
-/// (AVM-specific: maps to block BlkSeed).
+/// Delegates to BuiltinCallableRegistry for most and rejects blockhash when its
+/// EVM semantics cannot be represented faithfully on AVM.
 class SolBuiltinCall: public SolFunctionCall
 {
 public:

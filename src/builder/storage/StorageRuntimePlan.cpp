@@ -39,11 +39,7 @@ StorageRuntimePlan StorageRuntimePlan::analyze(
 {
 	StorageRuntimePlan result;
 	result.evmLayout = _typeMapper.profile().evmStorageLayout;
-	result.dispatchLayout.computeLayout(
-		_contract, _typeMapper,
-		result.evmLayout
-			? StorageLayoutSource::SolidityCanonical
-			: StorageLayoutSource::LegacyDispatch);
+	result.solidityLayout.computeLayout(_contract, _typeMapper);
 
 	auto const& asmCallables = _typeMapper.analysis().callablesWithStorageAssembly;
 	forEachDefinedFunction(_contract, [&](auto const* _function) {
@@ -70,12 +66,12 @@ StorageRuntimePlan StorageRuntimePlan::analyze(
 	result.requiresSparseSlots = result.containsInlineAssembly;
 
 	// Packed addresses use a keccak-derived shadow slot for their high bytes.
-	for (auto const& variable: result.dispatchLayout.variables())
+	for (auto const& variable: result.solidityLayout.variables())
 	{
 		if (variable.slot >= solidity::u256(kEvmDenseSlotLimit))
 			result.requiresSparseSlots = true;
 		if (variable.wtype == awst::WType::accountType() && variable.byteSize == 20)
-			if (auto const* slot = result.dispatchLayout.getSlotInfo(variable.slot);
+			if (auto const* slot = result.solidityLayout.getSlotInfo(variable.slot);
 				slot && slot->variableIndices.size() > 1)
 				result.requiresSparseSlots = true;
 	}

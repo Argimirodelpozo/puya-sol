@@ -1,6 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
 #include "builder/contract/StorageDispatchSupport.h"
-#include "builder/contract/StateVarWalker.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/StorageMapper.h"
@@ -20,7 +19,6 @@
 namespace puyasol::builder
 {
 void ContractBuilder::buildStorageDispatch(
-	solidity::frontend::ContractDefinition const& _contract,
 	StorageRuntimePlan const& _storagePlan,
 	awst::Contract* _contractNode,
 	std::string const& _contractName
@@ -32,7 +30,7 @@ void ContractBuilder::buildStorageDispatch(
 		return;
 	}
 
-	auto const& layout = _storagePlan.dispatchLayout;
+	auto const& layout = _storagePlan.solidityLayout;
 	std::string cref = m_sourceFile + "." + _contractName;
 	awst::SourceLocation loc;
 	loc.file = m_sourceFile;
@@ -44,6 +42,18 @@ void ContractBuilder::buildStorageDispatch(
 
 	auto makeBytes = [&](std::string const& s) {
 		return awst::makeUtf8BytesConstant(s, loc);
+	};
+	auto storageName = [&](SlotVariable const* variable) {
+		if (!variable)
+			return std::string{};
+		return variable->declaration
+			? m_storageMapper.physicalBindingFor(*variable->declaration).name
+			: variable->name;
+	};
+	auto usesBoxStorage = [&](SlotVariable const* variable) {
+		return variable && variable->declaration
+			&& m_storageMapper.physicalBindingFor(*variable->declaration).kind
+				== awst::AppStorageKind::Box;
 	};
 
 	// EVM slot arithmetic wraps mod 2^256 (boundary fixtures repoint an array to
@@ -75,7 +85,7 @@ void ContractBuilder::buildStorageDispatch(
 	// (typed cell read → SlotWordCodec).
 	auto packedFieldBytes = [&](SlotVariable const* v) -> std::shared_ptr<awst::Expression> {
 		auto read = m_storageMapper.createStateRead(
-			v->name, v->wtype, awst::AppStorageKind::AppGlobal, loc);
+			storageName(v), v->wtype, awst::AppStorageKind::AppGlobal, loc);
 		return SlotWordCodec::nativeToPackedBytes(std::move(read), v->wtype, v->byteSize, loc);
 	};
 
@@ -131,25 +141,14 @@ void ContractBuilder::buildStorageDispatch(
 			if (!native)
 				continue;   // codec errored loudly
 
-			auto key = awst::makeUtf8BytesConstant(v->name, loc, awst::WType::stateKeyType());
+			auto key = awst::makeUtf8BytesConstant(
+				storageName(v), loc, awst::WType::stateKeyType());
 			auto target = awst::makeAppStateExpression(std::move(key), v->wtype, loc);
 			auto assign = awst::makeAssignmentExpression(
 				std::move(target), std::move(native), loc, v->wtype);
 			_blk.body.push_back(awst::makeExpressionStatement(std::move(assign), loc));
 		}
 	};
-
-	// State vars stored as BOXES (structs with dynamic members etc.) vs
-	// app-globals — struct-slot routing needs the right cell either way.
-	std::map<std::string, bool> boxVars;
-	std::map<std::string, solidity::frontend::StructType const*> structVars;
-	forEachStateVar(_contract, [&](auto const* var)
-	{
-		if (!var || var->isConstant() || var->immutable()) return;
-		boxVars[var->name()] = m_storageMapper.shouldUseBoxStorage(*var);
-		if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(var->type()))
-			structVars[var->name()] = st;
-	});
 
 	// Can SlotWordCodec handle this field? Leaf scalars only — array/struct/
 	// mapping members occupy their own slots (solc storageBytes==32 for them),
@@ -174,16 +173,18 @@ void ContractBuilder::buildStorageDispatch(
 
 	// Read the struct var's cell (typed).
 	auto structCellRead = [&](SlotVariable const* v) -> std::shared_ptr<awst::Expression> {
-		if (boxVars[v->name])
+		auto name = storageName(v);
+		if (usesBoxStorage(v))
 			return StorageMapper::makeStateGetWithDefault(
-				StorageMapper::makeTopLevelBoxExpr(v->name, v->wtype, loc), v->wtype, loc);
+				StorageMapper::makeTopLevelBoxExpr(name, v->wtype, loc), v->wtype, loc);
 		return m_storageMapper.createStateRead(
-			v->name, v->wtype, awst::AppStorageKind::AppGlobal, loc);
+			name, v->wtype, awst::AppStorageKind::AppGlobal, loc);
 	};
 	auto structCellTarget = [&](SlotVariable const* v) -> std::shared_ptr<awst::Expression> {
-		if (boxVars[v->name])
-			return StorageMapper::makeTopLevelBoxExpr(v->name, v->wtype, loc);
-		auto key = awst::makeUtf8BytesConstant(v->name, loc, awst::WType::stateKeyType());
+		auto name = storageName(v);
+		if (usesBoxStorage(v))
+			return StorageMapper::makeTopLevelBoxExpr(name, v->wtype, loc);
+		auto key = awst::makeUtf8BytesConstant(name, loc, awst::WType::stateKeyType());
 		return awst::makeAppStateExpression(std::move(key), v->wtype, loc);
 	};
 
@@ -256,14 +257,15 @@ void ContractBuilder::buildStorageDispatch(
 			// from the fields living there. One compare per internal slot whose
 			// field group the codec fully supports; others keep the fallback.
 			if (vars.size() == 1)
-				if (auto stIt = structVars.find(vars[0]->name); stIt != structVars.end())
+				if (auto const* structType = dynamic_cast<
+						solidity::frontend::StructType const*>(vars[0]->solType))
 				{
 					auto const* structW = dynamic_cast<awst::ARC4Struct const*>(vars[0]->wtype);
 					if (structW)
 					{
-						auto fields = SlotHandleAccess::fieldPositions(stIt->second, structW);
-						unsigned stride = static_cast<unsigned>(stIt->second->storageSize() > 64
-							? 64 : static_cast<unsigned>(stIt->second->storageSize()));
+						auto fields = SlotHandleAccess::fieldPositions(structType, structW);
+						unsigned stride = static_cast<unsigned>(structType->storageSize() > 64
+							? 64 : static_cast<unsigned>(structType->storageSize()));
 						for (unsigned k = 0; k < stride; ++k)
 						{
 							std::vector<SlotHandleAccess::FieldPos const*> group;
@@ -327,7 +329,7 @@ void ContractBuilder::buildStorageDispatch(
 				// Full-slot single var (or box-backed dynamic root): raw cell bytes
 				// low-aligned into the word — the pre-packing behavior, unchanged.
 				auto get = awst::makeIntrinsicCall("app_global_get", awst::WType::bytesType(), loc);
-				get->stackArgs.push_back(makeBytes(vars[0]->name));
+				get->stackArgs.push_back(makeBytes(storageName(vars[0])));
 
 				// Left-pad + take last 32 bytes (global slots may be <32 for short ints).
 				auto cat = awst::makeLeftPad(std::move(get), 32, loc);
@@ -430,14 +432,15 @@ void ContractBuilder::buildStorageDispatch(
 			// STRUCT state var (see the read side): split the stored word into
 			// the slot's fields via COW on the typed cell.
 			if (vars.size() == 1)
-				if (auto stIt = structVars.find(vars[0]->name); stIt != structVars.end())
+				if (auto const* structType = dynamic_cast<
+						solidity::frontend::StructType const*>(vars[0]->solType))
 				{
 					auto const* structW = dynamic_cast<awst::ARC4Struct const*>(vars[0]->wtype);
 					if (structW)
 					{
-						auto fields = SlotHandleAccess::fieldPositions(stIt->second, structW);
-						unsigned stride = static_cast<unsigned>(stIt->second->storageSize() > 64
-							? 64 : static_cast<unsigned>(stIt->second->storageSize()));
+						auto fields = SlotHandleAccess::fieldPositions(structType, structW);
+						unsigned stride = static_cast<unsigned>(structType->storageSize() > 64
+							? 64 : static_cast<unsigned>(structType->storageSize()));
 						for (unsigned k = 0; k < stride; ++k)
 						{
 							std::vector<SlotHandleAccess::FieldPos const*> group;
@@ -522,7 +525,8 @@ void ContractBuilder::buildStorageDispatch(
 				auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
 
 				auto extract = awst::makeExtract3(cat, std::move(sub32), makeUint64("32"), loc);
-				auto put = awst::makeAppGlobalPut(makeBytes(vars[0]->name), std::move(extract), loc);
+				auto put = awst::makeAppGlobalPut(
+					makeBytes(storageName(vars[0])), std::move(extract), loc);
 
 				auto stmt = awst::makeExpressionStatement(std::move(put), loc);
 				ifBlock->body.push_back(std::move(stmt));

@@ -2,11 +2,11 @@
 /// msg.sender, block.timestamp, block.prevrandao, block.difficulty, etc.
 
 #include "builder/sol-ast/members/SolIntrinsicAccess.h"
+#include "builder/EvmFeaturePolicy.h"
 #include "builder/SelectorSemantics.h"
 #include "builder/sol-intrinsics/IntrinsicMapper.h"
 #include "builder/sol-types/TypeMapper.h"
-#include "Logger.h"
-
+#include <cctype>
 #include <vector>
 
 namespace puyasol::builder::sol_ast
@@ -20,25 +20,27 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	std::string baseName = baseId->name();
 	std::string member = memberName();
 
-	// block.chainid → 1 (no per-chain id on AVM). Warn: the constant 1 is
-	// folded into EIP-712/permit domain separators on every Algorand network,
-	// enabling cross-network replay. Use `global GenesisHash` in assembly instead.
+	auto const& profile = m_ctx.typeMapper.profile();
+
+	// An explicitly configured EVM chain id is exact for replay. Otherwise use
+	// GenesisHash as the AVM-native network identity instead of a plausible
+	// fixed integer shared by every Algorand network.
 	if (baseName == "block" && member == "chainid")
 	{
-		Logger::instance().warning(
-			"block.chainid returns the constant 1 on AVM (no per-chain id). "
-			"EIP-712/permit domain separators will be identical across Algorand "
-			"networks — signatures may be replayable cross-network. Read global "
-			"GenesisHash in assembly to distinguish networks.", m_loc);
-		auto c = awst::makeOne(m_loc, awst::WType::biguintType());
-		return c;
+		builder::EvmFeaturePolicy::report(
+			builder::EvmFeature::BlockChainId, profile, m_loc);
+		if (profile.evmChainId)
+			return awst::makeIntegerConstant(
+				*profile.evmChainId, m_loc, awst::WType::biguintType());
+		return awst::makeAsBiguint(
+			awst::makeGlobal("GenesisHash", awst::WType::bytesType(), m_loc), m_loc);
 	}
 
 	// block.difficulty → 0 (no PoW on Algorand)
 	if (baseName == "block" && member == "difficulty")
 	{
-		Logger::instance().warning(
-			"block.difficulty returns 0 on AVM — Algorand has no proof-of-work.", m_loc);
+		builder::EvmFeaturePolicy::report(
+			builder::EvmFeature::BlockDifficulty, profile, m_loc);
 		auto zero = awst::makeZero(m_loc, awst::WType::biguintType());
 		return zero;
 	}
@@ -47,40 +49,92 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	// AVM has a flat per-txn fee (~1000 microAlgos); no EIP-1559 or blob pricing.
 	if (baseName == "block" && (member == "basefee" || member == "blobbasefee"))
 	{
-		Logger::instance().warning(
-			"block." + member + " returns 0 on AVM — no EIP-1559 base fee concept.", m_loc);
+		builder::EvmFeaturePolicy::report(
+			member == "basefee" ? builder::EvmFeature::BlockBaseFee
+				: builder::EvmFeature::BlockBlobBaseFee,
+			profile, m_loc);
 		auto zero = awst::makeZero(m_loc, awst::WType::biguintType());
 		return zero;
 	}
 
-	// block.gaslimit → 70000 sentinel. AVM has no gas (fixed opcode budget:
-	// 700/call, poolable across a 16-txn group). 70000 prevents premature
-	// abort in gaslimit-based Solidity loops.
+	// Use an explicit replay value when supplied; otherwise OpcodeBudget is an
+	// honest AVM adaptation. Never invent a loop-friendly gas sentinel.
 	if (baseName == "block" && member == "gaslimit")
 	{
-		Logger::instance().warning(
-			"block.gaslimit returns 70000 on AVM — no direct analog for EVM block gas limit.", m_loc);
-		auto val = awst::makeIntegerConstant("70000", m_loc, awst::WType::biguintType());
-		return val;
+		builder::EvmFeaturePolicy::report(
+			builder::EvmFeature::BlockGasLimit, profile, m_loc);
+		if (profile.evmBlockGasLimit)
+			return awst::makeIntegerConstant(
+				*profile.evmBlockGasLimit, m_loc, awst::WType::biguintType());
+		return awst::makeAsBiguint(
+			awst::makeItob(awst::makeGlobal(
+				"OpcodeBudget", awst::WType::uint64Type(), m_loc), m_loc), m_loc);
 	}
 
 	// block.prevrandao → block BlkSeed (Round - 2)
 	if (baseName == "block" && member == "prevrandao")
 	{
-		Logger::instance().warning(
-			"block.prevrandao mapped to AVM block seed (BlkSeed) of previous round.", m_loc);
+		builder::EvmFeaturePolicy::report(
+			builder::EvmFeature::BlockPrevrandao, profile, m_loc);
 
+		// Round - 2, clamped: uint64 Sub panics on underflow and the first
+		// rounds of a fresh chain (create at round 1) would hard-panic.
 		auto round = awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), m_loc);
-
-		auto two = awst::makeIntegerConstant("2", m_loc);
-
-		auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two), m_loc);
+		auto isEarly = awst::makeNumericCompare(
+			awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), m_loc),
+			awst::NumericComparison::Lt,
+			awst::makeIntegerConstant("2", m_loc), m_loc);
+		auto prevRound = awst::makeConditional(
+			std::move(isEarly),
+			awst::makeZero(m_loc),
+			awst::makeUInt64BinOp(
+				std::move(round), awst::UInt64BinaryOperator::Sub,
+				awst::makeIntegerConstant("2", m_loc), m_loc),
+			awst::WType::uint64Type(), m_loc);
 
 		auto blockSeed = awst::makeBlock(
 			"BlkSeed", std::move(prevRound), awst::WType::bytesType(), m_loc);
 
 		auto cast = awst::makeAsBiguint(std::move(blockSeed), m_loc);
 		return cast;
+	}
+
+	if (baseName == "block" && member == "coinbase")
+	{
+		builder::EvmFeaturePolicy::report(
+			builder::EvmFeature::BlockCoinbase, profile, m_loc);
+		std::vector<uint8_t> value(32, 0);
+		if (profile.evmCoinbase)
+		{
+			auto nibble = [](char c) -> uint8_t {
+				if (c >= '0' && c <= '9') return static_cast<uint8_t>(c - '0');
+				return static_cast<uint8_t>(std::tolower(
+					static_cast<unsigned char>(c)) - 'a' + 10);
+			};
+			for (size_t i = 0; i < 20; ++i)
+				value[12 + i] = static_cast<uint8_t>(
+					(nibble((*profile.evmCoinbase)[2 * i]) << 4)
+					| nibble((*profile.evmCoinbase)[2 * i + 1]));
+		}
+		return awst::makeAsAccount(
+			awst::makeBytesConstant(std::move(value), m_loc), m_loc);
+	}
+
+	if (baseName == "tx" && member == "origin")
+	{
+		builder::EvmFeaturePolicy::report(
+			builder::EvmFeature::TxOrigin, profile, m_loc);
+		// Type-correct poison value; the logged error prevents emission.
+		return awst::makeTxn("Sender", awst::WType::accountType(), m_loc);
+	}
+
+	if (baseName == "tx" && member == "gasprice")
+	{
+		builder::EvmFeaturePolicy::report(
+			builder::EvmFeature::TxGasPrice, profile, m_loc);
+		return awst::makeAsBiguint(
+			awst::makeItob(awst::makeTxn(
+				"Fee", awst::WType::uint64Type(), m_loc), m_loc), m_loc);
 	}
 
 	// msg.value → GroupIndex > 0 ? gtxns Amount[GroupIndex-1] : 0
@@ -192,6 +246,10 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	if (intrinsic)
 	{
 		auto* solType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
+		if (intrinsic->wtype == awst::WType::uint64Type()
+			&& solType == awst::WType::biguintType())
+			return awst::makeAsBiguint(
+				awst::makeItob(std::move(intrinsic), m_loc), m_loc);
 		if (intrinsic->wtype == awst::WType::bytesType()
 			&& solType == awst::WType::biguintType())
 		{

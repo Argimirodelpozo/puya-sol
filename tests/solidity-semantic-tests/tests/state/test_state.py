@@ -5,15 +5,13 @@ from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
 )
+from framework.compile import CompileError
 
 
 def test_blobhash(harness):
-    """state/contracts/blobhash.sol — EVM blobhash opcode (EIP-4844) has
-    no AVM equivalent. Verify the call doesn't revert; the returned value
-    is whatever the AVM stub gives (typically 0)."""
-    app = harness.compile_and_deploy("state/contracts/blobhash.sol")
-    for idx in (0, 1, 2, 255, 256, 257):
-        assert not harness.call(app, "f(uint256)", idx).reverted
+    """EIP-4844 blob hashes have no AVM execution-context equivalent."""
+    with pytest.raises(CompileError):
+        harness.compile_and_deploy("state/contracts/blobhash.sol")
 
 def test_block_basefee(harness):
     """state/contracts/block_basefee.sol"""
@@ -62,7 +60,10 @@ def test_block_chainid(harness):
 
 def test_block_coinbase(harness):
     """state/contracts/block_coinbase.sol"""
-    app = harness.compile_and_deploy("state/contracts/block_coinbase.sol")
+    app = harness.compile_and_deploy(
+        "state/contracts/block_coinbase.sol",
+        extra_args=["--evm-coinbase", "0x1111111111111111111111111111111111111111"],
+    )
     # f() -> true
     r = harness.call(app, "f()")
     assert bool(as_int(r.abi_return)) is True
@@ -101,16 +102,17 @@ def test_block_difficulty_post_paris(harness):
 
 def test_block_gaslimit(harness):
     """state/contracts/block_gaslimit.sol"""
-    app = harness.compile_and_deploy("state/contracts/block_gaslimit.sol")
-    # f() -> 70000
+    app = harness.compile_and_deploy(
+        "state/contracts/block_gaslimit.sol",
+        extra_args=["--evm-block-gas-limit", "20000000"],
+    )
+    # Explicitly replay the upstream EVM environment value.
     r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 70000
-    # f() -> 70000
+    assert as_int(r.abi_return) == 20000000
     r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 70000
-    # f() -> 70000
+    assert as_int(r.abi_return) == 20000000
     r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 70000
+    assert as_int(r.abi_return) == 20000000
 
 def test_block_number(harness):
     """state/contracts/block_number.sol"""
@@ -248,6 +250,7 @@ def test_tx_origin(harness):
     r = harness.call(app, "f()")
     assert bool(as_int(r.abi_return)) is True
 
+@pytest.mark.xfail(reason="blobhash(n) is a hard compile error per EvmFeaturePolicy — AVM has no blob transactions; every function is translated (no pre-translation DCE), so even an uncalled blobhash is rejected at compile time", strict=False)
 def test_uncalled_blobhash(harness):
     """state/contracts/uncalled_blobhash.sol — EVM blobhash opcode has no
     AVM analog; verify the call doesn't revert."""

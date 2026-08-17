@@ -2,6 +2,7 @@
 /// Solidity builtin function implementations via the builder pattern.
 
 #include "builder/sol-eb/BuiltinCallables.h"
+#include "builder/EvmFeaturePolicy.h"
 #include "awst/NameGen.h"
 #include "builder/sol-eb/BigUIntMathHelpers.h"
 #include "builder/sol-eb/SolIntegerBuilder.h"
@@ -202,7 +203,11 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleGasleft(
 	std::vector<std::shared_ptr<awst::Expression>>& /*_args*/,
 	awst::SourceLocation const& _loc)
 {
-	auto e = awst::makeGlobal(std::string("OpcodeBudget"), awst::WType::uint64Type(), _loc);
+	EvmFeaturePolicy::report(
+		EvmFeature::GasLeft, _ctx.typeMapper.profile(), _loc);
+	auto e = awst::makeAsBiguint(
+		awst::makeItob(awst::makeGlobal(
+			std::string("OpcodeBudget"), awst::WType::uint64Type(), _loc), _loc), _loc);
 	return std::make_unique<GenericInstanceBuilder>(_ctx, std::move(e));
 }
 

@@ -227,16 +227,20 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 				// the Solidity length. No 2-byte ARC4 prefix is applied on
 				// write (see `bytes data; data = msg.data;` write path which
 				// drops raw bytes into the box), so don't subtract one here.
+				// Key by the physical binding, matching the write paths —
+				// colliding inherited declarations diverge from the raw name.
+				auto const boxName =
+					m_ctx.storageMapper.physicalBindingFor(*varDecl).name;
 				if (arrType->isByteArrayOrString())
 				{
-					auto boxKey = awst::makeUtf8BytesConstant(ident->name(), m_loc);
+					auto boxKey = awst::makeUtf8BytesConstant(boxName, m_loc);
 					auto boxLen = builder::StorageMapper::makeBoxLenTuple(
 						m_ctx.typeMapper, std::move(boxKey), m_loc);
 					return awst::makeTupleItem(
 						std::move(boxLen), 0, awst::WType::uint64Type(), m_loc);
 				}
 
-				return stateDynArrayLength(m_ctx, ident->name(), arrType, m_loc);
+				return stateDynArrayLength(m_ctx, boxName, arrType, m_loc);
 			}
 		}
 	}

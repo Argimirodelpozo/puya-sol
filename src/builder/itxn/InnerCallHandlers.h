@@ -97,7 +97,7 @@ private:
 		std::shared_ptr<awst::Expression> _inputData,
 		awst::SourceLocation const& _loc);
 
-	/// .delegatecall(...) → stub
+	/// .delegatecall(...) → explicit runtime failure when reached.
 	static std::unique_ptr<InstanceBuilder> handleDelegatecall(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,

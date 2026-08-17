@@ -842,6 +842,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 )
 {
 	m_currentContract = &_contract;
+	m_boxArrayVars.clear();
 	std::string contractName = _contract.name();
 	std::string contractId = m_sourceFile + "." + contractName;
 
@@ -905,9 +906,9 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	m_exprBuilder->viaIRSequencing = m_viaIR;
 
 	// One session-owned layout feeds state access, inline-assembly slot routing,
-	// and runtime-dispatch generation. In EVM mode it is solc's exact linearized
-	// layout; default mode uses the compiler's physical AVM layout.
-	m_exprBuilder->storageLayout = &_storagePlan.dispatchLayout;
+	// and runtime-dispatch generation. It is always solc's exact logical layout;
+	// the selected backend binds declarations to physical AVM cells separately.
+	m_exprBuilder->storageLayout = &_storagePlan.solidityLayout;
 
 	// Pre-populate host-bound function map before translation so the call
 	// resolver routes them as InstanceMethodTargets.
@@ -1110,7 +1111,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// Default-layout dispatch remains contract-specific and is always emitted.
 	if (_emitEvmStorageRuntime
 		|| (!m_typeMapper.profile().evmStorageLayout && _storagePlan.needsDispatch()))
-		buildStorageDispatch(_contract, _storagePlan, contract.get(), contractName);
+		buildStorageDispatch(_storagePlan, contract.get(), contractName);
 
 	// Generate function pointer dispatch tables
 	{

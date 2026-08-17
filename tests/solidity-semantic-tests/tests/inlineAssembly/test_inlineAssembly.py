@@ -6,6 +6,7 @@ from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
 )
+from framework.compile import CompileError
 
 # The 4 calldata_* xfails below share one root cause — see the
 # calldata-pointer-asm-model notes: EVM calldata is a raw caller-controlled
@@ -40,15 +41,13 @@ def test_blobbasefee_shanghai_function(harness):
 
 def test_blobhash(harness):
     """inlineAssembly/contracts/blobhash.sol — EVM blobhash has no AVM analog."""
-    app = harness.compile_and_deploy("inlineAssembly/contracts/blobhash.sol")
-    assert not harness.call(app, "f()").reverted
+    with pytest.raises(CompileError):
+        harness.compile_and_deploy("inlineAssembly/contracts/blobhash.sol")
 
 def test_blobhash_index_exceeding_blob_count(harness):
     """inlineAssembly/contracts/blobhash_index_exceeding_blob_count.sol"""
-    app = harness.compile_and_deploy("inlineAssembly/contracts/blobhash_index_exceeding_blob_count.sol")
-    # f() -> 0x00
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 0
+    with pytest.raises(CompileError):
+        harness.compile_and_deploy("inlineAssembly/contracts/blobhash_index_exceeding_blob_count.sol")
 
 def test_blobhash_pre_cancun(harness):
     """inlineAssembly/contracts/blobhash_pre_cancun.sol"""
@@ -169,7 +168,10 @@ def test_calldata_struct_assign_and_return(harness):
 
 def test_chainid(harness):
     """inlineAssembly/contracts/chainid.sol"""
-    app = harness.compile_and_deploy("inlineAssembly/contracts/chainid.sol")
+    app = harness.compile_and_deploy(
+        "inlineAssembly/contracts/chainid.sol",
+        extra_args=["--evm-chain-id", "1"],
+    )
     # f() -> 1
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 1
@@ -216,9 +218,9 @@ def test_constant_access_referencing(harness):
 def test_difficulty(harness):
     """inlineAssembly/contracts/difficulty.sol"""
     app = harness.compile_and_deploy("inlineAssembly/contracts/difficulty.sol", evm_version='london')
-    # f() -> 200000000
+    # AVM adaptation: no proof-of-work difficulty.
     r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 200000000
+    assert as_int(r.abi_return) == 0
 
 def test_external_function_pointer_address(harness):
     """inlineAssembly/contracts/external_function_pointer_address.sol"""
@@ -637,9 +639,9 @@ def test_optimize_memory_store_multi_block_bugreport(harness):
 def test_prevrandao(harness):
     """inlineAssembly/contracts/prevrandao.sol"""
     app = harness.compile_and_deploy("inlineAssembly/contracts/prevrandao.sol")
-    # f() -> 0xa86c2e601b6c44eb4848f7d23d9df3113fbcac42041c49cbed5000cb4f118777
+    # AVM adaptation: the recent Algorand VRF block seed.
     r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 76179698116359622413486155173975521935699888105599510728246182663625645328247
+    assert as_int(r.abi_return) != 0
 
 def test_selfbalance(harness):
     """inlineAssembly/contracts/selfbalance.sol"""

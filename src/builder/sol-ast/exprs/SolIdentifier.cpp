@@ -315,13 +315,11 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 					return read;
 			}
 
-			auto kind = m_ctx.storageMapper.shouldUseBoxStorage(*varDecl)
-				? awst::AppStorageKind::Box
-				: awst::AppStorageKind::AppGlobal;
+			auto binding = m_ctx.storageMapper.physicalBindingFor(*varDecl);
 
 			// Dynamic arrays in box storage: placeholder
 			if (type && type->kind() == awst::WTypeKind::ReferenceArray
-				&& kind == awst::AppStorageKind::Box)
+				&& binding.kind == awst::AppStorageKind::Box)
 			{
 				auto placeholder = awst::makeVarExpression(name, type, m_loc);
 				return placeholder;
@@ -332,7 +330,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 				return buildExpr(*varDecl->value());
 
 			return m_ctx.storageMapper.createStateRead(
-				m_ctx.storageMapper.storageNameFor(*varDecl), type, kind, m_loc);
+				binding.name, type, binding.kind, m_loc);
 		}
 	}
 

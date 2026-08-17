@@ -190,6 +190,12 @@ int main(int _argc, char* _argv[])
 		.evmMemoryLayout = opts.evmMemoryLayout,
 		.evmSelectors = opts.evmSelectors,
 		.viaIRSequencing = opts.viaYulBehavior,
+		.evmChainId = opts.evmChainId.empty()
+			? std::nullopt : std::optional<std::string>{opts.evmChainId},
+		.evmBlockGasLimit = opts.evmBlockGasLimit.empty()
+			? std::nullopt : std::optional<std::string>{opts.evmBlockGasLimit},
+		.evmCoinbase = opts.evmCoinbase.empty()
+			? std::nullopt : std::optional<std::string>{opts.evmCoinbase},
 		.evmVersion = evmVer,
 		.scratchLayout = puyasol::builder::ScratchLayout(
 			opts.evmMemorySlots > 0

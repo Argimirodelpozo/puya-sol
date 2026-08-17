@@ -343,7 +343,8 @@ std::unique_ptr<SolMemberAccess> SolExpressionFactory::createMemberAccess(
 	}
 
 	// 5. type(X).max / type(X).min / type(C).name / type(I).interfaceId
-	//    type(C).creationCode / type(C).runtimeCode (stubbed as 32 zero bytes)
+	//    type(C).creationCode / type(C).runtimeCode (hard error: EVM bytecode
+	//    has no AVM meaning; routed here so the policy diagnostic fires)
 	if (baseType)
 	{
 		bool isMagicOrTypeType = dynamic_cast<MagicType const*>(baseType)

@@ -1050,9 +1050,13 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 							ptrExpr = low.readValue(*addr);
 						}
 						else
+						{
+							auto binding =
+								m_ctx.storageMapper.physicalBindingFor(*varDecl);
 							ptrExpr = m_ctx.storageMapper.createStateRead(
-								varDecl->name(), awst::WType::uint64Type(),
-								awst::AppStorageKind::AppGlobal, m_loc);
+								binding.name, awst::WType::uint64Type(),
+								binding.kind, m_loc);
+						}
 
 						std::vector<std::shared_ptr<awst::Expression>> args;
 						for (auto const& arg : m_call.arguments())

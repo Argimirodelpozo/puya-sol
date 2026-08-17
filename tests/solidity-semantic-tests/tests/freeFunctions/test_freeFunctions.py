@@ -21,6 +21,7 @@ def test_free_namesake_contract_function(harness):
     r = harness.call(app, "f()", expect_revert=True)
     assert r.reverted
 
+@pytest.mark.xfail(reason="type(C).runtimeCode is a compile-time hard error — EVM bytecode does not describe the deployed AVM application (EvmFeaturePolicy)", strict=False)
 def test_free_runtimecode(harness):
     """freeFunctions/contracts/free_runtimecode.sol"""
     app = harness.compile_and_deploy("freeFunctions/contracts/free_runtimecode.sol")

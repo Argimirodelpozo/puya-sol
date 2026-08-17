@@ -608,11 +608,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				auto const* arrType2 = dynamic_cast<ArrayType const*>(varDecl->type());
 				if (arrType2 && arrType2->isByteArrayOrString() && memberName == "pop")
 				{
-					std::string varName = varDecl->name();
+					auto binding = m_ctx.storageMapper.physicalBindingFor(*varDecl);
+					std::string varName = binding.name;
 					auto loc = m_loc;
-					auto kind = m_ctx.storageMapper.shouldUseBoxStorage(*varDecl)
-						? awst::AppStorageKind::Box
-						: awst::AppStorageKind::AppGlobal;
+					auto kind = binding.kind;
 
 					// Read current value
 					auto readVal = m_ctx.storageMapper.createStateRead(
@@ -662,11 +661,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				auto const* arrType = dynamic_cast<ArrayType const*>(varDecl->type());
 				if (arrType && arrType->isByteArrayOrString() && memberName == "push")
 				{
-					std::string varName = varDecl->name();
+					auto binding = m_ctx.storageMapper.physicalBindingFor(*varDecl);
+					std::string varName = binding.name;
 					auto loc = m_loc;
-					auto kind = m_ctx.storageMapper.shouldUseBoxStorage(*varDecl)
-						? awst::AppStorageKind::Box
-						: awst::AppStorageKind::AppGlobal;
+					auto kind = binding.kind;
 
 					// Read current value
 					auto readVal = m_ctx.storageMapper.createStateRead(

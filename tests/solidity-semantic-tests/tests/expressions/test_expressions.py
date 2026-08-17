@@ -139,6 +139,7 @@ def test_inc_dec_operators(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 342118
 
+@pytest.mark.xfail(reason="address(library) is a hard compile error per EvmFeaturePolicy — libraries are inlined as AVM subroutines with no deployed application identity", strict=False)
 def test_module_from_ternary_expression(harness):
     """expressions/contracts/module_from_ternary_expression.sol"""
     app = harness.compile_and_deploy("expressions/contracts/module_from_ternary_expression.sol")

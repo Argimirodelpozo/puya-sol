@@ -5,6 +5,7 @@ from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
     as_int, as_bytes,
 )
+from framework.compile import CompileError
 
 
 def test_array_multiple_local_vars(harness):
@@ -17,10 +18,8 @@ def test_array_multiple_local_vars(harness):
 
 def test_bare_call_no_returndatacopy(harness):
     """functionCall/contracts/bare_call_no_returndatacopy.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/bare_call_no_returndatacopy.sol")
-    # f() -> true
-    r = harness.call(app, "f()")
-    assert bool(as_int(r.abi_return)) is True
+    with pytest.raises(CompileError):
+        harness.compile_and_deploy("functionCall/contracts/bare_call_no_returndatacopy.sol")
 
 def test_call_attached_library_function_on_function(harness):
     """functionCall/contracts/call_attached_library_function_on_function.sol"""
@@ -96,16 +95,10 @@ def test_call_options_overload(harness):
 
 def test_calling_nonexisting_contract_throws(harness):
     """functionCall/contracts/calling_nonexisting_contract_throws.sol"""
-    app = harness.compile_and_deploy("functionCall/contracts/calling_nonexisting_contract_throws.sol")
-    # f() -> FAILURE
-    r = harness.call(app, "f()", expect_revert=True)
-    assert r.reverted
-    # g() -> FAILURE
-    r = harness.call(app, "g()", expect_revert=True)
-    assert r.reverted
-    # h() -> 7
-    r = harness.call(app, "h()")
-    assert as_int(r.abi_return) == 7
+    # Its low-level h() call relies on closed-world knowledge that address
+    # 0x1212 has no code. The AVM compiler cannot prove that from source.
+    with pytest.raises(CompileError):
+        harness.compile_and_deploy("functionCall/contracts/calling_nonexisting_contract_throws.sol")
 
 def test_calling_other_functions(harness):
     """functionCall/contracts/calling_other_functions.sol"""

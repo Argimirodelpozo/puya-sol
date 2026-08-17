@@ -845,7 +845,7 @@ void AWSTBuilder::translateContracts(
 				if (!contract || contract->isInterface())
 					continue;
 				auto const& storagePlan = m_session.storagePlan(*contract);
-				auto const slots = storagePlan.dispatchLayout.totalSlots();
+				auto const slots = storagePlan.solidityLayout.totalSlots();
 				if (storagePlan.needsDispatch())
 					evmStorageRuntimeNeeded = true;
 				if (storagePlan.requiresSparseSlots)

@@ -3,15 +3,14 @@
 // See inline comments for AVM adaptation notes.
 // ============================================================================
 contract C {
-    // AVM has a fixed opcode budget per app call (700), poolable across a
-    // 16-txn group. block.gaslimit is stubbed as a sentinel 70000 so
-    // Solidity patterns that gate on `gaslimit > N` still make progress.
-    // Original EVM expected: f() -> 20000000
+    // AVM has an opcode budget rather than an EVM block gas limit. The test
+    // driver explicitly supplies the upstream environment's 20,000,000 value
+    // with --evm-block-gas-limit.
     function f() public returns (uint) {
         return block.gaslimit;
     }
 }
 // ----
-// f() -> 70000
-// f() -> 70000
-// f() -> 70000
+// f() -> 20000000
+// f() -> 20000000
+// f() -> 20000000

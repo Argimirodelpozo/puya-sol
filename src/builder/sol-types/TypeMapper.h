@@ -85,10 +85,13 @@ private:
 	/// Owns all dynamically-created WTypes.
 	std::vector<std::unique_ptr<awst::WType>> m_ownedTypes;
 
-	/// solc owns and interns Type objects for the CompilerStack lifetime. Keying
-	/// by the object avoids conflating distinct declarations whose display
-	/// strings happen to match across source units/scopes.
-	std::unordered_map<solidity::frontend::Type const*, awst::WType const*>
+	/// Keyed by toString(true): solc does NOT intern Type objects
+	/// (TypeProvider::array/withLocation allocate fresh), so pointer keying
+	/// gives textually identical types distinct WTypes — recursive structs
+	/// then truncate at different depths (encode/decode mismatch) and the
+	/// ~40 pointer-equality sites against mapped types spuriously re-wrap.
+	/// toString is unambiguous per unit: names are fully qualified.
+	std::unordered_map<std::string, awst::WType const*>
 		m_solTypeCache;
 	/// Synthetic keys used only for struct recursion projections.
 	std::map<std::string, awst::WType const*> m_namedTypeCache;

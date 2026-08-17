@@ -24,7 +24,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 	VariableDeclaration const& _structVar)
 {
 	std::string fieldName = _fieldAccess.memberName();
-	std::string varName = _structVar.name();
+	auto binding = m_ctx.storageMapper.physicalBindingFor(_structVar);
+	std::string varName = binding.name;
 	auto loc = m_loc;
 
 	// Determine the field's array type and element type.
@@ -64,9 +65,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 		elemType = sa->elementType();
 	if (!elemType)
 		elemType = m_ctx.typeMapper.mapSolTypeToARC4(fieldArrayType->baseType());
-	auto kind = m_ctx.storageMapper.shouldUseBoxStorage(_structVar)
-		? awst::AppStorageKind::Box
-		: awst::AppStorageKind::AppGlobal;
+	auto kind = binding.kind;
 
 	// Read the struct (box_get or app_global_get with default).
 	auto structRead = m_ctx.storageMapper.createStateRead(
@@ -126,8 +125,10 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	auto* elemType = m_ctx.typeMapper.mapSolTypeToARC4(solArrType->baseType());
 	auto* arrWType = m_ctx.typeMapper.map(solArrType);
 
-	auto const* ident = dynamic_cast<Identifier const*>(&_baseExpr);
-	std::string arrayVarName = ident->name();
+	// Physical binding, not the raw source name — matches every other
+	// box-key derivation for this declaration (colliding names diverge).
+	std::string arrayVarName =
+		m_ctx.storageMapper.physicalBindingFor(_varDecl).name;
 
 	// `mapping(K=>V)[] a`: no element bytes inline; array box is just a
 	// 2-byte length header. `a[i][k]` boxes are derived from `a`+`i`+sha256(k)

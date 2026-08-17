@@ -16,6 +16,12 @@ namespace puyasol::builder
 class StorageMapper
 {
 public:
+	struct PhysicalBinding
+	{
+		std::string name;
+		awst::AppStorageKind kind = awst::AppStorageKind::AppGlobal;
+	};
+
 	explicit StorageMapper(TypeMapper& _typeMapper): m_typeMapper(_typeMapper) {}
 	TargetProfile const& profile() const { return m_typeMapper.profile(); }
 
@@ -25,12 +31,11 @@ public:
 		std::string const& _sourceFile
 	);
 
-	/// Storage key name for a state variable, disambiguating a name that two
-	/// DIFFERENT declarations share (ERC20's `string _name` vs EIP712's
-	/// `ShortString _name`, both private, both legal). The first declaration
-	/// keeps the plain name so existing contracts are byte-identical; a
-	/// colliding second one gets "<name>.<DeclaringContract>".
-	std::string storageNameFor(
+	/// Physical named-cell binding for a logical Solidity declaration. Slot and
+	/// offset placement deliberately do not participate in this decision. Names
+	/// are disambiguated when distinct inherited declarations share one source
+	/// name; the first retains the legacy key.
+	PhysicalBinding physicalBindingFor(
 		solidity::frontend::VariableDeclaration const& _var) const;
 
 	/// Create an expression to read a state variable.
@@ -123,7 +128,7 @@ public:
 
 	/// True iff _box is a top-level dynamic-typed state-var box
 	/// (ARC4DynamicArray / ReferenceArray / dynamic bytes) eagerly created in
-	/// __postInit (m_boxArrayVarNames), so bare BoxValueExpression reads are safe.
+	/// __postInit (m_boxArrayVars), so bare BoxValueExpression reads are safe.
 	/// "Top-level" = key is a BytesConstant; mapping values (runtime concat/hash)
 	/// are lazy and don't qualify. Shared by makeStateGetWithDefault (read skip)
 	/// and handleDelete (box_put-empty instead of box_del).
@@ -157,6 +162,9 @@ public:
 		awst::SourceLocation const& _loc);
 
 private:
+	std::string storageNameFor(
+		solidity::frontend::VariableDeclaration const& _var) const;
+
 	/// declaration id → storage key name (only populated for contracts whose
 	/// state vars are mapped; empty means "use the plain name").
 	std::map<int64_t, std::string> m_storageNames;

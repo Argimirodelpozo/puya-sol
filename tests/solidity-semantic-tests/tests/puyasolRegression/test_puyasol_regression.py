@@ -3704,6 +3704,63 @@ def test_default_storage_dispatch_is_contract_scoped(harness):
     assert as_int(harness.call(app_b, "raw()").abi_return) == 222
 
 
+def test_default_storage_layout_uses_declaration_identity(harness):
+    """Canonical solc placement and named AVM cells are joined by declaration ID.
+
+    Both bases legally declare a private ``value``. High-level and assembly
+    reads/writes must reach their respective physical cells at solc's distinct
+    slots; name-based layout or dispatch collapses one onto the other.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/canonical_storage_layout_same_name.sol")
+
+    assert as_int(harness.call(app, "leftSlot()").abi_return) == 0
+    assert as_int(harness.call(app, "rightSlot()").abi_return) == 1
+
+    harness.call(app, "setLeft(uint256)", 11)
+    harness.call(app, "setRight(uint256)", 22)
+    assert as_int(harness.call(app, "rawLeft()").abi_return) == 11
+    assert as_int(harness.call(app, "rawRight()").abi_return) == 22
+
+    harness.call(app, "storeLeft(uint256)", 33)
+    harness.call(app, "storeRight(uint256)", 44)
+    assert as_int(harness.call(app, "getLeft()").abi_return) == 33
+    assert as_int(harness.call(app, "getRight()").abi_return) == 44
+
+
+def test_colliding_name_aggregate_storage(harness):
+    """Colliding AGGREGATE declarations (dynamic array/bytes/mapping) across
+    bases: push/element/length and mapping write/read/auto-getter must all key
+    by the same disambiguated physical binding — a raw-source-name reader next
+    to a binding-name writer makes a base blind to its own writes."""
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/colliding_name_aggregate_storage.sol")
+
+    # Same-named dynamic arrays: each base's writes visible to ITS readers only.
+    harness.call(app, "pushA(uint256)", 7)
+    harness.call(app, "pushA(uint256)", 8)
+    harness.call(app, "pushB(uint256)", 99)
+    assert as_int(harness.call(app, "lenA()").abi_return) == 2
+    assert as_int(harness.call(app, "lenB()").abi_return) == 1
+    assert as_int(harness.call(app, "atA(uint256)", 0).abi_return) == 7
+    assert as_int(harness.call(app, "atA(uint256)", 1).abi_return) == 8
+    assert as_int(harness.call(app, "atB(uint256)", 0).abi_return) == 99
+
+    # Same-named bytes: length reader keys like the writer.
+    harness.call(app, "setBlobA(bytes)", b"abcde")
+    assert as_int(harness.call(app, "blobLenA()").abi_return) == 5
+    assert as_int(harness.call(app, "lenB()").abi_return) == 1
+
+    # Public mapping vs same-named private sibling: in-contract write, then
+    # auto-getter AND explicit reader — all three must share one hash chain.
+    addr = harness.localnet.account.address
+    harness.call(app, "setBal(address,uint256)", addr, 1234)
+    harness.call(app, "setOther(address,uint256)", addr, 5678)
+    assert as_int(harness.call(app, "readBal(address)", addr).abi_return) == 1234
+    assert as_int(harness.call(app, "bal(address)", addr).abi_return) == 1234
+    assert as_int(harness.call(app, "readOther(address)", addr).abi_return) == 5678
+
+
 def test_default_storage_functions_are_bound_to_each_host(harness):
     """Free/library sload bodies are copied into each default-layout host so
     their storage calls resolve against that host's scoped dispatcher."""

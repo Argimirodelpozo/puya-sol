@@ -22,11 +22,9 @@ std::shared_ptr<awst::Expression> StorageBackend::emitReadForVar(
 	if (isTransient(_var))
 		return m_transient->buildRead(_name, _type, _loc);
 
-	auto kind = m_mapper.shouldUseBoxStorage(_var)
-		? awst::AppStorageKind::Box
-		: awst::AppStorageKind::AppGlobal;
+	auto binding = m_mapper.physicalBindingFor(_var);
 	return m_mapper.createStateRead(
-		m_mapper.storageNameFor(_var), _type, kind, _loc);
+		binding.name, _type, binding.kind, _loc);
 }
 
 std::shared_ptr<awst::Statement> StorageBackend::emitWriteForVar(
@@ -38,13 +36,11 @@ std::shared_ptr<awst::Statement> StorageBackend::emitWriteForVar(
 	if (isTransient(_var))
 		return m_transient->buildWrite(_name, std::move(_value), _loc);
 
-	auto kind = m_mapper.shouldUseBoxStorage(_var)
-		? awst::AppStorageKind::Box
-		: awst::AppStorageKind::AppGlobal;
+	auto binding = m_mapper.physicalBindingFor(_var);
 	auto const* type = _value ? _value->wtype : nullptr;
 	// createStateWrite returns an Expression; wrap as Statement.
 	auto writeExpr = m_mapper.createStateWrite(
-		m_mapper.storageNameFor(_var), std::move(_value), type, kind, _loc);
+		binding.name, std::move(_value), type, binding.kind, _loc);
 	return awst::makeExpressionStatement(std::move(writeExpr), _loc);
 }
 

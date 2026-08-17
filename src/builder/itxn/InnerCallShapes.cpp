@@ -5,6 +5,7 @@
 ///   - handleStaticCallPrecompile (0x01..0x09 precompiles)
 
 #include "builder/itxn/InnerCallHandlers.h"
+#include "builder/EvmFeaturePolicy.h"
 #include "awst/NameGen.h"
 #include "builder/itxn/InnerCallInternal.h"
 #include "builder/itxn/CallResolver.h"
@@ -178,6 +179,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::submitTypedAppCall(
 	std::shared_ptr<awst::Expression> _callValue,
 	awst::SourceLocation const& _loc)
 {
+	EvmFeaturePolicy::report(
+		EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
 	std::vector<awst::WType const*> argTypes;
 	for (auto const& item : _argsTuple->items)
 		argTypes.push_back(item->wtype);
@@ -310,6 +313,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	std::shared_ptr<awst::Expression> _callValue,
 	awst::SourceLocation const& _loc)
 {
+	EvmFeaturePolicy::report(
+		EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
 	if (_dataBytes->wtype == awst::WType::stringType())
 	{
 		auto cast = awst::makeAsBytes(std::move(_dataBytes), _loc);

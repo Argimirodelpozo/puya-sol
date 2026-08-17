@@ -2,6 +2,7 @@
 /// Bitwise and shift operations: shl, shr, div, byte, signextend, buildPowerOf2.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/EvmFeaturePolicy.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"
@@ -298,8 +299,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleGas(
 )
 {
 	// Returns uint64; consumer coerces via ensureBiguint (match at consumption, drops itob widen).
-	Logger::instance().debug(
-		"gas() mapped to AVM OpcodeBudget (analogous but not equivalent to EVM gas)", _loc);
+	EvmFeaturePolicy::report(
+		EvmFeature::GasLeft, m_typeMapper.profile(), _loc);
 	return awst::makeGlobal(std::string("OpcodeBudget"), awst::WType::uint64Type(), _loc);
 }
 

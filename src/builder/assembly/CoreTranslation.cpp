@@ -2,6 +2,7 @@
 /// Core expression translation: dispatch, literals, identifiers, function calls.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/EvmFeaturePolicy.h"
 #include "builder/sol-types/FunctionPointerKind.h"
 #include "Logger.h"
 #include "awst/NameGen.h"
@@ -549,19 +550,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	}
 	if (funcName == "origin")
 	{
-		// origin() (EVM tx.origin) → HARD ERROR. It denotes the EOA that
-		// started the transaction, distinct from caller()/msg.sender (the
-		// immediate caller). AVM has no transaction-origin concept; the only
-		// available value is `txn Sender` = caller(), so origin() would
-		// silently alias caller() and make `origin == caller` access guards
-		// vacuous. Refuse rather than emit a wrong guard. (caller() below is
-		// sound — `txn Sender` is the correct analog of the immediate caller.)
-		Logger::instance().error(
-			"Yul `origin()` (EVM tx.origin) is not supported on AVM. It denotes "
-			"the EOA that started the transaction, distinct from `caller()`; AVM "
-			"has no such concept, so it would silently alias `caller()` and make "
-			"`origin == caller` checks vacuous. Use `caller()` (maps to txn Sender).",
-			loc);
+		EvmFeaturePolicy::report(
+			EvmFeature::TxOrigin, m_typeMapper.profile(), loc);
 		// Stub so AWST building completes; the error aborts before any TEAL.
 		auto sender = awst::makeTxn("Sender", awst::WType::bytesType(), loc);
 		return awst::makeAsBiguint(std::move(sender), loc);
@@ -577,75 +567,44 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	}
 	if (funcName == "blockhash")
 	{
-		// blockhash(n) -> HARD ERROR. EVM blockhash(n) is the hash of a recent
-		// block (last 256, else 0). AVM has no block-hash opcode; `block
-		// BlkSeed` is a per-round VRF seed for a narrow recent window that
-		// ignores the round argument and panics out-of-window -- a different
-		// value AND failure mode, so a blockhash-based commitment/RNG silently
-		// diverges. Refuse to compile rather than emit a wrong value. (blobhash
-		// below is left as a stand-in; the maintainer scoped this to blockhash.)
-		Logger::instance().error(
-			"`blockhash(n)` is not supported on AVM. EVM returns the hash of a "
-			"recent block (or 0 outside the last 256); AVM has no block-hash "
-			"opcode. `block BlkSeed` is a per-round VRF seed for a narrow recent "
-			"window, so the round argument is ignored and the value is wrong, "
-			"with no faithful equivalent.", loc);
+		EvmFeaturePolicy::report(
+			EvmFeature::BlockHash, m_typeMapper.profile(), loc);
 		// Stub so AWST building completes; the error aborts the build first.
 		return awst::makeZero(loc, awst::WType::biguintType());
 	}
 	if (funcName == "blobhash")
 	{
-		// Map Yul blobhash to AVM BlkSeed(Round - 2). The caller's index is
-		// used only for index < 2 (emulating the EVM test harness's 2-mock
-		// blobs). Any further index returns bytes32(0). See the
-		// SolBuiltinCall counterparts for details.
-		Logger::instance().warning(
-			funcName + "() in assembly → BlkSeed(Round - 2) stand-in; "
-			"not cryptographically equivalent to EVM " + funcName + ".",
-			loc);
-
-		auto round = awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), loc);
-
-		auto two = awst::makeIntegerConstant("2", loc);
-
-		auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two), loc);
-
-		auto seed = awst::makeBlock(
-			"BlkSeed", std::move(prevRound), awst::WType::bytesType(), loc);
-
-		auto seedBigUint = awst::makeAsBiguint(std::move(seed), loc);
-
-		if (funcName == "blobhash" && !args.empty())
-		{
-			// Return seed for index < 2, zero otherwise. Mirrors the
-			// 2-slot EVM mock harness.
-			auto indexArg = args[0];
-			auto twoLit = awst::makeIntegerConstant("2", loc, awst::WType::biguintType());
-			auto withinRange = awst::makeNumericCompare(std::move(indexArg), awst::NumericComparison::Lt, std::move(twoLit), loc);
-
-			auto zero = awst::makeZero(loc, awst::WType::biguintType());
-
-			return awst::makeConditional(
-				std::move(withinRange), std::move(seedBigUint), std::move(zero),
-				awst::WType::biguintType(), loc);
-		}
-		return seedBigUint;
+		EvmFeaturePolicy::report(
+			EvmFeature::BlobHash, m_typeMapper.profile(), loc);
+		return awst::makeZero(loc, awst::WType::biguintType());
 	}
 	if (funcName == "difficulty")
 	{
-		// Pre-paris EVM DIFFICULTY. AVM has no equivalent; emit the
-		// Solidity test runner's canonical mocked value (200000000) so
-		// legacy-EVM tests that assert a specific difficulty pass.
-		return awst::makeIntegerConstant("200000000", loc, awst::WType::biguintType());
+		EvmFeaturePolicy::report(
+			EvmFeature::BlockDifficulty, m_typeMapper.profile(), loc);
+		return awst::makeZero(loc, awst::WType::biguintType());
 	}
 	if (funcName == "prevrandao")
 	{
-		// prevrandao() has no AVM equivalent. Emit the Solidity test runner's
-		// canonical mocked value so post-paris tests that assert a specific
-		// prevrandao pass (same pattern as `difficulty` above).
-		return awst::makeIntegerConstant(
-			"76179698116359622413486155173975521935699888105599510728246182663625645328247",
-			loc, awst::WType::biguintType());
+		EvmFeaturePolicy::report(
+			EvmFeature::BlockPrevrandao, m_typeMapper.profile(), loc);
+		// Round - 2, clamped: uint64 Sub panics on underflow and the first
+		// rounds of a fresh chain (create at round 1) would hard-panic.
+		auto round = awst::makeGlobal(
+			std::string("Round"), awst::WType::uint64Type(), loc);
+		auto isEarly = awst::makeNumericCompare(
+			awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), loc),
+			awst::NumericComparison::Lt,
+			awst::makeIntegerConstant("2", loc), loc);
+		auto prevRound = awst::makeConditional(
+			std::move(isEarly),
+			awst::makeZero(loc),
+			awst::makeUInt64BinOp(
+				std::move(round), awst::UInt64BinaryOperator::Sub,
+				awst::makeIntegerConstant("2", loc), loc),
+			awst::WType::uint64Type(), loc);
+		return awst::makeAsBiguint(awst::makeBlock(
+			"BlkSeed", std::move(prevRound), awst::WType::bytesType(), loc), loc);
 	}
 	if (funcName == "number")
 	{
@@ -684,25 +643,63 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		bal->stackArgs.push_back(std::move(appAddr));
 		return bal;
 	}
-	if (funcName == "coinbase" || funcName == "gasprice" || funcName == "basefee"
-		|| funcName == "blobbasefee")
+	if (funcName == "coinbase")
 	{
-		// Stub: return 0 for EVM-specific block properties with no AVM equivalent
-		Logger::instance().warning(
-			funcName + "() has no AVM equivalent, returning 0", loc);
-		auto zero = awst::makeZero(loc, awst::WType::biguintType());
-		return zero;
+		EvmFeaturePolicy::report(
+			EvmFeature::BlockCoinbase, m_typeMapper.profile(), loc);
+		if (!m_typeMapper.profile().evmCoinbase)
+			return awst::makeZero(loc, awst::WType::biguintType());
+		auto const& hex = *m_typeMapper.profile().evmCoinbase;
+		// Mirrors SolIntrinsicAccess's decoder exactly — case-insensitive, so
+		// a future profile producer that skips CliOptions' lowercasing cannot
+		// make the asm and Solidity paths emit different addresses.
+		auto nibble = [](char c) -> uint8_t {
+			if (c >= '0' && c <= '9') return static_cast<uint8_t>(c - '0');
+			return static_cast<uint8_t>(std::tolower(
+				static_cast<unsigned char>(c)) - 'a' + 10);
+		};
+		std::vector<uint8_t> bytes(20);
+		for (size_t i = 0; i < bytes.size(); ++i)
+			bytes[i] = static_cast<uint8_t>(
+				(nibble(hex[2 * i]) << 4) | nibble(hex[2 * i + 1]));
+		return awst::makeAsBiguint(
+			awst::makeBytesConstant(std::move(bytes), loc), loc);
+	}
+	if (funcName == "gasprice")
+	{
+		EvmFeaturePolicy::report(
+			EvmFeature::TxGasPrice, m_typeMapper.profile(), loc);
+		return awst::makeTxn("Fee", awst::WType::uint64Type(), loc);
+	}
+	if (funcName == "basefee" || funcName == "blobbasefee")
+	{
+		EvmFeaturePolicy::report(
+			funcName == "basefee" ? EvmFeature::BlockBaseFee
+				: EvmFeature::BlockBlobBaseFee,
+			m_typeMapper.profile(), loc);
+		return awst::makeZero(loc, awst::WType::biguintType());
 	}
 	if (funcName == "chainid")
 	{
-		// AVM has no per-chain identifier; return 1 so that Solidity's
-		// `block.chainid` lines up with what semantic tests expect
-		// (Ethereum mainnet id). Real-world contracts that need network
-		// differentiation should use `global GenesisHash` directly in
-		// assembly instead.
-		Logger::instance().debug("chainid() stubbed as 1 for AVM", loc);
-		auto c = awst::makeOne(loc, awst::WType::biguintType());
-		return c;
+		EvmFeaturePolicy::report(
+			EvmFeature::BlockChainId, m_typeMapper.profile(), loc);
+		if (m_typeMapper.profile().evmChainId)
+			return awst::makeIntegerConstant(
+				*m_typeMapper.profile().evmChainId, loc,
+				awst::WType::biguintType());
+		return awst::makeAsBiguint(awst::makeGlobal(
+			"GenesisHash", awst::WType::bytesType(), loc), loc);
+	}
+	if (funcName == "gaslimit")
+	{
+		EvmFeaturePolicy::report(
+			EvmFeature::BlockGasLimit, m_typeMapper.profile(), loc);
+		if (m_typeMapper.profile().evmBlockGasLimit)
+			return awst::makeIntegerConstant(
+				*m_typeMapper.profile().evmBlockGasLimit, loc,
+				awst::WType::biguintType());
+		return awst::makeGlobal(
+			"OpcodeBudget", awst::WType::uint64Type(), loc);
 	}
 	if (funcName == "codesize")
 	{
@@ -762,14 +759,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	}
 	if (funcName == "call" || funcName == "staticcall")
 	{
-		// call/staticcall in expression context (e.g., `let success := call(...)`)
-		// is handled by the variable declaration / assignment translators.
-		// In pure expression context, we can't do the full pattern match.
-		Logger::instance().warning(
-			funcName + " in pure expression context; use let/assign form for precompile support", loc
-		);
-		auto one = awst::makeOne(loc, awst::WType::biguintType());
-		return one;
+		// call/staticcall in let/assign/pop/statement form is pattern-matched
+		// by those translators. In pure expression context (e.g. the Solady
+		// `if iszero(call(...)) { revert }` ETH-transfer idiom) no such match
+		// exists — folding to constant success would silently drop the call,
+		// so this is the invented-success class the policy hard-errors on.
+		EvmFeaturePolicy::report(
+			EvmFeature::UnknownLowLevelCall, m_typeMapper.profile(), loc);
+		return awst::makeOne(loc, awst::WType::biguintType());
 	}
 
 	// Check for user-defined assembly function — inline in expression context

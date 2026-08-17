@@ -88,6 +88,20 @@ as `msg.sig`. This mode changes the internal external-function-pointer encoding
 from 12 to 16 bytes so it can retain both the Solidity selector and ARC-4 route;
 all contracts that exchange such pointers must be compiled with the same mode.
 
+EVM-only environment values are never supplied as unexplained test constants.
+`block.chainid` defaults to the Algorand `GenesisHash` interpreted as a
+`uint256`, and `block.gaslimit` defaults to the current AVM opcode budget. For
+historical replay or EVM-domain compatibility, override them with
+`--evm-chain-id <uint256>` and `--evm-block-gas-limit <uint256>`.
+`block.coinbase` has no AVM analogue and is a compile error unless an explicit
+20-byte value is supplied with `--evm-coinbase <hex-address>`.
+
+`type(C).creationCode` and `type(C).runtimeCode` are hard compile errors: the
+deployed program is TEAL, so EVM bytecode — even solc's real object for the
+same source — describes a contract that does not exist on chain, and its usual
+consumers (CREATE2 address derivation, code hashing) would silently compute
+meaningless values.
+
 For contracts that exceed the 8 KB AVM program-size limit, add `--split-contracts --allow-mid-function-split`.
 
 ## Testing

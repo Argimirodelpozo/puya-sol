@@ -6,8 +6,8 @@ namespace puyasol::builder::sol_ast
 {
 
 /// msg.sender, block.timestamp, block.difficulty, block.prevrandao, etc.
-/// Delegates to IntrinsicMapper for standard intrinsics; handles block.prevrandao
-/// and block.difficulty specially.
+/// Exact intrinsics use IntrinsicMapper; EVM-only environment values are
+/// classified and lowered through EvmFeaturePolicy.
 class SolIntrinsicAccess: public SolMemberAccess
 {
 public:

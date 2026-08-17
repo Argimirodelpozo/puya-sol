@@ -182,7 +182,8 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 
 	// boxKey = bytes(varName) ++ itob(page)
 	auto nameBytes = awst::makeUtf8BytesConstant(
-		varDecl->name(), m_loc, awst::WType::boxKeyType());
+		m_ctx.storageMapper.physicalBindingFor(*varDecl).name,
+		m_loc, awst::WType::boxKeyType());
 	auto boxKey = awst::makeConcat(
 		std::move(nameBytes), awst::makeItob(std::move(pageExpr), m_loc), m_loc);
 	boxKey->wtype = awst::WType::boxKeyType();

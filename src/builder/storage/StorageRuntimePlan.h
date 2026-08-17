@@ -22,13 +22,13 @@ struct StorageRuntimePlan
 		// layout every declared state access does; in default layout only
 		// sload/sstore-style assembly access does.
 		return evmLayout
-			? dispatchLayout.totalSlots() != 0 || containsInlineAssembly
+			? solidityLayout.totalSlots() != 0 || containsInlineAssembly
 			: containsInlineAssembly;
 	}
 
-	/// Slot map consumed by the runtime sload/sstore bridge. In EVM-layout mode
-	/// it is canonical; in default mode it preserves the named-cell bridge.
-	StorageLayout dispatchLayout;
+	/// Canonical declaration-to-slot/offset assignment supplied by solc. The
+	/// selected backend independently binds those declarations to AVM storage.
+	StorageLayout solidityLayout;
 	bool evmLayout = false;
 	bool containsInlineAssembly = false;
 	bool requiresSparseSlots = false;

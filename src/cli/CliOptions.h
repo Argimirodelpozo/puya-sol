@@ -34,6 +34,12 @@ struct Options
 	// both identities and observable selector values change.
 	bool evmSelectors = false;
 	std::string evmVersion;     // empty = compiler default (cancun)
+	// Explicit EVM environment inputs used by the semantic policy. Empty means
+	// use the documented AVM adaptation (chain id / gas limit) or fail where no
+	// honest adaptation exists (coinbase).
+	std::string evmChainId;
+	std::string evmBlockGasLimit;
+	std::string evmCoinbase;
 	// --evm-memory-slots <N>: 0 means unspecified/default (5 slots=20KB).
 	// UltraHonk needs 32; extended memory is placed above reserved slots 5..15.
 	int evmMemorySlots = 0;

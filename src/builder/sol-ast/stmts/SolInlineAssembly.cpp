@@ -187,7 +187,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 		auto const* intType = dynamic_cast<IntegerType const*>(varDecl->type());
 		if (!intType || intType->isSigned() || intType->numBits() != 256) continue;
 		stateVarSlots[yulId->name.str()] =
-			{varDecl->name(), m_blk.typeMapper().map(varDecl->type())};
+			{m_blk.builderCtx().storageMapper.physicalBindingFor(*varDecl).name,
+				m_blk.typeMapper().map(varDecl->type())};
 	}
 
 	// Struct-storage-ref local bound from a storage-ref-returning function
@@ -270,11 +271,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				: nullptr;
 			if (!layout)
 			{
-				fallbackLayout.computeLayout(
-					*contractDef, m_blk.typeMapper(),
-					m_blk.typeMapper().profile().evmStorageLayout
-						? StorageLayoutSource::SolidityCanonical
-						: StorageLayoutSource::LegacyDispatch);
+				fallbackLayout.computeLayout(*contractDef, m_blk.typeMapper());
 				layout = &fallbackLayout;
 			}
 
@@ -288,8 +285,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				if (m_blk.typeMapper().profile().evmStorageLayout) return;   // no named-cell routes in slot space
 				if (!svDecl || svDecl->isConstant() || svDecl->immutable()) return;
 				if (svDecl->referenceLocation() == VariableDeclaration::Location::Transient) return;
-				auto const* vi = layout->getVarInfo(svDecl->name());
+				auto const* vi = layout->getVarInfoById(svDecl->id());
 				if (!vi) return;
+				auto physicalName =
+					m_blk.builderCtx().storageMapper.physicalBindingFor(*svDecl).name;
 				auto const* arrT = dynamic_cast<solidity::frontend::ArrayType const*>(svDecl->type());
 				if (arrT && arrT->isDynamicallySized() && !arrT->isByteArrayOrString()
 					&& m_blk.builderCtx().storageMapper.shouldUseBoxStorage(*svDecl))
@@ -299,7 +298,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 						return;   // tier-1: 32-byte elements only
 					AssemblyBuilder::SlotRoute root;
 					root.kind = AssemblyBuilder::SlotRoute::Kind::ArrayRoot;
-					root.varName = svDecl->name();
+					root.varName = physicalName;
 					slotRoutes[vi->slot.str()] = root;
 
 					// K = keccak256(32-byte BE root slot) — compile-time.
@@ -307,7 +306,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 					auto k = solidity::u256(solidity::util::keccak256(slotWord));
 					AssemblyBuilder::SlotRoute data;
 					data.kind = AssemblyBuilder::SlotRoute::Kind::ArrayData;
-					data.varName = svDecl->name();
+					data.varName = physicalName;
 					data.dataBase = k.str();
 					slotDataRegions.push_back(std::move(data));
 				}
@@ -317,7 +316,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				{
 					AssemblyBuilder::SlotRoute r;
 					r.kind = AssemblyBuilder::SlotRoute::Kind::Scalar;
-					r.varName = svDecl->name();
+					r.varName = physicalName;
 					r.wtype = vi->wtype;
 					slotRoutes[vi->slot.str()] = r;
 				}
@@ -354,7 +353,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				auto* arc4Elem = m_blk.typeMapper().mapSolTypeToARC4(localArrT->baseType());
 				if (builder::StorageMapper::computeEncodedElementSize(arc4Elem) != 32) continue;
 
-				auto const* vi = layout->getVarInfo(structVar->name());
+				auto const* vi = layout->getVarInfoById(structVar->id());
 				if (!vi) continue;
 				auto memberOff = structType->storageOffsetsOfMember(fieldName);
 				if (memberOff.second != 0) continue;   // arrays always start a fresh slot
@@ -363,7 +362,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 
 				AssemblyBuilder::SlotRoute r;
 				r.kind = AssemblyBuilder::SlotRoute::Kind::StructMemberArrayRoot;
-				r.varName = structVar->name();
+				r.varName =
+					m_blk.builderCtx().storageMapper.physicalBindingFor(*structVar).name;
 				r.fieldName = fieldName;
 				r.wtype = structWType;
 				slotRoutes[slotStr] = r;
@@ -412,7 +412,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 					auto* ts = m_blk.builderCtx().transientStorage;
 					if (ts)
 					{
-						if (auto const* tv = ts->getVarInfo(varDecl->name()))
+						if (auto const* tv = ts->getVarInfoById(varDecl->id()))
 						{
 							slotStr = std::to_string(tv->slot);
 							byteOffset = tv->byteOffset;
@@ -422,7 +422,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				}
 				else
 				{
-					if (auto const* varInfo = layout->getVarInfo(varDecl->name()))
+					if (auto const* varInfo = layout->getVarInfoById(varDecl->id()))
 					{
 						slotStr = varInfo->slot.str();
 						byteOffset = varInfo->byteOffset;
@@ -434,7 +434,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				if (suffix == "slot")
 				{
 					constants[yulName] = slotStr;
-					storageSlotVars[yulName] = varDecl->name();
+					storageSlotVars[yulName] =
+						m_blk.builderCtx().storageMapper.physicalBindingFor(*varDecl).name;
 				}
 				else if (suffix == "offset")
 				{

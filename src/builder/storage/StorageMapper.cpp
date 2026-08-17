@@ -302,7 +302,7 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 	{
 		auto slotsUpperBound = type->storageSizeUpperBound();
 		unsigned estimatedBytes = static_cast<unsigned>(slotsUpperBound) * 32;
-		unsigned keyBytes = static_cast<unsigned>(_var.name().size());
+	unsigned keyBytes = static_cast<unsigned>(storageNameFor(_var).size());
 		unsigned maxValueBytes = (128 > keyBytes) ? (128 - keyBytes) : 0;
 		if (estimatedBytes > maxValueBytes)
 			return true;
@@ -428,6 +428,17 @@ std::string StorageMapper::storageNameFor(
 {
 	auto it = m_storageNames.find(_var.id());
 	return it == m_storageNames.end() ? _var.name() : it->second;
+}
+
+StorageMapper::PhysicalBinding StorageMapper::physicalBindingFor(
+	solidity::frontend::VariableDeclaration const& _var) const
+{
+	return {
+		storageNameFor(_var),
+		shouldUseBoxStorage(_var)
+			? awst::AppStorageKind::Box
+			: awst::AppStorageKind::AppGlobal,
+	};
 }
 
 std::shared_ptr<awst::Expression> StorageMapper::createStateRead(

@@ -15,7 +15,7 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 		return awst::WType::voidType();
 
 	std::string const typeStr = _solType->toString(true);
-	auto it = m_solTypeCache.find(_solType);
+	auto it = m_solTypeCache.find(typeStr);
 	if (it != m_solTypeCache.end())
 		return it->second;
 
@@ -188,7 +188,7 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	}
 
 	if (result)
-		m_solTypeCache[_solType] = result;
+		m_solTypeCache[typeStr] = result;
 	else
 		result = awst::WType::voidType();
 

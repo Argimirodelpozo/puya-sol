@@ -46,6 +46,8 @@ set(SOURCES
 	src/awst/Termination.cpp
 	# Builder core
 	src/builder/AWSTBuilder.cpp
+	src/builder/CompilationSession.cpp
+	src/builder/EvmFeaturePolicy.cpp
 	src/builder/ProgramAnalysis.cpp
 	src/builder/ParameterMutationAnalysis.cpp
 	src/builder/SolcFacts.cpp

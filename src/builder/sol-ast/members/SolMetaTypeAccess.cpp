@@ -4,6 +4,7 @@
 
 #include "builder/sol-ast/members/SolMetaTypeAccess.h"
 #include "builder/SelectorSemantics.h"
+#include "builder/EvmFeaturePolicy.h"
 #include "builder/SolcFacts.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -65,16 +66,16 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 		return awst::makeUtf8BytesConstant(typeName, m_loc, awst::WType::stringType());
 	}
 
-	// type(C).creationCode / .runtimeCode: no AVM analog (AVM apps don't expose
-	// TEAL bytecode as a value). Stub as 32 zero bytes; code depending on actual
-	// content silently misbehaves.
+	// EVM bytecode introspection has no AVM meaning: the deployed program is
+	// TEAL, so any answer here — including solc's real object — describes a
+	// contract that does not exist on chain. Hard error via the central policy.
 	if (member == "creationCode" || member == "runtimeCode")
 	{
-		Logger::instance().warning(
-			"type(C)." + member + " has no AVM analog — stubbed as 32 zero bytes;"
-			" code that depends on the actual bytecode will misbehave",
-			m_loc);
-		return awst::makeBytesConstant(std::vector<uint8_t>(32, 0), m_loc);
+		builder::EvmFeaturePolicy::report(
+			member == "creationCode" ? builder::EvmFeature::CreationCode
+				: builder::EvmFeature::RuntimeCode,
+			m_ctx.typeMapper.profile(), m_loc);
+		return awst::makeBytesConstant({}, m_loc);
 	}
 
 	// type(I).interfaceId uses solc's EIP-165 value under --evm-selectors.

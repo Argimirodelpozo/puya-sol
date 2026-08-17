@@ -4,6 +4,7 @@
 
 #include "builder/itxn/InnerCallHandlers.h"
 #include "awst/NameGen.h"
+#include "builder/EvmFeaturePolicy.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/itxn/InnerCallInternal.h"
@@ -40,6 +41,20 @@ std::optional<uint64_t> detectPrecompileAddress(
 		}
 	}
 	return precompileAddr;
+}
+
+static bool isLiteralZeroAddress(
+	solidity::frontend::Expression const& _baseExpr)
+{
+	using namespace solidity::frontend;
+	auto const* baseCall = dynamic_cast<FunctionCall const*>(&_baseExpr);
+	if (!baseCall || !baseCall->annotation().kind.set()
+		|| *baseCall->annotation().kind != FunctionCallKind::TypeConversion
+		|| baseCall->arguments().empty())
+		return false;
+	auto const* rational = dynamic_cast<RationalNumberType const*>(
+		baseCall->arguments()[0]->annotation().type);
+	return rational && rational->literalValue(nullptr) == 0;
 }
 
 static awst::WTuple s_boolBytesType(
@@ -382,6 +397,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleSend(
 	ContractContext& _ctx, std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount, awst::SourceLocation const& _loc)
 {
+	EvmFeaturePolicy::report(
+		EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
 	auto create = buildPaymentTransaction(_ctx, std::move(_receiver), std::move(_amount), _loc);
 	static awst::WInnerTransaction s_payTxnType(TxnTypePay);
 	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
@@ -397,6 +414,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithValue(
 	ContractContext& _ctx, std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount, awst::SourceLocation const& _loc)
 {
+	EvmFeaturePolicy::report(
+		EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
 	auto create = buildPaymentTransaction(_ctx, std::move(_receiver), std::move(_amount), _loc);
 	static awst::WInnerTransaction s_payTxnType(TxnTypePay);
 	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
@@ -422,11 +441,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
 	// puya's DCE strips the unreached body entirely). Any delegatecall that
 	// actually EXECUTES still dies with an explicit message, never a silently
 	// wrong stub.
-	Logger::instance().warning(
-		"`.delegatecall(...)` has no AVM equivalent (isolated storage; inner-"
-		"txn callers are the calling app). Lowered to a runtime failure — "
-		"this call site REVERTS if ever reached.",
-		_loc);
+	EvmFeaturePolicy::report(
+		EvmFeature::DelegateCall, _ctx.typeMapper.profile(), _loc);
 	for (auto const& arg : _callNode.arguments())
 		_ctx.buildExpr(*arg);
 	// assert(false) is a compile-time TERMINATOR: puya flags the statements
@@ -488,10 +504,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	if ((_memberName == "call" || _memberName == "staticcall") && !_callNode.arguments().empty())
 	{
 		if (_memberName == "staticcall")
-			Logger::instance().warning(
-				"address.staticcall(data) lowers to a regular inner application call on the AVM — the "
-				"EVM read-only (no-state-change) guarantee is NOT enforced; the callee may mutate state.",
-				_loc);
+			EvmFeaturePolicy::report(
+				EvmFeature::StaticCall, _ctx.typeMapper.profile(), _loc);
 		auto const& dataArg = *_callNode.arguments()[0];
 
 		// {value:} needs an inner PaymentTxn grouped with a real inner app call.
@@ -809,8 +823,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			auto result = handleStaticCallPrecompile(_ctx, *precompileAddr, std::move(inputData), _loc);
 			if (result) return result;
 		}
-		// Non-encodeCall self-call: route to __fallback (non-selector data
-		// would reach fallback in the approval program anyway).
+		// Non-encodeCall self-call: an exact route exists — non-selector data
+		// reaches the fallback in the approval program, so call __fallback
+		// directly. Not an UnknownLowLevelCall: the target is proven (self).
 		bool isSelfCall = false;
 		if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
 		{
@@ -878,9 +893,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 		}
 
 		// Non-self raw .call(data) → inner app call; splits [selector, rest].
-		// Compile-time empty literal → stub (true, "") to match EVM "call to
-		// non-contract returns true" (bare_call_no_returndatacopy.sol,
-		// calling_nonexisting_contract_throws.sol).
+		// Empty calls are only exactly decidable for the literal zero address;
+		// other addresses need open-world account/code state that AVM does not expose.
 		auto dataExpr = _ctx.buildExpr(dataArg);
 		auto isEmptyConst = [](awst::Expression const* e) {
 			// Unwrap ReinterpretCast (string→bytes, etc.) to inspect the inner.
@@ -897,8 +911,15 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 			// Empty data + {value:} = plain transfer (EVM: invokes receive()).
 			if (_callValue)
 				return handleCallWithValue(_ctx, std::move(_receiver), std::move(_callValue), _loc);
+			if (isLiteralZeroAddress(_baseExpr))
+				return std::make_unique<GenericResultBuilder>(_ctx,
+					makeBoolBytesTupleEmpty(_loc));
+			EvmFeaturePolicy::report(
+				EvmFeature::UnknownLowLevelCall,
+				_ctx.typeMapper.profile(), _loc);
 			return std::make_unique<GenericResultBuilder>(_ctx,
-				makeBoolBytesTupleEmpty(_loc));
+				makeBoolBytesTuple(
+					false, awst::makeBytesConstant({}, _loc), _loc));
 		}
 		return handleCallWithRawData(_ctx, _receiver, std::move(dataExpr), std::move(_callValue), _loc);
 	}
@@ -916,12 +937,12 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 		// Hard error: stubbing as (true, "") would make require(ok) pass spuriously.
 		for (auto const& arg : _callNode.arguments())
 			_ctx.buildExpr(*arg);
-		Logger::instance().error(
-			"`address.staticcall(data)` to this target is not supported on AVM. "
-			"Only precompile addresses 0x01–0x08 are handled; any other target "
-			"would be stubbed as `(true, \"\")`, which makes `require(ok)` pass "
-			"spuriously and yields all-zero returndata.", _loc);
-		return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
+		EvmFeaturePolicy::report(
+			EvmFeature::UnknownLowLevelCall,
+			_ctx.typeMapper.profile(), _loc);
+		return std::make_unique<GenericResultBuilder>(_ctx,
+			makeBoolBytesTuple(
+				false, awst::makeBytesConstant({}, _loc), _loc));
 	}
 
 	if (_memberName == "delegatecall")

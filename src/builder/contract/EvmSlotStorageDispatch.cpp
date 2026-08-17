@@ -25,7 +25,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	std::string const& _contractName
 )
 {
-	auto const& layout = _storagePlan.dispatchLayout;
+	auto const& layout = _storagePlan.solidityLayout;
 
 	// Dense-only: every runtime slot is provably < 2^16 — no mapping / dynamic
 	// array / bytes / string anywhere in the persistent layout (their slots are

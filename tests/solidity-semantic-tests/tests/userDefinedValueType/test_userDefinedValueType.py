@@ -27,6 +27,7 @@ def test_assembly_access_bytes2_abicoder_v2(harness):
     assert bytes(harness.call(app, "f(bytes2)", b"ab").abi_return) == b"ab"
     assert bytes(harness.call(app, "g(bytes2)", b"ab").abi_return) == b"ab"
 
+@pytest.mark.xfail(reason="empty .call('') to an arbitrary (non-literal-zero) address is a hard compile error per EvmFeaturePolicy — EVM's 'call to codeless address returns true' needs open-world account state AVM does not expose", strict=False)
 def test_calldata(harness):
     """userDefinedValueType/contracts/calldata.sol"""
     app = harness.compile_and_deploy("userDefinedValueType/contracts/calldata.sol")

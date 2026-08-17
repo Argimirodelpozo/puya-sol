@@ -433,9 +433,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			else if (getter.args.empty())
 			{
 				// Simple state variable (no keys/indices): read from storage.
-				auto storageKind = m_storageMapper.shouldUseBoxStorage(*var)
-					? awst::AppStorageKind::Box
-					: awst::AppStorageKind::AppGlobal;
+				auto binding = m_storageMapper.physicalBindingFor(*var);
 
 				// Struct getter: read the full ARC4Struct, project each field (sign-extending
 				// signed sub-word fields). Covers single-field structs too — they were read
@@ -445,7 +443,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				{
 					auto* storedWType = m_typeMapper.map(var->type());
 					auto fullStruct = m_storageMapper.createStateRead(
-						var->name(), storedWType, storageKind, loc
+						binding.name, storedWType, binding.kind, loc
 					);
 
 					auto const* arc4Struct = dynamic_cast<awst::ARC4Struct const*>(storedWType);
@@ -477,7 +475,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					}
 					if (!readExpr)
 						readExpr = m_storageMapper.createStateRead(
-							var->name(), readType, storageKind, loc
+							binding.name, readType, binding.kind, loc
 						);
 				}
 			}
@@ -490,12 +488,10 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				auto* arrWType = m_typeMapper.map(arrType);
 				auto* elemARC4 = m_typeMapper.mapSolTypeToARC4(arrType->baseType());
 
-				auto storageKind = m_storageMapper.shouldUseBoxStorage(*var)
-					? awst::AppStorageKind::Box
-					: awst::AppStorageKind::AppGlobal;
+				auto binding = m_storageMapper.physicalBindingFor(*var);
 
 				auto arrayRead = m_storageMapper.createStateRead(
-					var->name(), arrWType, storageKind, loc
+					binding.name, arrWType, binding.kind, loc
 				);
 
 				auto idxRef = awst::makeVarExpression(getter.args[0].name, getter.args[0].wtype, loc);
@@ -533,6 +529,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			}
 			else
 			{
+				auto binding = m_storageMapper.physicalBindingFor(*var);
 				// Walk type outer-to-inner: Mapping/array-of-mapping → box key (K…K);
 				// array-of-flat-elements → IndexExpression on the value (I…I).
 				// Mirrors SolIndexAccess::handleMappingAccess key derivation.
@@ -595,17 +592,14 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				if (keyArgCount == 0)
 				{
 					// No mapping keys: plain multi-dim array; read the whole value.
-					auto storageKind = m_storageMapper.shouldUseBoxStorage(*var)
-						? awst::AppStorageKind::Box
-						: awst::AppStorageKind::AppGlobal;
 					storageRead = m_storageMapper.createStateRead(
-						var->name(), storedWType, storageKind, loc);
+						binding.name, storedWType, binding.kind, loc);
 				}
 				else
 				{
 				// Per-layer hash (mirrors handleMappingAccess writer).
 				std::shared_ptr<awst::Expression> currentPrefix = awst::makeUtf8BytesConstant(
-					var->name(), loc, awst::WType::boxKeyType());
+					binding.name, loc, awst::WType::boxKeyType());
 
 				for (size_t i = 0; i < keyArgCount; ++i)
 				{

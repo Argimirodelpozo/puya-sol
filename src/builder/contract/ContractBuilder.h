@@ -229,8 +229,8 @@ private:
 		std::string const& _arc4Selector = {});
 	OverloadedNamesSet m_overloadedNames;
 
-	/// Box-stored dynamic array variable names that need box_create in __postInit
-	std::vector<std::string> m_boxArrayVarNames;
+	/// Box-stored declarations that need box_create in __postInit.
+	std::vector<solidity::frontend::VariableDeclaration const*> m_boxArrayVars;
 
 	/// Transient storage manager (blob-based, reset per transaction)
 	TransientStorage m_transientStorage;
@@ -248,9 +248,8 @@ private:
 		std::string const& _contractName
 	);
 
-	/// Emit box_create/box_put for each var in m_boxArrayVarNames. Appends to _postInitBody.
+	/// Emit box_create/box_put for each var in m_boxArrayVars. Appends to _postInitBody.
 	void emitBoxCreateForStateVars(
-		solidity::frontend::ContractDefinition const& _contract,
 		awst::Block& _postInitBody,
 		awst::SourceLocation const& _loc);
 
@@ -310,7 +309,6 @@ private:
 
 	/// Emit __storage_read/__storage_write: switch on slot → app_global, box fallthrough for dynamic.
 	void buildStorageDispatch(
-		solidity::frontend::ContractDefinition const& _contract,
 		StorageRuntimePlan const& _storagePlan,
 		awst::Contract* _contractNode,
 		std::string const& _contractName

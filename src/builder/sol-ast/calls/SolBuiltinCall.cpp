@@ -1,6 +1,7 @@
 #include "builder/sol-ast/calls/SolBuiltinCall.h"
 #include "builder/builtin/Ripemd160Builder.h"
 #include "builder/BuildArtifacts.h"
+#include "builder/EvmFeaturePolicy.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -25,43 +26,20 @@ SolBuiltinCall::SolBuiltinCall(
 
 std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 {
-	// blockhash is AVM-specific, handle separately
+	// Preserve the argument's effects, then issue the centralized hard error.
 	if (m_builtinName == "blockhash")
 		return handleBlockhash();
 
-	// blobhash(n): AVM has no blob transactions. EVM test harness injects
-	// 2 mock blobs (indices 0..1); return BlkSeed(Round-2) for n<2, else 0.
+	// AVM has no blob transaction context. A block seed is not a blob hash and
+	// must not be substituted merely to make an EVM test harness pass.
 	if (m_builtinName == "blobhash")
 	{
-		Logger::instance().warning(
-			"blobhash() has no AVM equivalent — returning BlkSeed(Round - 2) for "
-			"n < 2 and bytes32(0) otherwise, to emulate the 2-blob EVM test harness.",
-			m_loc);
-		auto indexExpr = buildExpr(*m_call.arguments()[0]);
-		indexExpr = TypeCoercion::implicitNumericCast(
-			std::move(indexExpr), awst::WType::uint64Type(), m_loc);
-
-		auto two = awst::makeIntegerConstant("2", m_loc);
-
-		auto withinRange = awst::makeNumericCompare(std::move(indexExpr), awst::NumericComparison::Lt, std::move(two), m_loc);
-
-		auto round = awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), m_loc);
-
-		auto two2 = awst::makeIntegerConstant("2", m_loc);
-
-		auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two2), m_loc);
-
-		auto seed = awst::makeBlock(
-			"BlkSeed", std::move(prevRound), awst::WType::bytesType(), m_loc);
-
-		auto zeros = awst::makeBytesConstant(std::vector<uint8_t>(32, 0), m_loc);
-
-		auto cond = awst::makeConditional(
-			std::move(withinRange), std::move(seed), std::move(zeros),
-			awst::WType::bytesType(), m_loc);
-
-		auto cast = awst::makeReinterpretCast(std::move(cond), m_ctx.typeMapper.createType<awst::BytesWType>(32), m_loc);
-		return cast;
+		builder::EvmFeaturePolicy::report(
+			builder::EvmFeature::BlobHash, m_ctx.typeMapper.profile(), m_loc);
+		(void) buildExpr(*m_call.arguments()[0]);
+		return awst::makeBytesConstant(
+			std::vector<uint8_t>(32, 0), m_loc, awst::BytesEncoding::Base16,
+			m_ctx.typeMapper.createType<awst::BytesWType>(32));
 	}
 
 	// ripemd160: no AVM opcode; lower to synthesized __builtin_ripemd160
@@ -183,26 +161,13 @@ std::shared_ptr<awst::Expression> SolBuiltinCall::toAwst()
 
 std::shared_ptr<awst::Expression> SolBuiltinCall::handleBlockhash()
 {
-	Logger::instance().error(
-		"`blockhash(n)` is not supported on AVM. EVM returns the hash of a recent "
-		"block (or 0 outside the last 256); AVM has no block-hash opcode. `block "
-		"BlkSeed` is a per-round VRF seed for a narrow recent window, so the round "
-		"argument is ignored and the value is wrong, with no faithful equivalent.",
-		m_loc);
+	builder::EvmFeaturePolicy::report(
+		builder::EvmFeature::BlockHash, m_ctx.typeMapper.profile(), m_loc);
 
-	// Evaluate arg for side effects; ignore value. `block` rejects rounds
-	// outside a narrow window; substitute Round-2 (same as prevrandao;
-	// in localnet simulate, Round-1 is not yet readable).
+	// Preserve argument effects, but return only a type-correct poison value;
+	// the policy error prevents it from reaching TEAL.
 	(void) buildExpr(*m_call.arguments()[0]);
-
-	auto round = awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), m_loc);
-
-	auto two = awst::makeIntegerConstant("2", m_loc);
-
-	auto prevRound = awst::makeUInt64BinOp(std::move(round), awst::UInt64BinaryOperator::Sub, std::move(two), m_loc);
-
-	auto e = awst::makeBlock(
-		"BlkSeed", std::move(prevRound), awst::WType::bytesType(), m_loc);
+	auto e = awst::makeBytesConstant(std::vector<uint8_t>(32, 0), m_loc);
 
 	// Cast to the target type (bytes32 or biguint)
 	if (m_wtype && m_wtype != awst::WType::bytesType())

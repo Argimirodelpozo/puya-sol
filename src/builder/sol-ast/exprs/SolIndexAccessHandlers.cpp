@@ -46,7 +46,8 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 	if (auto const* ident = dynamic_cast<Identifier const*>(&m_indexAccess.baseExpression()))
 	{
 		std::string keyParam;
-		if (auto const* decl = ident->annotation().referencedDeclaration)
+		auto const* decl = ident->annotation().referencedDeclaration;
+		if (decl)
 			keyParam = m_scope.findMappingKeyParam(decl->id());
 		if (!keyParam.empty())
 		{
@@ -56,7 +57,15 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleDynamicArrayAccess()
 			boxExpr = awst::makeBoxValueExpression(std::move(key), arrWType, m_loc);
 		}
 		else
-			boxExpr = builder::StorageMapper::makeTopLevelBoxExpr(ident->name(), arrWType, m_loc);
+		{
+			// Same physical-binding key the writers (push/pop, dispatch) use;
+			// raw source names diverge for colliding inherited declarations.
+			auto boxName = ident->name();
+			if (auto const* stateVar = dynamic_cast<VariableDeclaration const*>(decl);
+				stateVar && stateVar->isStateVariable())
+				boxName = m_ctx.storageMapper.physicalBindingFor(*stateVar).name;
+			boxExpr = builder::StorageMapper::makeTopLevelBoxExpr(boxName, arrWType, m_loc);
+		}
 	}
 	else
 		boxExpr = builder::StorageMapper::makeTopLevelBoxExpr(std::string(), arrWType, m_loc);
@@ -375,6 +384,13 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 		// underlying state var, not the local name, or writes land wrong.
 		if (auto const* decl = ident->annotation().referencedDeclaration)
 		{
+			// State vars key by their PHYSICAL binding name (declaration
+			// identity): colliding inherited names get disambiguated, and the
+			// public getter seeds its hash chain from the same binding.
+			if (auto const* stateVar = dynamic_cast<VariableDeclaration const*>(decl);
+				stateVar && stateVar->isStateVariable()
+				&& !stateVar->isConstant() && !stateVar->immutable())
+				out.varName = m_ctx.storageMapper.physicalBindingFor(*stateVar).name;
 			auto const* alias = m_scope.findStorageAlias(decl->id());
 			if (alias)
 			{
@@ -594,7 +610,9 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 				auto idxExpr = m_indexAccess.indexExpression()
 					? buildExpr(*m_indexAccess.indexExpression()) : nullptr;
 				if (idxExpr)
-					return buildMultiBoxAccess(varDecl->name(), baseWtype, std::move(idxExpr));
+					return buildMultiBoxAccess(
+						m_ctx.storageMapper.physicalBindingFor(*varDecl).name,
+						baseWtype, std::move(idxExpr));
 			}
 		}
 	}

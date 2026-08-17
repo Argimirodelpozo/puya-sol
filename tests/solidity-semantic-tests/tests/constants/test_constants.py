@@ -21,6 +21,7 @@ def test_asm_constant_file_level(harness):
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 103164821458651970696730694073941364629493592419
 
+@pytest.mark.xfail(reason="type(C).creationCode/runtimeCode are compile-time hard errors — EVM bytecode does not describe the deployed AVM application (EvmFeaturePolicy)", strict=False)
 def test_assign_type_info(harness):
     """constants/contracts/assign_type_info.sol"""
     app = harness.compile_and_deploy("constants/contracts/assign_type_info.sol")

@@ -3,6 +3,8 @@
 #include "awst/Node.h"
 
 #include <memory>
+#include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
