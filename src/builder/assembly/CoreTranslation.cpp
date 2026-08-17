@@ -578,16 +578,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			EvmFeature::BlobHash, m_typeMapper.profile(), loc);
 		return awst::makeZero(loc, awst::WType::biguintType());
 	}
-	if (funcName == "difficulty")
+	// difficulty == prevrandao post-Paris (same EVM opcode); one lowering.
+	if (funcName == "difficulty" || funcName == "prevrandao")
 	{
 		EvmFeaturePolicy::report(
-			EvmFeature::BlockDifficulty, m_typeMapper.profile(), loc);
-		return awst::makeZero(loc, awst::WType::biguintType());
-	}
-	if (funcName == "prevrandao")
-	{
-		EvmFeaturePolicy::report(
-			EvmFeature::BlockPrevrandao, m_typeMapper.profile(), loc);
+			funcName == "difficulty" ? EvmFeature::BlockDifficulty
+				: EvmFeature::BlockPrevrandao,
+			m_typeMapper.profile(), loc);
 		// Round - 2, clamped: uint64 Sub panics on underflow and the first
 		// rounds of a fresh chain (create at round 1) would hard-panic.
 		auto round = awst::makeGlobal(
@@ -698,8 +695,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 			return awst::makeIntegerConstant(
 				*m_typeMapper.profile().evmBlockGasLimit, loc,
 				awst::WType::biguintType());
-		return awst::makeGlobal(
-			"OpcodeBudget", awst::WType::uint64Type(), loc);
+		// Total pooled app-call budget (GroupSize x MaxAppProgramCost=700):
+		// constant within an execution, like EVM's block-level value — NOT the
+		// shrinking OpcodeBudget remainder, which two reads would disagree on.
+		return awst::makeUInt64BinOp(
+			awst::makeGlobal("GroupSize", awst::WType::uint64Type(), loc),
+			awst::UInt64BinaryOperator::Mult,
+			awst::makeIntegerConstant("700", loc), loc);
 	}
 	if (funcName == "codesize")
 	{

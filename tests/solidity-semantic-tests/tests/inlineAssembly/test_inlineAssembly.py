@@ -216,11 +216,11 @@ def test_constant_access_referencing(harness):
     assert not r.reverted
 
 def test_difficulty(harness):
-    """inlineAssembly/contracts/difficulty.sol"""
+    """inlineAssembly/contracts/difficulty.sol — asm difficulty() ==
+    prevrandao() post-Paris: the Algorand block seed, never zero."""
     app = harness.compile_and_deploy("inlineAssembly/contracts/difficulty.sol", evm_version='london')
-    # AVM adaptation: no proof-of-work difficulty.
     r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 0
+    assert as_int(r.abi_return) != 0
 
 def test_external_function_pointer_address(harness):
     """inlineAssembly/contracts/external_function_pointer_address.sol"""

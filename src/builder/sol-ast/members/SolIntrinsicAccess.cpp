@@ -36,14 +36,6 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 			awst::makeGlobal("GenesisHash", awst::WType::bytesType(), m_loc), m_loc);
 	}
 
-	// block.difficulty → 0 (no PoW on Algorand)
-	if (baseName == "block" && member == "difficulty")
-	{
-		builder::EvmFeaturePolicy::report(
-			builder::EvmFeature::BlockDifficulty, profile, m_loc);
-		auto zero = awst::makeZero(m_loc, awst::WType::biguintType());
-		return zero;
-	}
 
 	// block.basefee / block.blobbasefee → 0.
 	// AVM has a flat per-txn fee (~1000 microAlgos); no EIP-1559 or blob pricing.
@@ -57,8 +49,10 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 		return zero;
 	}
 
-	// Use an explicit replay value when supplied; otherwise OpcodeBudget is an
-	// honest AVM adaptation. Never invent a loop-friendly gas sentinel.
+	// Use an explicit replay value when supplied; otherwise the group's TOTAL
+	// pooled app-call budget (GroupSize x MaxAppProgramCost=700) — constant
+	// within an execution like EVM's block-level value, unlike the shrinking
+	// OpcodeBudget remainder. Never invent a loop-friendly gas sentinel.
 	if (baseName == "block" && member == "gaslimit")
 	{
 		builder::EvmFeaturePolicy::report(
@@ -67,15 +61,20 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 			return awst::makeIntegerConstant(
 				*profile.evmBlockGasLimit, m_loc, awst::WType::biguintType());
 		return awst::makeAsBiguint(
-			awst::makeItob(awst::makeGlobal(
-				"OpcodeBudget", awst::WType::uint64Type(), m_loc), m_loc), m_loc);
+			awst::makeItob(awst::makeUInt64BinOp(
+				awst::makeGlobal("GroupSize", awst::WType::uint64Type(), m_loc),
+				awst::UInt64BinaryOperator::Mult,
+				awst::makeIntegerConstant("700", m_loc), m_loc), m_loc), m_loc);
 	}
 
-	// block.prevrandao → block BlkSeed (Round - 2)
-	if (baseName == "block" && member == "prevrandao")
+	// block.prevrandao / block.difficulty → block BlkSeed (Round - 2).
+	// difficulty == prevrandao post-Paris (same EVM opcode); one lowering.
+	if (baseName == "block" && (member == "prevrandao" || member == "difficulty"))
 	{
 		builder::EvmFeaturePolicy::report(
-			builder::EvmFeature::BlockPrevrandao, profile, m_loc);
+			member == "difficulty" ? builder::EvmFeature::BlockDifficulty
+				: builder::EvmFeature::BlockPrevrandao,
+			profile, m_loc);
 
 		// Round - 2, clamped: uint64 Sub panics on underflow and the first
 		// rounds of a fresh chain (create at round 1) would hard-panic.

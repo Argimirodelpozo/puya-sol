@@ -22,7 +22,8 @@ EvmFeatureDecision EvmFeaturePolicy::decide(
 			"set --evm-chain-id for an EVM-compatible numeric domain"};
 	case EvmFeature::BlockDifficulty:
 		return {F::AvmAdaptation, "block.difficulty",
-			"returns zero because Algorand has no proof-of-work difficulty"};
+			"post-Paris EVM defines difficulty as prevrandao (same opcode); "
+			"lowered identically to the Algorand block seed for Round - 2"};
 	case EvmFeature::BlockBaseFee:
 		return {F::AvmAdaptation, "block.basefee",
 			"returns zero because AVM has no EIP-1559 base fee"};
@@ -34,8 +35,10 @@ EvmFeatureDecision EvmFeaturePolicy::decide(
 			return {F::ConfiguredEnvironment, "block.gaslimit",
 				"uses the compile-time --evm-block-gas-limit value"};
 		return {F::AvmAdaptation, "block.gaslimit",
-			"uses the current AVM OpcodeBudget; set --evm-block-gas-limit when code "
-			"requires an EVM block-level value"};
+			"uses the group's total pooled app-call opcode budget "
+			"(GroupSize x 700) — constant within an execution like EVM's "
+			"block-level value; set --evm-block-gas-limit for an exact "
+			"EVM number"};
 	case EvmFeature::BlockPrevrandao:
 		return {F::AvmAdaptation, "block.prevrandao",
 			"uses the Algorand block seed for Round - 2"};

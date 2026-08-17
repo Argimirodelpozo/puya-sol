@@ -75,30 +75,18 @@ def test_block_coinbase(harness):
     assert bool(as_int(r.abi_return)) is True
 
 def test_block_difficulty(harness):
-    """state/contracts/block_difficulty.sol"""
+    """state/contracts/block_difficulty.sol — difficulty == prevrandao
+    post-Paris (same EVM opcode): the Algorand block seed, never zero."""
     app = harness.compile_and_deploy("state/contracts/block_difficulty.sol", evm_version='london')
-    # f() -> 0
     r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 0
-    # f() -> 0
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 0
-    # f() -> 0
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 0
+    assert as_int(r.abi_return) != 0
 
 def test_block_difficulty_post_paris(harness):
-    """state/contracts/block_difficulty_post_paris.sol"""
+    """state/contracts/block_difficulty_post_paris.sol — same block-seed
+    lowering as block.prevrandao."""
     app = harness.compile_and_deploy("state/contracts/block_difficulty_post_paris.sol")
-    # f() -> 0
     r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 0
-    # f() -> 0
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 0
-    # f() -> 0
-    r = harness.call(app, "f()")
-    assert as_int(r.abi_return) == 0
+    assert as_int(r.abi_return) != 0
 
 def test_block_gaslimit(harness):
     """state/contracts/block_gaslimit.sol"""
@@ -113,6 +101,16 @@ def test_block_gaslimit(harness):
     assert as_int(r.abi_return) == 20000000
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 20000000
+
+def test_block_gaslimit_unconfigured(harness):
+    """Without --evm-block-gas-limit: the group's TOTAL pooled app-call
+    opcode budget (GroupSize x 700) — constant within an execution, unlike
+    the shrinking OpcodeBudget remainder. Single-txn group -> 700."""
+    app = harness.compile_and_deploy("state/contracts/block_gaslimit.sol")
+    r = harness.call(app, "f()")
+    assert as_int(r.abi_return) == 700
+    r = harness.call(app, "f()")
+    assert as_int(r.abi_return) == 700
 
 def test_block_number(harness):
     """state/contracts/block_number.sol"""
