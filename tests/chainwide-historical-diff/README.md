@@ -89,6 +89,67 @@ Requires: LocalNet running, `build/puya-sol` built, and the
 `tests/WIP/tiny-fuzzing-oracle/.evmvenv` venv (web3/eth-tester/py-solc-x) —
 the EVM leg runs under that interpreter as a subprocess.
 
+## Oracle-backed joint CCTP replay
+
+`oracle_cctp_historical.py` replays the cached `cctp_transmitter`,
+`cctp_messenger`, and `cctp_minter` histories in one chronological avm-prover
+ledger. Unlike the ordinary per-contract replay, the three unsplit contracts
+call each other as real AVM inner application calls. Twelve trace-derived
+entries are therefore excluded from the 429 root calls rather than being
+executed twice.
+
+```bash
+python3 oracle_cctp_historical.py cases \
+  --prover-root /path/to/avm-prover \
+  --output /tmp/cctp-historical.json
+```
+
+The driver uses unified `Access` resources first and falls back to a pooled
+16-transaction resource group when needed. Historical contract addresses keep
+their exact signed 32-byte representation; their low 64 bits are also used as
+the corresponding application IDs, matching puya-sol's current contract-call
+address convention. Timestamp, round, sender, value, constructor order, and
+receipt success/revert status are replayed. The report stops at the first
+divergence by default; `--continue-after-divergence` marks the suffix tainted.
+
+The complete campaign was validated on 2026-08-17: all 429 root calls were
+executed, all 429 AVM statuses matched their Ethereum mainnet receipts, and no
+call was skipped.
+
+The same driver was also validated against a disposable wider corpus containing
+the first 500 MessageTransmitter calls, the first 500 TokenMessenger calls, and
+all 29 direct TokenMinter calls. All 1,029 root calls matched, with zero skipped
+calls and zero mismatches. The wider receipt audit found one additional stale
+Blockscout success label, retained in `MAINNET_RECEIPT_METADATA` alongside the
+three already known corrections.
+
+The result is intentionally a **CCTP receipt-status replay**, not a claim of
+full Ethereum-state equivalence:
+
+- USDC is the corpus' `StubERC20`. Before each historically successful
+  `depositForBurn`, the runner records and performs a synthetic mint and
+  approval. It does not prove historical USDC balances or allowances.
+- Return bytes, event payloads, and full EVM/AVM storage snapshots are not
+  compared yet.
+- The cached CCTP sources were Solidity 0.7.6 but were fetched through
+  `--relax-pre08`. Disposable copies of the cached TEAL therefore apply four
+  reported, CCTP-specific compatibility shims: TypedMemView's intentional
+  `uint8(32 * 8)` wrap, OpUp budget for receive/replace, forwarding the exact
+  signed message body, and comparing a caller application to the low 64 bits
+  of its historical EVM address. This is not general Solidity 0.7 emulation.
+- Four stale success labels in the Blockscout fixtures are overridden by
+  explicitly listed Ethereum mainnet receipts. The first 500 calls to each of
+  Transmitter and Messenger were re-audited; the cached fixture files remain
+  untouched.
+- The runner consumes the cached artifacts. Rebuilding the current relaxed
+  MessageTransmitter source is presently a separate compiler failure
+  (`unresolved root subroutine id '__solfn_1385'`) and is not hidden by this
+  replay.
+
+Use `--no-pre08-compat` to demonstrate the unmodified pragma-relaxed artifact's
+known semantic failure. Unit tests for the stream, corrections, address model,
+and compatibility-patch guards live in `test_oracle_cctp_historical.py`.
+
 ## Architecture
 
 ```
