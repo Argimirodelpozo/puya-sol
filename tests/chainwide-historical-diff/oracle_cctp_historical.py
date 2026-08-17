@@ -522,7 +522,11 @@ class Runner:
             "creator": creator,
             "approval_source": artifact["source"],
             "clear_state_source": artifact["clear"],
-            "global_num_uint": 1,
+            # The canonical ledger enforces schemas (the hand-applied path did
+            # not); puya-sol contracts keep scalar state vars in app globals,
+            # so declare the AVM maximum (64 total entries) up front.
+            "global_num_uint": 32,
+            "global_num_byteslice": 32,
             "extra_program_pages": 7,
         }
 
