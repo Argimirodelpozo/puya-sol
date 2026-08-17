@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/call_function_returning_nothing_via_pointer.sol.test.approval_program() -> uint64:
 main:
     intcblock 0 1
-    bytecblock "flag" 0x00 0x151f7c75
+    bytecblock "flag" 0x10b04df6 0x00 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -36,7 +36,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x10b04df6 0x4b4fb052 0xfc32fe40 // method "f0()void", method "f()bool", method "flag()bool"
+    bytec_1 // method "f0()void"
+    pushbytess 0x4b4fb052 0xfc32fe40 // method "f()bool", method "flag()bool"
     txna ApplicationArgs 0
     match main_f0_route@5 main_f_route@6 main_flag_route@7
     err
@@ -56,11 +57,11 @@ main_ternary_merge@14:
     bytec_0 // "flag"
     app_global_get_ex
     assert // check flag exists
-    bytec_1 // 0x00
+    bytec_2 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -87,11 +88,11 @@ main_ternary_merge@19:
     bytec_0 // "flag"
     app_global_get_ex
     assert // check flag exists
-    bytec_1 // 0x00
+    bytec_2 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -110,21 +111,29 @@ main_f0_route@5:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/call_function_returning_nothing_via_pointer.sol.test.f0() -> void:
 f0:
+    txn NumAppArgs
+    bz f0_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_1 // method "f0()void"
+    ==
+    bz f0_after_if_else@6
     txn GroupIndex
-    bz f0_ternary_false@2
+    bz f0_ternary_false@4
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-f0_ternary_merge@3:
+f0_ternary_merge@5:
     !
     assert // not payable
+
+f0_after_if_else@6:
     bytec_0 // "flag"
     intc_1 // 1
     app_global_put
     retsub
 
-f0_ternary_false@2:
+f0_ternary_false@4:
     intc_0 // 0
-    b f0_ternary_merge@3
+    b f0_ternary_merge@5

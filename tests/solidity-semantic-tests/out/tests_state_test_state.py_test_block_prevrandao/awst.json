@@ -1131,7 +1131,7 @@
                     ],
                     "stack_args": [
                       {
-                        "_type": "UInt64BinaryOperation",
+                        "_type": "ConditionalExpression",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/block_prevrandao.sol",
                           "line": 13,
@@ -1145,8 +1145,8 @@
                           "name": "uint64",
                           "immutable": true
                         },
-                        "left": {
-                          "_type": "IntrinsicCall",
+                        "condition": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/block_prevrandao.sol",
                             "line": 13,
@@ -1157,17 +1157,51 @@
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "uint64",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "op_code": "global",
-                          "immediates": [
-                            "Round"
-                          ],
-                          "stack_args": []
+                          "lhs": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/block_prevrandao.sol",
+                              "line": 13,
+                              "end_line": 13,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "op_code": "global",
+                            "immediates": [
+                              "Round"
+                            ],
+                            "stack_args": []
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/block_prevrandao.sol",
+                              "line": 13,
+                              "end_line": 13,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 2,
+                            "teal_alias": null
+                          }
                         },
-                        "op": "-",
-                        "right": {
+                        "true_expr": {
                           "_type": "IntegerConstant",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/block_prevrandao.sol",
@@ -1182,8 +1216,64 @@
                             "name": "uint64",
                             "immutable": true
                           },
-                          "value": 2,
+                          "value": 0,
                           "teal_alias": null
+                        },
+                        "false_expr": {
+                          "_type": "UInt64BinaryOperation",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/block_prevrandao.sol",
+                            "line": 13,
+                            "end_line": 13,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "left": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/block_prevrandao.sol",
+                              "line": 13,
+                              "end_line": 13,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "op_code": "global",
+                            "immediates": [
+                              "Round"
+                            ],
+                            "stack_args": []
+                          },
+                          "op": "-",
+                          "right": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/block_prevrandao.sol",
+                              "line": 13,
+                              "end_line": 13,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 2,
+                            "teal_alias": null
+                          }
                         }
                       }
                     ]

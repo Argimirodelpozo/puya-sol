@@ -6,6 +6,7 @@ main:
     intcblock 1 32 0 8
     bytecblock "bits" 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75 0x0100
     intc_2 // 0
+    dupn 2
     pushint 4096
     bzero
     dup
@@ -53,15 +54,26 @@ main_rawWord_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
+    load 0
+    store 0
+    intc_1 // 32
+    bzero
     bytec_0 // "bits"
-    callsub BitsetLib.raw
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 32
+    dig 1
+    swap
+    replace2 0
+    load 0
+    store 0
     dup
     len
     intc_1 // 32
     <=
     assert // overflow
-    intc_1 // 32
-    bzero
     b|
     bytec_3 // 0x151f7c75
     swap
@@ -77,7 +89,7 @@ main_ternary_false@13:
 main_get_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
+    bury 4
     len
     intc_1 // 32
     ==
@@ -92,129 +104,15 @@ main_get_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
-    bytec_0 // "bits"
-    dig 1
-    callsub BitsetLib.has
-    pushbytes 0x00
-    intc_2 // 0
-    uncover 2
-    setbit
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@18:
-    intc_2 // 0
-    b main_ternary_merge@19
-
-main_set_route@5:
-    txna ApplicationArgs 1
-    dup
-    bury 2
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@23
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@24:
-    !
-    assert // not payable
-    bytec_0 // "bits"
-    dig 1
-    callsub BitsetLib.setBit
-    intc_0 // 1
-    return
-
-main_ternary_false@23:
-    intc_2 // 0
-    b main_ternary_merge@24
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_slot_storage_ref_param.sol.BitsetLib.setBit(b: bytes, i: bytes) -> void:
-BitsetLib.setBit:
-    proto 2 0
     load 0
     store 0
-    intc_1 // 32
-    bzero
-    dup
-    frame_dig -2
-    box_get
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 0 32
-    replace2 0
-    frame_dig -1
+    dig 2
     bytec 4 // 0x0100
     b<
-    bz BitsetLib.setBit_ternary_false@2
-    intc_3 // 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    pushint 256
-    %
-    pushint 255
-    swap
-    -
-    frame_dig 0
-    swap
-    intc_0 // 1
-    setbit
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-
-BitsetLib.setBit_ternary_merge@3:
-    frame_dig 1
-    b|
-    frame_dig 0
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    frame_dig -2
-    swap
-    box_put
-    load 0
-    store 0
-    retsub
-
-BitsetLib.setBit_ternary_false@2:
-    bytec_2 // 0x
-    b BitsetLib.setBit_ternary_merge@3
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_slot_storage_ref_param.sol.BitsetLib.has(b: bytes, i: bytes) -> uint64:
-BitsetLib.has:
-    proto 2 1
-    load 0
-    store 0
-    frame_dig -1
-    bytec 4 // 0x0100
-    b<
-    bz BitsetLib.has_ternary_false@2
+    bz main_ternary_false@29
     intc_1 // 32
     bzero
-    frame_dig -2
+    bytec_0 // "bits"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -225,7 +123,7 @@ BitsetLib.has:
     replace2 0
     intc_3 // 8
     bzero
-    frame_dig -1
+    dig 5
     concat
     dup
     len
@@ -243,34 +141,113 @@ BitsetLib.has:
     setbit
     b/
 
-BitsetLib.has_ternary_merge@3:
+main_ternary_merge@30:
     pushbytes 0x01
     b&
     bytec_2 // 0x
     b!=
     load 0
     store 0
-    retsub
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
-BitsetLib.has_ternary_false@2:
+main_ternary_false@29:
     bytec_2 // 0x
-    b BitsetLib.has_ternary_merge@3
+    b main_ternary_merge@30
 
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_slot_storage_ref_param.sol.BitsetLib.raw(b: bytes) -> bytes:
-BitsetLib.raw:
-    proto 1 1
+main_set_route@5:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
     load 0
     store 0
     intc_1 // 32
     bzero
-    frame_dig -1
+    dup
+    bury 3
+    bytec_0 // "bits"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 0 32
     replace2 0
+    bury 1
+    dig 2
+    bytec 4 // 0x0100
+    b<
+    bz main_ternary_false@34
+    intc_3 // 8
+    bzero
+    dig 3
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 256
+    %
+    pushint 255
+    swap
+    -
+    dig 2
+    swap
+    intc_0 // 1
+    setbit
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+
+main_ternary_merge@35:
+    dig 1
+    b|
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // "bits"
+    swap
+    box_put
     load 0
     store 0
-    retsub
+    intc_0 // 1
+    return
+
+main_ternary_false@34:
+    bytec_2 // 0x
+    b main_ternary_merge@35
+
+main_ternary_false@23:
+    intc_2 // 0
+    b main_ternary_merge@24

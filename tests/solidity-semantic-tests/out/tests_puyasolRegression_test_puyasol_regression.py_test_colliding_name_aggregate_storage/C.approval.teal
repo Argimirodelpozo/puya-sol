@@ -1,0 +1,676 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/colliding_name_aggregate_storage.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 32 0 2
+    bytecblock 0x151f7c75 "data.ArrayBase" "data" "blob.ArrayBase" "bal.MapBase" "__ctor_pending" "bal" 0x010000000000000000 0x0001
+    intc_2 // 0
+    dupn 4
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xf6599f76 0x50650b80 0xd7d54be4 0x423e72f3 0x1d6704dc 0x0114b4df 0xbcff7645 0x43b5c95c 0x2a34a2cb 0x5635b660 0xd5191738 0x8ef75113 0x517e6be3 // method "__postInit()void", method "bal(address)uint256", method "setOther(address,uint256)void", method "readOther(address)uint256", method "pushB(uint256)void", method "lenB()uint256", method "atB(uint256)uint256", method "setBal(address,uint256)void", method "readBal(address)uint256", method "pushA(uint256)void", method "lenA()uint256", method "atA(uint256)uint256", method "setBlobA(byte[])void", method "blobLenA()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_bal_route@6 main_setOther_route@7 main_readOther_route@8 main_pushB_route@9 main_lenB_route@10 main_atB_route@11 main_setBal_route@12 main_readBal_route@13 main_pushA_route@14 main_lenA_route@15 main_atA_route@16 main_setBlobA_route@17 main_blobLenA_route@18
+    err
+
+main_blobLenA_route@18:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    bytec_3 // "blob.ArrayBase"
+    box_len
+    pop
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_2 // 0
+    b main_ternary_merge@25
+
+main_setBlobA_route@17:
+    txna ApplicationArgs 1
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bury 2
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    bytec_3 // "blob.ArrayBase"
+    box_del
+    pop
+    bytec_3 // "blob.ArrayBase"
+    dig 2
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@29:
+    intc_2 // 0
+    b main_ternary_merge@30
+
+main_atA_route@16:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@34
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@35:
+    !
+    assert // not payable
+    dig 4
+    dup
+    bytec 7 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    pushint 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_1 // 32
+    *
+    intc_3 // 2
+    +
+    bytec_1 // "data.ArrayBase"
+    swap
+    intc_1 // 32
+    box_extract // on error: index out of bounds
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@34:
+    intc_2 // 0
+    b main_ternary_merge@35
+
+main_lenA_route@15:
+    txn GroupIndex
+    bz main_ternary_false@39
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@40:
+    !
+    assert // not payable
+    bytec_1 // "data.ArrayBase"
+    box_len
+    pop
+    intc_3 // 2
+    >=
+    bz main_ternary_false@42
+    bytec_1 // "data.ArrayBase"
+    box_len
+    pop
+
+main_ternary_merge@43:
+    intc_3 // 2
+    -
+    intc_1 // 32
+    /
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@42:
+    intc_3 // 2
+    b main_ternary_merge@43
+
+main_ternary_false@39:
+    intc_2 // 0
+    b main_ternary_merge@40
+
+main_pushA_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@47
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@48:
+    !
+    assert // not payable
+    bytec 8 // 0x0001
+    dig 4
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_1 // "data.ArrayBase"
+    intc_2 // 0
+    uncover 3
+    uncover 3
+    intc_1 // 32
+    callsub box_dynamic_array_concat_fixed
+    intc_0 // 1
+    return
+
+main_ternary_false@47:
+    intc_2 // 0
+    b main_ternary_merge@48
+
+main_readBal_route@13:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@52
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@53:
+    !
+    assert // not payable
+    dig 2
+    bytec 4 // "bal.MapBase"
+    concat
+    sha256
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@52:
+    intc_2 // 0
+    b main_ternary_merge@53
+
+main_setBal_route@12:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 5
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@57
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@58:
+    !
+    assert // not payable
+    dig 2
+    bytec 4 // "bal.MapBase"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 4
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@57:
+    intc_2 // 0
+    b main_ternary_merge@58
+
+main_atB_route@11:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@62
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@63:
+    !
+    assert // not payable
+    dig 4
+    dup
+    bytec 7 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    pushint 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_1 // 32
+    *
+    intc_3 // 2
+    +
+    bytec_2 // "data"
+    swap
+    intc_1 // 32
+    box_extract // on error: index out of bounds
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@62:
+    intc_2 // 0
+    b main_ternary_merge@63
+
+main_lenB_route@10:
+    txn GroupIndex
+    bz main_ternary_false@67
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@68:
+    !
+    assert // not payable
+    bytec_2 // "data"
+    box_len
+    pop
+    intc_3 // 2
+    >=
+    bz main_ternary_false@70
+    bytec_2 // "data"
+    box_len
+    pop
+
+main_ternary_merge@71:
+    intc_3 // 2
+    -
+    intc_1 // 32
+    /
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@70:
+    intc_3 // 2
+    b main_ternary_merge@71
+
+main_ternary_false@67:
+    intc_2 // 0
+    b main_ternary_merge@68
+
+main_pushB_route@9:
+    txna ApplicationArgs 1
+    dup
+    bury 5
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@75
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@76:
+    !
+    assert // not payable
+    bytec 8 // 0x0001
+    dig 4
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_2 // "data"
+    intc_2 // 0
+    uncover 3
+    uncover 3
+    intc_1 // 32
+    callsub box_dynamic_array_concat_fixed
+    intc_0 // 1
+    return
+
+main_ternary_false@75:
+    intc_2 // 0
+    b main_ternary_merge@76
+
+main_readOther_route@8:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@80
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@81:
+    !
+    assert // not payable
+    dig 2
+    bytec 6 // "bal"
+    concat
+    sha256
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@80:
+    intc_2 // 0
+    b main_ternary_merge@81
+
+main_setOther_route@7:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    bury 5
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@85
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@86:
+    !
+    assert // not payable
+    dig 2
+    bytec 6 // "bal"
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    dig 4
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@85:
+    intc_2 // 0
+    b main_ternary_merge@86
+
+main_bal_route@6:
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@90
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@91:
+    !
+    assert // not payable
+    dup
+    bytec 4 // "bal.MapBase"
+    concat
+    sha256
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@90:
+    intc_2 // 0
+    b main_ternary_merge@91
+
+main___postInit_route@5:
+    bytec 5 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec 5 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_1 // "data.ArrayBase"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_3 // "blob.ArrayBase"
+    intc_2 // 0
+    box_create
+    pop
+    bytec_2 // "data"
+    intc_3 // 2
+    box_create
+    pop
+    pushbytes "blob"
+    intc_2 // 0
+    box_create
+    pop
+    bytec 4 // "bal.MapBase"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 6 // "bal"
+    intc_3 // 2
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// _puya_lib.box_arc4.box_dynamic_array_concat_fixed(box_key: bytes, array_offset: uint64, new_items_bytes: bytes, new_items_count: uint64, fixed_element_size: uint64) -> void:
+box_dynamic_array_concat_fixed:
+    proto 5 0
+    frame_dig -5
+    frame_dig -4
+    intc_3 // 2
+    box_extract
+    btoi
+    frame_dig -5
+    box_len
+    pop
+    frame_dig -2
+    frame_dig -1
+    *
+    +
+    frame_dig -5
+    swap
+    box_resize
+    dup
+    frame_dig -2
+    +
+    itob
+    extract 6 2
+    frame_dig -5
+    frame_dig -4
+    uncover 2
+    box_replace
+    frame_dig -4
+    intc_3 // 2
+    +
+    swap
+    frame_dig -1
+    *
+    +
+    frame_dig -5
+    swap
+    intc_2 // 0
+    frame_dig -3
+    box_splice
+    retsub

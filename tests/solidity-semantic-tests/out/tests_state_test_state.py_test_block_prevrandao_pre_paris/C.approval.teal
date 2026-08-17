@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/block_prevrandao_pre_paris.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 0 1 2
     pushint 4096
     bzero
     dup
@@ -23,7 +23,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -41,7 +41,7 @@ main_f_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -49,23 +49,33 @@ main_ternary_merge@9:
     !
     assert // not payable
     global Round
-    pushint 2
-    -
+    intc_2 // 2
+    <
+    bz main_ternary_false@11
+    intc_0 // 0
+
+main_ternary_merge@12:
     block BlkSeed
-    intc_1 // 0
+    intc_0 // 0
     itob
     b>
     pushbytes 0x00
-    intc_1 // 0
+    intc_0 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
+main_ternary_false@11:
+    global Round
+    intc_2 // 2
+    -
+    b main_ternary_merge@12
+
 main_ternary_false@8:
-    intc_1 // 0
+    intc_0 // 0
     b main_ternary_merge@9

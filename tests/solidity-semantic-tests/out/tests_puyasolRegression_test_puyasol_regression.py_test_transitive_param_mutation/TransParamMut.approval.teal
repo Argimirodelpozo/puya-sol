@@ -121,8 +121,7 @@ main_ternary_merge@25:
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
     box_put
     bytec_0 // "s"
-    callsub outer
-    pop
+    callsub __solfn_51
     bytec_0 // "s"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -155,8 +154,7 @@ main_ternary_merge@30:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
     box_put
     bytec_0 // "s"
-    callsub outer
-    pop
+    callsub __solfn_51
     bytec_0 // "s"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -175,7 +173,7 @@ main_ternary_false@29:
     b main_ternary_merge@30
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/transitive_param_mutation.sol.LibMut.bumpVia(q: bytes, v: bytes) -> void:
+// __solfn_16(q: bytes, v: bytes) -> void:
 LibMut.bumpVia:
     proto 2 0
     frame_dig -2
@@ -204,9 +202,9 @@ LibMut.bumpVia:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/transitive_param_mutation.sol.TransParamMut.outer(p: bytes) -> bytes:
-outer:
-    proto 1 1
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/transitive_param_mutation.sol.TransParamMut.__solfn_51(p: bytes) -> void:
+__solfn_51:
+    proto 1 0
     frame_dig -1
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -230,5 +228,4 @@ outer:
     frame_dig -1
     swap
     box_put
-    frame_dig -1
     retsub

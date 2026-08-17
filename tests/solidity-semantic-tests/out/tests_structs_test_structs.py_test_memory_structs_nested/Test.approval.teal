@@ -72,13 +72,13 @@ main_ternary_merge@9:
     itob
     pushbytes 0x010200030000000000000000000000000000000000000000000000000000000000000004
     swap
-    callsub extract
+    callsub __solfn_101
     uncover 5
-    callsub extract
+    callsub __solfn_101
     uncover 5
-    callsub extract
+    callsub __solfn_101
     uncover 5
-    callsub extract
+    callsub __solfn_101
     pop
     cover 4
     dig 2
@@ -132,14 +132,14 @@ main_ternary_false@8:
     b main_ternary_merge@9
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_nested.sol.Test.extract(s: bytes, which: bytes) -> bytes, bytes:
-extract:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_nested.sol.Test.__solfn_101(s: bytes, which: bytes) -> bytes, bytes:
+__solfn_101:
     proto 2 2
     intc_2 // 0
     itob
     frame_dig -1
     b==
-    bz extract_else_body@2
+    bz __solfn_101_else_body@2
     frame_dig -2
     intc_2 // 0
     getbyte
@@ -147,12 +147,12 @@ extract:
     frame_dig -2
     retsub
 
-extract_else_body@2:
+__solfn_101_else_body@2:
     intc_0 // 1
     itob
     frame_dig -1
     b==
-    bz extract_else_body@4
+    bz __solfn_101_else_body@4
     frame_dig -2
     extract 1 35
     intc_2 // 0
@@ -161,12 +161,12 @@ extract_else_body@2:
     frame_dig -2
     retsub
 
-extract_else_body@4:
+__solfn_101_else_body@4:
     intc_3 // 2
     itob
     frame_dig -1
     b==
-    bz extract_else_body@6
+    bz __solfn_101_else_body@6
     frame_dig -2
     extract 1 35
     intc_0 // 1
@@ -175,7 +175,7 @@ extract_else_body@4:
     frame_dig -2
     retsub
 
-extract_else_body@6:
+__solfn_101_else_body@6:
     frame_dig -2
     extract 1 35
     extract 3 32

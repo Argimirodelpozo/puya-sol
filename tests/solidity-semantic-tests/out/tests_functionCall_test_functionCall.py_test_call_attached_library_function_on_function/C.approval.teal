@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/call_attached_library_function_on_function.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x151f7c75
+    bytecblock 0x3e9a707a 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -33,14 +33,15 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xcd78b354 0x3e9a707a // method "f()uint256", method "t()uint256"
+    pushbytes 0xcd78b354 // method "f()uint256"
+    bytec_0 // method "t()uint256"
     txna ApplicationArgs 0
     match main_f_route@5 main_t_route@6
     err
 
 main_t_route@6:
     callsub t
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -59,7 +60,7 @@ main_ternary_merge@15:
     !
     assert // not payable
     callsub t
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -73,19 +74,27 @@ main_ternary_false@14:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/call_attached_library_function_on_function.sol.C.t() -> bytes:
 t:
+    txn NumAppArgs
+    bz t_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_0 // method "t()uint256"
+    ==
+    bz t_after_if_else@6
     txn GroupIndex
-    bz t_ternary_false@2
+    bz t_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-t_ternary_merge@3:
+t_ternary_merge@5:
     !
     assert // not payable
+
+t_after_if_else@6:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     retsub
 
-t_ternary_false@2:
+t_ternary_false@4:
     intc_1 // 0
-    b t_ternary_merge@3
+    b t_ternary_merge@5

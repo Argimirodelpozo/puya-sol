@@ -1,3 +1,27 @@
+# Semantic Test Status — v488 (EvmFeaturePolicy + canonical storage identity)
+
+> **Full run 2026-08-17: 8 failed / 1421 passed / 113 xf / 32 xp** (was 11f/1407p/105xf/32xp).
+> All 8 fails are baseline members; **prbmath_signed, prbmath_unsigned and
+> transient_storage_low_level_calls went GREEN** (16KiB app deployment freed their
+> 8KB caps). +8 xfails are intended EvmFeaturePolicy hard errors:
+> creationCode/runtimeCode ×3, blobhash ×2 (uncalled + builtin), address(library)
+> ternary, arbitrary-address empty .call(''), callvalue_check (pre-existing reason).
+> Landed with this round: EvmFeaturePolicy framework (centralized EVM-feature
+> fidelity: Exact/AvmAdaptation/ConfiguredEnvironment/HardCompileError/
+> HardRuntimeFailure + --evm-chain-id/--evm-block-gas-limit/--evm-coinbase);
+> canonical solc storage layout (linearizedStateVariables, DECLARATION identity)
+> with physical-binding keys aligned across writers/readers/getters (split-brain
+> fixes: dyn-array/bytes element+length readers, mapping getter hash-chain seed,
+> guard test_colliding_name_aggregate_storage); restored address(this).call(data)
+> → __fallback route (9 tests); TypeMapper cache re-keyed by toString (solc does
+> NOT intern Type objects; pointer keying broke recursive structs, e.g.
+> test_array_of_recursive_struct); Yul call/staticcall in pure expression context
+> now hard-errors instead of folding to success (Solady ETH-transfer idiom would
+> silently drop the payment); prevrandao Round-2 underflow clamp (both paths);
+> asm coinbase hex decode case-insensitive; type(C).creationCode/runtimeCode =
+> unconditional hard error (exact-bytecode support removed by user decision).
+> avm-stdlib 20/20.
+
 # Semantic Test Status — v487 (mode-matrix lane)
 
 > **First full-suite slot-mode sweep (`PUYA_SOL_EXTRA_ARGS=--evm-storage-layout`),

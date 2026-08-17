@@ -1,0 +1,90 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_layout_modifier_asm_only.sol.C.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock 0x703a0000000000000000
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x0c098fbf // method "run()uint256"
+    txna ApplicationArgs 0
+    match main_run_route@4
+    err
+
+main_run_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    load 0
+    store 0
+    bytec_0 // 0x703a0000000000000000
+    pushint 2048
+    box_create
+    pop
+    bytec_0 // 0x703a0000000000000000
+    intc_1 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000077
+    box_replace
+    bytec_0 // 0x703a0000000000000000
+    box_len
+    bury 1
+    bz main_after_if_else@12
+    bytec_0 // 0x703a0000000000000000
+    intc_1 // 0
+    pushint 32
+    box_extract
+
+main_after_inlined___puyasol___storage_read@13:
+    pushbytes 0x77
+    b==
+    !
+    !
+    assert // revert
+    load 0
+    store 0
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_after_if_else@12:
+    pushbytes 0x
+    b main_after_inlined___puyasol___storage_read@13
+
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9

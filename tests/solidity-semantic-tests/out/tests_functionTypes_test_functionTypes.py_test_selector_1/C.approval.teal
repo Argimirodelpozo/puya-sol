@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/selector_1.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    bytecblock 0x11105f41
     pushint 4096
     bzero
     dup
@@ -32,51 +33,65 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x5b82652c 0x0c88cb4e 0x11105f41 // method "test()(byte[4],byte[4],byte[4],byte[4])", method "ext()void", method "pub()void"
+    pushbytess 0x5b82652c 0x0c88cb4e // method "test()(byte[4],byte[4],byte[4],byte[4])", method "ext()void"
+    bytec_0 // method "pub()void"
     txna ApplicationArgs 0
     match main_test_route@5 main_ext_route@6 main_pub_route@7
     err
 
 main_pub_route@7:
+    txn NumAppArgs
+    bz main_after_if_else@17
+    txna ApplicationArgs 0
+    bytec_0 // method "pub()void"
+    ==
+    bz main_after_if_else@17
     txn GroupIndex
-    bz main_ternary_false@13
+    bz main_ternary_false@15
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+main_ternary_merge@16:
+    !
+    assert // not payable
+
+main_after_if_else@17:
+    intc_0 // 1
+    return
+
+main_ternary_false@15:
+    intc_1 // 0
+    b main_ternary_merge@16
+
+main_ext_route@6:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
     !
     assert // not payable
     intc_0 // 1
     return
 
-main_ternary_false@13:
+main_ternary_false@21:
     intc_1 // 0
-    b main_ternary_merge@19
-
-main_ext_route@6:
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@19
-
-main_ternary_false@18:
-    intc_1 // 0
-    b main_ternary_merge@19
+    b main_ternary_merge@22
 
 main_test_route@5:
     txn GroupIndex
-    bz main_ternary_false@23
+    bz main_ternary_false@26
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+main_ternary_merge@27:
     !
     assert // not payable
     pushbytes 0x151f7c750c88cb4e11105f410c88cb4e11105f41
@@ -84,6 +99,6 @@ main_ternary_merge@24:
     intc_0 // 1
     return
 
-main_ternary_false@23:
+main_ternary_false@26:
     intc_1 // 0
-    b main_ternary_merge@24
+    b main_ternary_merge@27

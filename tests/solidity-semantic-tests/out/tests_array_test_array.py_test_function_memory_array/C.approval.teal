@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x7e9f4949 0x2930a603 0xd8ea6643 0x27775eea 0xc7619fcb
     intc_2 // 0
     dup
     pushbytes ""
@@ -36,7 +36,12 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x7e9f4949 0x2930a603 0xd8ea6643 0x27775eea 0xc7619fcb 0x5b15d901 // method "a(uint256)uint256", method "b(uint256)uint256", method "c(uint256)uint256", method "d(uint256)uint256", method "e(uint256)uint256", method "test(uint256,uint256)uint256"
+    bytec_2 // method "a(uint256)uint256"
+    bytec_3 // method "b(uint256)uint256"
+    bytec 4 // method "c(uint256)uint256"
+    bytec 5 // method "d(uint256)uint256"
+    bytec 6 // method "e(uint256)uint256"
+    pushbytes 0x5b15d901 // method "test(uint256,uint256)uint256"
     txna ApplicationArgs 0
     match main_a_route@5 main_b_route@6 main_c_route@7 main_d_route@8 main_e_route@9 main_test_route@10
     err
@@ -228,16 +233,24 @@ main_a_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.a(__arc4_x: bytes) -> bytes:
 a:
     proto 1 1
+    txn NumAppArgs
+    bz a_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_2 // method "a(uint256)uint256"
+    ==
+    bz a_after_if_else@6
     txn GroupIndex
-    bz a_ternary_false@2
+    bz a_ternary_false@4
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-a_ternary_merge@3:
+a_ternary_merge@5:
     !
     assert // not payable
+
+a_after_if_else@6:
     intc_1 // 1
     itob
     frame_dig -1
@@ -256,24 +269,32 @@ a_ternary_merge@3:
     b|
     retsub
 
-a_ternary_false@2:
+a_ternary_false@4:
     intc_2 // 0
-    b a_ternary_merge@3
+    b a_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.b(__arc4_x: bytes) -> bytes:
 b:
     proto 1 1
+    txn NumAppArgs
+    bz b_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_3 // method "b(uint256)uint256"
+    ==
+    bz b_after_if_else@6
     txn GroupIndex
-    bz b_ternary_false@2
+    bz b_ternary_false@4
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-b_ternary_merge@3:
+b_ternary_merge@5:
     !
     assert // not payable
+
+b_after_if_else@6:
     pushint 2
     itob
     frame_dig -1
@@ -292,24 +313,32 @@ b_ternary_merge@3:
     b|
     retsub
 
-b_ternary_false@2:
+b_ternary_false@4:
     intc_2 // 0
-    b b_ternary_merge@3
+    b b_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.c(__arc4_x: bytes) -> bytes:
 c:
     proto 1 1
+    txn NumAppArgs
+    bz c_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 4 // method "c(uint256)uint256"
+    ==
+    bz c_after_if_else@6
     txn GroupIndex
-    bz c_ternary_false@2
+    bz c_ternary_false@4
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-c_ternary_merge@3:
+c_ternary_merge@5:
     !
     assert // not payable
+
+c_after_if_else@6:
     pushint 3
     itob
     frame_dig -1
@@ -328,24 +357,32 @@ c_ternary_merge@3:
     b|
     retsub
 
-c_ternary_false@2:
+c_ternary_false@4:
     intc_2 // 0
-    b c_ternary_merge@3
+    b c_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.d(__arc4_x: bytes) -> bytes:
 d:
     proto 1 1
+    txn NumAppArgs
+    bz d_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 5 // method "d(uint256)uint256"
+    ==
+    bz d_after_if_else@6
     txn GroupIndex
-    bz d_ternary_false@2
+    bz d_ternary_false@4
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-d_ternary_merge@3:
+d_ternary_merge@5:
     !
     assert // not payable
+
+d_after_if_else@6:
     pushint 5
     itob
     frame_dig -1
@@ -364,24 +401,32 @@ d_ternary_merge@3:
     b|
     retsub
 
-d_ternary_false@2:
+d_ternary_false@4:
     intc_2 // 0
-    b d_ternary_merge@3
+    b d_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.e(__arc4_x: bytes) -> bytes:
 e:
     proto 1 1
+    txn NumAppArgs
+    bz e_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 6 // method "e(uint256)uint256"
+    ==
+    bz e_after_if_else@6
     txn GroupIndex
-    bz e_ternary_false@2
+    bz e_ternary_false@4
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-e_ternary_merge@3:
+e_ternary_merge@5:
     !
     assert // not payable
+
+e_after_if_else@6:
     intc_3 // 8
     itob
     frame_dig -1
@@ -400,6 +445,6 @@ e_ternary_merge@3:
     b|
     retsub
 
-e_ternary_false@2:
+e_ternary_false@4:
     intc_2 // 0
-    b e_ternary_merge@3
+    b e_ternary_merge@5

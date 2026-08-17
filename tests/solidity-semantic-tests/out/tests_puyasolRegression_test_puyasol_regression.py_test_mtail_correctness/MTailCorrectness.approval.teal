@@ -170,13 +170,13 @@ main_ternary_false@33:
 
 main_gb_route@8:
     txn GroupIndex
-    bz main_ternary_false@39
+    bz main_ternary_false@42
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@40:
+main_ternary_merge@43:
     !
     assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
@@ -184,19 +184,19 @@ main_ternary_merge@40:
     intc_0 // 1
     return
 
-main_ternary_false@39:
+main_ternary_false@42:
     intc_2 // 0
-    b main_ternary_merge@40
+    b main_ternary_merge@43
 
 main_ga_route@7:
     txn GroupIndex
-    bz main_ternary_false@44
+    bz main_ternary_false@47
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@45:
+main_ternary_merge@48:
     !
     assert // not payable
     bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
@@ -204,9 +204,9 @@ main_ternary_merge@45:
     intc_0 // 1
     return
 
-main_ternary_false@44:
+main_ternary_false@47:
     intc_2 // 0
-    b main_ternary_merge@45
+    b main_ternary_merge@48
 
 main_f_route@6:
     txna ApplicationArgs 1
@@ -224,13 +224,13 @@ main_f_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@49
+    bz main_ternary_false@52
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@50:
+main_ternary_merge@53:
     !
     assert // not payable
     dup2
@@ -254,9 +254,9 @@ main_ternary_merge@50:
     intc_0 // 1
     return
 
-main_ternary_false@49:
+main_ternary_false@52:
     intc_2 // 0
-    b main_ternary_merge@50
+    b main_ternary_merge@53
 
 main_f_route@5:
     txna ApplicationArgs 1
@@ -267,13 +267,13 @@ main_f_route@5:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@54
+    bz main_ternary_false@57
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@55:
+main_ternary_merge@58:
     !
     assert // not payable
     pushint 100
@@ -299,6 +299,6 @@ main_ternary_merge@55:
     intc_0 // 1
     return
 
-main_ternary_false@54:
+main_ternary_false@57:
     intc_2 // 0
-    b main_ternary_merge@55
+    b main_ternary_merge@58

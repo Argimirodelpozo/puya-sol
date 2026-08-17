@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/external_call_with_function_pointer_parameter.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1
+    intcblock 0 32 1
     bytecblock 0x82fadf35 0x151f7c75
-    intc_1 // 0
+    intc_0 // 0
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -35,64 +36,55 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     bytec_0 // method "double(uint256)uint256"
-    pushbytess 0xc14ad39f 0x31c0ee5d // method "g(uint256)uint256", method "run(byte[12],uint256)uint256"
+    pushbytes 0xc14ad39f // method "g(uint256)uint256"
     txna ApplicationArgs 0
-    match main_double_route@5 main_g_route@6 main_run_route@7
+    match main_double_route@5 main_g_route@6
     err
-
-main_run_route@7:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 12
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 12>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub __intlib_L_run
-    pop
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
 
 main_g_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
+    bury 3
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@15
+    bz main_ternary_false@12
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@16:
+main_ternary_merge@13:
     !
     assert // not payable
     global CurrentApplicationID
     itob
     bytec_0 // method "double(uint256)uint256"
     concat
+    dup
+    intc_0 // 0
+    extract_uint64
+    dup
+    bury 3
+    global CurrentApplicationID
+    ==
+    bz main_else_body@16
+    extract 8 4
+    bytec_0 // method "double(uint256)uint256"
+    ==
+    assert // unknown function selector in self-call dispatch
     dig 1
-    callsub __intlib_L_run
-    pop
+    callsub double
+
+main_after_if_else@17:
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -102,15 +94,34 @@ main_ternary_merge@16:
     intc_2 // 1
     return
 
-main_ternary_false@15:
-    intc_1 // 0
-    b main_ternary_merge@16
+main_else_body@16:
+    itxn_begin
+    extract 8 4
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    dig 1
+    itxn_field ApplicationID
+    itxn_field ApplicationArgs
+    dig 1
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    b main_after_if_else@17
+
+main_ternary_false@12:
+    intc_0 // 0
+    b main_ternary_merge@13
 
 main_double_route@5:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub double
@@ -144,82 +155,14 @@ double_ternary_merge@3:
     assert // overflow
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     retsub
 
 double_ternary_false@2:
-    intc_1 // 0
+    intc_0 // 0
     b double_ternary_merge@3
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/external_call_with_function_pointer_parameter.sol.C.__intlib_L_run(__arc4__operation: bytes, __arc4__a: bytes) -> bytes, bytes:
-__intlib_L_run:
-    proto 2 2
-    pushbytes ""
-    txn GroupIndex
-    bz __intlib_L_run_ternary_false@2
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-__intlib_L_run_ternary_merge@3:
-    !
-    assert // not payable
-    frame_dig -2
-    intc_1 // 0
-    extract_uint64
-    dup
-    frame_bury 0
-    global CurrentApplicationID
-    ==
-    bz __intlib_L_run_else_body@5
-    frame_dig -2
-    extract 8 4
-    bytec_0 // method "double(uint256)uint256"
-    ==
-    assert // unknown function selector in self-call dispatch
-    frame_dig -1
-    callsub double
-
-__intlib_L_run_after_if_else@7:
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    frame_dig -2
-    uncover 2
-    retsub
-
-__intlib_L_run_else_body@5:
-    itxn_begin
-    frame_dig -2
-    extract 8 4
-    pushint 6
-    itxn_field TypeEnum
-    intc_1 // 0
-    itxn_field OnCompletion
-    intc_1 // 0
-    itxn_field Fee
-    frame_dig 0
-    itxn_field ApplicationID
-    itxn_field ApplicationArgs
-    frame_dig -1
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    b __intlib_L_run_after_if_else@7
-
-__intlib_L_run_ternary_false@2:
-    intc_1 // 0
-    b __intlib_L_run_ternary_merge@3

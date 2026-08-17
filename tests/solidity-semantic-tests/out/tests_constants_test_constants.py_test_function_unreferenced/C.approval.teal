@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constants/contracts/function_unreferenced.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    bytecblock 0xf2b65f27
     pushint 4096
     bzero
     dup
@@ -32,38 +33,47 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x4bb8a92a 0xf2b65f27 // method "f()byte[4]", method "g()void"
+    pushbytes 0x4bb8a92a // method "f()byte[4]"
+    bytec_0 // method "g()void"
     txna ApplicationArgs 0
     match main_f_route@5 main_g_route@6
     err
 
 main_g_route@6:
+    txn NumAppArgs
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    bytec_0 // method "g()void"
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@15:
     !
     assert // not payable
+
+main_after_if_else@16:
     intc_0 // 1
     return
 
-main_ternary_false@12:
+main_ternary_false@14:
     intc_1 // 0
-    b main_ternary_merge@13
+    b main_ternary_merge@15
 
 main_f_route@5:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@20
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@21:
     !
     assert // not payable
     pushbytes 0x151f7c75f2b65f27
@@ -71,6 +81,6 @@ main_ternary_merge@18:
     intc_0 // 1
     return
 
-main_ternary_false@17:
+main_ternary_false@20:
     intc_1 // 0
-    b main_ternary_merge@18
+    b main_ternary_merge@21

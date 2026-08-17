@@ -1,0 +1,481 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.approval_program() -> uint64:
+main:
+    intcblock 1 0 32 8
+    bytecblock 0x151f7c75 0x01e1efa5 0x76542536 0x00 0x151f7c7501e1efa5
+    intc_1 // 0
+    dupn 3
+    pushbytes ""
+    dup
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    bytec_1 // method "alpha(uint256)bool"
+    pushbytess 0x49f0dfa3 0x4ceb18f5 0x11bfb764 0xe3f88c1e 0xb628d01a 0x890c45f7 0xabdb4af2 0x984a74b0 0x5042f554 // method "noReturn(byte[32])void", method "functionSelector()byte[4]", method "eventSelector()byte[32]", method "errorSelector()byte[4]", method "interfaceId()byte[4]", method "encodedCallSelector()byte[4]", method "encodedSignatureSelector()byte[4]", method "pointerSelector()byte[4]", method "pointerCall(uint256)bool"
+    bytec_2 // method "innerMsgSig()byte[4]"
+    pushbytess 0x83d99a37 0x1da899a8 0xefd3cee0 // method "outerMsgSig()byte[4]", method "directMsgSig()byte[4]", method "assemblyMsgSig(uint256)byte[4]"
+    txna ApplicationArgs 0
+    match main_alpha_route@5 main_noReturn_route@6 main_functionSelector_route@7 main_eventSelector_route@8 main_errorSelector_route@9 main_interfaceId_route@10 main_encodedCallSelector_route@11 main_encodedSignatureSelector_route@12 main_pointerSelector_route@13 main_pointerCall_route@14 main_innerMsgSig_route@15 main_outerMsgSig_route@16 main_directMsgSig_route@17 main_assemblyMsgSig_route@18
+    err
+
+main_assemblyMsgSig_route@18:
+    txna ApplicationArgs 1
+    dup
+    bury 7
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    load 0
+    store 0
+    txn NumAppArgs
+    bz main_ternary_false@27
+    txna ApplicationArgs 0
+
+main_ternary_merge@28:
+    intc_2 // 32
+    bzero
+    dup
+    bury 5
+    dig 7
+    dup
+    cover 2
+    dig 1
+    b|
+    uncover 3
+    swap
+    concat
+    dup
+    uncover 2
+    concat
+    bury 6
+    intc_3 // 8
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    bury 4
+    swap
+    len
+    dup
+    bury 3
+    <
+    bz main_ternary_false@30
+    dig 1
+
+main_ternary_merge@31:
+    dig 4
+    swap
+    intc_2 // 32
+    extract3
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    extract 0 4
+    load 0
+    store 0
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@30:
+    dup
+    b main_ternary_merge@31
+
+main_ternary_false@27:
+    pushint 4
+    bzero
+    b main_ternary_merge@28
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_directMsgSig_route@17:
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c75
+    txna ApplicationArgs 0
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@35:
+    intc_1 // 0
+    b main_ternary_merge@36
+
+main_outerMsgSig_route@16:
+    txn GroupIndex
+    bz main_ternary_false@40
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@41:
+    !
+    assert // not payable
+    callsub innerMsgSig
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@40:
+    intc_1 // 0
+    b main_ternary_merge@41
+
+main_innerMsgSig_route@15:
+    callsub innerMsgSig
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_pointerCall_route@14:
+    txna ApplicationArgs 1
+    dup
+    bury 6
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@47
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@48:
+    !
+    assert // not payable
+    dig 4
+    callsub alpha
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@47:
+    intc_1 // 0
+    b main_ternary_merge@48
+
+main_pointerSelector_route@13:
+    txn GroupIndex
+    bz main_ternary_false@52
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@53:
+    !
+    assert // not payable
+    global CurrentApplicationID
+    itob
+    bytec_1 // method "alpha(uint256)bool"
+    concat
+    extract 8 4
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@52:
+    intc_1 // 0
+    b main_ternary_merge@53
+
+main_encodedSignatureSelector_route@12:
+    txn GroupIndex
+    bz main_ternary_false@57
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@58:
+    !
+    assert // not payable
+    load 0
+    store 0
+    load 0
+    store 0
+    pushbytes 0x151f7c758ded4079
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@57:
+    intc_1 // 0
+    b main_ternary_merge@58
+
+main_encodedCallSelector_route@11:
+    txn GroupIndex
+    bz main_ternary_false@68
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@69:
+    !
+    assert // not payable
+    load 0
+    store 0
+    load 0
+    store 0
+    bytec 4 // 0x151f7c7501e1efa5
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@68:
+    intc_1 // 0
+    b main_ternary_merge@69
+
+main_interfaceId_route@10:
+    txn GroupIndex
+    bz main_ternary_false@79
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@80:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7548113006
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@79:
+    intc_1 // 0
+    b main_ternary_merge@80
+
+main_errorSelector_route@9:
+    txn GroupIndex
+    bz main_ternary_false@84
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@85:
+    !
+    assert // not payable
+    pushbytes 0x151f7c75d76d72f9
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@84:
+    intc_1 // 0
+    b main_ternary_merge@85
+
+main_eventSelector_route@8:
+    txn GroupIndex
+    bz main_ternary_false@89
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@90:
+    !
+    assert // not payable
+    pushbytes 0x151f7c7595c2acba92d7c59527aa33cd2dd3d2f01ef5ef8c5e7d4acb3b786fe188d43250
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@89:
+    intc_1 // 0
+    b main_ternary_merge@90
+
+main_functionSelector_route@7:
+    txn GroupIndex
+    bz main_ternary_false@94
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@95:
+    !
+    assert // not payable
+    bytec 4 // 0x151f7c7501e1efa5
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@94:
+    intc_1 // 0
+    b main_ternary_merge@95
+
+main_noReturn_route@6:
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@99
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@100:
+    !
+    assert // not payable
+    intc_0 // 1
+    return
+
+main_ternary_false@99:
+    intc_1 // 0
+    b main_ternary_merge@100
+
+main_alpha_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub alpha
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.alpha(__arc4_value: bytes) -> uint64:
+alpha:
+    proto 1 1
+    txn GroupIndex
+    bz alpha_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+alpha_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 7
+    itob
+    frame_dig -1
+    b==
+    retsub
+
+alpha_ternary_false@2:
+    intc_1 // 0
+    b alpha_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.innerMsgSig() -> bytes:
+innerMsgSig:
+    txn NumAppArgs
+    bz innerMsgSig_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_2 // method "innerMsgSig()byte[4]"
+    ==
+    bz innerMsgSig_after_if_else@6
+    txn GroupIndex
+    bz innerMsgSig_ternary_false@4
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+innerMsgSig_ternary_merge@5:
+    !
+    assert // not payable
+
+innerMsgSig_after_if_else@6:
+    txna ApplicationArgs 0
+    retsub
+
+innerMsgSig_ternary_false@4:
+    intc_1 // 0
+    b innerMsgSig_ternary_merge@5

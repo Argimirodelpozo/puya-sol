@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_function_usage_in_constructor_arguments.sol.Derived.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "m_a" 0x151f7c75
+    bytecblock "m_a" 0x151f7c75 0xd3661b80
     pushint 4096
     bzero
     dup
@@ -40,7 +40,9 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x39e69bec 0xd3661b80 0x4b2c0376 // method "getA()uint256", method "overridden()uint256", method "g()uint256"
+    pushbytes 0x39e69bec // method "getA()uint256"
+    bytec_2 // method "overridden()uint256"
+    pushbytes 0x4b2c0376 // method "g()uint256"
     txna ApplicationArgs 0
     match main_getA_route@5 main_overridden_route@6 main_g_route@7
     err
@@ -100,22 +102,30 @@ main_ternary_false@17:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_function_usage_in_constructor_arguments.sol.Derived.overridden() -> bytes:
 overridden:
+    txn NumAppArgs
+    bz overridden_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_2 // method "overridden()uint256"
+    ==
+    bz overridden_after_if_else@6
     txn GroupIndex
-    bz overridden_ternary_false@2
+    bz overridden_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-overridden_ternary_merge@3:
+overridden_ternary_merge@5:
     !
     assert // not payable
+
+overridden_after_if_else@6:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
     retsub
 
-overridden_ternary_false@2:
+overridden_ternary_false@4:
     intc_1 // 0
-    b overridden_ternary_merge@3
+    b overridden_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_function_usage_in_constructor_arguments.sol.Derived.g() -> bytes:

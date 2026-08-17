@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_override_changing_mutability_public.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
+    bytecblock 0xf9402ac3 0xcc9daa45 0x3c8c3450
     pushint 4096
     bzero
     dup
@@ -32,7 +33,10 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xa6ff944a 0xf9402ac3 0xcc9daa45 0x3c8c3450 // method "run()void", method "mutableWithViewOverride()void", method "mutableWithPureOverride()void", method "viewWithPureOverride()void"
+    pushbytes 0xa6ff944a // method "run()void"
+    bytec_0 // method "mutableWithViewOverride()void"
+    bytec_1 // method "mutableWithPureOverride()void"
+    bytec_2 // method "viewWithPureOverride()void"
     txna ApplicationArgs 0
     match main_run_route@5 main_mutableWithViewOverride_route@6 main_mutableWithPureOverride_route@7 main_viewWithPureOverride_route@8
     err
@@ -76,56 +80,80 @@ main_ternary_false@20:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_override_changing_mutability_public.sol.C.mutableWithViewOverride() -> void:
 mutableWithViewOverride:
+    txn NumAppArgs
+    bz mutableWithViewOverride_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_0 // method "mutableWithViewOverride()void"
+    ==
+    bz mutableWithViewOverride_after_if_else@6
     txn GroupIndex
-    bz mutableWithViewOverride_ternary_false@2
+    bz mutableWithViewOverride_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-mutableWithViewOverride_ternary_merge@3:
+mutableWithViewOverride_ternary_merge@5:
     !
     assert // not payable
+
+mutableWithViewOverride_after_if_else@6:
     retsub
 
-mutableWithViewOverride_ternary_false@2:
+mutableWithViewOverride_ternary_false@4:
     intc_1 // 0
-    b mutableWithViewOverride_ternary_merge@3
+    b mutableWithViewOverride_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_override_changing_mutability_public.sol.C.mutableWithPureOverride() -> void:
 mutableWithPureOverride:
+    txn NumAppArgs
+    bz mutableWithPureOverride_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_1 // method "mutableWithPureOverride()void"
+    ==
+    bz mutableWithPureOverride_after_if_else@6
     txn GroupIndex
-    bz mutableWithPureOverride_ternary_false@2
+    bz mutableWithPureOverride_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-mutableWithPureOverride_ternary_merge@3:
+mutableWithPureOverride_ternary_merge@5:
     !
     assert // not payable
+
+mutableWithPureOverride_after_if_else@6:
     retsub
 
-mutableWithPureOverride_ternary_false@2:
+mutableWithPureOverride_ternary_false@4:
     intc_1 // 0
-    b mutableWithPureOverride_ternary_merge@3
+    b mutableWithPureOverride_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_override_changing_mutability_public.sol.C.viewWithPureOverride() -> void:
 viewWithPureOverride:
+    txn NumAppArgs
+    bz viewWithPureOverride_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_2 // method "viewWithPureOverride()void"
+    ==
+    bz viewWithPureOverride_after_if_else@6
     txn GroupIndex
-    bz viewWithPureOverride_ternary_false@2
+    bz viewWithPureOverride_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-viewWithPureOverride_ternary_merge@3:
+viewWithPureOverride_ternary_merge@5:
     !
     assert // not payable
+
+viewWithPureOverride_after_if_else@6:
     retsub
 
-viewWithPureOverride_ternary_false@2:
+viewWithPureOverride_ternary_false@4:
     intc_1 // 0
-    b viewWithPureOverride_ternary_merge@3
+    b viewWithPureOverride_ternary_merge@5

@@ -51,7 +51,7 @@ main_partialAssignArrayCrossStorageBoundary_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    callsub getArray
+    callsub __solfn_11
     dup
     pushbytes 0x0b
     callsub __storage_write
@@ -117,7 +117,7 @@ main_partialAssignArrayBeforeStorageBoundary_route@7:
 main_ternary_merge@20:
     !
     assert // not payable
-    callsub getArray
+    callsub __solfn_11
     dup
     pushbytes 0x15
     callsub __storage_write
@@ -195,7 +195,7 @@ main_ternary_merge@25:
     concat
     replace2 64
     store 0
-    callsub getArray
+    callsub __solfn_11
     dup
     callsub __storage_read
     dup
@@ -348,7 +348,7 @@ main_fillArray_route@5:
 main_ternary_merge@30:
     !
     assert // not payable
-    callsub getArray
+    callsub __solfn_11
     bury 2
     intc_1 // 1
     itob
@@ -387,7 +387,7 @@ main_ternary_false@29:
     b main_ternary_merge@30
 
 
-// __puyasol___storage_read(__slot: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_partial_assignment.sol.C.__storage_read(__slot: bytes) -> bytes:
 __storage_read:
     proto 1 1
     frame_dig -1
@@ -417,7 +417,7 @@ __storage_read:
     retsub
 
 
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_partial_assignment.sol.C.__storage_write(__slot: bytes, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     frame_dig -2
@@ -457,8 +457,8 @@ __storage_write:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_partial_assignment.sol.C.getArray() -> bytes:
-getArray:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_partial_assignment.sol.C.__solfn_11() -> bytes:
+__solfn_11:
     load 0
     store 0
     load 0

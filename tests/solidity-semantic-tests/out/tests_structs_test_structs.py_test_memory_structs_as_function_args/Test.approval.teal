@@ -70,11 +70,11 @@ main_ternary_merge@9:
     itob
     pushbytes 0x0100020000000000000000000000000000000000000000000000000000000000000003
     swap
-    callsub extract
+    callsub __solfn_75
     uncover 4
-    callsub extract
+    callsub __solfn_75
     uncover 4
-    callsub extract
+    callsub __solfn_75
     pop
     cover 2
     dig 1
@@ -117,14 +117,14 @@ main_ternary_false@8:
     b main_ternary_merge@9
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_as_function_args.sol.Test.extract(s: bytes, which: bytes) -> bytes, bytes:
-extract:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_as_function_args.sol.Test.__solfn_75(s: bytes, which: bytes) -> bytes, bytes:
+__solfn_75:
     proto 2 2
     intc_2 // 0
     itob
     frame_dig -1
     b==
-    bz extract_else_body@2
+    bz __solfn_75_else_body@2
     frame_dig -2
     intc_2 // 0
     getbyte
@@ -132,12 +132,12 @@ extract:
     frame_dig -2
     retsub
 
-extract_else_body@2:
+__solfn_75_else_body@2:
     intc_0 // 1
     itob
     frame_dig -1
     b==
-    bz extract_else_body@4
+    bz __solfn_75_else_body@4
     frame_dig -2
     intc_0 // 1
     extract_uint16
@@ -145,7 +145,7 @@ extract_else_body@2:
     frame_dig -2
     retsub
 
-extract_else_body@4:
+__solfn_75_else_body@4:
     frame_dig -2
     extract 3 32
     frame_dig -2

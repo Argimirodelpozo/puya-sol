@@ -138,7 +138,7 @@ main_ternary_merge@27:
 main_after_if_else@51:
     dig 1
     assert // LOCKED
-    callsub _settleIfLast
+    callsub __solfn_171
     intc_1 // 1
     return
 
@@ -227,7 +227,7 @@ main_bool_merge@59:
     bytec_1 // "netDelta"
     swap
     app_global_put
-    callsub _settleIfLast
+    callsub __solfn_171
     intc_1 // 1
     return
 
@@ -316,7 +316,7 @@ main_bool_merge@67:
     bytec_1 // "netDelta"
     swap
     app_global_put
-    callsub _settleIfLast
+    callsub __solfn_171
     intc_1 // 1
     return
 
@@ -387,7 +387,7 @@ main_after_if_else@48:
     bytec_0 // "unlocked"
     intc_1 // 1
     app_global_put
-    callsub _settleIfLast
+    callsub __solfn_171
     intc_1 // 1
     return
 
@@ -396,8 +396,8 @@ main_ternary_false@41:
     b main_ternary_merge@42
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/flash_accounting.sol.FlashAccounting._settleIfLast() -> void:
-_settleIfLast:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/flash_accounting.sol.FlashAccounting.__solfn_171() -> void:
+__solfn_171:
     proto 0 0
     pushbytes ""
     txn GroupIndex
@@ -405,7 +405,7 @@ _settleIfLast:
     intc_1 // 1
     -
     ==
-    bz _settleIfLast_after_if_else@4
+    bz __solfn_171_after_if_else@4
     intc_0 // 0
     bytec_1 // "netDelta"
     app_global_get_ex
@@ -415,16 +415,16 @@ _settleIfLast:
     b==
     dup
     frame_bury 0
-    bnz _settleIfLast_after_if_else@3
+    bnz __solfn_171_after_if_else@3
     pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000009554e534554544c45440000000000000000000000000000000000000000000000
     log
 
-_settleIfLast_after_if_else@3:
+__solfn_171_after_if_else@3:
     frame_dig 0
     assert // UNSETTLED
     bytec_0 // "unlocked"
     intc_0 // 0
     app_global_put
 
-_settleIfLast_after_if_else@4:
+__solfn_171_after_if_else@4:
     retsub

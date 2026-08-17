@@ -102,7 +102,7 @@ main_ternary_merge@20:
     assert // overflow
     swap
     cover 2
-    callsub _approve
+    callsub __solfn_375
     bytec 4 // 0x151f7c7580
     log
     intc_1 // 1
@@ -157,7 +157,7 @@ main_ternary_merge@25:
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    callsub _approve
+    callsub __solfn_375
     bytec 4 // 0x151f7c7580
     log
     intc_1 // 1
@@ -205,7 +205,7 @@ main_ternary_merge@30:
     dig 10
     dup
     cover 4
-    callsub _transfer
+    callsub __solfn_245
     txn Sender
     dig 1
     bytec_2 // "_allowances"
@@ -233,7 +233,7 @@ main_ternary_merge@30:
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    callsub _approve
+    callsub __solfn_375
     bytec 4 // 0x151f7c7580
     log
     intc_1 // 1
@@ -271,7 +271,7 @@ main_ternary_merge@35:
     txn Sender
     dig 4
     dig 9
-    callsub _approve
+    callsub __solfn_375
     bytec 4 // 0x151f7c7580
     log
     intc_1 // 1
@@ -309,7 +309,7 @@ main_ternary_merge@40:
     txn Sender
     dig 3
     dig 9
-    callsub _transfer
+    callsub __solfn_245
     bytec 4 // 0x151f7c7580
     log
     intc_1 // 1
@@ -542,18 +542,18 @@ main_after_if_else@58:
     return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/erc20.sol.ERC20._transfer(from: bytes, to: bytes, value: bytes) -> void:
-_transfer:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/erc20.sol.ERC20.__solfn_245(from: bytes, to: bytes, value: bytes) -> void:
+__solfn_245:
     proto 3 0
     frame_dig -2
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     dup
-    bnz _transfer_after_if_else@2
+    bnz __solfn_245_after_if_else@2
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002345524332303a207472616e7366657220746f20746865207a65726f20616464726573730000000000000000000000000000000000000000000000000000000000
     log
 
-_transfer_after_if_else@2:
+__solfn_245_after_if_else@2:
     frame_dig 0
     assert // ERC20: transfer to the zero address
     frame_dig -3
@@ -623,19 +623,19 @@ _transfer_after_if_else@2:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/erc20.sol.ERC20._approve(owner: bytes, spender: bytes, value: bytes) -> void:
-_approve:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/erc20.sol.ERC20.__solfn_375(owner: bytes, spender: bytes, value: bytes) -> void:
+__solfn_375:
     proto 3 0
     bytec_0 // ""
     frame_dig -3
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     dup
-    bnz _approve_after_if_else@2
+    bnz __solfn_375_after_if_else@2
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002445524332303a20617070726f76652066726f6d20746865207a65726f206164647265737300000000000000000000000000000000000000000000000000000000
     log
 
-_approve_after_if_else@2:
+__solfn_375_after_if_else@2:
     frame_dig 1
     assert // ERC20: approve from the zero address
     frame_dig -2
@@ -643,11 +643,11 @@ _approve_after_if_else@2:
     !=
     dup
     frame_bury 0
-    bnz _approve_after_if_else@4
+    bnz __solfn_375_after_if_else@4
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002245524332303a20617070726f766520746f20746865207a65726f2061646472657373000000000000000000000000000000000000000000000000000000000000
     log
 
-_approve_after_if_else@4:
+__solfn_375_after_if_else@4:
     frame_dig 0
     assert // ERC20: approve to the zero address
     frame_dig -3

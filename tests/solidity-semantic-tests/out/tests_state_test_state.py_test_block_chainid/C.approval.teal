@@ -3,6 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/block_chainid.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 0
     pushint 4096
     bzero
     dup
@@ -22,7 +23,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -40,18 +41,28 @@ main_f_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    pushint 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@9:
     !
     assert // not payable
-    pushbytes 0x151f7c7580
+    global GenesisHash
+    intc_1 // 0
+    itob
+    b>
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_0 // 1
     return
 
 main_ternary_false@8:
-    pushint 0
+    intc_1 // 0
     b main_ternary_merge@9

@@ -4,7 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_override_changing_mutability_public.sol.A.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0xf9402ac3 0xcc9daa45 0x3c8c3450
     pushint 4096
     bzero
     dup
@@ -33,48 +32,14 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_0 // method "mutableWithViewOverride()void"
-    bytec_1 // method "mutableWithPureOverride()void"
-    bytec_2 // method "viewWithPureOverride()void"
+    pushbytess 0xf9402ac3 0xcc9daa45 0x3c8c3450 // method "mutableWithViewOverride()void", method "mutableWithPureOverride()void", method "viewWithPureOverride()void"
     txna ApplicationArgs 0
     match main_mutableWithViewOverride_route@5 main_mutableWithPureOverride_route@6 main_viewWithPureOverride_route@7
     err
 
 main_viewWithPureOverride_route@7:
-    txn NumAppArgs
-    bz main_after_if_else@33
-    txna ApplicationArgs 0
-    bytec_2 // method "viewWithPureOverride()void"
-    ==
-    bz main_after_if_else@33
     txn GroupIndex
-    bz main_ternary_false@15
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@16:
-    !
-    assert // not payable
-
-main_after_if_else@33:
-    intc_0 // 1
-    return
-
-main_ternary_false@15:
-    intc_1 // 0
-    b main_ternary_merge@16
-
-main_mutableWithPureOverride_route@6:
-    txn NumAppArgs
-    bz main_after_if_else@33
-    txna ApplicationArgs 0
-    bytec_1 // method "mutableWithPureOverride()void"
-    ==
-    bz main_after_if_else@33
-    txn GroupIndex
-    bz main_ternary_false@23
+    bz main_ternary_false@13
     txn GroupIndex
     intc_0 // 1
     -
@@ -83,31 +48,35 @@ main_mutableWithPureOverride_route@6:
 main_ternary_merge@24:
     !
     assert // not payable
-    b main_after_if_else@33
+    intc_0 // 1
+    return
 
-main_ternary_false@23:
+main_ternary_false@13:
     intc_1 // 0
     b main_ternary_merge@24
 
-main_mutableWithViewOverride_route@5:
-    txn NumAppArgs
-    bz main_after_if_else@33
-    txna ApplicationArgs 0
-    bytec_0 // method "mutableWithViewOverride()void"
-    ==
-    bz main_after_if_else@33
+main_mutableWithPureOverride_route@6:
     txn GroupIndex
-    bz main_ternary_false@31
+    bz main_ternary_false@18
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+    b main_ternary_merge@24
 
-main_ternary_merge@32:
-    !
-    assert // not payable
-    b main_after_if_else@33
-
-main_ternary_false@31:
+main_ternary_false@18:
     intc_1 // 0
-    b main_ternary_merge@32
+    b main_ternary_merge@24
+
+main_mutableWithViewOverride_route@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+    b main_ternary_merge@24
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/variable_cleanup.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 8
+    intcblock 0 32 1 8 18446744073709551360
     bytecblock "x" "y" "b"
     intc_0 // 0
     dupn 2
@@ -112,7 +112,7 @@ main_ternary_merge@9:
     pushint 128
     >=
     bz main_ternary_false@11
-    pushint 18446744073709551360
+    intc 4 // 18446744073709551360
     +
 
 main_ternary_merge@12:
@@ -138,17 +138,27 @@ main_ternary_merge@12:
     bytec_1 // "y"
     app_global_get_ex
     assert // check y exists
+    pushint 256
+    %
+    dup
+    pushint 128
+    >=
+    bz main_ternary_false@14
+    intc 4 // 18446744073709551360
+    +
+
+main_ternary_merge@15:
     itob
     pushbytes 0xffffffff
     b&
     dup
     pushbytes 0x80000000
     b>=
-    bz main_ternary_false@14
+    bz main_ternary_false@17
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
     b+
 
-main_ternary_merge@15:
+main_ternary_merge@18:
     dup
     len
     intc_1 // 32
@@ -176,6 +186,9 @@ main_ternary_merge@15:
     log
     intc_2 // 1
     return
+
+main_ternary_false@17:
+    b main_ternary_merge@18
 
 main_ternary_false@14:
     b main_ternary_merge@15

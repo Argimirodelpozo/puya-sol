@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/variable_cleanup_sstore.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32
+    intcblock 0 1 128 18446744073709551360
     bytecblock "x" "y" "b" 0x0000000000000000000000000000000000000000000000000000000061627f10
     pushbytes ""
     pushint 4096
@@ -71,13 +71,13 @@ main_ternary_merge@9:
     pushint 30
     getbyte
     dup
-    pushint 128
+    intc_2 // 128
     >=
-    bz main_ternary_false@16
-    pushint 18446744073709551360
+    bz main_ternary_false@19
+    intc_3 // 18446744073709551360
     +
 
-main_ternary_merge@17:
+main_ternary_merge@20:
     bytec_1 // "y"
     swap
     app_global_put
@@ -97,23 +97,33 @@ main_ternary_merge@17:
     bytec_1 // "y"
     app_global_get_ex
     assert // check y exists
+    pushint 256
+    %
+    dup
+    intc_2 // 128
+    >=
+    bz main_ternary_false@11
+    intc_3 // 18446744073709551360
+    +
+
+main_ternary_merge@12:
     itob
     pushbytes 0xffffffff
     b&
     dup
     pushbytes 0x80000000
     b>=
-    bz main_ternary_false@11
+    bz main_ternary_false@14
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
     b+
 
-main_ternary_merge@12:
+main_ternary_merge@15:
     dup
     len
-    intc_2 // 32
+    pushint 32
     <=
     assert // overflow
-    intc_2 // 32
+    pushint 32
     bzero
     b|
     intc_0 // 0
@@ -136,11 +146,14 @@ main_ternary_merge@12:
     intc_1 // 1
     return
 
+main_ternary_false@14:
+    b main_ternary_merge@15
+
 main_ternary_false@11:
     b main_ternary_merge@12
 
-main_ternary_false@16:
-    b main_ternary_merge@17
+main_ternary_false@19:
+    b main_ternary_merge@20
 
 main_ternary_false@8:
     intc_0 // 0

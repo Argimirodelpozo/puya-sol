@@ -1,0 +1,131 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_layout_library_asm_only.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 0 1
+    bytecblock 0x703a0000000000000000
+    intc_1 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xc3ed4a8c // method "roundtrip(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_roundtrip_route@4
+    err
+
+main_roundtrip_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    bury 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    dup
+    callsub SlotIO.write
+    callsub SlotIO.read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@8:
+    intc_1 // 0
+    b main_ternary_merge@9
+
+
+// __solfn_8(value: bytes) -> void:
+SlotIO.write:
+    proto 1 0
+    load 0
+    store 0
+    bytec_0 // 0x703a0000000000000000
+    pushint 2048
+    box_create
+    pop
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x703a0000000000000000
+    intc_1 // 0
+    uncover 2
+    box_replace
+    load 0
+    store 0
+    retsub
+
+
+// __solfn_15() -> bytes:
+SlotIO.read:
+    load 0
+    store 0
+    bytec_0 // 0x703a0000000000000000
+    box_len
+    bury 1
+    bz SlotIO.read_after_if_else@4
+    bytec_0 // 0x703a0000000000000000
+    intc_1 // 0
+    intc_0 // 32
+    box_extract
+
+SlotIO.read_after_inlined___puyasol___storage_read@8:
+    load 0
+    store 0
+    retsub
+
+SlotIO.read_after_if_else@4:
+    pushbytes 0x
+    b SlotIO.read_after_inlined___puyasol___storage_read@8

@@ -1,0 +1,103 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/on_demand_subroutine_roots.sol.OnDemand.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x8f9f0cf7 0xa213053d 0xfe7a0611 // method "unusedFunctionPointer()uint256", method "unusedRecursiveYul()uint256", method "foldedRipemd()byte[20]"
+    txna ApplicationArgs 0
+    match main_unusedFunctionPointer_route@5 main_unusedRecursiveYul_route@6 main_foldedRipemd_route@7
+    err
+
+main_foldedRipemd_route@7:
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    pushbytes 0x151f7c759c1185a5c5e9fc54612808977ee8f548b2258d31
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@13:
+    intc_1 // 0
+    b main_ternary_merge@14
+
+main_unusedRecursiveYul_route@6:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    load 0
+    store 0
+    load 0
+    store 0
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
+main_unusedFunctionPointer_route@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@23:
+    intc_1 // 0
+    b main_ternary_merge@24

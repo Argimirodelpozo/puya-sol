@@ -1175,7 +1175,7 @@
                             }
                           },
                           {
-                            "_type": "IntrinsicCall",
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
                               "line": 12,
@@ -1190,50 +1190,26 @@
                               "immutable": true,
                               "length": null
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
-                                  "line": 12,
-                                  "end_line": 12,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
-                                      "line": 12,
-                                      "end_line": 12,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 24,
-                                    "teal_alias": null
-                                  }
-                                ]
+                            "expr": {
+                              "_type": "ARC4Encode",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
+                                "line": 12,
+                                "end_line": 12,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
                               },
-                              {
-                                "_type": "IntrinsicCall",
+                              "wtype": {
+                                "_type": "ARC4UIntN",
+                                "name": "arc4.uint256",
+                                "immutable": true,
+                                "n": 256,
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "value": {
+                                "_type": "ReinterpretCast",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
                                   "line": 12,
@@ -1243,35 +1219,52 @@
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
                                 },
-                                "op_code": "itob",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
-                                      "line": 12,
-                                      "end_line": 12,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 5,
-                                    "teal_alias": null
-                                  }
-                                ]
-                              }
-                            ]
+                                "expr": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
+                                    "line": 12,
+                                    "end_line": 12,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "itob",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
+                                        "line": 12,
+                                        "end_line": 12,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 5,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                }
+                              },
+                              "error_message": null
+                            }
                           }
                         ]
                       },
@@ -2398,7 +2391,7 @@
                             }
                           },
                           {
-                            "_type": "IntrinsicCall",
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
                               "line": 17,
@@ -2413,50 +2406,26 @@
                               "immutable": true,
                               "length": null
                             },
-                            "op_code": "concat",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
-                                  "line": 17,
-                                  "end_line": 17,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "bzero",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
-                                      "line": 17,
-                                      "end_line": 17,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 24,
-                                    "teal_alias": null
-                                  }
-                                ]
+                            "expr": {
+                              "_type": "ARC4Encode",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
+                                "line": 17,
+                                "end_line": 17,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
                               },
-                              {
-                                "_type": "IntrinsicCall",
+                              "wtype": {
+                                "_type": "ARC4UIntN",
+                                "name": "arc4.uint256",
+                                "immutable": true,
+                                "n": 256,
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "value": {
+                                "_type": "ReinterpretCast",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
                                   "line": 17,
@@ -2466,35 +2435,52 @@
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
                                 },
-                                "op_code": "itob",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
-                                      "line": 17,
-                                      "end_line": 17,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 2,
-                                    "teal_alias": null
-                                  }
-                                ]
-                              }
-                            ]
+                                "expr": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
+                                    "line": 17,
+                                    "end_line": 17,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "itob",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
+                                        "line": 17,
+                                        "end_line": 17,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 2,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                }
+                              },
+                              "error_message": null
+                            }
                           }
                         ]
                       },
@@ -3979,7 +3965,7 @@
                         },
                         "items": [
                           {
-                            "_type": "ReinterpretCast",
+                            "_type": "MethodConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
                               "line": 21,
@@ -3994,51 +3980,17 @@
                               "immutable": true,
                               "length": null
                             },
-                            "expr": {
-                              "_type": "ReinterpretCast",
+                            "value": {
+                              "_type": "MethodSignatureString",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
-                                "line": 22,
-                                "end_line": 22,
+                                "line": 21,
+                                "end_line": 23,
                                 "comment_lines": 0,
                                 "column": null,
                                 "end_column": null
                               },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes[4]",
-                                "immutable": true,
-                                "length": 4
-                              },
-                              "expr": {
-                                "_type": "MethodConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
-                                  "line": 22,
-                                  "end_line": 22,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "value": {
-                                  "_type": "MethodSignatureString",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/precompile_extcodesize_check.sol",
-                                    "line": 22,
-                                    "end_line": 22,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "value": "selectorAndAppendValue(uint256)uint256"
-                                }
-                              }
+                              "value": "selectorAndAppendValue(uint256)uint256"
                             }
                           },
                           {

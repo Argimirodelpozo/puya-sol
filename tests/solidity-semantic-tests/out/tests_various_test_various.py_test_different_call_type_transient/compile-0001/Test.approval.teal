@@ -113,6 +113,8 @@ main_ternary_merge@20:
     bytec_0 // "b"
     app_global_get_ex
     assert // check b exists
+    pushint 32
+    bzero
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -129,7 +131,7 @@ main_ternary_merge@20:
     itxn_field ApplicationID
     pushbytes 0x8359b348 // method "callSetValue(address,uint256)void"
     itxn_field ApplicationArgs
-    dig 1
+    dig 2
     itxn_field ApplicationArgs
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
     itxn_field ApplicationArgs
@@ -147,7 +149,7 @@ main_ternary_merge@20:
     itxn_submit
     itxn LastLog
     itxn_begin
-    swap
+    uncover 2
     intc_3 // 24
     extract_uint64
     intc_2 // 6
@@ -168,12 +170,9 @@ main_ternary_merge@20:
     pushint 32
     <=
     assert // overflow
-    pushint 32
-    bzero
-    swap
-    dig 1
+    dig 2
     b|
-    uncover 2
+    swap
     extract 4 0
     dup
     len
@@ -210,6 +209,8 @@ main_ternary_merge@25:
     bytec_0 // "b"
     app_global_get_ex
     assert // check b exists
+    pushint 32
+    bzero
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
@@ -226,7 +227,7 @@ main_ternary_merge@25:
     itxn_field ApplicationID
     pushbytes 0x667d8c6d // method "delegateSetValue(address,uint256)void"
     itxn_field ApplicationArgs
-    dig 1
+    dig 2
     itxn_field ApplicationArgs
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     itxn_field ApplicationArgs
@@ -244,7 +245,7 @@ main_ternary_merge@25:
     itxn_submit
     itxn LastLog
     itxn_begin
-    swap
+    uncover 2
     intc_3 // 24
     extract_uint64
     intc_2 // 6
@@ -265,12 +266,9 @@ main_ternary_merge@25:
     pushint 32
     <=
     assert // overflow
-    pushint 32
-    bzero
-    swap
-    dig 1
+    dig 2
     b|
-    uncover 2
+    swap
     extract 4 0
     dup
     len

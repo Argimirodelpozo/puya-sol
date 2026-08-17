@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/same_function_in_construction_and_runtime_equality_check.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "x" 0x151f7c75
+    bytecblock "x" 0x82fadf35 0x151f7c75
     intc_1 // 0
     pushint 4096
     bzero
@@ -37,7 +37,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0xf59e3cc4 0x82fadf35 // method "test()bool", method "double(uint256)uint256"
+    pushbytes 0xf59e3cc4 // method "test()bool"
+    bytec_1 // method "double(uint256)uint256"
     txna ApplicationArgs 0
     match main_test_route@5 main_double_route@6
     err
@@ -50,16 +51,24 @@ main_double_route@6:
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    txn NumAppArgs
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    bytec_1 // method "double(uint256)uint256"
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@15:
     !
     assert // not payable
+
+main_after_if_else@16:
     pushint 2
     itob
     dig 1
@@ -76,26 +85,26 @@ main_ternary_merge@13:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@12:
+main_ternary_false@14:
     intc_1 // 0
-    b main_ternary_merge@13
+    b main_ternary_merge@15
 
 main_test_route@5:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@20
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@21:
     !
     assert // not payable
     intc_1 // 0
@@ -108,13 +117,13 @@ main_ternary_merge@18:
     intc_1 // 0
     uncover 2
     setbit
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@17:
+main_ternary_false@20:
     intc_1 // 0
-    b main_ternary_merge@18
+    b main_ternary_merge@21
