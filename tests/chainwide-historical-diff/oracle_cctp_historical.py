@@ -57,6 +57,36 @@ STUB_CONFIG = {
 }
 ALL_CONFIG = [*CASE_CONFIG.values(), STUB_CONFIG]
 ADDRESS_TO_APP = {item["address"].lower(): item["app_id"] for item in ALL_CONFIG}
+# Where the StubERC20 artifact lives (its case tag need not be in CASE_CONFIG:
+# the v2 config reuses the v1 minter's compiled stub).
+STUB_SOURCE = {"tag": "cctp_minter"}
+# Config-era calls replayed right after a case deploys (v2: the proxy's
+# historical initialize calldata, decoded to plain values by gen_v2_config).
+INIT_CALLS: list[dict[str, Any]] = []
+
+
+def apply_joint_config(config: dict[str, Any]) -> None:
+    """Re-point the module at another contract system (e.g. CCTP v2).
+
+    In-place mutation on purpose: cctp_evm_leg and cctp_joint_diff hold
+    references to these same dict objects via runpy, so one application
+    propagates everywhere.
+    """
+    CASE_CONFIG.clear()
+    CASE_CONFIG.update(config["cases"])
+    stub = dict(config.get("stub") or {})
+    if stub:
+        STUB_CONFIG.update(
+            {k: stub[k] for k in ("contract", "app_id", "address") if k in stub}
+        )
+        STUB_SOURCE["tag"] = stub.get("artifact_tag", STUB_SOURCE["tag"])
+    ALL_CONFIG[:] = [*CASE_CONFIG.values(), STUB_CONFIG]
+    ADDRESS_TO_APP.clear()
+    ADDRESS_TO_APP.update(
+        {item["address"].lower(): item["app_id"] for item in ALL_CONFIG}
+    )
+    INIT_CALLS[:] = config.get("init_calls") or []
+    MAINNET_RECEIPT_METADATA.update(config.get("receipt_metadata") or {})
 P0 = (b"p:" + bytes(8)).hex()
 SIGNATURE = re.compile(r"^([^()]*)\((.*)\)$")
 
@@ -510,8 +540,9 @@ class Runner:
         self.cases = {tag: CaseData.load(cases_path, tag) for tag in CASE_CONFIG}
         for data in self.cases.values():
             object.__setattr__(data, "oracle_api", self.api)
-        minter = self.cases["cctp_minter"]
-        self.stub_arc56 = load_json(minter.path / "out_avm" / "StubERC20.arc56.json")
+        self.stub_arc56 = load_json(
+            cases_path / STUB_SOURCE["tag"] / "out_avm" / "StubERC20.arc56.json"
+        )
         self._compat_temp = None
         self.compatibility_patches: dict[str, list[str]] = {}
         artifact_cases = cases_path
@@ -526,8 +557,9 @@ class Runner:
             for tag, data in self.cases.items()
         }
         self.artifacts["StubERC20"] = self.api.artifact(
-            cases_path, "cctp_minter", "StubERC20"
+            cases_path, STUB_SOURCE["tag"], "StubERC20"
         )
+        self.cases_path = cases_path
         self.continue_after_divergence = continue_after_divergence
         self.steps: list[dict[str, Any]] = []
         self.results: list[dict[str, Any]] = []
@@ -709,7 +741,7 @@ class Runner:
                 "approve(address,uint256)",
                 [
                     bytes.fromhex(
-                        self.api.app_address(CASE_CONFIG["cctp_messenger"]["app_id"])
+                        self.api.app_address(data.config["app_id"])
                     ),
                     amount,
                 ],
@@ -741,8 +773,10 @@ class Runner:
             (data.case["creation"] for data in self.cases.values()),
             key=lambda creation: (int(creation["block"]), int(creation["ts"])),
         )
-        minter = self.cases["cctp_minter"]
-        creator = (bytes(12) + raw20(minter.registry["creator"])).hex()
+        stub_registry = load_json(
+            self.cases_path / STUB_SOURCE["tag"] / "registry.json"
+        )
+        creator = (bytes(12) + raw20(stub_registry["creator"])).hex()
         self.initialize(
             name="StubERC20",
             app_id=STUB_CONFIG["app_id"],
@@ -769,6 +803,26 @@ class Runner:
             block=int(creation["block"]),
             ctor_values=ctor_values,
         )
+        # Config-era replay (v2): the proxy's historical initialize call,
+        # decoded from the creation txn's delegatecall trace. Sender is the
+        # creator — `initializer` gates on the latch, not on ownership.
+        for entry in INIT_CALLS:
+            if entry["tag"] != data.tag:
+                continue
+            response, record = self.call_app(
+                name=f"historical initialize {data.config['contract']}",
+                app_id=data.config["app_id"],
+                arc56=data.arc56,
+                signature=entry["sig"],
+                values=[data.resolve(v) for v in entry["args"]],
+                sender=creator,
+            )
+            record.update({"kind": "config-era-initialize"})
+            self.steps.append(record)
+            if response.get("result") != "ACCEPT":
+                raise RuntimeError(
+                    f"{data.config['contract']} historical initialize failed: {record}"
+                )
 
     def replay_call(self, item: dict[str, Any]) -> bool:
         data = self.cases[item["tag"]]
@@ -776,10 +830,11 @@ class Runner:
         self.world.latest_timestamp = int(call["ts"])
         self.world.round = int(item["block"])
         sender = data.sender(call, item["txn"])
-        if (
-            data.tag == "cctp_messenger"
-            and call["sig"].startswith("depositForBurn")
-            and historical_ok(call)
+        # Only the TokenMessenger declares depositForBurn* — keying on the
+        # method rather than a literal tag keeps this correct for v2, whose
+        # tags differ and whose signature carries three extra parameters.
+        if call["sig"] and (
+            call["sig"].startswith("depositForBurn") and historical_ok(call)
         ):
             self.seed_usdc(data, call, sender)
 
@@ -991,11 +1046,19 @@ def main() -> int:
     parser.add_argument("--limit", type=int)
     parser.add_argument("--continue-after-divergence", action="store_true")
     parser.add_argument(
+        "--config",
+        type=Path,
+        help="joint config JSON re-pointing the replay at another contract "
+        "system (e.g. joint_config_v2.json for CCTP v2)",
+    )
+    parser.add_argument(
         "--no-pre08-compat",
         action="store_true",
         help="use cached pragma-relaxed artifacts without the CCTP uint8-wrap shim",
     )
     args = parser.parse_args()
+    if args.config:
+        apply_joint_config(load_json(args.config))
 
     oracle = args.oracle or args.prover_root / "oracle" / "avmoracle"
     runner = Runner(

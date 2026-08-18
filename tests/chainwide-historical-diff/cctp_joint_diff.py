@@ -289,7 +289,33 @@ def main() -> int:
     parser.add_argument("--avm", type=Path, required=True)
     parser.add_argument("--evm", type=Path)
     parser.add_argument("--output", type=Path)
+    parser.add_argument(
+        "--config", type=Path, help="joint config JSON (e.g. joint_config_v2.json)"
+    )
     args = parser.parse_args()
+    if args.config:
+        DRIVER["apply_joint_config"](json.loads(args.config.read_text()))
+        # Module-level tables are derived from CASE_CONFIG; rebuild them.
+        APP_TO_TAG.clear()
+        APP_TO_TAG.update({c["app_id"]: t for t, c in CASE_CONFIG.items()})
+        APP_TO_TAG[STUB_CONFIG["app_id"]] = "stub_usdc"
+        APP_TO_HIST.clear()
+        APP_TO_HIST.update(
+            {c["app_id"]: c["address"].lower() for c in CASE_CONFIG.values()}
+        )
+        APP_TO_HIST[STUB_CONFIG["app_id"]] = STUB_CONFIG["address"].lower()
+        HIST_TO_TAG.clear()
+        HIST_TO_TAG.update({c["address"].lower(): t for t, c in CASE_CONFIG.items()})
+        HIST_TO_TAG[STUB_CONFIG["address"].lower()] = "stub_usdc"
+        BLOB_FOLDS.clear()
+        for cfg in [*CASE_CONFIG.values(), STUB_CONFIG]:
+            hist32 = bytes(12) + bytes.fromhex(cfg["address"][2:])
+            BLOB_FOLDS.append(
+                (bytes(24) + int(cfg["app_id"]).to_bytes(8, "big"), hist32)
+            )
+            BLOB_FOLDS.append(
+                (bytes(12) + avm_account_low20(cfg["app_id"]), hist32)
+            )
 
     avm = json.loads(args.avm.read_text())
     evm = json.loads(args.evm.read_text()) if args.evm else None

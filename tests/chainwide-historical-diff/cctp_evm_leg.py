@@ -31,6 +31,7 @@ from __future__ import annotations
 import argparse
 import json
 import runpy
+import shutil
 import sys
 from pathlib import Path
 from typing import Any
@@ -51,16 +52,28 @@ GAS = 15_000_000
 GAS_PRICE = 10**9
 
 
-def compile_unit(path: Path) -> dict[str, dict[str, Any]]:
+def compile_unit(
+    path: Path,
+    extra_sources: list[Path] | None = None,
+    import_dir: Path | None = None,
+    remappings: list[str] | None = None,
+) -> dict[str, dict[str, Any]]:
     import solcx
 
     solcx.set_solc_version("0.8.26")
+    kwargs: dict[str, Any] = {}
+    if import_dir is not None:
+        kwargs["allow_paths"] = str(import_dir)
+        kwargs["base_path"] = str(import_dir)
+    if remappings:
+        kwargs["import_remappings"] = list(remappings)
     return solcx.compile_files(
-        [str(path)],
+        [str(path), *[str(p) for p in (extra_sources or [])]],
         output_values=["abi", "bin"],
         optimize=True,
         optimize_runs=200,
         via_ir=False,
+        **kwargs,
     )
 
 
@@ -127,6 +140,13 @@ class JointEvmLeg:
         out: set[bytes] = set()
         for data in self.cases.values():
             out.add(self.to_local20(data.registry["creator"]))
+        # The StubERC20's creator comes from its own case, which is NOT in
+        # self.cases under a v2 config (the stub reuses the v1 minter's).
+        stub_tag = DRIVER["STUB_SOURCE"]["tag"]
+        stub_registry = json.loads(
+            (self.cases_dir / stub_tag / "registry.json").read_text()
+        )
+        out.add(self.to_local20(stub_registry["creator"]))
         for item in historical_stream(self.cases):
             if item["kind"] != "call":
                 continue
@@ -329,40 +349,110 @@ class JointEvmLeg:
         " // pre-0.8 compat: uint8(32*8)==0 asks leftMask for all 256 bits"
     )
 
+    # v2 patches, byte-for-byte the same edits build_v2_avm.py makes to the
+    # AVM tree — both legs must run identical semantics.
+    P1_MARK = "if (msg.sender != tx.origin) {"
+    P2_MARK = "_disableInitializers();"
+
+    def patch_tree(self, tree: Path) -> None:
+        """Apply P1/P2 in place on a disposable copy of a multi-file tree."""
+        for path in sorted(tree.rglob("*.sol")):
+            text = path.read_text()
+            changed = text
+            if self.P1_MARK in changed:
+                lines = changed.splitlines(keepends=True)
+                out, i = [], 0
+                while i < len(lines):
+                    if self.P1_MARK in lines[i]:
+                        depth = lines[i].count("{") - lines[i].count("}")
+                        i += 1
+                        while i < len(lines) and depth > 0:
+                            depth += lines[i].count("{") - lines[i].count("}")
+                            i += 1
+                        self.steps.append(
+                            {"name": f"P1 tx.origin: {path.name}", "ok": True,
+                             "error": None}
+                        )
+                        continue
+                    out.append(lines[i])
+                    i += 1
+                changed = "".join(out)
+            if self.P2_MARK in changed:
+                changed = changed.replace(self.P2_MARK, "")
+                self.steps.append(
+                    {"name": f"P2 initializers: {path.name}", "ok": True,
+                     "error": None}
+                )
+            if self.PRE08_TMV in changed:
+                changed = changed.replace(self.PRE08_TMV, self.PRE08_TMV_FIX)
+                self.steps.append(
+                    {"name": f"pre08 TMV wrap: {path.name}", "ok": True,
+                     "error": None}
+                )
+            if changed != text:
+                path.write_text(changed)
+
+    def compile_case_tree(
+        self, data: CaseData, contract: str
+    ) -> tuple[dict[str, Any], dict[str, dict[str, Any]], str]:
+        """Multi-file (v2) or single-file (v1) compile of a case's source."""
+        import tempfile
+
+        case = json.loads((data.path / "case.json").read_text())
+        mf = case.get("multifile")
+        tmp = Path(tempfile.mkdtemp(prefix=f"cctp-evm-{data.tag}-"))
+        if mf:
+            tree = tmp / "src"
+            shutil.copytree(data.path / "src", tree)
+            self.patch_tree(tree)
+            unit = compile_unit(
+                tree / mf["main"],
+                extra_sources=[tree / f for f in mf["files"]],
+                import_dir=tree,
+                remappings=mf["remappings"],
+            )
+        else:
+            tree = tmp
+            tree.mkdir(exist_ok=True)
+            (tree / "prepared.sol").write_text(
+                (data.path / "prepared.sol").read_text()
+            )
+            self.patch_tree(tree)
+            unit = compile_unit(tree / "prepared.sol")
+        for key, art in unit.items():
+            if str(key).endswith(f":{contract}"):
+                return art, unit, str(key)
+        raise RuntimeError(f"{contract} not found for {data.tag}")
+
     def compile_contract(
         self, path: Path, contract: str
     ) -> tuple[dict[str, Any], dict[str, dict[str, Any]], str]:
-        source = path.read_text()
-        if self.PRE08_TMV in source:
-            # The AVM leg restores this exact wrap at the TEAL level
-            # (pre08_compat_teal); mirror it here at the source level so both
-            # legs run the same 0.7 semantics for TypedMemView.index.
-            import tempfile
+        """Single standalone file (the StubERC20 dependency)."""
+        import tempfile
 
-            patched = source.replace(self.PRE08_TMV, self.PRE08_TMV_FIX)
-            tmp = Path(tempfile.mkdtemp(prefix="cctp-evm-")) / path.name
-            tmp.write_text(patched)
-            self.steps.append(
-                {
-                    "name": f"pre08 TypedMemView wrap patch: {path}",
-                    "ok": True,
-                    "error": None,
-                }
-            )
-            path = tmp
-        unit = compile_unit(path)
+        tmp = Path(tempfile.mkdtemp(prefix="cctp-evm-")) / path.name
+        tmp.write_text(path.read_text())
+        self.patch_tree(tmp.parent)
+        unit = compile_unit(tmp)
         for key, art in unit.items():
             if str(key).endswith(f":{contract}"):
                 return art, unit, str(key)
         raise RuntimeError(f"{contract} not found in {path}")
 
     def deploy_stub(self) -> None:
+        stub_tag = DRIVER["STUB_SOURCE"]["tag"]
         stub_sol = (
-            self.cases["cctp_minter"].path / "deps" / "argdep_a0b86991" / "prepared.sol"
+            self.cases_dir / stub_tag / "deps" / "argdep_a0b86991" / "prepared.sol"
         )
         art, unit, fq = self.compile_contract(stub_sol, "StubERC20")
         self.abis["stub_usdc"] = art["abi"]
-        creator = self.to_local20(self.cases["cctp_minter"].registry["creator"])
+        stub_registry = json.loads(
+            (self.cases_dir / stub_tag / "registry.json").read_text()
+        )
+        creator = self.to_local20(stub_registry["creator"])
+        # Kept for the re-homed genesis: under a v2 config the stub's case
+        # (v1 minter) is not in self.cases, so its creator is not a sender.
+        self.stub_creator = creator
         ok, _c, created = self.execute(
             creator, None, self.resolve_bin(unit, fq, creator), "create StubERC20"
         )
@@ -371,9 +461,7 @@ class JointEvmLeg:
         self.local[STUB_CONFIG["address"].lower()] = created
 
     def deploy_case(self, data: CaseData) -> None:
-        art, unit, fq = self.compile_contract(
-            data.path / "prepared.sol", data.config["contract"]
-        )
+        art, unit, fq = self.compile_case_tree(data, data.config["contract"])
         self.abis[data.tag] = art["abi"]
         from eth_abi import encode
 
@@ -402,7 +490,9 @@ class JointEvmLeg:
         amount = int(call["args"][0])
         target = data.raw_address(call["sender"]["__addr__"])
         stub = self.local[STUB_CONFIG["address"].lower()]
-        messenger = self.local[CASE_CONFIG["cctp_messenger"]["address"].lower()]
+        # The spender is the messenger making this deposit — `data` IS that
+        # case, so no literal tag lookup (v2 tags differ).
+        messenger = self.local[data.config["address"].lower()]
         mint = self.encode_call(
             self.abis["stub_usdc"],
             "mint(address,uint256)",
@@ -459,7 +549,15 @@ class JointEvmLeg:
             accounts[hist20] = self.snapshot_account(local)
         for _fq, lib20 in self.lib_addresses.items():
             accounts[lib20] = self.snapshot_account(lib20)
-        for sender in self.all_senders():
+        # Senders + creators (creators also send the config-era initialize
+        # calls after re-homing, and a contract address that got re-homed onto
+        # a creator's slot must keep its code, so contracts win the merge).
+        funded = set(self.all_senders())
+        funded.update(
+            self.to_local20(d.registry["creator"]) for d in self.cases.values()
+        )
+        funded.add(self.stub_creator)
+        for sender in funded:
             if sender not in accounts:
                 accounts[sender] = {
                     "balance": 10**24,
@@ -467,6 +565,8 @@ class JointEvmLeg:
                     "code": b"",
                     "storage": {},
                 }
+            else:
+                accounts[sender]["balance"] = 10**24
 
         first = min(int(d.case["creation"]["ts"]) for d in self.cases.values())
         genesis = get_default_genesis_params(
@@ -500,6 +600,23 @@ class JointEvmLeg:
                 self.deploy_case(self.cases[item["tag"]])
         # Phase B: re-home everything at historical addresses and replay.
         self.rehome_to_historical()
+        # Config era (v2): replay each proxy's historical initialize calldata
+        # against the directly-deployed implementation, exactly as the AVM
+        # leg does after its deploy.
+        for entry in DRIVER["INIT_CALLS"]:
+            data = self.cases[entry["tag"]]
+            target = self.local[data.config["address"].lower()]
+            creator = self.to_local20(data.registry["creator"])
+            payload = self.encode_call(
+                self.abis[data.tag], entry["sig"], data, entry["args"]
+            )
+            ok, comp, _ = self.execute(
+                creator, target, payload, f"initialize {data.config['contract']}"
+            )
+            if not ok:
+                raise RuntimeError(
+                    f"{data.config['contract']} initialize failed: {comp.error}"
+                )
         replayed = 0
         for item in historical_stream(self.cases):
             if item["kind"] == "create":
@@ -515,10 +632,10 @@ class JointEvmLeg:
                 else item["txn"]["from"].lower()
             )
             sender20 = self.to_local20(sender_raw)
-            if (
-                data.tag == "cctp_messenger"
-                and call["sig"].startswith("depositForBurn")
-                and historical_ok(call)
+            # Method-keyed, not tag-keyed: only the TokenMessenger declares
+            # depositForBurn*, and v2's tags/arity differ.
+            if call["sig"] and (
+                call["sig"].startswith("depositForBurn") and historical_ok(call)
             ):
                 self.seed_usdc(data, call, sender20)
 
@@ -591,7 +708,17 @@ def main() -> int:
     parser.add_argument("cases", type=Path)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--output", type=Path)
+    parser.add_argument(
+        "--config", type=Path, help="joint config JSON (e.g. joint_config_v2.json)"
+    )
     args = parser.parse_args()
+    if args.config:
+        DRIVER["apply_joint_config"](json.loads(args.config.read_text()))
+        TRACKED.clear()
+        TRACKED.update(
+            {cfg["address"].lower(): tag for tag, cfg in CASE_CONFIG.items()}
+        )
+        TRACKED[STUB_CONFIG["address"].lower()] = "stub_usdc"
     leg = JointEvmLeg(args.cases)
     report = leg.run(args.limit)
     from collections import Counter, defaultdict
