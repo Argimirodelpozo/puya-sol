@@ -739,6 +739,23 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
             ai = {}
         creation = {"creator": (ai.get("creator_address_hash") or "").lower() or None,
                     "hash": ai.get("creation_tx_hash"), "ts": 0, "block": 0}
+        # Factory-created contracts (CCTP v2's proxies) have NO txlist creation
+        # row, and a zero block/ts poisons downstream deploy timestamps
+        # (min(creation)-1 = -1 → the oracle rejects a negative uint64).
+        # Resolve the real block/ts from the creation txn itself.
+        if creation["hash"]:
+            try:
+                ct = http_json(
+                    f"https://{host}/api/v2/transactions/{creation['hash']}")
+                import datetime
+                creation["ts"] = int(datetime.datetime.fromisoformat(
+                    ct["timestamp"].replace("Z", "+00:00")).timestamp())
+                creation["block"] = int(ct.get("block_number") or ct.get("block"))
+                if not creation["creator"]:
+                    creation["creator"] = (
+                        (ct.get("from") or {}).get("hash") or "").lower() or None
+            except Exception as e:
+                print(f"[fetch] {tag}: creation txn lookup failed: {e}")
 
     # INTERNAL CALLS (contract-to-contract traffic): merged into the same
     # ordered stream as the direct txns. For router-driven tokens this is most
