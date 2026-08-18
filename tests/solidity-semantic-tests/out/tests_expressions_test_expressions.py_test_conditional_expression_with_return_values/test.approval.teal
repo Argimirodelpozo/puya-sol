@@ -5,8 +5,7 @@
 main:
     intcblock 1 32 0
     intc_2 // 0
-    dupn 2
-    pushbytes ""
+    dup
     pushint 4096
     bzero
     dup
@@ -49,10 +48,8 @@ main_f_route@4:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
-    bury 1
     txna ApplicationArgs 2
     dup
-    bury 5
     len
     intc_1 // 32
     ==
@@ -67,7 +64,8 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dupn 2
+    swap
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
@@ -76,11 +74,10 @@ main_ternary_merge@9:
     pushbytes 0x
     bury 3
     bz main_ternary_false@11
-    dig 3
-    bury 3
+    bury 2
 
 main_ternary_merge@12:
-    dig 2
+    dig 1
     dup
     len
     intc_1 // 32
@@ -91,7 +88,7 @@ main_ternary_merge@12:
     swap
     dig 1
     b|
-    dig 3
+    dig 2
     dup
     len
     intc_1 // 32
@@ -108,8 +105,7 @@ main_ternary_merge@12:
     return
 
 main_ternary_false@11:
-    dig 3
-    bury 2
+    bury 1
     b main_ternary_merge@12
 
 main_ternary_false@8:

@@ -4,11 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/nested_array_loop.sol.NestedArrayLoop.approval_program() -> uint64:
 main:
     intcblock 32 2 0 1
-    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x 0x01 0x010000000000000000 0x151f7c75
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x01 0x 0x010000000000000000 0x151f7c75
     intc_2 // 0
-    dupn 16
-    bytec_1 // ""
-    dupn 6
+    dupn 2
     pushint 4096
     bzero
     dup
@@ -48,33 +46,30 @@ main_sumNestedWhile_route@8:
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 5
+    cover 2
     intc_1 // 2
     *
-    bury 3
+    swap
     dup
     len
-    bury 2
+    cover 2
     extract 2 0
-    bury 20
     intc_2 // 0
-    bury 4
 
 main_for_header@13:
-    dig 3
-    dig 3
+    dup
+    dig 5
     <
     bz main_after_for@15
-    dig 3
     dup
     intc_1 // 2
     *
-    dig 21
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 5
     dup
     cover 4
     ==
@@ -89,17 +84,17 @@ main_for_header@13:
     intc_1 // 2
     +
     +
-    bury 3
+    cover 2
     intc_3 // 1
     +
-    bury 4
     b main_for_header@13
 
 main_after_for@15:
-    dig 1
+    pop
+    swap
     intc_1 // 2
     +
-    dig 1
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
     txn GroupIndex
@@ -112,33 +107,30 @@ main_after_for@15:
 main_ternary_merge@18:
     !
     assert // not payable
-    bytec_1 // 0x
-    bury 10
+    bytec_2 // 0x
     intc_2 // 0
     itob
     dup
-    bury 19
-    bury 17
+    bury 5
 
 main_while_top@19:
-    dig 2
+    dig 3
     itob
-    dig 17
+    dig 1
     b>
     bz main_after_while@24
-    dig 17
-    bury 14
+    dig 4
+    swap
 
 main_while_top@21:
-    dig 16
-    dup
+    dupn 2
     bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
     bzero
     dup
-    bury 11
+    cover 6
     swap
     concat
     dup
@@ -147,12 +139,12 @@ main_while_top@21:
     -
     extract_uint64
     dup
-    dig 4
+    dig 7
     <
     assert // array index out of bounds
     intc_1 // 2
     *
-    dig 20
+    dig 4
     dup
     uncover 2
     extract_uint16
@@ -164,32 +156,35 @@ main_while_top@21:
     +
     extract3
     dup
-    bury 22
+    cover 7
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 8
     itob
-    dig 14
+    dig 3
     b>
     bnz main_after_if_else@23
-    dig 16
-    bytec_2 // 0x01
+    pop
+    bury 1
+    uncover 3
+    pop
+    uncover 4
+    pop
+    bytec_1 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 17
     b main_while_top@19
 
 main_after_if_else@23:
-    dig 13
+    uncover 2
     dup
     bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    dig 9
+    uncover 5
     dig 1
     concat
     dup
@@ -198,36 +193,34 @@ main_after_if_else@23:
     -
     extract_uint64
     dup
-    dig 9
+    uncover 3
     <
     assert // array index out of bounds
-    dig 22
+    uncover 6
     extract 2 0
     swap
     intc_0 // 32
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    dig 11
+    uncover 3
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     swap
-    bytec_2 // 0x01
+    bytec_1 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    swap
-    bury 11
-    bury 14
+    uncover 2
     b main_while_top@21
 
 main_after_while@24:
-    dig 9
+    pop
     dup
     len
     intc_0 // 32
@@ -250,12 +243,12 @@ main_ternary_false@17:
 main_sumEvenIdx_route@7:
     txna ApplicationArgs 1
     dup
-    bury 25
+    bury 4
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 7
+    cover 2
     intc_0 // 32
     *
     intc_1 // 2
@@ -274,38 +267,38 @@ main_sumEvenIdx_route@7:
 main_ternary_merge@29:
     !
     assert // not payable
-    bytec_1 // 0x
-    bury 10
-    bytec_1 // 0x
-    bury 15
+    bytec_2 // 0x
+    swap
+    bytec_2 // 0x
+    swap
 
 main_while_top@30:
-    dig 4
+    dup
     itob
-    dig 15
+    dig 2
     b>
     bz main_after_while@35
     intc_1 // 2
     itob
-    dig 15
+    dig 2
     swap
     b%
     intc_3 // 1
     itob
     b==
     bz main_after_if_else@33
-    dig 14
-    bytec_2 // 0x01
+    swap
+    bytec_1 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 15
+    swap
     b main_while_top@30
 
 main_after_if_else@33:
-    dig 14
+    dig 1
     dup
     bytec_3 // 0x010000000000000000
     b<
@@ -320,10 +313,10 @@ main_after_if_else@33:
     -
     extract_uint64
     dup
-    dig 6
+    dig 2
     <
     assert // array index out of bounds
-    dig 24
+    dig 6
     extract 2 0
     swap
     intc_0 // 32
@@ -331,32 +324,30 @@ main_after_if_else@33:
     intc_0 // 32
     extract3 // on error: index access is out of bounds
     dup
-    bury 24
+    bury 6
     pushint 99
     itob
     b==
     bnz main_after_while@35
-    dig 9
-    dig 23
+    uncover 2
+    dig 4
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 15
-    bytec_2 // 0x01
+    uncover 2
+    bytec_1 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    swap
-    bury 11
-    bury 15
+    uncover 2
     b main_while_top@30
 
 main_after_while@35:
-    dig 9
+    popn 2
     dup
     len
     intc_0 // 32
@@ -382,33 +373,30 @@ main_countNested_route@6:
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 5
+    cover 2
     intc_1 // 2
     *
-    bury 3
+    swap
     dup
     len
-    bury 2
+    cover 2
     extract 2 0
-    bury 20
     intc_2 // 0
-    bury 4
 
 main_for_header@38:
-    dig 3
-    dig 3
+    dup
+    dig 5
     <
     bz main_after_for@40
-    dig 3
     dup
     intc_1 // 2
     *
-    dig 21
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 5
     dup
     cover 4
     ==
@@ -423,17 +411,17 @@ main_for_header@38:
     intc_1 // 2
     +
     +
-    bury 3
+    cover 2
     intc_3 // 1
     +
-    bury 4
     b main_for_header@38
 
 main_after_for@40:
-    dig 1
+    pop
+    swap
     intc_1 // 2
     +
-    dig 1
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
     txn GroupIndex
@@ -446,23 +434,20 @@ main_after_for@40:
 main_ternary_merge@43:
     !
     assert // not payable
-    bytec_1 // 0x
-    bury 11
-    bytec_1 // 0x
-    bury 16
+    bytec_2 // 0x
+    dup
 
 main_while_top@44:
-    dig 2
+    dig 3
     itob
-    dig 16
+    dig 1
     b>
     bz main_after_while@49
-    bytec_1 // 0x
-    bury 12
+    bytec_2 // 0x
+    cover 2
 
 main_while_top@46:
-    dig 15
-    dup
+    dupn 2
     bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
@@ -476,12 +461,12 @@ main_while_top@46:
     -
     extract_uint64
     dup
-    dig 4
+    dig 6
     <
     assert // array index out of bounds
     intc_1 // 2
     *
-    dig 20
+    dig 4
     dup
     uncover 2
     extract_uint16
@@ -495,41 +480,40 @@ main_while_top@46:
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    dig 12
+    dig 3
     b>
     bnz main_after_if_else@48
-    dig 15
-    bytec_2 // 0x01
+    uncover 2
+    pop
+    bytec_1 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 16
     b main_while_top@44
 
 main_after_if_else@48:
-    dig 10
-    bytec_2 // 0x01
+    swap
+    bytec_1 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 12
-    bytec_2 // 0x01
+    uncover 2
+    bytec_1 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     swap
-    bury 12
-    bury 12
+    uncover 2
     b main_while_top@46
 
 main_after_while@49:
-    dig 10
+    pop
     dup
     len
     intc_0 // 32
@@ -555,33 +539,30 @@ main_sumNested_route@5:
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 5
+    cover 2
     intc_1 // 2
     *
-    bury 3
+    swap
     dup
     len
-    bury 2
+    cover 2
     extract 2 0
-    bury 20
     intc_2 // 0
-    bury 4
 
 main_for_header@52:
-    dig 3
-    dig 3
+    dup
+    dig 5
     <
     bz main_after_for@54
-    dig 3
     dup
     intc_1 // 2
     *
-    dig 21
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 5
     dup
     cover 4
     ==
@@ -596,17 +577,17 @@ main_for_header@52:
     intc_1 // 2
     +
     +
-    bury 3
+    cover 2
     intc_3 // 1
     +
-    bury 4
     b main_for_header@52
 
 main_after_for@54:
-    dig 1
+    pop
+    swap
     intc_1 // 2
     +
-    dig 1
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
     txn GroupIndex
@@ -619,30 +600,27 @@ main_after_for@54:
 main_ternary_merge@57:
     !
     assert // not payable
-    bytec_1 // 0x
-    bury 10
-    bytec_1 // 0x
-    bury 19
+    bytec_2 // 0x
+    dup
 
 main_while_top@58:
-    dig 2
+    dig 3
     itob
-    dig 19
+    dig 1
     b>
     bz main_after_while@63
-    bytec_1 // 0x
-    bury 13
+    bytec_2 // 0x
+    swap
 
 main_while_top@60:
-    dig 18
-    dup
+    dupn 2
     bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
     bzero
     dup
-    bury 10
+    cover 6
     swap
     concat
     dup
@@ -651,12 +629,12 @@ main_while_top@60:
     -
     extract_uint64
     dup
-    dig 4
+    dig 7
     <
     assert // array index out of bounds
     intc_1 // 2
     *
-    dig 20
+    dig 4
     dup
     uncover 2
     extract_uint16
@@ -668,32 +646,35 @@ main_while_top@60:
     +
     extract3
     dup
-    bury 23
+    cover 7
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 7
     itob
-    dig 13
+    dig 3
     b>
     bnz main_after_if_else@62
-    dig 18
-    bytec_2 // 0x01
+    pop
+    bury 1
+    uncover 3
+    pop
+    uncover 4
+    pop
+    bytec_1 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 19
     b main_while_top@58
 
 main_after_if_else@62:
-    dig 12
+    uncover 2
     dup
     bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    dig 8
+    uncover 5
     dig 1
     concat
     dup
@@ -702,36 +683,34 @@ main_after_if_else@62:
     -
     extract_uint64
     dup
-    dig 8
+    uncover 3
     <
     assert // array index out of bounds
-    dig 23
+    uncover 6
     extract 2 0
     swap
     intc_0 // 32
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    dig 11
+    uncover 3
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     swap
-    bytec_2 // 0x01
+    bytec_1 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    swap
-    bury 11
-    bury 13
+    uncover 2
     b main_while_top@60
 
 main_after_while@63:
-    dig 9
+    pop
     dup
     len
     intc_0 // 32

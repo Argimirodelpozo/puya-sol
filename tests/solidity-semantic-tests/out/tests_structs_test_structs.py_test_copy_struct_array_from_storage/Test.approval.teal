@@ -5,10 +5,6 @@
 main:
     intcblock 2 0 1 32
     bytecblock "a" 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 "b" "__ctor_pending" 0x00020004000600000000 0x00020000
-    intc_1 // 0
-    dupn 15
-    pushbytes ""
-    dupn 7
     pushint 4096
     bzero
     dup
@@ -58,13 +54,11 @@ main_ternary_merge@16:
     assert // not payable
     intc_0 // 2
     itob
-    bury 17
     pushint 4
     itob
-    bury 16
+    swap
     pushint 6
     itob
-    bury 15
     bytec_0 // "a"
     box_len
     bury 1
@@ -106,29 +100,26 @@ main_ternary_merge@19:
     intc_2 // 1
     callsub dynamic_array_replace_dynamic_element
     dup
-    bury 12
+    cover 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 2
     itob
-    dig 17
+    uncover 4
     b==
     dup
-    bury 9
     bnz main_after_if_else@21
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@21:
-    dig 7
     assert
     dup
     assert // index out of bounds
-    dig 10
+    uncover 2
     extract 2 0
     dup
-    bury 23
+    cover 3
     dup
     intc_1 // 0
     extract_uint16
@@ -146,19 +137,16 @@ main_after_if_else@21:
     itob
     b==
     dup
-    bury 8
     bnz main_after_if_else@23
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@23:
-    dig 6
     assert
     intc_2 // 1
-    dig 1
-    <
+    >
     assert // index out of bounds
-    dig 21
+    swap
     dup
     intc_0 // 2
     extract_uint16
@@ -170,78 +158,66 @@ main_after_if_else@23:
     +
     extract3
     dup
-    bury 14
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    dig 16
+    dig 3
     b==
     dup
-    bury 7
     bnz main_after_if_else@25
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@25:
-    dig 5
     assert
-    dig 12
+    dup
     extract 2 32
     extract 0 32
-    dig 16
+    uncover 3
     b==
     dup
-    bury 6
     bnz main_after_if_else@27
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@27:
-    dig 4
     assert
-    dig 12
+    dup
     extract 34 32
     extract 0 32
     pushint 5
     itob
     b==
     dup
-    bury 5
     bnz main_after_if_else@29
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@29:
-    dig 3
     assert
-    dig 12
+    dup
     extract 66 32
     extract 0 32
-    dig 15
+    uncover 2
     b==
     dup
-    bury 4
     bnz main_after_if_else@31
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@31:
-    dig 2
     assert
-    dig 12
     extract 98 32
     extract 0 32
     pushint 7
     itob
     b==
     dup
-    bury 3
     bnz main_after_if_else@134
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@134:
-    dig 1
     assert
     pushbytes 0x151f7c7580
     log
@@ -269,13 +245,10 @@ main_ternary_merge@38:
     assert // not payable
     intc_0 // 2
     itob
-    bury 20
     pushint 4
     itob
-    bury 19
     pushint 6
     itob
-    bury 18
     bytec_0 // "a"
     box_len
     bury 1
@@ -311,7 +284,7 @@ main_ternary_merge@41:
     swap
     intc_1 // 0
     callsub dynamic_array_replace_dynamic_element
-    bury 12
+    swap
     bytec_0 // "a"
     box_len
     bury 1
@@ -345,34 +318,31 @@ main_ternary_merge@44:
     bytec_0 // "a"
     cover 2
     box_extract
-    dig 12
+    uncover 2
     swap
     intc_2 // 1
     callsub dynamic_array_replace_dynamic_element
     dup
-    bury 13
+    cover 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 2
     itob
-    dig 20
+    uncover 5
     b==
     dup
-    bury 9
     bnz main_after_if_else@46
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@46:
-    dig 7
     assert
     dup
     assert // index out of bounds
-    dig 11
+    uncover 2
     extract 2 0
     dup
-    bury 24
+    cover 3
     dup
     intc_1 // 0
     extract_uint16
@@ -390,19 +360,16 @@ main_after_if_else@46:
     itob
     b==
     dup
-    bury 8
     bnz main_after_if_else@48
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@48:
-    dig 6
     assert
     intc_2 // 1
-    dig 1
-    <
+    >
     assert // index out of bounds
-    dig 22
+    swap
     dup
     intc_0 // 2
     extract_uint16
@@ -414,72 +381,61 @@ main_after_if_else@48:
     +
     extract3
     dup
-    bury 15
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    dig 19
+    dig 3
     b==
     dup
-    bury 7
     bnz main_after_if_else@50
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@50:
-    dig 5
     assert
-    dig 13
+    dup
     extract 2 32
     extract 0 32
-    dig 19
+    uncover 3
     b==
     dup
-    bury 6
     bnz main_after_if_else@52
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@52:
-    dig 4
     assert
-    dig 13
+    dup
     extract 34 32
     extract 0 32
     pushint 5
     itob
     b==
     dup
-    bury 5
     bnz main_after_if_else@54
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@54:
-    dig 3
     assert
-    dig 13
+    dup
     extract 66 32
     extract 0 32
-    dig 18
+    uncover 2
     b==
     dup
-    bury 4
     bnz main_after_if_else@56
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@56:
-    dig 2
     assert
-    dig 13
     extract 98 32
     extract 0 32
     pushint 7
     itob
     b==
     dup
-    bury 3
     bnz main_after_if_else@134
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
@@ -518,13 +474,11 @@ main_ternary_merge@63:
     itob
     b==
     dup
-    bury 9
     bnz main_after_if_else@65
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@65:
-    dig 7
     assert
     bytec_0 // "a"
     intc_0 // 2
@@ -543,13 +497,11 @@ main_after_if_else@65:
     itob
     b==
     dup
-    bury 8
     bnz main_after_if_else@67
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@67:
-    dig 6
     assert
     bytec_0 // "a"
     pushint 4
@@ -567,16 +519,14 @@ main_after_if_else@67:
     pushint 4
     itob
     dup
-    bury 12
+    cover 2
     b==
     dup
-    bury 7
     bnz main_after_if_else@69
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@69:
-    dig 5
     assert
     bytec_0 // "a"
     pushint 4
@@ -598,16 +548,13 @@ main_after_if_else@69:
     intc_3 // 32
     box_extract // on error: index out of bounds
     extract 0 32
-    dig 10
     b==
     dup
-    bury 6
     bnz main_after_if_else@71
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@71:
-    dig 4
     assert
     bytec_0 // "a"
     pushint 4
@@ -635,13 +582,11 @@ main_after_if_else@71:
     itob
     b==
     dup
-    bury 5
     bnz main_after_if_else@73
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@73:
-    dig 3
     assert
     bytec_0 // "a"
     pushint 4
@@ -669,13 +614,11 @@ main_after_if_else@73:
     itob
     b==
     dup
-    bury 4
     bnz main_after_if_else@75
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@75:
-    dig 2
     assert
     bytec_0 // "a"
     pushint 4
@@ -703,7 +646,6 @@ main_after_if_else@75:
     itob
     b==
     dup
-    bury 3
     bnz main_after_if_else@134
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
@@ -729,7 +671,7 @@ main_ternary_merge@82:
     assert // box exists
     intc_0 // 2
     itob
-    bury 22
+    swap
     bytec 5 // 0x00020000
     intc_2 // 1
     callsub dynamic_array_concat_dynamic_element
@@ -741,8 +683,6 @@ main_ternary_merge@82:
     box_put
     bytec_2 // "b"
     box_get
-    swap
-    bury 25
     assert // box exists
     bytec_0 // "a"
     box_len
@@ -771,7 +711,7 @@ main_after_if_else@87:
     bytec_0 // "a"
     box_get
     assert // box exists
-    dig 24
+    swap
     intc_2 // 1
     callsub dynamic_array_replace_dynamic_element
     bytec_0 // "a"
@@ -792,16 +732,13 @@ main_after_if_else@87:
 
 main_ternary_merge@90:
     itob
-    dig 21
     b==
     dup
-    bury 9
     bnz main_after_if_else@92
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@92:
-    dig 7
     assert
     bytec_0 // "a"
     box_len
@@ -832,13 +769,11 @@ main_ternary_merge@95:
     itob
     b==
     dup
-    bury 8
     bnz main_after_if_else@97
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@97:
-    dig 6
     assert
     bytec_0 // "a"
     box_len
@@ -870,16 +805,14 @@ main_ternary_merge@100:
     pushint 4
     itob
     dup
-    bury 11
+    cover 2
     b==
     dup
-    bury 7
     bnz main_after_if_else@102
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@102:
-    dig 5
     assert
     bytec_0 // "a"
     box_len
@@ -929,16 +862,13 @@ main_ternary_merge@108:
     intc_3 // 32
     box_extract // on error: index out of bounds
     extract 0 32
-    dig 9
     b==
     dup
-    bury 6
     bnz main_after_if_else@110
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@110:
-    dig 4
     assert
     bytec_0 // "a"
     box_len
@@ -994,13 +924,11 @@ main_ternary_merge@116:
     itob
     b==
     dup
-    bury 5
     bnz main_after_if_else@118
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@118:
-    dig 3
     assert
     bytec_0 // "a"
     box_len
@@ -1056,13 +984,11 @@ main_ternary_merge@124:
     itob
     b==
     dup
-    bury 4
     bnz main_after_if_else@126
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@126:
-    dig 2
     assert
     bytec_0 // "a"
     box_len
@@ -1118,7 +1044,6 @@ main_ternary_merge@132:
     itob
     b==
     dup
-    bury 3
     bnz main_after_if_else@134
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
@@ -1478,7 +1403,6 @@ box_dynamic_array_concat_fixed:
 // _puya_lib.arc4.dynamic_array_concat_dynamic_element(array: bytes, new_head_and_tail: bytes, new_items_count: uint64) -> bytes:
 dynamic_array_concat_dynamic_element:
     proto 3 1
-    pushbytes ""
     frame_dig -3
     intc_1 // 0
     extract_uint16
@@ -1493,80 +1417,81 @@ dynamic_array_concat_dynamic_element:
     swap
     intc_0 // 2
     *
+    swap
     frame_dig -1
     intc_0 // 2
     *
+    cover 2
     intc_1 // 0
+    cover 4
 
 dynamic_array_concat_dynamic_element_for_header@1:
-    frame_dig 5
-    frame_dig 3
+    frame_dig 0
+    dig 2
     <
     bz dynamic_array_concat_dynamic_element_after_for@4
-    frame_dig 2
-    frame_dig 5
+    dup
+    frame_dig 0
     dup
     cover 2
     extract_uint16
-    frame_dig 4
+    dig 4
     +
     itob
     extract 6 0
-    frame_dig 1
+    uncover 5
     swap
     concat
-    frame_bury 1
+    cover 4
     intc_0 // 2
     +
-    frame_bury 5
+    frame_bury 0
     b dynamic_array_concat_dynamic_element_for_header@1
 
 dynamic_array_concat_dynamic_element_after_for@4:
-    frame_dig 2
+    dup
     len
-    frame_bury 0
+    swap
     intc_1 // 0
-    frame_bury 5
+    frame_bury 0
 
 dynamic_array_concat_dynamic_element_for_header@5:
-    frame_dig 5
-    frame_dig 4
+    frame_dig 0
+    dig 4
     <
     bz dynamic_array_concat_dynamic_element_after_for@8
     frame_dig -2
-    frame_dig 5
+    frame_dig 0
     dup
     cover 2
     extract_uint16
-    frame_dig 0
+    dig 3
     +
     itob
     extract 6 0
-    frame_dig 1
+    uncover 6
     swap
     concat
-    frame_bury 1
+    cover 5
     intc_0 // 2
     +
-    frame_bury 5
+    frame_bury 0
     b dynamic_array_concat_dynamic_element_for_header@5
 
 dynamic_array_concat_dynamic_element_after_for@8:
-    frame_dig 2
-    frame_dig 3
-    frame_dig 0
+    cover 2
     substring3
-    frame_dig 1
+    uncover 2
     swap
     concat
     frame_dig -2
     len
     frame_dig -2
-    frame_dig 4
+    uncover 3
     uncover 2
     substring3
     concat
-    frame_bury 0
+    swap
     retsub
 
 
@@ -1581,7 +1506,7 @@ dynamic_array_replace_dynamic_element:
     extract 2 0
     frame_dig -2
     len
-    cover 2
+    cover 3
     dup
     len
     frame_dig -1
@@ -1608,7 +1533,7 @@ dynamic_array_replace_dynamic_element:
     extract_uint16
     dup2
     -
-    cover 6
+    cover 7
     dig 4
     intc_1 // 0
     uncover 2
@@ -1624,37 +1549,34 @@ dynamic_array_replace_dynamic_element:
     swap
     intc_0 // 2
     *
-    swap
+    cover 2
 
 dynamic_array_replace_dynamic_element_for_header@2:
-    frame_dig 5
-    frame_dig 4
+    dup
+    dig 3
     <
     bz dynamic_array_replace_dynamic_element_after_for@5
-    frame_dig 3
+    swap
     dup
-    frame_dig 5
-    dup
-    cover 3
+    dig 2
     extract_uint16
-    frame_dig 1
+    dig 6
     +
-    frame_dig 2
+    dig 5
     -
     itob
     extract 6 0
     dig 2
     swap
     replace3
-    frame_bury 3
+    swap
     intc_0 // 2
     +
-    frame_bury 5
     b dynamic_array_replace_dynamic_element_for_header@2
 
 dynamic_array_replace_dynamic_element_after_for@5:
-    frame_dig 0
-    frame_dig 3
+    pop
+    bury 1
     concat
     frame_bury 0
     retsub

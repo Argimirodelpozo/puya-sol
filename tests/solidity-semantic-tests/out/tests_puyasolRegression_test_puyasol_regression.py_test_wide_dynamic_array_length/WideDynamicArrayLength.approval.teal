@@ -3,11 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 16 4294967295
+    intcblock 1 2 0 16 4294967295
     bytecblock 0x151f7c75 0x0001 "a" "e" "d" "c" "b" "__ctor_pending"
-    intc_1 // 0
-    dup
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -58,7 +55,7 @@ main_ternary_merge@23:
     bytec_3 // "e"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
     >=
     bz main_ternary_false@25
     bytec_3 // "e"
@@ -66,7 +63,7 @@ main_ternary_merge@23:
     pop
 
 main_ternary_merge@26:
-    intc_2 // 2
+    intc_1 // 2
     -
     pushint 32
     /
@@ -82,17 +79,16 @@ main_ternary_merge@26:
     return
 
 main_ternary_false@25:
-    intc_2 // 2
+    intc_1 // 2
     b main_ternary_merge@26
 
 main_ternary_false@22:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@23
 
 main_pushE_route@15:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     pushint 32
     ==
@@ -108,15 +104,15 @@ main_ternary_merge@31:
     !
     assert // not payable
     bytec_1 // 0x0001
-    dig 2
+    swap
     concat
     dup
     extract 2 0
     swap
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     bytec_3 // "e"
-    intc_1 // 0
+    intc_2 // 0
     uncover 3
     uncover 3
     pushint 32
@@ -125,7 +121,7 @@ main_ternary_merge@31:
     return
 
 main_ternary_false@30:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@31
 
 main_lenD_route@14:
@@ -142,7 +138,7 @@ main_ternary_merge@36:
     bytec 4 // "d"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
     >=
     bz main_ternary_false@38
     bytec 4 // "d"
@@ -150,7 +146,7 @@ main_ternary_merge@36:
     pop
 
 main_ternary_merge@39:
-    intc_2 // 2
+    intc_1 // 2
     -
     itob
     pushint 32
@@ -164,11 +160,11 @@ main_ternary_merge@39:
     return
 
 main_ternary_false@38:
-    intc_2 // 2
+    intc_1 // 2
     b main_ternary_merge@39
 
 main_ternary_false@35:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@36
 
 main_pushD_route@13:
@@ -179,7 +175,6 @@ main_pushD_route@13:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@43
     txn GroupIndex
@@ -190,7 +185,7 @@ main_pushD_route@13:
 main_ternary_merge@44:
     !
     assert // not payable
-    dupn 2
+    dup
     pushint 255
     <=
     assert // ABI validation
@@ -209,10 +204,10 @@ main_ternary_merge@44:
     dup
     extract 2 0
     swap
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     bytec 4 // "d"
-    intc_1 // 0
+    intc_2 // 0
     uncover 3
     uncover 3
     intc_0 // 1
@@ -221,7 +216,7 @@ main_ternary_merge@44:
     return
 
 main_ternary_false@43:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@44
 
 main_lenC_route@12:
@@ -238,7 +233,7 @@ main_ternary_merge@49:
     bytec 5 // "c"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
     >=
     bz main_ternary_false@51
     bytec 5 // "c"
@@ -246,7 +241,7 @@ main_ternary_merge@49:
     pop
 
 main_ternary_merge@52:
-    intc_2 // 2
+    intc_1 // 2
     -
     pushint 4
     /
@@ -262,11 +257,11 @@ main_ternary_merge@52:
     return
 
 main_ternary_false@51:
-    intc_2 // 2
+    intc_1 // 2
     b main_ternary_merge@52
 
 main_ternary_false@48:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@49
 
 main_pushC_route@11:
@@ -277,7 +272,6 @@ main_pushC_route@11:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@56
     txn GroupIndex
@@ -288,7 +282,7 @@ main_pushC_route@11:
 main_ternary_merge@57:
     !
     assert // not payable
-    dupn 2
+    dup
     intc 4 // 4294967295
     <=
     assert // ABI validation
@@ -307,10 +301,10 @@ main_ternary_merge@57:
     dup
     extract 2 0
     swap
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     bytec 5 // "c"
-    intc_1 // 0
+    intc_2 // 0
     uncover 3
     uncover 3
     pushint 4
@@ -319,7 +313,7 @@ main_ternary_merge@57:
     return
 
 main_ternary_false@56:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@57
 
 main_lenB_route@10:
@@ -336,7 +330,7 @@ main_ternary_merge@62:
     bytec 6 // "b"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
     >=
     bz main_ternary_false@64
     bytec 6 // "b"
@@ -344,7 +338,7 @@ main_ternary_merge@62:
     pop
 
 main_ternary_merge@65:
-    intc_2 // 2
+    intc_1 // 2
     -
     pushint 20
     /
@@ -360,17 +354,16 @@ main_ternary_merge@65:
     return
 
 main_ternary_false@64:
-    intc_2 // 2
+    intc_1 // 2
     b main_ternary_merge@65
 
 main_ternary_false@61:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@62
 
 main_pushB_route@9:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     pushint 20
     ==
@@ -388,7 +381,7 @@ main_ternary_merge@70:
     pushint 20
     bzero
     dup
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -408,10 +401,10 @@ main_ternary_merge@70:
     dup
     extract 2 0
     swap
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     bytec 6 // "b"
-    intc_1 // 0
+    intc_2 // 0
     uncover 3
     uncover 3
     pushint 20
@@ -420,13 +413,12 @@ main_ternary_merge@70:
     return
 
 main_ternary_false@69:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@70
 
 main_get_route@8:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     pushint 32
     ==
@@ -441,7 +433,6 @@ main_get_route@8:
 main_ternary_merge@75:
     !
     assert // not payable
-    dig 2
     dup
     pushbytes 0x010000000000000000
     b<
@@ -459,7 +450,7 @@ main_ternary_merge@75:
     extract_uint64
     intc_3 // 16
     *
-    intc_2 // 2
+    intc_1 // 2
     +
     bytec_2 // "a"
     swap
@@ -488,7 +479,7 @@ main_ternary_merge@75:
     return
 
 main_ternary_false@74:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@75
 
 main_len_route@7:
@@ -505,7 +496,7 @@ main_ternary_merge@80:
     bytec_2 // "a"
     box_len
     pop
-    intc_2 // 2
+    intc_1 // 2
     >=
     bz main_ternary_false@82
     bytec_2 // "a"
@@ -513,7 +504,7 @@ main_ternary_merge@80:
     pop
 
 main_ternary_merge@83:
-    intc_2 // 2
+    intc_1 // 2
     -
     intc_3 // 16
     /
@@ -529,17 +520,16 @@ main_ternary_merge@83:
     return
 
 main_ternary_false@82:
-    intc_2 // 2
+    intc_1 // 2
     b main_ternary_merge@83
 
 main_ternary_false@79:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@80
 
 main_push_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_3 // 16
     ==
@@ -557,7 +547,7 @@ main_ternary_merge@88:
     intc_3 // 16
     bzero
     dup
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -577,10 +567,10 @@ main_ternary_merge@88:
     dup
     extract 2 0
     swap
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     bytec_2 // "a"
-    intc_1 // 0
+    intc_2 // 0
     uncover 3
     uncover 3
     intc_3 // 16
@@ -589,7 +579,7 @@ main_ternary_merge@88:
     return
 
 main_ternary_false@87:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@88
 
 main___postInit_route@5:
@@ -601,26 +591,26 @@ main___postInit_route@5:
     ==
     assert // __postInit callable only by the app creator
     bytec 7 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     bytec_2 // "a"
-    intc_2 // 2
+    intc_1 // 2
     box_create
     pop
     bytec 6 // "b"
-    intc_2 // 2
+    intc_1 // 2
     box_create
     pop
     bytec 5 // "c"
-    intc_2 // 2
+    intc_1 // 2
     box_create
     pop
     bytec 4 // "d"
-    intc_2 // 2
+    intc_1 // 2
     box_create
     pop
     bytec_3 // "e"
-    intc_2 // 2
+    intc_1 // 2
     box_create
     pop
     intc_0 // 1
@@ -632,7 +622,7 @@ box_dynamic_array_concat_fixed:
     proto 5 0
     frame_dig -5
     frame_dig -4
-    intc_2 // 2
+    intc_1 // 2
     box_extract
     btoi
     frame_dig -5
@@ -655,7 +645,7 @@ box_dynamic_array_concat_fixed:
     uncover 2
     box_replace
     frame_dig -4
-    intc_2 // 2
+    intc_1 // 2
     +
     swap
     frame_dig -1
@@ -663,7 +653,7 @@ box_dynamic_array_concat_fixed:
     +
     frame_dig -5
     swap
-    intc_1 // 0
+    intc_2 // 0
     frame_dig -3
     box_splice
     retsub

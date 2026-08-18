@@ -4,8 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_log_emit.sol.AsmLogEmit.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    intc_2 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -42,7 +40,6 @@ main_after_if_else@2:
 main_emit0_route@6:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
@@ -62,7 +59,7 @@ main_ternary_merge@13:
     load 0
     intc_0 // 32
     bzero
-    dig 4
+    uncover 2
     concat
     dup
     len
@@ -87,21 +84,18 @@ main_ternary_false@12:
 main_emit2_route@5:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 4
     len
     intc_0 // 32
     ==
@@ -122,7 +116,7 @@ main_ternary_merge@18:
     intc_0 // 32
     bzero
     dup
-    dig 5
+    uncover 3
     concat
     dup
     len
@@ -135,7 +129,7 @@ main_ternary_merge@18:
     replace2 0
     store 0
     dup
-    dig 3
+    uncover 3
     concat
     dup
     len
@@ -144,7 +138,7 @@ main_ternary_merge@18:
     intc_0 // 32
     extract3
     swap
-    dig 2
+    uncover 2
     concat
     dup
     len

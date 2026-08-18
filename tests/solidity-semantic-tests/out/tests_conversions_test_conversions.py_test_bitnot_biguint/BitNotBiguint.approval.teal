@@ -5,7 +5,7 @@
 main:
     intcblock 16 1 32 20
     bytecblock 0x151f7c75
-    pushints 0 4096
+    pushint 4096
     bzero
     dup
     store 5
@@ -41,7 +41,6 @@ main_after_if_else@2:
 main_notU160_route@7:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_3 // 20
     ==
@@ -60,7 +59,7 @@ main_ternary_merge@14:
     bzero
     intc_2 // 32
     bzero
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -100,7 +99,6 @@ main_ternary_false@13:
 main_clearTopBit_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 16
     ==
@@ -117,7 +115,7 @@ main_ternary_merge@19:
     assert // not payable
     intc_0 // 16
     bzero
-    dig 1
+    swap
     pushbytes 0x7fffffffffffffffffffffffffffffff
     b&
     dig 1
@@ -149,7 +147,6 @@ main_ternary_false@18:
 main_notU128_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 16
     ==
@@ -168,7 +165,7 @@ main_ternary_merge@25:
     bzero
     intc_2 // 32
     bzero
-    dig 2
+    uncover 2
     concat
     dup
     len

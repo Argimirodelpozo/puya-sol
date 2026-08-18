@@ -5,8 +5,6 @@
 main:
     intcblock 1 0 128 2
     bytecblock "__ctor_pending" "tmp_h" "tmp_i" 0x151f7c75
-    intc_1 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -46,10 +44,8 @@ main_after_if_else@2:
 main_i_route@7:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     dup
-    bury 2
     intc_2 // 128
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.uint256, 2>, 2>
@@ -64,11 +60,11 @@ main_ternary_merge@14:
     !
     assert // not payable
     bytec_2 // "tmp_i"
-    dig 2
+    uncover 2
     dup
     cover 2
     box_put
-    dig 1
+    swap
     itob
     extract 6 2
     swap
@@ -86,9 +82,7 @@ main_ternary_false@13:
 
 main_h_route@6:
     txna ApplicationArgs 1
-    dup
-    bury 3
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 64
@@ -98,7 +92,7 @@ main_h_route@6:
     swap
     len
     dup
-    bury 3
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.uint256, 2>>
     txn GroupIndex
@@ -115,11 +109,11 @@ main_ternary_merge@19:
     box_del
     pop
     bytec_1 // "tmp_h"
-    dig 2
+    uncover 2
     dup
     cover 2
     box_put
-    dig 1
+    swap
     itob
     extract 6 2
     swap

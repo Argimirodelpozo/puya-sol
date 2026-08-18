@@ -5,7 +5,6 @@
 main:
     intcblock 1 0
     bytecblock 0xf2b65f27
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -61,13 +60,11 @@ main_ternary_merge@13:
     concat
     !=
     dup
-    bury 2
     bnz main_after_if_else@15
     pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@15:
-    dup
     assert
     global CurrentApplicationID
     itob

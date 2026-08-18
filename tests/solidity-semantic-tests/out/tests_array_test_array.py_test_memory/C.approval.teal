@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/memory.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 128
+    intcblock 1 32 128 0
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -42,9 +41,8 @@ main_after_if_else@2:
 main_i_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_3 // 128
+    intc_2 // 128
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
     txn GroupIndex
@@ -57,7 +55,6 @@ main_i_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    dup
     callsub h
     pop
     pushint 2
@@ -83,14 +80,14 @@ main_ternary_merge@13:
     return
 
 main_ternary_false@12:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@13
 
 main_h_route@5:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 128
+    intc_2 // 128
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
     callsub h
@@ -151,5 +148,5 @@ h_ternary_merge@3:
     retsub
 
 h_ternary_false@2:
-    intc_2 // 0
+    intc_3 // 0
     b h_ternary_merge@3

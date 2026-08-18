@@ -6,8 +6,6 @@ main:
     intcblock 2 1 32 0
     bytecblock "data" "ids" 0x010000000000000000 "__ctor_pending" 0x151f7c75
     intc_3 // 0
-    dupn 6
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -47,14 +45,13 @@ main_after_if_else@2:
 main_setLengths_route@12:
     txna ApplicationArgs 1
     dup
-    bury 7
+    bury 2
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 6
     len
     intc_2 // 32
     ==
@@ -87,7 +84,7 @@ main_ternary_merge@23:
     pushint 64
     /
     itob
-    dig 6
+    dig 2
     b<
     bz main_while_top@25
     bytec_0 // "data"
@@ -115,7 +112,7 @@ main_ternary_merge@28:
     intc_2 // 32
     /
     itob
-    dig 5
+    dig 1
     b<
     bz main_after_while@30
     bytec_1 // "ids"
@@ -169,7 +166,6 @@ main_ternary_merge@38:
     pushint 64
     /
     itob
-    bury 2
     bytec_1 // "ids"
     box_len
     pop
@@ -188,7 +184,7 @@ main_ternary_merge@41:
     itob
     intc_2 // 32
     bzero
-    dig 3
+    uncover 2
     dig 1
     b|
     cover 2
@@ -216,7 +212,6 @@ main_ternary_false@34:
 main_getData_route@10:
     txna ApplicationArgs 1
     dup
-    bury 8
     len
     intc_2 // 32
     ==
@@ -231,7 +226,6 @@ main_getData_route@10:
 main_ternary_merge@46:
     !
     assert // not payable
-    dig 6
     dup
     bytec_2 // 0x010000000000000000
     b<
@@ -272,7 +266,6 @@ main_ternary_false@45:
 main_getID_route@9:
     txna ApplicationArgs 1
     dup
-    bury 8
     len
     intc_2 // 32
     ==
@@ -287,7 +280,6 @@ main_getID_route@9:
 main_ternary_merge@51:
     !
     assert // not payable
-    dig 6
     dup
     bytec_2 // 0x010000000000000000
     b<
@@ -323,21 +315,19 @@ main_ternary_false@50:
 main_setData_route@8:
     txna ApplicationArgs 1
     dup
-    bury 8
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 5
+    cover 2
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 4
     len
     intc_2 // 32
     ==
@@ -352,7 +342,7 @@ main_setData_route@8:
 main_ternary_merge@56:
     !
     assert // not payable
-    dig 6
+    dig 1
     bytec_2 // 0x010000000000000000
     b<
     assert // array index out of bounds
@@ -368,7 +358,7 @@ main_ternary_merge@56:
 main_after_if_else@58:
     pushint 8
     bzero
-    dig 7
+    uncover 2
     concat
     dup
     len
@@ -380,13 +370,12 @@ main_after_if_else@58:
     intc_0 // 2
     +
     dup
-    bury 2
     bytec_0 // "data"
     dig 1
     pushint 64
     box_extract // on error: index out of bounds
     extract 32 32
-    dig 5
+    uncover 4
     swap
     concat
     bytec_0 // "data"
@@ -404,12 +393,10 @@ main_after_if_else@58:
 main_after_if_else@60:
     bytec_0 // "data"
     dig 1
-    dup
-    cover 2
     pushint 64
     box_extract // on error: index out of bounds
     extract 0 32
-    dig 4
+    uncover 2
     concat
     bytec_0 // "data"
     cover 2
@@ -424,14 +411,12 @@ main_ternary_false@55:
 main_setID_route@7:
     txna ApplicationArgs 1
     dup
-    bury 8
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 9
     len
     intc_2 // 32
     ==
@@ -446,7 +431,7 @@ main_setID_route@7:
 main_ternary_merge@65:
     !
     assert // not payable
-    dig 6
+    dig 1
     bytec_2 // 0x010000000000000000
     b<
     assert // array index out of bounds
@@ -462,7 +447,7 @@ main_ternary_merge@65:
 main_after_if_else@67:
     pushint 8
     bzero
-    dig 7
+    uncover 2
     concat
     dup
     len
@@ -475,7 +460,7 @@ main_after_if_else@67:
     +
     bytec_1 // "ids"
     swap
-    dig 9
+    uncover 2
     box_replace // on error: index out of bounds
     intc_1 // 1
     return
@@ -487,7 +472,6 @@ main_ternary_false@64:
 main_setIDStatic_route@6:
     txna ApplicationArgs 1
     dup
-    bury 9
     len
     intc_2 // 32
     ==
@@ -514,7 +498,7 @@ main_ternary_merge@72:
 main_after_if_else@74:
     bytec_1 // "ids"
     pushint 66
-    dig 9
+    uncover 2
     box_replace // on error: index out of bounds
     intc_1 // 1
     return

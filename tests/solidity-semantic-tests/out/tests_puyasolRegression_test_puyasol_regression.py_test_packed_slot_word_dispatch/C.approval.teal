@@ -5,10 +5,6 @@
 main:
     intcblock 0 1 32 8 255
     bytecblock "a" "b" "c" "d" "e" 0x151f7c75
-    intc_0 // 0
-    dupn 2
-    pushbytes ""
-    dupn 4
     pushint 4096
     bzero
     dup
@@ -76,7 +72,6 @@ main_ternary_merge@15:
     assert // check a exists
     intc 4 // 255
     &
-    bury 5
     intc_0 // 0
     bytec_1 // "b"
     app_global_get_ex
@@ -112,7 +107,7 @@ main_ternary_merge@18:
     bytec 4 // "e"
     app_global_get_ex
     assert // check e exists
-    dig 8
+    uncover 4
     itob
     uncover 4
     concat
@@ -148,7 +143,6 @@ main_set_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
     txna ApplicationArgs 2
     dup
     len
@@ -156,7 +150,7 @@ main_set_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 2
+    swap
     txna ApplicationArgs 3
     dup
     len
@@ -164,10 +158,10 @@ main_set_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
+    cover 2
     txna ApplicationArgs 4
     dup
-    bury 7
+    cover 3
     len
     intc_3 // 8
     ==
@@ -180,7 +174,6 @@ main_set_route@7:
     assert // invalid number of bytes for arc4.bool
     intc_0 // 0
     getbit
-    bury 4
     txn GroupIndex
     bz main_ternary_false@22
     txn GroupIndex
@@ -191,19 +184,19 @@ main_set_route@7:
 main_ternary_merge@23:
     !
     assert // not payable
-    dig 2
+    swap
     dup
     intc 4 // 255
     <=
     assert // ABI validation
     intc 4 // 255
     &
-    bury 3
-    dig 1
+    swap
+    dig 2
     pushint 2147483647
     <=
     bnz main_bool_true@25
-    dig 1
+    dig 2
     pushint 18446744071562067968
     >=
     bz main_bool_false@26
@@ -213,22 +206,21 @@ main_bool_true@25:
 
 main_bool_merge@27:
     assert // ABI validation
-    dig 3
     dup
     intc_1 // 1
     <=
     assert // ABI bool validation
     bytec_0 // "a"
-    dig 4
+    uncover 2
     app_global_put
     bytec_1 // "b"
-    dig 3
+    uncover 2
     app_global_put
     bytec_2 // "c"
-    dig 2
+    uncover 3
     app_global_put
     bytec_3 // "d"
-    dig 7
+    uncover 2
     app_global_put
     bytec 4 // "e"
     swap
@@ -247,7 +239,6 @@ main_ternary_false@22:
 main_writeWord_route@6:
     txna ApplicationArgs 1
     dup
-    bury 9
     len
     intc_2 // 32
     ==
@@ -266,7 +257,7 @@ main_ternary_merge@32:
     store 0
     intc_2 // 32
     bzero
-    dig 8
+    swap
     concat
     dup
     len
@@ -274,9 +265,7 @@ main_ternary_merge@32:
     -
     intc_2 // 32
     extract3
-    dup
-    bury 8
-    dup
+    dupn 2
     pushint 31
     getbyte
     bytec_0 // "a"
@@ -295,7 +284,6 @@ main_ternary_merge@44:
     bytec_1 // "b"
     swap
     app_global_put
-    dig 6
     dup
     pushint 19
     extract_uint64

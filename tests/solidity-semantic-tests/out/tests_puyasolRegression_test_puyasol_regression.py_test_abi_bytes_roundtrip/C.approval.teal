@@ -5,8 +5,6 @@
 main:
     intcblock 32 0 1 8 255
     bytecblock 0x 0x151f7c75 0x00
-    intc_1 // 0
-    dupn 8
     bytec_0 // ""
     dupn 6
     pushint 4096
@@ -44,9 +42,7 @@ main_after_if_else@2:
 
 main_stEq_route@8:
     txna ApplicationArgs 1
-    dup
-    bury 14
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
@@ -54,11 +50,10 @@ main_stEq_route@8:
     dig 1
     len
     dup
-    bury 10
+    bury 11
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 8
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -69,19 +64,19 @@ main_stEq_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    dig 7
+    dup
     keccak256
-    bury 10
-    dig 6
+    swap
+    dig 9
     intc_0 // 32
     >=
     bz main_else_body@24
-    dig 12
+    dig 2
     extract 0 24
     bytec_0 // 0x
     b==
     bz main_else_body@24
-    dig 12
+    dig 2
     extract 0 32
     dup
     len
@@ -89,21 +84,22 @@ main_ternary_merge@15:
     -
     extract_uint64
     dup
-    bury 3
+    bury 6
     intc_0 // 32
     %
     bnz main_else_body@24
-    dig 1
+    dig 4
     intc_0 // 32
     +
     dup
-    bury 2
-    dig 7
+    bury 5
+    dig 10
     <=
     bz main_else_body@24
-    dig 12
+    pop
+    swap
     dup
-    dig 3
+    dig 4
     intc_0 // 32
     extract3
     dup
@@ -111,13 +107,12 @@ main_ternary_merge@15:
     intc_3 // 8
     -
     extract_uint64
-    dig 2
+    dig 3
     swap
     extract3
 
 main_after_if_else@25:
     keccak256
-    dig 10
     ==
     bytec_2 // 0x00
     intc_1 // 0
@@ -131,7 +126,8 @@ main_after_if_else@25:
     return
 
 main_else_body@24:
-    dig 7
+    uncover 2
+    pop
     b main_after_if_else@25
 
 main_ternary_false@14:
@@ -140,9 +136,7 @@ main_ternary_false@14:
 
 main_rtEq_route@7:
     txna ApplicationArgs 1
-    dup
-    bury 15
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
@@ -150,11 +144,10 @@ main_rtEq_route@7:
     dig 1
     len
     dup
-    bury 10
+    bury 11
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 9
     txn GroupIndex
     bz main_ternary_false@29
     txn GroupIndex
@@ -165,19 +158,19 @@ main_rtEq_route@7:
 main_ternary_merge@30:
     !
     assert // not payable
-    dig 8
+    dup
     keccak256
-    bury 11
-    dig 6
+    swap
+    dig 9
     intc_0 // 32
     >=
     bz main_else_body@35
-    dig 13
+    dig 2
     extract 0 24
     bytec_0 // 0x
     b==
     bz main_else_body@35
-    dig 13
+    dig 2
     extract 0 32
     dup
     len
@@ -185,21 +178,22 @@ main_ternary_merge@30:
     -
     extract_uint64
     dup
-    bury 6
+    bury 9
     intc_0 // 32
     %
     bnz main_else_body@35
-    dig 4
+    dig 7
     intc_0 // 32
     +
     dup
-    bury 4
-    dig 7
+    bury 7
+    dig 10
     <=
     bz main_else_body@35
-    dig 13
+    pop
+    swap
     dup
-    dig 6
+    dig 7
     intc_0 // 32
     extract3
     dup
@@ -207,13 +201,12 @@ main_ternary_merge@30:
     intc_3 // 8
     -
     extract_uint64
-    dig 4
+    dig 5
     swap
     extract3
 
 main_after_if_else@36:
     keccak256
-    dig 11
     ==
     bytec_2 // 0x00
     intc_1 // 0
@@ -227,7 +220,8 @@ main_after_if_else@36:
     return
 
 main_else_body@35:
-    dig 8
+    uncover 2
+    pop
     b main_after_if_else@36
 
 main_ternary_false@29:
@@ -236,9 +230,7 @@ main_ternary_false@29:
 
 main_rtFirst_route@6:
     txna ApplicationArgs 1
-    dup
-    bury 16
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
@@ -246,11 +238,10 @@ main_rtFirst_route@6:
     dig 1
     len
     dup
-    bury 10
+    bury 11
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 9
     txn GroupIndex
     bz main_ternary_false@40
     txn GroupIndex
@@ -261,16 +252,16 @@ main_rtFirst_route@6:
 main_ternary_merge@41:
     !
     assert // not payable
-    dig 6
+    dig 8
     intc_0 // 32
     >=
     bz main_else_body@46
-    dig 14
+    dig 1
     extract 0 24
     bytec_0 // 0x
     b==
     bz main_else_body@46
-    dig 14
+    dig 1
     extract 0 32
     dup
     len
@@ -278,19 +269,19 @@ main_ternary_merge@41:
     -
     extract_uint64
     dup
-    bury 7
+    bury 9
     intc_0 // 32
     %
     bnz main_else_body@46
-    dig 5
+    dig 7
     intc_0 // 32
     +
     dup
-    bury 5
-    dig 7
+    bury 7
+    dig 9
     <=
     bz main_else_body@46
-    dig 14
+    pop
     dup
     dig 7
     intc_0 // 32
@@ -303,16 +294,16 @@ main_ternary_merge@41:
     dig 5
     swap
     extract3
-    bury 12
 
 main_after_if_else@47:
-    dig 11
+    dup
     len
     itob
     intc_1 // 0
     itob
     b==
     bz main_ternary_false@49
+    pop
     intc 4 // 255
 
 main_ternary_merge@50:
@@ -327,7 +318,6 @@ main_ternary_merge@50:
     return
 
 main_ternary_false@49:
-    dig 11
     intc_1 // 0
     getbyte
     intc 4 // 255
@@ -335,8 +325,7 @@ main_ternary_false@49:
     b main_ternary_merge@50
 
 main_else_body@46:
-    dig 8
-    bury 12
+    bury 1
     b main_after_if_else@47
 
 main_ternary_false@40:
@@ -345,9 +334,7 @@ main_ternary_false@40:
 
 main_rtLen_route@5:
     txna ApplicationArgs 1
-    dup
-    bury 17
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
@@ -355,11 +342,10 @@ main_rtLen_route@5:
     dig 1
     len
     dup
-    bury 10
+    bury 11
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 9
     txn GroupIndex
     bz main_ternary_false@54
     txn GroupIndex
@@ -370,16 +356,16 @@ main_rtLen_route@5:
 main_ternary_merge@55:
     !
     assert // not payable
-    dig 6
+    dig 8
     intc_0 // 32
     >=
     bz main_else_body@60
-    dig 15
+    dig 1
     extract 0 24
     bytec_0 // 0x
     b==
     bz main_else_body@60
-    dig 15
+    dig 1
     extract 0 32
     dup
     len
@@ -387,19 +373,19 @@ main_ternary_merge@55:
     -
     extract_uint64
     dup
-    bury 7
+    bury 9
     intc_0 // 32
     %
     bnz main_else_body@60
-    dig 5
+    dig 7
     intc_0 // 32
     +
     dup
-    bury 5
-    dig 7
+    bury 7
+    dig 9
     <=
     bz main_else_body@60
-    dig 15
+    pop
     dup
     dig 7
     intc_0 // 32
@@ -427,7 +413,7 @@ main_after_if_else@61:
     return
 
 main_else_body@60:
-    dig 8
+    bury 1
     b main_after_if_else@61
 
 main_ternary_false@54:

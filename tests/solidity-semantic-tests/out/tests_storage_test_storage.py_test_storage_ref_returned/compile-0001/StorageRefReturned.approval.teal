@@ -5,8 +5,6 @@
 main:
     intcblock 32 1 0
     bytecblock "_m" "__ctor_pending" 0x151f7c75 0x000000000000000000000000000000000000000000000000000000000000000000220000 "inner"
-    intc_2 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -51,7 +49,6 @@ main_rdViaRef_route@9:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -67,7 +64,7 @@ main_ternary_merge@16:
     !
     assert // not payable
     pushbytes "map"
-    dig 2
+    swap
     callsub L.rd
     dig 1
     len
@@ -101,21 +98,19 @@ main_ternary_false@15:
 main_bumpViaRef_route@8:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 2
+    cover 3
     len
     intc_0 // 32
     ==
@@ -131,10 +126,10 @@ main_ternary_merge@21:
     !
     assert // not payable
     bytec_0 // "_m"
-    dig 3
+    uncover 2
     callsub L.getRef
-    dig 2
-    dig 2
+    swap
+    uncover 2
     callsub L.bump
     intc_1 // 1
     return
@@ -146,14 +141,12 @@ main_ternary_false@20:
 main_rdDirect_route@7:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -171,7 +164,7 @@ main_ternary_merge@26:
     intc_0 // 32
     bzero
     dup
-    dig 4
+    uncover 3
     concat
     dup
     len
@@ -182,7 +175,7 @@ main_ternary_merge@26:
     bytec_0 // "_m"
     concat
     sha256
-    dig 3
+    uncover 2
     callsub L.rd
     dig 1
     len
@@ -215,21 +208,19 @@ main_ternary_false@25:
 main_bumpDirect_route@6:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 2
+    cover 3
     len
     intc_0 // 32
     ==
@@ -246,7 +237,7 @@ main_ternary_merge@31:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -257,8 +248,8 @@ main_ternary_merge@31:
     bytec_0 // "_m"
     concat
     sha256
-    dig 2
-    dig 2
+    swap
+    uncover 2
     callsub L.bump
     intc_1 // 1
     return

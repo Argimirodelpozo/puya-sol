@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/slot_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 64
+    intcblock 32 1 64 0
     bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
-    intc_1 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -26,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -43,7 +41,6 @@ main_after_if_else@2:
 main_mappingAccess_route@7:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -51,7 +48,7 @@ main_mappingAccess_route@7:
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -60,7 +57,6 @@ main_ternary_merge@14:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 2
     b|
     extract 0 32
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -74,17 +70,17 @@ main_ternary_merge@14:
     callsub __storage_read
     dig 1
     len
-    intc_3 // 64
+    intc_2 // 64
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 64
     bzero
     uncover 2
     dig 1
     b|
     dig 2
     len
-    intc_3 // 64
+    intc_2 // 64
     <=
     assert // overflow
     cover 2
@@ -94,18 +90,18 @@ main_ternary_merge@14:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@13:
-    intc_1 // 0
+    intc_3 // 0
     b main_ternary_merge@14
 
 main_get_route@6:
     txn GroupIndex
     bz main_ternary_false@18
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -126,17 +122,16 @@ main_ternary_merge@19:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@18:
-    intc_1 // 0
+    intc_3 // 0
     b main_ternary_merge@19
 
 main_set_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -144,7 +139,7 @@ main_set_route@5:
     txn GroupIndex
     bz main_ternary_false@23
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -168,7 +163,7 @@ main_ternary_merge@24:
     -
     extract_uint64
     dup
-    intc_3 // 64
+    intc_2 // 64
     /
     itob
     bytec_3 // "p:"
@@ -179,13 +174,13 @@ main_ternary_merge@24:
     box_create
     pop
     swap
-    intc_3 // 64
+    intc_2 // 64
     %
     intc_0 // 32
     *
     intc_0 // 32
     bzero
-    dig 3
+    uncover 3
     concat
     dup
     len
@@ -196,7 +191,7 @@ main_ternary_merge@24:
     box_replace
 
 main_after_inlined___puyasol___storage_write@28:
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_else_body@27:
@@ -219,7 +214,7 @@ main_else_body@27:
     box_create
     pop
     swap
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -227,20 +222,20 @@ main_else_body@27:
     -
     intc_0 // 32
     extract3
-    intc_1 // 0
+    intc_3 // 0
     swap
     box_replace
     b main_after_inlined___puyasol___storage_write@28
 
 main_ternary_false@23:
-    intc_1 // 0
+    intc_3 // 0
     b main_ternary_merge@24
 
 
 // __puyasol___storage_read(__slot: bytes) -> bytes:
 __storage_read:
     proto 1 1
-    intc_1 // 0
+    intc_3 // 0
     dup
     pushbytes ""
     frame_dig -1
@@ -262,7 +257,7 @@ __storage_read:
     extract_uint64
     dup
     frame_bury 2
-    intc_3 // 64
+    intc_2 // 64
     /
     itob
     bytec_3 // "p:"
@@ -274,7 +269,7 @@ __storage_read:
     bury 1
     bz __storage_read_after_if_else@3
     frame_dig 2
-    intc_3 // 64
+    intc_2 // 64
     %
     intc_0 // 32
     *
@@ -310,7 +305,7 @@ __storage_read_else_body@4:
     bury 1
     bz __storage_read_after_if_else@3
     frame_dig 0
-    intc_1 // 0
+    intc_3 // 0
     intc_0 // 32
     box_extract
     frame_bury 0

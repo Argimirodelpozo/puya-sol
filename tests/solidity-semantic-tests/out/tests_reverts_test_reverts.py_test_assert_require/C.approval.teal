@@ -5,8 +5,6 @@
 main:
     intcblock 1 0
     bytecblock 0x151f7c7580 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    pushbytes ""
-    dup
     pushint 4096
     bzero
     dup
@@ -49,7 +47,6 @@ main_h_route@7:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
@@ -60,7 +57,7 @@ main_h_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
@@ -83,7 +80,6 @@ main_g_route@6:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@18
     txn GroupIndex
@@ -94,20 +90,18 @@ main_g_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
     intc_0 // 1
     ==
     dup
-    bury 3
     bnz main_after_if_else@21
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@21:
-    dig 1
     assert
     bytec_0 // 0x151f7c7580
     log

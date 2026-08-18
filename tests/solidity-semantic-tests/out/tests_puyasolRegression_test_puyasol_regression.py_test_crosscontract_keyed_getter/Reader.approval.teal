@@ -5,8 +5,6 @@
 main:
     intcblock 32 0 1 16
     bytecblock 0x151f7c75
-    intc_1 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -43,7 +41,6 @@ main_after_if_else@2:
 main_readPlain_route@8:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -59,7 +56,6 @@ main_ternary_merge@15:
     !
     assert // not payable
     itxn_begin
-    dup
     pushint 24
     extract_uint64
     pushint 6
@@ -96,14 +92,13 @@ main_ternary_false@14:
 main_readArr_route@7:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 4
+    cover 2
     len
     intc_0 // 32
     ==
@@ -119,7 +114,6 @@ main_ternary_merge@20:
     !
     assert // not payable
     itxn_begin
-    dup
     pushint 24
     extract_uint64
     pushint 6
@@ -131,7 +125,6 @@ main_ternary_merge@20:
     itxn_field ApplicationID
     pushbytes 0x051b943c // method "arr(uint256)uint256"
     itxn_field ApplicationArgs
-    dig 2
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -158,14 +151,12 @@ main_ternary_false@19:
 main_readNarrow_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_3 // 16
     ==
@@ -184,7 +175,7 @@ main_ternary_merge@25:
     intc_3 // 16
     bzero
     dup
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -198,7 +189,7 @@ main_ternary_merge@25:
     <=
     assert // overflow
     b|
-    dig 1
+    swap
     pushint 24
     extract_uint64
     pushint 6
@@ -236,14 +227,12 @@ main_ternary_false@24:
 main_readMap_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -259,7 +248,7 @@ main_ternary_merge@30:
     !
     assert // not payable
     itxn_begin
-    dup
+    swap
     pushint 24
     extract_uint64
     pushint 6
@@ -271,7 +260,6 @@ main_ternary_merge@30:
     itxn_field ApplicationID
     pushbytes 0x8338d04b // method "m(uint256)uint256"
     itxn_field ApplicationArgs
-    dig 1
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog

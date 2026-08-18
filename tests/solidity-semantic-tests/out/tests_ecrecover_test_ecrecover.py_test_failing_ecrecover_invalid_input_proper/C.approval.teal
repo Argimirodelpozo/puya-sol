@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 255
-    bytecblock 0x 0xda1823d3 0x151f7c75 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+    bytecblock 0xda1823d3 0x151f7c75 0x 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
     pushint 4096
     bzero
     dup
@@ -34,7 +34,7 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytes 0xcdcb8654 // method "f()address"
-    bytec_1 // method "recover(byte[32],uint64,byte[32],byte[32],uint256,byte[32])address"
+    bytec_0 // method "recover(byte[32],uint64,byte[32],byte[32],uint256,byte[32])address"
     txna ApplicationArgs 0
     match main_f_route@5 main_recover_route@6
     err
@@ -78,7 +78,7 @@ main_recover_route@6:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     callsub recover
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -100,7 +100,7 @@ main_ternary_merge@15:
     intc_2 // 0
     pushbytess 0x6944c77849b18048f6abe0db8084b0d0d0689cdddb53d2671c36967b58691ad4 0xef4f06ba4f78319baafd0424365777241af4dfd3da840471b4b4b087b7750d0d 0xca35b7d915458ef540ade6068dfe2f44e8fa733c 0x000000000000000000000000ca35b7d915458ef540ade6068dfe2f44e8fa733c
     callsub recover
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -115,13 +115,10 @@ main_ternary_false@14:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol.C.recover(hash: bytes, v: uint64, r: bytes, s: bytes, __arc4_blockExpired: bytes, salt: bytes) -> bytes:
 recover:
     proto 6 1
-    intc_2 // 0
-    dup
-    bytec_0 // ""
     txn NumAppArgs
     bz recover_after_if_else@6
     txna ApplicationArgs 0
-    bytec_1 // method "recover(byte[32],uint64,byte[32],byte[32],uint256,byte[32])address"
+    bytec_0 // method "recover(byte[32],uint64,byte[32],byte[32],uint256,byte[32])address"
     ==
     bz recover_after_if_else@6
     txn GroupIndex
@@ -147,7 +144,6 @@ recover_after_if_else@6:
     intc_0 // 32
     bzero
     dup
-    frame_bury 0
     frame_dig -2
     concat
     dup
@@ -166,14 +162,13 @@ recover_after_if_else@6:
     pushint 27
     >=
     dup
-    frame_bury 2
     bz recover_ternary_false@16
     frame_dig -5
     pushint 28
     <=
     bz recover_ternary_false@16
     frame_dig -4
-    bytec_0 // 0x
+    bytec_2 // 0x
     b!=
     bz recover_ternary_false@16
     frame_dig -4
@@ -181,17 +176,17 @@ recover_after_if_else@6:
     b<
     bz recover_ternary_false@16
     frame_dig -3
-    bytec_0 // 0x
+    bytec_2 // 0x
     b!=
     bz recover_ternary_false@16
     frame_dig -3
     bytec_3 // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
     b<
     bz recover_ternary_false@16
+    bury 1
     pushint 12
     bzero
-    frame_bury 1
-    frame_dig 2
+    swap
     bz recover_ternary_false@14
     frame_dig -5
     pushint 27
@@ -208,12 +203,7 @@ recover_ternary_merge@15:
     concat
     keccak256
     extract 12 20
-    frame_dig 1
-    swap
     concat
-
-recover_ternary_merge@17:
-    frame_bury 0
     retsub
 
 recover_ternary_false@14:
@@ -221,8 +211,8 @@ recover_ternary_false@14:
     b recover_ternary_merge@15
 
 recover_ternary_false@16:
-    frame_dig 0
-    b recover_ternary_merge@17
+    pop
+    retsub
 
 recover_ternary_false@4:
     intc_2 // 0

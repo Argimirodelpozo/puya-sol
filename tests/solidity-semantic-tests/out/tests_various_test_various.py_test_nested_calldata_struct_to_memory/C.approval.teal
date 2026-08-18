@@ -3,8 +3,6 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/nested_calldata_struct_to_memory.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -24,7 +22,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -41,7 +39,6 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     pushint 160
     ==
@@ -49,14 +46,14 @@ main_f_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    intc_0 // 1
+    pushint 1
     -
     gtxns Amount
 
 main_ternary_merge@9:
     !
     assert // not payable
-    dupn 2
+    dup
     extract 0 32
     dig 1
     extract 32 32
@@ -81,9 +78,9 @@ main_ternary_merge@9:
     swap
     concat
     log
-    intc_0 // 1
+    pushint 1
     return
 
 main_ternary_false@8:
-    intc_1 // 0
+    pushint 0
     b main_ternary_merge@9

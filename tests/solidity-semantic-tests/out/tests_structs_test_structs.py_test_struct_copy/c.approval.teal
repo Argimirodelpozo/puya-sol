@@ -5,8 +5,6 @@
 main:
     intcblock 32 1 0
     bytecblock "data" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c7580
-    intc_2 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -46,7 +44,6 @@ main_after_if_else@2:
 main_retrieve_route@8:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -63,7 +60,7 @@ main_ternary_merge@15:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 2
+    swap
     concat
     dup
     len
@@ -109,14 +106,12 @@ main_ternary_false@14:
 main_copy_route@7:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -134,7 +129,7 @@ main_ternary_merge@20:
     intc_0 // 32
     bzero
     dup
-    dig 4
+    uncover 3
     concat
     dup
     len
@@ -150,7 +145,7 @@ main_ternary_merge@20:
     cover 2
     select
     swap
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -175,7 +170,6 @@ main_ternary_false@19:
 main_set_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -192,7 +186,7 @@ main_ternary_merge@25:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 2
+    swap
     concat
     dup
     len

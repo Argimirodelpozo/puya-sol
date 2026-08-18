@@ -5,8 +5,6 @@
 main:
     intcblock 1 0
     bytecblock 0x151f7c75
-    intc_1 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -43,7 +41,6 @@ main_after_if_else@2:
 main_g_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 1
     ==
@@ -59,7 +56,7 @@ main_ternary_merge@13:
     !
     assert // not payable
     bytec_0 // 0x151f7c75
-    dig 2
+    swap
     concat
     log
     intc_0 // 1
@@ -78,7 +75,6 @@ main_f_route@5:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@17
     txn GroupIndex
@@ -89,7 +85,6 @@ main_f_route@5:
 main_ternary_merge@18:
     !
     assert // not payable
-    dup
     bz main_else_body@20
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
 

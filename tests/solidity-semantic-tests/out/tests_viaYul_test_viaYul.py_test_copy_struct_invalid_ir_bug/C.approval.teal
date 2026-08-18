@@ -5,8 +5,6 @@
 main:
     intcblock 0 1 2 12
     bytecblock "array" 0x0c88cb4e "externalCalled" "__ctor_pending" 0x0001
-    pushbytes ""
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -101,10 +99,10 @@ main_ternary_merge@14:
     intc_0 // 0
     extract_uint64
     dup
-    bury 4
     global CurrentApplicationID
     ==
     bz main_else_body@16
+    pop
     extract 8 4
     bytec_1 // method "ext()void"
     ==
@@ -123,10 +121,10 @@ main_after_if_else@17:
     intc_0 // 0
     extract_uint64
     dup
-    bury 3
     global CurrentApplicationID
     ==
     bz main_else_body@19
+    pop
     extract 8 4
     bytec_1 // method "ext()void"
     ==
@@ -144,17 +142,16 @@ main_after_if_else@20:
     itob
     b==
     dup
-    bury 4
     bnz main_after_if_else@22
     pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@22:
-    dig 2
     return
 
 main_else_body@19:
     itxn_begin
+    swap
     extract 8 4
     pushint 6
     itxn_field TypeEnum
@@ -162,14 +159,14 @@ main_else_body@19:
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
-    dig 1
-    itxn_field ApplicationID
     itxn_field ApplicationArgs
+    itxn_field ApplicationID
     itxn_submit
     b main_after_if_else@20
 
 main_else_body@16:
     itxn_begin
+    swap
     extract 8 4
     pushint 6
     itxn_field TypeEnum
@@ -177,9 +174,8 @@ main_else_body@16:
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
-    dig 2
-    itxn_field ApplicationID
     itxn_field ApplicationArgs
+    itxn_field ApplicationID
     itxn_submit
     b main_after_if_else@17
 

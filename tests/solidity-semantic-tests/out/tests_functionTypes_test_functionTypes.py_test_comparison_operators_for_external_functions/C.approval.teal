@@ -6,9 +6,7 @@ main:
     intcblock 1 0
     bytecblock 0x2d4970c7 0xf2b65f27 0x0a449f0b 0xd70fdf03 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x151f7c7580
     intc_1 // 0
-    dupn 3
-    pushbytes ""
-    dupn 3
+    dup
     pushint 4096
     bzero
     dup
@@ -62,22 +60,22 @@ main_ternary_merge@17:
     bytec_0 // method "f()void"
     concat
     dup
-    bury 9
+    bury 3
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
     concat
-    bury 8
+    bury 2
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
-    bury 7
+    swap
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
-    bury 6
+    swap
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
@@ -88,169 +86,160 @@ main_ternary_merge@17:
     itob
     bytec_1 // method "g()void"
     concat
-    dig 7
+    dig 3
     ==
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
-    dig 6
+    dig 2
     ==
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
-    dig 5
+    dig 1
     ==
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
     concat
-    dig 8
+    dig 4
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
-    dig 8
+    dig 4
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
-    dig 8
+    dig 4
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
     concat
-    dig 7
+    dig 3
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
-    dig 7
+    dig 3
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
-    dig 7
+    dig 3
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
     concat
-    dig 6
+    dig 2
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
     concat
-    dig 6
+    dig 2
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
-    dig 6
+    dig 2
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
     concat
-    dig 5
+    dig 1
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
     concat
-    dig 5
+    dig 1
     !=
     bz main_bool_false@34
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
-    dig 5
+    dig 1
     !=
     bz main_bool_false@34
     intc_0 // 1
-    bury 4
 
 main_bool_merge@35:
-    dig 3
+    dup
     bnz main_after_if_else@37
     bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@37:
-    dig 3
     assert
-    dig 7
-    dig 7
+    dig 3
+    dig 3
     !=
     bz main_bool_false@41
-    dig 7
-    dig 6
+    dig 3
+    dig 2
     !=
     bz main_bool_false@41
-    dig 7
-    dig 5
+    dig 3
+    dig 1
     !=
     bz main_bool_false@41
     intc_0 // 1
-    bury 3
 
 main_bool_merge@42:
-    dig 2
+    dup
     bnz main_after_if_else@44
     bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@44:
-    dig 2
     assert
-    dig 6
-    dig 6
+    dig 2
+    dig 2
     !=
     bz main_bool_false@47
-    dig 6
-    dig 5
+    dig 2
+    dig 1
     !=
     bz main_bool_false@47
     intc_0 // 1
-    bury 2
 
 main_bool_merge@48:
-    dig 1
+    dup
     bnz main_after_if_else@50
     bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@50:
-    dig 1
     assert
-    dig 5
-    dig 5
     !=
     bz main_bool_false@52
     intc_0 // 1
-    bury 1
 
 main_bool_merge@53:
     dup
@@ -259,7 +248,6 @@ main_bool_merge@53:
     log
 
 main_after_if_else@55:
-    dup
     assert
     bytec 5 // 0x151f7c7580
     log
@@ -268,22 +256,18 @@ main_after_if_else@55:
 
 main_bool_false@52:
     intc_1 // 0
-    bury 1
     b main_bool_merge@53
 
 main_bool_false@47:
     intc_1 // 0
-    bury 2
     b main_bool_merge@48
 
 main_bool_false@41:
     intc_1 // 0
-    bury 3
     b main_bool_merge@42
 
 main_bool_false@34:
     intc_1 // 0
-    bury 4
     b main_bool_merge@35
 
 main_ternary_false@16:
@@ -402,16 +386,14 @@ main_ternary_merge@60:
     ==
     bz main_bool_false@71
     intc_0 // 1
-    bury 4
 
 main_bool_merge@72:
-    dig 3
+    dup
     bnz main_after_if_else@74
     bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@74:
-    dig 3
     assert
     bytec 5 // 0x151f7c7580
     log
@@ -420,7 +402,6 @@ main_after_if_else@74:
 
 main_bool_false@71:
     intc_1 // 0
-    bury 4
     b main_bool_merge@72
 
 main_ternary_false@59:

@@ -5,8 +5,6 @@
 main:
     intcblock 0 1 32 8
     bytecblock "a" 0x 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    intc_0 // 0
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -117,7 +115,6 @@ main_ternary_false@24:
 main_map_route@8:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_2 // 32
     ==
@@ -157,7 +154,6 @@ main_ternary_merge@36:
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bury 2
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
@@ -174,14 +170,12 @@ main_ternary_merge@36:
 main_ternary_merge@39:
     itob
     dig 1
-    dup
-    uncover 2
-    b<
+    b>
     assert // array index out of bounds
     intc_2 // 32
     bzero
     dup
-    dig 6
+    uncover 3
     concat
     dup
     len
@@ -281,14 +275,13 @@ main_ternary_false@43:
 main_n1_route@6:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 4
+    cover 2
     len
     intc_2 // 32
     ==
@@ -351,7 +344,6 @@ main_ternary_merge@58:
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bury 3
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
@@ -367,14 +359,12 @@ main_ternary_merge@58:
 
 main_ternary_merge@61:
     itob
-    dig 2
-    dup
-    uncover 2
-    b<
+    dig 1
+    b>
     assert // array index out of bounds
     intc_2 // 32
     bzero
-    dig 5
+    uncover 2
     concat
     dup
     len
@@ -400,7 +390,7 @@ main_ternary_merge@61:
     dup
     box_del
     pop
-    dig 3
+    swap
     box_put
     intc_1 // 1
     return

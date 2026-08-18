@@ -3,9 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_selfdestruct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    intc_1 // 0
-    dup
+    intcblock 1 32 0
     pushint 4096
     bzero
     dup
@@ -42,9 +40,8 @@ main_after_if_else@2:
 main_terminate_route@7:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
@@ -62,18 +59,17 @@ main_ternary_merge@14:
     intc_0 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
-    dup
     itxn_field CloseRemainderTo
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Amount
     itxn_submit
     intc_0 // 1
     return
 
 main_ternary_false@13:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@14
 
 main_get_route@6:
@@ -97,10 +93,10 @@ main_ternary_merge@19:
     b%
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -111,15 +107,14 @@ main_ternary_merge@19:
     return
 
 main_ternary_false@18:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@19
 
 main_set_route@5:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -135,9 +130,9 @@ main_ternary_merge@24:
     load 0
     store 0
     load 5
-    intc_2 // 32
+    intc_1 // 32
     bzero
-    dig 3
+    uncover 2
     b|
     replace2 0
     store 5
@@ -147,5 +142,5 @@ main_ternary_merge@24:
     return
 
 main_ternary_false@23:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@24

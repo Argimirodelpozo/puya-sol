@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_pop_call_output.sol.PopCallCaller.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 6
+    intcblock 32 0 1 6
     bytecblock 0x151f7c75 TMPL_APPROVAL_PopCallCallee TMPL_CLEAR_PopCallCallee
-    intc_0 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -43,9 +41,8 @@ main_h_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 4
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -67,7 +64,7 @@ main_ternary_merge@9:
     itxn_field GlobalNumUint
     pushint 16
     itxn_field GlobalNumByteSlice
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -82,7 +79,7 @@ main_ternary_merge@9:
     intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     pushint 1000000
     itxn_field Amount
@@ -95,23 +92,23 @@ main_ternary_merge@9:
     load 0
     store 0
     load 0
-    intc_1 // 32
+    intc_0 // 32
     bzero
     dup
     cover 2
-    bury 4
+    cover 3
     pushbytes 0x000000000000000000000000000000000000000000000000000000003fe9558e
     replace2 0
     store 0
     load 0
     swap
-    dig 5
+    uncover 4
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     replace2 32
     store 0
@@ -125,9 +122,9 @@ main_ternary_merge@9:
     extract_uint64
     intc_3 // 6
     itxn_field TypeEnum
-    intc_0 // 0
+    intc_1 // 0
     itxn_field OnCompletion
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
     swap
@@ -136,25 +133,21 @@ main_ternary_merge@9:
     itxn_submit
     itxn LastLog
     dup
-    bury 3
     len
     pushint 4
     >=
     bz main_ternary_false@12
-    dig 1
+    dup
     extract 0 4
     bytec_0 // 0x151f7c75
     ==
 
 main_ternary_merge@13:
     bz main_ternary_false@15
-    dig 1
     extract 4 0
 
 main_ternary_merge@16:
     dig 1
-    dup
-    cover 2
     concat
     extract 0 32
     dig 1
@@ -162,9 +155,9 @@ main_ternary_merge@16:
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     load 0
     swap
@@ -178,7 +171,7 @@ main_ternary_merge@16:
     b%
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
     b|
@@ -190,13 +183,12 @@ main_ternary_merge@16:
     return
 
 main_ternary_false@15:
-    dig 1
     b main_ternary_merge@16
 
 main_ternary_false@12:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@13
 
 main_ternary_false@8:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@9

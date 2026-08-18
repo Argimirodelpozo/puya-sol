@@ -5,8 +5,6 @@
 main:
     intcblock 1 32 0
     bytecblock "cnt" 0x151f7c75 0x01 0x151f7c750000000000000000000000000000000000000000000000000000000000000001 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    intc_2 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -80,7 +78,6 @@ main_ternary_false@18:
 main_mulmodOrder_route@11:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_1 // 32
     ==
@@ -100,7 +97,6 @@ main_ternary_merge@24:
     app_global_put
     pushint 6
     itob
-    dig 1
     b*
     pushbytes 0x07
     b%
@@ -211,14 +207,12 @@ main_ternary_false@47:
 main_f_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 2
     len
     intc_1 // 32
     ==
@@ -233,7 +227,6 @@ main_f_route@6:
 main_ternary_merge@53:
     !
     assert // not payable
-    dup2
     b+
     dup
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -261,7 +254,6 @@ main_ternary_false@52:
 main_f_route@5:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_1 // 32
     ==
@@ -278,7 +270,6 @@ main_ternary_merge@58:
     assert // not payable
     pushint 100
     itob
-    dig 2
     b+
     dup
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff

@@ -5,9 +5,6 @@
 main:
     intcblock 1 0 2
     bytecblock 0x151f7c75
-    intc_1 // 0
-    dup
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -43,9 +40,7 @@ main_after_if_else@2:
 
 main_h2_route@10:
     txna ApplicationArgs 1
-    dup
-    bury 3
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
@@ -65,7 +60,7 @@ main_ternary_merge@17:
     !
     assert // not payable
     pushbytes 0x00000001
-    dig 2
+    swap
     concat
     dup
     len
@@ -116,7 +111,6 @@ main_g2_route@8:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 3
     txn GroupIndex
     bz main_ternary_false@26
     txn GroupIndex
@@ -127,7 +121,6 @@ main_g2_route@8:
 main_ternary_merge@27:
     !
     assert // not payable
-    dig 2
     dup
     len
     itob
@@ -167,9 +160,7 @@ main_ternary_false@31:
 
 main_f2_route@6:
     txna ApplicationArgs 1
-    dup
-    bury 3
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
@@ -177,7 +168,7 @@ main_f2_route@6:
     swap
     len
     dup
-    bury 3
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     txn GroupIndex
@@ -190,10 +181,9 @@ main_f2_route@6:
 main_ternary_merge@37:
     !
     assert // not payable
-    dup
     itob
     extract 6 2
-    dig 2
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap

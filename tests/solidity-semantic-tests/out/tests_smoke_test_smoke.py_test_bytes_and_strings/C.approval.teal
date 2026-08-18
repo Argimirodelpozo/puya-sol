@@ -4,7 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/bytes_and_strings.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -100,9 +99,7 @@ main_ternary_false@24:
 
 main_e_route@5:
     txna ApplicationArgs 1
-    dup
-    bury 2
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
@@ -122,7 +119,7 @@ main_ternary_merge@30:
     !
     assert // not payable
     pushbytes 0x151f7c75
-    dig 1
+    swap
     concat
     log
     intc_0 // 1

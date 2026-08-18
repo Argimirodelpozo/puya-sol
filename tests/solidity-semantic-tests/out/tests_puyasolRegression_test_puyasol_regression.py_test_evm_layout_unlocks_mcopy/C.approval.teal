@@ -6,9 +6,8 @@ main:
     intcblock 32 4096 20480 8
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x1f 0x28
     pushint 0
-    dupn 3
     pushbytes ""
-    dupn 6
+    dup
     intc_1 // 4096
     bzero
     dup
@@ -54,7 +53,6 @@ main_f_route@4:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 9
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -65,7 +63,6 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dig 8
     dup
     len
     load 0
@@ -73,12 +70,12 @@ main_ternary_merge@9:
     extract_uint64
     dup
     cover 2
-    bury 10
+    bury 5
     load 0
     pushint 24
     bzero
     dup
-    bury 13
+    cover 5
     dig 2
     itob
     dig 1
@@ -94,7 +91,7 @@ main_ternary_merge@9:
     intc_0 // 32
     +
     dup
-    bury 8
+    cover 5
     uncover 3
     pushint 31
     +
@@ -112,26 +109,22 @@ main_ternary_merge@9:
     intc_0 // 32
     bzero
     dup
-    bury 12
+    bury 7
     concat
     dup
-    bury 12
     len
     intc_0 // 32
     -
     bury 4
     pushint 0
-    bury 5
 
 main_while_top@10:
-    dig 4
-    dig 4
+    dup
+    dig 5
     <
     bz main_after_while@12
     dig 2
-    dig 5
-    dup
-    cover 2
+    dig 1
     +
     dup
     intc_0 // 32
@@ -142,7 +135,7 @@ main_while_top@10:
     dup
     intc_1 // 4096
     /
-    dig 13
+    dig 3
     dig 3
     intc_0 // 32
     extract3
@@ -156,15 +149,14 @@ main_while_top@10:
     stores
     intc_0 // 32
     +
-    bury 5
     b main_while_top@10
 
 main_after_while@12:
+    popn 3
     load 0
     pushint 88
     extract_uint64
     dup
-    bury 7
     load 0
     dig 1
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -175,25 +167,21 @@ main_after_while@12:
     intc_0 // 32
     +
     dup
-    bury 3
+    cover 2
     itob
-    dig 9
+    uncover 4
     swap
     concat
     replace2 64
     store 0
     pushint 0
-    bury 2
 
 main_while_top@13:
-    dig 1
+    dup
     pushint 0
     <
     bz main_after_while@15
-    dup
-    dig 2
-    dup
-    cover 2
+    dup2
     +
     dup
     intc_0 // 32
@@ -204,7 +192,7 @@ main_while_top@13:
     dup
     intc_1 // 4096
     /
-    dig 12
+    dig 7
     dig 3
     intc_0 // 32
     extract3
@@ -218,15 +206,15 @@ main_while_top@13:
     stores
     intc_0 // 32
     +
-    bury 2
     b main_while_top@13
 
 main_after_while@15:
+    pop
     load 0
     store 0
     intc_3 // 8
     bzero
-    dig 7
+    dig 4
     itob
     dup
     bytec_1 // 0x1f
@@ -250,7 +238,7 @@ main_after_while@15:
     %
     intc_0 // 32
     extract3
-    dig 9
+    uncover 5
     dup
     cover 5
     itob
@@ -503,8 +491,8 @@ main_after_while@15:
     extract3
     pushint 24
     extract_uint64
-    dig 2
     swap
+    cover 2
     extract3
     dup
     len

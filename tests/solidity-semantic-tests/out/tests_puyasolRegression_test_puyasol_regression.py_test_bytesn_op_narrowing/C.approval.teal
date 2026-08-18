@@ -4,11 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/bytesn_op_narrowing.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 255 256 4294967295 281474976710655
-    bytecblock 0x151f7c75 0x 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x
     intc_2 // 0
-    dupn 8
-    bytec_1 // ""
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -50,7 +47,6 @@ main_shiftB6_route@10:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txna ApplicationArgs 2
     dup
     len
@@ -58,7 +54,6 @@ main_shiftB6_route@10:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
     txn GroupIndex
     bz main_ternary_false@16
     txn GroupIndex
@@ -69,13 +64,14 @@ main_shiftB6_route@10:
 main_ternary_merge@17:
     !
     assert // not payable
-    dupn 2
+    swap
+    dup
     intc 6 // 281474976710655
     <=
     assert // ABI validation
     intc 6 // 281474976710655
     &
-    dig 3
+    swap
     dup
     intc_3 // 255
     <=
@@ -83,20 +79,20 @@ main_ternary_merge@17:
     intc_3 // 255
     &
     dup
-    bury 5
+    cover 2
     pushint 6
     bzero
-    bury 6
+    cover 2
     swap
     itob
     extract 2 6
-    bury 8
+    swap
     intc 4 // 256
     <
     bz main_ternary_false@19
     intc_0 // 32
     bzero
-    dig 3
+    uncover 3
     intc 4 // 256
     %
     intc_3 // 255
@@ -104,14 +100,11 @@ main_ternary_merge@17:
     -
     intc_1 // 1
     setbit
-    dig 7
     b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 main_ternary_merge@20:
-    dig 4
-    swap
     concat
     dup
     len
@@ -131,7 +124,9 @@ main_ternary_merge@20:
     return
 
 main_ternary_false@19:
-    bytec_1 // 0x
+    pop
+    bury 1
+    bytec_2 // 0x
     b main_ternary_merge@20
 
 main_ternary_false@16:
@@ -141,14 +136,12 @@ main_ternary_false@16:
 main_narrowXor_route@9:
     txna ApplicationArgs 1
     dup
-    bury 12
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 11
     len
     intc_0 // 32
     ==
@@ -166,7 +159,7 @@ main_ternary_merge@25:
     intc_0 // 32
     bzero
     dup
-    dig 12
+    uncover 3
     concat
     dup
     len
@@ -175,7 +168,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     swap
-    dig 11
+    uncover 2
     concat
     dup
     len
@@ -203,14 +196,12 @@ main_ternary_false@24:
 main_narrowOr_route@8:
     txna ApplicationArgs 1
     dup
-    bury 12
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 11
     len
     intc_0 // 32
     ==
@@ -228,7 +219,7 @@ main_ternary_merge@30:
     intc_0 // 32
     bzero
     dup
-    dig 12
+    uncover 3
     concat
     dup
     len
@@ -237,7 +228,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     swap
-    dig 11
+    uncover 2
     concat
     dup
     len
@@ -265,14 +256,12 @@ main_ternary_false@29:
 main_narrowAnd_route@7:
     txna ApplicationArgs 1
     dup
-    bury 12
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 11
     len
     intc_0 // 32
     ==
@@ -290,7 +279,7 @@ main_ternary_merge@35:
     intc_0 // 32
     bzero
     dup
-    dig 12
+    uncover 3
     concat
     dup
     len
@@ -299,7 +288,7 @@ main_ternary_merge@35:
     intc_0 // 32
     extract3
     swap
-    dig 11
+    uncover 2
     concat
     dup
     len
@@ -327,14 +316,12 @@ main_ternary_false@34:
 main_truncShiftHuge_route@6:
     txna ApplicationArgs 1
     dup
-    bury 12
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 13
     len
     intc_0 // 32
     ==
@@ -352,8 +339,7 @@ main_ternary_merge@40:
     intc_0 // 32
     bzero
     dup
-    bury 7
-    dig 11
+    uncover 3
     concat
     dup
     len
@@ -361,45 +347,41 @@ main_ternary_merge@40:
     -
     intc_0 // 32
     extract3
-    bury 8
-    dig 11
+    bury 3
+    dig 1
     pushbytes 0x0100
     b<
     bz main_ternary_false@42
     pushint 8
     bzero
-    dig 12
+    uncover 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    bury 2
 
 main_ternary_merge@43:
-    dig 1
+    dup
     intc 4 // 256
     <
     bz main_ternary_false@45
-    dig 1
     intc 4 // 256
     %
     intc_3 // 255
     swap
     -
-    dig 6
+    dig 1
     swap
     intc_1 // 1
     setbit
-    dig 8
+    dig 2
     b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 main_ternary_merge@46:
-    dig 6
-    swap
     concat
     dup
     len
@@ -420,12 +402,13 @@ main_ternary_merge@46:
     return
 
 main_ternary_false@45:
-    bytec_1 // 0x
+    pop
+    bytec_2 // 0x
     b main_ternary_merge@46
 
 main_ternary_false@42:
+    bury 1
     intc 4 // 256
-    bury 2
     b main_ternary_merge@43
 
 main_ternary_false@39:
@@ -435,7 +418,6 @@ main_ternary_false@39:
 main_truncShift_route@5:
     txna ApplicationArgs 1
     dup
-    bury 12
     len
     intc_0 // 32
     ==
@@ -447,7 +429,6 @@ main_truncShift_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
     txn GroupIndex
     bz main_ternary_false@50
     txn GroupIndex
@@ -458,7 +439,6 @@ main_truncShift_route@5:
 main_ternary_merge@51:
     !
     assert // not payable
-    dig 2
     dup
     intc_3 // 255
     <=
@@ -466,12 +446,11 @@ main_ternary_merge@51:
     intc_3 // 255
     &
     dup
-    bury 4
     intc_0 // 32
     bzero
     dup
-    bury 7
-    dig 12
+    cover 2
+    uncover 4
     concat
     dup
     len
@@ -479,28 +458,25 @@ main_ternary_merge@51:
     -
     intc_0 // 32
     extract3
-    bury 10
+    swap
     intc 4 // 256
     <
     bz main_ternary_false@53
-    dig 2
+    uncover 2
     intc 4 // 256
     %
     intc_3 // 255
     swap
     -
-    dig 5
+    dig 2
     swap
     intc_1 // 1
     setbit
-    dig 9
     b*
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 main_ternary_merge@54:
-    dig 5
-    swap
     concat
     dup
     len
@@ -521,7 +497,9 @@ main_ternary_merge@54:
     return
 
 main_ternary_false@53:
-    bytec_1 // 0x
+    pop
+    bury 1
+    bytec_2 // 0x
     b main_ternary_merge@54
 
 main_ternary_false@50:

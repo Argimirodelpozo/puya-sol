@@ -4,10 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/new_array_size_side_effect.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 8
-    bytecblock "cnt" 0x151f7c75 0x
-    intc_0 // 0
-    bytec_2 // ""
-    dup
+    bytecblock "cnt" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -28,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "cnt"
-    bytec_2 // 0x
+    pushbytes 0x
     app_global_put
     intc_1 // 1
     return
@@ -169,17 +166,15 @@ main_ternary_merge@24:
     intc_3 // 8
     -
     extract_uint64
-    bury 1
     pushbytes 0x0000
-    bury 3
     intc_0 // 0
-    bury 2
 
 main_while_top@25:
-    dup2
+    dup
+    dig 3
     <
     bz main_after_while@27
-    dig 2
+    swap
     dup
     intc_0 // 0
     extract_uint16
@@ -190,15 +185,13 @@ main_while_top@25:
     replace2 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    bury 3
-    dig 1
+    swap
     intc_1 // 1
     +
-    bury 2
     b main_while_top@25
 
 main_after_while@27:
-    dig 2
+    pop
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob

@@ -5,7 +5,6 @@
 main:
     intcblock 1 0
     pushbytes ""
-    dup
     pushint 4096
     bzero
     dup
@@ -38,20 +37,20 @@ main_after_if_else@2:
     return
 
 main_after_if_else@4:
-    intc_1 // 0
-    bury 2
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_switch_case_next@11
+    bz main_after_if_else@13
     pushbytess 0x9509a93a 0x856fee35 // method "__fallback(byte[])byte[]", method "f()(bool,byte[])"
     txna ApplicationArgs 0
     match main___fallback_route@9 main_f_route@10
 
-main_switch_case_next@11:
-    dig 1
+main_after_if_else@13:
+    intc_1 // 0
     bury 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_override.sol.B.__puya_arc4_router__@14:
     dup
     bnz main_after_if_else@6
     txna ApplicationArgs 0
@@ -65,13 +64,13 @@ main_after_if_else@6:
 
 main_f_route@10:
     txn GroupIndex
-    bz main_ternary_false@16
+    bz main_ternary_false@17
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@17:
+main_ternary_merge@18:
     !
     assert // not payable
     pushbytes "abc"
@@ -87,12 +86,12 @@ main_ternary_merge@17:
     concat
     log
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@11
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_override.sol.B.__puya_arc4_router__@14
 
-main_ternary_false@16:
+main_ternary_false@17:
     intc_1 // 0
-    b main_ternary_merge@17
+    b main_ternary_merge@18
 
 main___fallback_route@9:
     txna ApplicationArgs 1
@@ -118,8 +117,8 @@ main___fallback_route@9:
     concat
     log
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@11
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_override.sol.B.__puya_arc4_router__@14
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_override.sol.B.__fallback(_input: bytes) -> bytes:

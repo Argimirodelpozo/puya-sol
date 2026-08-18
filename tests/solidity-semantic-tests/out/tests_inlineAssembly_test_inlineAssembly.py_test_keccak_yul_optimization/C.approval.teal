@@ -6,7 +6,6 @@ main:
     intcblock 1 32 0
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
     intc_2 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -60,10 +59,9 @@ main_ternary_merge@13:
     replace2 32
     store 0
     bytec_1 // 0x
-    bury 2
 
 main_while_top@14:
-    dig 1
+    dup
     pushbytes 0x14
     b<
     bz main_after_while@16
@@ -71,19 +69,17 @@ main_while_top@14:
     extract 32 32
     extract 0 16
     keccak256
-    bury 1
-    dig 1
+    bury 2
     pushbytes 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 2
     b main_while_top@14
 
 main_after_while@16:
     load 0
     store 0
-    dup
+    dig 1
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup

@@ -6,7 +6,7 @@ main:
     intcblock 32 0 1
     bytecblock 0x01 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x02 0x151f7c75 0x00
     intc_1 // 0
-    dupn 114
+    dupn 2
     pushint 4096
     bzero
     dup
@@ -43,14 +43,13 @@ main_after_if_else@2:
 main_test_other_operators_route@9:
     txna ApplicationArgs 1
     dup
-    bury 116
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 115
+    cover 2
     len
     intc_0 // 32
     ==
@@ -65,42 +64,38 @@ main_test_other_operators_route@9:
 main_ternary_merge@16:
     !
     assert // not payable
+    dup
     bytec_0 // 0x01
-    bury 24
-    dig 114
-    bury 95
-    dig 113
-    bury 59
+    dig 3
 
 main_while_top@17:
-    dig 58
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@21
-    dig 58
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@20
-    dig 23
-    dig 95
+    swap
+    dig 2
     b*
-    bury 24
+    swap
 
 main_after_if_else@20:
-    dig 58
     bytec_3 // 0x02
     b/
-    bury 59
-    dig 94
+    uncover 2
     dup
     b*
-    bury 95
+    cover 2
     b main_while_top@17
 
 main_after_while@21:
-    dig 23
+    pop
+    bury 1
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
@@ -108,223 +103,204 @@ main_after_while@21:
     pushint 25
     itob
     dup
-    bury 3
+    cover 4
     b/
-    bury 2
+    cover 2
+    dup
     bytec_0 // 0x01
-    bury 25
-    dig 114
-    bury 96
-    dig 113
-    bury 60
+    dig 3
 
 main_while_top@22:
-    dig 59
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@26
-    dig 59
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@25
-    dig 24
-    dig 96
+    swap
+    dig 2
     b*
-    bury 25
+    swap
 
 main_after_if_else@25:
-    dig 59
     bytec_3 // 0x02
     b/
-    bury 60
-    dig 95
+    uncover 2
     dup
     b*
-    bury 96
+    cover 2
     b main_while_top@22
 
 main_after_while@26:
-    dig 24
+    pop
+    bury 1
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 1
+    uncover 4
     b/
-    dig 2
+    uncover 3
     b==
     bz main_else_body@48
     bytec_0 // 0x01
-    bury 20
     pushint 3
     itob
     dup
-    bury 92
-    bury 90
-    dig 113
-    bury 55
+    bury 7
+    dig 3
 
 main_while_top@28:
-    dig 54
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@32
-    dig 54
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@31
-    dig 19
-    dig 90
+    uncover 2
+    dig 2
     b*
-    bury 20
+    cover 2
 
 main_after_if_else@31:
-    dig 54
     bytec_3 // 0x02
     b/
-    bury 55
-    dig 89
+    swap
     dup
     b*
-    bury 90
+    swap
     b main_while_top@28
 
 main_after_while@32:
-    dig 19
+    popn 2
+    dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
+    dig 1
     bytec_0 // 0x01
-    bury 21
-    dig 114
-    bury 92
-    dig 113
-    bury 56
+    dig 4
 
 main_while_top@33:
-    dig 55
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@37
-    dig 55
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@36
-    dig 20
-    dig 92
+    swap
+    dig 2
     b*
-    bury 21
+    swap
 
 main_after_if_else@36:
-    dig 55
     bytec_3 // 0x02
     b/
-    bury 56
-    dig 91
+    uncover 2
     dup
     b*
-    bury 92
+    cover 2
     b main_while_top@33
 
 main_after_while@37:
-    dig 20
+    pop
+    bury 1
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 20
     b*
     dup
     bury 5
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
+    dig 4
     bytec_0 // 0x01
-    bury 22
-    dig 90
-    bury 93
-    dig 113
-    bury 57
+    dig 3
 
 main_while_top@38:
-    dig 56
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@42
-    dig 56
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@41
-    dig 21
-    dig 93
+    swap
+    dig 2
     b*
-    bury 22
+    swap
 
 main_after_if_else@41:
-    dig 56
     bytec_3 // 0x02
     b/
-    bury 57
-    dig 92
+    uncover 2
     dup
     b*
-    bury 93
+    cover 2
     b main_while_top@38
 
 main_after_while@42:
-    dig 21
+    pop
+    bury 1
+    dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // 0x01
-    bury 23
-    dig 114
-    bury 94
-    dig 113
-    bury 58
+    dig 2
+    cover 2
+    dig 4
 
 main_while_top@43:
-    dig 57
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@47
-    dig 57
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@46
-    dig 22
-    dig 94
+    swap
+    dig 3
     b*
-    bury 23
+    swap
 
 main_after_if_else@46:
-    dig 57
     bytec_3 // 0x02
     b/
-    bury 58
-    dig 93
+    uncover 3
     dup
     b*
-    bury 94
+    cover 3
     b main_while_top@43
 
 main_after_while@47:
-    dig 22
+    pop
+    uncover 2
+    pop
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 22
     b*
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -335,326 +311,306 @@ main_after_while@47:
 
 main_after_if_else@49:
     bz main_else_body@91
+    dup
     bytec_0 // 0x01
-    bury 12
-    dig 114
-    bury 82
-    dig 113
-    bury 47
+    dig 3
 
 main_while_top@51:
-    dig 46
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@55
-    dig 46
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@54
-    dig 11
-    dig 82
+    swap
+    dig 2
     b*
-    bury 12
+    swap
 
 main_after_if_else@54:
-    dig 46
     bytec_3 // 0x02
     b/
-    bury 47
-    dig 81
+    uncover 2
     dup
     b*
-    bury 82
+    cover 2
     b main_while_top@51
 
 main_after_while@55:
+    pop
+    bury 1
     bytec_0 // 0x01
-    bury 11
-    dig 11
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 114
-    bury 82
-    bury 46
+    dig 3
+    cover 2
 
 main_while_top@56:
-    dig 45
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@60
-    dig 45
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@59
-    dig 10
-    dig 81
+    swap
+    dig 2
     b*
-    bury 11
+    swap
 
 main_after_if_else@59:
-    dig 45
     bytec_3 // 0x02
     b/
-    bury 46
-    dig 80
+    uncover 2
     dup
     b*
-    bury 81
+    cover 2
     b main_while_top@56
 
 main_after_while@60:
-    dig 10
+    pop
+    bury 1
+    dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // 0x01
-    bury 14
-    dig 114
+    dig 2
     dup
-    bury 85
-    bury 49
+    cover 3
 
 main_while_top@61:
-    dig 48
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@65
-    dig 48
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@64
-    dig 13
-    dig 84
+    swap
+    dig 3
     b*
-    bury 14
+    swap
 
 main_after_if_else@64:
-    dig 48
     bytec_3 // 0x02
     b/
-    bury 49
-    dig 83
+    uncover 3
     dup
     b*
-    bury 84
+    cover 3
     b main_while_top@61
 
 main_after_while@65:
+    pop
+    uncover 2
+    pop
     bytec_0 // 0x01
-    bury 13
-    dig 13
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 114
-    bury 84
-    bury 48
+    dig 4
+    cover 3
 
 main_while_top@66:
-    dig 47
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@70
-    dig 47
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@69
-    dig 12
-    dig 83
+    swap
+    dig 3
     b*
-    bury 13
+    swap
 
 main_after_if_else@69:
-    dig 47
     bytec_3 // 0x02
     b/
-    bury 48
-    dig 82
+    uncover 3
     dup
     b*
-    bury 83
+    cover 3
     b main_while_top@66
 
 main_after_while@70:
-    dig 12
+    pop
+    uncover 2
+    pop
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 11
+    swap
     b/
     bury 3
+    dup
     bytec_0 // 0x01
-    bury 17
-    dig 114
-    bury 87
-    dig 113
-    bury 52
+    dig 3
 
 main_while_top@71:
-    dig 51
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@75
-    dig 51
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@74
-    dig 16
-    dig 87
+    swap
+    dig 2
     b*
-    bury 17
+    swap
 
 main_after_if_else@74:
-    dig 51
     bytec_3 // 0x02
     b/
-    bury 52
-    dig 86
+    uncover 2
     dup
     b*
-    bury 87
+    cover 2
     b main_while_top@71
 
 main_after_while@75:
+    pop
+    bury 1
     bytec_0 // 0x01
-    bury 15
-    dig 16
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 114
-    bury 86
-    bury 50
+    dig 3
+    cover 2
 
 main_while_top@76:
-    dig 49
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@80
-    dig 49
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@79
-    dig 14
-    dig 85
+    swap
+    dig 2
     b*
-    bury 15
+    swap
 
 main_after_if_else@79:
-    dig 49
     bytec_3 // 0x02
     b/
-    bury 50
-    dig 84
+    uncover 2
     dup
     b*
-    bury 85
+    cover 2
     b main_while_top@76
 
 main_after_while@80:
-    dig 14
+    pop
+    bury 1
+    dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // 0x01
-    bury 19
-    dig 114
-    dup
-    bury 90
-    bury 54
+    dig 2
 
 main_while_top@81:
-    dig 53
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@85
-    dig 53
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@84
-    dig 18
-    dig 89
+    swap
+    dig 3
     b*
-    bury 19
+    swap
 
 main_after_if_else@84:
-    dig 53
     bytec_3 // 0x02
     b/
-    bury 54
-    dig 88
+    uncover 3
     dup
     b*
-    bury 89
+    cover 3
     b main_while_top@81
 
 main_after_while@85:
+    pop
+    uncover 2
+    pop
     bytec_0 // 0x01
-    bury 18
-    dig 18
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 114
-    bury 89
-    bury 53
 
 main_while_top@86:
-    dig 52
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@90
-    dig 52
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@89
-    dig 17
-    dig 88
+    swap
+    dig 3
     b*
-    bury 18
+    swap
 
 main_after_if_else@89:
-    dig 52
     bytec_3 // 0x02
     b/
-    bury 53
-    dig 87
+    uncover 3
     dup
     b*
-    bury 88
+    cover 3
     b main_while_top@86
 
 main_after_while@90:
-    dig 17
+    pop
+    uncover 2
+    pop
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 15
+    swap
     b/
-    dig 3
+    dig 1
     b==
 
 main_after_if_else@92:
@@ -670,6 +626,7 @@ main_after_if_else@92:
     return
 
 main_else_body@91:
+    popn 2
     intc_1 // 0
     b main_after_if_else@92
 
@@ -684,14 +641,13 @@ main_ternary_false@15:
 main_test_literal_mix_route@8:
     txna ApplicationArgs 1
     dup
-    bury 116
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 115
+    cover 2
     len
     intc_0 // 32
     ==
@@ -707,488 +663,458 @@ main_ternary_merge@97:
     !
     assert // not payable
     bytec_0 // 0x01
-    bury 36
     pushint 2
     itob
     dup
-    bury 109
-    bury 107
-    dig 113
-    bury 71
+    cover 4
+    dig 3
 
 main_while_top@98:
-    dig 70
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@102
-    dig 70
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@101
-    dig 35
-    dig 107
+    uncover 2
+    dig 2
     b*
-    bury 36
+    cover 2
 
 main_after_if_else@101:
-    dig 70
     bytec_3 // 0x02
     b/
-    bury 71
-    dig 106
+    swap
     dup
     b*
-    bury 107
+    swap
     b main_while_top@98
 
 main_after_while@102:
+    popn 2
     bytec_0 // 0x01
-    bury 35
-    dig 35
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 115
-    bury 107
-    bury 70
+    dig 2
+    cover 2
 
 main_while_top@103:
-    dig 69
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@107
-    dig 69
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@106
-    dig 34
-    dig 106
+    swap
+    dig 2
     b*
-    bury 35
+    swap
 
 main_after_if_else@106:
-    dig 69
     bytec_3 // 0x02
     b/
-    bury 70
-    dig 105
+    uncover 2
     dup
     b*
-    bury 106
+    cover 2
     b main_while_top@103
 
 main_after_while@107:
-    dig 34
+    pop
+    bury 1
+    dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // 0x01
-    bury 5
-    dig 107
-    bury 75
-    dig 113
-    bury 40
+    dig 4
+    cover 2
+    dig 4
 
 main_while_top@108:
-    dig 39
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@112
-    dig 39
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@111
-    dig 4
-    dig 75
+    swap
+    dig 3
     b*
-    bury 5
+    swap
 
 main_after_if_else@111:
-    dig 39
     bytec_3 // 0x02
     b/
-    bury 40
-    dig 74
+    uncover 3
     dup
     b*
-    bury 75
+    cover 3
     b main_while_top@108
 
 main_after_while@112:
+    pop
+    uncover 2
+    pop
     bytec_0 // 0x01
-    bury 37
-    dig 4
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 115
-    bury 110
-    bury 72
+    dig 3
+    cover 3
 
 main_while_top@113:
-    dig 71
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@117
-    dig 71
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@116
-    dig 36
-    dig 109
+    swap
+    dig 3
     b*
-    bury 37
+    swap
 
 main_after_if_else@116:
-    dig 71
     bytec_3 // 0x02
     b/
-    bury 72
-    dig 108
+    uncover 3
     dup
     b*
-    bury 109
+    cover 3
     b main_while_top@113
 
 main_after_while@117:
-    dig 36
+    pop
+    uncover 2
+    pop
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 35
     b==
     bz main_else_body@139
+    dup
     bytec_0 // 0x01
-    bury 32
-    dig 114
-    bury 103
-    dig 113
-    bury 67
+    dig 3
 
 main_while_top@119:
-    dig 66
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@123
-    dig 66
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@122
-    dig 31
-    dig 103
+    swap
+    dig 2
     b*
-    bury 32
+    swap
 
 main_after_if_else@122:
-    dig 66
     bytec_3 // 0x02
     b/
-    bury 67
-    dig 102
+    uncover 2
     dup
     b*
-    bury 103
+    cover 2
     b main_while_top@119
 
 main_after_while@123:
+    pop
+    bury 1
     bytec_0 // 0x01
-    bury 31
-    dig 31
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 108
-    bury 103
-    bury 66
+    dig 4
+    cover 2
 
 main_while_top@124:
-    dig 65
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@128
-    dig 65
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@127
-    dig 30
-    dig 102
+    swap
+    dig 2
     b*
-    bury 31
+    swap
 
 main_after_if_else@127:
-    dig 65
     bytec_3 // 0x02
     b/
-    bury 66
-    dig 101
+    uncover 2
     dup
     b*
-    bury 102
+    cover 2
     b main_while_top@124
 
 main_after_while@128:
-    dig 30
+    pop
+    bury 1
+    dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // 0x01
-    bury 34
-    dig 114
-    bury 105
-    dig 113
-    bury 69
+    dig 2
+    cover 2
+    dig 4
 
 main_while_top@129:
-    dig 68
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@133
-    dig 68
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@132
-    dig 33
-    dig 105
+    swap
+    dig 3
     b*
-    bury 34
+    swap
 
 main_after_if_else@132:
-    dig 68
     bytec_3 // 0x02
     b/
-    bury 69
-    dig 104
+    uncover 3
     dup
     b*
-    bury 105
+    cover 3
     b main_while_top@129
 
 main_after_while@133:
+    pop
+    uncover 2
+    pop
     bytec_0 // 0x01
-    bury 33
-    dig 33
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 108
-    bury 105
-    bury 68
+    dig 5
+    cover 3
 
 main_while_top@134:
-    dig 67
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@138
-    dig 67
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@137
-    dig 32
-    dig 104
+    swap
+    dig 3
     b*
-    bury 33
+    swap
 
 main_after_if_else@137:
-    dig 67
     bytec_3 // 0x02
     b/
-    bury 68
-    dig 103
+    uncover 3
     dup
     b*
-    bury 104
+    cover 3
     b main_while_top@134
 
 main_after_while@138:
-    dig 32
+    pop
+    uncover 2
+    pop
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 31
     b==
 
 main_after_if_else@140:
     bz main_else_body@162
+    dig 1
     bytec_0 // 0x01
-    bury 28
-    dig 113
-    bury 99
-    dig 107
-    bury 63
+    dig 4
 
 main_while_top@142:
-    dig 62
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@146
-    dig 62
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@145
-    dig 27
-    dig 99
+    swap
+    dig 2
     b*
-    bury 28
+    swap
 
 main_after_if_else@145:
-    dig 62
     bytec_3 // 0x02
     b/
-    bury 63
-    dig 98
+    uncover 2
     dup
     b*
-    bury 99
+    cover 2
     b main_while_top@142
 
 main_after_while@146:
+    pop
+    bury 1
     bytec_0 // 0x01
-    bury 26
-    dig 27
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 115
-    bury 98
-    bury 61
+    dig 2
+    cover 2
 
 main_while_top@147:
-    dig 60
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@151
-    dig 60
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@150
-    dig 25
-    dig 97
+    swap
+    dig 2
     b*
-    bury 26
+    swap
 
 main_after_if_else@150:
-    dig 60
     bytec_3 // 0x02
     b/
-    bury 61
-    dig 96
+    uncover 2
     dup
     b*
-    bury 97
+    cover 2
     b main_while_top@147
 
 main_after_while@151:
-    dig 25
+    pop
+    bury 1
+    dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // 0x01
-    bury 30
-    dig 113
-    bury 101
-    dig 107
-    bury 65
+    uncover 3
+    cover 2
+    uncover 4
 
 main_while_top@152:
-    dig 64
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@156
-    dig 64
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@155
-    dig 29
-    dig 101
+    swap
+    dig 3
     b*
-    bury 30
+    swap
 
 main_after_if_else@155:
-    dig 64
     bytec_3 // 0x02
     b/
-    bury 65
-    dig 100
+    uncover 3
     dup
     b*
-    bury 101
+    cover 3
     b main_while_top@152
 
 main_after_while@156:
+    pop
+    uncover 2
+    pop
     bytec_0 // 0x01
-    bury 29
-    dig 29
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 115
-    bury 101
-    bury 64
 
 main_while_top@157:
-    dig 63
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@161
-    dig 63
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@160
-    dig 28
-    dig 100
+    swap
+    dig 3
     b*
-    bury 29
+    swap
 
 main_after_if_else@160:
-    dig 63
     bytec_3 // 0x02
     b/
-    bury 64
-    dig 99
+    uncover 3
     dup
     b*
-    bury 100
+    cover 3
     b main_while_top@157
 
 main_after_while@161:
-    dig 28
+    pop
+    uncover 2
+    pop
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 26
     b==
 
 main_after_if_else@163:
@@ -1204,6 +1130,7 @@ main_after_if_else@163:
     return
 
 main_else_body@162:
+    popn 3
     intc_1 // 0
     b main_after_if_else@163
 
@@ -1218,21 +1145,20 @@ main_ternary_false@96:
 main_test_invariant_route@7:
     txna ApplicationArgs 1
     dup
-    bury 116
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 115
+    cover 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 114
+    cover 2
     len
     intc_0 // 32
     ==
@@ -1247,164 +1173,151 @@ main_test_invariant_route@7:
 main_ternary_merge@168:
     !
     assert // not payable
+    dig 2
     bytec_0 // 0x01
-    bury 7
-    dig 113
-    bury 77
-    dig 112
-    bury 42
+    dig 3
 
 main_while_top@169:
-    dig 41
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@173
-    dig 41
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@172
-    dig 6
-    dig 77
+    swap
+    dig 2
     b*
-    bury 7
+    swap
 
 main_after_if_else@172:
-    dig 41
     bytec_3 // 0x02
     b/
-    bury 42
-    dig 76
+    uncover 2
     dup
     b*
-    bury 77
+    cover 2
     b main_while_top@169
 
 main_after_while@173:
+    pop
+    bury 1
     bytec_0 // 0x01
-    bury 6
-    dig 6
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 115
-    bury 77
-    bury 41
+    dig 2
+    cover 2
 
 main_while_top@174:
-    dig 40
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@178
-    dig 40
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@177
-    dig 5
-    dig 76
+    swap
+    dig 2
     b*
-    bury 6
+    swap
 
 main_after_if_else@177:
-    dig 40
     bytec_3 // 0x02
     b/
-    bury 41
-    dig 75
+    uncover 2
     dup
     b*
-    bury 76
+    cover 2
     b main_while_top@174
 
 main_after_while@178:
-    dig 5
+    pop
+    bury 1
+    dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // 0x01
-    bury 9
-    dig 113
-    bury 79
-    dig 112
-    bury 44
+    uncover 4
+    cover 2
+    uncover 4
 
 main_while_top@179:
-    dig 43
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@183
-    dig 43
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@182
-    dig 8
-    dig 79
+    swap
+    dig 3
     b*
-    bury 9
+    swap
 
 main_after_if_else@182:
-    dig 43
     bytec_3 // 0x02
     b/
-    bury 44
-    dig 78
+    uncover 3
     dup
     b*
-    bury 79
+    cover 3
     b main_while_top@179
 
 main_after_while@183:
+    pop
+    uncover 2
+    pop
     bytec_0 // 0x01
-    bury 8
-    dig 8
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 115
-    bury 79
-    bury 43
 
 main_while_top@184:
-    dig 42
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@188
-    dig 42
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@187
-    dig 7
-    dig 78
+    swap
+    dig 3
     b*
-    bury 8
+    swap
 
 main_after_if_else@187:
-    dig 42
     bytec_3 // 0x02
     b/
-    bury 43
-    dig 77
+    uncover 3
     dup
     b*
-    bury 78
+    cover 3
     b main_while_top@184
 
 main_after_while@188:
-    dig 7
+    pop
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 6
     b==
     bytec 5 // 0x00
     intc_1 // 0
@@ -1424,28 +1337,26 @@ main_ternary_false@167:
 main_test_hardcode2_route@6:
     txna ApplicationArgs 1
     dup
-    bury 116
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 115
+    cover 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 114
+    cover 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
-    bury 113
     len
     intc_0 // 32
     ==
@@ -1461,119 +1372,109 @@ main_ternary_merge@193:
     !
     assert // not payable
     bytec_0 // 0x01
-    bury 27
-    dig 112
-    bury 98
-    dig 111
-    bury 62
+    uncover 3
+    swap
+    uncover 2
 
 main_while_top@194:
-    dig 61
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@198
-    dig 61
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@197
-    dig 26
-    dig 98
+    swap
+    dig 2
     b*
-    bury 27
+    swap
 
 main_after_if_else@197:
-    dig 61
     bytec_3 // 0x02
     b/
-    bury 62
-    dig 97
+    uncover 2
     dup
     b*
-    bury 98
+    cover 2
     b main_while_top@194
 
 main_after_while@198:
+    pop
+    bury 1
     bytec_0 // 0x01
-    bury 16
-    dig 26
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 114
-    bury 87
-    bury 51
+    uncover 3
+    cover 2
 
 main_while_top@199:
-    dig 50
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@203
-    dig 50
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@202
-    dig 15
-    dig 86
+    swap
+    dig 2
     b*
-    bury 16
+    swap
 
 main_after_if_else@202:
-    dig 50
     bytec_3 // 0x02
     b/
-    bury 51
-    dig 85
+    uncover 2
     dup
     b*
-    bury 86
+    cover 2
     b main_while_top@199
 
 main_after_while@203:
+    pop
+    bury 1
     bytec_0 // 0x01
-    bury 10
-    dig 15
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 115
-    bury 81
-    bury 45
 
 main_while_top@204:
-    dig 44
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@208
-    dig 44
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@207
-    dig 9
-    dig 80
+    swap
+    dig 2
     b*
-    bury 10
+    swap
 
 main_after_if_else@207:
-    dig 44
     bytec_3 // 0x02
     b/
-    bury 45
-    dig 79
+    uncover 2
     dup
     b*
-    bury 80
+    cover 2
     b main_while_top@204
 
 main_after_while@208:
-    dig 9
+    pop
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
@@ -1600,21 +1501,20 @@ main_ternary_false@192:
 main_test_hardcode1_route@5:
     txna ApplicationArgs 1
     dup
-    bury 116
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 115
+    cover 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 114
+    cover 2
     len
     intc_0 // 32
     ==
@@ -1630,80 +1530,71 @@ main_ternary_merge@213:
     !
     assert // not payable
     bytec_0 // 0x01
-    bury 39
-    dig 113
-    bury 111
-    dig 112
-    bury 74
+    cover 2
+    cover 3
 
 main_while_top@214:
-    dig 73
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@218
-    dig 73
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@217
-    dig 38
-    dig 111
+    swap
+    dig 2
     b*
-    bury 39
+    swap
 
 main_after_if_else@217:
-    dig 73
     bytec_3 // 0x02
     b/
-    bury 74
-    dig 110
+    uncover 2
     dup
     b*
-    bury 111
+    cover 2
     b main_while_top@214
 
 main_after_while@218:
+    pop
+    bury 1
     bytec_0 // 0x01
-    bury 38
-    dig 38
+    swap
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 115
-    bury 111
-    bury 73
 
 main_while_top@219:
-    dig 72
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@223
-    dig 72
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@222
-    dig 37
-    dig 110
+    swap
+    dig 2
     b*
-    bury 38
+    swap
 
 main_after_if_else@222:
-    dig 72
     bytec_3 // 0x02
     b/
-    bury 73
-    dig 109
+    uncover 2
     dup
     b*
-    bury 110
+    cover 2
     b main_while_top@219
 
 main_after_while@223:
-    dig 37
+    pop
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=

@@ -4,11 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_struct_mapping_alias.sol.ArrayStructMappingAlias.approval_program() -> uint64:
 main:
     intcblock 0 32 1 2
-    bytecblock "sarr" 0x "aom" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000007 "__ctor_pending" "m" "mm" 0xad1bd99b5efcb3051ddeaa82353511ad4433e96ce61c9ed6de2f9219803b66dd 0x36f5a8dae566d23f605c261fe05875e33e7e438776abdd9c2c894806915354f5 0x41568aacd942bbc8125d38e2ba9580edc0ee3998e09fb8c909697c51850c9e3d 0x34ea140695d5a4908e79b93a5fe5881fa070c6d250f74137bceeaef1655e2597 0xff4f8678af17d4a3ac3bc9aac656130d5d56cc33dafe41be78dad7628630f18a 0x0002002200000000000000000000000000000000000000000000000000000000000000000000 0xf656b9f75cb8389eb36fb49a0d40d87a052cba40c6c4f8a3e58b709ca78e4e52 0x5f9d45293d03923d85ce507b1a299213f4a21a700711d2ede36558c1b4d3f7d5 0x7d500ceeef534922693bf4dcfba48606f128e37b95fdf4aee1897450bcaf00a2 0xe7dc6719b433559ce2d3d4aeb52a420c523a819302ba98beb526d77b00d98185 0x83278134458c4e618a69b1ec4af1e9ac1b4f4ab327a46cbacd5387ed5cbec1f7 0x5fba69cecb0adc6c8a5946629286f30c24f97030799679428e49fa4c524d16be
-    intc_0 // 0
-    dupn 4
-    bytec_1 // ""
-    dupn 2
+    bytecblock "sarr" "aom" 0x 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000007 "__ctor_pending" "m" "mm" 0xad1bd99b5efcb3051ddeaa82353511ad4433e96ce61c9ed6de2f9219803b66dd 0x36f5a8dae566d23f605c261fe05875e33e7e438776abdd9c2c894806915354f5 0x41568aacd942bbc8125d38e2ba9580edc0ee3998e09fb8c909697c51850c9e3d 0x34ea140695d5a4908e79b93a5fe5881fa070c6d250f74137bceeaef1655e2597 0xff4f8678af17d4a3ac3bc9aac656130d5d56cc33dafe41be78dad7628630f18a 0x0002002200000000000000000000000000000000000000000000000000000000000000000000 0xf656b9f75cb8389eb36fb49a0d40d87a052cba40c6c4f8a3e58b709ca78e4e52 0x5f9d45293d03923d85ce507b1a299213f4a21a700711d2ede36558c1b4d3f7d5 0x7d500ceeef534922693bf4dcfba48606f128e37b95fdf4aee1897450bcaf00a2 0xe7dc6719b433559ce2d3d4aeb52a420c523a819302ba98beb526d77b00d98185 0x83278134458c4e618a69b1ec4af1e9ac1b4f4ab327a46cbacd5387ed5cbec1f7 0x5fba69cecb0adc6c8a5946629286f30c24f97030799679428e49fa4c524d16be
     pushint 4096
     bzero
     dup
@@ -48,14 +44,13 @@ main_after_if_else@2:
 main_bump_route@13:
     txna ApplicationArgs 1
     dup
-    bury 9
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 7
+    cover 2
     len
     intc_1 // 32
     ==
@@ -72,14 +67,13 @@ main_ternary_merge@20:
     assert // not payable
     pushint 8
     bzero
-    dig 8
+    swap
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    bury 2
     bytec_0 // "sarr"
     box_len
     bury 1
@@ -89,9 +83,9 @@ main_ternary_merge@20:
     pop
     intc_0 // 0
     extract_uint16
+    swap
 
 main_ternary_merge@23:
-    dig 2
     dup
     uncover 2
     <
@@ -109,13 +103,14 @@ main_ternary_merge@23:
     dup
     box_del
     pop
-    dig 6
+    swap
     box_put
     intc_2 // 1
     return
 
 main_ternary_false@22:
     intc_0 // 0
+    swap
     b main_ternary_merge@23
 
 main_ternary_false@19:
@@ -125,14 +120,12 @@ main_ternary_false@19:
 main_o_route@12:
     txna ApplicationArgs 1
     dup
-    bury 9
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 8
     len
     intc_1 // 32
     ==
@@ -149,12 +142,12 @@ main_ternary_merge@28:
     assert // not payable
     intc_0 // 0
     itob
-    dig 8
+    uncover 2
     b==
     bz main_ternary_false@30
     intc_1 // 32
     bzero
-    dig 7
+    swap
     concat
     dup
     len
@@ -166,7 +159,7 @@ main_ternary_merge@28:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
 
@@ -189,7 +182,7 @@ main_ternary_merge@31:
 main_ternary_false@30:
     intc_1 // 32
     bzero
-    dig 7
+    swap
     concat
     dup
     len
@@ -201,7 +194,7 @@ main_ternary_false@30:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     b main_ternary_merge@31
@@ -213,14 +206,12 @@ main_ternary_false@27:
 main_st_route@11:
     txna ApplicationArgs 1
     dup
-    bury 9
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 8
     len
     intc_1 // 32
     ==
@@ -237,12 +228,12 @@ main_ternary_merge@36:
     assert // not payable
     intc_0 // 0
     itob
-    dig 8
+    uncover 2
     b==
     bz main_ternary_false@38
     intc_1 // 32
     bzero
-    dig 7
+    swap
     concat
     dup
     len
@@ -254,7 +245,7 @@ main_ternary_merge@36:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
 
@@ -277,7 +268,7 @@ main_ternary_merge@39:
 main_ternary_false@38:
     intc_1 // 32
     bzero
-    dig 7
+    swap
     concat
     dup
     len
@@ -289,7 +280,7 @@ main_ternary_false@38:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     b main_ternary_merge@39
@@ -301,7 +292,6 @@ main_ternary_false@35:
 main_m_route@10:
     txna ApplicationArgs 1
     dup
-    bury 9
     len
     intc_1 // 32
     ==
@@ -319,7 +309,7 @@ main_ternary_merge@44:
     intc_1 // 32
     bzero
     dup
-    dig 9
+    uncover 2
     concat
     dup
     len
@@ -337,7 +327,7 @@ main_ternary_merge@44:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -360,7 +350,6 @@ main_ternary_false@43:
 main_a_route@9:
     txna ApplicationArgs 1
     dup
-    bury 9
     len
     intc_1 // 32
     ==
@@ -375,11 +364,11 @@ main_a_route@9:
 main_ternary_merge@49:
     !
     assert // not payable
-    bytec_2 // "aom"
+    bytec_1 // "aom"
     box_len
     bury 1
     bz main_ternary_false@51
-    bytec_2 // "aom"
+    bytec_1 // "aom"
     box_get
     pop
     intc_0 // 0
@@ -387,10 +376,8 @@ main_ternary_merge@49:
 
 main_ternary_merge@52:
     itob
-    dig 8
-    dup
-    uncover 2
-    b<
+    dig 1
+    b>
     assert // array index out of bounds
     pushint 8
     bzero
@@ -402,7 +389,7 @@ main_ternary_merge@52:
     -
     pushint 8
     extract3
-    bytec_2 // "aom"
+    bytec_1 // "aom"
     concat
     sha256
     bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000007
@@ -410,7 +397,7 @@ main_ternary_merge@52:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -439,7 +426,6 @@ main_ternary_false@48:
 main_x_route@8:
     txna ApplicationArgs 1
     dup
-    bury 9
     len
     intc_1 // 32
     ==
@@ -454,7 +440,6 @@ main_x_route@8:
 main_ternary_merge@57:
     !
     assert // not payable
-    dig 7
     dup
     pushbytes 0x010000000000000000
     b<
@@ -468,7 +453,6 @@ main_ternary_merge@57:
     pushint 8
     -
     extract_uint64
-    bury 1
     bytec_0 // "sarr"
     box_len
     bury 1
@@ -478,9 +462,9 @@ main_ternary_merge@57:
     pop
     intc_0 // 0
     extract_uint16
+    swap
 
 main_ternary_merge@60:
-    dig 1
     dup
     uncover 2
     <
@@ -509,6 +493,7 @@ main_ternary_merge@60:
 
 main_ternary_false@59:
     intc_0 // 0
+    swap
     b main_ternary_merge@60
 
 main_ternary_false@56:
@@ -518,7 +503,6 @@ main_ternary_false@56:
 main_s_route@7:
     txna ApplicationArgs 1
     dup
-    bury 9
     len
     intc_1 // 32
     ==
@@ -535,14 +519,13 @@ main_ternary_merge@65:
     assert // not payable
     pushint 8
     bzero
-    dig 8
+    swap
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    bury 3
     bytec_0 // "sarr"
     box_len
     bury 1
@@ -552,9 +535,9 @@ main_ternary_merge@65:
     pop
     intc_0 // 0
     extract_uint16
+    swap
 
 main_ternary_merge@68:
-    dig 3
     dup
     uncover 2
     <
@@ -570,7 +553,7 @@ main_ternary_merge@68:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -590,6 +573,7 @@ main_ternary_merge@68:
 
 main_ternary_false@67:
     intc_0 // 0
+    swap
     b main_ternary_merge@68
 
 main_ternary_false@64:
@@ -610,7 +594,6 @@ main_ternary_merge@73:
     pushint 100
     itob
     dup
-    bury 5
     bytec 8 // 0xad1bd99b5efcb3051ddeaa82353511ad4433e96ce61c9ed6de2f9219803b66dd
     box_del
     pop
@@ -620,7 +603,6 @@ main_ternary_merge@73:
     pushint 200
     itob
     dup
-    bury 6
     bytec 9 // 0x36f5a8dae566d23f605c261fe05875e33e7e438776abdd9c2c894806915354f5
     box_del
     pop
@@ -688,7 +670,7 @@ main_ternary_merge@76:
     box_del
     pop
     bytec 14 // 0xf656b9f75cb8389eb36fb49a0d40d87a052cba40c6c4f8a3e58b709ca78e4e52
-    dig 4
+    uncover 2
     box_put
     bytec_0 // "sarr"
     box_len
@@ -708,7 +690,7 @@ main_ternary_merge@79:
     box_del
     pop
     bytec 15 // 0x5f9d45293d03923d85ce507b1a299213f4a21a700711d2ede36558c1b4d3f7d5
-    dig 5
+    swap
     box_put
     bytec_0 // "sarr"
     box_len
@@ -834,16 +816,16 @@ main_after_if_else@89:
     bytec_0 // "sarr"
     swap
     box_put
-    bytec_2 // "aom"
+    bytec_1 // "aom"
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     len
     bz main_ternary_false@91
-    bytec_2 // "aom"
+    bytec_1 // "aom"
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     intc_0 // 0
@@ -860,14 +842,14 @@ main_ternary_merge@92:
     +
     itob
     extract 6 2
-    bytec_2 // "aom"
+    bytec_1 // "aom"
     swap
     box_put
-    bytec_2 // "aom"
+    bytec_1 // "aom"
     box_len
     bury 1
     bz main_ternary_false@97
-    bytec_2 // "aom"
+    bytec_1 // "aom"
     box_get
     pop
     intc_0 // 0
@@ -883,11 +865,11 @@ main_ternary_merge@98:
     bytec 16 // 0x7d500ceeef534922693bf4dcfba48606f128e37b95fdf4aee1897450bcaf00a2
     swap
     box_put
-    bytec_2 // "aom"
+    bytec_1 // "aom"
     box_len
     bury 1
     bz main_ternary_false@100
-    bytec_2 // "aom"
+    bytec_1 // "aom"
     box_get
     pop
     intc_0 // 0
@@ -971,7 +953,7 @@ main___postInit_route@5:
     intc_3 // 2
     box_create
     pop
-    bytec_2 // "aom"
+    bytec_1 // "aom"
     intc_3 // 2
     box_create
     pop
@@ -986,7 +968,6 @@ main___postInit_route@5:
 // _puya_lib.arc4.dynamic_array_concat_dynamic_element(array: bytes, new_head_and_tail: bytes, new_items_count: uint64) -> bytes:
 dynamic_array_concat_dynamic_element:
     proto 3 1
-    bytec_1 // ""
     frame_dig -3
     intc_0 // 0
     extract_uint16
@@ -1001,80 +982,81 @@ dynamic_array_concat_dynamic_element:
     swap
     intc_3 // 2
     *
+    swap
     frame_dig -1
     intc_3 // 2
     *
+    cover 2
     intc_0 // 0
+    cover 4
 
 dynamic_array_concat_dynamic_element_for_header@1:
-    frame_dig 5
-    frame_dig 3
+    frame_dig 0
+    dig 2
     <
     bz dynamic_array_concat_dynamic_element_after_for@4
-    frame_dig 2
-    frame_dig 5
+    dup
+    frame_dig 0
     dup
     cover 2
     extract_uint16
-    frame_dig 4
+    dig 4
     +
     itob
     extract 6 0
-    frame_dig 1
+    uncover 5
     swap
     concat
-    frame_bury 1
+    cover 4
     intc_3 // 2
     +
-    frame_bury 5
+    frame_bury 0
     b dynamic_array_concat_dynamic_element_for_header@1
 
 dynamic_array_concat_dynamic_element_after_for@4:
-    frame_dig 2
+    dup
     len
-    frame_bury 0
+    swap
     intc_0 // 0
-    frame_bury 5
+    frame_bury 0
 
 dynamic_array_concat_dynamic_element_for_header@5:
-    frame_dig 5
-    frame_dig 4
+    frame_dig 0
+    dig 4
     <
     bz dynamic_array_concat_dynamic_element_after_for@8
     frame_dig -2
-    frame_dig 5
+    frame_dig 0
     dup
     cover 2
     extract_uint16
-    frame_dig 0
+    dig 3
     +
     itob
     extract 6 0
-    frame_dig 1
+    uncover 6
     swap
     concat
-    frame_bury 1
+    cover 5
     intc_3 // 2
     +
-    frame_bury 5
+    frame_bury 0
     b dynamic_array_concat_dynamic_element_for_header@5
 
 dynamic_array_concat_dynamic_element_after_for@8:
-    frame_dig 2
-    frame_dig 3
-    frame_dig 0
+    cover 2
     substring3
-    frame_dig 1
+    uncover 2
     swap
     concat
     frame_dig -2
     len
     frame_dig -2
-    frame_dig 4
+    uncover 3
     uncover 2
     substring3
     concat
-    frame_bury 0
+    swap
     retsub
 
 
@@ -1089,7 +1071,7 @@ dynamic_array_replace_dynamic_element:
     extract 2 0
     frame_dig -2
     len
-    cover 2
+    cover 3
     dup
     len
     frame_dig -1
@@ -1116,7 +1098,7 @@ dynamic_array_replace_dynamic_element:
     extract_uint16
     dup2
     -
-    cover 6
+    cover 7
     dig 4
     intc_0 // 0
     uncover 2
@@ -1132,37 +1114,34 @@ dynamic_array_replace_dynamic_element:
     swap
     intc_3 // 2
     *
-    swap
+    cover 2
 
 dynamic_array_replace_dynamic_element_for_header@2:
-    frame_dig 5
-    frame_dig 4
+    dup
+    dig 3
     <
     bz dynamic_array_replace_dynamic_element_after_for@5
-    frame_dig 3
+    swap
     dup
-    frame_dig 5
-    dup
-    cover 3
+    dig 2
     extract_uint16
-    frame_dig 1
+    dig 6
     +
-    frame_dig 2
+    dig 5
     -
     itob
     extract 6 0
     dig 2
     swap
     replace3
-    frame_bury 3
+    swap
     intc_3 // 2
     +
-    frame_bury 5
     b dynamic_array_replace_dynamic_element_for_header@2
 
 dynamic_array_replace_dynamic_element_after_for@5:
-    frame_dig 0
-    frame_dig 3
+    pop
+    bury 1
     concat
     frame_bury 0
     retsub

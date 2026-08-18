@@ -6,9 +6,7 @@ main:
     intcblock 32 1 0 4096 20480
     bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" "_count" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "_list"
     intc_2 // 0
-    dupn 8
     pushbytes ""
-    dupn 2
     intc_3 // 4096
     bzero
     dup
@@ -61,20 +59,19 @@ main_ternary_merge@14:
     app_global_get_ex
     swap
     dup
-    cover 2
-    bury 9
+    uncover 2
     assert // check _count exists
     intc_2 // 0
     itob
-    bury 10
+    swap
     load 0
     pushint 88
     extract_uint64
-    bury 4
+    cover 2
     pushint 8
     bzero
     dup
-    bury 6
+    bury 7
     swap
     concat
     dup
@@ -82,17 +79,16 @@ main_ternary_merge@14:
     pushint 8
     -
     extract_uint64
-    bury 1
+    bury 4
     pushbytes 0x0000
-    bury 12
     intc_2 // 0
-    bury 2
 
 main_while_top@15:
-    dup2
+    dup
+    dig 6
     <
     bz main_after_while@17
-    dig 11
+    swap
     dup
     intc_2 // 0
     extract_uint16
@@ -103,27 +99,25 @@ main_while_top@15:
     replace2 0
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    bury 12
-    dig 1
+    swap
     intc_1 // 1
     +
-    bury 2
     b main_while_top@15
 
 main_after_while@17:
-    dig 8
-    bury 8
+    popn 2
+    dup
 
 main_while_top@18:
-    dig 7
-    dig 7
+    dup
+    dig 4
     b<
     bz main_after_while@23
     intc_0 // 32
     bzero
     dup
-    bury 7
-    dig 8
+    cover 5
+    dig 1
     concat
     dup
     len
@@ -135,7 +129,6 @@ main_while_top@18:
     concat
     sha256
     dup
-    bury 6
     box_get
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -143,14 +136,14 @@ main_while_top@18:
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     bz main_else_body@21
-    dig 7
+    dig 1
     dup
-    dig 10
+    dig 4
     dup
     cover 3
     b>=
     assert // underflow
-    dig 6
+    uncover 2
     box_get
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -169,7 +162,7 @@ main_while_top@18:
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 6
+    dig 9
     swap
     concat
     dup
@@ -189,7 +182,7 @@ main_while_top@18:
     dup
     intc_3 // 4096
     /
-    dig 8
+    uncover 7
     uncover 3
     concat
     dup
@@ -208,31 +201,33 @@ main_while_top@18:
     stores
 
 main_after_if_else@22:
-    dig 7
     pushbytes 0x01
     b+
     dup
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 8
     b main_while_top@18
 
 main_else_body@21:
-    dig 8
+    pop
+    uncover 4
+    pop
+    swap
     pushbytes 0x01
     b+
     dup
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 9
+    swap
     b main_after_if_else@22
 
 main_after_while@23:
+    pop
     load 0
     store 0
-    dig 2
+    swap
     dup
     intc_0 // 32
     +
@@ -245,10 +240,10 @@ main_after_while@23:
     /
     intc_0 // 32
     bzero
-    dig 10
+    uncover 5
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    dig 13
+    uncover 5
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -305,14 +300,12 @@ main_ternary_false@13:
 main_seed_route@6:
     txna ApplicationArgs 1
     dup
-    bury 12
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 11
     len
     intc_0 // 32
     ==
@@ -328,10 +321,10 @@ main_ternary_merge@28:
     !
     assert // not payable
     pushbytes 0xc179e834c1ea500bc2f9f0bfb47f565013c4d45c23975e012d05f78757470fc2
-    dig 11
+    uncover 2
     box_put
     pushbytes 0xb8706a89d68c2c93e22120c9b472155eeb1d68308b6a506e8e9b8742f132e5f1
-    dig 10
+    swap
     box_put
     pushint 3
     itob

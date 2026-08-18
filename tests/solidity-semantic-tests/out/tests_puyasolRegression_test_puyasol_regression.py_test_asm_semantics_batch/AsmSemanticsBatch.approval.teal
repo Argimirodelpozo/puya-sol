@@ -5,10 +5,6 @@
 main:
     intcblock 32 1 0 4294967296 2147483648 18446744069414584320 9223372036854775808
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0x151f7c75 0xffffffff
-    intc_2 // 0
-    dup
-    pushbytes ""
-    dup
     pushint 4096
     bzero
     dup
@@ -159,7 +155,6 @@ main_ternary_false@14:
 main_inlineLocals_route@7:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
@@ -176,7 +171,6 @@ main_ternary_merge@20:
     assert // not payable
     load 0
     store 0
-    dig 2
     pushbytes 0x05
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -213,14 +207,12 @@ main_ternary_false@19:
 main_kec48_route@6:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 4
     len
     intc_0 // 32
     ==
@@ -241,7 +233,7 @@ main_ternary_merge@25:
     intc_0 // 32
     bzero
     dup
-    dig 6
+    uncover 4
     concat
     dup
     len
@@ -255,7 +247,7 @@ main_ternary_merge@25:
     store 0
     load 0
     dig 1
-    dig 5
+    uncover 3
     concat
     dup
     len
@@ -319,7 +311,6 @@ main_ternary_merge@30:
     bz main_ternary_false@32
     intc 5 // 18446744069414584320
     +
-    bury 1
 
 main_ternary_merge@33:
     load 5
@@ -349,8 +340,7 @@ main_ternary_merge@39:
     ^
     intc 6 // 9223372036854775808
     <
-    bury 2
-    dup
+    swap
     itob
     bytec_3 // 0xffffffff
     b&
@@ -372,7 +362,7 @@ main_ternary_merge@42:
     b|
     pushbytes 0x00
     intc_2 // 0
-    dig 4
+    uncover 3
     setbit
     concat
     bytec_2 // 0x151f7c75
@@ -392,7 +382,6 @@ main_ternary_false@35:
     b main_ternary_merge@36
 
 main_ternary_false@32:
-    bury 1
     b main_ternary_merge@33
 
 main_ternary_false@29:

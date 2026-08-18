@@ -5,8 +5,6 @@
 main:
     intcblock 1 32 0 2
     bytecblock "arr" "s" 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000005 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000001 0x0000 "__ctor_pending"
-    intc_2 // 0
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -210,7 +208,6 @@ main_ternary_merge@43:
     assert // not payable
     intc_1 // 32
     bzero
-    bury 3
     bytec_1 // "s"
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000005
     box_put
@@ -242,7 +239,6 @@ main_ternary_merge@43:
     callsub __solfn_27
     b+
     dup
-    bury 5
     bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
@@ -256,13 +252,11 @@ main_ternary_merge@43:
     pop
 
 main_after_if_else@45:
-    dig 3
     dup
     len
     intc_1 // 32
     <=
     assert // overflow
-    dig 3
     b|
     bytec_0 // "arr"
     intc_3 // 2
@@ -613,7 +607,6 @@ main_ternary_merge@84:
     assert // not payable
     intc_1 // 32
     bzero
-    bury 2
     bytec_1 // "s"
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000005
     box_put
@@ -622,9 +615,10 @@ main_ternary_merge@84:
     intc_2 // 0
     itob
     dup
-    bury 3
+    cover 2
     b>
     bz main_ternary_false@86
+    pop
     bytec_1 // "s"
     box_get
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -638,7 +632,6 @@ main_ternary_merge@87:
     intc_1 // 32
     <=
     assert // overflow
-    dig 2
     b|
     bytec 4 // 0x151f7c75
     swap
@@ -648,7 +641,6 @@ main_ternary_merge@87:
     return
 
 main_ternary_false@86:
-    dup
     b main_ternary_merge@87
 
 main_ternary_false@83:

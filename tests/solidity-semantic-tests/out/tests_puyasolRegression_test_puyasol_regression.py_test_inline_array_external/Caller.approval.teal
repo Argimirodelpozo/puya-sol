@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/inline_array_external.sol.Caller.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 24
+    intcblock 32 0 1 24
     bytecblock 0x151f7c75
-    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -42,9 +41,8 @@ main_after_if_else@2:
 main_callU256_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
@@ -58,16 +56,16 @@ main_ternary_merge@13:
     !
     assert // not payable
     itxn_begin
-    intc_1 // 32
+    intc_0 // 32
     bzero
-    dig 1
+    swap
     intc_3 // 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_0 // 0
+    intc_1 // 0
     itxn_field OnCompletion
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0xfc673658 // method "sumU256(uint256[2])uint256"
@@ -79,7 +77,7 @@ main_ternary_merge@13:
     extract 4 0
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
     b|
@@ -91,15 +89,14 @@ main_ternary_merge@13:
     return
 
 main_ternary_false@12:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@13
 
 main_callU8_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
@@ -113,14 +110,13 @@ main_ternary_merge@18:
     !
     assert // not payable
     itxn_begin
-    dup
     intc_3 // 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_0 // 0
+    intc_1 // 0
     itxn_field OnCompletion
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0x9ad86bbf // method "sumU8(uint8[2])uint256"
@@ -132,10 +128,10 @@ main_ternary_merge@18:
     extract 4 0
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
     bytec_0 // 0x151f7c75
@@ -146,5 +142,5 @@ main_ternary_merge@18:
     return
 
 main_ternary_false@17:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@18

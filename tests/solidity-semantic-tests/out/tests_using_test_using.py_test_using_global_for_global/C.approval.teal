@@ -1,11 +1,10 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_eio9hgwn/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_zy48knhq/B.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 32
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -42,7 +41,6 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_1 // 32
     ==
@@ -57,7 +55,6 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dup
     callsub f
     callsub g
     dup
@@ -76,7 +73,7 @@ main_ternary_merge@9:
     return
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9
 
 

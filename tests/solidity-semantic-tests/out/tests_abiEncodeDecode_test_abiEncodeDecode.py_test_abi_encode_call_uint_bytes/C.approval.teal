@@ -5,8 +5,6 @@
 main:
     intcblock 1 0 2 8 65535
     bytecblock 0x151f7c75
-    pushbytes ""
-    dup
     pushint 4096
     bzero
     dup
@@ -108,7 +106,6 @@ main_h_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 2
     txna ApplicationArgs 2
     dup
     len
@@ -116,7 +113,6 @@ main_h_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@25
     txn GroupIndex
@@ -127,11 +123,10 @@ main_h_route@7:
 main_ternary_merge@26:
     !
     assert // not payable
-    dig 1
+    swap
     intc 4 // 65535
     <=
     assert // ABI validation
-    dup
     intc 4 // 65535
     <=
     assert // ABI validation

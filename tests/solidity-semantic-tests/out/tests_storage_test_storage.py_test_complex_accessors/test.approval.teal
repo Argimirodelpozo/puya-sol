@@ -5,8 +5,6 @@
 main:
     intcblock 32 1 0 2
     bytecblock 0x151f7c75 "__ctor_pending" "to_multiple_map" 0x "to_uint_map" "to_bool_map" "to_string_map" 0x98413884a76644a4b4937291b73147442959ecfcf5e27fd6b38ff16aafac98b1 0xecc7319eba4547133cdd40843ea5cc2bade8301c92aa3456541c3331785cf8bf
-    intc_2 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -46,14 +44,12 @@ main_after_if_else@2:
 main_to_multiple_map_route@9:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -71,7 +67,7 @@ main_ternary_merge@16:
     intc_0 // 32
     bzero
     dup
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -80,7 +76,7 @@ main_ternary_merge@16:
     intc_0 // 32
     extract3
     dig 1
-    dig 4
+    uncover 3
     concat
     dup
     len
@@ -117,7 +113,6 @@ main_ternary_false@15:
 main_to_uint_map_route@8:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -135,7 +130,7 @@ main_ternary_merge@21:
     intc_0 // 32
     bzero
     dup
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -170,7 +165,6 @@ main_ternary_false@20:
 main_to_bool_map_route@7:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -187,7 +181,7 @@ main_ternary_merge@26:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 2
+    swap
     concat
     dup
     len
@@ -223,7 +217,6 @@ main_ternary_false@25:
 main_to_string_map_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -240,7 +233,7 @@ main_ternary_merge@31:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 2
+    swap
     concat
     dup
     len

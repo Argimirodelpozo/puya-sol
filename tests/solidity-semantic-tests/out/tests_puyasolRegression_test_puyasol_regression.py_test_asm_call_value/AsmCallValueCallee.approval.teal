@@ -5,9 +5,7 @@
 main:
     intcblock 1 0 32
     bytecblock "hits" 0x "got" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    intc_1 // 0
     bytec_1 // ""
-    dup
     pushint 4096
     bzero
     dup
@@ -43,20 +41,20 @@ main_after_if_else@2:
     return
 
 main_after_if_else@4:
-    intc_1 // 0
-    bury 2
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_switch_case_next@14
+    bz main_after_if_else@16
     pushbytess 0x3fe9558e 0x1bf9882b 0xc599eb05 0x412f5d6f 0x9456342a // method "ping(uint256)uint256", method "__fallback()void", method "__receive()void", method "hits()uint256", method "got()uint256"
     txna ApplicationArgs 0
     match main_ping_route@9 main___fallback_route@10 main___receive_route@11 main_hits_route@12 main_got_route@13
 
-main_switch_case_next@14:
-    dig 1
+main_after_if_else@16:
+    intc_1 // 0
     bury 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@17:
     dup
     bnz main_after_if_else@6
     callsub __fallback
@@ -68,13 +66,13 @@ main_after_if_else@6:
 
 main_got_route@13:
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@20
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@21:
     !
     assert // not payable
     intc_1 // 0
@@ -94,22 +92,22 @@ main_ternary_merge@20:
     concat
     log
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@14
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@17
 
-main_ternary_false@19:
+main_ternary_false@20:
     intc_1 // 0
-    b main_ternary_merge@20
+    b main_ternary_merge@21
 
 main_hits_route@12:
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@25
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@26:
     !
     assert // not payable
     intc_1 // 0
@@ -129,40 +127,39 @@ main_ternary_merge@25:
     concat
     log
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@14
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@17
 
-main_ternary_false@24:
+main_ternary_false@25:
     intc_1 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@26
 
 main___receive_route@11:
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@14
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@17
 
 main___fallback_route@10:
     callsub __fallback
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@14
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@17
 
 main_ping_route@9:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@33
+    bz main_ternary_false@34
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@34:
+main_ternary_merge@35:
     !
     assert // not payable
     intc_1 // 0
@@ -180,7 +177,6 @@ main_ternary_merge@34:
     app_global_put
     pushint 1000
     itob
-    dig 3
     b+
     dup
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -199,12 +195,12 @@ main_ternary_merge@34:
     concat
     log
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@14
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@17
 
-main_ternary_false@33:
+main_ternary_false@34:
     intc_1 // 0
-    b main_ternary_merge@34
+    b main_ternary_merge@35
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__fallback() -> void:

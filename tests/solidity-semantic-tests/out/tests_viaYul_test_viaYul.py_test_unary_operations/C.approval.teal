@@ -3,12 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/unary_operations.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 8 255 18446744073709551488
+    intcblock 1 32 8 0 255 18446744073709551488
     bytecblock 0x151f7c75 0x80 0xff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0x0100 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0x8000 0x010000000000000000000000000000000000000000000000000000000000000000
-    intc_2 // 0
-    dupn 11
-    pushbytes ""
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -46,11 +42,10 @@ main_negate_s16_route@23:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 4
     txn GroupIndex
     bz main_ternary_false@29
     txn GroupIndex
@@ -61,11 +56,11 @@ main_negate_s16_route@23:
 main_ternary_merge@30:
     !
     assert // not payable
-    dig 3
+    dup
     pushint 32767
     <=
     bnz main_bool_true@32
-    dig 3
+    dup
     pushint 18446744073709518848
     >=
     bz main_bool_false@33
@@ -75,7 +70,6 @@ main_bool_true@32:
 
 main_bool_merge@34:
     assert // ABI validation
-    dig 3
     dup
     pushint 65535
     &
@@ -83,7 +77,7 @@ main_bool_merge@34:
     bytec 8 // 0x8000
     b!=
     assert // signed negation overflow
-    intc_3 // 8
+    intc_2 // 8
     bzero
     swap
     itob
@@ -95,7 +89,7 @@ main_bool_merge@34:
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     pushint 65536
@@ -141,22 +135,21 @@ main_ternary_false@36:
     b main_ternary_merge@37
 
 main_bool_false@33:
-    intc_2 // 0
+    intc_3 // 0
     b main_bool_merge@34
 
 main_ternary_false@29:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@30
 
 main_negate_s8_route@22:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 4
     txn GroupIndex
     bz main_ternary_false@44
     txn GroupIndex
@@ -167,11 +160,11 @@ main_negate_s8_route@22:
 main_ternary_merge@45:
     !
     assert // not payable
-    dig 3
+    dup
     pushint 127
     <=
     bnz main_bool_true@47
-    dig 3
+    dup
     intc 5 // 18446744073709551488
     >=
     bz main_bool_false@48
@@ -181,7 +174,6 @@ main_bool_true@47:
 
 main_bool_merge@49:
     assert // ABI validation
-    dig 3
     dup
     intc 4 // 255
     &
@@ -189,7 +181,7 @@ main_bool_merge@49:
     bytec_1 // 0x80
     b!=
     assert // signed negation overflow
-    intc_3 // 8
+    intc_2 // 8
     bzero
     swap
     itob
@@ -201,7 +193,7 @@ main_bool_merge@49:
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     pushint 256
@@ -247,17 +239,16 @@ main_ternary_false@51:
     b main_ternary_merge@52
 
 main_bool_false@48:
-    intc_2 // 0
+    intc_3 // 0
     b main_bool_merge@49
 
 main_ternary_false@44:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@45
 
 main_negate_route@21:
     txna ApplicationArgs 1
     dup
-    bury 17
     len
     intc_1 // 32
     ==
@@ -272,7 +263,6 @@ main_negate_route@21:
 main_ternary_merge@60:
     !
     assert // not payable
-    dig 15
     dup
     pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
     b!=
@@ -307,7 +297,7 @@ main_ternary_merge@60:
     return
 
 main_ternary_false@59:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@60
 
 main_bitnot_s8_route@20:
@@ -335,18 +325,17 @@ main_ternary_merge@65:
     return
 
 main_ternary_false@64:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@65
 
 main_bitnot_u8_route@19:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 4
     txn GroupIndex
     bz main_ternary_false@71
     txn GroupIndex
@@ -357,7 +346,6 @@ main_bitnot_u8_route@19:
 main_ternary_merge@72:
     !
     assert // not payable
-    dig 3
     dup
     intc 4 // 255
     <=
@@ -389,13 +377,12 @@ main_ternary_merge@72:
     return
 
 main_ternary_false@71:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@72
 
 main_bitnot_route@18:
     txna ApplicationArgs 1
     dup
-    bury 17
     len
     intc_1 // 32
     ==
@@ -413,7 +400,7 @@ main_ternary_merge@77:
     intc_1 // 32
     bzero
     dup
-    dig 17
+    uncover 2
     concat
     dup
     len
@@ -436,7 +423,7 @@ main_ternary_merge@77:
     return
 
 main_ternary_false@76:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@77
 
 main_not_route@17:
@@ -446,9 +433,8 @@ main_not_route@17:
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_2 // 0
+    intc_3 // 0
     getbit
-    bury 3
     txn GroupIndex
     bz main_ternary_false@81
     txn GroupIndex
@@ -459,14 +445,13 @@ main_not_route@17:
 main_ternary_merge@82:
     !
     assert // not payable
-    dig 2
     dup
     intc_0 // 1
     <=
     assert // ABI bool validation
     !
     pushbytes 0x00
-    intc_2 // 0
+    intc_3 // 0
     uncover 2
     setbit
     bytec_0 // 0x151f7c75
@@ -477,13 +462,12 @@ main_ternary_merge@82:
     return
 
 main_ternary_false@81:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@82
 
 main_postdecr_route@16:
     txna ApplicationArgs 1
     dup
-    bury 17
     len
     intc_1 // 32
     ==
@@ -498,7 +482,6 @@ main_postdecr_route@16:
 main_ternary_merge@87:
     !
     assert // not payable
-    dig 15
     dup
     bytec 5 // 0x01
     b-
@@ -523,13 +506,12 @@ main_ternary_merge@87:
     return
 
 main_ternary_false@86:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@87
 
 main_predecr_route@15:
     txna ApplicationArgs 1
     dup
-    bury 17
     len
     intc_1 // 32
     ==
@@ -544,7 +526,6 @@ main_predecr_route@15:
 main_ternary_merge@92:
     !
     assert // not payable
-    dig 15
     bytec 5 // 0x01
     b-
     dup
@@ -569,13 +550,12 @@ main_ternary_merge@92:
     return
 
 main_ternary_false@91:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@92
 
 main_postincr_route@14:
     txna ApplicationArgs 1
     dup
-    bury 17
     len
     intc_1 // 32
     ==
@@ -590,7 +570,6 @@ main_postincr_route@14:
 main_ternary_merge@97:
     !
     assert // not payable
-    dig 15
     dup
     bytec 5 // 0x01
     b+
@@ -619,13 +598,12 @@ main_ternary_merge@97:
     return
 
 main_ternary_false@96:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@97
 
 main_preincr_route@13:
     txna ApplicationArgs 1
     dup
-    bury 17
     len
     intc_1 // 32
     ==
@@ -640,7 +618,6 @@ main_preincr_route@13:
 main_ternary_merge@102:
     !
     assert // not payable
-    dig 15
     bytec 5 // 0x01
     b+
     dup
@@ -669,18 +646,17 @@ main_ternary_merge@102:
     return
 
 main_ternary_false@101:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@102
 
 main_postdecr_s8_route@12:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 4
     txn GroupIndex
     bz main_ternary_false@106
     txn GroupIndex
@@ -691,11 +667,11 @@ main_postdecr_s8_route@12:
 main_ternary_merge@107:
     !
     assert // not payable
-    dig 3
+    dup
     pushint 127
     <=
     bnz main_bool_true@109
-    dig 3
+    dup
     intc 5 // 18446744073709551488
     >=
     bz main_bool_false@110
@@ -705,7 +681,6 @@ main_bool_true@109:
 
 main_bool_merge@111:
     assert // ABI validation
-    dig 3
     itob
     dup
     bytec 4 // 0x0100
@@ -714,7 +689,7 @@ main_bool_merge@111:
     bytec_1 // 0x80
     b!=
     assert // signed inc/dec overflow
-    intc_3 // 8
+    intc_2 // 8
     bzero
     swap
     bytec_2 // 0xff
@@ -723,11 +698,11 @@ main_bool_merge@111:
     b%
     concat
     dup
-    bury 7
+    cover 2
     len
-    intc_3 // 8
+    intc_2 // 8
     -
-    bury 3
+    swap
     bytec_2 // 0xff
     b&
     dup
@@ -746,12 +721,11 @@ main_ternary_merge@114:
     intc_1 // 32
     bzero
     dup
-    bury 8
+    cover 2
     b|
-    bury 10
-    dig 4
-    dig 2
-    intc_3 // 8
+    uncover 3
+    uncover 3
+    intc_2 // 8
     extract3
     bytec_2 // 0xff
     b&
@@ -768,10 +742,8 @@ main_ternary_merge@117:
     intc_1 // 32
     <=
     assert // overflow
-    dig 6
+    uncover 2
     b|
-    dig 10
-    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -787,22 +759,21 @@ main_ternary_false@113:
     b main_ternary_merge@114
 
 main_bool_false@110:
-    intc_2 // 0
+    intc_3 // 0
     b main_bool_merge@111
 
 main_ternary_false@106:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@107
 
 main_predecr_s8_route@11:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 4
     txn GroupIndex
     bz main_ternary_false@121
     txn GroupIndex
@@ -813,11 +784,11 @@ main_predecr_s8_route@11:
 main_ternary_merge@122:
     !
     assert // not payable
-    dig 3
+    dup
     pushint 127
     <=
     bnz main_bool_true@124
-    dig 3
+    dup
     intc 5 // 18446744073709551488
     >=
     bz main_bool_false@125
@@ -827,7 +798,6 @@ main_bool_true@124:
 
 main_bool_merge@126:
     assert // ABI validation
-    dig 3
     itob
     bytec 4 // 0x0100
     b%
@@ -835,7 +805,7 @@ main_bool_merge@126:
     bytec_1 // 0x80
     b!=
     assert // signed inc/dec overflow
-    intc_3 // 8
+    intc_2 // 8
     bzero
     swap
     bytec_2 // 0xff
@@ -845,20 +815,19 @@ main_bool_merge@126:
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
-    intc_3 // 8
+    intc_2 // 8
     extract3
     bytec_2 // 0xff
     b&
     dup
-    bury 15
     bytec_1 // 0x80
     b>=
     dup
-    bury 2
+    cover 2
     bz main_ternary_false@128
-    dig 13
+    dup
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
@@ -871,12 +840,11 @@ main_ternary_merge@129:
     intc_1 // 32
     bzero
     dup
-    bury 9
+    cover 3
     b|
-    bury 11
-    dup
+    swap
+    uncover 3
     bz main_ternary_false@131
-    dig 13
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
@@ -886,10 +854,8 @@ main_ternary_merge@132:
     intc_1 // 32
     <=
     assert // overflow
-    dig 7
+    uncover 2
     b|
-    dig 11
-    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -899,30 +865,28 @@ main_ternary_merge@132:
     return
 
 main_ternary_false@131:
-    dig 13
     b main_ternary_merge@132
 
 main_ternary_false@128:
-    dig 13
+    dup
     b main_ternary_merge@129
 
 main_bool_false@125:
-    intc_2 // 0
+    intc_3 // 0
     b main_bool_merge@126
 
 main_ternary_false@121:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@122
 
 main_postincr_s8_route@10:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 4
     txn GroupIndex
     bz main_ternary_false@136
     txn GroupIndex
@@ -933,11 +897,11 @@ main_postincr_s8_route@10:
 main_ternary_merge@137:
     !
     assert // not payable
-    dig 3
+    dup
     pushint 127
     <=
     bnz main_bool_true@139
-    dig 3
+    dup
     intc 5 // 18446744073709551488
     >=
     bz main_bool_false@140
@@ -947,7 +911,6 @@ main_bool_true@139:
 
 main_bool_merge@141:
     assert // ABI validation
-    dig 3
     itob
     dup
     bytec 4 // 0x0100
@@ -956,7 +919,7 @@ main_bool_merge@141:
     pushbytes 0x7f
     b!=
     assert // signed inc/dec overflow
-    intc_3 // 8
+    intc_2 // 8
     bzero
     swap
     bytec 5 // 0x01
@@ -965,11 +928,11 @@ main_bool_merge@141:
     b%
     concat
     dup
-    bury 7
+    cover 2
     len
-    intc_3 // 8
+    intc_2 // 8
     -
-    bury 3
+    swap
     bytec_2 // 0xff
     b&
     dup
@@ -988,12 +951,11 @@ main_ternary_merge@144:
     intc_1 // 32
     bzero
     dup
-    bury 10
+    cover 2
     b|
-    bury 12
-    dig 4
-    dig 2
-    intc_3 // 8
+    uncover 3
+    uncover 3
+    intc_2 // 8
     extract3
     bytec_2 // 0xff
     b&
@@ -1010,10 +972,8 @@ main_ternary_merge@147:
     intc_1 // 32
     <=
     assert // overflow
-    dig 8
+    uncover 2
     b|
-    dig 12
-    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -1029,22 +989,21 @@ main_ternary_false@143:
     b main_ternary_merge@144
 
 main_bool_false@140:
-    intc_2 // 0
+    intc_3 // 0
     b main_bool_merge@141
 
 main_ternary_false@136:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@137
 
 main_preincr_s8_route@9:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 4
     txn GroupIndex
     bz main_ternary_false@151
     txn GroupIndex
@@ -1055,11 +1014,11 @@ main_preincr_s8_route@9:
 main_ternary_merge@152:
     !
     assert // not payable
-    dig 3
+    dup
     pushint 127
     <=
     bnz main_bool_true@154
-    dig 3
+    dup
     intc 5 // 18446744073709551488
     >=
     bz main_bool_false@155
@@ -1069,7 +1028,6 @@ main_bool_true@154:
 
 main_bool_merge@156:
     assert // ABI validation
-    dig 3
     itob
     bytec 4 // 0x0100
     b%
@@ -1077,7 +1035,7 @@ main_bool_merge@156:
     pushbytes 0x7f
     b!=
     assert // signed inc/dec overflow
-    intc_3 // 8
+    intc_2 // 8
     bzero
     swap
     bytec 5 // 0x01
@@ -1087,20 +1045,19 @@ main_bool_merge@156:
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
-    intc_3 // 8
+    intc_2 // 8
     extract3
     bytec_2 // 0xff
     b&
     dup
-    bury 16
     bytec_1 // 0x80
     b>=
     dup
-    bury 2
+    cover 2
     bz main_ternary_false@158
-    dig 14
+    dup
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
@@ -1113,12 +1070,11 @@ main_ternary_merge@159:
     intc_1 // 32
     bzero
     dup
-    bury 11
+    cover 3
     b|
-    bury 13
-    dup
+    swap
+    uncover 3
     bz main_ternary_false@161
-    dig 14
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
@@ -1128,10 +1084,8 @@ main_ternary_merge@162:
     intc_1 // 32
     <=
     assert // overflow
-    dig 9
+    uncover 2
     b|
-    dig 13
-    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -1141,30 +1095,28 @@ main_ternary_merge@162:
     return
 
 main_ternary_false@161:
-    dig 14
     b main_ternary_merge@162
 
 main_ternary_false@158:
-    dig 14
+    dup
     b main_ternary_merge@159
 
 main_bool_false@155:
-    intc_2 // 0
+    intc_3 // 0
     b main_bool_merge@156
 
 main_ternary_false@151:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@152
 
 main_postdecr_u8_route@8:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 4
     txn GroupIndex
     bz main_ternary_false@166
     txn GroupIndex
@@ -1175,7 +1127,6 @@ main_postdecr_u8_route@8:
 main_ternary_merge@167:
     !
     assert // not payable
-    dig 3
     dup
     intc 4 // 255
     <=
@@ -1201,18 +1152,17 @@ main_ternary_merge@167:
     return
 
 main_ternary_false@166:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@167
 
 main_predecr_u8_route@7:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 4
     txn GroupIndex
     bz main_ternary_false@171
     txn GroupIndex
@@ -1223,7 +1173,6 @@ main_predecr_u8_route@7:
 main_ternary_merge@172:
     !
     assert // not payable
-    dig 3
     dup
     intc 4 // 255
     <=
@@ -1249,18 +1198,17 @@ main_ternary_merge@172:
     return
 
 main_ternary_false@171:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@172
 
 main_postincr_u8_route@6:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 4
     txn GroupIndex
     bz main_ternary_false@176
     txn GroupIndex
@@ -1271,7 +1219,6 @@ main_postincr_u8_route@6:
 main_ternary_merge@177:
     !
     assert // not payable
-    dig 3
     dup
     intc 4 // 255
     <=
@@ -1301,18 +1248,17 @@ main_ternary_merge@177:
     return
 
 main_ternary_false@176:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@177
 
 main_preincr_u8_route@5:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 4
     txn GroupIndex
     bz main_ternary_false@181
     txn GroupIndex
@@ -1323,7 +1269,6 @@ main_preincr_u8_route@5:
 main_ternary_merge@182:
     !
     assert // not payable
-    dig 3
     dup
     intc 4 // 255
     <=
@@ -1353,5 +1298,5 @@ main_ternary_merge@182:
     return
 
 main_ternary_false@181:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@182

@@ -5,9 +5,7 @@
 main:
     intcblock 1 0 32
     bytecblock "received" 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    intc_1 // 0
     bytec_1 // ""
-    dup
     pushint 4096
     bzero
     dup
@@ -41,20 +39,20 @@ main_after_if_else@2:
     return
 
 main_after_if_else@4:
-    intc_1 // 0
-    bury 2
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_switch_case_next@12
+    bz main_after_if_else@14
     pushbytess 0x3bd31555 0x1bf9882b 0xc473430e // method "recv(uint256)void", method "__fallback()void", method "received()uint256"
     txna ApplicationArgs 0
     match main_recv_route@9 main___fallback_route@10 main_received_route@11
 
-main_switch_case_next@12:
-    dig 1
+main_after_if_else@14:
+    intc_1 // 0
     bury 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.receiver.__puya_arc4_router__@15:
     dup
     bnz main_after_if_else@6
     callsub __fallback
@@ -66,13 +64,13 @@ main_after_if_else@6:
 
 main_received_route@11:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@18
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@19:
     !
     assert // not payable
     intc_1 // 0
@@ -92,35 +90,34 @@ main_ternary_merge@18:
     concat
     log
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@12
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.receiver.__puya_arc4_router__@15
 
-main_ternary_false@17:
+main_ternary_false@18:
     intc_1 // 0
-    b main_ternary_merge@18
+    b main_ternary_merge@19
 
 main___fallback_route@10:
     callsub __fallback
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@12
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.receiver.__puya_arc4_router__@15
 
 main_recv_route@9:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@25
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@26:
     !
     assert // not payable
     intc_1 // 0
@@ -129,7 +126,7 @@ main_ternary_merge@25:
     assert // check received exists
     intc_0 // 1
     itob
-    dig 4
+    uncover 2
     b+
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -144,12 +141,12 @@ main_ternary_merge@25:
     swap
     app_global_put
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@12
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.receiver.__puya_arc4_router__@15
 
-main_ternary_false@24:
+main_ternary_false@25:
     intc_1 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@26
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.receiver.__fallback() -> void:

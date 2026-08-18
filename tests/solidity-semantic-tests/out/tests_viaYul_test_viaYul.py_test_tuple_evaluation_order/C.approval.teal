@@ -6,7 +6,6 @@ main:
     intcblock 0 1 32
     bytecblock "y" "x" 0x 0x7093054d 0x151f7c75
     intc_0 // 0
-    bytec_2 // ""
     pushint 4096
     bzero
     dup
@@ -71,7 +70,7 @@ main_ternary_merge@13:
     pushint 3
     itob
     dup
-    bury 5
+    bury 4
     dup
     callsub set
     pop
@@ -114,11 +113,10 @@ main_ternary_merge@13:
     bytec_1 // "x"
     app_global_get_ex
     assert // check x exists
-    dig 2
+    dig 1
     b==
     bz main_bool_false@16
     intc_1 // 1
-    bury 1
 
 main_bool_merge@17:
     dup
@@ -127,7 +125,6 @@ main_bool_merge@17:
     log
 
 main_after_if_else@19:
-    dup
     assert
     intc_0 // 0
     bytec_1 // "x"
@@ -164,7 +161,6 @@ main_after_if_else@19:
 
 main_bool_false@16:
     intc_0 // 0
-    bury 1
     b main_bool_merge@17
 
 main_ternary_false@12:

@@ -5,8 +5,6 @@
 main:
     intcblock 1 0 32 2
     bytecblock 0x151f7c75 "__ctor_pending" "s"
-    intc_1 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -55,7 +53,6 @@ main_fromSlice_route@9:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 2
     txn GroupIndex
     bz main_ternary_false@15
     txn GroupIndex
@@ -66,7 +63,6 @@ main_fromSlice_route@9:
 main_ternary_merge@16:
     !
     assert // not payable
-    dig 1
     substring 0 33
     intc_2 // 32
     bzero
@@ -124,7 +120,6 @@ main_fromCalldata_route@7:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 2
     txn GroupIndex
     bz main_ternary_false@25
     txn GroupIndex
@@ -137,8 +132,6 @@ main_ternary_merge@26:
     assert // not payable
     intc_2 // 32
     bzero
-    dig 2
-    swap
     concat
     extract 0 32
     bytec_0 // 0x151f7c75
@@ -164,7 +157,6 @@ main_fromMemory_route@6:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 1
     txn GroupIndex
     bz main_ternary_false@30
     txn GroupIndex
@@ -177,8 +169,6 @@ main_ternary_merge@31:
     assert // not payable
     intc_2 // 32
     bzero
-    dig 1
-    swap
     concat
     extract 0 32
     bytec_0 // 0x151f7c75

@@ -5,10 +5,6 @@
 main:
     intcblock 1 255 0 8
     bytecblock 0x151f7c75
-    intc_2 // 0
-    dup
-    pushbytes ""
-    dup
     pushint 4096
     bzero
     dup
@@ -44,9 +40,7 @@ main_after_if_else@2:
 
 main_decodeEnum_route@8:
     txna ApplicationArgs 1
-    dup
-    bury 4
-    dup
+    dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
@@ -56,7 +50,6 @@ main_decodeEnum_route@8:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 4
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -67,12 +60,12 @@ main_decodeEnum_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    dig 3
+    dup
     len
     pushint 32
     ==
     bz main_else_body@17
-    dig 2
+    pop
     extract 2 32
     dup
     len
@@ -96,7 +89,7 @@ main_after_if_else@18:
     return
 
 main_else_body@17:
-    dig 3
+    bury 1
     btoi
     b main_after_if_else@18
 
@@ -112,7 +105,6 @@ main_enumToInt_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 2
     txn GroupIndex
     bz main_ternary_false@22
     txn GroupIndex
@@ -123,7 +115,6 @@ main_enumToInt_route@7:
 main_ternary_merge@23:
     !
     assert // not payable
-    dig 1
     dup
     intc_1 // 255
     <=
@@ -156,7 +147,6 @@ main_intToEnum_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@27
     txn GroupIndex
@@ -167,7 +157,7 @@ main_intToEnum_route@6:
 main_ternary_merge@28:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_1 // 255
     <=
     assert // ABI validation

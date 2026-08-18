@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/contracts/small_exp.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 8 0 32
+    intcblock 1 8 32
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0x
-    intc_2 // 0
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -55,55 +53,49 @@ main_ternary_merge@9:
     store 0
     intc_1 // 8
     bzero
-    bury 1
     load 0
     store 0
     bytec_1 // 0x01
-    bury 2
     pushint 4294967294
     itob
-    bury 4
+    swap
     pushint 2
     itob
-    bury 3
 
 main_while_top@10:
-    dig 2
+    dup
     bytec_2 // 0x
     b>
     bz main_after_while@14
-    dig 2
+    dup
     bytec_1 // 0x01
     b&
     bytec_2 // 0x
     b!=
     bz main_after_if_else@13
-    dig 1
-    dig 4
+    swap
+    dig 2
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 2
+    swap
 
 main_after_if_else@13:
-    dig 2
     pushbytes 0x02
     b/
-    bury 3
-    dig 3
+    uncover 2
     dup
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 4
+    cover 2
     b main_while_top@10
 
 main_after_while@14:
-    dig 1
+    pop
+    bury 1
     pushbytes 0x0100000000
     b%
-    dig 1
-    swap
     concat
     dup
     len
@@ -115,10 +107,10 @@ main_after_while@14:
     b%
     dup
     len
-    intc_3 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -129,5 +121,5 @@ main_after_while@14:
     return
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9

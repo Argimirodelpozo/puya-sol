@@ -3,12 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/detect_add_overflow_signed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 8 18446744073709551488
+    intcblock 1 32 0 8 18446744073709551488
     bytecblock 0x0100 0x80 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
-    intc_1 // 0
-    dupn 3
     pushbytes ""
-    dupn 3
+    dup
     pushint 4096
     bzero
     dup
@@ -50,7 +48,6 @@ main_g_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 4
     txna ApplicationArgs 2
     dup
     len
@@ -58,7 +55,6 @@ main_g_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
@@ -69,11 +65,11 @@ main_g_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    dig 3
+    dig 1
     pushint 127
     <=
     bnz main_bool_true@15
-    dig 3
+    dig 1
     intc 4 // 18446744073709551488
     >=
     bz main_bool_false@16
@@ -83,11 +79,11 @@ main_bool_true@15:
 
 main_bool_merge@17:
     assert // ABI validation
-    dig 2
+    dup
     pushint 127
     <=
     bnz main_bool_true@19
-    dig 2
+    dup
     intc 4 // 18446744073709551488
     >=
     bz main_bool_false@20
@@ -97,37 +93,35 @@ main_bool_true@19:
 
 main_bool_merge@21:
     assert // ABI validation
-    dig 3
+    swap
     itob
     bytec_0 // 0x0100
     b%
     dup
-    bury 7
     bytec_1 // 0x80
     b<
     !
     dup
-    bury 3
-    dig 3
+    bury 5
+    uncover 2
     itob
     bytec_0 // 0x0100
     b%
     dup
-    bury 7
+    cover 2
     bytec_1 // 0x80
     b<
     !
     !=
     bnz main_bool_true@23
-    dig 5
-    dig 5
+    dup2
     b+
     bytec_0 // 0x0100
     b%
     bytec_1 // 0x80
     b<
     !
-    dig 2
+    dig 4
     ==
     bz main_bool_false@24
 
@@ -138,8 +132,7 @@ main_bool_merge@25:
     assert // signed arithmetic overflow
     intc_3 // 8
     bzero
-    dig 6
-    dig 6
+    cover 2
     b+
     bytec_0 // 0x0100
     b%
@@ -162,10 +155,10 @@ main_bool_merge@25:
 main_ternary_merge@28:
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -179,34 +172,33 @@ main_ternary_false@27:
     b main_ternary_merge@28
 
 main_bool_false@24:
-    intc_1 // 0
+    intc_2 // 0
     b main_bool_merge@25
 
 main_bool_false@20:
-    intc_1 // 0
+    intc_2 // 0
     b main_bool_merge@21
 
 main_bool_false@16:
-    intc_1 // 0
+    intc_2 // 0
     b main_bool_merge@17
 
 main_ternary_false@12:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@13
 
 main_f_route@5:
     txna ApplicationArgs 1
     dup
-    bury 9
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 8
+    cover 2
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -219,27 +211,27 @@ main_f_route@5:
 main_ternary_merge@33:
     !
     assert // not payable
-    dig 7
+    dup
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     dup
-    bury 2
-    dig 7
+    bury 4
+    dig 2
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     !=
     bnz main_bool_true@35
-    dig 7
-    dig 7
+    dup
+    dig 2
     b+
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 1
+    dig 3
     ==
     bz main_bool_false@36
 
@@ -248,17 +240,15 @@ main_bool_true@35:
 
 main_bool_merge@37:
     assert // signed arithmetic overflow
-    dig 7
-    dig 7
     b+
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -269,9 +259,9 @@ main_bool_merge@37:
     return
 
 main_bool_false@36:
-    intc_1 // 0
+    intc_2 // 0
     b main_bool_merge@37
 
 main_ternary_false@32:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@33

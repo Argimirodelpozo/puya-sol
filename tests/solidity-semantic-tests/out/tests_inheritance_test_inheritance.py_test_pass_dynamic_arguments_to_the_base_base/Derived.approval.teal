@@ -26,12 +26,13 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "m_i"
-    dig 1
+    swap
     app_global_put
     intc_1 // 1
     return
 
 main_after_if_else@2:
+    pop
     pushbytes 0x158d96ad // method "m_i()uint256"
     txna ApplicationArgs 0
     match main_m_i_route@4

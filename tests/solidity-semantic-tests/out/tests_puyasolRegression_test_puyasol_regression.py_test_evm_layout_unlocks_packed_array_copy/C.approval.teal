@@ -6,7 +6,7 @@ main:
     intcblock 32 8 0 1
     bytecblock 0x01 0x04 0x 0x09 0x0b 0x0c 0x703a0000000000000000 "__ctor_pending" 0x03 0x0a 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0x0000000000000002000000000000000000
     intc_2 // 0
-    dupn 3
+    dup
     pushint 4096
     bzero
     dup
@@ -355,7 +355,6 @@ main_ternary_merge@20:
     !
     assert // not payable
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    bury 1
     load 0
     pushint 24
     bzero
@@ -413,11 +412,11 @@ main_while_top@21:
     extract_uint64
     intc_1 // 8
     *
-    dig 3
+    uncover 3
     swap
     uncover 2
     replace3 // on error: index access is out of bounds
-    bury 2
+    swap
     bytec_0 // 0x01
     b+
     dup
@@ -429,7 +428,7 @@ main_while_top@21:
 
 main_after_while@31:
     pushbytes 0x151f7c75
-    dig 1
+    swap
     concat
     log
     intc_3 // 1
@@ -451,7 +450,6 @@ main_ternary_merge@28:
     !
     assert // not payable
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    bury 1
     load 0
     pushint 24
     bzero
@@ -528,11 +526,11 @@ main_while_top@29:
     extract_uint64
     intc_1 // 8
     *
-    dig 3
+    uncover 3
     swap
     uncover 2
     replace3 // on error: index access is out of bounds
-    bury 2
+    swap
     bytec_0 // 0x01
     b+
     dup
@@ -559,18 +557,17 @@ main___postInit_route@5:
     app_global_put
     intc_2 // 0
     itob
-    bury 4
 
 main_while_top@34:
     pushint 9
     itob
-    dig 4
+    dig 1
     b>
     bz main_after_while@36
     intc_1 // 8
     bzero
     dup
-    dig 5
+    uncover 2
     dup
     cover 2
     concat
@@ -623,7 +620,6 @@ main_while_top@34:
     bytec 10 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 4
     b main_while_top@34
 
 main_after_while@36:
@@ -679,14 +675,12 @@ __storage_read:
     box_len
     bury 1
     bz __storage_read_after_if_else@2
-    frame_dig 0
     intc_0 // 32
     *
     bytec 6 // 0x703a0000000000000000
     swap
     intc_0 // 32
     box_extract
-    swap
     retsub
 
 __storage_read_after_if_else@2:

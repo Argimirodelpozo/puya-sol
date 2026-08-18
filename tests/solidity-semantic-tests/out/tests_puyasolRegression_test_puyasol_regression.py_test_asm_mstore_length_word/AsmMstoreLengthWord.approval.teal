@@ -6,9 +6,6 @@ main:
     intcblock 32 0 8 1
     bytecblock 0x151f7c75
     intc_1 // 0
-    dupn 5
-    pushbytes ""
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -45,7 +42,6 @@ main_after_if_else@2:
 main_growLen_route@8:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_0 // 32
     ==
@@ -62,10 +58,8 @@ main_ternary_merge@15:
     assert // not payable
     pushint 64
     itob
-    dig 10
-    dup
-    uncover 2
-    b<=
+    dig 1
+    b>=
     assert
     intc_2 // 8
     bzero
@@ -81,12 +75,11 @@ main_ternary_merge@15:
     -
     extract_uint64
     dup
-    bury 6
     intc_2 // 8
     <
     bz main_ternary_false@17
     intc_1 // 0
-    dig 5
+    swap
     extract3
 
 main_ternary_merge@18:
@@ -112,7 +105,6 @@ main_ternary_merge@18:
     return
 
 main_ternary_false@17:
-    dig 4
     intc_2 // 8
     -
     bzero
@@ -126,14 +118,12 @@ main_ternary_false@14:
 main_shrink_route@7:
     txna ApplicationArgs 1
     dup
-    bury 6
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 11
     len
     intc_0 // 32
     ==
@@ -150,10 +140,8 @@ main_ternary_merge@23:
     assert // not payable
     intc_0 // 32
     itob
-    dig 10
-    dup
-    uncover 2
-    b<=
+    dig 1
+    b>=
     assert
     intc_0 // 32
     bzero
@@ -162,7 +150,7 @@ main_ternary_merge@23:
     intc_2 // 8
     bzero
     dig 1
-    dig 8
+    uncover 4
     concat
     dup
     len
@@ -185,15 +173,15 @@ main_ternary_merge@23:
     -
     extract_uint64
     dup
-    bury 6
-    swap
+    uncover 2
     len
     dup
-    bury 5
+    cover 2
     <
     bz main_ternary_false@27
+    pop
     intc_1 // 0
-    dig 4
+    swap
     extract3
 
 main_ternary_merge@28:
@@ -213,8 +201,6 @@ main_ternary_merge@28:
     return
 
 main_ternary_false@27:
-    dig 3
-    dig 3
     -
     bzero
     concat
@@ -227,14 +213,12 @@ main_ternary_false@22:
 main_toStrRev_route@6:
     txna ApplicationArgs 1
     dup
-    bury 10
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 11
     len
     intc_0 // 32
     ==
@@ -251,10 +235,8 @@ main_ternary_merge@33:
     assert // not payable
     intc_0 // 32
     itob
-    dig 10
-    dup
-    uncover 2
-    b<=
+    dig 1
+    b>=
     assert
     intc_0 // 32
     bzero
@@ -263,7 +245,7 @@ main_ternary_merge@33:
     intc_2 // 8
     bzero
     dig 1
-    dig 12
+    uncover 4
     concat
     dup
     len
@@ -286,15 +268,16 @@ main_ternary_merge@33:
     -
     extract_uint64
     dup
-    bury 6
+    cover 3
     swap
     len
     dup
-    bury 5
+    cover 2
     <
     bz main_ternary_false@37
+    pop
     intc_1 // 0
-    dig 4
+    uncover 2
     extract3
 
 main_ternary_merge@38:
@@ -314,8 +297,8 @@ main_ternary_merge@38:
     return
 
 main_ternary_false@37:
-    dig 3
-    dig 3
+    uncover 2
+    swap
     -
     bzero
     concat
@@ -328,14 +311,12 @@ main_ternary_false@32:
 main_toStr_route@5:
     txna ApplicationArgs 1
     dup
-    bury 10
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 11
     len
     intc_0 // 32
     ==
@@ -352,14 +333,12 @@ main_ternary_merge@43:
     assert // not payable
     intc_0 // 32
     itob
-    dig 10
-    dup
-    uncover 2
-    b<=
+    dig 1
+    b>=
     assert
     intc_0 // 32
     bzero
-    bury 9
+    bury 3
     load 0
     store 0
     intc_2 // 8
@@ -372,24 +351,22 @@ main_ternary_merge@43:
     -
     extract_uint64
     dup
-    bury 5
     intc_0 // 32
     <
     bz main_ternary_false@45
-    dig 7
+    dig 2
     intc_1 // 0
-    dig 5
+    uncover 2
     extract3
-    bury 7
 
 main_ternary_merge@46:
-    dig 6
+    dup
     len
     dup
-    bury 2
+    cover 2
     bz main_ternary_false@51
-    dig 7
-    dig 9
+    dig 3
+    uncover 3
     concat
     dup
     len
@@ -397,28 +374,23 @@ main_ternary_merge@46:
     -
     intc_0 // 32
     extract3
-    bury 6
-    dup
+    dig 2
     intc_0 // 32
     <
     bz main_ternary_false@49
-    dup
+    uncover 2
 
 main_ternary_merge@50:
-    dig 6
     intc_1 // 0
-    uncover 2
-    extract3
-    dig 7
     swap
+    extract3
     replace2 0
-    bury 8
+    bury 1
 
 main_ternary_merge@52:
     load 0
     store 0
-    dig 7
-    dup
+    dupn 2
     len
     itob
     extract 6 2
@@ -432,23 +404,24 @@ main_ternary_merge@52:
     return
 
 main_ternary_false@49:
+    uncover 2
+    pop
     intc_0 // 32
     b main_ternary_merge@50
 
 main_ternary_false@51:
-    dig 6
-    bury 8
+    bury 1
+    bury 1
+    bury 1
     b main_ternary_merge@52
 
 main_ternary_false@45:
-    dig 3
     intc_0 // 32
     -
     bzero
-    dig 8
+    dig 2
     swap
     concat
-    bury 7
     b main_ternary_merge@46
 
 main_ternary_false@42:

@@ -5,7 +5,6 @@
 main:
     intcblock 1 0 2 3
     bytecblock "stages" "__ctor_pending" "success"
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -95,10 +94,10 @@ main_ternary_merge@19:
     uncover 2
     select
     dup
-    bury 2
     intc_3 // 3
     ==
     bz main_else_body@22
+    pop
     bytec_2 // "success"
     intc_0 // 1
     app_global_put
@@ -114,6 +113,7 @@ main_else_body@22:
     intc_2 // 2
     ==
     bz main_else_body@24
+    pop
     txn Sender
     bytec_0 // "stages"
     concat
@@ -124,7 +124,6 @@ main_else_body@22:
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/mapping_of_functions.sol.Flow.__funcptr_dispatch_ret@25
 
 main_else_body@24:
-    dup
     intc_0 // 1
     ==
     assert // invalid function pointer

@@ -5,8 +5,6 @@
 main:
     intcblock 1 0
     bytecblock 0x151f7c75
-    intc_1 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -42,16 +40,13 @@ main_after_if_else@2:
 
 main_f4_route@10:
     txna ApplicationArgs 1
-    dup
-    bury 3
-    dup
+    dupn 2
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@16
     txn GroupIndex
@@ -71,10 +66,9 @@ main_ternary_merge@17:
     log
 
 main_after_if_else@33:
-    dup
     assert // assertion failed
     bytec_0 // 0x151f7c75
-    dig 2
+    swap
     concat
     log
     intc_0 // 1
@@ -86,16 +80,13 @@ main_ternary_false@16:
 
 main_f3_route@9:
     txna ApplicationArgs 1
-    dup
-    bury 3
-    dup
+    dupn 2
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@23
     txn GroupIndex
@@ -115,10 +106,9 @@ main_ternary_merge@24:
     log
 
 main_after_if_else@26:
-    dup
     assert // msg
     bytec_0 // 0x151f7c75
-    dig 2
+    swap
     concat
     log
     intc_0 // 1
@@ -130,16 +120,13 @@ main_ternary_false@23:
 
 main_f2_route@8:
     txna ApplicationArgs 1
-    dup
-    bury 3
-    dup
+    dupn 2
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@30
     txn GroupIndex
@@ -202,16 +189,13 @@ main_ternary_false@42:
 
 main_f_route@5:
     txna ApplicationArgs 1
-    dup
-    bury 3
-    dup
+    dupn 2
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@47
     txn GroupIndex
@@ -222,13 +206,13 @@ main_f_route@5:
 main_ternary_merge@48:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
     assert
     bytec_0 // 0x151f7c75
-    dig 2
+    swap
     concat
     log
     intc_0 // 1

@@ -5,8 +5,6 @@
 main:
     intcblock 0 1 32 2
     bytecblock 0x00 0x0000030000 "m" "__ctor_pending" 0x151f7c75
-    intc_0 // 0
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -46,14 +44,12 @@ main_after_if_else@2:
 main_arrAt_route@8:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 5
     len
     intc_2 // 32
     ==
@@ -68,14 +64,13 @@ main_arrAt_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    dig 3
     dup
     pushbytes 0x010000000000000000
     b<
     assert // array index out of bounds
     intc_2 // 32
     bzero
-    dig 4
+    uncover 2
     concat
     dup
     len
@@ -127,7 +122,6 @@ main_ternary_false@14:
 main_modifyFromDefault_route@7:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
@@ -145,8 +139,7 @@ main_ternary_merge@20:
     intc_2 // 32
     bzero
     dup
-    bury 2
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -157,9 +150,7 @@ main_ternary_merge@20:
     bytec_2 // "m"
     concat
     sha256
-    dup
-    bury 3
-    dup
+    dupn 2
     box_get
     bytec_1 // 0x0000030000
     cover 2
@@ -209,12 +200,11 @@ main_ternary_merge@20:
     box_len
     bury 1
     bnz main_after_if_else@22
-    dig 1
+    dup
     bytec_1 // 0x0000030000
     box_put
 
 main_after_if_else@22:
-    dig 1
     dup
     pushint 3
     intc_3 // 2
@@ -288,7 +278,7 @@ main_after_if_else@22:
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    dig 4
+    uncover 4
     b|
     bytec_0 // 0x00
     intc_0 // 0
@@ -316,7 +306,6 @@ main_ternary_false@19:
 main_readDefaults_route@6:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
@@ -334,7 +323,7 @@ main_ternary_merge@27:
     intc_2 // 32
     bzero
     dup
-    dig 4
+    uncover 2
     concat
     dup
     len

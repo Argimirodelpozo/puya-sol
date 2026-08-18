@@ -6,7 +6,6 @@ main:
     intcblock 1 0 32
     bytecblock 0x "x" 0x151f7c75
     bytec_0 // ""
-    dup
     pushint 4096
     bzero
     dup
@@ -42,20 +41,20 @@ main_after_if_else@2:
     return
 
 main_after_if_else@4:
-    intc_1 // 0
-    bury 2
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_switch_case_next@12
+    bz main_after_if_else@14
     pushbytess 0x9509a93a 0x856fee35 0x7c1072af // method "__fallback(byte[])byte[]", method "f()(bool,byte[])", method "x()uint256"
     txna ApplicationArgs 0
     match main___fallback_route@9 main_f_route@10 main_x_route@11
 
-main_switch_case_next@12:
-    dig 1
+main_after_if_else@14:
+    intc_1 // 0
     bury 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__puya_arc4_router__@15:
     dup
     bnz main_after_if_else@6
     txna ApplicationArgs 0
@@ -69,13 +68,13 @@ main_after_if_else@6:
 
 main_x_route@11:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@18
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@19:
     !
     assert // not payable
     intc_1 // 0
@@ -95,22 +94,22 @@ main_ternary_merge@18:
     concat
     log
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@12
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__puya_arc4_router__@15
 
-main_ternary_false@17:
+main_ternary_false@18:
     intc_1 // 0
-    b main_ternary_merge@18
+    b main_ternary_merge@19
 
 main_f_route@10:
     txn GroupIndex
-    bz main_ternary_false@22
+    bz main_ternary_false@23
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@23:
+main_ternary_merge@24:
     !
     assert // not payable
     pushbytes "abc"
@@ -126,12 +125,12 @@ main_ternary_merge@23:
     concat
     log
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@12
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__puya_arc4_router__@15
 
-main_ternary_false@22:
+main_ternary_false@23:
     intc_1 // 0
-    b main_ternary_merge@23
+    b main_ternary_merge@24
 
 main___fallback_route@9:
     txna ApplicationArgs 1
@@ -157,8 +156,8 @@ main___fallback_route@9:
     concat
     log
     intc_0 // 1
-    bury 2
-    b main_switch_case_next@12
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__puya_arc4_router__@15
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__fallback(_input: bytes) -> bytes:

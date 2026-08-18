@@ -3,12 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/ecrecover_abiV2.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 255
+    intcblock 1 32 255 27
     bytecblock 0x 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
-    intc_2 // 0
-    dupn 3
-    bytec_0 // ""
-    dup
     pushint 4096
     bzero
     dup
@@ -45,7 +41,6 @@ main_a_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 7
     len
     intc_1 // 32
     ==
@@ -57,17 +52,14 @@ main_a_route@4:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txna ApplicationArgs 3
     dup
-    bury 6
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 4
     dup
-    bury 5
     len
     intc_1 // 32
     ==
@@ -82,61 +74,57 @@ main_a_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dupn 2
-    intc_3 // 255
+    uncover 2
+    dup
+    intc_2 // 255
     <=
     assert // ABI validation
-    intc_3 // 255
+    intc_2 // 255
     &
     dup
-    bury 2
-    pushint 27
+    cover 3
+    intc_3 // 27
     >=
     dup
-    bury 3
     bz main_ternary_false@19
-    dup
+    dig 3
     pushint 28
     <=
     bz main_ternary_false@19
-    dig 4
+    dig 2
     bytec_0 // 0x
     b!=
     bz main_ternary_false@19
-    dig 4
+    dig 2
     bytec_1 // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
     b<
     bz main_ternary_false@19
-    dig 3
+    dig 1
     bytec_0 // 0x
     b!=
     bz main_ternary_false@19
-    dig 3
+    dig 1
     bytec_1 // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
     b<
     bz main_ternary_false@19
     pushint 12
     bzero
-    bury 3
-    dig 1
+    cover 4
     bz main_ternary_false@17
-    dup
-    pushint 27
+    uncover 2
+    intc_3 // 27
     -
 
 main_ternary_merge@18:
     intc_0 // 1
     &
-    dig 6
-    swap
-    dig 6
-    dig 6
+    cover 2
+    uncover 3
+    cover 4
     ecdsa_pk_recover Secp256k1
     concat
     keccak256
     extract 12 20
-    dig 3
-    swap
     concat
 
 main_ternary_merge@20:
@@ -148,14 +136,17 @@ main_ternary_merge@20:
     return
 
 main_ternary_false@17:
-    intc_2 // 0
+    uncover 2
+    pop
+    pushint 0
     b main_ternary_merge@18
 
 main_ternary_false@19:
+    popn 5
     intc_1 // 32
     bzero
     b main_ternary_merge@20
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9

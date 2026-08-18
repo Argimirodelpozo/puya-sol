@@ -343,8 +343,13 @@ def test_ripemd160(harness):
     # ceiling; compile with ensure_budget (program opups via inner txns) and
     # fund them with extra_fee. The old sim-fallback reported hash values
     # without ever executing the real transaction.
+    # puya 5.10's O2 goes ~100x superlinear on this ~40k-op pure-TEAL body
+    # (3m50s vs 2.2s at O1; was well inside the timeout on 5.9.0-rc.1). O1
+    # keeps the REAL on-chain hash execution these assertions test. See
+    # puyabug.md.
     app = harness.compile_and_deploy("builtinFunctions/contracts/ripemd160.sol",
-                                     ensure_budget={"f": 40000})
+                                     ensure_budget={"f": 40000},
+                                     extra_args=["--optimization-level", "1"])
     # f(int256): 4 -> 0x1b0f3c404d12075c68c938f9f60ebea4f74941a0000000000000000000000000
     r = harness.call(app, "f(int256)", 4, extra_fee=70000)
     assert as_int(r.abi_return) == 12239365456053725440107558875761931117347152855322617053615694768895724355584
@@ -368,8 +373,10 @@ def test_ripemd160_packed(harness):
     # ceiling; compile with ensure_budget (program opups via inner txns) and
     # fund them with extra_fee. The old sim-fallback reported hash values
     # without ever executing the real transaction.
+    # O1 for the same puya-5.10 O2 superlinearity as test_ripemd160 (puyabug.md).
     app = harness.compile_and_deploy("builtinFunctions/contracts/ripemd160_packed.sol",
-                                     ensure_budget={"f": 90000})
+                                     ensure_budget={"f": 90000},
+                                     extra_args=["--optimization-level", "1"])
     # f(int256): 4 -> 0xf93175303eba2a7b372174fc9330237f5ad202fc000000000000000000000000
     r = harness.call(app, "f(int256)", 4, extra_fee=140000)
     assert as_int(r.abi_return) == 112713283608413432366500292079636390015042877224965778699306835103129784025088

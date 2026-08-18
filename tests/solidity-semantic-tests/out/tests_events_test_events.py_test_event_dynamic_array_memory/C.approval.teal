@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_dynamic_array_memory.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 32
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -42,7 +41,6 @@ main_createEvent_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_1 // 32
     ==
@@ -59,8 +57,6 @@ main_ternary_merge@9:
     assert // not payable
     pushbytes 0x0003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     dig 1
-    dup
-    cover 2
     replace2 2 // on error: index access is out of bounds
     intc_0 // 1
     itob
@@ -107,5 +103,5 @@ main_ternary_merge@9:
     return
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9

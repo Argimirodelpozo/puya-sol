@@ -5,10 +5,6 @@
 main:
     intcblock 32 1 0
     bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
-    intc_2 // 0
-    dupn 9
-    pushbytes ""
-    dupn 7
     pushint 4096
     bzero
     dup
@@ -56,7 +52,6 @@ main_ternary_merge@13:
     pushint 5
     itob
     dup
-    bury 10
     callsub f
     dig 3
     len
@@ -66,7 +61,7 @@ main_ternary_merge@13:
     intc_0 // 32
     bzero
     dup
-    bury 17
+    cover 5
     uncover 4
     dig 1
     b|
@@ -100,65 +95,56 @@ main_ternary_merge@13:
     extract 0 32
     dig 1
     extract 32 32
-    bury 17
+    cover 2
     dig 1
     extract 64 32
-    bury 16
+    cover 2
     swap
     extract 96 32
-    bury 14
+    swap
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b==
     dup
-    bury 5
     bnz main_after_if_else@16
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@16:
-    dig 3
     assert
     intc_2 // 0
     itob
     dup
-    bury 12
-    dig 15
+    cover 2
+    uncover 4
     b==
     dup
-    bury 4
     bnz main_after_if_else@18
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@18:
-    dig 2
     assert
     intc_1 // 1
     itob
     dup
-    bury 11
-    dig 14
+    cover 2
+    uncover 4
     b==
     dup
-    bury 3
     bnz main_after_if_else@20
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@20:
-    dig 1
     assert
-    dig 12
-    dig 9
+    uncover 4
     b==
     dup
-    bury 2
     bnz main_after_if_else@22
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@22:
-    dup
     assert
     bytec_2 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
     callsub f
@@ -168,7 +154,7 @@ main_after_if_else@22:
     <=
     assert // overflow
     uncover 3
-    dig 15
+    uncover 6
     dup
     cover 2
     b|
@@ -208,58 +194,49 @@ main_after_if_else@22:
     swap
     dup
     extract 32 32
-    bury 20
+    swap
     dup
     extract 64 32
-    bury 19
+    swap
     extract 96 32
-    bury 17
+    uncover 3
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b==
     dup
-    bury 9
     bnz main_after_if_else@28
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@28:
-    dig 7
     assert
-    dig 17
-    dig 11
+    uncover 2
+    uncover 4
     b==
     dup
-    bury 8
     bnz main_after_if_else@30
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@30:
-    dig 6
     assert
-    dig 16
-    dig 10
+    swap
+    uncover 2
     b==
     dup
-    bury 7
     bnz main_after_if_else@32
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@32:
-    dig 5
     assert
-    dig 15
     bytec_2 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
     b==
     dup
-    bury 6
     bnz main_after_if_else@34
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@34:
-    dig 4
     assert
     pushbytes 0x151f7c7580
     log

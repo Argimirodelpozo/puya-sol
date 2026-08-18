@@ -95,8 +95,6 @@ main_f_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/modifer_recursive.sol.C.f(__arc4_x: bytes) -> bytes:
 f:
     proto 1 1
-    intc_1 // 0
-    dupn 2
     txn NumAppArgs
     bz f_after_if_else@6
     txna ApplicationArgs 0
@@ -145,7 +143,6 @@ f_after_if_else@15:
     intc_2 // 32
     bzero
     b|
-    frame_bury 0
     retsub
 
 f_else_body@9:
@@ -156,7 +153,7 @@ f_else_body@9:
     b>=
     assert // underflow
     bytec_2 // 0x01
-    frame_bury 2
+    swap
     frame_dig -1
     bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -169,40 +166,38 @@ f_else_body@9:
     b<=
     assert // overflow
     callsub f
-    frame_bury 0
+    swap
     intc_3 // 2
     itob
-    frame_bury 1
 
 f_while_top@10:
-    frame_dig 1
+    dup
     bytec_1 // 0x
     b>
     bz f_after_while@14
-    frame_dig 1
+    dup
     bytec_2 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz f_after_if_else@13
-    frame_dig 2
-    frame_dig 0
+    swap
+    dig 2
     b*
-    frame_bury 2
+    swap
 
 f_after_if_else@13:
-    frame_dig 1
     pushbytes 0x02
     b/
-    frame_bury 1
-    frame_dig 0
+    uncover 2
     dup
     b*
-    frame_bury 0
+    cover 2
     b f_while_top@10
 
 f_after_while@14:
-    frame_dig 2
+    pop
+    bury 1
     dup
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=

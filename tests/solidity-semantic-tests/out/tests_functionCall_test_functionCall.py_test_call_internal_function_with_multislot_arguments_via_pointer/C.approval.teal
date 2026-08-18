@@ -5,7 +5,6 @@
 main:
     intcblock 1 0 32
     bytecblock 0xeddddc3d 0x151f7c75
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -59,10 +58,10 @@ main_ternary_merge@13:
     intc_1 // 0
     extract_uint64
     dup
-    bury 3
     global CurrentApplicationID
     ==
     bz main_else_body@15
+    pop
     extract 8 4
     bytec_0 // method "foo()uint256"
     ==
@@ -93,6 +92,7 @@ main_after_if_else@16:
 
 main_else_body@15:
     itxn_begin
+    swap
     extract 8 4
     pushint 6
     itxn_field TypeEnum
@@ -100,9 +100,8 @@ main_else_body@15:
     itxn_field OnCompletion
     intc_1 // 0
     itxn_field Fee
-    dig 1
-    itxn_field ApplicationID
     itxn_field ApplicationArgs
+    itxn_field ApplicationID
     itxn_submit
     itxn LastLog
     extract 4 0

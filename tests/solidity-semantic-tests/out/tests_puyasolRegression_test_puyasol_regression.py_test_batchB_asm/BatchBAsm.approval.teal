@@ -6,8 +6,6 @@ main:
     intcblock 32 1 0 8
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x
     intc_2 // 0
-    dupn 6
-    bytec_2 // ""
     dup
     pushint 4096
     bzero
@@ -87,7 +85,6 @@ main_ternary_false@14:
 main_m11Bad_route@7:
     txna ApplicationArgs 1
     dup
-    bury 8
     len
     intc_0 // 32
     ==
@@ -104,7 +101,6 @@ main_ternary_merge@20:
     assert // not payable
     load 0
     store 0
-    dig 6
     dup
     pushbytes 0x80
     b<
@@ -156,7 +152,6 @@ main_ternary_false@19:
 main_m12_route@6:
     txna ApplicationArgs 1
     dup
-    bury 9
     len
     intc_0 // 32
     ==
@@ -181,19 +176,18 @@ main_ternary_merge@28:
     intc_0 // 32
     bzero
     dup
-    bury 5
-    dig 9
+    uncover 3
     dup
     cover 2
     dig 1
     b|
-    uncover 3
+    uncover 4
     swap
     concat
     dup
     uncover 2
     concat
-    bury 6
+    cover 2
     intc_3 // 8
     bzero
     uncover 2
@@ -204,18 +198,15 @@ main_ternary_merge@28:
     -
     extract_uint64
     dup
-    bury 4
-    swap
+    uncover 2
     len
     dup
-    bury 3
+    cover 2
     <
     bz main_ternary_false@30
-    dig 1
+    pop
 
 main_ternary_merge@31:
-    dig 4
-    swap
     intc_0 // 32
     extract3
     load 0
@@ -227,7 +218,6 @@ main_ternary_merge@31:
     intc_0 // 32
     <=
     assert // overflow
-    dig 3
     b|
     bytec_1 // 0x151f7c75
     swap
@@ -237,7 +227,7 @@ main_ternary_merge@31:
     return
 
 main_ternary_false@30:
-    dup
+    bury 1
     b main_ternary_merge@31
 
 main_ternary_false@27:
@@ -252,14 +242,13 @@ main_ternary_false@24:
 main_m6_route@5:
     txna ApplicationArgs 1
     dup
-    bury 10
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 7
+    bury 4
     len
     intc_0 // 32
     ==
@@ -277,22 +266,21 @@ main_ternary_merge@36:
     load 0
     store 0
     pushbytes 0x07
-    bury 5
-    dig 8
+    bury 2
     bytec_2 // 0x
     b!=
     bz main_after_while@39
-    dig 5
+    dig 1
     bytec_2 // 0x
     b!=
     assert // revert
     pushbytes 0x2a
-    bury 5
+    bury 1
 
 main_after_while@39:
     load 0
     store 0
-    dig 4
+    dup
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup

@@ -109,7 +109,6 @@ main_ternary_false@17:
 __solfn_148:
     proto 3 3
     intc_1 // 0
-    dupn 2
     itob
     dup
     frame_dig -1
@@ -126,16 +125,13 @@ __solfn_148:
     assert // overflow
     frame_dig -3
     frame_dig -2
-    uncover 5
-    uncover 5
-    uncover 5
+    uncover 3
     retsub
 
 __solfn_148_after_if_else@2:
     intc_0 // 1
     itob
     dup
-    frame_bury 1
     frame_dig -1
     dig 1
     b>=
@@ -147,15 +143,14 @@ __solfn_148_after_if_else@2:
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dup
-    frame_bury 0
-    dup
+    dupn 2
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    frame_dig 2
+    uncover 3
     b==
     bz __solfn_148_after_if_else@9
+    popn 2
     frame_dig -3
     extract 0 32
     frame_dig -2
@@ -169,17 +164,11 @@ __solfn_148_after_if_else@2:
 __solfn_148_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/contract_aware_param_mutation.sol.RecursiveMutation.__solfn_180@14:
     frame_dig -3
     frame_dig -2
-    uncover 5
-    uncover 5
-    uncover 5
     retsub
 
 __solfn_148_after_if_else@9:
-    frame_dig 0
     dup
-    frame_dig 1
-    dup
-    cover 3
+    dig 2
     b>=
     assert // underflow
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000

@@ -5,9 +5,6 @@
 main:
     intcblock 2 1 0 32
     bytecblock "a2" "a1" "__ctor_pending" 0x151f7c75
-    intc_2 // 0
-    dup
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -53,7 +50,6 @@ main_ternaryLen_route@7:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
@@ -64,7 +60,7 @@ main_ternaryLen_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_1 // 1
     <=
     assert // ABI bool validation
@@ -120,7 +116,6 @@ main_ternary_merge@22:
 main_after_if_else@24:
     intc_3 // 32
     bzero
-    bury 3
     bytec_1 // "a1"
     intc_2 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
@@ -175,7 +170,6 @@ main_ternary_merge@31:
     intc_3 // 32
     /
     itob
-    bury 2
     bytec_0 // "a2"
     box_len
     pop
@@ -192,8 +186,8 @@ main_ternary_merge@34:
     intc_3 // 32
     /
     itob
-    dig 2
-    dig 4
+    swap
+    uncover 2
     dup
     cover 2
     b|

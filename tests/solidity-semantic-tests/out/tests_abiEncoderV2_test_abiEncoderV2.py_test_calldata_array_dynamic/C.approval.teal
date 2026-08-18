@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/calldata_array_dynamic.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2 32
+    intcblock 1 0 2 32
     bytecblock 0x151f7c75
-    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -25,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -42,7 +41,7 @@ main_after_if_else@2:
 main_k_route@10:
     txna ApplicationArgs 1
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
     +
@@ -51,18 +50,16 @@ main_k_route@10:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 1
     txn GroupIndex
     bz main_ternary_false@16
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@17:
     !
     assert // not payable
-    dup
     callsub j
     dup
     len
@@ -74,17 +71,17 @@ main_ternary_merge@17:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@16:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@17
 
 main_j_route@9:
     txna ApplicationArgs 1
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
     +
@@ -104,15 +101,13 @@ main_j_route@9:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_i_route@8:
     txna ApplicationArgs 1
-    dup
-    bury 2
-    dup
-    intc_0 // 0
+    dupn 2
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
     +
@@ -123,14 +118,13 @@ main_i_route@8:
     txn GroupIndex
     bz main_ternary_false@23
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@24:
     !
     assert // not payable
-    dup
     callsub h
     pop
     dup
@@ -143,17 +137,17 @@ main_ternary_merge@24:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@23:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@24
 
 main_h_route@7:
     txna ApplicationArgs 1
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
     +
@@ -173,15 +167,13 @@ main_h_route@7:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_g_route@6:
     txna ApplicationArgs 1
-    dup
-    bury 2
-    dup
-    intc_0 // 0
+    dupn 2
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_3 // 32
     *
@@ -194,14 +186,13 @@ main_g_route@6:
     txn GroupIndex
     bz main_ternary_false@30
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@31:
     !
     assert // not payable
-    dup
     callsub f
     pop
     dup
@@ -214,17 +205,17 @@ main_ternary_merge@31:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@30:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@31
 
 main_f_route@5:
     txna ApplicationArgs 1
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_3 // 32
     *
@@ -246,7 +237,7 @@ main_f_route@5:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -256,7 +247,7 @@ f:
     txn GroupIndex
     bz f_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -268,7 +259,7 @@ f_ternary_merge@3:
     retsub
 
 f_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b f_ternary_merge@3
 
 
@@ -278,7 +269,7 @@ h:
     txn GroupIndex
     bz h_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -290,7 +281,7 @@ h_ternary_merge@3:
     retsub
 
 h_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b h_ternary_merge@3
 
 
@@ -300,7 +291,7 @@ j:
     txn GroupIndex
     bz j_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -316,5 +307,5 @@ j_ternary_merge@3:
     retsub
 
 j_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b j_ternary_merge@3

@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/checked_overflow_trunc.sol.CheckedOverflowTrunc.approval_program() -> uint64:
 main:
-    intcblock 8 1 0 32
+    intcblock 8 1 32 0
     bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    intc_2 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -43,16 +41,14 @@ main_after_if_else@2:
 main_normalAdd_route@9:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
-    intc_3 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
-    intc_3 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -67,8 +63,7 @@ main_ternary_merge@16:
     assert // not payable
     intc_0 // 8
     bzero
-    dig 3
-    dig 3
+    cover 2
     b+
     dup
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -89,15 +84,14 @@ main_ternary_merge@16:
     return
 
 main_ternary_false@15:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@16
 
 main_uncheckedOK_route@8:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_3 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -114,7 +108,7 @@ main_ternary_merge@21:
     bzero
     intc_1 // 1
     itob
-    dig 2
+    uncover 2
     b+
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -133,15 +127,14 @@ main_ternary_merge@21:
     return
 
 main_ternary_false@20:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@21
 
 main_viaTemp_route@7:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_3 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -156,7 +149,6 @@ main_ternary_merge@26:
     assert // not payable
     intc_1 // 1
     itob
-    dig 1
     b+
     dup
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -180,15 +172,14 @@ main_ternary_merge@26:
     return
 
 main_ternary_false@25:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@26
 
 main_truncMul_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_3 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -205,7 +196,7 @@ main_ternary_merge@31:
     bzero
     pushint 2
     itob
-    dig 2
+    uncover 2
     b*
     dup
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -226,15 +217,14 @@ main_ternary_merge@31:
     return
 
 main_ternary_false@30:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@31
 
 main_truncAdd_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_3 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -251,7 +241,7 @@ main_ternary_merge@36:
     bzero
     intc_1 // 1
     itob
-    dig 2
+    uncover 2
     b+
     dup
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -272,5 +262,5 @@ main_ternary_merge@36:
     return
 
 main_ternary_false@35:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@36

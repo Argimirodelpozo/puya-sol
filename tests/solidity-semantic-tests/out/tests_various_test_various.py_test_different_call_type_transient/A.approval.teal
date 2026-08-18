@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol.A.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 24
+    intcblock 32 1 0 24
     bytecblock 0x60dfc120
-    intc_1 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -28,7 +26,7 @@ main:
     bnz main_after_if_else@2
     pushbytess "value" 0x
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -46,7 +44,7 @@ main_value_route@8:
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -67,24 +65,22 @@ main_ternary_merge@15:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@14:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@15
 
 main_staticSetValue_route@7:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -92,7 +88,7 @@ main_staticSetValue_route@7:
     txn GroupIndex
     bz main_ternary_false@19
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -102,7 +98,7 @@ main_ternary_merge@20:
     itxn_begin
     intc_0 // 32
     bzero
-    dig 2
+    swap
     concat
     dup
     len
@@ -110,14 +106,14 @@ main_ternary_merge@20:
     -
     intc_0 // 32
     extract3
-    dig 1
+    swap
     intc_3 // 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_2 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
     itxn_field ApplicationID
     bytec_0 // method "setValue(uint256)"
@@ -126,24 +122,22 @@ main_ternary_merge@20:
     itxn_submit
     pushbytes 0x151f7c7580
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@19:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@20
 
 main_callSetValue_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -151,7 +145,7 @@ main_callSetValue_route@6:
     txn GroupIndex
     bz main_ternary_false@24
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -161,7 +155,7 @@ main_ternary_merge@25:
     itxn_begin
     intc_0 // 32
     bzero
-    dig 2
+    swap
     concat
     dup
     len
@@ -169,25 +163,25 @@ main_ternary_merge@25:
     -
     intc_0 // 32
     extract3
-    dig 1
+    swap
     intc_3 // 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_2 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
     itxn_field ApplicationID
     bytec_0 // method "setValue(uint256)"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@24:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@25
 
 main_delegateSetValue_route@5:
@@ -204,7 +198,7 @@ main_delegateSetValue_route@5:
     txn GroupIndex
     bz main_ternary_false@29
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -214,9 +208,9 @@ main_ternary_merge@30:
     global Round
     !
     assert // delegatecall is not supported on AVM
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@29:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@30

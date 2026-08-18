@@ -3,9 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/cleanup_bytes_types_v2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 65535 258
-    intc_1 // 0
-    pushbytes ""
+    intcblock 1 65535 258
     pushint 4096
     bzero
     dup
@@ -42,7 +40,6 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     pushint 2
     ==
@@ -54,7 +51,6 @@ main_f_route@4:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -65,17 +61,17 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dupn 2
-    intc_2 // 65535
+    dup
+    intc_1 // 65535
     <=
     assert // ABI validation
-    intc_2 // 65535
+    intc_1 // 65535
     &
-    bury 1
-    dig 1
+    swap
     pushbytes "ab"
     !=
     bz main_after_if_else@11
+    pop
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
 
 main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/cleanup_bytes_types_v2.sol.C.f@16:
@@ -88,18 +84,18 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
 
 main_after_if_else@11:
     dup
-    intc_3 // 258
+    intc_2 // 258
     !=
     bz main_after_if_else@13
+    pop
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/cleanup_bytes_types_v2.sol.C.f@16
 
 main_after_if_else@13:
-    dup
     itob
     extract 5 3
     btoi
-    intc_3 // 258
+    intc_2 // 258
     !=
     bz main_after_if_else@15
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
@@ -110,5 +106,5 @@ main_after_if_else@15:
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/cleanup_bytes_types_v2.sol.C.f@16
 
 main_ternary_false@8:
-    intc_1 // 0
+    pushint 0
     b main_ternary_merge@9

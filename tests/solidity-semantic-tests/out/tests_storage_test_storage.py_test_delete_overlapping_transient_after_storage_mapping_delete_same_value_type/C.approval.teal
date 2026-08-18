@@ -4,8 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_after_storage_mapping_delete_same_value_type.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502 0x "__ctor_pending"
-    bytec_1 // ""
+    bytecblock 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502 "__ctor_pending" 0x
     pushint 4096
     bzero
     dup
@@ -25,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -55,7 +54,7 @@ main_ternary_merge@14:
     assert // not payable
     bytec_0 // 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -113,7 +112,6 @@ main_ternary_merge@19:
     extract 0 32
     b==
     dup
-    bury 2
     bnz main_after_if_else@21
     pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
@@ -126,14 +124,14 @@ main_ternary_false@18:
     b main_ternary_merge@19
 
 main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     pushbytes "m"
@@ -141,7 +139,7 @@ main___postInit_route@5:
     box_create
     pop
     pushbytes "t"
-    bytec_1 // 0x
+    bytec_2 // 0x
     app_global_put
     intc_0 // 1
     return

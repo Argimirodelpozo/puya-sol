@@ -3,12 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/keccak_optimization_bug_string.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 4096 1
-    intc_1 // 0
-    dup
-    pushbytes ""
-    dupn 3
-    intc_2 // 4096
+    intcblock 32 4096 0 1
+    intc_1 // 4096
     bzero
     dup
     store 5
@@ -44,7 +40,7 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -53,7 +49,6 @@ main_f_route@4:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 5
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -64,7 +59,6 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dig 4
     dup
     len
     load 0
@@ -72,7 +66,7 @@ main_ternary_merge@9:
     extract_uint64
     dup
     cover 2
-    bury 7
+    cover 3
     load 0
     pushint 24
     bzero
@@ -91,7 +85,7 @@ main_ternary_merge@9:
     intc_0 // 32
     +
     dup
-    bury 6
+    cover 5
     uncover 3
     pushint 31
     +
@@ -110,23 +104,19 @@ main_ternary_merge@9:
     bzero
     concat
     dup
-    bury 7
+    cover 2
     len
     intc_0 // 32
     -
-    bury 2
-    intc_1 // 0
-    bury 3
+    intc_2 // 0
 
 main_while_top@10:
-    dig 2
+    dup
     dig 2
     <
     bz main_after_while@12
-    dup
-    dig 3
-    dup
-    cover 2
+    dig 2
+    dig 1
     +
     dup
     intc_0 // 32
@@ -135,36 +125,35 @@ main_while_top@10:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_2 // 4096
+    intc_1 // 4096
     /
-    dig 8
+    dig 5
     dig 3
     intc_0 // 32
     extract3
     dig 1
     loads
     uncover 3
-    intc_2 // 4096
+    intc_1 // 4096
     %
     uncover 2
     replace3
     stores
     intc_0 // 32
     +
-    bury 3
     b main_while_top@10
 
 main_after_while@12:
+    popn 4
     load 0
     store 0
-    dig 3
     dup
-    intc_2 // 4096
+    intc_1 // 4096
     /
     dup
     loads
     uncover 2
-    intc_2 // 4096
+    intc_1 // 4096
     %
     swap
     dig 1
@@ -182,7 +171,7 @@ main_after_while@12:
     load 0
     store 0
     pushbytes 0x00
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     setbit
     pushbytes 0x151f7c75
@@ -193,5 +182,5 @@ main_after_while@12:
     return
 
 main_ternary_false@8:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@9

@@ -6,9 +6,8 @@ main:
     intcblock 0 32 1 6 255 4294967295 1000
     bytecblock 0x8000000000000000000000000000000000000000000000000000000000000000 "c" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x03e8 0xffffffffffffffff 0x8000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
     intc_0 // 0
-    dupn 13
     pushbytes ""
-    dupn 11
+    dupn 8
     pushint 4096
     bzero
     dup
@@ -48,7 +47,6 @@ main_after_if_else@2:
 main_garr_route@30:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -79,7 +77,6 @@ main_ternary_merge@37:
     itxn_field ApplicationID
     pushbytes 0x7e57cd1b // method "arr(uint256)(uint64,uint32[])"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -142,7 +139,6 @@ main_ternary_false@36:
 main_gdstr_route@29:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -173,7 +169,6 @@ main_ternary_merge@42:
     itxn_field ApplicationID
     pushbytes 0x171abfe2 // method "dstr(uint256)(string,uint64)"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -218,7 +213,6 @@ main_ternary_false@41:
 main_gdyn_route@28:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -249,7 +243,6 @@ main_ternary_merge@47:
     itxn_field ApplicationID
     pushbytes 0xb7d21413 // method "dyn(uint256)(uint64,byte[])"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -314,7 +307,6 @@ main_ternary_false@46:
 main_gad_route@27:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -345,7 +337,6 @@ main_ternary_merge@52:
     itxn_field ApplicationID
     pushbytes 0x9066ab91 // method "ad(uint256)(address,uint64)"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -385,7 +376,6 @@ main_ternary_false@51:
 main_gea_route@26:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -416,7 +406,6 @@ main_ternary_merge@57:
     itxn_field ApplicationID
     pushbytes 0x6c9b6c90 // method "ea(uint256)(uint64,uint64)"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -463,7 +452,6 @@ main_ternary_false@56:
 main_gtbb_route@25:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -494,7 +482,6 @@ main_ternary_merge@62:
     itxn_field ApplicationID
     pushbytes 0x2d9c9628 // method "tbb(uint256)(bool,byte[4])"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -539,7 +526,6 @@ main_ternary_false@61:
 main_gtb4_route@24:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -570,7 +556,6 @@ main_ternary_merge@67:
     itxn_field ApplicationID
     pushbytes 0x309fbf87 // method "tb4(uint256)(byte[4],uint64)"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -615,7 +600,6 @@ main_ternary_false@66:
 main_gbub_route@23:
     txna ApplicationArgs 1
     dup
-    bury 26
     len
     intc_1 // 32
     ==
@@ -627,10 +611,9 @@ main_gbub_route@23:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 10
     txna ApplicationArgs 3
     dup
-    bury 24
+    cover 2
     len
     intc_1 // 32
     ==
@@ -646,7 +629,6 @@ main_ternary_merge@72:
     !
     assert // not payable
     itxn_begin
-    dig 9
     itob
     intc_0 // 0
     bytec_1 // "c"
@@ -663,10 +645,9 @@ main_ternary_merge@72:
     itxn_field ApplicationID
     pushbytes 0x4c44fb04 // method "bub(uint256,uint64,uint256)(bool,uint64,bool)"
     itxn_field ApplicationArgs
-    dig 25
+    uncover 2
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
-    dig 22
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -719,21 +700,19 @@ main_ternary_false@71:
 main_gbbu_route@22:
     txna ApplicationArgs 1
     dup
-    bury 26
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 25
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 24
+    cover 2
     len
     intc_1 // 32
     ==
@@ -764,11 +743,9 @@ main_ternary_merge@77:
     itxn_field ApplicationID
     pushbytes 0x3516cfb2 // method "bbu(uint256,uint256,uint256)(bool,bool,uint256)"
     itxn_field ApplicationArgs
-    dig 24
+    uncover 2
     itxn_field ApplicationArgs
-    dig 23
     itxn_field ApplicationArgs
-    dig 22
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -780,44 +757,43 @@ main_ternary_merge@77:
     swap
     intc_2 // 1
     getbit
-    bury 14
+    bury 11
     swap
     extract 5 32
-    bury 22
+    swap
     bz main_ternary_false@79
     pushint 2
     itob
-    bury 15
 
 main_ternary_merge@80:
-    dig 14
+    dup
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    bury 7
-    dig 11
+    bury 9
+    dig 10
     bz main_ternary_false@82
     intc_2 // 1
     itob
-    bury 14
+    swap
 
 main_ternary_merge@83:
-    dig 13
+    dig 1
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 7
+    dig 10
     !=
     bnz main_bool_true@85
-    dig 14
-    dig 14
+    dup
+    dig 2
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 7
+    dig 10
     ==
     bz main_bool_false@86
 
@@ -826,33 +802,30 @@ main_bool_true@85:
 
 main_bool_merge@87:
     assert // signed arithmetic overflow
-    dig 14
-    dig 14
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bury 18
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     dup
-    bury 4
-    dig 21
+    bury 6
+    dig 2
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     !=
     bnz main_bool_true@89
-    dig 16
-    dig 21
+    dup
+    dig 2
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 3
+    dig 5
     ==
     bz main_bool_false@90
 
@@ -861,8 +834,6 @@ main_bool_true@89:
 
 main_bool_merge@91:
     assert // signed arithmetic overflow
-    dig 16
-    dig 21
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -892,13 +863,12 @@ main_bool_false@86:
 main_ternary_false@82:
     intc_0 // 0
     itob
-    bury 14
+    swap
     b main_ternary_merge@83
 
 main_ternary_false@79:
     intc_0 // 0
     itob
-    bury 15
     b main_ternary_merge@80
 
 main_ternary_false@76:
@@ -908,21 +878,19 @@ main_ternary_false@76:
 main_gb3_route@21:
     txna ApplicationArgs 1
     dup
-    bury 26
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 25
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 24
+    cover 2
     len
     intc_1 // 32
     ==
@@ -953,11 +921,9 @@ main_ternary_merge@96:
     itxn_field ApplicationID
     pushbytes 0xee53c099 // method "b3(uint256,uint256,uint256)(bool,bool,bool)"
     itxn_field ApplicationArgs
-    dig 24
+    uncover 2
     itxn_field ApplicationArgs
-    dig 23
     itxn_field ApplicationArgs
-    dig 22
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -1005,14 +971,12 @@ main_ternary_false@95:
 main_gbb_route@20:
     txna ApplicationArgs 1
     dup
-    bury 26
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 25
     len
     intc_1 // 32
     ==
@@ -1043,9 +1007,8 @@ main_ternary_merge@101:
     itxn_field ApplicationID
     pushbytes 0x1c33976c // method "bb(uint256,uint256)(bool,bool)"
     itxn_field ApplicationArgs
-    dig 24
+    swap
     itxn_field ApplicationArgs
-    dig 23
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -1087,7 +1050,6 @@ main_gArr_route@19:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 11
     txn GroupIndex
     bz main_ternary_false@105
     txn GroupIndex
@@ -1099,7 +1061,6 @@ main_ternary_merge@106:
     !
     assert // not payable
     itxn_begin
-    dig 10
     itob
     intc_0 // 0
     bytec_1 // "c"
@@ -1145,17 +1106,16 @@ main_ternary_merge@106:
     bz main_ternary_false@108
     bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
     b+
-    bury 15
 
 main_ternary_merge@109:
-    dig 14
+    dup
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     dup
     !
-    bury 7
+    bury 8
     bz main_bool_true@111
-    dig 14
+    dup
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -1163,7 +1123,7 @@ main_ternary_merge@109:
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 6
+    dig 7
     ==
     bz main_bool_false@112
 
@@ -1172,7 +1132,6 @@ main_bool_true@111:
 
 main_bool_merge@113:
     assert // signed arithmetic overflow
-    dig 14
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -1197,7 +1156,6 @@ main_bool_false@112:
     b main_bool_merge@113
 
 main_ternary_false@108:
-    bury 15
     b main_ternary_merge@109
 
 main_ternary_false@105:
@@ -1212,7 +1170,6 @@ main_gStruct_route@18:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 11
     txna ApplicationArgs 2
     dup
     len
@@ -1220,7 +1177,7 @@ main_gStruct_route@18:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 9
+    swap
     txn GroupIndex
     bz main_ternary_false@117
     txn GroupIndex
@@ -1232,9 +1189,8 @@ main_ternary_merge@118:
     !
     assert // not payable
     itxn_begin
-    dig 10
     itob
-    dig 9
+    swap
     itob
     intc_0 // 0
     bytec_1 // "c"
@@ -1282,17 +1238,16 @@ main_ternary_merge@118:
     bz main_ternary_false@120
     bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
     b+
-    bury 15
 
 main_ternary_merge@121:
-    dig 14
+    dup
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     dup
     !
-    bury 6
+    bury 7
     bz main_bool_true@123
-    dig 14
+    dup
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -1300,7 +1255,7 @@ main_ternary_merge@121:
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 5
+    dig 6
     ==
     bz main_bool_false@124
 
@@ -1309,7 +1264,6 @@ main_bool_true@123:
 
 main_bool_merge@125:
     assert // signed arithmetic overflow
-    dig 14
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -1334,7 +1288,6 @@ main_bool_false@124:
     b main_bool_merge@125
 
 main_ternary_false@120:
-    bury 15
     b main_ternary_merge@121
 
 main_ternary_false@117:
@@ -1344,7 +1297,6 @@ main_ternary_false@117:
 main_gbu256_route@17:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -1375,7 +1327,6 @@ main_ternary_merge@130:
     itxn_field ApplicationID
     pushbytes 0x4e7c0081 // method "bu256(uint256)(byte[4],uint256)"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -1414,7 +1365,6 @@ main_ternary_false@129:
 main_gu128b_route@16:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -1445,7 +1395,6 @@ main_ternary_merge@135:
     itxn_field ApplicationID
     pushbytes 0x06c35f5e // method "u128b(uint256)(uint128,byte[4])"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -1484,7 +1433,6 @@ main_ternary_false@134:
 main_gbu128_route@15:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -1515,7 +1463,6 @@ main_ternary_merge@140:
     itxn_field ApplicationID
     pushbytes 0x20cf33e3 // method "bu128(uint256)(byte[4],uint128)"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -1554,14 +1501,13 @@ main_ternary_false@139:
 main_gsbig_route@14:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 23
+    cover 2
     len
     pushint 16
     ==
@@ -1580,7 +1526,7 @@ main_ternary_merge@145:
     pushint 16
     bzero
     dup
-    dig 23
+    uncover 3
     concat
     dup
     len
@@ -1609,7 +1555,7 @@ main_ternary_merge@145:
     itxn_field ApplicationID
     pushbytes 0x11afa1bd // method "sbig(uint256,uint128)(uint256,uint128)"
     itxn_field ApplicationArgs
-    dig 26
+    swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -1617,32 +1563,31 @@ main_ternary_merge@145:
     dup
     extract 4 32
     dup
-    cover 2
-    bury 22
+    uncover 2
     extract 36 16
     dup
     cover 2
-    bury 21
+    cover 3
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     dup
     cover 2
-    bury 8
+    bury 10
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     !=
     bnz main_bool_true@147
-    dig 19
-    dig 19
+    dup
+    dig 2
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 6
+    dig 8
     ==
     bz main_bool_false@148
 
@@ -1651,8 +1596,6 @@ main_bool_true@147:
 
 main_bool_merge@149:
     assert // signed arithmetic overflow
-    dig 19
-    dig 19
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -1682,7 +1625,6 @@ main_ternary_false@144:
 main_gpmix_route@13:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     pushint 16
     ==
@@ -1694,7 +1636,7 @@ main_gpmix_route@13:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 9
+    swap
     txn GroupIndex
     bz main_ternary_false@153
     txn GroupIndex
@@ -1709,7 +1651,7 @@ main_ternary_merge@154:
     pushint 16
     bzero
     dup
-    dig 27
+    uncover 2
     concat
     dup
     len
@@ -1723,7 +1665,7 @@ main_ternary_merge@154:
     <=
     assert // overflow
     b|
-    dig 9
+    swap
     itob
     intc_0 // 0
     bytec_1 // "c"
@@ -1776,14 +1718,13 @@ main_ternary_false@153:
 main_g128_route@12:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     pushint 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 2
     dup
-    bury 23
+    cover 2
     len
     pushint 16
     ==
@@ -1802,7 +1743,7 @@ main_ternary_merge@159:
     pushint 16
     bzero
     dup
-    dig 27
+    uncover 2
     concat
     dup
     len
@@ -1818,7 +1759,7 @@ main_ternary_merge@159:
     dig 1
     b|
     dig 1
-    dig 24
+    uncover 3
     concat
     dup
     len
@@ -1889,7 +1830,6 @@ main_gmixed_route@11:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 11
     txna ApplicationArgs 2
     dup
     len
@@ -1897,7 +1837,7 @@ main_gmixed_route@11:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 9
+    swap
     txn GroupIndex
     bz main_ternary_false@163
     txn GroupIndex
@@ -1909,9 +1849,8 @@ main_ternary_merge@164:
     !
     assert // not payable
     itxn_begin
-    dig 10
     itob
-    dig 9
+    swap
     itob
     intc_0 // 0
     bytec_1 // "c"
@@ -1939,7 +1878,7 @@ main_ternary_merge@164:
     extract 4 32
     uncover 2
     extract 36 8
-    bury 20
+    cover 2
     concat
     dup
     len
@@ -1955,30 +1894,29 @@ main_ternary_merge@164:
     bz main_ternary_false@166
     bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
     b+
-    bury 15
 
 main_ternary_merge@167:
-    dig 14
+    dup
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     dup
-    bury 7
-    dig 18
+    bury 9
+    dig 2
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     !=
     bnz main_bool_true@169
-    dig 14
-    dig 18
+    dup
+    dig 2
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 6
+    dig 8
     ==
     bz main_bool_false@170
 
@@ -1987,20 +1925,17 @@ main_bool_true@169:
 
 main_bool_merge@171:
     assert // signed arithmetic overflow
-    dig 14
-    dig 18
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bury 17
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     dup
     !
-    bury 3
+    bury 4
     bz main_bool_true@173
-    dig 15
+    dup
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2008,7 +1943,7 @@ main_bool_merge@171:
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 2
+    dig 3
     ==
     bz main_bool_false@174
 
@@ -2017,7 +1952,6 @@ main_bool_true@173:
 
 main_bool_merge@175:
     assert // signed arithmetic overflow
-    dig 15
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2046,7 +1980,6 @@ main_bool_false@170:
     b main_bool_merge@171
 
 main_ternary_false@166:
-    bury 15
     b main_ternary_merge@167
 
 main_ternary_false@163:
@@ -2061,7 +1994,6 @@ main_gpair_route@10:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 11
     txna ApplicationArgs 2
     dup
     len
@@ -2069,7 +2001,7 @@ main_gpair_route@10:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 9
+    swap
     txn GroupIndex
     bz main_ternary_false@179
     txn GroupIndex
@@ -2081,9 +2013,8 @@ main_ternary_merge@180:
     !
     assert // not payable
     itxn_begin
-    dig 10
     itob
-    dig 9
+    swap
     itob
     intc_0 // 0
     bytec_1 // "c"
@@ -2128,7 +2059,7 @@ main_ternary_merge@180:
     -
     pushint 8
     extract3
-    bury 14
+    bury 11
     bytec 6 // 0xffffffffffffffff
     b&
     dup
@@ -2137,15 +2068,14 @@ main_ternary_merge@180:
     bz main_ternary_false@182
     bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
     b+
-    bury 15
 
 main_ternary_merge@183:
-    dig 14
+    dup
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    bury 4
-    dig 12
+    bury 5
+    dig 10
     bytec 6 // 0xffffffffffffffff
     b&
     dup
@@ -2154,25 +2084,25 @@ main_ternary_merge@183:
     bz main_ternary_false@185
     bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
     b+
-    bury 14
+    swap
 
 main_ternary_merge@186:
-    dig 13
+    dig 1
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 4
+    dig 6
     !=
     bnz main_bool_true@188
-    dig 14
-    dig 14
+    dup
+    dig 2
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 4
+    dig 6
     ==
     bz main_bool_false@189
 
@@ -2181,20 +2111,17 @@ main_bool_true@188:
 
 main_bool_merge@190:
     assert // signed arithmetic overflow
-    dig 14
-    dig 14
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bury 17
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     dup
     !
-    bury 2
+    bury 3
     bz main_bool_true@192
-    dig 15
+    dup
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2202,7 +2129,7 @@ main_bool_merge@190:
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 1
+    dig 2
     ==
     bz main_bool_false@193
 
@@ -2211,7 +2138,6 @@ main_bool_true@192:
 
 main_bool_merge@194:
     assert // signed arithmetic overflow
-    dig 15
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2240,11 +2166,10 @@ main_bool_false@189:
     b main_bool_merge@190
 
 main_ternary_false@185:
-    bury 14
+    swap
     b main_ternary_merge@186
 
 main_ternary_false@182:
-    bury 15
     b main_ternary_merge@183
 
 main_ternary_false@179:
@@ -2254,7 +2179,6 @@ main_ternary_false@179:
 main_gu32_route@9:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -2285,7 +2209,6 @@ main_ternary_merge@199:
     itxn_field ApplicationID
     pushbytes 0xcdfa2f27 // method "u32(uint256)uint64"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -2321,7 +2244,6 @@ main_ternary_false@198:
 main_g64_route@8:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -2352,7 +2274,6 @@ main_ternary_merge@204:
     itxn_field ApplicationID
     pushbytes 0x275dfe0e // method "r64(uint256)uint256"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -2365,17 +2286,16 @@ main_ternary_merge@204:
     bz main_ternary_false@206
     bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
     b+
-    bury 15
 
 main_ternary_merge@207:
-    dig 14
+    dup
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     dup
     !
-    bury 9
+    bury 10
     bz main_bool_true@209
-    dig 14
+    dup
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2383,7 +2303,7 @@ main_ternary_merge@207:
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 8
+    dig 9
     ==
     bz main_bool_false@210
 
@@ -2392,7 +2312,6 @@ main_bool_true@209:
 
 main_bool_merge@211:
     assert // signed arithmetic overflow
-    dig 14
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2417,7 +2336,6 @@ main_bool_false@210:
     b main_bool_merge@211
 
 main_ternary_false@206:
-    bury 15
     b main_ternary_merge@207
 
 main_ternary_false@203:
@@ -2427,7 +2345,6 @@ main_ternary_false@203:
 main_g32_route@7:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -2458,7 +2375,6 @@ main_ternary_merge@216:
     itxn_field ApplicationID
     pushbytes 0xf9ab7717 // method "r32(uint256)uint256"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -2471,17 +2387,16 @@ main_ternary_merge@216:
     bz main_ternary_false@218
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
     b+
-    bury 15
 
 main_ternary_merge@219:
-    dig 14
+    dup
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     dup
     !
-    bury 9
+    bury 10
     bz main_bool_true@221
-    dig 14
+    dup
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2489,7 +2404,7 @@ main_ternary_merge@219:
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 8
+    dig 9
     ==
     bz main_bool_false@222
 
@@ -2498,7 +2413,6 @@ main_bool_true@221:
 
 main_bool_merge@223:
     assert // signed arithmetic overflow
-    dig 14
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2523,7 +2437,6 @@ main_bool_false@222:
     b main_bool_merge@223
 
 main_ternary_false@218:
-    bury 15
     b main_ternary_merge@219
 
 main_ternary_false@215:
@@ -2533,7 +2446,6 @@ main_ternary_false@215:
 main_g16_route@6:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -2564,7 +2476,6 @@ main_ternary_merge@228:
     itxn_field ApplicationID
     pushbytes 0xee73ab7d // method "r16(uint256)uint256"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -2577,17 +2488,16 @@ main_ternary_merge@228:
     bz main_ternary_false@230
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bury 15
 
 main_ternary_merge@231:
-    dig 14
+    dup
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     dup
     !
-    bury 9
+    bury 10
     bz main_bool_true@233
-    dig 14
+    dup
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2595,7 +2505,7 @@ main_ternary_merge@231:
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 8
+    dig 9
     ==
     bz main_bool_false@234
 
@@ -2604,7 +2514,6 @@ main_bool_true@233:
 
 main_bool_merge@235:
     assert // signed arithmetic overflow
-    dig 14
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2629,7 +2538,6 @@ main_bool_false@234:
     b main_bool_merge@235
 
 main_ternary_false@230:
-    bury 15
     b main_ternary_merge@231
 
 main_ternary_false@227:
@@ -2639,7 +2547,6 @@ main_ternary_false@227:
 main_g8_route@5:
     txna ApplicationArgs 1
     dup
-    bury 27
     len
     intc_1 // 32
     ==
@@ -2670,7 +2577,6 @@ main_ternary_merge@240:
     itxn_field ApplicationID
     pushbytes 0xb8a413f1 // method "r8(uint256)uint256"
     itxn_field ApplicationArgs
-    dig 25
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -2683,17 +2589,16 @@ main_ternary_merge@240:
     bz main_ternary_false@242
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bury 15
 
 main_ternary_merge@243:
-    dig 14
+    dup
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     dup
     !
-    bury 9
+    bury 10
     bz main_bool_true@245
-    dig 14
+    dup
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2701,7 +2606,7 @@ main_ternary_merge@243:
     bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
-    dig 8
+    dig 9
     ==
     bz main_bool_false@246
 
@@ -2710,7 +2615,6 @@ main_bool_true@245:
 
 main_bool_merge@247:
     assert // signed arithmetic overflow
-    dig 14
     bytec 5 // 0x03e8
     b+
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2735,7 +2639,6 @@ main_bool_false@246:
     b main_bool_merge@247
 
 main_ternary_false@242:
-    bury 15
     b main_ternary_merge@243
 
 main_ternary_false@239:

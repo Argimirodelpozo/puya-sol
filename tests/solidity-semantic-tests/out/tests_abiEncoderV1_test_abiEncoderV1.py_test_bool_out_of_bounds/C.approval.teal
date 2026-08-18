@@ -3,8 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/bool_out_of_bounds.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    intc_1 // 0
+    intcblock 1
     pushint 4096
     bzero
     dup
@@ -41,7 +40,6 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 1
     ==
@@ -57,12 +55,12 @@ main_ternary_merge@9:
     !
     assert // not payable
     pushbytes 0x151f7c75
-    dig 1
+    swap
     concat
     log
     intc_0 // 1
     return
 
 main_ternary_false@8:
-    intc_1 // 0
+    pushint 0
     b main_ternary_merge@9

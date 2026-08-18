@@ -5,8 +5,6 @@
 main:
     intcblock 0 1 32
     bytecblock 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x00 0x151f7c75
-    intc_0 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -43,7 +41,6 @@ main_after_if_else@2:
 main_rtSmall_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     pushint 18
     ==
@@ -88,7 +85,7 @@ main_ternary_merge@19:
     intc_2 // 32
     bzero
     b|
-    dig 1
+    swap
     dup
     pushint 16
     getbyte
@@ -133,7 +130,6 @@ main_ternary_false@12:
 main_rt_route@5:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     pushint 81
     ==
@@ -148,10 +144,9 @@ main_rt_route@5:
 main_ternary_merge@24:
     !
     assert // not payable
-    dig 1
-    dup
+    dupn 2
     extract 0 32
-    bury 4
+    cover 2
     extract 32 16
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
@@ -181,7 +176,7 @@ main_ternary_merge@30:
     intc_2 // 32
     bzero
     b|
-    dig 2
+    swap
     dup
     extract 48 32
     swap
@@ -193,7 +188,7 @@ main_ternary_merge@30:
     setbit
     intc_0 // 0
     getbit
-    dig 5
+    uncover 3
     uncover 3
     concat
     uncover 2

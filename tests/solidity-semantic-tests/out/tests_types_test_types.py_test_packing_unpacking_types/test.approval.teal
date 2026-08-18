@@ -4,10 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/contracts/packing_unpacking_types.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 0 4294967295 8
-    bytecblock 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_1 // 0
-    bytec_0 // ""
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -50,7 +48,6 @@ main_run_route@4:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 3
     txna ApplicationArgs 2
     dup
     len
@@ -58,7 +55,6 @@ main_run_route@4:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 2
     txna ApplicationArgs 3
     dup
     len
@@ -66,7 +62,7 @@ main_run_route@4:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
+    swap
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -77,36 +73,34 @@ main_run_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dig 1
     dup
     intc_2 // 4294967295
     <=
     assert // ABI validation
     intc_2 // 4294967295
     &
-    bury 2
-    dig 2
+    uncover 2
     dup
     intc_0 // 1
     <=
     assert // ABI bool validation
-    bytec_0 // 0x
-    bury 5
+    pushbytes 0x
+    bury 4
     bz main_after_if_else@11
     intc_0 // 1
     itob
-    bury 4
+    bury 3
 
 main_after_if_else@11:
     pushint 4294967296
     itob
-    dig 4
+    dig 3
     b*
     dup
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 2
+    swap
     intc_2 // 4294967295
     ^
     itob
@@ -114,10 +108,10 @@ main_after_if_else@11:
     pushbytes 0x010000000000000000
     b*
     dup
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 1
+    swap
     pushint 18446744073709551615
     ^
     itob

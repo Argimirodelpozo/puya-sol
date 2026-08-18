@@ -5,10 +5,6 @@
 main:
     intcblock 32 1 4 0
     bytecblock 0x151f7c75
-    intc_3 // 0
-    dupn 5
-    pushbytes ""
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -45,7 +41,6 @@ main_after_if_else@2:
 main_partCopy_route@7:
     txna ApplicationArgs 1
     dup
-    bury 10
     len
     intc_0 // 32
     ==
@@ -70,29 +65,27 @@ main_ternary_merge@17:
     intc_0 // 32
     bzero
     dup
-    bury 6
-    dig 10
+    uncover 3
     b|
+    uncover 2
+    swap
     concat
     pushint 8
     bzero
     dig 1
     swap
     concat
-    bury 7
+    swap
     pushint 28
-    bury 4
+    swap
     len
     dup
-    bury 3
     pushint 28
     >
     bz main_ternary_false@19
-    dig 2
+    pop
 
 main_ternary_merge@20:
-    dig 6
-    swap
     pushint 8
     extract3
     load 0
@@ -104,8 +97,6 @@ main_ternary_merge@20:
     pushint 256
     intc_0 // 32
     extract3
-    dig 4
-    swap
     concat
     dup
     len
@@ -124,7 +115,7 @@ main_ternary_merge@20:
     return
 
 main_ternary_false@19:
-    dig 1
+    bury 1
     b main_ternary_merge@20
 
 main_ternary_false@16:
@@ -139,14 +130,13 @@ main_ternary_false@13:
 main_toHigh_route@6:
     txna ApplicationArgs 1
     dup
-    bury 10
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 9
+    cover 2
     len
     intc_0 // 32
     ==
@@ -171,34 +161,30 @@ main_ternary_merge@28:
     intc_0 // 32
     bzero
     dup
-    bury 9
-    dig 10
+    uncover 3
     dig 1
     b|
-    uncover 2
+    uncover 3
     swap
     concat
-    dig 9
+    uncover 3
     dig 2
     b|
     concat
     dup
     uncover 2
     concat
-    bury 6
+    swap
     pushint 36
-    bury 4
+    swap
     len
     dup
-    bury 2
     pushint 36
     >
     bz main_ternary_false@30
-    dig 2
+    pop
 
 main_ternary_merge@31:
-    dig 5
-    swap
     intc_0 // 32
     extract3
     load 1
@@ -210,8 +196,6 @@ main_ternary_merge@31:
     pushint 2048
     intc_0 // 32
     extract3
-    dig 7
-    swap
     concat
     dup
     len
@@ -230,7 +214,7 @@ main_ternary_merge@31:
     return
 
 main_ternary_false@30:
-    dup
+    bury 1
     b main_ternary_merge@31
 
 main_ternary_false@27:
@@ -245,14 +229,13 @@ main_ternary_false@24:
 main_toLow_route@5:
     txna ApplicationArgs 1
     dup
-    bury 10
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 9
+    cover 2
     len
     intc_0 // 32
     ==
@@ -277,34 +260,30 @@ main_ternary_merge@39:
     intc_0 // 32
     bzero
     dup
-    bury 9
-    dig 10
+    uncover 3
     dig 1
     b|
-    uncover 2
+    uncover 3
     swap
     concat
-    dig 9
+    uncover 3
     dig 2
     b|
     concat
     dup
     uncover 2
     concat
-    bury 6
+    swap
     intc_2 // 4
-    bury 4
+    swap
     len
     dup
-    bury 2
     intc_2 // 4
     >
     bz main_ternary_false@41
-    dig 2
+    pop
 
 main_ternary_merge@42:
-    dig 5
-    swap
     intc_0 // 32
     extract3
     load 0
@@ -316,8 +295,6 @@ main_ternary_merge@42:
     pushint 512
     intc_0 // 32
     extract3
-    dig 7
-    swap
     concat
     dup
     len
@@ -336,7 +313,7 @@ main_ternary_merge@42:
     return
 
 main_ternary_false@41:
-    dup
+    bury 1
     b main_ternary_merge@42
 
 main_ternary_false@38:

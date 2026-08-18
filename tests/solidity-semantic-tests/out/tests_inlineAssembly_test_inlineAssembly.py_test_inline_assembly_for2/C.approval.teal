@@ -6,7 +6,6 @@ main:
     intcblock 32 0 1
     bytecblock "st" 0x010000000000000000000000000000000000000000000000000000000000000000 0x
     intc_1 // 0
-    dupn 4
     pushint 4096
     bzero
     dup
@@ -46,7 +45,6 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 6
     len
     intc_0 // 32
     ==
@@ -62,9 +60,8 @@ main_ternary_merge@9:
     !
     assert // not payable
     bytec_2 // 0x
-    bury 4
+    bury 2
     bytec_2 // 0x
-    bury 3
     intc_1 // 0
     itob
     bytec_0 // "st"
@@ -72,14 +69,12 @@ main_ternary_merge@9:
     app_global_put
     load 0
     store 0
-    dig 4
-    bury 2
+    swap
 
 main_while_top@10:
     intc_0 // 32
     bzero
     dup
-    bury 2
     bytec_0 // "st"
     app_global_get
     concat
@@ -100,13 +95,14 @@ main_while_top@10:
     pushbytes 0x01
     b==
     bnz main_after_if_else@12
+    bury 1
     load 0
     store 0
     intc_1 // 0
     bytec_0 // "st"
     app_global_get_ex
     assert // check st exists
-    dig 4
+    dig 3
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
@@ -114,7 +110,7 @@ main_while_top@10:
     intc_0 // 32
     <=
     assert // overflow
-    dig 2
+    uncover 2
     dup
     cover 2
     b|
@@ -128,7 +124,7 @@ main_while_top@10:
     assert // overflow
     dig 2
     b|
-    dig 5
+    uncover 3
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
@@ -150,16 +146,16 @@ main_while_top@10:
     return
 
 main_after_if_else@12:
+    pop
     bytec_2 // 0x
-    dig 3
+    uncover 2
     pushbytes 0x03
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 4
-    dig 2
-    bury 5
-    bury 2
+    cover 2
+    swap
+    bury 3
     b main_while_top@10
 
 main_ternary_false@8:

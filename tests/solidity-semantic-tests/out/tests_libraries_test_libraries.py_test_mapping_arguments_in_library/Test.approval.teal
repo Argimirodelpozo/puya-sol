@@ -5,8 +5,6 @@
 main:
     intcblock 32 1 0
     bytecblock "m" "__ctor_pending" 0x151f7c75
-    intc_2 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -46,7 +44,6 @@ main_after_if_else@2:
 main_get_route@7:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -62,7 +59,7 @@ main_ternary_merge@14:
     !
     assert // not payable
     bytec_0 // "m"
-    dig 2
+    swap
     callsub Lib.get
     dup
     len
@@ -86,14 +83,13 @@ main_ternary_false@13:
 main_set_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 2
+    cover 2
     len
     intc_0 // 32
     ==
@@ -109,13 +105,11 @@ main_ternary_merge@19:
     !
     assert // not payable
     bytec_0 // "m"
-    dig 2
-    dup
-    cover 2
+    dig 1
     callsub Lib.get
     bytec_0 // "m"
     uncover 2
-    dig 3
+    uncover 3
     callsub Lib.set
     dup
     len

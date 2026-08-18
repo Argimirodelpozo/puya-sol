@@ -4,8 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/contracts/inherited.sol.A.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "data" 0x
-    bytec_1 // ""
+    bytecblock "data"
     pushint 4096
     bzero
     dup
@@ -26,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data"
-    bytec_1 // 0x
+    pushbytes 0x
     app_global_put
     intc_0 // 1
     return
@@ -39,29 +38,27 @@ main_after_if_else@2:
     return
 
 main_after_if_else@4:
-    intc_1 // 0
-    bury 1
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_switch_case_next@9
+    bz main_after_if_else@11
     pushbytess 0xc599eb05 0xe1e64a74 // method "__receive()void", method "getData()uint256"
     txna ApplicationArgs 0
     match main___receive_route@7 main_getData_route@8
 
-main_switch_case_next@9:
-    return
+main_after_if_else@11:
+    err
 
 main_getData_route@8:
     txn GroupIndex
-    bz main_ternary_false@14
+    bz main_ternary_false@15
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@15:
+main_ternary_merge@16:
     !
     assert // not payable
     intc_1 // 0
@@ -81,18 +78,16 @@ main_ternary_merge@15:
     concat
     log
     intc_0 // 1
-    bury 1
-    b main_switch_case_next@9
+    return
 
-main_ternary_false@14:
+main_ternary_false@15:
     intc_1 // 0
-    b main_ternary_merge@15
+    b main_ternary_merge@16
 
 main___receive_route@7:
     callsub __receive
     intc_0 // 1
-    bury 1
-    b main_switch_case_next@9
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/receive/contracts/inherited.sol.A.__receive() -> void:

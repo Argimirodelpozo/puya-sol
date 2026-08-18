@@ -4,9 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/contracts/calldata_array_invalid_length.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 2 1 32
-    intc_0 // 0
-    pushbytes ""
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -46,33 +43,30 @@ main_f_route@4:
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 5
+    cover 2
     intc_1 // 2
     *
-    bury 3
+    swap
     dup
     len
-    bury 2
+    cover 2
     extract 2 0
-    bury 5
     intc_0 // 0
-    bury 4
 
 main_for_header@7:
-    dig 3
-    dig 3
+    dup
+    dig 5
     <
     bz main_after_for@9
-    dig 3
     dup
     intc_1 // 2
     *
-    dig 6
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 5
     dup
     cover 4
     ==
@@ -87,17 +81,17 @@ main_for_header@7:
     intc_1 // 2
     +
     +
-    bury 3
+    cover 2
     intc_2 // 1
     +
-    bury 4
     b main_for_header@7
 
 main_after_for@9:
-    dig 1
+    pop
+    swap
     intc_1 // 2
     +
-    dig 1
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
     txn GroupIndex
@@ -110,9 +104,8 @@ main_after_for@9:
 main_ternary_merge@12:
     !
     assert // not payable
-    dig 2
+    swap
     assert // array index out of bounds
-    dig 4
     dup
     intc_0 // 0
     extract_uint16

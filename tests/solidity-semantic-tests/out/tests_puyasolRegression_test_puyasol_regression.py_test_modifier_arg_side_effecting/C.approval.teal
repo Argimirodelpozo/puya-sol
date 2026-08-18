@@ -5,10 +5,6 @@
 main:
     intcblock 8 1 0 32 9223372036854775808 18446744073709551615
     bytecblock 0x010000000000000000 0x8000000000000000 "s" 0xffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000 0x151f7c75
-    intc_2 // 0
-    dupn 3
-    pushbytes ""
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -87,7 +83,6 @@ main_stackedNamed_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
     txna ApplicationArgs 2
     dup
     len
@@ -95,7 +90,7 @@ main_stackedNamed_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 2
+    swap
     txn GroupIndex
     bz main_ternary_false@18
     txn GroupIndex
@@ -106,13 +101,13 @@ main_stackedNamed_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
-    dig 2
+    dup
     intc 4 // 9223372036854775808
     ^
     intc 4 // 9223372036854775808
     >=
     bz main_else_body@27
-    dig 2
+    dup
 
 main_after_if_else@28:
     itob
@@ -130,48 +125,45 @@ main_ternary_merge@31:
     itob
     b<
     assert
+    swap
+    itob
+    bytec_0 // 0x010000000000000000
+    b%
+    dup
+    pushbytes 0x
+    b==
+    bnz main_bool_true@48
     dig 1
     itob
     bytec_0 // 0x010000000000000000
     b%
     dup
-    bury 6
-    pushbytes 0x
-    b==
-    bnz main_bool_true@48
-    dig 2
-    itob
-    bytec_0 // 0x010000000000000000
-    b%
-    dup
-    bury 5
     bytec_1 // 0x8000000000000000
     b<
     dup
     !
-    dig 6
+    dig 3
     bytec_1 // 0x8000000000000000
     b<
     dup
-    bury 4
+    cover 2
     !
     ==
     bz main_ternary_false@40
+    swap
     bnz main_ternary_false@35
     bytec_0 // 0x010000000000000000
-    dig 4
+    uncover 2
     b-
-    bury 7
 
 main_ternary_merge@36:
-    dup
+    swap
     bnz main_ternary_false@38
     bytec_0 // 0x010000000000000000
-    dig 5
+    dig 2
     b-
 
 main_ternary_merge@39:
-    dig 7
     b*
     bytec_1 // 0x8000000000000000
     b<
@@ -186,11 +178,11 @@ main_bool_merge@50:
     assert // signed arithmetic overflow
     intc_0 // 8
     bzero
-    dig 3
+    uncover 2
     itob
     bytec_0 // 0x010000000000000000
     b%
-    dig 6
+    uncover 2
     b*
     bytec_0 // 0x010000000000000000
     b%
@@ -247,30 +239,28 @@ main_bool_false@49:
     b main_bool_merge@50
 
 main_ternary_false@38:
-    dig 4
+    dig 1
     b main_ternary_merge@39
 
 main_ternary_false@35:
-    dig 3
-    bury 7
+    swap
     b main_ternary_merge@36
 
 main_ternary_false@40:
+    swap
     bnz main_ternary_false@42
     bytec_0 // 0x010000000000000000
-    dig 4
+    uncover 2
     b-
-    bury 6
 
 main_ternary_merge@43:
-    dup
+    swap
     bnz main_ternary_false@45
     bytec_0 // 0x010000000000000000
-    dig 5
+    dig 2
     b-
 
 main_ternary_merge@46:
-    dig 6
     b*
     bytec_1 // 0x8000000000000000
     b>
@@ -278,20 +268,18 @@ main_ternary_merge@46:
     b main_ternary_merge@47
 
 main_ternary_false@45:
-    dig 4
+    dig 1
     b main_ternary_merge@46
 
 main_ternary_false@42:
-    dig 3
-    bury 6
+    swap
     b main_ternary_merge@43
 
 main_ternary_false@30:
     b main_ternary_merge@31
 
 main_else_body@27:
-    dig 2
-    dup
+    dupn 2
     intc 5 // 18446744073709551615
     &
     itob
@@ -327,7 +315,6 @@ main_absGate_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
     txn GroupIndex
     bz main_ternary_false@23
     txn GroupIndex
@@ -338,13 +325,13 @@ main_absGate_route@5:
 main_ternary_merge@24:
     !
     assert // not payable
-    dig 2
+    dup
     intc 4 // 9223372036854775808
     ^
     intc 4 // 9223372036854775808
     >
     bz main_else_body@57
-    dig 2
+    dup
 
 main_after_if_else@58:
     itob
@@ -362,7 +349,6 @@ main_ternary_merge@61:
     itob
     b<
     assert
-    dig 2
     itob
     bytec_3 // 0xffffffffffffffff
     b&
@@ -396,8 +382,7 @@ main_ternary_false@60:
     b main_ternary_merge@61
 
 main_else_body@57:
-    dig 2
-    dup
+    dupn 2
     intc 5 // 18446744073709551615
     &
     itob

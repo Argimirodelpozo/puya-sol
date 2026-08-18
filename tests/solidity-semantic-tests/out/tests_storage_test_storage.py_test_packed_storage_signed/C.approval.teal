@@ -5,8 +5,6 @@
 main:
     intcblock 0 8 1 32
     bytecblock "a" 0x0100 "b" "c" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
-    intc_0 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -119,7 +117,6 @@ main_ternary_merge@9:
     bz main_ternary_false@13
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
-    bury 2
 
 main_ternary_merge@14:
     intc_0 // 0
@@ -127,7 +124,7 @@ main_ternary_merge@14:
     app_global_get_ex
     assert // check b exists
     itob
-    bury 1
+    swap
     intc_0 // 0
     bytec_3 // "c"
     app_global_get_ex
@@ -148,7 +145,7 @@ main_ternary_merge@17:
     app_global_get_ex
     assert // check d exists
     itob
-    dig 3
+    uncover 2
     dup
     len
     intc_3 // 32
@@ -159,7 +156,7 @@ main_ternary_merge@17:
     swap
     dig 1
     b|
-    dig 4
+    uncover 4
     dig 2
     b|
     uncover 4
@@ -191,7 +188,6 @@ main_ternary_false@16:
     b main_ternary_merge@17
 
 main_ternary_false@13:
-    bury 2
     b main_ternary_merge@14
 
 main_ternary_false@8:

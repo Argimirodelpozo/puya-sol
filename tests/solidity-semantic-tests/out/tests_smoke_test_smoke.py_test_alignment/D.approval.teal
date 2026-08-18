@@ -5,9 +5,6 @@
 main:
     intcblock 0 1 32 6
     bytecblock 0x151f7c75 "stateBool" "stateDecimal" "stateBytes" 0x174df305 TMPL_APPROVAL_C TMPL_CLEAR_C
-    intc_0 // 0
-    dup
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -153,17 +150,14 @@ main_update_route@6:
     assert // invalid number of bytes for arc4.bool
     intc_0 // 0
     getbit
-    bury 1
     txna ApplicationArgs 2
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -178,7 +172,8 @@ main_update_route@6:
 main_ternary_merge@31:
     !
     assert // not payable
-    dupn 2
+    uncover 2
+    dup
     intc_1 // 1
     <=
     assert // ABI bool validation
@@ -186,12 +181,10 @@ main_ternary_merge@31:
     swap
     app_global_put
     bytec_2 // "stateDecimal"
-    dig 3
+    uncover 2
     app_global_put
     bytec_3 // "stateBytes"
-    dig 2
-    dup
-    cover 2
+    dig 1
     app_global_put
     intc_0 // 0
     bytec_1 // "stateBool"

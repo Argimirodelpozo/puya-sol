@@ -5,8 +5,6 @@
 main:
     intcblock 0 1 32
     bytecblock "x" 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
-    intc_0 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -143,7 +141,6 @@ main_ternary_false@19:
 main_shouldFail_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -173,16 +170,13 @@ main_ternary_merge@25:
     app_global_put
     intc_0 // 0
     itob
-    dig 2
     b==
     dup
-    bury 2
     bnz main_after_if_else@51
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000d61206973206e6f74207a65726f00000000000000000000000000000000000000
     log
 
 main_after_if_else@51:
-    dup
     assert // a is not zero
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000d62206973206e6f74207a65726f00000000000000000000000000000000000000
     log

@@ -5,7 +5,6 @@
 main:
     intcblock 1 32 0 3
     bytecblock 0x151f7c75 0x2b9082ff 0x1928cd24
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -50,7 +49,6 @@ main_g_route@7:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
@@ -61,7 +59,7 @@ main_g_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation

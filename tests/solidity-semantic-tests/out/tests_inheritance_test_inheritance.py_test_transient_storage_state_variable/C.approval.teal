@@ -5,10 +5,8 @@
 main:
     intcblock 0 1 16777215 8 16777216 8388608 18446744073692774400
     bytecblock 0x01000000 0x800000 "y" "w" 0xffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
-    intc_0 // 0
-    dupn 4
     pushbytes ""
-    dupn 3
+    dup
     pushint 4096
     bzero
     dup
@@ -88,14 +86,13 @@ main_ternary_merge@9:
     bytec_0 // 0x01000000
     b%
     dup
-    bury 8
     bytec_1 // 0x800000
     b<
     dup
     !
-    bury 3
+    bury 4
     bz main_bool_true@11
-    dig 6
+    dup
     pushbytes 0x02
     b+
     bytec_0 // 0x01000000
@@ -103,7 +100,7 @@ main_ternary_merge@9:
     bytec_1 // 0x800000
     b<
     !
-    dig 2
+    dig 3
     ==
     bz main_bool_false@12
 
@@ -115,8 +112,7 @@ main_bool_merge@13:
     intc_3 // 8
     bzero
     dup
-    bury 7
-    dig 7
+    uncover 2
     pushbytes 0x02
     b+
     bytec_0 // 0x01000000
@@ -160,14 +156,13 @@ main_ternary_merge@16:
     bytec_0 // 0x01000000
     b%
     dup
-    bury 6
     bytec_1 // 0x800000
     b<
     dup
     !
-    bury 2
+    bury 4
     bz main_bool_true@18
-    dig 4
+    dup
     pushbytes 0x04
     b+
     bytec_0 // 0x01000000
@@ -175,7 +170,7 @@ main_ternary_merge@16:
     bytec_1 // 0x800000
     b<
     !
-    dig 1
+    dig 3
     ==
     bz main_bool_false@19
 
@@ -184,13 +179,10 @@ main_bool_true@18:
 
 main_bool_merge@20:
     assert // signed arithmetic overflow
-    dig 4
     pushbytes 0x04
     b+
     bytec_0 // 0x01000000
     b%
-    dig 6
-    swap
     concat
     dup
     len
@@ -208,7 +200,6 @@ main_bool_merge@20:
     btoi
     intc_2 // 16777215
     &
-    bury 4
     intc_0 // 0
     bytec_2 // "y"
     app_global_get_ex
@@ -232,16 +223,16 @@ main_ternary_merge@23:
     pushint 32
     bzero
     dup
-    bury 10
+    cover 3
     b|
-    bury 9
+    cover 2
     intc_0 // 0
     bytec_3 // "w"
     app_global_get_ex
     assert // check w exists
     intc_2 // 16777215
     &
-    bury 3
+    cover 2
     load 5
     extract 26 3
     btoi
@@ -271,13 +262,13 @@ main_ternary_merge@29:
     pushint 32
     <=
     assert // overflow
-    dig 8
+    uncover 2
     b|
-    dig 4
+    swap
     itob
-    dig 10
+    uncover 3
     concat
-    dig 4
+    uncover 2
     itob
     concat
     swap

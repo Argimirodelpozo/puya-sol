@@ -1,12 +1,10 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_4h9vlc4_/C.sol.C.approval_program() -> uint64:
+// /tmp/multisource_3xry31cg/C.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 32 1
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    intc_2 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -43,14 +41,12 @@ main_test_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -65,7 +61,7 @@ main_test_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dig 1
+    swap
     callsub g
     dup
     len
@@ -77,7 +73,7 @@ main_ternary_merge@9:
     swap
     dig 1
     b|
-    dig 2
+    uncover 2
     callsub f
     dup
     len
@@ -95,7 +91,7 @@ main_ternary_merge@9:
     return
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9
 
 

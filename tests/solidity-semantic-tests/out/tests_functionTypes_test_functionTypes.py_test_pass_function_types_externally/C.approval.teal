@@ -5,7 +5,6 @@
 main:
     intcblock 32 1 0
     bytecblock 0xc14ad39f 0x151f7c75 0x82e26298
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -81,7 +80,6 @@ main_eval_route@7:
 main_f2_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -100,7 +98,7 @@ main_ternary_merge@19:
     itob
     bytec_0 // method "g(uint256)uint256"
     concat
-    dig 1
+    swap
     callsub eval
     pop
     dup
@@ -125,7 +123,6 @@ main_ternary_false@18:
 main_f_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -144,7 +141,7 @@ main_ternary_merge@24:
     itob
     bytec_0 // method "g(uint256)uint256"
     concat
-    dig 1
+    swap
     callsub eval
     pop
     dup
@@ -170,7 +167,6 @@ main_ternary_false@23:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/pass_function_types_externally.sol.C.eval(__arc4_x: bytes, __arc4_a: bytes) -> bytes, bytes:
 eval:
     proto 2 2
-    pushbytes ""
     txn NumAppArgs
     bz eval_after_if_else@6
     txna ApplicationArgs 0
@@ -193,10 +189,10 @@ eval_after_if_else@6:
     intc_2 // 0
     extract_uint64
     dup
-    frame_bury 0
     global CurrentApplicationID
     ==
     bz eval_else_body@8
+    pop
     frame_dig -2
     extract 8 4
     bytec_0 // method "g(uint256)uint256"
@@ -215,7 +211,6 @@ eval_after_if_else@10:
     bzero
     b|
     frame_dig -2
-    uncover 2
     retsub
 
 eval_else_body@8:
@@ -228,9 +223,8 @@ eval_else_body@8:
     itxn_field OnCompletion
     intc_2 // 0
     itxn_field Fee
-    frame_dig 0
-    itxn_field ApplicationID
     itxn_field ApplicationArgs
+    itxn_field ApplicationID
     frame_dig -1
     itxn_field ApplicationArgs
     itxn_submit

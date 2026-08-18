@@ -5,8 +5,6 @@
 main:
     intcblock 1 0 32
     bytecblock "lastRole" "members" "__ctor_pending" 0x151f7c75
-    intc_1 // 0
-    dupn 4
     pushint 4096
     bzero
     dup
@@ -72,14 +70,12 @@ main_ternary_false@20:
 main_members_route@13:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 4
     len
     intc_2 // 32
     ==
@@ -94,12 +90,10 @@ main_members_route@13:
 main_ternary_merge@26:
     !
     assert // not payable
-    dig 3
+    swap
     bytec_1 // "members"
     concat
     sha256
-    dig 3
-    swap
     concat
     sha256
     box_get
@@ -167,14 +161,12 @@ main_ternary_false@35:
 main_isMember_route@10:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 6
     len
     intc_2 // 32
     ==
@@ -189,12 +181,10 @@ main_isMember_route@10:
 main_ternary_merge@41:
     !
     assert // not payable
-    dup
+    swap
     bytec_1 // "members"
     concat
     sha256
-    dig 5
-    swap
     concat
     sha256
     box_get
@@ -222,7 +212,6 @@ main_ternary_false@40:
 main_anyRole_route@9:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -238,7 +227,7 @@ main_ternary_merge@46:
     !
     assert // not payable
     bytec_0 // "lastRole"
-    dig 2
+    swap
     app_global_put
     pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000b
     log
@@ -298,14 +287,12 @@ main_ternary_false@55:
 main_grant_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 6
     len
     intc_2 // 32
     ==
@@ -320,12 +307,10 @@ main_grant_route@6:
 main_ternary_merge@61:
     !
     assert // not payable
-    dup
+    swap
     bytec_1 // "members"
     concat
     sha256
-    dig 5
-    swap
     concat
     sha256
     intc_0 // 1

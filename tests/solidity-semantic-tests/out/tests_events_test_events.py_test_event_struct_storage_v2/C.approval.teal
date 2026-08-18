@@ -3,8 +3,6 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_struct_storage_v2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -26,7 +24,7 @@ main:
     bnz main_after_if_else@2
     pushbytess "s" 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    intc_0 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -43,7 +41,6 @@ main_createEvent_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     pushint 32
     ==
@@ -51,7 +48,7 @@ main_createEvent_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    intc_0 // 1
+    pushint 1
     -
     gtxns Amount
 
@@ -60,16 +57,14 @@ main_ternary_merge@9:
     assert // not payable
     pushbytes "s"
     dig 1
-    dup
-    cover 2
     app_global_put
     pushbytes 0xdc195c34 // method "E((uint256))"
     swap
     concat
     log
-    intc_0 // 1
+    pushint 1
     return
 
 main_ternary_false@8:
-    intc_1 // 0
+    pushint 0
     b main_ternary_merge@9

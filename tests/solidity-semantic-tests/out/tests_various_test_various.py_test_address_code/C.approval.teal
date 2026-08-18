@@ -5,7 +5,6 @@
 main:
     intcblock 1 0
     bytecblock "initCode" "__ctor_pending" 0x151f7c75 0x
-    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -119,10 +118,7 @@ main_ternary_merge@31:
     assert // not payable
     global CurrentApplicationID
     app_params_get AppApprovalProgram
-    swap
-    bury 2
     bz main_ternary_false@33
-    dup
 
 main_ternary_merge@34:
     len
@@ -142,6 +138,7 @@ main_ternary_merge@34:
     return
 
 main_ternary_false@33:
+    pop
     bytec_3 // 0x
     b main_ternary_merge@34
 

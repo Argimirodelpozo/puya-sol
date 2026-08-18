@@ -3,7 +3,6 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/send_zero_ether.sol.Receiver.approval_program() -> uint64:
 main:
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -31,12 +30,10 @@ main_if_body@1:
 main_after_if_else@2:
     txn NumAppArgs
     bz main_if_body@1
-    pushint 0
-    bury 1
     pushbytes 0xc599eb05 // method "__receive()void"
     txna ApplicationArgs 0
     match main___receive_route@6
-    return
+    err
 
 main___receive_route@6:
     txn OnCompletion

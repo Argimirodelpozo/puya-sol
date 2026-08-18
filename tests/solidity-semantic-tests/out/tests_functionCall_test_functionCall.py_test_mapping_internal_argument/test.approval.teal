@@ -5,8 +5,6 @@
 main:
     intcblock 255 1 0 8
     bytecblock "__ctor_pending" "a" "b" 0x151f7c75
-    pushbytes ""
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -51,7 +49,6 @@ main_get_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
@@ -62,7 +59,6 @@ main_get_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
-    dig 2
     dup
     intc_0 // 255
     <=
@@ -120,7 +116,6 @@ main_set_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
     txna ApplicationArgs 2
     dup
     len
@@ -128,7 +123,7 @@ main_set_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 2
+    swap
     txna ApplicationArgs 3
     dup
     len
@@ -136,7 +131,7 @@ main_set_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
+    swap
     txn GroupIndex
     bz main_ternary_false@18
     txn GroupIndex
@@ -147,21 +142,20 @@ main_set_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
-    dig 2
     dup
     intc_0 // 255
     <=
     assert // ABI validation
     intc_0 // 255
     &
-    dig 2
+    uncover 2
     dup
     intc_0 // 255
     <=
     assert // ABI validation
     intc_0 // 255
     &
-    dig 2
+    uncover 2
     dup
     intc_0 // 255
     <=

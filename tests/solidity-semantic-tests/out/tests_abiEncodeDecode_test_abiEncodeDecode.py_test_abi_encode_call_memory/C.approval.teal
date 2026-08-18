@@ -6,9 +6,8 @@ main:
     intcblock 1 0 24 16
     bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x40e33532 TMPL_APPROVAL_D TMPL_CLEAR_D
     intc_1 // 0
-    dupn 3
+    dup
     pushbytes ""
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -112,62 +111,57 @@ main_ternary_merge@13:
     extract 0 12 // on error: index access is out of bounds
     extract 8 4
     dup
-    bury 10
+    bury 5
     swap
     extract 8 4
-    bury 8
+    swap
     len
     itob
     pushint 4
     itob
     dup
-    bury 8
+    bury 5
     b==
     bz main_bool_false@17
-    dig 6
+    dup
     len
     itob
-    dig 6
+    dig 3
     b==
     dup
-    bury 2
+    bury 3
     bz main_bool_false@17
-    dup
+    dig 1
     bz main_bool_false@17
     intc_0 // 1
-    bury 4
 
 main_bool_merge@18:
-    dig 3
+    dup
     bnz main_after_if_else@20
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@20:
-    dig 3
     assert
     pushint 4
     bzero
-    dig 8
+    dig 4
     dig 1
     concat
     extract 0 4
     dup
-    cover 2
-    bury 7
-    dig 8
+    uncover 2
+    dig 3
     swap
     concat
     extract 0 4
     ==
     dup
-    bury 4
     bnz main_after_if_else@22
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@22:
-    dig 2
     dup
     assert
     bnz main_after_if_else@24
@@ -175,20 +169,18 @@ main_after_if_else@22:
     log
 
 main_after_if_else@24:
-    dig 4
-    dig 7
+    dup
+    uncover 2
     ==
     dup
-    bury 3
     bnz main_after_if_else@26
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@26:
-    dig 1
     assert
     pushbytes 0x151f7c75
-    dig 5
+    swap
     concat
     log
     intc_0 // 1
@@ -196,7 +188,6 @@ main_after_if_else@26:
 
 main_bool_false@17:
     intc_1 // 0
-    bury 4
     b main_bool_merge@18
 
 main_ternary_false@12:

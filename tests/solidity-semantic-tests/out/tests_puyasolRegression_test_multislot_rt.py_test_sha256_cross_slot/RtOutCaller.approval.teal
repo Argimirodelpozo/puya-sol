@@ -3,13 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_multislot_rt_copies.sol.RtOutCaller.approval_program() -> uint64:
 main:
-    intcblock 32 0 4096 1 20480
+    intcblock 32 4096 0 1 20480
     bytecblock 0x151f7c75 TMPL_APPROVAL_RtOutCallee TMPL_CLEAR_RtOutCallee
-    intc_1 // 0
-    dupn 4
-    pushbytes ""
-    dupn 2
-    intc_2 // 4096
+    intc_1 // 4096
     bzero
     dup
     store 5
@@ -45,14 +41,12 @@ main_h_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 8
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 9
     len
     intc_0 // 32
     ==
@@ -76,7 +70,7 @@ main_ternary_merge@9:
     itxn_field GlobalNumUint
     pushint 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -91,7 +85,7 @@ main_ternary_merge@9:
     intc_3 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
     pushint 4000000
     itxn_field Amount
@@ -108,13 +102,13 @@ main_ternary_merge@9:
     bzero
     dup
     cover 2
-    bury 7
+    cover 3
     pushbytes 0x000000000000000000000000000000000000000000000000000000003fe9558e
     replace2 0
     store 0
     load 0
     swap
-    dig 9
+    uncover 5
     concat
     dup
     len
@@ -137,42 +131,39 @@ main_ternary_merge@9:
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_2 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
     itxn_field ApplicationID
     swap
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
-    dig 8
+    uncover 2
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    bury 3
     itxn LastLog
     dup
-    bury 6
     len
     pushint 4
     >=
     bz main_ternary_false@12
-    dig 4
+    dup
     extract 0 4
     bytec_0 // 0x151f7c75
     ==
 
 main_ternary_merge@13:
     bz main_ternary_false@15
-    dig 4
     extract 4 0
 
 main_ternary_merge@16:
-    dig 4
+    dig 2
     concat
     extract 0 32
     dup
@@ -183,16 +174,16 @@ main_ternary_merge@16:
     swap
     dig 1
     -
-    dig 5
+    dig 3
     +
     dup
-    bury 4
+    cover 3
     dup
-    intc_2 // 4096
+    intc_1 // 4096
     /
     loads
     swap
-    intc_2 // 4096
+    intc_1 // 4096
     %
     intc_0 // 32
     extract3
@@ -203,20 +194,16 @@ main_ternary_merge@16:
     cover 2
     extract3
     concat
-    bury 6
-    intc_1 // 0
-    bury 2
+    intc_2 // 0
 
 main_while_top@17:
-    dig 5
+    dig 1
     len
-    dig 2
+    dig 1
     >
     bz main_after_while@19
-    dig 2
-    dig 2
-    dup
-    cover 2
+    dig 3
+    dig 1
     +
     dup
     intc_0 // 32
@@ -225,45 +212,43 @@ main_while_top@17:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_2 // 4096
+    intc_1 // 4096
     /
-    dig 8
+    dig 3
     dig 3
     intc_0 // 32
     extract3
     dig 1
     loads
     uncover 3
-    intc_2 // 4096
+    intc_1 // 4096
     %
     uncover 2
     replace3
     stores
     intc_0 // 32
     +
-    bury 2
     b main_while_top@17
 
 main_after_while@19:
-    dup
-    intc_0 // 32
-    +
-    intc 4 // 20480
-    <=
-    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
-    dig 2
-    dup
+    popn 2
     intc_0 // 32
     +
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_2 // 4096
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
     /
     loads
     swap
-    intc_2 // 4096
+    intc_1 // 4096
     %
     intc_0 // 32
     extract3
@@ -276,7 +261,6 @@ main_after_while@19:
     intc_0 // 32
     <=
     assert // overflow
-    dig 4
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -286,13 +270,12 @@ main_after_while@19:
     return
 
 main_ternary_false@15:
-    dig 4
     b main_ternary_merge@16
 
 main_ternary_false@12:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@13
 
 main_ternary_false@8:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@9

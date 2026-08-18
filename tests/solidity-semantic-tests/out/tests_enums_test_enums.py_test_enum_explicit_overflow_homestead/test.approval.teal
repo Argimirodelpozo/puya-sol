@@ -5,7 +5,6 @@
 main:
     intcblock 1 0 32 8
     bytecblock "choice" 0x03 0x151f7c75
-    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -70,7 +69,6 @@ main_ternary_false@13:
 main_getChoiceFromSigned_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_2 // 32
     ==
@@ -85,7 +83,7 @@ main_getChoiceFromSigned_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
-    dupn 2
+    dup
     bytec_1 // 0x03
     b<
     assert // enum out of range
@@ -123,7 +121,6 @@ main_ternary_false@18:
 main_getChoiceExp_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_2 // 32
     ==
@@ -138,7 +135,7 @@ main_getChoiceExp_route@5:
 main_ternary_merge@24:
     !
     assert // not payable
-    dupn 2
+    dup
     bytec_1 // 0x03
     b<
     assert // enum out of range

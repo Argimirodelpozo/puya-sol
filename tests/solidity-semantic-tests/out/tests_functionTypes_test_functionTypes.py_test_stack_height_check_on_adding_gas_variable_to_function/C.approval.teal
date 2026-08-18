@@ -5,8 +5,6 @@
 main:
     intcblock 1 0
     bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    pushbytes ""
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -60,16 +58,14 @@ main_ternary_merge@14:
     ==
     bz main_else_body@17
     intc_0 // 1
-    bury 3
 
 main_after_if_else@18:
-    dig 2
+    dup
     bnz main_after_if_else@20
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@20:
-    dig 2
     assert
     global CurrentApplicationAddress
     dup
@@ -80,23 +76,20 @@ main_after_if_else@20:
     ==
     bz main_else_body@23
     intc_0 // 1
-    bury 2
 
 main_after_if_else@24:
-    dig 1
+    dup
     bnz main_after_if_else@26
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@26:
-    dig 1
     assert
     global CurrentApplicationAddress
     dup
     ==
     bz main_else_body@28
     intc_0 // 1
-    bury 1
 
 main_after_if_else@29:
     dup
@@ -105,7 +98,6 @@ main_after_if_else@29:
     log
 
 main_after_if_else@31:
-    dup
     assert
     pushbytes 0x151f7c7580
     log
@@ -114,17 +106,14 @@ main_after_if_else@31:
 
 main_else_body@28:
     intc_1 // 0
-    bury 1
     b main_after_if_else@29
 
 main_else_body@23:
     intc_1 // 0
-    bury 2
     b main_after_if_else@24
 
 main_else_body@17:
     intc_1 // 0
-    bury 3
     b main_after_if_else@18
 
 main_ternary_false@13:

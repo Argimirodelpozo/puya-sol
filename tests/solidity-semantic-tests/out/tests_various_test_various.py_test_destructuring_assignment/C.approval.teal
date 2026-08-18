@@ -5,8 +5,6 @@
 main:
     intcblock 2 1 0 32
     bytecblock "arrayData" "y" "data" "__ctor_pending" "x" 0x34d579df 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000004 0x0000000000000000000000000000000000000000000000000000000000000005
-    intc_2 // 0
-    dupn 4
     pushint 4096
     bzero
     dup
@@ -47,9 +45,7 @@ main_after_if_else@2:
 
 main_f_route@7:
     txna ApplicationArgs 1
-    dup
-    bury 4
-    dup
+    dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 2
@@ -59,7 +55,6 @@ main_f_route@7:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 4
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
@@ -73,7 +68,7 @@ main_ternary_merge@14:
     callsub returnsArray
     intc_0 // 2
     itob
-    bury 6
+    cover 2
     bytec_0 // "arrayData"
     pushint 98
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
@@ -82,7 +77,7 @@ main_ternary_merge@14:
     box_del
     pop
     bytec_2 // "data"
-    dig 5
+    dig 2
     box_put
     bytec_1 // "y"
     box_del
@@ -93,7 +88,6 @@ main_ternary_merge@14:
     pushint 4
     itob
     dup
-    bury 2
     bytec 4 // "x"
     swap
     app_global_put
@@ -117,6 +111,7 @@ main_ternary_merge@19:
     itob
     b!=
     bz main_after_if_else@21
+    popn 4
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
 
 main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/destructuring_assignment.sol.C.f@41:
@@ -136,6 +131,7 @@ main_after_if_else@21:
     itob
     b!=
     bz main_after_if_else@23
+    popn 4
     bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000004
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/destructuring_assignment.sol.C.f@41
 
@@ -144,9 +140,9 @@ main_after_if_else@23:
     pushint 226
     intc_3 // 32
     box_extract // on error: index out of bounds
-    dig 1
     b!=
     bz main_after_if_else@25
+    popn 3
     bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000005
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/destructuring_assignment.sol.C.f@41
 
@@ -155,11 +151,12 @@ main_after_if_else@25:
     box_len
     pop
     itob
-    dig 4
+    swap
     len
     itob
     b!=
     bz main_after_if_else@27
+    popn 2
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/destructuring_assignment.sol.C.f@41
 
@@ -168,10 +165,11 @@ main_after_if_else@27:
     pushint 3
     intc_1 // 1
     box_extract
-    dig 3
+    uncover 2
     extract 5 1
     !=
     bz main_after_if_else@29
+    pop
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/destructuring_assignment.sol.C.f@41
 
@@ -180,7 +178,6 @@ main_after_if_else@29:
     pushint 98
     intc_3 // 32
     box_extract // on error: index out of bounds
-    dig 5
     b!=
     bz main_after_if_else@31
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
@@ -193,7 +190,6 @@ main_after_if_else@31:
     box_extract
     btoi
     itob
-    bury 2
     bytec_0 // "arrayData"
     box_len
     pop
@@ -210,7 +206,6 @@ main_ternary_merge@34:
     intc_3 // 32
     /
     itob
-    dig 2
     b!=
     bz main_after_if_else@36
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a

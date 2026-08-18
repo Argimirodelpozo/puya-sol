@@ -5,9 +5,7 @@
 main:
     intcblock 0 2 1
     intc_0 // 0
-    dup
     pushbytes ""
-    dupn 5
     pushint 4096
     bzero
     dup
@@ -47,58 +45,55 @@ main_f_route@4:
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 8
+    cover 2
     intc_1 // 2
     *
-    bury 4
+    swap
     dup
     len
-    bury 2
+    bury 4
     extract 2 0
-    bury 8
+    bury 4
     intc_0 // 0
-    bury 5
 
 main_for_header@7:
-    dig 4
-    dig 6
+    dup
+    dig 3
     <
     bz main_after_for@12
-    dig 4
+    dup
     intc_1 // 2
     *
-    dig 8
+    dig 5
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    dig 4
     ==
     assert // invalid tail pointer for (len+(len+uint256[])[2][])
     dig 1
     len
     substring3
-    bury 7
+    cover 2
     pushint 4
-    bury 2
+    cover 2
     intc_0 // 0
-    bury 4
 
 main_for_header@9:
-    dig 3
+    dup
     intc_1 // 2
     <
     bz main_after_for@11
-    dig 3
     dup
     intc_1 // 2
     *
-    dig 8
+    dig 5
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 6
     dup
     cover 4
     ==
@@ -113,28 +108,28 @@ main_for_header@9:
     intc_1 // 2
     +
     +
-    bury 3
+    cover 3
     intc_2 // 1
     +
-    bury 4
     b main_for_header@9
 
 main_after_for@11:
-    dig 2
-    dig 2
+    pop
+    uncover 3
+    pop
+    swap
+    uncover 2
     +
-    bury 3
-    dig 4
+    swap
     intc_2 // 1
     +
-    bury 5
     b main_for_header@7
 
 main_after_for@12:
-    dig 2
+    pop
     intc_1 // 2
     +
-    dig 1
+    dig 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>>
     txn GroupIndex
@@ -147,7 +142,6 @@ main_after_for@12:
 main_ternary_merge@15:
     !
     assert // not payable
-    dig 5
     assert // array index out of bounds
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000017
     log

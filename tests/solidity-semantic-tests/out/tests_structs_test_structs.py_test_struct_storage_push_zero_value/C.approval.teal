@@ -5,10 +5,7 @@
 main:
     intcblock 0 2 1 54
     bytecblock "s" 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 "__ctor_pending" "b"
-    intc_0 // 0
-    dupn 2
     pushbytes ""
-    dupn 11
     pushint 4096
     bzero
     dup
@@ -67,23 +64,23 @@ main_ternary_merge@13:
     +
     itob
     extract 6 0
-    bury 16
+    cover 2
     swap
     extract 2 0
-    bury 16
+    swap
     intc_1 // 2
     *
-    bury 12
+    swap
     intc_0 // 0
-    bury 1
+    bury 4
 
 main_for_header@63:
-    dup
-    dig 12
+    dig 3
+    dig 2
     <
     bz main_after_for@65
-    dig 14
-    dig 1
+    dup
+    dig 4
     dup
     cover 2
     extract_uint16
@@ -91,52 +88,49 @@ main_for_header@63:
     +
     itob
     extract 6 0
-    dig 15
+    uncover 4
     swap
     concat
-    bury 15
+    cover 3
     intc_1 // 2
     +
-    bury 1
+    bury 4
     b main_for_header@63
 
 main_after_for@65:
-    dig 14
+    dup
     len
-    bury 2
+    cover 2
     intc_0 // 0
-    bury 1
+    bury 5
 
 main_for_header@66:
-    dup
+    dig 4
     intc_1 // 2
     <
     bz main_after_for@68
     pushbytes 0x00020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000660000
-    dig 1
+    dig 5
     dup
     cover 2
     extract_uint16
-    dig 3
+    dig 4
     +
     itob
     extract 6 0
-    dig 15
+    uncover 5
     swap
     concat
-    bury 15
+    cover 4
     intc_1 // 2
     +
-    bury 1
+    bury 5
     b main_for_header@66
 
 main_after_for@68:
-    dig 14
-    dig 12
-    dig 3
-    substring3
-    dig 14
     swap
+    uncover 2
+    substring3
     concat
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000660000
     concat
@@ -172,16 +166,14 @@ main_ternary_merge@16:
     intc_0 // 0
     itob
     dup
-    bury 15
+    cover 2
     b==
     dup
-    bury 12
     bnz main_after_if_else@18
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@18:
-    dig 10
     assert
     bytec_0 // "s"
     box_len
@@ -206,16 +198,14 @@ main_ternary_merge@21:
     swap
     pushint 16
     box_extract // on error: index out of bounds
-    dig 13
+    dig 1
     b==
     dup
-    bury 11
     bnz main_after_if_else@23
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@23:
-    dig 9
     assert
     bytec_0 // "s"
     box_len
@@ -243,13 +233,12 @@ main_ternary_merge@26:
     btoi
     dup
     !
-    bury 10
+    swap
     bz main_after_if_else@28
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@28:
-    dig 8
     assert
     bytec_0 // "s"
     box_len
@@ -287,16 +276,14 @@ main_ternary_merge@34:
     pushint 48
     box_extract // on error: index out of bounds
     extract 0 16 // on error: index access is out of bounds
-    dig 13
+    dig 1
     b==
     dup
-    bury 9
     bnz main_after_if_else@36
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@36:
-    dig 7
     assert
     bytec_0 // "s"
     box_len
@@ -334,16 +321,14 @@ main_ternary_merge@42:
     pushint 48
     box_extract // on error: index out of bounds
     extract 16 16 // on error: index access is out of bounds
-    dig 13
+    dig 1
     b==
     dup
-    bury 8
     bnz main_after_if_else@44
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@44:
-    dig 6
     assert
     bytec_0 // "s"
     box_len
@@ -381,16 +366,14 @@ main_ternary_merge@50:
     pushint 48
     box_extract // on error: index out of bounds
     extract 32 16 // on error: index access is out of bounds
-    dig 13
+    dig 1
     b==
     dup
-    bury 7
     bnz main_after_if_else@52
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@52:
-    dig 5
     assert
     bytec_0 // "s"
     box_len
@@ -417,16 +400,13 @@ main_ternary_merge@55:
     box_extract
     btoi
     itob
-    dig 13
     b==
     dup
-    bury 6
     bnz main_after_if_else@57
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@57:
-    dig 4
     assert
     intc_0 // 0
     bytec_3 // "b"
@@ -435,13 +415,11 @@ main_after_if_else@57:
     pushint 23
     ==
     dup
-    bury 5
     bnz main_after_if_else@59
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@59:
-    dig 3
     assert
     intc_0 // 0
     pushbytes "a"
@@ -450,13 +428,11 @@ main_after_if_else@59:
     pushint 17
     ==
     dup
-    bury 4
     bnz main_after_if_else@61
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@61:
-    dig 2
     return
 
 main_ternary_false@54:

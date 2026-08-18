@@ -5,10 +5,6 @@
 main:
     intcblock 2 0 1 32
     bytecblock "__ctor_pending" 0x151f7c75
-    intc_1 // 0
-    dupn 2
-    pushbytes ""
-    dupn 5
     pushint 4096
     bzero
     dup
@@ -51,33 +47,30 @@ main_f_which_route@8:
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 5
+    cover 2
     intc_0 // 2
     *
-    bury 3
+    swap
     dup
     len
-    bury 2
+    swap
     extract 2 0
-    bury 7
     intc_1 // 0
-    bury 4
 
 main_for_header@13:
-    dig 3
-    dig 3
+    dup
+    dig 5
     <
     bz main_after_for@15
-    dig 3
     dup
     intc_0 // 2
     *
-    dig 8
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 6
     dup
     cover 4
     ==
@@ -92,22 +85,21 @@ main_for_header@13:
     intc_0 // 2
     +
     +
-    bury 3
+    cover 3
     intc_2 // 1
     +
-    bury 4
     b main_for_header@13
 
 main_after_for@15:
-    dig 1
+    pop
+    uncover 2
     intc_0 // 2
     +
-    dig 1
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
     txna ApplicationArgs 2
     dup
-    bury 10
     len
     intc_3 // 32
     ==
@@ -122,7 +114,6 @@ main_after_for@15:
 main_ternary_merge@18:
     !
     assert // not payable
-    dig 8
     dup
     pushbytes 0x010000000000000000
     b<
@@ -137,14 +128,13 @@ main_ternary_merge@18:
     -
     extract_uint64
     dup
-    dig 4
+    uncover 3
     <
     assert // array index out of bounds
     intc_0 // 2
     *
-    dig 7
-    dup
-    uncover 2
+    dig 1
+    swap
     extract_uint16
     dup2
     extract_uint16
@@ -166,39 +156,34 @@ main_ternary_false@17:
 
 main_f_encode_route@7:
     txna ApplicationArgs 1
-    dup
-    bury 9
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 7
+    cover 2
     intc_0 // 2
     *
-    bury 3
+    swap
     dup
     len
-    bury 2
+    swap
     extract 2 0
-    bury 7
     intc_1 // 0
-    bury 4
 
 main_for_header@21:
-    dig 3
+    dup
     dig 5
     <
     bz main_after_for@23
-    dig 3
     dup
     intc_0 // 2
     *
-    dig 8
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 6
     dup
     cover 4
     ==
@@ -213,14 +198,16 @@ main_for_header@21:
     intc_0 // 2
     +
     +
-    bury 3
+    cover 3
     intc_2 // 1
     +
-    bury 4
     b main_for_header@21
 
 main_after_for@23:
-    dig 1
+    popn 2
+    uncover 2
+    pop
+    swap
     intc_0 // 2
     +
     dig 1
@@ -236,10 +223,9 @@ main_after_for@23:
 main_ternary_merge@26:
     !
     assert // not payable
-    dup
     itob
     extract 6 2
-    dig 8
+    swap
     concat
     bytec_1 // 0x151f7c75
     swap
@@ -254,39 +240,34 @@ main_ternary_false@25:
 
 main_f_memory_route@6:
     txna ApplicationArgs 1
-    dup
-    bury 9
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 8
+    cover 2
     intc_0 // 2
     *
-    bury 3
+    swap
     dup
     len
-    bury 2
+    swap
     extract 2 0
-    bury 7
     intc_1 // 0
-    bury 4
 
 main_for_header@29:
-    dig 3
-    dig 6
+    dup
+    dig 5
     <
     bz main_after_for@31
-    dig 3
     dup
     intc_0 // 2
     *
-    dig 8
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 6
     dup
     cover 4
     ==
@@ -301,17 +282,18 @@ main_for_header@29:
     intc_0 // 2
     +
     +
-    bury 3
+    cover 3
     intc_2 // 1
     +
-    bury 4
     b main_for_header@29
 
 main_after_for@31:
-    dig 1
+    popn 2
+    uncover 2
+    pop
+    swap
     intc_0 // 2
     +
-    dig 1
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
     txn GroupIndex
@@ -325,7 +307,7 @@ main_ternary_merge@34:
     !
     assert // not payable
     bytec_1 // 0x151f7c75
-    dig 8
+    swap
     concat
     log
     intc_2 // 1

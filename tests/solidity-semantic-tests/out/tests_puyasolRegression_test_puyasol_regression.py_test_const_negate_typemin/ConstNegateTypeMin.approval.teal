@@ -5,7 +5,6 @@
 main:
     intcblock 1 0 8 32
     bytecblock 0x8000 0x010000000000000000 0x151f7c750000000000000000000000000000000000000000000000000000000000007fff 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8000
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -47,7 +46,6 @@ main_negVar_route@16:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@22
     txn GroupIndex
@@ -72,7 +70,7 @@ main_bool_true@25:
 
 main_bool_merge@27:
     assert // ABI validation
-    dupn 2
+    dup
     pushint 65535
     &
     itob

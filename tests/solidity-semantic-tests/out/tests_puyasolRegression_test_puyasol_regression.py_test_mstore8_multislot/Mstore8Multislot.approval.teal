@@ -4,8 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/mstore8_multislot.sol.Mstore8Multislot.approval_program() -> uint64:
 main:
     intcblock 32 4096 1 8
-    pushint 0
-    pushbytes ""
     intc_1 // 4096
     bzero
     dup
@@ -42,7 +40,6 @@ main_writeHigh_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -54,7 +51,6 @@ main_writeHigh_route@4:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -65,7 +61,7 @@ main_writeHigh_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dupn 2
+    dup
     pushint 255
     <=
     assert // ABI validation
@@ -75,7 +71,7 @@ main_ternary_merge@9:
     store 0
     intc_3 // 8
     bzero
-    dig 3
+    uncover 2
     concat
     dup
     len

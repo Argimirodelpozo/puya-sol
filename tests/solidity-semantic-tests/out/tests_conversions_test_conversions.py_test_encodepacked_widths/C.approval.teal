@@ -3,11 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/encodepacked_widths.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 255 8
+    intcblock 1 255 0 8
     bytecblock 0x151f7c75
-    intc_1 // 0
-    pushbytes ""
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -44,10 +41,8 @@ main_after_if_else@2:
 main_pAddr_route@9:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     dup
-    bury 3
     pushint 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
@@ -61,10 +56,9 @@ main_pAddr_route@9:
 main_ternary_merge@16:
     !
     assert // not payable
-    dig 1
     itob
     extract 6 2
-    dig 4
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -74,7 +68,7 @@ main_ternary_merge@16:
     return
 
 main_ternary_false@15:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@16
 
 main_pI128neg_route@8:
@@ -94,7 +88,7 @@ main_ternary_merge@21:
     return
 
 main_ternary_false@20:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@21
 
 main_pI8neg_route@7:
@@ -114,7 +108,7 @@ main_ternary_merge@26:
     return
 
 main_ternary_false@25:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@26
 
 main_pMix_route@6:
@@ -125,7 +119,6 @@ main_pMix_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txna ApplicationArgs 2
     dup
     len
@@ -133,7 +126,6 @@ main_pMix_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
     txn GroupIndex
     bz main_ternary_false@31
     txn GroupIndex
@@ -144,18 +136,19 @@ main_pMix_route@6:
 main_ternary_merge@32:
     !
     assert // not payable
-    dupn 2
-    intc_2 // 255
-    <=
-    assert // ABI validation
-    intc_2 // 255
-    &
-    dig 3
+    swap
     dup
-    intc_2 // 255
+    intc_1 // 255
     <=
     assert // ABI validation
-    intc_2 // 255
+    intc_1 // 255
+    &
+    swap
+    dup
+    intc_1 // 255
+    <=
+    assert // ABI validation
+    intc_1 // 255
     &
     dup
     pushint 2
@@ -182,7 +175,7 @@ main_ternary_merge@32:
     return
 
 main_ternary_false@31:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@32
 
 main_pEnum_route@5:
@@ -193,7 +186,6 @@ main_pEnum_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
     txn GroupIndex
     bz main_ternary_false@36
     txn GroupIndex
@@ -204,12 +196,11 @@ main_pEnum_route@5:
 main_ternary_merge@37:
     !
     assert // not payable
-    dig 2
     dup
-    intc_2 // 255
+    intc_1 // 255
     <=
     assert // ABI validation
-    intc_2 // 255
+    intc_1 // 255
     &
     dup
     pushint 2
@@ -225,5 +216,5 @@ main_ternary_merge@37:
     return
 
 main_ternary_false@36:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@37

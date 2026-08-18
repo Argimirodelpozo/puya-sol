@@ -125,7 +125,6 @@ main_ternary_false@20:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/transient_value_types_multi_frame_call.sol.C.g() -> void:
 g:
     proto 0 0
-    intc_2 // 0
     pushbytes ""
     txn GroupIndex
     bz g_ternary_false@2
@@ -154,14 +153,13 @@ g_ternary_merge@6:
     bytec_1 // 0x0100
     b%
     dup
-    frame_bury 0
     bytec_0 // 0x80
     b<
     dup
     !
-    frame_bury 1
+    frame_bury 0
     bnz g_bool_true@8
-    frame_dig 0
+    dup
     bytec_1 // 0x0100
     b+
     pushbytes 0x01
@@ -171,7 +169,7 @@ g_ternary_merge@6:
     bytec_0 // 0x80
     b<
     !
-    frame_dig 1
+    frame_dig 0
     ==
     bz g_bool_false@9
 
@@ -182,7 +180,7 @@ g_bool_merge@10:
     assert // signed arithmetic overflow
     intc_1 // 8
     bzero
-    frame_dig 0
+    swap
     bytec_1 // 0x0100
     b+
     pushbytes 0x01

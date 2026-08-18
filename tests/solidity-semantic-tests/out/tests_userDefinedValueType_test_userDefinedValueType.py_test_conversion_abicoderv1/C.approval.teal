@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/conversion_abicoderv1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 8 0 255 18446744073709551360
+    intcblock 1 8 255 0 18446744073709551360
     bytecblock 0x151f7c75 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
-    intc_2 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -48,7 +46,6 @@ main_m_route@11:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@17
     txn GroupIndex
@@ -59,8 +56,7 @@ main_m_route@11:
 main_ternary_merge@18:
     !
     assert // not payable
-    dup
-    intc_3 // 255
+    intc_2 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -71,7 +67,7 @@ main_ternary_merge@18:
     return
 
 main_ternary_false@17:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@18
 
 main_k_route@10:
@@ -82,7 +78,6 @@ main_k_route@10:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@22
     txn GroupIndex
@@ -93,8 +88,7 @@ main_k_route@10:
 main_ternary_merge@23:
     !
     assert // not payable
-    dup
-    intc_3 // 255
+    intc_2 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -105,7 +99,7 @@ main_ternary_merge@23:
     return
 
 main_ternary_false@22:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@23
 
 main_j_route@9:
@@ -116,7 +110,6 @@ main_j_route@9:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@27
     txn GroupIndex
@@ -127,8 +120,7 @@ main_j_route@9:
 main_ternary_merge@28:
     !
     assert // not payable
-    dup
-    intc_3 // 255
+    intc_2 // 255
     &
     itob
     pushint 32
@@ -142,7 +134,7 @@ main_ternary_merge@28:
     return
 
 main_ternary_false@27:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@28
 
 main_i_route@8:
@@ -153,7 +145,6 @@ main_i_route@8:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@32
     txn GroupIndex
@@ -164,8 +155,7 @@ main_i_route@8:
 main_ternary_merge@33:
     !
     assert // not payable
-    dup
-    intc_3 // 255
+    intc_2 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -176,7 +166,7 @@ main_ternary_merge@33:
     return
 
 main_ternary_false@32:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@33
 
 main_h_route@7:
@@ -187,7 +177,6 @@ main_h_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@37
     txn GroupIndex
@@ -198,8 +187,7 @@ main_h_route@7:
 main_ternary_merge@38:
     !
     assert // not payable
-    dup
-    intc_3 // 255
+    intc_2 // 255
     &
     pushint 256
     %
@@ -244,13 +232,12 @@ main_ternary_false@40:
     b main_ternary_merge@41
 
 main_ternary_false@37:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@38
 
 main_g_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     pushint 32
     ==
@@ -267,14 +254,14 @@ main_ternary_merge@49:
     assert // not payable
     intc_1 // 8
     bzero
-    dig 2
+    swap
     concat
     dup
     len
     intc_1 // 8
     -
     extract_uint64
-    intc_3 // 255
+    intc_2 // 255
     &
     pushint 256
     %
@@ -319,13 +306,12 @@ main_ternary_false@51:
     b main_ternary_merge@52
 
 main_ternary_false@48:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@49
 
 main_f_route@5:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     pushint 32
     ==
@@ -342,14 +328,14 @@ main_ternary_merge@60:
     assert // not payable
     intc_1 // 8
     bzero
-    dig 2
+    swap
     concat
     dup
     len
     intc_1 // 8
     -
     extract_uint64
-    intc_3 // 255
+    intc_2 // 255
     &
     itob
     bytec_0 // 0x151f7c75
@@ -360,5 +346,5 @@ main_ternary_merge@60:
     return
 
 main_ternary_false@59:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@60

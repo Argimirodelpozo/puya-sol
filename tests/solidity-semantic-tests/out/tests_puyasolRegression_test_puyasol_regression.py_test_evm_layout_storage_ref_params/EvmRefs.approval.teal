@@ -5,9 +5,6 @@
 main:
     intcblock 32 1 0 16 4294967295
     bytecblock 0x 0x01 0x151f7c75 0x02 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000003 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6 0x010000 "p:" "s:"
-    intc_2 // 0
-    dupn 9
-    bytec_0 // ""
     pushint 4096
     bzero
     dup
@@ -44,21 +41,19 @@ main_after_if_else@2:
 main_rebind_route@21:
     txna ApplicationArgs 1
     dup
-    bury 9
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 8
+    cover 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 7
     len
     intc_3 // 16
     ==
@@ -76,7 +71,7 @@ main_ternary_merge@28:
     intc_0 // 32
     bzero
     dup
-    dig 9
+    uncover 3
     b|
     extract 0 32
     bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000003
@@ -94,15 +89,13 @@ main_ternary_merge@28:
     intc_0 // 32
     extract3
     dig 2
-    dig 9
-    dup
-    cover 5
+    dig 4
     b|
     extract 16 16
     replace2 16
     callsub __storage_write
     dup
-    dig 9
+    uncover 3
     b|
     extract 0 32
     bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000003
@@ -143,7 +136,6 @@ main_ternary_false@27:
 main_getPos_route@20:
     txna ApplicationArgs 1
     dup
-    bury 10
     len
     intc_0 // 32
     ==
@@ -161,7 +153,7 @@ main_ternary_merge@33:
     intc_0 // 32
     bzero
     dup
-    dig 10
+    uncover 2
     b|
     extract 0 32
     bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000003
@@ -240,21 +232,20 @@ main_ternary_false@32:
 main_viaLocal_route@19:
     txna ApplicationArgs 1
     dup
-    bury 10
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 5
+    cover 2
     len
     intc_3 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 3
     dup
-    bury 4
+    cover 2
     len
     intc_3 // 16
     ==
@@ -272,7 +263,7 @@ main_ternary_merge@38:
     intc_0 // 32
     bzero
     dup
-    dig 10
+    uncover 2
     b|
     extract 0 32
     bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000003
@@ -290,7 +281,7 @@ main_ternary_merge@38:
     intc_0 // 32
     extract3
     dig 2
-    dig 7
+    uncover 5
     b|
     extract 16 16
     replace2 16
@@ -309,7 +300,7 @@ main_ternary_merge@38:
     intc_0 // 32
     extract3
     uncover 2
-    dig 5
+    uncover 3
     b|
     extract 16 16
     replace2 0
@@ -402,10 +393,8 @@ main_ck_route@16:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txna ApplicationArgs 2
     dup
-    bury 6
     len
     pushint 28
     ==
@@ -420,7 +409,8 @@ main_ck_route@16:
 main_ternary_merge@53:
     !
     assert // not payable
-    dupn 2
+    swap
+    dup
     intc 4 // 4294967295
     <=
     assert // ABI validation
@@ -428,7 +418,7 @@ main_ternary_merge@53:
     &
     bytec_3 // 0x02
     swap
-    dig 6
+    uncover 2
     callsub Checkpoints.push
     intc_1 // 1
     return
@@ -472,7 +462,6 @@ main_ternary_false@57:
 main_numAt_route@14:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_0 // 32
     ==
@@ -489,10 +478,8 @@ main_ternary_merge@63:
     assert // not payable
     bytec_1 // 0x01
     callsub __storage_read
-    dig 10
-    dup
-    uncover 2
-    b<
+    dig 1
+    b>
     assert // array index out of bounds
     bytec 7 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
     b+
@@ -519,14 +506,13 @@ main_ternary_false@62:
 main_bumpNum_route@13:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 12
+    cover 2
     len
     intc_0 // 32
     ==
@@ -542,8 +528,8 @@ main_ternary_merge@68:
     !
     assert // not payable
     bytec_1 // 0x01
-    dig 10
-    dig 12
+    swap
+    uncover 2
     callsub Lib.bump
     intc_1 // 1
     return
@@ -555,7 +541,6 @@ main_ternary_false@67:
 main_pushNum_route@12:
     txna ApplicationArgs 1
     dup
-    bury 7
     len
     intc_0 // 32
     ==
@@ -575,7 +560,7 @@ main_ternary_merge@73:
     bytec 7 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
     dig 1
     b+
-    dig 7
+    uncover 2
     callsub __storage_write
     bytec_1 // 0x01
     b+
@@ -624,7 +609,6 @@ main_ternary_false@77:
 main_setTailViaSlot_route@10:
     txna ApplicationArgs 1
     dup
-    bury 7
     len
     intc_0 // 32
     ==
@@ -641,7 +625,7 @@ main_ternary_merge@83:
     assert // not payable
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
     callsub SS.getUint256Slot
-    dig 6
+    swap
     callsub __storage_write
     intc_1 // 1
     return
@@ -662,7 +646,6 @@ main_setDViaLib_route@9:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 2
     txn GroupIndex
     bz main_ternary_false@87
     txn GroupIndex
@@ -674,7 +657,7 @@ main_ternary_merge@88:
     !
     assert // not payable
     bytec_0 // 0x
-    dig 2
+    swap
     callsub Lib.setVia
     intc_1 // 1
     return
@@ -785,7 +768,6 @@ main_setA_route@5:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 2
     txn GroupIndex
     bz main_ternary_false@107
     txn GroupIndex
@@ -798,7 +780,7 @@ main_ternary_merge@108:
     assert // not payable
     bytec_0 // 0x
     callsub SS.getStringSlot
-    dig 2
+    swap
     callsub __evm_bytes_write
     intc_1 // 1
     return
@@ -1021,15 +1003,13 @@ Lib.total:
 Lib.total_while_top@1:
     frame_dig -1
     callsub __storage_read
-    frame_dig 1
+    dig 1
     b>
     bz Lib.total_after_while@3
     frame_dig -1
     callsub __storage_read
-    frame_dig 1
-    dup
-    uncover 2
-    b<
+    dig 1
+    b>
     assert // array index out of bounds
     intc_0 // 32
     bzero
@@ -1045,7 +1025,7 @@ Lib.total_while_top@1:
     dig 1
     b+
     callsub __storage_read
-    frame_dig 0
+    uncover 2
     b+
     dup
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -1058,11 +1038,10 @@ Lib.total_while_top@1:
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    frame_bury 1
-    frame_bury 0
     b Lib.total_while_top@1
 
 Lib.total_after_while@3:
+    pop
     retsub
 
 
@@ -1242,10 +1221,6 @@ __storage_write_else_body@2:
 // __puyasol___evm_bytes_read(__slot: bytes) -> bytes:
 __evm_bytes_read:
     proto 1 1
-    intc_2 // 0
-    dup
-    bytec_0 // ""
-    dup
     intc_0 // 32
     bzero
     dup
@@ -1262,20 +1237,19 @@ __evm_bytes_read:
     pushint 31
     getbyte
     dup
-    cover 2
     pushint 2
     %
     bnz __evm_bytes_read_after_if_else@2
-    frame_dig 5
     pushint 2
     /
     intc_2 // 0
     swap
     extract3
-    frame_bury 0
+    swap
     retsub
 
 __evm_bytes_read_after_if_else@2:
+    pop
     pushint 8
     bzero
     swap
@@ -1289,8 +1263,7 @@ __evm_bytes_read_after_if_else@2:
     pushint 8
     -
     extract_uint64
-    frame_bury 3
-    frame_dig 4
+    dig 1
     frame_dig -1
     concat
     dup
@@ -1300,26 +1273,22 @@ __evm_bytes_read_after_if_else@2:
     intc_0 // 32
     extract3
     keccak256
-    frame_bury 0
     bytec_0 // 0x
-    frame_bury 1
     intc_2 // 0
-    frame_bury 2
 
 __evm_bytes_read_while_top@3:
-    frame_dig 2
+    dup
     intc_0 // 32
     *
-    frame_dig 3
+    dig 4
     <
     bz __evm_bytes_read_after_while@5
-    frame_dig 2
     dup
     itob
-    frame_dig 0
+    dig 3
     b+
     callsub __storage_read
-    frame_dig 4
+    dig 5
     swap
     concat
     dup
@@ -1328,21 +1297,21 @@ __evm_bytes_read_while_top@3:
     -
     intc_0 // 32
     extract3
-    frame_dig 1
+    uncover 2
     swap
     concat
-    frame_bury 1
+    swap
     intc_1 // 1
     +
-    frame_bury 2
     b __evm_bytes_read_while_top@3
 
 __evm_bytes_read_after_while@5:
-    frame_dig 1
+    pop
+    bury 1
     intc_2 // 0
-    frame_dig 3
+    uncover 2
     extract3
-    frame_bury 0
+    swap
     retsub
 
 
@@ -1351,12 +1320,13 @@ __evm_bytes_write:
     proto 2 0
     intc_2 // 0
     bytec_0 // ""
-    dupn 2
+    dup
     frame_dig -1
     len
     intc_0 // 32
     bzero
     dup
+    cover 2
     frame_dig -2
     callsub __storage_read
     dig 1
@@ -1369,7 +1339,8 @@ __evm_bytes_write:
     intc_0 // 32
     extract3
     dup
-    uncover 2
+    cover 2
+    cover 4
     frame_dig -2
     concat
     dup
@@ -1381,7 +1352,7 @@ __evm_bytes_write:
     keccak256
     swap
     intc_2 // 0
-    swap
+    cover 4
     pushint 31
     getbyte
     pushint 2
@@ -1391,7 +1362,7 @@ __evm_bytes_write:
     bz __evm_bytes_write_after_if_else@2
     pushint 8
     bzero
-    frame_dig 6
+    frame_dig 3
     bytec_1 // 0x01
     b-
     bytec_3 // 0x02
@@ -1406,22 +1377,24 @@ __evm_bytes_write:
     +
     intc_0 // 32
     /
-    frame_bury 8
+    frame_bury 4
 
 __evm_bytes_write_after_if_else@2:
     intc_2 // 0
-    frame_bury 3
-    frame_dig 4
+    frame_bury 2
+    dig 1
     intc_0 // 32
     <
     bz __evm_bytes_write_else_body@4
+    uncover 2
+    pop
     pushint 31
     bzero
     frame_dig -1
     swap
     concat
     extract 0 31
-    frame_dig 4
+    uncover 2
     pushint 2
     *
     itob
@@ -1432,31 +1405,28 @@ __evm_bytes_write_after_if_else@2:
     callsub __storage_write
 
 __evm_bytes_write_after_if_else@8:
-    frame_dig 3
-    frame_bury 2
+    frame_dig 2
 
 __evm_bytes_write_while_top@9:
-    frame_dig 2
-    frame_dig 8
+    dup
+    frame_dig 4
     <
     bz __evm_bytes_write_after_while@11
-    frame_dig 2
     dup
     itob
-    frame_dig 7
+    dig 2
     b+
     bytec_0 // 0x
     callsub __storage_write
     intc_1 // 1
     +
-    frame_bury 2
     b __evm_bytes_write_while_top@9
 
 __evm_bytes_write_after_while@11:
     retsub
 
 __evm_bytes_write_else_body@4:
-    frame_dig 4
+    swap
     dup
     pushint 2
     *
@@ -1470,9 +1440,9 @@ __evm_bytes_write_else_body@4:
     +
     intc_0 // 32
     /
-    frame_bury 3
+    frame_bury 2
     frame_dig -1
-    frame_dig 5
+    uncover 2
     concat
     frame_bury 0
     intc_2 // 0
@@ -1480,13 +1450,13 @@ __evm_bytes_write_else_body@4:
 
 __evm_bytes_write_while_top@5:
     frame_dig 1
-    frame_dig 3
+    frame_dig 2
     <
     bz __evm_bytes_write_after_if_else@8
     frame_dig 1
     dup
     itob
-    frame_dig 7
+    dig 2
     b+
     dig 1
     intc_0 // 32

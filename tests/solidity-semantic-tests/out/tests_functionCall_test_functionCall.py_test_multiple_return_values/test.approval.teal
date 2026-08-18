@@ -4,8 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/multiple_return_values.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 0
-    intc_1 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -48,10 +46,8 @@ main_run_route@4:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 1
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     pushint 32
     ==
@@ -66,7 +62,8 @@ main_run_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dupn 2
+    swap
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
@@ -74,8 +71,6 @@ main_ternary_merge@9:
     intc_1 // 0
     uncover 2
     setbit
-    dig 2
-    swap
     concat
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     concat

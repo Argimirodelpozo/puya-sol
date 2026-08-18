@@ -6,9 +6,8 @@ main:
     intcblock 0 1 2 32
     bytecblock 0x 0x151f7c75
     intc_0 // 0
-    dupn 3
+    dupn 2
     bytec_0 // ""
-    dupn 4
     pushint 4096
     bzero
     dup
@@ -73,33 +72,31 @@ main_f_route@6:
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 5
+    bury 3
     intc_2 // 2
     *
-    bury 3
+    swap
     dup
     len
-    bury 2
+    cover 2
     extract 2 0
-    bury 9
+    bury 6
     intc_0 // 0
-    bury 4
 
 main_for_header@17:
-    dig 3
-    dig 3
+    dup
+    dig 4
     <
     bz main_after_for@19
-    dig 3
     dup
     intc_2 // 2
     *
-    dig 10
+    dig 7
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 4
     dup
     cover 4
     ==
@@ -114,17 +111,15 @@ main_for_header@17:
     intc_2 // 2
     +
     +
-    bury 3
+    swap
     intc_1 // 1
     +
-    bury 4
     b main_for_header@17
 
 main_after_for@19:
-    dig 1
+    pop
     intc_2 // 2
     +
-    dig 1
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
     txn GroupIndex
@@ -138,20 +133,19 @@ main_ternary_merge@22:
     !
     assert // not payable
     bytec_0 // 0x
-    bury 7
+    bury 3
     bytec_0 // 0x
-    bury 6
-    dig 2
+    bury 2
+    dup
     itob
     dup
-    bury 9
     intc_0 // 0
     itob
     b>
     bz main_after_if_else@24
-    dig 2
+    dig 1
     assert // array index out of bounds
-    dig 8
+    dig 4
     dup
     intc_0 // 0
     extract_uint16
@@ -165,19 +159,19 @@ main_ternary_merge@22:
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    bury 7
+    bury 4
 
 main_after_if_else@24:
     intc_1 // 1
     itob
-    dig 8
+    dig 1
     b<
     bz main_after_if_else@26
     intc_1 // 1
-    dig 3
+    dig 2
     <
     assert // array index out of bounds
-    dig 8
+    dig 4
     dup
     intc_2 // 2
     extract_uint16
@@ -191,15 +185,15 @@ main_after_if_else@24:
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    bury 6
+    bury 3
 
 main_after_if_else@26:
     intc_3 // 32
     bzero
-    dig 8
+    swap
     dig 1
     b|
-    dig 8
+    dig 4
     dup
     len
     intc_3 // 32
@@ -207,7 +201,7 @@ main_after_if_else@26:
     assert // overflow
     dig 2
     b|
-    dig 8
+    dig 4
     dup
     len
     intc_3 // 32
@@ -236,7 +230,7 @@ main_f_route@5:
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 7
+    cover 2
     intc_3 // 32
     *
     intc_2 // 2
@@ -255,7 +249,6 @@ main_f_route@5:
 main_ternary_merge@31:
     !
     assert // not payable
-    dig 4
     itob
     intc_3 // 32
     bzero

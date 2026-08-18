@@ -5,10 +5,8 @@
 main:
     intcblock 0 2 1 32
     bytecblock 0x151f7c75
-    intc_0 // 0
-    dupn 3
     pushbytes ""
-    dupn 10
+    dupn 2
     pushint 4096
     bzero
     dup
@@ -44,39 +42,34 @@ main_after_if_else@2:
 
 main_l_route@11:
     txna ApplicationArgs 1
-    dup
-    bury 16
-    dup
+    dupn 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 10
+    cover 3
     intc_1 // 2
     *
-    bury 5
+    swap
     dup
     len
-    bury 3
+    cover 2
     extract 2 0
-    bury 14
     intc_0 // 0
-    bury 7
 
 main_for_header@16:
+    dup
     dig 6
-    dig 8
     <
     bz main_after_for@18
-    dig 6
     dup
     intc_1 // 2
     *
-    dig 15
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 7
+    uncover 5
     dup
     cover 4
     ==
@@ -91,17 +84,18 @@ main_for_header@16:
     intc_1 // 2
     +
     +
-    bury 5
+    cover 2
     intc_2 // 1
     +
-    bury 7
     b main_for_header@16
 
 main_after_for@18:
-    dig 3
+    popn 2
+    uncover 3
+    pop
     intc_1 // 2
     +
-    dig 2
+    dig 1
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<S>>
     txn GroupIndex
@@ -114,10 +108,9 @@ main_after_for@18:
 main_ternary_merge@21:
     !
     assert // not payable
-    dig 1
     itob
     extract 6 2
-    dig 15
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -133,10 +126,8 @@ main_ternary_false@20:
 main_k_route@10:
     txna ApplicationArgs 1
     dup
-    bury 16
     len
     dup
-    bury 6
     pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<S, 2>
@@ -150,10 +141,9 @@ main_k_route@10:
 main_ternary_merge@26:
     !
     assert // not payable
-    dig 4
     itob
     extract 6 2
-    dig 15
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -168,9 +158,7 @@ main_ternary_false@25:
 
 main_j_route@9:
     txna ApplicationArgs 1
-    dup
-    bury 16
-    dup
+    dupn 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     intc_3 // 32
@@ -180,7 +168,7 @@ main_j_route@9:
     swap
     len
     dup
-    bury 7
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<S>
     txn GroupIndex
@@ -193,10 +181,9 @@ main_j_route@9:
 main_ternary_merge@31:
     !
     assert // not payable
-    dig 4
     itob
     extract 6 2
-    dig 15
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -211,64 +198,58 @@ main_ternary_false@30:
 
 main_i_route@8:
     txna ApplicationArgs 1
-    dup
-    bury 16
-    dup
+    dupn 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 11
+    bury 4
     intc_1 // 2
     *
-    bury 5
+    swap
     dup
     len
-    bury 3
+    cover 2
     extract 2 0
-    bury 14
     intc_0 // 0
-    bury 7
 
 main_for_header@34:
+    dup
     dig 6
-    dig 9
     <
     bz main_after_for@39
-    dig 6
+    dup
     intc_1 // 2
     *
-    dig 14
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 6
+    dig 5
     ==
     assert // invalid tail pointer for (len+((len+uint256[]))[2][])
     dig 1
     len
     substring3
-    bury 12
+    cover 4
     pushint 4
-    bury 3
+    cover 2
     intc_0 // 0
-    bury 6
 
 main_for_header@36:
-    dig 5
+    dup
     intc_1 // 2
     <
     bz main_after_for@38
-    dig 5
     dup
     intc_1 // 2
     *
-    dig 13
+    dig 7
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 6
+    uncover 6
     dup
     cover 4
     ==
@@ -294,28 +275,28 @@ main_for_header@36:
     pushint 4
     +
     +
-    bury 4
+    cover 3
     intc_2 // 1
     +
-    bury 6
     b main_for_header@36
 
 main_after_for@38:
-    dig 3
-    dig 3
+    pop
+    uncover 5
+    pop
+    uncover 3
+    uncover 3
     +
-    bury 4
-    dig 6
+    cover 2
     intc_2 // 1
     +
-    bury 7
     b main_for_header@34
 
 main_after_for@39:
-    dig 3
+    popn 2
     intc_1 // 2
     +
-    dig 2
+    dig 1
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<D, 2>>
     txn GroupIndex
@@ -328,10 +309,9 @@ main_after_for@39:
 main_ternary_merge@42:
     !
     assert // not payable
-    dig 1
     itob
     extract 6 2
-    dig 15
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -346,38 +326,34 @@ main_ternary_false@41:
 
 main_h_route@7:
     txna ApplicationArgs 1
-    dup
-    bury 16
-    dup
+    dupn 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 13
+    bury 6
     intc_1 // 2
     *
-    bury 5
+    swap
     dup
     len
-    bury 3
+    cover 2
     extract 2 0
-    bury 14
     intc_0 // 0
-    bury 7
 
 main_for_header@45:
-    dig 6
-    dig 11
+    dup
+    dig 8
     <
     bz main_after_for@50
-    dig 6
+    dup
     intc_1 // 2
     *
-    dig 14
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 6
+    dig 5
     ==
     assert // invalid tail pointer for (len+(len+((len+uint256[]))[])[])
     dig 1
@@ -387,30 +363,28 @@ main_for_header@45:
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 12
+    bury 9
     intc_1 // 2
     *
-    bury 4
+    cover 3
     extract 2 0
-    bury 13
+    swap
     intc_0 // 0
-    bury 6
 
 main_for_header@47:
-    dig 5
+    dup
     dig 10
     <
     bz main_after_for@49
-    dig 5
     dup
     intc_1 // 2
     *
-    dig 14
+    dig 3
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 6
+    uncover 7
     dup
     cover 4
     ==
@@ -436,30 +410,29 @@ main_for_header@47:
     pushint 4
     +
     +
-    bury 4
+    cover 4
     intc_2 // 1
     +
-    bury 6
     b main_for_header@47
 
 main_after_for@49:
-    dig 2
+    pop
+    bury 1
+    uncover 2
     intc_1 // 2
     +
-    dig 4
+    uncover 3
     +
-    bury 4
-    dig 6
+    cover 2
     intc_2 // 1
     +
-    bury 7
     b main_for_header@45
 
 main_after_for@50:
-    dig 3
+    popn 2
     intc_1 // 2
     +
-    dig 2
+    dig 1
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<D>>
     txn GroupIndex
@@ -472,10 +445,9 @@ main_after_for@50:
 main_ternary_merge@53:
     !
     assert // not payable
-    dig 1
     itob
     extract 6 2
-    dig 15
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -490,27 +462,23 @@ main_ternary_false@52:
 
 main_g_route@6:
     txna ApplicationArgs 1
-    bury 15
     pushint 4
-    bury 4
     intc_0 // 0
-    bury 7
 
 main_for_header@56:
-    dig 6
+    dup
     intc_1 // 2
     <
     bz main_after_for@58
-    dig 6
     dup
     intc_1 // 2
     *
-    dig 16
+    dig 3
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 7
+    uncover 4
     dup
     cover 4
     ==
@@ -536,18 +504,17 @@ main_for_header@56:
     pushint 4
     +
     +
-    bury 5
+    swap
     intc_2 // 1
     +
-    bury 7
     b main_for_header@56
 
 main_after_for@58:
-    dig 14
+    pop
+    dig 1
     len
     dup
-    bury 6
-    dig 4
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.static_array<D, 2>
     txn GroupIndex
@@ -560,10 +527,9 @@ main_after_for@58:
 main_ternary_merge@61:
     !
     assert // not payable
-    dig 4
     itob
     extract 6 2
-    dig 15
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -578,13 +544,10 @@ main_ternary_false@60:
 
 main_f_route@5:
     txna ApplicationArgs 1
-    dup
-    bury 16
-    dup
+    dupn 2
     len
     dup
-    cover 2
-    bury 3
+    uncover 2
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid tuple encoding
@@ -612,10 +575,9 @@ main_f_route@5:
 main_ternary_merge@66:
     !
     assert // not payable
-    dup
     itob
     extract 6 2
-    dig 15
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap

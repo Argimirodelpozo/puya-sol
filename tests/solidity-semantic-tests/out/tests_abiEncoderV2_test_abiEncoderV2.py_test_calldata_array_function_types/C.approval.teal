@@ -5,7 +5,6 @@
 main:
     intcblock 0 1 32 2
     bytecblock 0x151f7c75 0xf2ecd32a 0xc19647e5 0x5e403be6
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -52,7 +51,6 @@ main_g_route@10:
     assert // invalid number of bytes for arc4.bool
     intc_0 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@16
     txn GroupIndex
@@ -63,7 +61,7 @@ main_g_route@10:
 main_ternary_merge@17:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_1 // 1
     <=
     assert // ABI bool validation
@@ -88,9 +86,10 @@ main_ternary_merge@17:
     bz main_ternary_false@19
     callsub f_reenc
     pop
+    cover 2
+    swap
 
 main_ternary_merge@20:
-    uncover 2
     dup
     len
     intc_2 // 32
@@ -101,7 +100,7 @@ main_ternary_merge@20:
     swap
     dig 1
     b|
-    uncover 3
+    uncover 2
     dup
     len
     intc_2 // 32
@@ -131,6 +130,8 @@ main_ternary_merge@20:
 main_ternary_false@19:
     callsub f
     pop
+    cover 2
+    swap
     b main_ternary_merge@20
 
 main_ternary_false@16:
@@ -220,10 +221,6 @@ main_f_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/calldata_array_function_types.sol.C.f(s: bytes) -> bytes, bytes, bytes, bytes:
 f:
     proto 1 4
-    intc_0 // 0
-    dup
-    pushbytes ""
-    dupn 4
     txn GroupIndex
     bz f_ternary_false@2
     txn GroupIndex
@@ -238,21 +235,18 @@ f_ternary_merge@3:
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    frame_bury 2
     itob
     pushint 3
     itob
     b==
     dup
-    frame_bury 3
     bnz f_after_if_else@5
     pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 f_after_if_else@5:
-    frame_dig 3
     assert
-    frame_dig 2
+    dup
     assert // array index out of bounds
     frame_dig -1
     extract 2 12
@@ -260,59 +254,62 @@ f_after_if_else@5:
     intc_0 // 0
     extract_uint64
     dup
-    frame_bury 4
     global CurrentApplicationID
     ==
     bz f_else_body@7
+    pop
     extract 8 4
     callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
     intc_0 // 0
     callsub __funcptr_dispatch_ret_t_uint256
-    frame_bury 0
 
 f_after_if_else@9:
     intc_1 // 1
-    frame_dig 2
+    dig 2
     <
     assert // array index out of bounds
     frame_dig -1
     extract 14 12
     dup
+    cover 2
     intc_0 // 0
     extract_uint64
     dup
-    frame_bury 5
     global CurrentApplicationID
     ==
     bz f_else_body@11
+    pop
+    swap
     extract 8 4
     callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
     intc_0 // 0
     callsub __funcptr_dispatch_ret_t_uint256
-    frame_bury 1
+    swap
 
 f_after_if_else@13:
     intc_3 // 2
-    frame_dig 2
+    uncover 3
     <
     assert // array index out of bounds
     frame_dig -1
     extract 26 12
     dup
+    cover 2
     intc_0 // 0
     extract_uint64
     dup
-    frame_bury 6
     global CurrentApplicationID
     ==
     bz f_else_body@15
+    pop
+    swap
     extract 8 4
     callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
     intc_0 // 0
     callsub __funcptr_dispatch_ret_t_uint256
 
 f_after_if_else@17:
-    frame_dig 0
+    swap
     dup
     len
     intc_2 // 32
@@ -323,7 +320,7 @@ f_after_if_else@17:
     swap
     dig 1
     b|
-    frame_dig 1
+    uncover 3
     dup
     len
     intc_2 // 32
@@ -340,14 +337,11 @@ f_after_if_else@17:
     uncover 3
     b|
     frame_dig -1
-    frame_bury 3
-    frame_bury 2
-    frame_bury 1
-    frame_bury 0
     retsub
 
 f_else_body@15:
     itxn_begin
+    uncover 2
     extract 8 4
     pushint 6
     itxn_field TypeEnum
@@ -355,9 +349,8 @@ f_else_body@15:
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
-    frame_dig 6
-    itxn_field ApplicationID
     itxn_field ApplicationArgs
+    itxn_field ApplicationID
     itxn_submit
     itxn LastLog
     extract 4 0
@@ -365,6 +358,7 @@ f_else_body@15:
 
 f_else_body@11:
     itxn_begin
+    uncover 2
     extract 8 4
     pushint 6
     itxn_field TypeEnum
@@ -372,17 +366,17 @@ f_else_body@11:
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
-    frame_dig 5
-    itxn_field ApplicationID
     itxn_field ApplicationArgs
+    itxn_field ApplicationID
     itxn_submit
     itxn LastLog
     extract 4 0
-    frame_bury 1
+    swap
     b f_after_if_else@13
 
 f_else_body@7:
     itxn_begin
+    swap
     extract 8 4
     pushint 6
     itxn_field TypeEnum
@@ -390,13 +384,11 @@ f_else_body@7:
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
-    frame_dig 4
-    itxn_field ApplicationID
     itxn_field ApplicationArgs
+    itxn_field ApplicationID
     itxn_submit
     itxn LastLog
     extract 4 0
-    frame_bury 0
     b f_after_if_else@9
 
 f_ternary_false@2:

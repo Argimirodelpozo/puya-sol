@@ -5,10 +5,6 @@
 main:
     intcblock 1 0
     bytecblock 0x0000 0x151f7c75
-    intc_1 // 0
-    dup
-    pushbytes ""
-    dup
     pushint 4096
     bzero
     dup
@@ -54,16 +50,14 @@ main_ternary_merge@13:
     !
     assert // not payable
     bytec_0 // 0x0000
-    bury 3
     intc_1 // 0
-    bury 1
 
 main_while_top@14:
     dup
     intc_0 // 1
     <
     bz main_after_while@16
-    dig 2
+    swap
     dup
     intc_1 // 0
     extract_uint16
@@ -74,15 +68,13 @@ main_while_top@14:
     replace2 0
     bytec_0 // 0x0000
     concat
-    bury 3
-    dup
+    swap
     intc_0 // 1
     +
-    bury 1
     b main_while_top@14
 
 main_after_while@16:
-    dig 2
+    pop
     pushbytes 0x002a
     replace2 6 // on error: index access is out of bounds
     pushint 6
@@ -114,16 +106,14 @@ main_ternary_merge@21:
     !
     assert // not payable
     bytec_0 // 0x0000
-    bury 4
     intc_1 // 0
-    bury 2
 
 main_while_top@22:
-    dig 1
+    dup
     intc_1 // 0
     <
     bz main_after_while@24
-    dig 3
+    swap
     dup
     intc_1 // 0
     extract_uint16
@@ -134,15 +124,13 @@ main_while_top@22:
     replace2 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    bury 4
-    dig 1
+    swap
     intc_0 // 1
     +
-    bury 2
     b main_while_top@22
 
 main_after_while@24:
-    dig 3
+    pop
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000002a
     replace2 34 // on error: index access is out of bounds
     extract 34 32

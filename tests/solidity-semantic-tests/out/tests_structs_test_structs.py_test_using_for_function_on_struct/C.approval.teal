@@ -5,7 +5,6 @@
 main:
     intcblock 1 32 0
     bytecblock "x" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000003
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -72,7 +71,6 @@ main_ternary_false@12:
 main_f_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_1 // 32
     ==
@@ -93,7 +91,7 @@ main_ternary_merge@18:
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000003
     app_global_put
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000003
-    dig 2
+    uncover 2
     callsub D.mul
     pop
     bytec_0 // "x"

@@ -3,8 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    intc_1 // 0
+    intcblock 1 32 0
     pushint 4096
     bzero
     dup
@@ -41,9 +40,8 @@ main_after_if_else@2:
 main_f_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -56,7 +54,6 @@ main_f_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    dup
     callsub dyn
     pop
     pushbytes 0x151f7c7580
@@ -65,14 +62,14 @@ main_ternary_merge@13:
     return
 
 main_ternary_false@12:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@13
 
 main_dyn_route@5:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub dyn
@@ -120,5 +117,5 @@ dyn_ternary_merge@3:
     retsub
 
 dyn_ternary_false@2:
-    intc_1 // 0
+    intc_2 // 0
     b dyn_ternary_merge@3

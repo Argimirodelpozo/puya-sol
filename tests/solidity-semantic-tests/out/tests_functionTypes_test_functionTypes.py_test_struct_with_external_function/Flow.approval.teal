@@ -5,9 +5,6 @@
 main:
     intcblock 0 1 32 16
     bytecblock "t" 0x0000000000000000000000000000000000000000000000000000000000000000 0xff07 "__ctor_pending" 0xb583a38a 0xbfb0782e 0x151f7c75
-    intc_0 // 0
-    pushbytes ""
-    dup
     pushint 4096
     bzero
     dup
@@ -69,15 +66,14 @@ main_ternary_merge@15:
     intc_0 // 0
     extract_uint64
     dup
-    bury 3
     global CurrentApplicationID
     ==
     bz main_else_body@17
+    pop
     extract 8 4
     callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
     intc_0 // 0
     callsub __funcptr_dispatch_ret_t_uint256
-    bury 3
 
 main_after_if_else@18:
     bytec_0 // "t"
@@ -88,20 +84,22 @@ main_after_if_else@18:
     extract 16 16 // on error: index access is out of bounds
     extract 2 12
     dup
+    cover 2
     intc_0 // 0
     extract_uint64
     dup
-    bury 4
     global CurrentApplicationID
     ==
     bz main_else_body@20
+    pop
+    swap
     extract 8 4
     callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
     intc_0 // 0
     callsub __funcptr_dispatch_ret_t_uint256
 
 main_after_if_else@21:
-    dig 3
+    swap
     dup
     len
     intc_2 // 32
@@ -130,6 +128,7 @@ main_after_if_else@21:
 
 main_else_body@20:
     itxn_begin
+    uncover 2
     extract 8 4
     pushint 6
     itxn_field TypeEnum
@@ -137,9 +136,8 @@ main_else_body@20:
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
-    dig 2
-    itxn_field ApplicationID
     itxn_field ApplicationArgs
+    itxn_field ApplicationID
     itxn_submit
     itxn LastLog
     extract 4 0
@@ -147,6 +145,7 @@ main_else_body@20:
 
 main_else_body@17:
     itxn_begin
+    swap
     extract 8 4
     pushint 6
     itxn_field TypeEnum
@@ -154,13 +153,11 @@ main_else_body@17:
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
-    dig 1
-    itxn_field ApplicationID
     itxn_field ApplicationArgs
+    itxn_field ApplicationID
     itxn_submit
     itxn LastLog
     extract 4 0
-    bury 3
     b main_after_if_else@18
 
 main_ternary_false@14:

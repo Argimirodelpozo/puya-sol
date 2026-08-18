@@ -4,8 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/bool_out_of_bounds.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    intc_1 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -41,16 +39,13 @@ main_f_route@4:
     &&
     assert
     txna ApplicationArgs 1
-    dup
-    bury 3
-    dup
+    dupn 2
     len
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -61,12 +56,11 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
     pushbytes 0x151f7c75
-    dig 2
+    swap
     concat
     log
     intc_0 // 1

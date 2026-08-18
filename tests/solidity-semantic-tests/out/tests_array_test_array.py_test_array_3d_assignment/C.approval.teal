@@ -6,8 +6,7 @@ main:
     intcblock 1 2 0 32
     bytecblock 0x010000000000000000 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_2 // 0
-    dupn 7
-    pushbytes ""
+    dupn 3
     pushint 4096
     bzero
     dup
@@ -44,7 +43,7 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 10
+    bury 5
     len
     intc_3 // 32
     ==
@@ -61,32 +60,29 @@ main_ternary_merge@9:
     assert // not payable
     intc_1 // 2
     itob
-    bury 7
+    bury 3
     pushbytes 0x00020004000600000000
-    bury 8
     intc_2 // 0
     itob
     dup
-    bury 6
-    bury 4
+    bury 3
 
 main_while_top@10:
-    dig 3
-    dig 7
+    dup
+    dig 5
     b<
     bz main_after_while@15
     pushint 3
     itob
-    bury 6
-    dig 3
-    dup
+    bury 4
+    dupn 2
     bytec_0 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
     bzero
     dup
-    bury 4
+    cover 4
     swap
     concat
     dup
@@ -95,26 +91,26 @@ main_while_top@10:
     -
     extract_uint64
     dup
-    bury 2
-    dig 8
+    cover 4
+    uncover 2
     pushbytes 0x000300060008000a000000000000
     uncover 2
     callsub dynamic_array_replace_dynamic_element
-    bury 8
+    swap
     dig 4
-    bury 3
+    swap
 
 main_while_top@12:
-    dig 2
-    dig 6
+    dig 1
+    dig 7
     b<
     bz main_after_while@14
-    dig 2
+    swap
     dup
     bytec_0 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    dig 2
+    dig 3
     dig 1
     concat
     dup
@@ -122,10 +118,10 @@ main_while_top@12:
     pushint 8
     -
     extract_uint64
-    dig 9
+    uncover 3
     dup
     cover 2
-    dig 4
+    dig 6
     dup
     cover 4
     callsub dynamic_array_read_dynamic_element
@@ -134,29 +130,32 @@ main_while_top@12:
     callsub dynamic_array_replace_dynamic_element
     uncover 2
     callsub dynamic_array_replace_dynamic_element
-    bury 9
+    cover 2
     bytec_1 // 0x01
     b+
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 3
+    swap
     b main_while_top@12
 
 main_after_while@14:
-    dig 3
+    bury 1
+    uncover 2
+    pop
+    uncover 2
+    pop
     bytec_1 // 0x01
     b+
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 4
     b main_while_top@10
 
 main_after_while@15:
-    dig 7
+    pop
     dup
     intc_0 // 1
     callsub dynamic_array_read_dynamic_element
@@ -178,7 +177,7 @@ main_after_while@15:
     intc_1 // 2
     +
     extract3
-    dig 11
+    dig 6
     replace2 34 // on error: index access is out of bounds
     intc_0 // 1
     callsub dynamic_array_replace_dynamic_element
@@ -260,7 +259,7 @@ dynamic_array_replace_dynamic_element:
     extract 2 0
     frame_dig -2
     len
-    cover 2
+    cover 3
     dup
     len
     frame_dig -1
@@ -287,7 +286,7 @@ dynamic_array_replace_dynamic_element:
     extract_uint16
     dup2
     -
-    cover 6
+    cover 7
     dig 4
     intc_2 // 0
     uncover 2
@@ -303,37 +302,34 @@ dynamic_array_replace_dynamic_element:
     swap
     intc_1 // 2
     *
-    swap
+    cover 2
 
 dynamic_array_replace_dynamic_element_for_header@2:
-    frame_dig 5
-    frame_dig 4
+    dup
+    dig 3
     <
     bz dynamic_array_replace_dynamic_element_after_for@5
-    frame_dig 3
+    swap
     dup
-    frame_dig 5
-    dup
-    cover 3
+    dig 2
     extract_uint16
-    frame_dig 1
+    dig 6
     +
-    frame_dig 2
+    dig 5
     -
     itob
     extract 6 0
     dig 2
     swap
     replace3
-    frame_bury 3
+    swap
     intc_1 // 2
     +
-    frame_bury 5
     b dynamic_array_replace_dynamic_element_for_header@2
 
 dynamic_array_replace_dynamic_element_after_for@5:
-    frame_dig 0
-    frame_dig 3
+    pop
+    bury 1
     concat
     frame_bury 0
     retsub

@@ -5,10 +5,6 @@
 main:
     intcblock 32 1 0 10 10000
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
-    intc_2 // 0
-    dupn 6
-    pushbytes ""
-    dupn 4
     pushint 4096
     bzero
     dup
@@ -93,35 +89,31 @@ main_ternary_merge@18:
     intc_0 // 32
     bzero
     dup
-    bury 10
+    cover 2
     b|
     dup
-    bury 8
     len
     dup
-    bury 6
+    cover 2
     itob
     intc_0 // 32
     itob
     dup
-    bury 8
+    cover 5
     b==
     bz main_bool_false@20
     intc_1 // 1
 
 main_bool_merge@21:
     assert
-    dig 4
+    swap
     intc_0 // 32
     ==
     bz main_else_body@23
-    dig 6
     extract 0 32
-    bury 12
 
 main_after_if_else@24:
-    dig 11
-    dup
+    dupn 2
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
@@ -139,37 +131,34 @@ main_after_if_else@24:
     intc_0 // 32
     <=
     assert // overflow
-    dig 8
+    dig 2
     b|
     dup
-    bury 8
+    cover 2
     intc_3 // 10
     callsub b
     pop
     len
     dup
-    bury 5
+    cover 3
     itob
-    dig 6
+    dig 5
     b==
     bz main_bool_false@26
     intc_1 // 1
 
 main_bool_merge@27:
     assert
-    dig 3
+    uncover 2
     intc_0 // 32
     ==
     bz main_else_body@29
-    dig 6
+    swap
     extract 0 32
 
 main_after_if_else@30:
-    dig 12
     b+
-    dup
-    bury 12
-    dup
+    dupn 2
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
@@ -184,34 +173,29 @@ main_after_if_else@30:
     intc_0 // 32
     <=
     assert // overflow
-    dig 8
+    dig 2
     b|
     dup
-    bury 8
     len
     dup
-    bury 4
+    cover 2
     itob
-    dig 6
+    dig 5
     b==
     bz main_bool_false@32
     intc_1 // 1
 
 main_bool_merge@33:
     assert
-    dig 2
+    swap
     intc_0 // 32
     ==
     bz main_else_body@35
-    dig 6
     extract 0 32
 
 main_after_if_else@36:
-    dig 11
     b+
-    dup
-    bury 11
-    dup
+    dupn 2
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
@@ -226,34 +210,29 @@ main_after_if_else@36:
     intc_0 // 32
     <=
     assert // overflow
-    dig 8
+    dig 2
     b|
     dup
-    bury 8
     len
     dup
-    bury 3
+    cover 2
     itob
-    dig 6
+    dig 5
     b==
     bz main_bool_false@38
     intc_1 // 1
 
 main_bool_merge@39:
     assert
-    dig 1
+    swap
     intc_0 // 32
     ==
     bz main_else_body@41
-    dig 6
     extract 0 32
 
 main_after_if_else@42:
-    dig 10
     b+
-    dup
-    bury 10
-    dup
+    dupn 2
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
@@ -271,33 +250,30 @@ main_after_if_else@42:
     intc_0 // 32
     <=
     assert // overflow
-    dig 8
+    dig 2
     b|
     dup
-    bury 8
     intc 4 // 10000
     callsub b
     pop
     len
     dup
-    bury 2
+    cover 2
     itob
-    dig 6
+    uncover 5
     b==
     bz main_bool_false@44
     intc_1 // 1
 
 main_bool_merge@45:
     assert
-    dup
+    swap
     intc_0 // 32
     ==
     bz main_else_body@47
-    dig 6
     extract 0 32
 
 main_after_if_else@48:
-    dig 9
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -313,7 +289,6 @@ main_after_if_else@48:
     intc_0 // 32
     <=
     assert // overflow
-    dig 8
     b|
     bytec_1 // 0x151f7c75
     swap
@@ -323,7 +298,6 @@ main_after_if_else@48:
     return
 
 main_else_body@47:
-    dig 6
     b main_after_if_else@48
 
 main_bool_false@44:
@@ -331,7 +305,6 @@ main_bool_false@44:
     b main_bool_merge@45
 
 main_else_body@41:
-    dig 6
     b main_after_if_else@42
 
 main_bool_false@38:
@@ -339,7 +312,6 @@ main_bool_false@38:
     b main_bool_merge@39
 
 main_else_body@35:
-    dig 6
     b main_after_if_else@36
 
 main_bool_false@32:
@@ -347,7 +319,7 @@ main_bool_false@32:
     b main_bool_merge@33
 
 main_else_body@29:
-    dig 6
+    swap
     b main_after_if_else@30
 
 main_bool_false@26:
@@ -355,8 +327,6 @@ main_bool_false@26:
     b main_bool_merge@27
 
 main_else_body@23:
-    dig 6
-    bury 12
     b main_after_if_else@24
 
 main_bool_false@20:

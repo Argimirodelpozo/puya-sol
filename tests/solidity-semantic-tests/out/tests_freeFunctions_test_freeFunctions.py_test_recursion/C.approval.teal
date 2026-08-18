@@ -5,8 +5,6 @@
 main:
     intcblock 1 32 0
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    intc_2 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -43,14 +41,12 @@ main_g_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 2
     len
     intc_1 // 32
     ==
@@ -65,7 +61,6 @@ main_g_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dup2
     callsub exp
     dup
     len

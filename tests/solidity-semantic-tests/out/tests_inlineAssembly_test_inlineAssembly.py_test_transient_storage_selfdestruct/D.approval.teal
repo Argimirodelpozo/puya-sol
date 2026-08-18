@@ -5,7 +5,6 @@
 main:
     intcblock 0 1 6 16 1000000
     bytecblock "c" "__ctor_pending" TMPL_APPROVAL_C TMPL_CLEAR_C 0x7cb116cd 0x000000000000000000000000000000000000000000000000000000000000002a 0xb30e2ea6 0xf08d7860 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -164,7 +163,6 @@ main_ternary_merge@20:
     extract 4 0
     b==
     dup
-    bury 2
     bnz main_after_if_else@29
     bytec 8 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
@@ -238,7 +236,6 @@ main_ternary_merge@27:
     extract 4 0
     b==
     dup
-    bury 2
     bnz main_after_if_else@29
     bytec 8 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log

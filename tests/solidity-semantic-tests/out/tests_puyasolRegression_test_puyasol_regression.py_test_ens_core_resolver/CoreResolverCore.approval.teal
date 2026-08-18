@@ -4,11 +4,9 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ens_core_resolver.sol.CoreResolverCore.approval_program() -> uint64:
 main:
     intcblock 0 32 1 2
-    bytecblock "recordVersions" 0x 0x151f7c75 "versionable_addresses" "__ctor_pending" "versionable_pubkeys" "versionable_names" "versionable_hashes" "versionable_texts" 0x000000000000000000000000000000000000000000000000000000000000003c 0x01000000000000000000000000
+    bytecblock "recordVersions" 0x151f7c75 0x "versionable_addresses" "__ctor_pending" "versionable_pubkeys" "versionable_names" "versionable_hashes" "versionable_texts" 0x000000000000000000000000000000000000000000000000000000000000003c 0x01000000000000000000000000
     intc_0 // 0
-    dupn 12
-    bytec_1 // ""
-    dupn 3
+    dup
     pushint 4096
     bzero
     dup
@@ -48,7 +46,6 @@ main_after_if_else@2:
 main_clearRecords_route@18:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_1 // 32
     ==
@@ -63,7 +60,6 @@ main_clearRecords_route@18:
 main_ternary_merge@25:
     !
     assert // not payable
-    dig 9
     bytec_0 // "recordVersions"
     concat
     sha256
@@ -89,7 +85,6 @@ main_ternary_false@24:
 main_pubkey_route@17:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_1 // 32
     ==
@@ -104,7 +99,6 @@ main_pubkey_route@17:
 main_ternary_merge@30:
     !
     assert // not payable
-    dig 9
     dup
     bytec_0 // "recordVersions"
     concat
@@ -131,7 +125,7 @@ main_ternary_merge@30:
     swap
     extract 32 32
     concat
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -145,21 +139,18 @@ main_ternary_false@29:
 main_setPubkey_route@16:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 7
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 3
     dup
-    bury 6
     len
     intc_1 // 32
     ==
@@ -174,10 +165,8 @@ main_setPubkey_route@16:
 main_ternary_merge@35:
     !
     assert // not payable
-    dig 5
-    dig 5
     concat
-    dig 10
+    swap
     dup
     bytec_0 // "recordVersions"
     concat
@@ -207,7 +196,6 @@ main_ternary_false@34:
 main_getName_route@15:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_1 // 32
     ==
@@ -222,7 +210,6 @@ main_getName_route@15:
 main_ternary_merge@40:
     !
     assert // not payable
-    dig 9
     dup
     bytec_0 // "recordVersions"
     concat
@@ -241,7 +228,7 @@ main_ternary_merge@40:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -250,7 +237,7 @@ main_ternary_merge@40:
     extract 6 2
     swap
     concat
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -264,7 +251,6 @@ main_ternary_false@39:
 main_setName_route@14:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_1 // 32
     ==
@@ -280,7 +266,6 @@ main_setName_route@14:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 11
     txn GroupIndex
     bz main_ternary_false@44
     txn GroupIndex
@@ -291,7 +276,7 @@ main_setName_route@14:
 main_ternary_merge@45:
     !
     assert // not payable
-    dig 9
+    swap
     dup
     bytec_0 // "recordVersions"
     concat
@@ -312,7 +297,7 @@ main_ternary_merge@45:
     dup
     box_del
     pop
-    dig 11
+    swap
     box_put
     intc_2 // 1
     return
@@ -324,7 +309,6 @@ main_ternary_false@44:
 main_contenthash_route@13:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_1 // 32
     ==
@@ -339,7 +323,6 @@ main_contenthash_route@13:
 main_ternary_merge@50:
     !
     assert // not payable
-    dig 9
     dup
     bytec_0 // "recordVersions"
     concat
@@ -358,7 +341,7 @@ main_ternary_merge@50:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -367,7 +350,7 @@ main_ternary_merge@50:
     extract 6 2
     swap
     concat
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -381,7 +364,6 @@ main_ternary_false@49:
 main_setContenthash_route@12:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_1 // 32
     ==
@@ -397,7 +379,6 @@ main_setContenthash_route@12:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 13
     txn GroupIndex
     bz main_ternary_false@54
     txn GroupIndex
@@ -408,7 +389,7 @@ main_setContenthash_route@12:
 main_ternary_merge@55:
     !
     assert // not payable
-    dig 9
+    swap
     dup
     bytec_0 // "recordVersions"
     concat
@@ -429,7 +410,7 @@ main_ternary_merge@55:
     dup
     box_del
     pop
-    dig 13
+    swap
     box_put
     intc_2 // 1
     return
@@ -441,7 +422,6 @@ main_ternary_false@54:
 main_text_route@11:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_1 // 32
     ==
@@ -457,7 +437,6 @@ main_text_route@11:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 12
     txn GroupIndex
     bz main_ternary_false@59
     txn GroupIndex
@@ -468,9 +447,8 @@ main_text_route@11:
 main_ternary_merge@60:
     !
     assert // not payable
-    dig 11
     sha256
-    dig 10
+    swap
     dup
     bytec_0 // "recordVersions"
     concat
@@ -491,7 +469,7 @@ main_ternary_merge@60:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -500,7 +478,7 @@ main_ternary_merge@60:
     extract 6 2
     swap
     concat
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -514,7 +492,6 @@ main_ternary_false@59:
 main_setText_route@10:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_1 // 32
     ==
@@ -530,7 +507,6 @@ main_setText_route@10:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 12
     txna ApplicationArgs 3
     dup
     intc_0 // 0
@@ -542,7 +518,7 @@ main_setText_route@10:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 7
+    cover 2
     txn GroupIndex
     bz main_ternary_false@64
     txn GroupIndex
@@ -553,9 +529,8 @@ main_setText_route@10:
 main_ternary_merge@65:
     !
     assert // not payable
-    dig 11
     sha256
-    dig 10
+    swap
     dup
     bytec_0 // "recordVersions"
     concat
@@ -578,7 +553,7 @@ main_ternary_merge@65:
     dup
     box_del
     pop
-    dig 7
+    swap
     box_put
     intc_2 // 1
     return
@@ -590,7 +565,6 @@ main_ternary_false@64:
 main_addrEth_route@9:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_1 // 32
     ==
@@ -605,7 +579,6 @@ main_addrEth_route@9:
 main_ternary_merge@70:
     !
     assert // not payable
-    dig 9
     dup
     bytec_0 // "recordVersions"
     concat
@@ -628,25 +601,24 @@ main_ternary_merge@70:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
-    bury 15
+    bury 3
     len
     dup
-    bury 2
     itob
     dup
-    bury 10
     intc_0 // 0
     itob
     b==
     bz main_after_if_else@72
+    popn 2
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
 
 main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ens_core_resolver.sol.CoreResolverCore.addrEth@73:
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -656,38 +628,31 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
 main_after_if_else@72:
     pushint 20
     itob
-    dig 9
     b==
     assert
     load 0
     store 0
     intc_1 // 32
     bzero
-    bury 8
-    intc_0 // 0
-    bury 4
-    dup
-    bz main_ternary_false@91
-    dig 3
     bury 2
+    intc_0 // 0
+    dig 1
+    bz main_ternary_false@91
 
 main_ternary_merge@92:
-    dup
-    dig 2
+    swap
+    dig 1
     -
     dup
-    bury 4
     intc_1 // 32
     <
     bz main_ternary_false@94
-    dig 2
 
 main_ternary_merge@95:
-    dig 14
     dig 3
-    uncover 2
+    cover 2
     extract3
-    dig 8
+    dig 1
     dup
     cover 2
     concat
@@ -706,12 +671,13 @@ main_ternary_merge@95:
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ens_core_resolver.sol.CoreResolverCore.addrEth@73
 
 main_ternary_false@94:
+    pop
     intc_1 // 32
     b main_ternary_merge@95
 
 main_ternary_false@91:
+    pop
     dup
-    bury 2
     b main_ternary_merge@92
 
 main_ternary_false@69:
@@ -721,14 +687,12 @@ main_ternary_false@69:
 main_setAddrEth_route@8:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 17
     len
     intc_1 // 32
     ==
@@ -749,7 +713,7 @@ main_ternary_merge@78:
     store 0
     intc_1 // 32
     bzero
-    dig 17
+    uncover 2
     bytec 10 // 0x01000000000000000000000000
     b*
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -765,7 +729,7 @@ main_ternary_merge@78:
     replace2 0
     load 0
     store 0
-    dig 10
+    swap
     dup
     bytec_0 // "recordVersions"
     concat
@@ -802,14 +766,12 @@ main_ternary_false@77:
 main_addr_route@7:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 18
     len
     intc_1 // 32
     ==
@@ -826,7 +788,7 @@ main_ternary_merge@83:
     assert // not payable
     intc_1 // 32
     bzero
-    dig 17
+    swap
     concat
     dup
     len
@@ -834,7 +796,7 @@ main_ternary_merge@83:
     -
     intc_1 // 32
     extract3
-    dig 10
+    swap
     dup
     bytec_0 // "recordVersions"
     concat
@@ -855,7 +817,7 @@ main_ternary_merge@83:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -864,7 +826,7 @@ main_ternary_merge@83:
     extract 6 2
     swap
     concat
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -878,14 +840,12 @@ main_ternary_false@82:
 main_setAddr_route@6:
     txna ApplicationArgs 1
     dup
-    bury 11
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 18
     len
     intc_1 // 32
     ==
@@ -901,7 +861,7 @@ main_setAddr_route@6:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 15
+    cover 2
     txn GroupIndex
     bz main_ternary_false@87
     txn GroupIndex
@@ -914,7 +874,7 @@ main_ternary_merge@88:
     assert // not payable
     intc_1 // 32
     bzero
-    dig 17
+    swap
     concat
     dup
     len
@@ -922,7 +882,7 @@ main_ternary_merge@88:
     -
     intc_1 // 32
     extract3
-    dig 10
+    swap
     dup
     bytec_0 // "recordVersions"
     concat
@@ -945,7 +905,7 @@ main_ternary_merge@88:
     dup
     box_del
     pop
-    dig 15
+    swap
     box_put
     intc_2 // 1
     return

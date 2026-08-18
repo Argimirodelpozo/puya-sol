@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_oob_index.sol.ArrayOOB.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8 6400
+    intcblock 32 1 8 0 6400
     bytecblock "mbArr" 0x010000000000000000 0x151f7c75 "sArr" "__ctor_pending" "fArr" 0x0000000000000000000000000000000000000000000000000000000000000001
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -45,7 +44,6 @@ main_after_if_else@2:
 main_inBounds_route@12:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -60,17 +58,17 @@ main_inBounds_route@12:
 main_ternary_merge@19:
     !
     assert // not payable
-    dupn 2
+    dup
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    intc_3 // 8
+    intc_2 // 8
     bzero
     swap
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     intc_0 // 32
@@ -87,13 +85,12 @@ main_ternary_merge@19:
     return
 
 main_ternary_false@18:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@19
 
 main_mbWriteOOB_route@11:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -122,13 +119,13 @@ main_ternary_merge@24:
     pop
 
 main_after_if_else@26:
-    intc_3 // 8
+    intc_2 // 8
     bzero
-    dig 1
+    swap
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     intc_0 // 32
@@ -138,7 +135,7 @@ main_after_if_else@26:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
     box_replace // on error: index out of bounds
     bytec_0 // "mbArr"
-    intc_2 // 0
+    intc_3 // 0
     intc_0 // 32
     box_extract // on error: index out of bounds
     bytec_2 // 0x151f7c75
@@ -149,13 +146,12 @@ main_after_if_else@26:
     return
 
 main_ternary_false@23:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@24
 
 main_mbReadOOB_route@10:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -181,20 +177,20 @@ main_ternary_merge@31:
 
 main_after_if_else@33:
     bytec_0 // "mbArr"
-    intc_2 // 0
+    intc_3 // 0
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000001
     box_replace // on error: index out of bounds
-    dupn 2
+    dup
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    intc_3 // 8
+    intc_2 // 8
     bzero
     swap
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     intc_0 // 32
@@ -211,13 +207,12 @@ main_after_if_else@33:
     return
 
 main_ternary_false@30:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@31
 
 main_memWriteOOB_route@9:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -232,17 +227,17 @@ main_memWriteOOB_route@9:
 main_ternary_merge@38:
     !
     assert // not payable
-    dupn 2
+    dup
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    intc_3 // 8
+    intc_2 // 8
     bzero
     swap
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     intc_0 // 32
@@ -262,13 +257,12 @@ main_ternary_merge@38:
     return
 
 main_ternary_false@37:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@38
 
 main_fixedOOB_route@8:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -283,7 +277,7 @@ main_fixedOOB_route@8:
 main_ternary_merge@43:
     !
     assert // not payable
-    intc_2 // 0
+    intc_3 // 0
     bytec 5 // "fArr"
     app_global_get_ex
     assert // check fArr exists
@@ -296,18 +290,18 @@ main_ternary_merge@43:
     bytec 5 // "fArr"
     dig 1
     app_global_put
-    dig 1
+    swap
     dup
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    intc_3 // 8
+    intc_2 // 8
     bzero
     swap
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     intc_0 // 32
@@ -322,13 +316,12 @@ main_ternary_merge@43:
     return
 
 main_ternary_false@42:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@43
 
 main_memOOB_route@7:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -343,17 +336,17 @@ main_memOOB_route@7:
 main_ternary_merge@48:
     !
     assert // not payable
-    dupn 2
+    dup
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    intc_3 // 8
+    intc_2 // 8
     bzero
     swap
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     intc_0 // 32
@@ -370,13 +363,12 @@ main_ternary_merge@48:
     return
 
 main_ternary_false@47:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@48
 
 main_storageOOB_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -398,28 +390,28 @@ main_ternary_merge@53:
     pushbytes 0x0000
     box_put
     bytec_3 // "sArr"
-    intc_2 // 0
+    intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
     intc_1 // 1
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_3 // "sArr"
-    intc_2 // 0
+    intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
     intc_1 // 1
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
-    dupn 2
+    dup
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    intc_3 // 8
+    intc_2 // 8
     bzero
     swap
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     intc_0 // 32
@@ -438,7 +430,7 @@ main_ternary_merge@53:
     return
 
 main_ternary_false@52:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@53
 
 main___postInit_route@5:
@@ -450,7 +442,7 @@ main___postInit_route@5:
     ==
     assert // __postInit callable only by the app creator
     bytec 4 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_3 // "sArr"
     pushint 2
@@ -503,7 +495,7 @@ box_dynamic_array_concat_fixed:
     +
     frame_dig -5
     swap
-    intc_2 // 0
+    intc_3 // 0
     frame_dig -3
     box_splice
     retsub

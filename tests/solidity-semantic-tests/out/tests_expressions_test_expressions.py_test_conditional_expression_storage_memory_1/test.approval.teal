@@ -6,7 +6,6 @@ main:
     intcblock 1 0 88 4
     bytecblock "data1"
     intc_1 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -52,7 +51,6 @@ main_f_route@4:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -63,7 +61,7 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
@@ -103,14 +101,14 @@ main_ternary_merge@9:
     app_global_put
     intc_1 // 0
     itob
-    bury 3
+    bury 2
     extract 0 2 // on error: index access is out of bounds
     pushbytes "aa"
     ==
     bz main_after_if_else@11
     intc_0 // 1
     itob
-    bury 2
+    bury 1
 
 main_after_if_else@11:
     intc_1 // 0
@@ -123,11 +121,10 @@ main_after_if_else@11:
     bz main_after_if_else@13
     pushint 2
     itob
-    bury 2
+    bury 1
 
 main_after_if_else@13:
-    dig 1
-    dup
+    dupn 2
     len
     pushint 32
     <=

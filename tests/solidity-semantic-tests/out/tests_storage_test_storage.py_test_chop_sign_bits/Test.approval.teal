@@ -5,10 +5,6 @@
 main:
     intcblock 0 1 32 128
     bytecblock 0xff 0x00 0x151f7c75 "x" "__ctor_pending" "y" 0xffff 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x0002
-    intc_0 // 0
-    dup
-    pushbytes ""
-    dup
     pushint 4096
     bzero
     dup
@@ -48,7 +44,6 @@ main_after_if_else@2:
 main_y_route@10:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_2 // 32
     ==
@@ -69,7 +64,7 @@ main_ternary_merge@17:
     assert // check y exists
     pushint 8
     bzero
-    dig 5
+    uncover 2
     concat
     dup
     len
@@ -115,7 +110,6 @@ main_ternary_false@16:
 main_x_route@9:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_2 // 32
     ==
@@ -132,7 +126,7 @@ main_ternary_merge@25:
     assert // not payable
     pushint 8
     bzero
-    dig 4
+    swap
     concat
     dup
     len
@@ -189,7 +183,6 @@ main_h_route@8:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@32
     txn GroupIndex
@@ -214,7 +207,6 @@ main_bool_true@35:
 
 main_bool_merge@37:
     assert // ABI validation
-    dup
     pushint 256
     %
     dup
@@ -339,20 +331,16 @@ main_f_route@6:
 main_ternary_merge@53:
     !
     assert // not payable
-    intc_0 // 0
-    bury 2
     bytec 9 // 0x0002
-    bury 3
+    intc_0 // 0
 
 main_while_top@54:
-    dig 1
+    dup
     pushint 2
     <
     bz main_after_while@56
     pushint 2
-    dig 2
-    dup
-    cover 2
+    dig 1
     +
     pushbytes 0x0002fdfc
     swap
@@ -369,23 +357,21 @@ main_while_top@54:
     select
     swap
     concat
-    dig 4
+    uncover 2
     swap
     concat
-    bury 4
+    swap
     intc_1 // 1
     +
-    bury 2
     b main_while_top@54
 
 main_after_while@56:
+    pop
     bytec_3 // "x"
     box_del
     pop
     bytec_3 // "x"
-    dig 3
-    dup
-    cover 2
+    dig 1
     box_put
     bytec_2 // 0x151f7c75
     swap

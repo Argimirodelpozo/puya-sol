@@ -6,7 +6,6 @@ main:
     intcblock 32 2 0 1
     bytecblock "storageArray" 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x01 "__ctor_pending" 0x010000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000
     intc_2 // 0
-    dupn 6
     pushint 4096
     bzero
     dup
@@ -46,7 +45,6 @@ main_after_if_else@2:
 main_test_zeroed_indices_route@6:
     txna ApplicationArgs 1
     dup
-    bury 8
     len
     intc_0 // 32
     ==
@@ -79,7 +77,7 @@ main_ternary_merge@17:
     intc_0 // 32
     /
     itob
-    dig 7
+    dig 1
     b<
     bz main_while_top@19
     bytec_0 // "storageArray"
@@ -107,7 +105,7 @@ main_ternary_merge@22:
     intc_0 // 32
     /
     itob
-    dig 7
+    dig 1
     b>
     bz main_after_while@24
     bytec_0 // "storageArray"
@@ -120,22 +118,21 @@ main_after_while@24:
     intc_2 // 0
     itob
     dup
-    bury 4
-    bury 2
+    cover 2
 
 main_while_top@25:
-    dig 1
-    dig 7
+    dup
+    dig 2
     b<
     bz main_after_while@29
     intc_3 // 1
     itob
-    dig 2
+    dig 1
     dup
     uncover 2
     b+
     dup
-    bury 8
+    cover 2
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
@@ -152,7 +149,6 @@ main_while_top@25:
     pop
 
 main_after_if_else@28:
-    dig 5
     dup
     len
     intc_0 // 32
@@ -163,7 +159,7 @@ main_after_if_else@28:
     b|
     pushint 8
     bzero
-    dig 3
+    uncover 2
     dup
     cover 2
     concat
@@ -186,15 +182,15 @@ main_after_if_else@28:
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 2
     b main_while_top@25
 
 main_after_while@29:
+    pop
     pushint 3
     itob
     dup
-    bury 2
-    dig 7
+    bury 4
+    dig 1
     b<
     bz main_while_top@43
 
@@ -215,7 +211,7 @@ main_ternary_merge@33:
     intc_0 // 32
     /
     itob
-    dig 3
+    dig 2
     b>
     bz main_while_top@35
     bytec_0 // "storageArray"
@@ -241,7 +237,7 @@ main_ternary_merge@38:
     intc_0 // 32
     /
     itob
-    dig 1
+    dig 3
     b<
     bz main_while_top@41
     bytec_0 // "storageArray"
@@ -253,8 +249,8 @@ main_ternary_merge@38:
     b main_while_top@35
 
 main_while_top@41:
-    dup
-    dig 7
+    dig 2
+    dig 1
     b<
     bz main_while_top@43
     load 0
@@ -264,17 +260,17 @@ main_while_top@41:
     replace2 0
     store 0
     pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
-    dig 1
+    dig 3
     b+
     bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bury 6
     bytec_1 // 0x
     b==
     bz main_else_body@59
+    pop
     intc_0 // 32
     bzero
     bytec_0 // "storageArray"
@@ -295,20 +291,20 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     assert // revert
     load 0
     store 0
-    dup
+    dig 2
     bytec 4 // 0x01
     b+
     dup
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 1
+    bury 3
     b main_while_top@41
 
 main_else_body@59:
     intc_0 // 32
     bzero
-    dig 5
+    swap
     concat
     dup
     len
@@ -345,7 +341,7 @@ main_ternary_merge@46:
     intc_0 // 32
     /
     itob
-    dig 3
+    dig 2
     b>
     bz main_while_top@48
     bytec_0 // "storageArray"
@@ -371,7 +367,7 @@ main_ternary_merge@51:
     intc_0 // 32
     /
     itob
-    dig 7
+    dig 1
     b<
     bz main_after_while@53
     bytec_0 // "storageArray"
@@ -383,15 +379,13 @@ main_ternary_merge@51:
     b main_while_top@48
 
 main_after_while@53:
-    dig 2
-    bury 4
+    dig 1
 
 main_while_top@54:
-    dig 3
-    dig 7
+    dup
+    dig 2
     b<
     bz main_after_while@56
-    dig 3
     dup
     bytec 6 // 0x010000000000000000
     b<
@@ -414,7 +408,7 @@ main_while_top@54:
     intc_0 // 32
     box_extract // on error: index out of bounds
     dup
-    dig 5
+    dig 4
     b==
     assert
     load 0
@@ -437,7 +431,6 @@ main_while_top@54:
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 4
     b main_while_top@54
 
 main_after_while@56:

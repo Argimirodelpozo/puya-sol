@@ -4,11 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/mappings_array2d_pop_delete.sol.C.approval_program() -> uint64:
 main:
     intcblock 2 0 1 32
-    bytecblock "a" 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x "__ctor_pending" 0x0000 0x010000000000000000 0x00020000
-    intc_1 // 0
-    dupn 8
-    bytec_3 // ""
-    dupn 4
+    bytecblock "a" 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "__ctor_pending" 0x0000 0x010000000000000000 0x00020000
     pushint 4096
     bzero
     dup
@@ -28,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_2 // 1
     app_global_put
     intc_2 // 1
@@ -60,7 +56,7 @@ main_ternary_merge@17:
     box_del
     pop
     bytec_0 // "a"
-    bytec 5 // 0x0000
+    bytec 4 // 0x0000
     box_put
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
@@ -86,8 +82,7 @@ main_ternary_merge@25:
     box_get
     swap
     dup
-    cover 2
-    bury 12
+    uncover 2
     assert // box exists
     intc_1 // 0
     extract_uint16
@@ -96,46 +91,40 @@ main_ternary_merge@25:
     dup
     itob
     extract 6 0
-    bury 7
+    cover 2
     intc_0 // 2
     *
-    bury 1
     intc_0 // 2
-    bury 2
 
 main_while_top@60:
-    dup2
+    dup
+    dig 2
     <=
     bz main_after_while@62
-    dig 9
     dig 2
-    dup
-    cover 2
+    dig 1
     extract_uint16
     intc_0 // 2
     -
     itob
     extract 6 0
-    dig 7
+    uncover 4
     swap
     concat
-    bury 7
+    cover 3
     intc_0 // 2
     +
-    bury 2
     b main_while_top@60
 
 main_after_while@62:
-    dig 9
+    uncover 2
     extract 2 0
     dup
-    dig 2
+    uncover 3
     extract_uint16
-    dig 3
     swap
+    cover 2
     substring3
-    dig 6
-    swap
     concat
     bytec_0 // "a"
     box_del
@@ -153,7 +142,6 @@ main_ternary_false@24:
 main_map_route@8:
     txna ApplicationArgs 1
     dup
-    bury 15
     len
     intc_3 // 32
     ==
@@ -183,7 +171,7 @@ main_ternary_merge@33:
     intc_2 // 1
     itob
     dup
-    bury 11
+    cover 3
     dup2
     b>=
     assert // underflow
@@ -199,13 +187,13 @@ main_ternary_merge@33:
     b<=
     assert // overflow
     dup
-    bytec 6 // 0x010000000000000000
+    bytec 5 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
     bzero
     dup
-    bury 10
+    cover 4
     swap
     concat
     dup
@@ -213,7 +201,6 @@ main_ternary_merge@33:
     pushint 8
     -
     extract_uint64
-    bury 3
     bytec_0 // "a"
     box_len
     bury 1
@@ -223,9 +210,9 @@ main_ternary_merge@33:
     pop
     intc_1 // 0
     extract_uint16
+    swap
 
 main_ternary_merge@36:
-    dig 3
     dup
     uncover 2
     <
@@ -248,7 +235,7 @@ main_ternary_merge@36:
     btoi
     itob
     dup
-    dig 10
+    uncover 3
     dup
     cover 3
     b>=
@@ -256,7 +243,7 @@ main_ternary_merge@36:
     intc_3 // 32
     bzero
     dup
-    dig 17
+    uncover 4
     concat
     dup
     len
@@ -275,7 +262,7 @@ main_ternary_merge@36:
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 10
+    uncover 3
     swap
     concat
     dup
@@ -290,7 +277,7 @@ main_ternary_merge@36:
     concat
     sha256
     box_get
-    bytec_3 // 0x
+    pushbytes 0x
     cover 2
     select
     dup
@@ -308,6 +295,7 @@ main_ternary_merge@36:
 
 main_ternary_false@35:
     intc_1 // 0
+    swap
     b main_ternary_merge@36
 
 main_ternary_false@32:
@@ -334,8 +322,8 @@ main_ternary_merge@41:
     assert // box exists
     intc_2 // 1
     itob
-    bury 12
-    bytec 7 // 0x00020000
+    swap
+    bytec 6 // 0x00020000
     intc_2 // 1
     callsub dynamic_array_concat_dynamic_element
     bytec_0 // "a"
@@ -357,9 +345,7 @@ main_ternary_merge@41:
 main_ternary_merge@44:
     itob
     dup
-    dig 12
-    dup
-    cover 3
+    dig 2
     b>=
     assert // underflow
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -373,7 +359,7 @@ main_ternary_merge@44:
     b<=
     assert // overflow
     dup
-    bytec 6 // 0x010000000000000000
+    bytec 5 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
@@ -385,7 +371,6 @@ main_ternary_merge@44:
     pushint 8
     -
     extract_uint64
-    bury 4
     bytec_0 // "a"
     box_len
     bury 1
@@ -395,9 +380,9 @@ main_ternary_merge@44:
     pop
     intc_1 // 0
     extract_uint16
+    swap
 
 main_ternary_merge@47:
-    dig 4
     dup
     uncover 2
     <
@@ -408,7 +393,7 @@ main_ternary_merge@47:
     dup
     dig 2
     callsub dynamic_array_read_dynamic_element
-    bytec 5 // 0x0000
+    bytec 4 // 0x0000
     intc_2 // 1
     callsub dynamic_array_concat_byte_length_head
     uncover 2
@@ -424,6 +409,7 @@ main_ternary_merge@47:
 
 main_ternary_false@46:
     intc_1 // 0
+    swap
     b main_ternary_merge@47
 
 main_ternary_false@43:
@@ -437,14 +423,13 @@ main_ternary_false@40:
 main_n1_route@6:
     txna ApplicationArgs 1
     dup
-    bury 15
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 14
+    cover 2
     len
     intc_3 // 32
     ==
@@ -464,8 +449,8 @@ main_ternary_merge@52:
     assert // box exists
     intc_2 // 1
     itob
-    bury 13
-    bytec 7 // 0x00020000
+    swap
+    bytec 6 // 0x00020000
     intc_2 // 1
     callsub dynamic_array_concat_dynamic_element
     bytec_0 // "a"
@@ -487,7 +472,7 @@ main_ternary_merge@52:
 main_ternary_merge@55:
     itob
     dup
-    dig 13
+    dig 2
     dup
     cover 3
     b>=
@@ -503,13 +488,13 @@ main_ternary_merge@55:
     b<=
     assert // overflow
     dup
-    bytec 6 // 0x010000000000000000
+    bytec 5 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
     bzero
     dup
-    bury 9
+    cover 4
     swap
     concat
     dup
@@ -517,7 +502,6 @@ main_ternary_merge@55:
     pushint 8
     -
     extract_uint64
-    bury 5
     bytec_0 // "a"
     box_len
     bury 1
@@ -527,9 +511,9 @@ main_ternary_merge@55:
     pop
     intc_1 // 0
     extract_uint16
+    swap
 
 main_ternary_merge@58:
-    dig 5
     dup
     uncover 2
     <
@@ -540,7 +524,7 @@ main_ternary_merge@58:
     dup
     dig 2
     callsub dynamic_array_read_dynamic_element
-    bytec 5 // 0x0000
+    bytec 4 // 0x0000
     intc_2 // 1
     callsub dynamic_array_concat_byte_length_head
     dig 2
@@ -569,14 +553,12 @@ main_ternary_merge@58:
     btoi
     itob
     dup
-    dig 13
-    dup
-    cover 3
+    dig 2
     b>=
     assert // underflow
     intc_3 // 32
     bzero
-    dig 16
+    uncover 3
     concat
     dup
     len
@@ -595,7 +577,7 @@ main_ternary_merge@58:
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 8
+    uncover 2
     swap
     concat
     dup
@@ -612,13 +594,14 @@ main_ternary_merge@58:
     dup
     box_del
     pop
-    dig 13
+    swap
     box_put
     intc_2 // 1
     return
 
 main_ternary_false@57:
     intc_1 // 0
+    swap
     b main_ternary_merge@58
 
 main_ternary_false@54:
@@ -630,14 +613,14 @@ main_ternary_false@51:
     b main_ternary_merge@52
 
 main___postInit_route@5:
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     bytec_0 // "a"
@@ -723,45 +706,40 @@ dynamic_array_concat_byte_length_head:
     intc_1 // 0
 
 dynamic_array_concat_byte_length_head_for_header@2:
-    frame_dig 4
-    frame_dig 2
+    dup
+    dig 3
     <
     bz dynamic_array_concat_byte_length_head_after_for@4
-    frame_dig 3
+    swap
     dup
     itob
     extract 6 0
-    frame_dig 0
-    frame_dig 4
-    dup
-    cover 4
+    uncover 5
+    dig 3
     uncover 2
     replace3
     dup
-    frame_bury 0
+    cover 5
     dig 1
     extract_uint16
     intc_0 // 2
     +
     +
-    frame_bury 3
+    swap
     intc_0 // 2
     +
-    frame_bury 4
     b dynamic_array_concat_byte_length_head_for_header@2
 
 dynamic_array_concat_byte_length_head_after_for@4:
-    frame_dig 1
-    frame_dig 0
+    popn 3
+    swap
     concat
-    frame_bury 0
     retsub
 
 
 // _puya_lib.arc4.dynamic_array_concat_dynamic_element(array: bytes, new_head_and_tail: bytes, new_items_count: uint64) -> bytes:
 dynamic_array_concat_dynamic_element:
     proto 3 1
-    bytec_3 // ""
     frame_dig -3
     intc_1 // 0
     extract_uint16
@@ -776,80 +754,81 @@ dynamic_array_concat_dynamic_element:
     swap
     intc_0 // 2
     *
+    swap
     frame_dig -1
     intc_0 // 2
     *
+    cover 2
     intc_1 // 0
+    cover 4
 
 dynamic_array_concat_dynamic_element_for_header@1:
-    frame_dig 5
-    frame_dig 3
+    frame_dig 0
+    dig 2
     <
     bz dynamic_array_concat_dynamic_element_after_for@4
-    frame_dig 2
-    frame_dig 5
+    dup
+    frame_dig 0
     dup
     cover 2
     extract_uint16
-    frame_dig 4
+    dig 4
     +
     itob
     extract 6 0
-    frame_dig 1
+    uncover 5
     swap
     concat
-    frame_bury 1
+    cover 4
     intc_0 // 2
     +
-    frame_bury 5
+    frame_bury 0
     b dynamic_array_concat_dynamic_element_for_header@1
 
 dynamic_array_concat_dynamic_element_after_for@4:
-    frame_dig 2
+    dup
     len
-    frame_bury 0
+    swap
     intc_1 // 0
-    frame_bury 5
+    frame_bury 0
 
 dynamic_array_concat_dynamic_element_for_header@5:
-    frame_dig 5
-    frame_dig 4
+    frame_dig 0
+    dig 4
     <
     bz dynamic_array_concat_dynamic_element_after_for@8
     frame_dig -2
-    frame_dig 5
+    frame_dig 0
     dup
     cover 2
     extract_uint16
-    frame_dig 0
+    dig 3
     +
     itob
     extract 6 0
-    frame_dig 1
+    uncover 6
     swap
     concat
-    frame_bury 1
+    cover 5
     intc_0 // 2
     +
-    frame_bury 5
+    frame_bury 0
     b dynamic_array_concat_dynamic_element_for_header@5
 
 dynamic_array_concat_dynamic_element_after_for@8:
-    frame_dig 2
-    frame_dig 3
-    frame_dig 0
+    cover 2
     substring3
-    frame_dig 1
+    uncover 2
     swap
     concat
     frame_dig -2
     len
     frame_dig -2
-    frame_dig 4
+    uncover 3
     uncover 2
     substring3
     concat
-    frame_bury 0
+    swap
     retsub
 
 
@@ -864,7 +843,7 @@ dynamic_array_replace_dynamic_element:
     extract 2 0
     frame_dig -2
     len
-    cover 2
+    cover 3
     dup
     len
     frame_dig -1
@@ -891,7 +870,7 @@ dynamic_array_replace_dynamic_element:
     extract_uint16
     dup2
     -
-    cover 6
+    cover 7
     dig 4
     intc_1 // 0
     uncover 2
@@ -907,37 +886,34 @@ dynamic_array_replace_dynamic_element:
     swap
     intc_0 // 2
     *
-    swap
+    cover 2
 
 dynamic_array_replace_dynamic_element_for_header@2:
-    frame_dig 5
-    frame_dig 4
+    dup
+    dig 3
     <
     bz dynamic_array_replace_dynamic_element_after_for@5
-    frame_dig 3
+    swap
     dup
-    frame_dig 5
-    dup
-    cover 3
+    dig 2
     extract_uint16
-    frame_dig 1
+    dig 6
     +
-    frame_dig 2
+    dig 5
     -
     itob
     extract 6 0
     dig 2
     swap
     replace3
-    frame_bury 3
+    swap
     intc_0 // 2
     +
-    frame_bury 5
     b dynamic_array_replace_dynamic_element_for_header@2
 
 dynamic_array_replace_dynamic_element_after_for@5:
-    frame_dig 0
-    frame_dig 3
+    pop
+    bury 1
     concat
     frame_bury 0
     retsub

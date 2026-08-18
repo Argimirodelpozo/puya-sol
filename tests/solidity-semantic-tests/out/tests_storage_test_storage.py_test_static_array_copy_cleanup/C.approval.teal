@@ -6,7 +6,7 @@ main:
     intcblock 8 1 0 32 160 320
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 "dest" "source" 0x01 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "canary" 0x151f7c75
     intc_2 // 0
-    dupn 7
+    dupn 3
     pushint 4096
     bzero
     dup
@@ -89,7 +89,6 @@ main_ternary_merge@25:
     !
     assert // not payable
     bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    bury 2
     load 0
     pushint 24
     bzero
@@ -104,15 +103,15 @@ main_ternary_merge@25:
     store 0
     intc_2 // 0
     itob
-    bury 5
+    bury 4
 
 main_while_top@26:
     pushint 10
     itob
-    dig 5
+    dig 4
     b>
     bz main_after_while@36
-    dig 4
+    dig 3
     dup
     bytec_1 // 0x010000000000000000
     b<
@@ -162,7 +161,7 @@ main_while_top@26:
     extract_uint64
     intc_0 // 8
     *
-    dig 7
+    uncover 6
     swap
     uncover 3
     replace3 // on error: index access is out of bounds
@@ -244,19 +243,19 @@ main_while_top@26:
     *
     swap
     replace3 // on error: index access is out of bounds
-    bury 3
+    swap
     bytec 4 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 5
+    bury 4
     b main_while_top@26
 
 main_after_while@36:
     bytec 9 // 0x151f7c75
-    dig 2
+    swap
     concat
     log
     intc_1 // 1
@@ -278,7 +277,6 @@ main_ternary_merge@33:
     !
     assert // not payable
     bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    bury 2
     load 0
     pushint 24
     bzero
@@ -293,15 +291,15 @@ main_ternary_merge@33:
     store 0
     intc_2 // 0
     itob
-    bury 6
+    bury 5
 
 main_while_top@34:
     pushint 5
     itob
-    dig 6
+    dig 5
     b>
     bz main_after_while@36
-    dig 5
+    dig 4
     dup
     bytec_1 // 0x010000000000000000
     b<
@@ -351,7 +349,7 @@ main_while_top@34:
     extract_uint64
     intc_0 // 8
     *
-    dig 7
+    uncover 6
     swap
     uncover 3
     replace3 // on error: index access is out of bounds
@@ -433,14 +431,14 @@ main_while_top@34:
     *
     swap
     replace3 // on error: index access is out of bounds
-    bury 3
+    swap
     bytec 4 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 6
+    bury 5
     b main_while_top@34
 
 main_ternary_false@32:
@@ -531,23 +529,22 @@ main_ternary_merge@56:
     assert // not payable
     intc_2 // 0
     itob
-    bury 3
+    bury 1
 
 main_while_top@57:
     pushint 10
     itob
-    dig 3
+    dig 1
     b>
     bz main_after_while@71
     intc_0 // 8
     bzero
     dup
-    bury 2
     pushint 100
     itob
     pushint 4
     itob
-    dig 5
+    dig 4
     dup
     cover 4
     b*
@@ -629,7 +626,7 @@ main_while_top@57:
     concat
     swap
     concat
-    bury 8
+    swap
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
@@ -643,8 +640,8 @@ main_while_top@57:
     pop
 
 main_after_if_else@60:
-    dup
-    dig 3
+    swap
+    dig 2
     dup
     cover 2
     concat
@@ -657,7 +654,7 @@ main_after_if_else@60:
     *
     bytec_2 // "dest"
     swap
-    dig 9
+    uncover 3
     box_replace // on error: index out of bounds
     bytec 4 // 0x01
     b+
@@ -665,7 +662,7 @@ main_after_if_else@60:
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 3
+    bury 1
     b main_while_top@57
 
 main_after_while@71:
@@ -689,23 +686,22 @@ main_ternary_merge@66:
     assert // not payable
     intc_2 // 0
     itob
-    bury 4
+    bury 2
 
 main_while_top@67:
     pushint 5
     itob
-    dig 4
+    dig 2
     b>
     bz main_after_while@71
     intc_0 // 8
     bzero
     dup
-    bury 2
     intc_1 // 1
     itob
     pushint 4
     itob
-    dig 6
+    dig 5
     dup
     cover 4
     dig 1
@@ -787,7 +783,7 @@ main_while_top@67:
     concat
     swap
     concat
-    bury 9
+    swap
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
@@ -801,8 +797,8 @@ main_while_top@67:
     pop
 
 main_after_if_else@70:
-    dup
-    dig 4
+    swap
+    dig 3
     dup
     cover 2
     concat
@@ -815,7 +811,7 @@ main_after_if_else@70:
     *
     bytec_3 // "source"
     swap
-    dig 10
+    uncover 3
     box_replace // on error: index out of bounds
     bytec 4 // 0x01
     b+
@@ -823,7 +819,7 @@ main_after_if_else@70:
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 4
+    bury 2
     b main_while_top@67
 
 main_ternary_false@65:

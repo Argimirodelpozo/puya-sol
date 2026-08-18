@@ -6,8 +6,6 @@ main:
     intcblock 1 32 0 8
     bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x80
     intc_2 // 0
-    dupn 3
-    pushbytes ""
     dupn 2
     pushint 4096
     bzero
@@ -55,35 +53,31 @@ main_ternary_merge@14:
     assert // not payable
     intc_2 // 0
     itob
-    dup
-    bury 5
-    dup
+    dupn 2
     callsub get
     b==
     bz main_bool_false@17
     pushint 42
     itob
     callsub get
-    dig 4
+    dig 1
     b==
     bz main_bool_false@17
     intc_0 // 1
-    bury 3
 
 main_bool_merge@18:
-    dig 2
+    dup
     bnz main_after_if_else@20
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@20:
-    dig 2
     assert
     pushint 21
     itob
     dup
-    bury 8
-    dig 4
+    bury 5
+    dig 1
     dup
     cover 2
     dig 1
@@ -95,42 +89,38 @@ main_after_if_else@20:
     pushint 42
     itob
     callsub get
-    dig 4
+    dig 1
     b==
     bz main_bool_false@23
     intc_0 // 1
-    bury 2
 
 main_bool_merge@24:
-    dig 1
+    dup
     bnz main_after_if_else@26
     bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@26:
-    dig 1
     assert
     pushint 42
     itob
     dup
-    bury 7
+    bury 4
     pushint 131
     itob
     dup
-    bury 7
+    bury 4
     callsub set
-    dig 3
     callsub get
-    dig 7
+    dig 3
     b==
     bz main_bool_false@29
-    dig 5
+    dig 1
     callsub get
-    dig 5
+    dig 1
     b==
     bz main_bool_false@29
     intc_0 // 1
-    bury 1
 
 main_bool_merge@30:
     dup
@@ -143,17 +133,14 @@ main_after_if_else@32:
 
 main_bool_false@29:
     intc_2 // 0
-    bury 1
     b main_bool_merge@30
 
 main_bool_false@23:
     intc_2 // 0
-    bury 2
     b main_bool_merge@24
 
 main_bool_false@17:
     intc_2 // 0
-    bury 3
     b main_bool_merge@18
 
 main_ternary_false@13:

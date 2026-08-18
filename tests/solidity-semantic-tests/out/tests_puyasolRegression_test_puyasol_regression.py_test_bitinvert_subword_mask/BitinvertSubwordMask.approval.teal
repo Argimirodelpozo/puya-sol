@@ -5,8 +5,6 @@
 main:
     intcblock 32 1 16 0
     bytecblock 0x151f7c75 0x0100000000000000000000000000000000 0xffffffffffffffffffffffffffffffff
-    intc_3 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -43,7 +41,6 @@ main_after_if_else@2:
 main_invU256_route@9:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -61,7 +58,7 @@ main_ternary_merge@16:
     intc_0 // 32
     bzero
     dup
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -90,7 +87,6 @@ main_ternary_false@15:
 main_invAddU192_route@8:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     pushint 24
     ==
@@ -109,7 +105,7 @@ main_ternary_merge@21:
     bzero
     intc_0 // 32
     bzero
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -156,7 +152,6 @@ main_ternary_false@20:
 main_invMaskU128_route@7:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_2 // 16
     ==
@@ -173,7 +168,7 @@ main_ternary_merge@26:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 1
+    swap
     concat
     dup
     len
@@ -204,7 +199,6 @@ main_ternary_false@25:
 main_invDivU128_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_2 // 16
     ==
@@ -223,7 +217,7 @@ main_ternary_merge@31:
     bzero
     intc_0 // 32
     bzero
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -265,14 +259,13 @@ main_ternary_false@30:
 main_invAddU128_route@5:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_2 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 2
     dup
-    bury 4
+    cover 2
     len
     intc_2 // 16
     ==
@@ -291,7 +284,7 @@ main_ternary_merge@36:
     bzero
     intc_0 // 32
     bzero
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -302,7 +295,7 @@ main_ternary_merge@36:
     b~
     bytec_1 // 0x0100000000000000000000000000000000
     b%
-    dig 4
+    uncover 2
     b+
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffff

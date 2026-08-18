@@ -5,9 +5,6 @@
 main:
     intcblock 32 1 0 2
     bytecblock 0x "_allowances" 0x151f7c7580 "_balances" 0x0000000000000000000000000000000000000000000000000000000000000000 "_totalSupply" "__ctor_pending" 0x151f7c75 0x28918861 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000
-    intc_2 // 0
-    dupn 8
-    bytec_0 // ""
     pushint 4096
     bzero
     dup
@@ -47,14 +44,12 @@ main_after_if_else@2:
 main_decreaseAllowance_route@13:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 10
     len
     intc_0 // 32
     ==
@@ -74,7 +69,7 @@ main_ternary_merge@20:
     bytec_1 // "_allowances"
     concat
     sha256
-    dig 5
+    uncover 3
     dup
     uncover 2
     concat
@@ -83,7 +78,7 @@ main_ternary_merge@20:
     bytec_0 // 0x
     cover 2
     select
-    dig 11
+    uncover 3
     callsub FixedMath.sub
     callsub __solfn_463
     bytec_2 // 0x151f7c7580
@@ -98,14 +93,13 @@ main_ternary_false@19:
 main_increaseAllowance_route@12:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 11
+    cover 2
     len
     intc_0 // 32
     ==
@@ -125,7 +119,7 @@ main_ternary_merge@25:
     bytec_1 // "_allowances"
     concat
     sha256
-    dig 5
+    uncover 2
     dup
     uncover 2
     concat
@@ -134,7 +128,7 @@ main_ternary_merge@25:
     bytec_0 // 0x
     cover 2
     select
-    dig 12
+    uncover 3
     callsub FixedMath.add
     callsub __solfn_463
     bytec_2 // 0x151f7c7580
@@ -149,21 +143,18 @@ main_ternary_false@24:
 main_transferFrom_route@11:
     txna ApplicationArgs 1
     dup
-    bury 7
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 3
     dup
-    bury 9
     len
     intc_0 // 32
     ==
@@ -178,12 +169,10 @@ main_transferFrom_route@11:
 main_ternary_merge@30:
     !
     assert // not payable
-    dig 5
+    uncover 2
     dup
-    dig 4
-    dig 10
-    dup
-    cover 4
+    uncover 3
+    dig 3
     callsub __solfn_326
     txn Sender
     dup
@@ -212,14 +201,13 @@ main_ternary_false@29:
 main_approve_route@10:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 9
+    cover 2
     len
     intc_0 // 32
     ==
@@ -235,8 +223,8 @@ main_ternary_merge@35:
     !
     assert // not payable
     txn Sender
-    dig 4
-    dig 9
+    swap
+    uncover 2
     callsub __solfn_463
     bytec_2 // 0x151f7c7580
     log
@@ -250,14 +238,12 @@ main_ternary_false@34:
 main_transfer_route@9:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 9
     len
     intc_0 // 32
     ==
@@ -273,8 +259,7 @@ main_ternary_merge@40:
     !
     assert // not payable
     txn Sender
-    dig 3
-    dig 9
+    cover 2
     callsub __solfn_326
     bytec_2 // 0x151f7c7580
     log
@@ -288,14 +273,13 @@ main_ternary_false@39:
 main_allowance_route@8:
     txna ApplicationArgs 1
     dup
-    bury 6
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 5
+    cover 2
     len
     intc_0 // 32
     ==
@@ -310,12 +294,9 @@ main_allowance_route@8:
 main_ternary_merge@45:
     !
     assert // not payable
-    dig 4
     bytec_1 // "_allowances"
     concat
     sha256
-    dig 4
-    swap
     concat
     sha256
     box_get
@@ -344,7 +325,6 @@ main_ternary_false@44:
 main_balanceOf_route@7:
     txna ApplicationArgs 1
     dup
-    bury 6
     len
     intc_0 // 32
     ==
@@ -359,7 +339,6 @@ main_balanceOf_route@7:
 main_ternary_merge@50:
     !
     assert // not payable
-    dig 4
     bytec_3 // "_balances"
     concat
     sha256
@@ -444,35 +423,28 @@ main___postInit_route@5:
     app_global_put
     txn Sender
     dup
-    bury 8
     pushint 20
     itob
-    bury 3
+    swap
     bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     dup
-    bury 2
     bnz main_after_if_else@58
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001f45524332303a206d696e7420746f20746865207a65726f206164647265737300
     log
 
 main_after_if_else@58:
-    dup
     assert // ERC20: mint to the zero address
     intc_2 // 0
     bytec 5 // "_totalSupply"
     app_global_get_ex
     assert // check _totalSupply exists
-    dig 2
-    dup
-    cover 2
+    dig 1
     callsub FixedMath.add
     bytec 5 // "_totalSupply"
     swap
     app_global_put
-    dig 7
-    dup
-    cover 2
+    dig 1
     bytec_3 // "_balances"
     concat
     sha256
@@ -546,7 +518,6 @@ __solfn_326:
     log
 
 __solfn_326_after_if_else@2:
-    frame_dig 0
     assert // ERC20: transfer to the zero address
     frame_dig -3
     bytec_3 // "_balances"
@@ -602,7 +573,6 @@ __solfn_326_after_if_else@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.__solfn_463(owner: bytes, spender: bytes, value: bytes) -> void:
 __solfn_463:
     proto 3 0
-    bytec_0 // ""
     frame_dig -3
     bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
@@ -612,19 +582,16 @@ __solfn_463:
     log
 
 __solfn_463_after_if_else@2:
-    frame_dig 1
     assert // ERC20: approve from the zero address
     frame_dig -2
     bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     dup
-    frame_bury 0
     bnz __solfn_463_after_if_else@4
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002245524332303a20617070726f766520746f20746865207a65726f2061646472657373000000000000000000000000000000000000000000000000000000000000
     log
 
 __solfn_463_after_if_else@4:
-    frame_dig 0
     assert // ERC20: approve to the zero address
     frame_dig -3
     bytec_1 // "_allowances"

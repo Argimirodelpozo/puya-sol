@@ -5,7 +5,6 @@
 main:
     intcblock 32 1 0
     bytecblock "last" 0x151f7c75 0x17fa654a
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -80,7 +79,6 @@ main_ternary_false@14:
 main_setLast_route@7:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -96,7 +94,7 @@ main_ternary_merge@20:
     !
     assert // not payable
     bytec_0 // "last"
-    dig 1
+    swap
     app_global_put
     intc_1 // 1
     return

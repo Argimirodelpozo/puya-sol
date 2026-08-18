@@ -5,7 +5,6 @@
 main:
     intcblock 2 32 0 1
     bytecblock "addressArray" "__ctor_pending" 0x068101
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -45,7 +44,6 @@ main_after_if_else@2:
 main_set_get_length_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_1 // 32
     ==
@@ -187,6 +185,7 @@ main_ternary_merge@22:
     b main_while_top@19
 
 main_after_while@24:
+    pop
     bytec_0 // "addressArray"
     box_len
     pop

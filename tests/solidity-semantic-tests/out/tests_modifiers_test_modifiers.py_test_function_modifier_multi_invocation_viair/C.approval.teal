@@ -5,7 +5,6 @@
 main:
     intcblock 1 0 32
     intc_1 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -48,7 +47,6 @@ main_f_route@4:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -69,7 +67,8 @@ main_ternary_merge@9:
     bury 2
 
 main_after_if_else@12:
-    dup2
+    dig 1
+    swap
     callsub f__body_0
     dup
     len

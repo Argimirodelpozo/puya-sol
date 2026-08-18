@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/multireturn_struct.sol.MultiReturnStruct.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 24
+    intcblock 32 1 24 88
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -42,7 +41,6 @@ main_after_if_else@2:
 main_test2_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -58,10 +56,10 @@ main_ternary_merge@13:
     !
     assert // not payable
     load 0
-    intc_3 // 24
+    intc_2 // 24
     bzero
     dig 1
-    pushint 88
+    intc_3 // 88
     extract_uint64
     pushint 64
     +
@@ -72,8 +70,6 @@ main_ternary_merge@13:
     pushint 10
     itob
     dig 1
-    dup
-    uncover 2
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -134,13 +130,12 @@ main_ternary_merge@13:
     return
 
 main_ternary_false@12:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@13
 
 main_test4_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -156,10 +151,10 @@ main_ternary_merge@18:
     !
     assert // not payable
     load 0
-    intc_3 // 24
+    intc_2 // 24
     bzero
     dig 1
-    pushint 88
+    intc_3 // 88
     extract_uint64
     pushint 128
     +
@@ -170,8 +165,6 @@ main_ternary_merge@18:
     intc_1 // 1
     itob
     dig 1
-    dup
-    uncover 2
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -314,5 +307,5 @@ main_ternary_merge@18:
     return
 
 main_ternary_false@17:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@18

@@ -5,9 +5,6 @@
 main:
     intcblock 0 1 24 32
     bytecblock "probe" 0x151f7c75 "__ctor_pending" 0x00 TMPL_APPROVAL_Probe TMPL_CLEAR_Probe
-    intc_0 // 0
-    dupn 7
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -86,36 +83,28 @@ main_ternary_merge@22:
     app_global_get_ex
     assert // check probe exists
     global CurrentApplicationAddress
-    bury 5
+    swap
     load 0
     store 0
     intc_2 // 24
     extract_uint64
     app_params_get AppApprovalProgram
-    swap
-    bury 8
     bz main_ternary_false@24
-    dig 6
     len
 
 main_ternary_merge@25:
     itob
-    bury 3
-    dig 3
+    swap
     intc_2 // 24
     extract_uint64
     app_params_get AppApprovalProgram
-    swap
-    bury 7
     bz main_ternary_false@27
-    dig 5
     len
 
 main_ternary_merge@28:
     itob
     load 0
     store 0
-    dig 3
     b+
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -139,10 +128,12 @@ main_ternary_merge@28:
     return
 
 main_ternary_false@27:
+    pop
     intc_0 // 0
     b main_ternary_merge@28
 
 main_ternary_false@24:
+    pop
     intc_0 // 0
     b main_ternary_merge@25
 
@@ -170,30 +161,21 @@ main_ternary_merge@33:
     intc_2 // 24
     extract_uint64
     dup
-    bury 2
     app_params_get AppApprovalProgram
-    swap
-    bury 9
     bz main_ternary_false@35
-    dig 7
     len
 
 main_ternary_merge@36:
     itob
-    bury 2
     load 0
     store 0
-    dup
-    app_params_get AppApprovalProgram
     swap
-    bury 10
+    app_params_get AppApprovalProgram
     bz main_ternary_false@38
-    dig 8
 
 main_ternary_merge@39:
     len
     itob
-    dig 2
     b==
     bytec_3 // 0x00
     intc_0 // 0
@@ -207,10 +189,12 @@ main_ternary_merge@39:
     return
 
 main_ternary_false@38:
+    pop
     pushbytes 0x
     b main_ternary_merge@39
 
 main_ternary_false@35:
+    pop
     intc_0 // 0
     b main_ternary_merge@36
 
@@ -221,7 +205,6 @@ main_ternary_false@32:
 main_eoaHasNoCode_route@7:
     txna ApplicationArgs 1
     dup
-    bury 6
     len
     intc_3 // 32
     ==
@@ -236,7 +219,6 @@ main_eoaHasNoCode_route@7:
 main_ternary_merge@44:
     !
     assert // not payable
-    dig 4
     callsub __solfn_34
     bytec_3 // 0x00
     intc_0 // 0
@@ -346,7 +328,6 @@ __solfn_34:
     extract_uint64
     app_params_get AppApprovalProgram
     bz __solfn_34_ternary_false@2
-    frame_dig 0
     len
 
 __solfn_34_ternary_merge@3:
@@ -356,9 +337,9 @@ __solfn_34_ternary_merge@3:
     intc_0 // 0
     itob
     b>
-    swap
     retsub
 
 __solfn_34_ternary_false@2:
+    pop
     intc_0 // 0
     b __solfn_34_ternary_merge@3

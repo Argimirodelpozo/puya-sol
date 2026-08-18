@@ -4,10 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/bytesN_shift.sol.BytesNShift.approval_program() -> uint64:
 main:
     intcblock 1 4 255 256 65535
-    bytecblock 0x 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
-    pushint 0
-    dupn 2
-    bytec_0 // ""
+    bytecblock 0x151f7c75 0x 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -44,14 +41,12 @@ main_after_if_else@2:
 main_comp_route@9:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_1 // 4
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
     txna ApplicationArgs 2
     dup
-    bury 4
     len
     intc_1 // 4
     ==
@@ -68,7 +63,7 @@ main_ternary_merge@16:
     assert // not payable
     intc_1 // 4
     bzero
-    dig 4
+    uncover 2
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000100
     b*
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -80,9 +75,8 @@ main_ternary_merge@16:
     -
     intc_1 // 4
     extract3
-    dig 3
     b|
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -96,7 +90,6 @@ main_ternary_false@15:
 main_shr1_route@8:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_0 // 1
     ==
@@ -108,7 +101,6 @@ main_shr1_route@8:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@21
     txn GroupIndex
@@ -119,23 +111,22 @@ main_shr1_route@8:
 main_ternary_merge@22:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_2 // 255
     <=
     assert // ABI validation
     intc_2 // 255
     &
     dup
-    bury 2
     intc_0 // 1
     bzero
-    bury 3
+    swap
     intc_3 // 256
     <
     bz main_ternary_false@24
     pushint 32
     bzero
-    dig 1
+    uncover 2
     intc_3 // 256
     %
     intc_2 // 255
@@ -143,12 +134,12 @@ main_ternary_merge@22:
     -
     intc_0 // 1
     setbit
-    dig 4
+    uncover 2
     swap
     b/
+    swap
 
 main_ternary_merge@25:
-    dig 2
     swap
     concat
     dup
@@ -157,7 +148,7 @@ main_ternary_merge@25:
     -
     intc_0 // 1
     extract3
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -165,7 +156,10 @@ main_ternary_merge@25:
     return
 
 main_ternary_false@24:
-    bytec_0 // 0x
+    bury 1
+    bury 1
+    bytec_1 // 0x
+    swap
     b main_ternary_merge@25
 
 main_ternary_false@21:
@@ -175,7 +169,6 @@ main_ternary_false@21:
 main_shl32_route@7:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     pushint 32
     ==
@@ -187,7 +180,6 @@ main_shl32_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@29
     txn GroupIndex
@@ -198,37 +190,36 @@ main_shl32_route@7:
 main_ternary_merge@30:
     !
     assert // not payable
-    dupn 2
+    dup
     intc 4 // 65535
     <=
     assert // ABI validation
     intc 4 // 65535
     &
     dup
-    bury 2
     pushint 32
     bzero
-    bury 3
+    swap
     intc_3 // 256
     <
     bz main_ternary_false@32
-    dup
+    swap
     intc_3 // 256
     %
     intc_2 // 255
     swap
     -
-    dig 2
+    dig 1
     swap
     intc_0 // 1
     setbit
-    dig 4
+    uncover 2
     b*
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    swap
 
 main_ternary_merge@33:
-    dig 2
     swap
     concat
     dup
@@ -237,7 +228,7 @@ main_ternary_merge@33:
     -
     pushint 32
     extract3
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -245,7 +236,10 @@ main_ternary_merge@33:
     return
 
 main_ternary_false@32:
-    bytec_0 // 0x
+    bury 1
+    bury 1
+    bytec_1 // 0x
+    swap
     b main_ternary_merge@33
 
 main_ternary_false@29:
@@ -255,7 +249,6 @@ main_ternary_false@29:
 main_shr4_route@6:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_1 // 4
     ==
@@ -267,7 +260,6 @@ main_shr4_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@37
     txn GroupIndex
@@ -278,23 +270,22 @@ main_shr4_route@6:
 main_ternary_merge@38:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_2 // 255
     <=
     assert // ABI validation
     intc_2 // 255
     &
     dup
-    bury 2
     intc_1 // 4
     bzero
-    bury 3
+    swap
     intc_3 // 256
     <
     bz main_ternary_false@40
     pushint 32
     bzero
-    dig 1
+    uncover 2
     intc_3 // 256
     %
     intc_2 // 255
@@ -302,12 +293,12 @@ main_ternary_merge@38:
     -
     intc_0 // 1
     setbit
-    dig 4
+    uncover 2
     swap
     b/
+    swap
 
 main_ternary_merge@41:
-    dig 2
     swap
     concat
     dup
@@ -316,7 +307,7 @@ main_ternary_merge@41:
     -
     intc_1 // 4
     extract3
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -324,7 +315,10 @@ main_ternary_merge@41:
     return
 
 main_ternary_false@40:
-    bytec_0 // 0x
+    bury 1
+    bury 1
+    bytec_1 // 0x
+    swap
     b main_ternary_merge@41
 
 main_ternary_false@37:
@@ -334,7 +328,6 @@ main_ternary_false@37:
 main_shl4_route@5:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_1 // 4
     ==
@@ -346,7 +339,6 @@ main_shl4_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@45
     txn GroupIndex
@@ -357,23 +349,22 @@ main_shl4_route@5:
 main_ternary_merge@46:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_2 // 255
     <=
     assert // ABI validation
     intc_2 // 255
     &
     dup
-    bury 2
     intc_1 // 4
     bzero
-    bury 3
+    swap
     intc_3 // 256
     <
     bz main_ternary_false@48
     pushint 32
     bzero
-    dig 1
+    uncover 2
     intc_3 // 256
     %
     intc_2 // 255
@@ -381,13 +372,13 @@ main_ternary_merge@46:
     -
     intc_0 // 1
     setbit
-    dig 4
+    uncover 2
     b*
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    swap
 
 main_ternary_merge@49:
-    dig 2
     swap
     concat
     dup
@@ -396,7 +387,7 @@ main_ternary_merge@49:
     -
     intc_1 // 4
     extract3
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -404,7 +395,10 @@ main_ternary_merge@49:
     return
 
 main_ternary_false@48:
-    bytec_0 // 0x
+    bury 1
+    bury 1
+    bytec_1 // 0x
+    swap
     b main_ternary_merge@49
 
 main_ternary_false@45:

@@ -5,9 +5,7 @@
 main:
     intcblock 0 1 8 32
     bytecblock "x" "y" "z" 0x0100 0x80 0x151f7c75
-    intc_0 // 0
     pushbytes ""
-    dup
     pushint 4096
     bzero
     dup
@@ -39,7 +37,7 @@ main:
     intc_2 // 8
     -
     extract_uint64
-    bury 5
+    cover 3
     bytec_0 // "x"
     pushbytes 0x
     app_global_put
@@ -65,14 +63,13 @@ main:
     bytec_3 // 0x0100
     b%
     dup
-    bury 4
     bytec 4 // 0x80
     b<
     dup
     !
-    bury 2
+    bury 4
     bz main_bool_true@3
-    dig 2
+    dup
     pushbytes 0x02
     b+
     bytec_3 // 0x0100
@@ -80,7 +77,7 @@ main:
     bytec 4 // 0x80
     b<
     !
-    dig 1
+    dig 3
     ==
     bz main_bool_false@4
 
@@ -91,7 +88,7 @@ main_bool_merge@5:
     assert // signed arithmetic overflow
     intc_2 // 8
     bzero
-    dig 3
+    swap
     pushbytes 0x02
     b+
     bytec_3 // 0x0100
@@ -105,7 +102,6 @@ main_bool_merge@5:
     bytec_1 // "y"
     swap
     app_global_put
-    dig 1
     pushint 3
     +
     dup

@@ -5,8 +5,6 @@
 main:
     intcblock 0 32 1 2
     bytecblock "cnt" "arr" 0x151f7c75 "__ctor_pending" 0x0000
-    intc_0 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -226,7 +224,7 @@ main_ternary_merge@32:
     intc_1 // 32
     bzero
     dup
-    bury 4
+    cover 3
     uncover 2
     dig 1
     b|
@@ -245,15 +243,15 @@ main_ternary_merge@32:
     pop
     dup
     extract 0 32
-    bury 3
+    swap
     extract 32 32
-    dig 2
+    swap
     dup
     len
     intc_1 // 32
     <=
     assert // overflow
-    dig 2
+    uncover 2
     dup
     cover 2
     b|

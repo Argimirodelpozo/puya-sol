@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/mapping_struct_dynarray_push.sol.G.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 8
+    intcblock 32 1 0 8
     bytecblock "m" "__ctor_pending" 0x000a00000000000000000000 0x151f7c75
-    intc_1 // 0
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -27,9 +25,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_2 // 1
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -46,14 +44,12 @@ main_after_if_else@2:
 main_getM_route@8:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 5
     len
     intc_0 // 32
     ==
@@ -61,21 +57,20 @@ main_getM_route@8:
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 main_ternary_merge@15:
     !
     assert // not payable
-    dig 3
     dup
     pushbytes 0x010000000000000000
     b<
     assert // array index out of bounds
     intc_0 // 32
     bzero
-    dig 4
+    uncover 2
     concat
     dup
     len
@@ -100,7 +95,7 @@ main_ternary_merge@15:
     -
     extract_uint64
     dig 1
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16
     dig 2
     len
@@ -117,17 +112,16 @@ main_ternary_merge@15:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@14:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@15
 
 main_lenM_route@7:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
@@ -135,7 +129,7 @@ main_lenM_route@7:
     txn GroupIndex
     bz main_ternary_false@19
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -145,7 +139,7 @@ main_ternary_merge@20:
     intc_0 // 32
     bzero
     dup
-    dig 4
+    uncover 2
     concat
     dup
     len
@@ -161,12 +155,12 @@ main_ternary_merge@20:
     cover 2
     select
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16
     dig 1
     len
     substring3
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     itob
     b|
@@ -174,24 +168,22 @@ main_ternary_merge@20:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@19:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@20
 
 main_pushM_route@6:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 2
     len
     intc_3 // 8
     ==
@@ -199,7 +191,7 @@ main_pushM_route@6:
     txn GroupIndex
     bz main_ternary_false@24
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -208,7 +200,7 @@ main_ternary_merge@25:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -220,24 +212,23 @@ main_ternary_merge@25:
     concat
     sha256
     dup
-    bury 3
     box_len
     bury 1
     bnz main_after_if_else@27
-    dig 1
+    dup
     bytec_2 // 0x000a00000000000000000000
     box_put
 
 main_after_if_else@27:
     pushbytes 0x0001
-    dig 1
+    uncover 2
     concat
     dup
     extract 2 0
     swap
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    dig 3
+    uncover 2
     dup
     pushints 10 2
     box_extract
@@ -265,14 +256,14 @@ main_after_if_else@27:
     *
     pushint 12
     +
-    intc_1 // 0
+    intc_2 // 0
     uncover 3
     box_splice
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_ternary_false@24:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@25
 
 main___postInit_route@5:
@@ -284,11 +275,11 @@ main___postInit_route@5:
     ==
     assert // __postInit callable only by the app creator
     bytec_1 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     bytec_0 // "m"
     pushint 2
     box_create
     pop
-    intc_2 // 1
+    intc_1 // 1
     return

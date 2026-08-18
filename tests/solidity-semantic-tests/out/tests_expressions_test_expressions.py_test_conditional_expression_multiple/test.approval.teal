@@ -3,8 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/contracts/conditional_expression_multiple.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 100
-    intc_1 // 0
+    intcblock 1 32 100 1000
     pushint 4096
     bzero
     dup
@@ -41,9 +40,8 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -56,23 +54,22 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    intc_3 // 100
+    intc_2 // 100
     itob
     dig 1
     b<
     bz main_ternary_false@11
-    pushint 1000
+    intc_3 // 1000
     itob
-    dig 1
-    b<
-    intc_3 // 100
-    pushint 1000
+    b>
+    intc_2 // 100
+    intc_3 // 1000
     uncover 2
     select
 
 main_ternary_merge@12:
     itob
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -85,13 +82,12 @@ main_ternary_merge@12:
 main_ternary_false@11:
     pushint 50
     itob
-    dig 1
-    b<
+    b>
     pushints 10 50
     uncover 2
     select
     b main_ternary_merge@12
 
 main_ternary_false@8:
-    intc_1 // 0
+    pushint 0
     b main_ternary_merge@9

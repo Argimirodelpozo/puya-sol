@@ -5,7 +5,6 @@
 main:
     intcblock 1 32 0 64
     bytecblock 0x676464ad0790a8d847d7966943b543955e8b581e830b344d7c1d9ed9ec7cf0d4 "__ctor_pending" "test" 0x000000000000000000000000000000000000000000000000000000000000000000220000
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -45,7 +44,6 @@ main_after_if_else@2:
 main_test_route@7:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_1 // 32
     ==
@@ -62,7 +60,7 @@ main_ternary_merge@14:
     assert // not payable
     intc_1 // 32
     bzero
-    dig 1
+    swap
     concat
     dup
     len

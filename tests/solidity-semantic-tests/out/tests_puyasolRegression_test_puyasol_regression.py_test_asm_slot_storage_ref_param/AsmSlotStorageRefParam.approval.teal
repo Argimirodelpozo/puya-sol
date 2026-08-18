@@ -5,8 +5,6 @@
 main:
     intcblock 1 32 0 8
     bytecblock "bits" 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75 0x0100
-    intc_2 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -89,7 +87,6 @@ main_ternary_false@13:
 main_get_route@6:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_1 // 32
     ==
@@ -106,7 +103,7 @@ main_ternary_merge@19:
     assert // not payable
     load 0
     store 0
-    dig 2
+    dup
     bytec 4 // 0x0100
     b<
     bz main_ternary_false@29
@@ -123,7 +120,7 @@ main_ternary_merge@19:
     replace2 0
     intc_3 // 8
     bzero
-    dig 5
+    uncover 3
     concat
     dup
     len
@@ -160,6 +157,7 @@ main_ternary_merge@30:
     return
 
 main_ternary_false@29:
+    pop
     bytec_2 // 0x
     b main_ternary_merge@30
 
@@ -170,7 +168,6 @@ main_ternary_false@18:
 main_set_route@5:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_1 // 32
     ==
@@ -190,7 +187,7 @@ main_ternary_merge@24:
     intc_1 // 32
     bzero
     dup
-    bury 3
+    cover 2
     bytec_0 // "bits"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -198,14 +195,13 @@ main_ternary_merge@24:
     select
     extract 0 32
     replace2 0
-    bury 1
-    dig 2
+    dig 1
     bytec 4 // 0x0100
     b<
     bz main_ternary_false@34
     intc_3 // 8
     bzero
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -223,12 +219,10 @@ main_ternary_merge@24:
     setbit
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    swap
 
 main_ternary_merge@35:
-    dig 1
     b|
-    dig 2
-    swap
     concat
     dup
     len
@@ -245,7 +239,9 @@ main_ternary_merge@35:
     return
 
 main_ternary_false@34:
+    bury 1
     bytec_2 // 0x
+    swap
     b main_ternary_merge@35
 
 main_ternary_false@23:

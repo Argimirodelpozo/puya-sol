@@ -5,8 +5,6 @@
 main:
     intcblock 1 0 32 2
     bytecblock "__ctor_pending" 0x1a52c1e3d1e04a0d2370c50c6c860132b2db248b7fa9dc0e01fc7af5490f8b28 "m_nameToRecord" 0x 0x151f7c75
-    intc_1 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -81,7 +79,6 @@ main_ternary_false@15:
 main_setFixed_route@8:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -100,7 +97,7 @@ main_ternary_merge@21:
     box_del
     pop
     bytec_1 // 0x1a52c1e3d1e04a0d2370c50c6c860132b2db248b7fa9dc0e01fc7af5490f8b28
-    dig 2
+    swap
     box_put
     intc_0 // 1
     return
@@ -121,7 +118,6 @@ main_get_route@7:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 1
     txn GroupIndex
     bz main_ternary_false@25
     txn GroupIndex
@@ -132,7 +128,6 @@ main_get_route@7:
 main_ternary_merge@26:
     !
     assert // not payable
-    dup
     sha256
     bytec_2 // "m_nameToRecord"
     concat
@@ -172,10 +167,8 @@ main_set_route@6:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 1
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -190,7 +183,7 @@ main_set_route@6:
 main_ternary_merge@31:
     !
     assert // not payable
-    dup
+    swap
     sha256
     bytec_2 // "m_nameToRecord"
     concat
@@ -198,7 +191,7 @@ main_ternary_merge@31:
     dup
     box_del
     pop
-    dig 2
+    swap
     box_put
     intc_0 // 1
     return

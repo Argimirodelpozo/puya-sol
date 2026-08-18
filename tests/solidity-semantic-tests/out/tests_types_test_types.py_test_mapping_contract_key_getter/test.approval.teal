@@ -5,8 +5,6 @@
 main:
     intcblock 1 0 32 255
     bytecblock "__ctor_pending" "table" 0x151f7c75
-    intc_1 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -62,7 +60,6 @@ main_table_route@8:
 main_get_route@7:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -77,7 +74,6 @@ main_get_route@7:
 main_ternary_merge@17:
     !
     assert // not payable
-    dig 1
     callsub table
     intc_3 // 255
     &
@@ -96,7 +92,6 @@ main_ternary_false@16:
 main_set_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -108,7 +103,6 @@ main_set_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@21
     txn GroupIndex
@@ -119,13 +113,13 @@ main_set_route@6:
 main_ternary_merge@22:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_3 // 255
     <=
     assert // ABI validation
     intc_3 // 255
     &
-    dig 2
+    swap
     bytec_1 // "table"
     concat
     sha256

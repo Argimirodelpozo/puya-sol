@@ -6,9 +6,7 @@ main:
     intcblock 32 1 0
     bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_2 // 0
-    dupn 8
-    pushbytes ""
-    dup
+    dupn 3
     pushint 4096
     bzero
     dup
@@ -60,7 +58,6 @@ main_bar_route@10:
 main_selfStaticInherited_route@9:
     txna ApplicationArgs 1
     dup
-    bury 12
     len
     intc_0 // 32
     ==
@@ -75,7 +72,6 @@ main_selfStaticInherited_route@9:
 main_ternary_merge@19:
     !
     assert // not payable
-    dig 10
     callsub bar
     dup
     len
@@ -85,35 +81,31 @@ main_ternary_merge@19:
     intc_0 // 32
     bzero
     dup
-    bury 5
+    bury 3
     b|
     dup
-    bury 10
     len
     dup
-    bury 2
+    cover 2
     itob
     intc_0 // 32
     itob
     b==
     bz main_bool_false@21
     intc_1 // 1
-    bury 2
 
 main_bool_merge@22:
-    dig 1
+    dup
     bnz main_after_if_else@24
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001b696e6865726974656420656e636f646543616c6c206661696c65640000000000
     log
 
 main_after_if_else@24:
-    dig 1
     assert // inherited encodeCall failed
-    dup
+    swap
     intc_0 // 32
     ==
     bz main_else_body@26
-    dig 8
     extract 0 32
 
 main_after_if_else@27:
@@ -122,7 +114,7 @@ main_after_if_else@27:
     intc_0 // 32
     <=
     assert // overflow
-    dig 3
+    dig 1
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -132,12 +124,10 @@ main_after_if_else@27:
     return
 
 main_else_body@26:
-    dig 8
     b main_after_if_else@27
 
 main_bool_false@21:
     intc_2 // 0
-    bury 2
     b main_bool_merge@22
 
 main_ternary_false@18:
@@ -147,7 +137,6 @@ main_ternary_false@18:
 main_selfStaticCall_route@8:
     txna ApplicationArgs 1
     dup
-    bury 12
     len
     intc_0 // 32
     ==
@@ -162,7 +151,6 @@ main_selfStaticCall_route@8:
 main_ternary_merge@32:
     !
     assert // not payable
-    dig 10
     callsub foo
     dup
     len
@@ -172,35 +160,31 @@ main_ternary_merge@32:
     intc_0 // 32
     bzero
     dup
-    bury 6
+    bury 4
     b|
     dup
-    bury 11
     len
     dup
-    bury 2
+    cover 2
     itob
     intc_0 // 32
     itob
     b==
     bz main_bool_false@34
     intc_1 // 1
-    bury 2
 
 main_bool_merge@35:
-    dig 1
+    dup
     bnz main_after_if_else@37
     pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000011656e636f646543616c6c206661696c6564000000000000000000000000000000
     log
 
 main_after_if_else@37:
-    dig 1
     assert // encodeCall failed
-    dup
+    swap
     intc_0 // 32
     ==
     bz main_else_body@39
-    dig 9
     extract 0 32
 
 main_after_if_else@40:
@@ -209,7 +193,7 @@ main_after_if_else@40:
     intc_0 // 32
     <=
     assert // overflow
-    dig 4
+    dig 2
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -219,12 +203,10 @@ main_after_if_else@40:
     return
 
 main_else_body@39:
-    dig 9
     b main_after_if_else@40
 
 main_bool_false@34:
     intc_2 // 0
-    bury 2
     b main_bool_merge@35
 
 main_ternary_false@31:
@@ -234,7 +216,6 @@ main_ternary_false@31:
 main_selfCall_route@7:
     txna ApplicationArgs 1
     dup
-    bury 12
     len
     intc_0 // 32
     ==
@@ -249,7 +230,6 @@ main_selfCall_route@7:
 main_ternary_merge@45:
     !
     assert // not payable
-    dig 10
     callsub foo
     dup
     len
@@ -259,35 +239,31 @@ main_ternary_merge@45:
     intc_0 // 32
     bzero
     dup
-    bury 7
+    bury 5
     b|
     dup
-    bury 8
     len
     dup
-    bury 2
+    cover 2
     itob
     intc_0 // 32
     itob
     b==
     bz main_bool_false@47
     intc_1 // 1
-    bury 2
 
 main_bool_merge@48:
-    dig 1
+    dup
     bnz main_after_if_else@50
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b63616c6c206661696c6564000000000000000000000000000000000000000000
     log
 
 main_after_if_else@50:
-    dig 1
     assert // call failed
-    dup
+    swap
     intc_0 // 32
     ==
     bz main_else_body@52
-    dig 6
     extract 0 32
 
 main_after_if_else@53:
@@ -296,7 +272,7 @@ main_after_if_else@53:
     intc_0 // 32
     <=
     assert // overflow
-    dig 5
+    dig 3
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -306,12 +282,10 @@ main_after_if_else@53:
     return
 
 main_else_body@52:
-    dig 6
     b main_after_if_else@53
 
 main_bool_false@47:
     intc_2 // 0
-    bury 2
     b main_bool_merge@48
 
 main_ternary_false@44:
@@ -321,7 +295,6 @@ main_ternary_false@44:
 main_selfStatic_route@6:
     txna ApplicationArgs 1
     dup
-    bury 12
     len
     intc_0 // 32
     ==
@@ -336,7 +309,6 @@ main_selfStatic_route@6:
 main_ternary_merge@58:
     !
     assert // not payable
-    dig 10
     callsub foo
     dup
     len
@@ -346,35 +318,31 @@ main_ternary_merge@58:
     intc_0 // 32
     bzero
     dup
-    bury 8
+    bury 6
     b|
     dup
-    bury 9
     len
     dup
-    bury 2
+    cover 2
     itob
     intc_0 // 32
     itob
     b==
     bz main_bool_false@60
     intc_1 // 1
-    bury 2
 
 main_bool_merge@61:
-    dig 1
+    dup
     bnz main_after_if_else@63
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001173746174696363616c6c206661696c6564000000000000000000000000000000
     log
 
 main_after_if_else@63:
-    dig 1
     assert // staticcall failed
-    dup
+    swap
     intc_0 // 32
     ==
     bz main_else_body@65
-    dig 7
     extract 0 32
 
 main_after_if_else@66:
@@ -383,7 +351,7 @@ main_after_if_else@66:
     intc_0 // 32
     <=
     assert // overflow
-    dig 6
+    dig 4
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -393,12 +361,10 @@ main_after_if_else@66:
     return
 
 main_else_body@65:
-    dig 7
     b main_after_if_else@66
 
 main_bool_false@60:
     intc_2 // 0
-    bury 2
     b main_bool_merge@61
 
 main_ternary_false@57:

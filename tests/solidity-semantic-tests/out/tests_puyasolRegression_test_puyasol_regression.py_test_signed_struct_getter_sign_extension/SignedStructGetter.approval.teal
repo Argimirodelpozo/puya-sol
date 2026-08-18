@@ -5,10 +5,6 @@
 main:
     intcblock 1 0 16 32 32767 18446744073709518848
     bytecblock 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x151f7c75 "one" "small" "many" 0xffff 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x000000000000000000000000000000000000000000000000000000
-    intc_1 // 0
-    dupn 4
-    pushbytes ""
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -67,7 +63,7 @@ main_ternary_merge@19:
     dup
     intc_1 // 0
     getbyte
-    bury 3
+    swap
     intc_0 // 1
     extract_uint16
     itob
@@ -79,7 +75,6 @@ main_ternary_merge@19:
     bz main_ternary_false@21
     bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bury 4
 
 main_ternary_merge@22:
     bytec 6 // "many"
@@ -89,7 +84,7 @@ main_ternary_merge@22:
     select
     dup
     extract 3 8
-    bury 7
+    cover 3
     extract 11 16
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
@@ -99,11 +94,12 @@ main_ternary_merge@22:
     bz main_ternary_false@24
     bytec_2 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
+    swap
 
 main_ternary_merge@25:
-    dig 2
+    uncover 2
     itob
-    dig 5
+    swap
     dup
     len
     pushint 64
@@ -117,7 +113,7 @@ main_ternary_merge@25:
     uncover 2
     swap
     concat
-    dig 8
+    uncover 3
     concat
     uncover 2
     dup
@@ -136,10 +132,10 @@ main_ternary_merge@25:
     return
 
 main_ternary_false@24:
+    swap
     b main_ternary_merge@25
 
 main_ternary_false@21:
-    bury 4
     b main_ternary_merge@22
 
 main_ternary_false@18:
@@ -172,10 +168,8 @@ main_ternary_merge@30:
     bz main_ternary_false@32
     bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bury 4
 
 main_ternary_merge@33:
-    dig 3
     bytec 7 // 0xffff
     b&
     dup
@@ -205,7 +199,6 @@ main_ternary_false@35:
     b main_ternary_merge@36
 
 main_ternary_false@32:
-    bury 4
     b main_ternary_merge@33
 
 main_ternary_false@29:
@@ -236,10 +229,8 @@ main_ternary_merge@41:
     bz main_ternary_false@43
     bytec_2 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 4
 
 main_ternary_merge@44:
-    dig 3
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -269,7 +260,6 @@ main_ternary_false@46:
     b main_ternary_merge@47
 
 main_ternary_false@43:
-    bury 4
     b main_ternary_merge@44
 
 main_ternary_false@40:
@@ -363,10 +353,8 @@ main_ternary_merge@63:
     bz main_ternary_false@65
     bytec_2 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 4
 
 main_ternary_merge@66:
-    dig 3
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -396,7 +384,6 @@ main_ternary_false@68:
     b main_ternary_merge@69
 
 main_ternary_false@65:
-    bury 4
     b main_ternary_merge@66
 
 main_ternary_false@62:
@@ -411,10 +398,8 @@ main_setMany_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
     txna ApplicationArgs 2
     dup
-    bury 9
     len
     intc_2 // 16
     ==
@@ -429,7 +414,6 @@ main_setMany_route@7:
 main_ternary_merge@74:
     !
     assert // not payable
-    dig 7
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -438,14 +422,14 @@ main_ternary_merge@74:
     bz main_ternary_false@76
     bytec_2 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 5
+    swap
 
 main_ternary_merge@77:
-    dig 2
+    dup
     intc 4 // 32767
     <=
     bnz main_bool_true@79
-    dig 2
+    dup
     intc 5 // 18446744073709518848
     >=
     bz main_bool_false@80
@@ -464,7 +448,7 @@ main_bool_merge@81:
     extract 0 1
     pushint 2
     bzero
-    dig 5
+    uncover 3
     itob
     extract 6 2
     dig 1
@@ -502,7 +486,7 @@ main_bool_merge@81:
     intc_2 // 16
     bzero
     dup
-    dig 9
+    uncover 5
     concat
     dup
     len
@@ -534,7 +518,7 @@ main_bool_false@80:
     b main_bool_merge@81
 
 main_ternary_false@76:
-    bury 5
+    swap
     b main_ternary_merge@77
 
 main_ternary_false@73:
@@ -549,7 +533,6 @@ main_setSmall_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@85
     txn GroupIndex
@@ -576,7 +559,7 @@ main_bool_merge@90:
     assert // ABI validation
     pushint 2
     bzero
-    dig 1
+    swap
     itob
     extract 6 2
     dig 1
@@ -611,7 +594,6 @@ main_ternary_false@85:
 main_setOne_route@5:
     txna ApplicationArgs 1
     dup
-    bury 8
     len
     intc_2 // 16
     ==
@@ -626,7 +608,6 @@ main_setOne_route@5:
 main_ternary_merge@95:
     !
     assert // not payable
-    dig 6
     bytec_0 // 0xffffffffffffffffffffffffffffffff
     b&
     dup

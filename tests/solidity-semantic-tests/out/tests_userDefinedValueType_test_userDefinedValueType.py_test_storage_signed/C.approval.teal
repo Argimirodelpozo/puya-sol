@@ -3,11 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/storage_signed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 8
+    intcblock 1 0 32 8
     bytecblock "a" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffff 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x0000000000000002
-    intc_0 // 0
-    dupn 2
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -34,7 +31,7 @@ main:
     app_global_put
     pushbytess "third" 0x6566
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -52,14 +49,14 @@ main_a_route@11:
     txn GroupIndex
     bz main_ternary_false@17
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@18:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
@@ -86,28 +83,28 @@ main_ternary_merge@21:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@20:
     b main_ternary_merge@21
 
 main_ternary_false@17:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@18
 
 main_viaasm_route@10:
     txn GroupIndex
     bz main_ternary_false@25
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@26:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
@@ -141,28 +138,28 @@ main_ternary_merge@29:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@28:
     b main_ternary_merge@29
 
 main_ternary_false@25:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@26
 
 main_div_route@9:
     txn GroupIndex
     bz main_ternary_false@33
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@34:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
@@ -185,22 +182,21 @@ main_ternary_merge@37:
     bz main_ternary_false@39
     bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000
     b+
-    bury 4
 
 main_ternary_merge@40:
     intc_3 // 8
     bzero
-    bury 3
-    dig 3
+    swap
+    dup
     pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
     b>=
     dup
-    bury 2
+    cover 2
     bz main_ternary_false@63
-    dup
+    dig 1
     bz main_ternary_false@51
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 4
+    dig 1
     b-
 
 main_ternary_merge@52:
@@ -209,10 +205,10 @@ main_ternary_merge@52:
     pushbytes 0x
     b==
     bnz main_ternary_false@63
-    dup
+    dig 1
     bz main_ternary_false@58
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 4
+    dig 1
     b-
 
 main_ternary_merge@59:
@@ -226,13 +222,13 @@ main_ternary_merge@70:
     dig 3
     swap
     concat
-    bury 2
-    dup
+    cover 3
+    dig 1
     bz main_ternary_false@88
-    dup
+    dig 1
     bz main_ternary_false@76
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 4
+    dig 1
     b-
 
 main_ternary_merge@77:
@@ -241,10 +237,10 @@ main_ternary_merge@77:
     pushbytes 0x
     b==
     bnz main_ternary_false@88
-    dup
+    swap
     bz main_ternary_false@83
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 4
+    swap
     b-
 
 main_ternary_merge@84:
@@ -255,14 +251,10 @@ main_ternary_merge@84:
     b-
 
 main_ternary_merge@95:
-    dig 3
-    swap
     concat
     len
     intc_3 // 8
     -
-    dig 2
-    swap
     intc_3 // 8
     extract3
     bytec_3 // 0xffff
@@ -287,21 +279,20 @@ main_ternary_merge@98:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@97:
     b main_ternary_merge@98
 
 main_ternary_false@83:
-    dig 3
     b main_ternary_merge@84
 
 main_ternary_false@88:
-    dup
+    swap
     bz main_ternary_false@90
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 4
+    swap
     b-
 
 main_ternary_merge@91:
@@ -310,22 +301,21 @@ main_ternary_merge@91:
     b main_ternary_merge@95
 
 main_ternary_false@90:
-    dig 3
     b main_ternary_merge@91
 
 main_ternary_false@76:
-    dig 3
+    dup
     b main_ternary_merge@77
 
 main_ternary_false@58:
-    dig 3
+    dup
     b main_ternary_merge@59
 
 main_ternary_false@63:
-    dup
+    dig 1
     bz main_ternary_false@65
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 4
+    dig 1
     b-
 
 main_ternary_merge@66:
@@ -334,29 +324,28 @@ main_ternary_merge@66:
     b main_ternary_merge@70
 
 main_ternary_false@65:
-    dig 3
+    dup
     b main_ternary_merge@66
 
 main_ternary_false@51:
-    dig 3
+    dup
     b main_ternary_merge@52
 
 main_ternary_false@39:
-    bury 4
     b main_ternary_merge@40
 
 main_ternary_false@36:
     b main_ternary_merge@37
 
 main_ternary_false@33:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@34
 
 main_toMemIndirect_route@8:
     txn GroupIndex
     bz main_ternary_false@102
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -375,7 +364,7 @@ main_ternary_merge@103:
     concat
     replace2 64
     store 0
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
@@ -385,18 +374,18 @@ main_ternary_merge@103:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@102:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@103
 
 main_toMemDirect_route@7:
     txn GroupIndex
     bz main_ternary_false@107
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -415,7 +404,7 @@ main_ternary_merge@108:
     concat
     replace2 64
     store 0
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
@@ -425,25 +414,25 @@ main_ternary_merge@108:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@107:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@108
 
 main_indirect_route@6:
     txn GroupIndex
     bz main_ternary_false@112
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@113:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
@@ -470,28 +459,28 @@ main_ternary_merge@116:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@115:
     b main_ternary_merge@116
 
 main_ternary_false@112:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@113
 
 main_direct_route@5:
     txn GroupIndex
     bz main_ternary_false@120
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@121:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "a"
     app_global_get_ex
     assert // check a exists
@@ -518,12 +507,12 @@ main_ternary_merge@124:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@123:
     b main_ternary_merge@124
 
 main_ternary_false@120:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@121

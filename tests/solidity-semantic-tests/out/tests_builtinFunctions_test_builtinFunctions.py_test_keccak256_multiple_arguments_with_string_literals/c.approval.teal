@@ -3,9 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_multiple_arguments_with_string_literals.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 65535
-    intc_2 // 0
-    pushbytes ""
+    intcblock 1 32 65535 0
     pushint 4096
     bzero
     dup
@@ -42,7 +40,6 @@ main_after_if_else@2:
 main_bar_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_1 // 32
     ==
@@ -54,7 +51,6 @@ main_bar_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
@@ -65,15 +61,15 @@ main_bar_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    dupn 2
-    intc_3 // 65535
+    dup
+    intc_2 // 65535
     <=
     assert // ABI validation
-    intc_3 // 65535
+    intc_2 // 65535
     &
     intc_1 // 32
     bzero
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -96,7 +92,7 @@ main_ternary_merge@13:
     return
 
 main_ternary_false@12:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@13
 
 main_foo_route@5:
@@ -116,5 +112,5 @@ main_ternary_merge@18:
     return
 
 main_ternary_false@17:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@18

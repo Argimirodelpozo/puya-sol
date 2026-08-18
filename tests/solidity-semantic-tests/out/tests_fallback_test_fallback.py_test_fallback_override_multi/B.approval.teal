@@ -5,7 +5,6 @@
 main:
     intcblock 1 0
     pushbytes ""
-    dup
     pushint 4096
     bzero
     dup
@@ -38,15 +37,13 @@ main_after_if_else@2:
     return
 
 main_after_if_else@4:
-    intc_1 // 0
-    bury 2
     pushbytes 0x9509a93a // method "__fallback(byte[])byte[]"
     txna ApplicationArgs 0
     match main___fallback_route@8
-    dig 1
+    intc_1 // 0
     bury 1
 
-main_switch_case_next@9:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_override_multi.sol.B.__puya_arc4_router__@10:
     dup
     bnz main_after_if_else@6
     txna ApplicationArgs 0
@@ -88,7 +85,7 @@ main___fallback_route@8:
     log
     intc_0 // 1
     bury 1
-    b main_switch_case_next@9
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_override_multi.sol.B.__puya_arc4_router__@10
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_override_multi.sol.B.__fallback(_input: bytes) -> bytes:

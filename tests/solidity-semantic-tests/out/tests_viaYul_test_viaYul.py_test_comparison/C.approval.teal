@@ -5,8 +5,6 @@
 main:
     intcblock 1 0 32
     bytecblock 0x00 0x151f7c75 0x8000000000000000000000000000000000000000000000000000000000000000
-    intc_1 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -43,14 +41,12 @@ main_after_if_else@2:
 main_neq_route@16:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -65,8 +61,6 @@ main_neq_route@16:
 main_ternary_merge@23:
     !
     assert // not payable
-    dig 2
-    dig 2
     b!=
     bytec_0 // 0x00
     intc_1 // 0
@@ -86,14 +80,12 @@ main_ternary_false@22:
 main_eq_route@15:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -108,8 +100,6 @@ main_eq_route@15:
 main_ternary_merge@28:
     !
     assert // not payable
-    dig 2
-    dig 2
     b==
     bytec_0 // 0x00
     intc_1 // 0
@@ -129,14 +119,12 @@ main_ternary_false@27:
 main_sgte_route@14:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -151,10 +139,10 @@ main_sgte_route@14:
 main_ternary_merge@33:
     !
     assert // not payable
-    dig 2
+    swap
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
-    dig 2
+    swap
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     b>=
@@ -176,14 +164,12 @@ main_ternary_false@32:
 main_gte_route@13:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -198,8 +184,6 @@ main_gte_route@13:
 main_ternary_merge@38:
     !
     assert // not payable
-    dig 2
-    dig 2
     b>=
     bytec_0 // 0x00
     intc_1 // 0
@@ -219,14 +203,12 @@ main_ternary_false@37:
 main_sgt_route@12:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -241,10 +223,10 @@ main_sgt_route@12:
 main_ternary_merge@43:
     !
     assert // not payable
-    dig 2
+    swap
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
-    dig 2
+    swap
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     b>
@@ -266,14 +248,12 @@ main_ternary_false@42:
 main_gt_route@11:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -288,8 +268,6 @@ main_gt_route@11:
 main_ternary_merge@48:
     !
     assert // not payable
-    dig 2
-    dig 2
     b>
     bytec_0 // 0x00
     intc_1 // 0
@@ -309,14 +287,12 @@ main_ternary_false@47:
 main_slte_route@10:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -331,10 +307,10 @@ main_slte_route@10:
 main_ternary_merge@53:
     !
     assert // not payable
-    dig 2
+    swap
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
-    dig 2
+    swap
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     b<=
@@ -356,14 +332,12 @@ main_ternary_false@52:
 main_lte_route@9:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -378,8 +352,6 @@ main_lte_route@9:
 main_ternary_merge@58:
     !
     assert // not payable
-    dig 2
-    dig 2
     b<=
     bytec_0 // 0x00
     intc_1 // 0
@@ -399,14 +371,12 @@ main_ternary_false@57:
 main_slt_route@8:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -421,10 +391,10 @@ main_slt_route@8:
 main_ternary_merge@63:
     !
     assert // not payable
-    dig 2
+    swap
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
-    dig 2
+    swap
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     b<
@@ -446,14 +416,12 @@ main_ternary_false@62:
 main_lt_route@7:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -468,8 +436,6 @@ main_lt_route@7:
 main_ternary_merge@68:
     !
     assert // not payable
-    dig 2
-    dig 2
     b<
     bytec_0 // 0x00
     intc_1 // 0
@@ -509,7 +475,6 @@ main_ternary_false@72:
 main_f_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_2 // 32
     ==
@@ -524,7 +489,6 @@ main_f_route@5:
 main_ternary_merge@78:
     !
     assert // not payable
-    dup
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     ==
     bytec_0 // 0x00

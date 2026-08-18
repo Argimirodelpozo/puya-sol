@@ -5,7 +5,6 @@
 main:
     intcblock 1 0
     bytecblock "__ctor_pending" "supportedInterfaces"
-    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -45,7 +44,6 @@ main_after_if_else@2:
 main_supportsInterface_route@8:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     pushint 4
     ==
@@ -60,7 +58,6 @@ main_supportsInterface_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    dup
     bytec_1 // "supportedInterfaces"
     concat
     sha256

@@ -5,7 +5,6 @@
 main:
     intcblock 0 1 32 2
     bytecblock 0x151f7c75 "a" "b" 0xafedb2e5 "x" 0x4b2c0376 0x000000000000000000000000
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -123,10 +122,11 @@ main_ternary_merge@28:
     intc_0 // 0
     extract_uint64
     dup
-    bury 3
+    cover 2
     global CurrentApplicationID
     ==
     bz main_else_body@30
+    bury 1
     extract 8 4
     callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
     intc_0 // 0
@@ -157,9 +157,8 @@ main_else_body@30:
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
-    dig 1
-    itxn_field ApplicationID
     itxn_field ApplicationArgs
+    itxn_field ApplicationID
     itxn_submit
     itxn LastLog
     extract 4 0
@@ -226,10 +225,11 @@ main_ternary_merge@41:
     intc_0 // 0
     extract_uint64
     dup
-    bury 3
+    cover 2
     global CurrentApplicationID
     ==
     bz main_else_body@43
+    bury 1
     extract 8 4
     callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
     intc_0 // 0
@@ -260,9 +260,8 @@ main_else_body@43:
     itxn_field OnCompletion
     intc_0 // 0
     itxn_field Fee
-    dig 1
-    itxn_field ApplicationID
     itxn_field ApplicationArgs
+    itxn_field ApplicationID
     itxn_submit
     itxn LastLog
     extract 4 0

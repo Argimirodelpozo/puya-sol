@@ -5,7 +5,6 @@
 main:
     intcblock 0 1 16 6 1000000
     bytecblock 0x72a794c0 TMPL_APPROVAL_A TMPL_CLEAR_A 0x151f7c75
-    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -151,9 +150,7 @@ main_ternary_false@12:
 
 main_f_route@5:
     txna ApplicationArgs 1
-    dup
-    bury 2
-    dup
+    dupn 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     pushint 32
@@ -174,7 +171,6 @@ main_f_route@5:
 main_ternary_merge@18:
     !
     assert // not payable
-    dup
     extract 34 32
     bytec_3 // 0x151f7c75
     swap

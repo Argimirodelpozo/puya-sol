@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_local_var.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 2
+    intcblock 1 32 2 0
     bytecblock "a" "__ctor_pending" 0x151f7c75
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -45,7 +44,6 @@ main_after_if_else@2:
 main_a_route@7:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_1 // 32
     ==
@@ -62,7 +60,7 @@ main_ternary_merge@14:
     assert // not payable
     pushint 8
     bzero
-    dig 1
+    swap
     concat
     dup
     len
@@ -71,7 +69,7 @@ main_ternary_merge@14:
     extract_uint64
     intc_1 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     bytec_0 // "a"
     swap
@@ -85,7 +83,7 @@ main_ternary_merge@14:
     return
 
 main_ternary_false@13:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@14
 
 main_f_route@6:
@@ -111,7 +109,7 @@ main_ternary_merge@19:
 
 main_after_if_else@22:
     bytec_0 // "a"
-    intc_2 // 0
+    intc_3 // 0
     pushbytes 0x0007
     box_replace
     load 0
@@ -119,7 +117,7 @@ main_after_if_else@22:
     bytec_0 // "a"
     box_len
     pop
-    intc_3 // 2
+    intc_2 // 2
     >=
     bz main_ternary_false@25
     bytec_0 // "a"
@@ -127,7 +125,7 @@ main_after_if_else@22:
     pop
 
 main_ternary_merge@26:
-    intc_3 // 2
+    intc_2 // 2
     -
     intc_1 // 32
     /
@@ -150,7 +148,7 @@ main_ternary_merge@26:
     return
 
 main_ternary_false@25:
-    intc_3 // 2
+    intc_2 // 2
     b main_ternary_merge@26
 
 main_else_body@21:
@@ -161,7 +159,7 @@ main_else_body@21:
     b main_after_if_else@22
 
 main_ternary_false@18:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@19
 
 main___postInit_route@5:
@@ -173,10 +171,10 @@ main___postInit_route@5:
     ==
     assert // __postInit callable only by the app creator
     bytec_1 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_0 // "a"
-    intc_3 // 2
+    intc_2 // 2
     box_create
     pop
     intc_0 // 1

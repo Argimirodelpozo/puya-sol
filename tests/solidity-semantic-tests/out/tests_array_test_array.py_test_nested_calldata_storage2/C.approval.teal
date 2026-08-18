@@ -5,10 +5,6 @@
 main:
     intcblock 2 1 0 32
     bytecblock "tmp_i" "__ctor_pending"
-    intc_2 // 0
-    dupn 3
-    pushbytes ""
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -48,14 +44,12 @@ main_after_if_else@2:
 main_tmp_i_route@7:
     txna ApplicationArgs 1
     dup
-    bury 9
     len
     intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 8
     len
     intc_3 // 32
     ==
@@ -73,7 +67,7 @@ main_ternary_merge@14:
     pushint 8
     bzero
     dup
-    dig 9
+    uncover 3
     concat
     dup
     len
@@ -81,7 +75,7 @@ main_ternary_merge@14:
     -
     extract_uint64
     swap
-    dig 8
+    uncover 2
     concat
     dup
     len
@@ -131,39 +125,34 @@ main_ternary_false@13:
 
 main_i_route@6:
     txna ApplicationArgs 1
-    dup
-    bury 6
-    dup
+    dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 6
+    cover 2
     intc_0 // 2
     *
-    bury 3
+    swap
     dup
     len
-    bury 2
+    cover 2
     extract 2 0
-    bury 6
     intc_2 // 0
-    bury 3
 
 main_for_header@17:
-    dig 2
-    dig 4
+    dup
+    dig 5
     <
     bz main_after_for@19
-    dig 2
     dup
     intc_0 // 2
     *
-    dig 7
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 5
     dup
     cover 4
     ==
@@ -178,17 +167,17 @@ main_for_header@17:
     intc_0 // 2
     +
     +
-    bury 3
+    cover 2
     intc_1 // 1
     +
-    bury 3
     b main_for_header@17
 
 main_after_for@19:
-    dig 1
+    popn 2
+    uncover 2
+    pop
     intc_0 // 2
     +
-    dig 1
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
     txn GroupIndex
@@ -205,7 +194,7 @@ main_ternary_merge@22:
     box_del
     pop
     bytec_0 // "tmp_i"
-    dig 5
+    swap
     box_put
     intc_1 // 1
     return

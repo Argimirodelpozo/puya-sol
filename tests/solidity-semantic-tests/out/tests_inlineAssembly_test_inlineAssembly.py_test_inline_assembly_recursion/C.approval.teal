@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_recursion.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 32 1
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -42,7 +41,6 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -59,7 +57,6 @@ main_ternary_merge@9:
     assert // not payable
     load 0
     store 0
-    dup
     callsub __yul_C_9_asm_7_fac
     load 0
     store 0
@@ -81,7 +78,7 @@ main_ternary_merge@9:
     return
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9
 
 

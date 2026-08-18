@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/contracts/literal_base.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 32 1
     bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0x02
-    intc_2 // 0
-    dupn 6
     pushint 4096
     bzero
     dup
@@ -43,7 +41,6 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 8
     len
     intc_0 // 32
     ==
@@ -59,85 +56,84 @@ main_ternary_merge@9:
     !
     assert // not payable
     bytec_2 // 0x01
-    bury 2
+    swap
     pushint 2
     itob
-    bury 6
-    dig 6
-    bury 4
+    cover 2
+    dup
 
 main_while_top@10:
-    dig 3
+    dup
     bytec_0 // 0x
     b>
     bz main_after_while@14
-    dig 3
+    dup
     bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
     bz main_after_if_else@13
-    dig 1
-    dig 6
+    uncover 2
+    dig 3
     b*
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 2
+    cover 2
 
 main_after_if_else@13:
-    dig 3
     bytec_3 // 0x02
     b/
-    bury 4
-    dig 5
+    uncover 3
     dup
     b*
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 6
+    cover 3
     b main_while_top@10
 
 main_after_while@14:
+    pop
+    uncover 2
+    pop
     bytec_2 // 0x01
-    bury 1
+    swap
     bytec_3 // 0x02
-    bury 5
-    dig 6
-    bury 3
+    cover 3
+    dup
 
 main_while_top@16:
-    dig 2
+    dup
     bytec_0 // 0x
     b>
     bz main_after_while@20
-    dig 2
+    dup
     bytec_2 // 0x01
     b&
     bytec_0 // 0x
     b!=
     bz main_after_if_else@19
-    dup
-    dig 5
+    uncover 2
+    dig 4
     b*
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 1
+    cover 2
 
 main_after_if_else@19:
-    dig 2
     bytec_3 // 0x02
     b/
-    bury 3
-    dig 4
+    uncover 4
     dup
     b*
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 5
+    cover 4
     b main_while_top@16
 
 main_after_while@20:
-    dig 6
+    pop
+    uncover 3
+    pop
     bytec_3 // 0x02
     b%
     bytec_0 // 0x
@@ -148,13 +144,13 @@ main_after_while@20:
     b==
     bnz main_ternary_false@23
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    dig 1
+    swap
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 main_ternary_merge@24:
-    dig 2
+    swap
     dup
     len
     intc_0 // 32
@@ -182,9 +178,8 @@ main_ternary_merge@24:
     return
 
 main_ternary_false@23:
-    dup
     b main_ternary_merge@24
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9

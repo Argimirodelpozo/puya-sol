@@ -5,8 +5,6 @@
 main:
     intcblock 1 0 32 2
     bytecblock 0x 0x151f7c75 "bc" "c" "ba" "a" "__ctor_pending"
-    intc_1 // 0
-    dupn 4
     pushint 4096
     bzero
     dup
@@ -55,7 +53,6 @@ main_bc_route@17:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 2
     txn GroupIndex
     bz main_ternary_false@23
     txn GroupIndex
@@ -66,7 +63,6 @@ main_bc_route@17:
 main_ternary_merge@24:
     !
     assert // not payable
-    dig 1
     sha256
     bytec_2 // "bc"
     concat
@@ -106,7 +102,6 @@ main_c_route@16:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 2
     txn GroupIndex
     bz main_ternary_false@28
     txn GroupIndex
@@ -117,7 +112,6 @@ main_c_route@16:
 main_ternary_merge@29:
     !
     assert // not payable
-    dig 1
     sha256
     bytec_3 // "c"
     concat
@@ -157,7 +151,6 @@ main_ba_route@15:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 1
     txn GroupIndex
     bz main_ternary_false@33
     txn GroupIndex
@@ -168,7 +161,6 @@ main_ba_route@15:
 main_ternary_merge@34:
     !
     assert // not payable
-    dup
     sha256
     bytec 4 // "ba"
     concat
@@ -208,7 +200,6 @@ main_a_route@14:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 1
     txn GroupIndex
     bz main_ternary_false@38
     txn GroupIndex
@@ -219,7 +210,6 @@ main_a_route@14:
 main_ternary_merge@39:
     !
     assert // not payable
-    dup
     sha256
     bytec 5 // "a"
     concat
@@ -259,7 +249,6 @@ main_getBc_route@13:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 4
     txn GroupIndex
     bz main_ternary_false@43
     txn GroupIndex
@@ -270,7 +259,6 @@ main_getBc_route@13:
 main_ternary_merge@44:
     !
     assert // not payable
-    dig 3
     sha256
     bytec_2 // "bc"
     concat
@@ -310,7 +298,6 @@ main_getC_route@12:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 4
     txn GroupIndex
     bz main_ternary_false@48
     txn GroupIndex
@@ -321,7 +308,6 @@ main_getC_route@12:
 main_ternary_merge@49:
     !
     assert // not payable
-    dig 3
     sha256
     bytec_3 // "c"
     concat
@@ -361,10 +347,9 @@ main_setBc_route@11:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 4
     txna ApplicationArgs 2
     dup
-    bury 6
+    cover 2
     len
     intc_2 // 32
     ==
@@ -379,7 +364,6 @@ main_setBc_route@11:
 main_ternary_merge@54:
     !
     assert // not payable
-    dig 3
     sha256
     bytec_2 // "bc"
     concat
@@ -387,7 +371,7 @@ main_ternary_merge@54:
     dup
     box_del
     pop
-    dig 5
+    swap
     box_put
     intc_0 // 1
     return
@@ -408,10 +392,9 @@ main_setC_route@10:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 4
     txna ApplicationArgs 2
     dup
-    bury 6
+    cover 2
     len
     intc_2 // 32
     ==
@@ -426,7 +409,6 @@ main_setC_route@10:
 main_ternary_merge@59:
     !
     assert // not payable
-    dig 3
     sha256
     bytec_3 // "c"
     concat
@@ -434,7 +416,7 @@ main_ternary_merge@59:
     dup
     box_del
     pop
-    dig 5
+    swap
     box_put
     intc_0 // 1
     return
@@ -455,7 +437,6 @@ main_getBa_route@9:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 3
     txn GroupIndex
     bz main_ternary_false@63
     txn GroupIndex
@@ -466,7 +447,6 @@ main_getBa_route@9:
 main_ternary_merge@64:
     !
     assert // not payable
-    dig 2
     sha256
     bytec 4 // "ba"
     concat
@@ -506,7 +486,6 @@ main_getA_route@8:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 3
     txn GroupIndex
     bz main_ternary_false@68
     txn GroupIndex
@@ -517,7 +496,6 @@ main_getA_route@8:
 main_ternary_merge@69:
     !
     assert // not payable
-    dig 2
     sha256
     bytec 5 // "a"
     concat
@@ -557,10 +535,9 @@ main_setBa_route@7:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 3
     txna ApplicationArgs 2
     dup
-    bury 6
+    cover 2
     len
     intc_2 // 32
     ==
@@ -575,7 +552,6 @@ main_setBa_route@7:
 main_ternary_merge@74:
     !
     assert // not payable
-    dig 2
     sha256
     bytec 4 // "ba"
     concat
@@ -583,7 +559,7 @@ main_ternary_merge@74:
     dup
     box_del
     pop
-    dig 5
+    swap
     box_put
     intc_0 // 1
     return
@@ -604,10 +580,9 @@ main_setA_route@6:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 3
     txna ApplicationArgs 2
     dup
-    bury 6
+    cover 2
     len
     intc_2 // 32
     ==
@@ -622,7 +597,6 @@ main_setA_route@6:
 main_ternary_merge@79:
     !
     assert // not payable
-    dig 2
     sha256
     bytec 5 // "a"
     concat
@@ -630,7 +604,7 @@ main_ternary_merge@79:
     dup
     box_del
     pop
-    dig 5
+    swap
     box_put
     intc_0 // 1
     return

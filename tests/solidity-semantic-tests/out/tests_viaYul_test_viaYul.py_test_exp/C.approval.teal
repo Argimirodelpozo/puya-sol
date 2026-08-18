@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/exp.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 32 1
     bytecblock 0x01 0x
-    intc_2 // 0
-    dupn 4
     pushint 4096
     bzero
     dup
@@ -43,14 +41,12 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 6
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 5
     len
     intc_0 // 32
     ==
@@ -66,41 +62,36 @@ main_ternary_merge@9:
     !
     assert // not payable
     bytec_0 // 0x01
-    bury 1
-    dig 4
-    bury 3
-    dig 3
-    bury 2
+    swap
 
 main_while_top@10:
-    dig 1
+    dup
     bytec_1 // 0x
     b>
     bz main_after_while@14
-    dig 1
+    dup
     bytec_0 // 0x01
     b&
     bytec_1 // 0x
     b!=
     bz main_after_if_else@13
-    dup
-    dig 3
+    swap
+    dig 2
     b*
-    bury 1
+    swap
 
 main_after_if_else@13:
-    dig 1
     pushbytes 0x02
     b/
-    bury 2
-    dig 2
+    uncover 2
     dup
     b*
-    bury 3
+    cover 2
     b main_while_top@10
 
 main_after_while@14:
-    dupn 2
+    pop
+    dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
@@ -120,5 +111,5 @@ main_after_while@14:
     return
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9

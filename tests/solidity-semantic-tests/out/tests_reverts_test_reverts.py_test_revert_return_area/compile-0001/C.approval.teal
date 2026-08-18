@@ -4,10 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/revert_return_area.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 4
-    intc_0 // 0
-    dup
     pushbytes ""
-    dup
     pushint 4096
     bzero
     dup
@@ -36,20 +33,20 @@ main_after_if_else@2:
     b __fallback
 
 main_after_if_else@4:
-    intc_0 // 0
-    bury 2
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_switch_case_next@11
+    bz main_after_if_else@13
     pushbytess 0x1bf9882b 0x219b312e // method "__fallback()void", method "f()(uint256,uint256)"
     txna ApplicationArgs 0
     match __fallback main_f_route@10
 
-main_switch_case_next@11:
-    dig 1
+main_after_if_else@13:
+    intc_0 // 0
     bury 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/revert_return_area.sol.C.__puya_arc4_router__@14:
     dup
     bnz main_after_if_else@6
     b __fallback
@@ -59,13 +56,13 @@ main_after_if_else@6:
 
 main_f_route@10:
     txn GroupIndex
-    bz main_ternary_false@16
+    bz main_ternary_false@17
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@17:
+main_ternary_merge@18:
     !
     assert // not payable
     global CurrentApplicationAddress
@@ -74,7 +71,7 @@ main_ternary_merge@17:
     load 0
     intc_2 // 32
     bzero
-    bury 5
+    cover 2
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     replace2 0
     store 0
@@ -101,25 +98,21 @@ main_ternary_merge@17:
     itxn_submit
     itxn LastLog
     dup
-    bury 5
     len
     intc_3 // 4
     >=
-    bz main_ternary_false@20
-    dig 3
+    bz main_ternary_false@21
+    dup
     extract 0 4
     pushbytes 0x151f7c75
     ==
 
-main_ternary_merge@21:
-    bz main_ternary_false@23
-    dig 3
+main_ternary_merge@22:
+    bz main_ternary_false@24
     extract 4 0
 
-main_ternary_merge@24:
-    dig 3
-    dup
-    cover 2
+main_ternary_merge@25:
+    dig 1
     concat
     extract 0 32
     dig 1
@@ -152,20 +145,19 @@ main_ternary_merge@24:
     concat
     log
     intc_1 // 1
-    bury 2
-    b main_switch_case_next@11
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/revert_return_area.sol.C.__puya_arc4_router__@14
 
-main_ternary_false@23:
-    dig 3
-    b main_ternary_merge@24
+main_ternary_false@24:
+    b main_ternary_merge@25
 
-main_ternary_false@20:
+main_ternary_false@21:
     intc_0 // 0
-    b main_ternary_merge@21
+    b main_ternary_merge@22
 
-main_ternary_false@16:
+main_ternary_false@17:
     intc_0 // 0
-    b main_ternary_merge@17
+    b main_ternary_merge@18
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/revert_return_area.sol.C.__fallback() -> void:

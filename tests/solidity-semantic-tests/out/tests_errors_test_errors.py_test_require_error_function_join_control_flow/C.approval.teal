@@ -6,8 +6,6 @@ main:
     intcblock 0 32 1 42
     bytecblock "y" "x"
     intc_0 // 0
-    dup
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -60,7 +58,6 @@ main_f_route@4:
     assert // invalid number of bytes for arc4.bool
     intc_0 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -78,8 +75,6 @@ main_ternary_merge@9:
     intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
-    swap
-    bury 3
     assert // check x exists
     intc_0 // 0
     bytec_0 // "y"
@@ -89,6 +84,7 @@ main_ternary_merge@9:
     itob
     b==
     bz main_else_body@11
+    bury 1
     pushint 21
     itob
     bytec_1 // "x"
@@ -127,7 +123,7 @@ main_after_if_else@14:
     uncover 2
     dig 2
     b|
-    dig 4
+    uncover 3
     dup
     len
     intc_1 // 32
@@ -163,13 +159,13 @@ main_else_body@11:
     swap
     concat
     bury 3
-    dup
+    dig 1
     bnz main_after_if_else@13
     dig 2
     log
 
 main_after_if_else@13:
-    dup
+    swap
     assert // E
     b main_after_if_else@14
 

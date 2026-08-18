@@ -4,9 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/events_with_same_name.sol.ClientReceipt.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    intc_1 // 0
-    dupn 2
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -43,14 +40,13 @@ main_after_if_else@2:
 main_deposit_route@8:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 3
+    cover 2
     dup
     len
     intc_0 // 1
@@ -58,7 +54,6 @@ main_deposit_route@8:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -69,12 +64,10 @@ main_deposit_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
-    dig 2
-    dig 2
+    swap
     concat
     pushbytes 0x1a400015 // method "Deposit(address,bool)"
     swap
@@ -92,14 +85,12 @@ main_ternary_false@14:
 main_deposit_route@7:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 5
     len
     intc_2 // 32
     ==
@@ -114,8 +105,6 @@ main_deposit_route@7:
 main_ternary_merge@20:
     !
     assert // not payable
-    dig 2
-    dig 4
     concat
     pushbytes 0x18a962c4 // method "Deposit(address,uint256)"
     swap
@@ -133,7 +122,6 @@ main_ternary_false@19:
 main_deposit_route@6:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_2 // 32
     ==
@@ -149,7 +137,7 @@ main_ternary_merge@25:
     !
     assert // not payable
     pushbytes 0x08db9ab9 // method "Deposit(address)"
-    dig 3
+    swap
     concat
     log
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002

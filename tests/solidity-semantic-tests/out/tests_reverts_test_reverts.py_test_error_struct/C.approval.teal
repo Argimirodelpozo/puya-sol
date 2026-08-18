@@ -5,7 +5,6 @@
 main:
     intcblock 1 0
     bytecblock "_struct"
-    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -45,7 +44,6 @@ main_after_if_else@2:
 main_g_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     pushint 32
     ==
@@ -62,8 +60,6 @@ main_ternary_merge@13:
     assert // not payable
     bytec_0 // "_struct"
     dig 1
-    dup
-    cover 2
     app_global_put
     extract 0 32
     pushbytes 0x151f7c75

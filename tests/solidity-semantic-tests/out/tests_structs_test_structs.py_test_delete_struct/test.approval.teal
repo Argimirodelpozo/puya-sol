@@ -5,7 +5,6 @@
 main:
     intcblock 1 0 32 34
     bytecblock "str" 0x151f7c75 0x0024000000000000000000000000000000000000000000000000000000000000000000480000000000000000000000000000000000000000000000000000000000000000002200000000 "__ctor_pending" "toDelete" 0x91f7fb54d1b445cafc9d5a95c720d7b987c389891ef4dfdbd4c068aa74746b73 0x7dcc8e1ed07254679b8cf5231fd0d660e6114a1e48cb876a30abc72f00c200fd
-    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -45,7 +44,6 @@ main_after_if_else@2:
 main_getNestedMapping_route@10:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_2 // 32
     ==
@@ -62,7 +60,7 @@ main_ternary_merge@17:
     assert // not payable
     intc_2 // 32
     bzero
-    dig 1
+    swap
     concat
     dup
     len
@@ -98,7 +96,6 @@ main_ternary_false@16:
 main_getTopMapping_route@9:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_2 // 32
     ==
@@ -116,7 +113,7 @@ main_ternary_merge@22:
     intc_2 // 32
     bzero
     dup
-    dig 2
+    uncover 2
     concat
     dup
     len

@@ -3,8 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_declaration.sol.Base.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
-    intc_2 // 0
+    intcblock 1 32
     pushint 4096
     bzero
     dup
@@ -41,7 +40,6 @@ main_a_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_1 // 32
     ==
@@ -58,7 +56,6 @@ main_ternary_merge@9:
     assert // not payable
     intc_0 // 1
     itob
-    dig 1
     b+
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -80,5 +77,5 @@ main_ternary_merge@9:
     return
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9

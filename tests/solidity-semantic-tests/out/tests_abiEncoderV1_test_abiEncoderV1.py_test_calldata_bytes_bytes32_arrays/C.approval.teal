@@ -3,10 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/calldata_bytes_bytes32_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1
-    intc_0 // 0
-    dup
-    pushbytes ""
+    intcblock 1 0
     pushint 4096
     bzero
     dup
@@ -26,7 +23,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -44,15 +41,14 @@ main_f_route@4:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 1
+    intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_0 // 0
+    intc_1 // 0
     getbit
-    bury 1
     txna ApplicationArgs 2
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -61,10 +57,8 @@ main_f_route@4:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 3
     txna ApplicationArgs 3
     dup
-    bury 3
     len
     pushint 64
     ==
@@ -72,7 +66,7 @@ main_f_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -80,10 +74,10 @@ main_ternary_merge@9:
     !
     assert // not payable
     pushbytes 0x00
-    intc_0 // 0
-    dig 2
+    intc_1 // 0
+    uncover 4
     setbit
-    dig 3
+    uncover 2
     dup
     len
     itob
@@ -93,7 +87,7 @@ main_ternary_merge@9:
     swap
     pushbytes 0x0043
     concat
-    dig 3
+    uncover 2
     concat
     swap
     concat
@@ -101,9 +95,9 @@ main_ternary_merge@9:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@8:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@9

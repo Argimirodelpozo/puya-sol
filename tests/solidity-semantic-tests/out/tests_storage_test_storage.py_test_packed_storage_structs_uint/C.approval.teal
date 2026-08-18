@@ -5,7 +5,6 @@
 main:
     intcblock 1 0 2 43981
     bytecblock "data" 0x00000000000000000000000000000000000000000000000000000000000000000000
-    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -122,7 +121,7 @@ main_after_if_else@13:
     itob
     dup
     cover 3
-    bury 4
+    cover 3
     concat
     pushbytes 0x00000000000000000000000000000000000000000000000000001234567890
     concat
@@ -132,6 +131,7 @@ main_after_if_else@13:
     extract 3 31
     b!=
     bz main_after_if_else@15
+    pop
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_storage_structs_uint.sol.C.test@28
 
@@ -146,6 +146,7 @@ main_after_if_else@15:
     intc_2 // 2
     !=
     bz main_after_if_else@17
+    pop
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_storage_structs_uint.sol.C.test@28
 
@@ -172,6 +173,7 @@ main_after_if_else@17:
     pushint 8
     !=
     bz main_after_if_else@19
+    pop
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_storage_structs_uint.sol.C.test@28
 
@@ -186,6 +188,7 @@ main_after_if_else@19:
     intc_3 // 43981
     !=
     bz main_after_if_else@21
+    pop
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_storage_structs_uint.sol.C.test@28
 
@@ -212,6 +215,7 @@ main_after_if_else@21:
     pushint 56491
     !=
     bz main_after_if_else@23
+    pop
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_storage_structs_uint.sol.C.test@28
 
@@ -222,7 +226,6 @@ main_after_if_else@23:
     cover 2
     select
     extract 3 31
-    dig 1
     b!=
     bz main_after_if_else@25
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009

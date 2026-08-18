@@ -5,8 +5,6 @@
 main:
     intcblock 0 1 32 4096
     intc_0 // 0
-    pushbytes ""
-    dup
     intc_3 // 4096
     bzero
     dup
@@ -78,14 +76,14 @@ main_ternary_merge@9:
     intc_3 // 4096
     /
     dup
-    bury 4
+    cover 2
     dup
     loads
     uncover 2
     intc_3 // 4096
     %
     dup
-    bury 4
+    cover 3
     swap
     dig 1
     pushbytes 0x00000000000000000000000000000000000000000000000000deadbeef15dead
@@ -136,16 +134,16 @@ main_ternary_merge@12:
 main_ternary_merge@15:
     load 0
     store 0
-    dig 1
+    swap
     loads
-    dig 1
+    swap
     intc_2 // 32
     extract3
     pushint 62678480396345005
     itob
     b==
     bz main_bool_false@18
-    dig 2
+    dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffef15dead
     b==
     bz main_bool_false@18

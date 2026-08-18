@@ -3,9 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_byte_oob.sol.AsmByteOOB.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
-    intc_2 // 0
-    dup
+    intcblock 32 1 8
     pushint 4096
     bzero
     dup
@@ -42,14 +40,12 @@ main_tbyte_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -72,7 +68,7 @@ main_ternary_merge@9:
     bz main_ternary_false@11
     intc_0 // 32
     bzero
-    dig 1
+    swap
     concat
     dup
     len
@@ -80,13 +76,13 @@ main_ternary_merge@9:
     -
     intc_0 // 32
     extract3
-    intc_3 // 8
+    intc_2 // 8
     bzero
-    dig 3
+    uncover 2
     concat
     dup
     len
-    intc_3 // 8
+    intc_2 // 8
     -
     extract_uint64
     intc_1 // 1
@@ -113,9 +109,10 @@ main_ternary_merge@12:
     return
 
 main_ternary_false@11:
+    popn 2
     pushbytes 0x
     b main_ternary_merge@12
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9

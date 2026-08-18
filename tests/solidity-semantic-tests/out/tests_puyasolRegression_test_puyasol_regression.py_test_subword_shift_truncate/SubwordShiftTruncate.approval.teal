@@ -5,7 +5,6 @@
 main:
     intcblock 8 1 255 0 65535
     bytecblock 0x0000000000000000000000000000000000000000000000000000000000000002 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x00 0x0100
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -47,7 +46,6 @@ main_shlMaskU8_route@9:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@15
     txn GroupIndex
@@ -58,7 +56,7 @@ main_shlMaskU8_route@9:
 main_ternary_merge@16:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_2 // 255
     <=
     assert // ABI validation
@@ -104,7 +102,6 @@ main_shlCmpU64_route@8:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@21
     txn GroupIndex
@@ -117,7 +114,7 @@ main_ternary_merge@22:
     assert // not payable
     intc_0 // 8
     bzero
-    dig 1
+    swap
     itob
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b*
@@ -156,7 +153,6 @@ main_shlCmpU16_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@27
     txn GroupIndex
@@ -167,7 +163,7 @@ main_shlCmpU16_route@7:
 main_ternary_merge@28:
     !
     assert // not payable
-    dupn 2
+    dup
     intc 4 // 65535
     <=
     assert // ABI validation
@@ -214,7 +210,6 @@ main_comboChkU8_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@33
     txn GroupIndex
@@ -225,7 +220,7 @@ main_comboChkU8_route@6:
 main_ternary_merge@34:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_2 // 255
     <=
     assert // ABI validation
@@ -274,7 +269,6 @@ main_shlCmpU8_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@39
     txn GroupIndex
@@ -285,7 +279,7 @@ main_shlCmpU8_route@5:
 main_ternary_merge@40:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_2 // 255
     <=
     assert // ABI validation

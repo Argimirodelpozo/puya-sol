@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/amount_overflow_guard.sol.AmountOverflowGuard.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 8
+    intcblock 1 32 0 8
     bytecblock 0x010000000000000000
-    intc_1 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -43,16 +41,14 @@ main_after_if_else@2:
 main_doValueCall_route@7:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 3
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -65,7 +61,6 @@ main_doValueCall_route@7:
 main_ternary_merge@19:
     !
     assert // not payable
-    dig 1
     dup
     bytec_0 // 0x010000000000000000
     b<
@@ -82,9 +77,9 @@ main_ternary_merge@19:
     extract_uint64
     intc_0 // 1
     itxn_field TypeEnum
-    dig 1
+    swap
     itxn_field Receiver
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
     itxn_field Amount
     itxn_submit
@@ -94,22 +89,20 @@ main_ternary_merge@19:
     return
 
 main_ternary_false@13:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@19
 
 main_doSend_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 3
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -121,22 +114,20 @@ main_doSend_route@6:
     b main_ternary_merge@19
 
 main_ternary_false@18:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@19
 
 main_doTransfer_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 3
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -149,7 +140,6 @@ main_doTransfer_route@5:
 main_ternary_merge@24:
     !
     assert // not payable
-    dig 1
     dup
     bytec_0 // 0x010000000000000000
     b<
@@ -166,9 +156,9 @@ main_ternary_merge@24:
     extract_uint64
     intc_0 // 1
     itxn_field TypeEnum
-    dig 1
+    swap
     itxn_field Receiver
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
     itxn_field Amount
     itxn_submit
@@ -176,5 +166,5 @@ main_ternary_merge@24:
     return
 
 main_ternary_false@23:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@24

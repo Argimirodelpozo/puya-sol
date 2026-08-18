@@ -5,10 +5,8 @@
 main:
     intcblock 2 0 1 4
     bytecblock 0x151f7c75
-    intc_1 // 0
-    dupn 3
     pushbytes ""
-    dupn 11
+    dupn 3
     pushint 4096
     bzero
     dup
@@ -44,39 +42,34 @@ main_after_if_else@2:
 
 main_j_route@9:
     txna ApplicationArgs 1
-    dup
-    bury 17
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 9
+    cover 2
     intc_0 // 2
     *
-    bury 4
+    swap
     dup
     len
-    bury 2
+    swap
     extract 2 0
-    bury 15
     intc_1 // 0
-    bury 6
 
 main_for_header@14:
+    dup
     dig 5
-    dig 7
     <
     bz main_after_for@16
-    dig 5
     dup
     intc_0 // 2
     *
-    dig 16
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 6
+    uncover 6
     dup
     cover 4
     ==
@@ -91,14 +84,16 @@ main_for_header@14:
     intc_0 // 2
     +
     +
-    bury 4
+    cover 3
     intc_2 // 1
     +
-    bury 6
     b main_for_header@14
 
 main_after_for@16:
-    dig 2
+    popn 2
+    uncover 2
+    pop
+    swap
     intc_0 // 2
     +
     dig 1
@@ -114,10 +109,9 @@ main_after_for@16:
 main_ternary_merge@19:
     !
     assert // not payable
-    dup
     itob
     extract 6 2
-    dig 16
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -132,26 +126,23 @@ main_ternary_false@18:
 
 main_i_route@8:
     txna ApplicationArgs 1
-    bury 16
     intc_0 // 2
-    bury 3
     intc_1 // 0
-    bury 6
 
 main_for_header@22:
-    dig 5
+    dup
     intc_2 // 1
     <
     bz main_after_for@27
-    dig 5
+    dup
     intc_0 // 2
     *
-    dig 16
+    dig 3
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    dig 4
     ==
     assert // invalid tail pointer for (len+(len+uint16[])[])[1]
     dig 1
@@ -161,30 +152,28 @@ main_for_header@22:
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 10
+    bury 6
     intc_0 // 2
     *
-    bury 3
+    cover 2
     extract 2 0
-    bury 15
+    swap
     intc_1 // 0
-    bury 5
 
 main_for_header@24:
-    dig 4
-    dig 8
+    dup
+    dig 7
     <
     bz main_after_for@26
-    dig 4
     dup
     intc_0 // 2
     *
-    dig 16
+    dig 3
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 6
     dup
     cover 4
     ==
@@ -199,31 +188,30 @@ main_for_header@24:
     intc_0 // 2
     +
     +
-    bury 3
+    cover 3
     intc_2 // 1
     +
-    bury 5
     b main_for_header@24
 
 main_after_for@26:
-    dig 1
+    pop
+    bury 1
+    swap
     intc_0 // 2
     +
-    dig 3
+    uncover 2
     +
-    bury 3
-    dig 5
+    swap
     intc_2 // 1
     +
-    bury 6
     b main_for_header@22
 
 main_after_for@27:
-    dig 15
+    pop
+    dig 1
     len
     dup
-    bury 5
-    dig 3
+    uncover 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.dynamic_array<arc4.dynamic_array<arc4.uint16>>, 1>
     txn GroupIndex
@@ -236,10 +224,9 @@ main_after_for@27:
 main_ternary_merge@30:
     !
     assert // not payable
-    dig 3
     itob
     extract 6 2
-    dig 16
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -254,64 +241,58 @@ main_ternary_false@29:
 
 main_h_route@7:
     txna ApplicationArgs 1
-    dup
-    bury 17
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 11
+    bury 5
     intc_0 // 2
     *
-    bury 4
+    swap
     dup
     len
-    bury 2
+    swap
     extract 2 0
-    bury 15
     intc_1 // 0
-    bury 6
 
 main_for_header@33:
-    dig 5
-    dig 9
+    dup
+    dig 7
     <
     bz main_after_for@38
-    dig 5
+    dup
     intc_0 // 2
     *
-    dig 15
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    dig 6
     ==
     assert // invalid tail pointer for (len+(len+uint16[])[2][])
     dig 1
     len
     substring3
-    bury 13
+    cover 4
     intc_3 // 4
-    bury 2
+    cover 2
     intc_1 // 0
-    bury 5
 
 main_for_header@35:
-    dig 4
+    dup
     intc_0 // 2
     <
     bz main_after_for@37
-    dig 4
     dup
     intc_0 // 2
     *
-    dig 14
+    dig 7
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 6
     dup
     cover 4
     ==
@@ -326,25 +307,26 @@ main_for_header@35:
     intc_0 // 2
     +
     +
-    bury 3
+    cover 3
     intc_2 // 1
     +
-    bury 5
     b main_for_header@35
 
 main_after_for@37:
-    dig 2
-    dig 2
+    pop
+    uncover 5
+    pop
+    uncover 4
+    uncover 3
     +
-    bury 3
-    dig 5
+    cover 3
     intc_2 // 1
     +
-    bury 6
     b main_for_header@33
 
 main_after_for@38:
-    dig 2
+    popn 2
+    swap
     intc_0 // 2
     +
     dig 1
@@ -360,10 +342,9 @@ main_after_for@38:
 main_ternary_merge@41:
     !
     assert // not payable
-    dup
     itob
     extract 6 2
-    dig 16
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -378,38 +359,34 @@ main_ternary_false@40:
 
 main_g_route@6:
     txna ApplicationArgs 1
-    dup
-    bury 17
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 13
+    bury 7
     intc_0 // 2
     *
-    bury 4
+    swap
     dup
     len
-    bury 2
+    swap
     extract 2 0
-    bury 15
     intc_1 // 0
-    bury 6
 
 main_for_header@44:
-    dig 5
-    dig 11
+    dup
+    dig 9
     <
     bz main_after_for@49
-    dig 5
+    dup
     intc_0 // 2
     *
-    dig 15
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    dig 6
     ==
     assert // invalid tail pointer for (len+(len+(len+uint8[])[])[])
     dig 1
@@ -419,30 +396,28 @@ main_for_header@44:
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 12
+    bury 10
     intc_0 // 2
     *
-    bury 3
+    cover 3
     extract 2 0
-    bury 14
+    swap
     intc_1 // 0
-    bury 5
 
 main_for_header@46:
-    dig 4
-    dig 10
+    dup
+    dig 11
     <
     bz main_after_for@48
-    dig 4
     dup
     intc_0 // 2
     *
-    dig 15
+    dig 3
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 7
     dup
     cover 4
     ==
@@ -455,27 +430,27 @@ main_for_header@46:
     intc_0 // 2
     +
     +
-    bury 3
+    cover 4
     intc_2 // 1
     +
-    bury 5
     b main_for_header@46
 
 main_after_for@48:
-    dig 1
+    pop
+    bury 1
+    uncover 2
     intc_0 // 2
     +
-    dig 3
+    uncover 4
     +
-    bury 3
-    dig 5
+    cover 3
     intc_2 // 1
     +
-    bury 6
     b main_for_header@44
 
 main_after_for@49:
-    dig 2
+    popn 2
+    swap
     intc_0 // 2
     +
     dig 1
@@ -491,10 +466,9 @@ main_after_for@49:
 main_ternary_merge@52:
     !
     assert // not payable
-    dup
     itob
     extract 6 2
-    dig 16
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -509,39 +483,34 @@ main_ternary_false@51:
 
 main_f_route@5:
     txna ApplicationArgs 1
-    dup
-    bury 17
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 14
+    cover 2
     intc_0 // 2
     *
-    bury 4
+    swap
     dup
     len
-    bury 2
+    swap
     extract 2 0
-    bury 15
     intc_1 // 0
-    bury 6
 
 main_for_header@55:
+    dup
     dig 5
-    dig 12
     <
     bz main_after_for@57
-    dig 5
     dup
     intc_0 // 2
     *
-    dig 16
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 6
+    uncover 6
     dup
     cover 4
     ==
@@ -556,14 +525,16 @@ main_for_header@55:
     intc_0 // 2
     +
     +
-    bury 4
+    cover 3
     intc_2 // 1
     +
-    bury 6
     b main_for_header@55
 
 main_after_for@57:
-    dig 2
+    popn 2
+    uncover 2
+    pop
+    swap
     intc_0 // 2
     +
     dig 1
@@ -579,10 +550,9 @@ main_after_for@57:
 main_ternary_merge@60:
     !
     assert // not payable
-    dup
     itob
     extract 6 2
-    dig 16
+    swap
     concat
     bytec_0 // 0x151f7c75
     swap

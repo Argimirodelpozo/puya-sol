@@ -5,8 +5,6 @@
 main:
     intcblock 1 32 0
     bytecblock "__ctor_pending" "bal"
-    intc_2 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -46,7 +44,6 @@ main_after_if_else@2:
 main_readOther_route@7:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_1 // 32
     ==
@@ -61,7 +58,6 @@ main_readOther_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
-    dup
     bytec_1 // "bal"
     concat
     sha256
@@ -91,14 +87,13 @@ main_ternary_false@13:
 main_setOther_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 3
+    cover 2
     len
     intc_1 // 32
     ==
@@ -113,14 +108,13 @@ main_setOther_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
-    dup
     bytec_1 // "bal"
     concat
     sha256
     dup
     box_del
     pop
-    dig 2
+    swap
     box_put
     intc_0 // 1
     return

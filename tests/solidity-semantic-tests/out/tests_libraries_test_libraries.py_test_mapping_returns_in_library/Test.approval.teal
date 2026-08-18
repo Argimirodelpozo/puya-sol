@@ -4,10 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/mapping_returns_in_library.sol.Test.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x "b" 0x151f7c75 "a" "__ctor_pending"
-    intc_2 // 0
-    dup
-    bytec_0 // ""
+    bytecblock "b" 0x 0x151f7c75 "a" "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -47,7 +44,6 @@ main_after_if_else@2:
 main_get_b_route@9:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
@@ -65,7 +61,7 @@ main_ternary_merge@16:
     intc_0 // 32
     bzero
     dup
-    dig 4
+    uncover 2
     concat
     dup
     len
@@ -73,11 +69,11 @@ main_ternary_merge@16:
     -
     intc_0 // 32
     extract3
-    bytec_1 // "b"
+    bytec_0 // "b"
     concat
     sha256
     box_get
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 2
     select
     dup
@@ -100,7 +96,6 @@ main_ternary_false@15:
 main_get_a_route@8:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
@@ -118,7 +113,7 @@ main_ternary_merge@21:
     intc_0 // 32
     bzero
     dup
-    dig 4
+    uncover 2
     concat
     dup
     len
@@ -130,7 +125,7 @@ main_ternary_merge@21:
     concat
     sha256
     box_get
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 2
     select
     dup
@@ -159,10 +154,8 @@ main_get_route@7:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
-    bury 1
     txna ApplicationArgs 2
     dup
-    bury 4
     len
     intc_0 // 32
     ==
@@ -177,14 +170,15 @@ main_get_route@7:
 main_ternary_merge@26:
     !
     assert // not payable
-    dupn 2
+    swap
+    dup
     intc_1 // 1
     <=
     assert // ABI bool validation
     intc_0 // 32
     bzero
     dup
-    dig 5
+    uncover 3
     concat
     dup
     len
@@ -193,13 +187,13 @@ main_ternary_merge@26:
     intc_0 // 32
     extract3
     bytec_3 // "a"
-    bytec_1 // "b"
+    bytec_0 // "b"
     uncover 4
     callsub Lib.choose_mapping
     concat
     sha256
     box_get
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 2
     select
     dup
@@ -228,17 +222,15 @@ main_set_route@6:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
-    bury 1
     txna ApplicationArgs 2
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 3
+    cover 3
     len
     intc_0 // 32
     ==
@@ -253,18 +245,19 @@ main_set_route@6:
 main_ternary_merge@31:
     !
     assert // not payable
-    dupn 2
+    swap
+    dup
     intc_1 // 1
     <=
     assert // ABI bool validation
     bytec_3 // "a"
-    bytec_1 // "b"
+    bytec_0 // "b"
     uncover 2
     callsub Lib.choose_mapping
     intc_0 // 32
     bzero
     dup
-    dig 5
+    uncover 3
     concat
     dup
     len
@@ -277,14 +270,14 @@ main_ternary_merge@31:
     sha256
     dup
     box_get
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 2
     select
     dig 1
     box_del
     pop
     swap
-    dig 4
+    uncover 3
     box_put
     dup
     len
@@ -318,7 +311,7 @@ main___postInit_route@5:
     intc_3 // 2
     box_create
     pop
-    bytec_1 // "b"
+    bytec_0 // "b"
     intc_3 // 2
     box_create
     pop

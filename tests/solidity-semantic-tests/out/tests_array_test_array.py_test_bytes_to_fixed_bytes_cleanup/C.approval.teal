@@ -6,8 +6,6 @@ main:
     intcblock 1 0 2 16
     bytecblock 0x151f7c75 "__ctor_pending" "s"
     intc_1 // 0
-    dupn 2
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -56,7 +54,6 @@ main_fromSlice_route@9:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 4
     txn GroupIndex
     bz main_ternary_false@15
     txn GroupIndex
@@ -67,7 +64,6 @@ main_fromSlice_route@9:
 main_ternary_merge@16:
     !
     assert // not payable
-    dig 3
     substring 0 6
     pushint 8
     bzero
@@ -125,7 +121,6 @@ main_fromCalldata_route@7:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 4
     txn GroupIndex
     bz main_ternary_false@25
     txn GroupIndex
@@ -138,8 +133,6 @@ main_ternary_merge@26:
     assert // not payable
     intc_3 // 16
     bzero
-    dig 4
-    swap
     concat
     extract 0 16
     bytec_0 // 0x151f7c75
@@ -155,9 +148,7 @@ main_ternary_false@25:
 
 main_fromMemory_route@6:
     txna ApplicationArgs 1
-    dup
-    bury 3
-    dup
+    dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
@@ -167,7 +158,7 @@ main_fromMemory_route@6:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 3
+    bury 2
     txn GroupIndex
     bz main_ternary_false@30
     txn GroupIndex
@@ -180,23 +171,22 @@ main_ternary_merge@31:
     assert // not payable
     load 0
     store 0
-    dig 2
+    dig 1
     len
     dup
-    bury 2
     pushint 14
     >
     bz main_ternary_false@33
-    dig 1
+    pop
     extract 2 14
-    bury 3
+    bury 1
 
 main_ternary_merge@34:
     load 0
     store 0
     intc_3 // 16
     bzero
-    dig 3
+    dig 1
     swap
     concat
     extract 0 16
@@ -208,14 +198,15 @@ main_ternary_merge@34:
     return
 
 main_ternary_false@33:
+    bury 1
     pushint 14
-    dig 1
+    swap
     -
     bzero
-    dig 3
+    dig 1
     swap
     concat
-    bury 3
+    bury 1
     b main_ternary_merge@34
 
 main_ternary_false@30:

@@ -5,8 +5,6 @@
 main:
     intcblock 32 1 0 64
     bytecblock "__ctor_pending" "x" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x2f58e78cb142c2f87ee123a92fa4d31c9fbcc6d7171a0c2c69bc73317019cfdf
-    intc_2 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -46,14 +44,12 @@ main_after_if_else@2:
 main_x_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -71,7 +67,7 @@ main_ternary_merge@13:
     intc_0 // 32
     bzero
     dup
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -80,7 +76,7 @@ main_ternary_merge@13:
     intc_0 // 32
     extract3
     swap
-    dig 3
+    uncover 2
     concat
     dup
     len

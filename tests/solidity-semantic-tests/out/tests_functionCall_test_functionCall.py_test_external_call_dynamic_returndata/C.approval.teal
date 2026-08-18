@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_dynamic_returndata.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 8
+    intcblock 32 0 1 8
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0x01 0x151f7c75
-    intc_0 // 0
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -43,9 +41,8 @@ main_after_if_else@2:
 main_dt_route@6:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -58,24 +55,19 @@ main_dt_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    dig 3
     callsub d
-    bury 3
-    intc_0 // 0
+    intc_1 // 0
     itob
     dup
-    bury 2
-    bury 2
 
 main_while_top@14:
     dig 2
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    dig 2
+    dig 1
     b>
     bz main_after_while@16
-    dig 1
     dup
     bytec_1 // 0x010000000000000000
     b<
@@ -89,14 +81,14 @@ main_while_top@14:
     intc_3 // 8
     -
     extract_uint64
-    dig 4
+    dig 3
     extract 2 0
     swap
-    intc_1 // 32
+    intc_0 // 32
     *
-    intc_1 // 32
+    intc_0 // 32
     extract3 // on error: index access is out of bounds
-    dig 2
+    uncover 2
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -109,18 +101,16 @@ main_while_top@14:
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    swap
-    bury 2
-    bury 2
     b main_while_top@14
 
 main_after_while@16:
-    dupn 2
+    pop
+    dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
     bytec_3 // 0x151f7c75
@@ -131,14 +121,14 @@ main_after_while@16:
     return
 
 main_ternary_false@12:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@13
 
 main_d_route@5:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub d
@@ -153,10 +143,8 @@ main_d_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_dynamic_returndata.sol.C.d(__arc4_n: bytes) -> bytes:
 d:
     proto 1 1
-    intc_0 // 0
-    dupn 3
+    intc_1 // 0
     pushbytes ""
-    dup
     txn GroupIndex
     bz d_ternary_false@2
     txn GroupIndex
@@ -170,7 +158,7 @@ d_ternary_merge@3:
     intc_3 // 8
     bzero
     dup
-    frame_bury 3
+    frame_bury 0
     frame_dig -1
     concat
     dup
@@ -178,23 +166,20 @@ d_ternary_merge@3:
     intc_3 // 8
     -
     extract_uint64
-    frame_bury 5
-    intc_0 // 0
+    frame_bury 1
+    intc_1 // 0
     itob
-    frame_bury 2
     pushbytes 0x0000
-    frame_bury 0
-    intc_0 // 0
-    frame_bury 4
+    intc_1 // 0
 
 d_while_top@4:
-    frame_dig 4
-    frame_dig 5
+    dup
+    frame_dig 1
     <
     bz d_after_while@6
-    frame_dig 0
+    swap
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16
     intc_2 // 1
     +
@@ -203,40 +188,37 @@ d_while_top@4:
     replace2 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    frame_bury 0
-    frame_dig 4
+    swap
     intc_2 // 1
     +
-    frame_bury 4
     b d_while_top@4
 
 d_after_while@6:
-    frame_dig 0
-    frame_bury 1
+    pop
 
 d_while_top@7:
-    frame_dig 1
-    intc_0 // 0
+    dup
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     itob
-    frame_dig 2
+    dig 2
     b>
     bz d_after_while@9
-    frame_dig 2
+    swap
     dup
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     dig 1
     b|
-    frame_dig 3
+    frame_dig 0
     dig 2
     concat
     dup
@@ -244,29 +226,28 @@ d_while_top@7:
     intc_3 // 8
     -
     extract_uint64
-    intc_1 // 32
+    intc_0 // 32
     *
     pushint 2
     +
-    frame_dig 1
+    uncover 3
     swap
     uncover 2
     replace3 // on error: index access is out of bounds
-    frame_bury 1
+    swap
     bytec_2 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    frame_bury 2
+    swap
     b d_while_top@7
 
 d_after_while@9:
-    frame_dig 1
     frame_bury 0
     retsub
 
 d_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b d_ternary_merge@3

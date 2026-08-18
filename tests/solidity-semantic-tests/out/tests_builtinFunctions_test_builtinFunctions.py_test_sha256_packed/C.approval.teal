@@ -3,8 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/sha256_packed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    intc_2 // 0
+    intcblock 32 1
     pushint 4096
     bzero
     dup
@@ -41,7 +40,6 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -58,7 +56,7 @@ main_ternary_merge@9:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 1
+    swap
     concat
     dup
     len
@@ -84,5 +82,5 @@ main_ternary_merge@9:
     return
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9

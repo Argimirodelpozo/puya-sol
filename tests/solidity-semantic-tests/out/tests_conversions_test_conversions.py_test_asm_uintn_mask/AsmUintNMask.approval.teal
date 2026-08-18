@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/asm_uintn_mask.sol.AsmUintNMask.approval_program() -> uint64:
 main:
-    intcblock 1 16 20 0
+    intcblock 1 16 20 32
     bytecblock 0x151f7c75
-    intc_3 // 0
     pushint 4096
     bzero
     dup
@@ -42,9 +41,8 @@ main_after_if_else@2:
 main_mask128_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    pushint 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -59,7 +57,6 @@ main_ternary_merge@13:
     assert // not payable
     load 0
     store 0
-    dup
     pushbytes 0xffffffffffffffffffffffffffffffff
     b&
     load 0
@@ -92,15 +89,14 @@ main_ternary_merge@13:
     return
 
 main_ternary_false@12:
-    intc_3 // 0
+    pushint 0
     b main_ternary_merge@13
 
 main_mask160_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    pushint 32
+    intc_3 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -115,7 +111,6 @@ main_ternary_merge@18:
     assert // not payable
     load 0
     store 0
-    dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffff
     b&
     load 0
@@ -148,5 +143,5 @@ main_ternary_merge@18:
     return
 
 main_ternary_false@17:
-    intc_3 // 0
+    pushint 0
     b main_ternary_merge@18

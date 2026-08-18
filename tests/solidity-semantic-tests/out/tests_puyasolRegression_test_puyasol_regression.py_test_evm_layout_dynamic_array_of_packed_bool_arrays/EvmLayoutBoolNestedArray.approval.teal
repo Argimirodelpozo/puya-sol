@@ -5,8 +5,6 @@
 main:
     intcblock 32 1 0 8
     bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x01 0x010000 "p:" "s:"
-    intc_2 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -43,7 +41,6 @@ main_after_if_else@2:
 main_rawWideElementWord_route@11:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -65,7 +62,6 @@ main_ternary_merge@18:
     replace2 0
     store 0
     pushbytes 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
-    dig 2
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -124,9 +120,7 @@ main_ternary_false@22:
 
 main_setWide_route@9:
     txna ApplicationArgs 1
-    dup
-    bury 2
-    dup
+    dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     pushint 4
@@ -148,7 +142,7 @@ main_ternary_merge@28:
     !
     assert // not payable
     bytec_3 // 0x01
-    dig 1
+    swap
     intc_1 // 1
     pushint 4
     intc_0 // 32
@@ -165,7 +159,6 @@ main_ternary_false@27:
 main_rawElementWord_route@8:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -187,7 +180,6 @@ main_ternary_merge@33:
     replace2 0
     store 0
     pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
-    dig 2
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -272,9 +264,7 @@ main_ternary_false@42:
 
 main_set_route@5:
     txna ApplicationArgs 1
-    dup
-    bury 2
-    dup
+    dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
@@ -294,7 +284,7 @@ main_ternary_merge@48:
     !
     assert // not payable
     bytec_0 // 0x
-    dig 1
+    swap
     intc_1 // 1
     dup
     pushint 2
@@ -475,9 +465,7 @@ __storage_write_else_body@2:
 // __puyasol___evm_dynarr_read(__slot: bytes, __size: uint64, __aw: uint64, __per: uint64, __mul: uint64, __bp: uint64) -> bytes:
 __evm_dynarr_read:
     proto 6 1
-    intc_2 // 0
     bytec_0 // ""
-    dupn 2
     intc_2 // 0
     intc_3 // 8
     bzero
@@ -512,28 +500,26 @@ __evm_dynarr_read:
     intc_2 // 0
 
 __evm_dynarr_read_while_top@1:
-    frame_dig 9
-    frame_dig 5
+    dup
+    dig 5
     <
     bz __evm_dynarr_read_after_while@10
-    frame_dig 9
-    dup
+    dupn 2
     frame_dig -3
     /
     dup
-    frame_bury 3
+    frame_bury 0
     frame_dig -3
     *
     -
     dup
-    frame_bury 2
     bnz __evm_dynarr_read_after_if_else@4
-    frame_dig 3
+    frame_dig 0
     itob
-    frame_dig 7
+    dig 4
     b+
     callsub __storage_read
-    frame_dig 6
+    dig 5
     swap
     concat
     dup
@@ -542,10 +528,9 @@ __evm_dynarr_read_while_top@1:
     -
     intc_0 // 32
     extract3
-    frame_bury 4
+    frame_bury 1
 
 __evm_dynarr_read_after_if_else@4:
-    frame_dig 2
     intc_1 // 1
     +
     frame_dig -5
@@ -553,28 +538,27 @@ __evm_dynarr_read_after_if_else@4:
     intc_0 // 32
     swap
     -
-    frame_dig 4
+    frame_dig 1
     swap
     frame_dig -5
     extract3
-    frame_bury 0
+    cover 2
     frame_dig -1
     bz __evm_dynarr_read_else_body@8
-    frame_dig 9
+    dup
     frame_dig -2
     %
     dup
-    frame_bury 1
     bnz __evm_dynarr_read_after_if_else@7
     frame_dig -4
     bzero
-    frame_dig 8
+    uncover 3
     swap
     concat
-    frame_bury 8
+    cover 2
 
 __evm_dynarr_read_after_if_else@7:
-    frame_dig 9
+    dig 1
     frame_dig -2
     /
     frame_dig -4
@@ -583,22 +567,19 @@ __evm_dynarr_read_after_if_else@7:
     +
     intc_3 // 8
     *
-    frame_dig 1
     +
-    frame_dig 0
+    uncover 3
     btoi
     intc_2 // 0
     !=
-    frame_dig 8
+    uncover 3
     cover 2
     setbit
-    frame_bury 8
+    swap
 
 __evm_dynarr_read_after_if_else@9:
-    frame_dig 9
     intc_1 // 1
     +
-    frame_bury 9
     b __evm_dynarr_read_while_top@1
 
 __evm_dynarr_read_else_body@8:
@@ -606,16 +587,16 @@ __evm_dynarr_read_else_body@8:
     frame_dig -5
     -
     bzero
-    frame_dig 0
+    uncover 3
     concat
-    frame_dig 8
+    uncover 2
     swap
     concat
-    frame_bury 8
+    swap
     b __evm_dynarr_read_after_if_else@9
 
 __evm_dynarr_read_after_while@10:
-    frame_dig 8
+    pop
     frame_bury 0
     retsub
 
@@ -624,9 +605,7 @@ __evm_dynarr_read_after_while@10:
 __evm_dynarr_write:
     proto 7 0
     intc_2 // 0
-    bytec_0 // ""
-    dupn 2
-    intc_2 // 0
+    dup
     intc_3 // 8
     bzero
     frame_dig -7
@@ -647,7 +626,7 @@ __evm_dynarr_write:
     swap
     frame_dig -2
     *
-    swap
+    cover 2
     itob
     frame_dig -7
     swap
@@ -655,6 +634,7 @@ __evm_dynarr_write:
     intc_0 // 32
     bzero
     dup
+    cover 3
     frame_dig -7
     concat
     dup
@@ -667,12 +647,11 @@ __evm_dynarr_write:
     intc_2 // 0
 
 __evm_dynarr_write_while_top@1:
-    frame_dig 9
-    frame_dig 5
+    dup
+    dig 3
     <
     bz __evm_dynarr_write_after_while@12
-    frame_dig 9
-    dup
+    dupn 2
     frame_dig -3
     /
     dup
@@ -683,20 +662,19 @@ __evm_dynarr_write_while_top@1:
     -
     dup
     cover 2
-    frame_bury 1
+    cover 3
     itob
-    frame_dig 8
+    dig 4
     b+
     frame_bury 0
     bnz __evm_dynarr_write_ternary_merge@5
-    frame_dig 7
-    frame_bury 4
+    frame_dig 2
+    frame_bury 1
 
 __evm_dynarr_write_ternary_merge@5:
     frame_dig -1
     bz __evm_dynarr_write_else_body@7
-    frame_dig 9
-    dup
+    dupn 2
     frame_dig -2
     %
     swap
@@ -716,7 +694,7 @@ __evm_dynarr_write_ternary_merge@5:
     extract 7 1
 
 __evm_dynarr_write_after_if_else@8:
-    frame_dig 1
+    uncover 2
     dup
     intc_1 // 1
     +
@@ -725,37 +703,35 @@ __evm_dynarr_write_after_if_else@8:
     intc_0 // 32
     swap
     -
-    frame_dig 4
+    frame_dig 1
     swap
     uncover 3
     replace3
-    frame_bury 4
+    frame_bury 1
     frame_dig -3
     intc_1 // 1
     -
     ==
     bnz __evm_dynarr_write_if_body@10
-    frame_dig 5
+    dig 2
     intc_1 // 1
     -
-    frame_dig 9
+    dig 1
     ==
     bz __evm_dynarr_write_after_if_else@11
 
 __evm_dynarr_write_if_body@10:
     frame_dig 0
-    frame_dig 4
+    frame_dig 1
     callsub __storage_write
 
 __evm_dynarr_write_after_if_else@11:
-    frame_dig 9
     intc_1 // 1
     +
-    frame_bury 9
     b __evm_dynarr_write_while_top@1
 
 __evm_dynarr_write_else_body@7:
-    frame_dig 9
+    dup
     frame_dig -4
     *
     frame_dig -4
@@ -771,36 +747,35 @@ __evm_dynarr_write_else_body@7:
     b __evm_dynarr_write_after_if_else@8
 
 __evm_dynarr_write_after_while@12:
+    pop
     frame_dig -3
     intc_1 // 1
     -
-    frame_dig 5
+    uncover 2
     dig 1
     +
     frame_dig -3
     /
-    frame_bury 3
-    frame_dig 6
+    swap
+    uncover 3
     +
     frame_dig -3
     /
-    frame_bury 2
+    swap
 
 __evm_dynarr_write_while_top@13:
-    frame_dig 3
-    frame_dig 2
+    dup
+    dig 2
     <
     bz __evm_dynarr_write_after_while@15
-    frame_dig 3
     dup
     itob
-    frame_dig 8
+    dig 3
     b+
     bytec_0 // 0x
     callsub __storage_write
     intc_1 // 1
     +
-    frame_bury 3
     b __evm_dynarr_write_while_top@13
 
 __evm_dynarr_write_after_while@15:

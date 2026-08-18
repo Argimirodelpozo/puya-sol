@@ -5,8 +5,6 @@
 main:
     intcblock 8 1 0
     bytecblock 0x151f7c75 0x010000000000000000
-    pushbytes ""
-    dup
     pushint 4096
     bzero
     dup
@@ -48,7 +46,6 @@ main_addChecked_route@8:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 2
     txna ApplicationArgs 2
     dup
     len
@@ -56,7 +53,6 @@ main_addChecked_route@8:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -67,7 +63,6 @@ main_addChecked_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    dup2
     +
     itob
     bytec_0 // 0x151f7c75
@@ -89,7 +84,6 @@ main_mulChecked_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 2
     txna ApplicationArgs 2
     dup
     len
@@ -97,7 +91,6 @@ main_mulChecked_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@19
     txn GroupIndex
@@ -108,7 +101,6 @@ main_mulChecked_route@7:
 main_ternary_merge@20:
     !
     assert // not payable
-    dup2
     *
     itob
     bytec_0 // 0x151f7c75
@@ -130,7 +122,6 @@ main_add_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 2
     txna ApplicationArgs 2
     dup
     len
@@ -138,7 +129,6 @@ main_add_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@24
     txn GroupIndex
@@ -151,9 +141,9 @@ main_ternary_merge@25:
     assert // not payable
     intc_0 // 8
     bzero
-    dig 2
+    uncover 2
     itob
-    dig 2
+    uncover 2
     itob
     b+
     bytec_1 // 0x010000000000000000
@@ -184,7 +174,6 @@ main_mul_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 2
     txna ApplicationArgs 2
     dup
     len
@@ -192,7 +181,6 @@ main_mul_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@29
     txn GroupIndex
@@ -205,9 +193,9 @@ main_ternary_merge@30:
     assert // not payable
     intc_0 // 8
     bzero
-    dig 2
+    uncover 2
     itob
-    dig 2
+    uncover 2
     itob
     b*
     bytec_1 // 0x010000000000000000

@@ -5,8 +5,6 @@
 main:
     intcblock 0 1 32 24
     bytecblock "h" "__ctor_pending" 0x4334fac7 0x151f7c75 TMPL_APPROVAL_holder TMPL_CLEAR_holder
-    intc_0 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -164,10 +162,9 @@ main_set_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txna ApplicationArgs 2
     dup
-    bury 3
+    cover 2
     len
     intc_2 // 32
     ==
@@ -197,7 +194,6 @@ main_bool_true@30:
 main_bool_merge@32:
     assert // ABI validation
     itxn_begin
-    dup
     itob
     intc_0 // 0
     bytec_0 // "h"
@@ -215,7 +211,6 @@ main_bool_merge@32:
     bytec_2 // method "set(uint64,uint256)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
-    dig 1
     itxn_field ApplicationArgs
     itxn_submit
     intc_1 // 1

@@ -5,8 +5,6 @@
 main:
     intcblock 32 1 0 64
     bytecblock "_m" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000420000 0x151f7c75 0x0042 "inner"
-    intc_2 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -46,14 +44,12 @@ main_after_if_else@2:
 main_getLocal_route@9:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -68,9 +64,9 @@ main_getLocal_route@9:
 main_ternary_merge@16:
     !
     assert // not payable
-    dig 2
+    swap
     callsub __solfn_107
-    dig 2
+    swap
     callsub L.get
     dig 2
     len
@@ -116,21 +112,19 @@ main_ternary_false@15:
 main_bumpLocal_route@8:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 2
+    cover 3
     len
     intc_0 // 32
     ==
@@ -145,12 +139,12 @@ main_bumpLocal_route@8:
 main_ternary_merge@21:
     !
     assert // not payable
-    dig 2
+    swap
     callsub __solfn_107
     dup
     callsub L.checkInit
-    dig 2
-    dig 2
+    swap
+    uncover 2
     callsub L.bump
     intc_1 // 1
     return
@@ -162,14 +156,12 @@ main_ternary_false@20:
 main_getDirect_route@7:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -187,7 +179,7 @@ main_ternary_merge@26:
     intc_0 // 32
     bzero
     dup
-    dig 4
+    uncover 3
     concat
     dup
     len
@@ -198,7 +190,7 @@ main_ternary_merge@26:
     bytec_0 // "_m"
     concat
     sha256
-    dig 3
+    uncover 2
     callsub L.get
     dig 2
     len
@@ -242,21 +234,19 @@ main_ternary_false@25:
 main_bumpDirect_route@6:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 2
+    cover 3
     len
     intc_0 // 32
     ==
@@ -273,7 +263,7 @@ main_ternary_merge@31:
     assert // not payable
     intc_0 // 32
     bzero
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -284,8 +274,8 @@ main_ternary_merge@31:
     bytec_0 // "_m"
     concat
     sha256
-    dig 2
-    dig 2
+    swap
+    uncover 2
     callsub L.bump
     intc_1 // 1
     return
@@ -481,7 +471,6 @@ L.checkInit:
     log
 
 L.checkInit_after_if_else@2:
-    frame_dig 0
     assert // NOT_INIT
     retsub
 

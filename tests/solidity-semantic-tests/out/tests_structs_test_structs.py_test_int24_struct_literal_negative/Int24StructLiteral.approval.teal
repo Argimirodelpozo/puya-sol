@@ -5,9 +5,6 @@
 main:
     intcblock 16 3 1 0 16777216 8388608 18446744073692774400 16777215
     bytecblock 0x80000000000000000000000000000000 0x0100000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0xffffff 0x800000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000 0x151f7c75
-    intc_3 // 0
-    dupn 5
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -44,7 +41,6 @@ main_after_if_else@2:
 main_fu_route@6:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     pushint 22
     ==
@@ -56,7 +52,6 @@ main_fu_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
@@ -67,13 +62,13 @@ main_fu_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    dupn 2
+    dup
     intc 7 // 16777215
     <=
     assert // ABI validation
     intc 7 // 16777215
     &
-    dig 4
+    swap
     dup
     extract 0 3
     dig 1
@@ -146,7 +141,6 @@ main_ternary_false@12:
 main_fs_route@5:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     pushint 22
     ==
@@ -158,7 +152,6 @@ main_fs_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@17
     txn GroupIndex
@@ -185,8 +178,8 @@ main_bool_merge@22:
     assert // ABI validation
     intc_1 // 3
     bzero
-    bury 2
-    dig 3
+    swap
+    dig 2
     extract 0 3
     btoi
     intc 4 // 16777216
@@ -217,7 +210,7 @@ main_ternary_merge@25:
     <=
     assert // overflow
     b|
-    bury 7
+    cover 2
     dig 3
     extract 3 3
     btoi
@@ -233,7 +226,7 @@ main_ternary_merge@25:
 main_ternary_merge@28:
     itob
     extract 5 3
-    dig 2
+    uncover 2
     dup
     uncover 2
     concat
@@ -250,8 +243,8 @@ main_ternary_merge@28:
     assert // overflow
     dig 1
     b|
-    bury 7
-    dig 1
+    cover 3
+    swap
     itob
     extract 5 3
     dig 1
@@ -269,11 +262,10 @@ main_ternary_merge@28:
     <=
     assert // overflow
     b|
-    bury 5
+    swap
     intc_0 // 16
     bzero
-    bury 3
-    dig 3
+    uncover 4
     extract 6 16
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
@@ -285,7 +277,7 @@ main_ternary_merge@28:
     b+
 
 main_ternary_merge@31:
-    dig 3
+    swap
     dup
     uncover 2
     concat
@@ -302,13 +294,13 @@ main_ternary_merge@31:
     assert // overflow
     b|
     txn Sender
-    dig 8
+    uncover 2
     concat
-    dig 7
+    uncover 3
     concat
     swap
     concat
-    dig 5
+    swap
     concat
     callsub Lib.sconsume
     pop
@@ -361,8 +353,6 @@ main_ternary_false@17:
 // __solfn_53(o: bytes) -> bytes, bytes:
 Lib.sconsume:
     proto 1 2
-    intc_3 // 0
-    dupn 7
     pushbytes ""
     dupn 2
     frame_dig -1
@@ -387,7 +377,6 @@ Lib.sconsume_ternary_merge@3:
     bz Lib.sconsume_ternary_false@5
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b+
-    frame_bury 1
 
 Lib.sconsume_ternary_merge@6:
     frame_dig -1
@@ -412,7 +401,6 @@ Lib.sconsume_ternary_merge@9:
     bz Lib.sconsume_ternary_false@11
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b+
-    frame_bury 0
 
 Lib.sconsume_ternary_merge@12:
     frame_dig -1
@@ -430,11 +418,11 @@ Lib.sconsume_ternary_merge@15:
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    frame_bury 2
+    cover 3
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
-    frame_bury 8
+    frame_bury 0
     frame_dig -1
     extract 32 3
     btoi
@@ -462,22 +450,22 @@ Lib.sconsume_ternary_merge@21:
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    frame_bury 3
+    cover 3
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
-    frame_dig 8
+    frame_dig 0
     !=
     bnz Lib.sconsume_bool_true@23
-    frame_dig 2
-    frame_dig 3
+    dig 3
+    dig 3
     b+
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
-    frame_dig 8
+    frame_dig 0
     ==
     bz Lib.sconsume_bool_false@24
 
@@ -486,8 +474,8 @@ Lib.sconsume_bool_true@23:
 
 Lib.sconsume_bool_merge@25:
     assert // signed arithmetic overflow
-    frame_dig 2
-    frame_dig 3
+    uncover 3
+    uncover 3
     b+
     bytec_1 // 0x0100000000000000000000000000000000
     b%
@@ -504,31 +492,31 @@ Lib.sconsume_ternary_merge@28:
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    frame_bury 4
+    cover 3
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
     dup
-    frame_bury 9
-    frame_dig 0
+    frame_bury 1
+    swap
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    frame_bury 5
+    cover 3
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
     !=
     bnz Lib.sconsume_bool_true@30
-    frame_dig 4
-    frame_dig 5
+    dig 2
+    dig 2
     b+
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
-    frame_dig 9
+    frame_dig 1
     ==
     bz Lib.sconsume_bool_false@31
 
@@ -537,8 +525,7 @@ Lib.sconsume_bool_true@30:
 
 Lib.sconsume_bool_merge@32:
     assert // signed arithmetic overflow
-    frame_dig 4
-    frame_dig 5
+    cover 2
     b+
     bytec_1 // 0x0100000000000000000000000000000000
     b%
@@ -555,31 +542,29 @@ Lib.sconsume_ternary_merge@35:
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    frame_bury 6
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
     dup
-    frame_bury 10
-    frame_dig 1
+    frame_bury 2
+    uncover 2
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     dup
-    frame_bury 7
+    cover 2
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
     !=
     bnz Lib.sconsume_bool_true@37
-    frame_dig 6
-    frame_dig 7
+    dup2
     b+
     bytec_1 // 0x0100000000000000000000000000000000
     b%
     bytec_0 // 0x80000000000000000000000000000000
     b<
     !
-    frame_dig 10
+    frame_dig 2
     ==
     bz Lib.sconsume_bool_false@38
 
@@ -588,8 +573,6 @@ Lib.sconsume_bool_true@37:
 
 Lib.sconsume_bool_merge@39:
     assert // signed arithmetic overflow
-    frame_dig 6
-    frame_dig 7
     b+
     bytec_1 // 0x0100000000000000000000000000000000
     b%
@@ -639,14 +622,12 @@ Lib.sconsume_ternary_false@14:
     b Lib.sconsume_ternary_merge@15
 
 Lib.sconsume_ternary_false@11:
-    frame_bury 0
     b Lib.sconsume_ternary_merge@12
 
 Lib.sconsume_ternary_false@8:
     b Lib.sconsume_ternary_merge@9
 
 Lib.sconsume_ternary_false@5:
-    frame_bury 1
     b Lib.sconsume_ternary_merge@6
 
 Lib.sconsume_ternary_false@2:

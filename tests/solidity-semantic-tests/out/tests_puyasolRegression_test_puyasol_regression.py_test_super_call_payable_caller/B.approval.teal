@@ -5,7 +5,6 @@
 main:
     intcblock 32 1 0
     bytecblock "total" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -125,7 +124,6 @@ main_g_route@6:
 main_f_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -146,7 +144,7 @@ main_ternary_merge@24:
     assert // check total exists
     pushint 2
     itob
-    dig 2
+    uncover 2
     b*
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff

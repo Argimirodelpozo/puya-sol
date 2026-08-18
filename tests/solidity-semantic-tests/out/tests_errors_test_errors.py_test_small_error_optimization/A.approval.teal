@@ -5,7 +5,6 @@
 main:
     intcblock 0 1 8 2
     bytecblock "x" "__ctor_pending"
-    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -55,7 +54,6 @@ main_ternary_merge@13:
     assert // not payable
     intc_0 // 0
     itob
-    bury 1
 
 main_while_top@14:
     pushint 100
@@ -66,8 +64,6 @@ main_while_top@14:
     intc_2 // 8
     bzero
     dig 1
-    dup
-    cover 2
     concat
     dup
     len
@@ -126,7 +122,6 @@ main_while_top@14:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 1
     b main_while_top@14
 
 main_after_while@16:

@@ -6,7 +6,6 @@ main:
     intcblock 0 1 32
     bytecblock "counter"
     intc_0 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -54,7 +53,6 @@ main_f_route@6:
     assert // invalid number of bytes for arc4.bool
     intc_0 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
@@ -100,7 +98,6 @@ main_ternary_merge@13:
     log
 
 main_after_if_else@15:
-    dup
     assert // CustomError
     intc_1 // 1
     return

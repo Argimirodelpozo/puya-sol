@@ -4,11 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/exp_overflow.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 255 0
-    bytecblock 0x 0x01 0x151f7c75
-    intc_3 // 0
-    dupn 4
-    bytec_0 // ""
-    dup
+    bytecblock 0x01 0x 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -45,14 +41,12 @@ main_after_if_else@2:
 main_g_route@6:
     txna ApplicationArgs 1
     dup
-    bury 8
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 7
     len
     intc_1 // 32
     ==
@@ -67,42 +61,36 @@ main_g_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    bytec_1 // 0x01
-    bury 3
-    dig 6
-    bury 5
-    dig 5
-    bury 4
+    bytec_0 // 0x01
+    swap
 
 main_while_top@14:
-    dig 3
-    bytec_0 // 0x
+    dup
+    bytec_1 // 0x
     b>
     bz main_after_while@18
-    dig 3
-    bytec_1 // 0x01
+    dup
+    bytec_0 // 0x01
     b&
-    bytec_0 // 0x
+    bytec_1 // 0x
     b!=
     bz main_after_if_else@17
+    swap
     dig 2
-    dig 5
     b*
-    bury 3
+    swap
 
 main_after_if_else@17:
-    dig 3
     pushbytes 0x02
     b/
-    bury 4
-    dig 4
+    uncover 2
     dup
     b*
-    bury 5
+    cover 2
     b main_while_top@14
 
 main_after_while@18:
-    dig 2
+    pop
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
@@ -134,7 +122,6 @@ main_f_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 2
     txna ApplicationArgs 2
     dup
     len
@@ -142,7 +129,6 @@ main_f_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@22
     txn GroupIndex
@@ -153,23 +139,23 @@ main_f_route@5:
 main_ternary_merge@23:
     !
     assert // not payable
-    dig 1
+    swap
     dup
     intc_2 // 255
     <=
     assert // ABI validation
     intc_2 // 255
     &
-    bury 2
-    dupn 2
+    swap
+    dup
     intc_2 // 255
     <=
     assert // ABI validation
     intc_2 // 255
     &
     dup
-    bury 2
     bnz main_ternary_false@25
+    popn 2
     intc_0 // 1
 
 main_ternary_merge@26:
@@ -189,7 +175,6 @@ main_ternary_merge@26:
     return
 
 main_ternary_false@25:
-    dup2
     exp
     b main_ternary_merge@26
 

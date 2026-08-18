@@ -4,10 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ternary_storage_ptr_families.sol.MappingTernary.approval_program() -> uint64:
 main:
     intcblock 1 32 0 2
-    bytecblock 0x "__ctor_pending" "m2" "m1"
-    intc_2 // 0
-    dup
-    bytec_0 // ""
+    bytecblock "__ctor_pending" "m2" "m1" 0x
     pushint 4096
     bzero
     dup
@@ -27,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -53,17 +50,14 @@ main_mapWrite_route@6:
     assert // invalid number of bytes for arc4.bool
     intc_2 // 0
     getbit
-    bury 1
     txna ApplicationArgs 2
     dup
-    bury 4
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 3
     len
     intc_1 // 32
     ==
@@ -78,18 +72,19 @@ main_mapWrite_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    dupn 2
+    uncover 2
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
-    bytec_2 // "m2"
-    bytec_3 // "m1"
+    bytec_1 // "m2"
+    bytec_2 // "m1"
     uncover 2
     select
     intc_1 // 32
     bzero
     dup
-    dig 5
+    uncover 4
     concat
     dup
     len
@@ -104,22 +99,22 @@ main_ternary_merge@13:
     dup
     box_del
     pop
-    dig 4
+    uncover 3
     box_put
     dup
-    bytec_3 // "m1"
+    bytec_2 // "m1"
     concat
     sha256
     box_get
-    bytec_0 // 0x
+    bytec_3 // 0x
     cover 2
     select
     swap
-    bytec_2 // "m2"
+    bytec_1 // "m2"
     concat
     sha256
     box_get
-    bytec_0 // 0x
+    bytec_3 // 0x
     cover 2
     select
     dig 1
@@ -151,21 +146,21 @@ main_ternary_false@12:
     b main_ternary_merge@13
 
 main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_3 // "m1"
+    bytec_2 // "m1"
     intc_3 // 2
     box_create
     pop
-    bytec_2 // "m2"
+    bytec_1 // "m2"
     intc_3 // 2
     box_create
     pop

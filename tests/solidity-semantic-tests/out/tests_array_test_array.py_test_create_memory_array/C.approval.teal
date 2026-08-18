@@ -6,9 +6,8 @@ main:
     intcblock 2 0 1 170 12994
     bytecblock 0x0000 0x0042
     intc_1 // 0
-    dupn 5
+    dup
     pushbytes ""
-    dupn 4
     pushint 4096
     bzero
     dup
@@ -57,18 +56,16 @@ main_ternary_merge@9:
     bzero
     pushbytes 0x41
     replace2 199
-    bury 7
+    bury 3
     bytec_0 // 0x0000
-    bury 11
     intc_1 // 0
-    bury 5
 
 main_while_top@10:
-    dig 4
+    dup
     pushint 300
     <
     bz main_after_while@12
-    dig 10
+    swap
     dup
     intc_1 // 0
     extract_uint16
@@ -79,15 +76,13 @@ main_while_top@10:
     replace2 0
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     concat
-    bury 11
-    dig 4
+    swap
     intc_2 // 1
     +
-    bury 5
     b main_while_top@10
 
 main_after_while@12:
-    dig 10
+    pop
     dup
     intc 4 // 12994
     pushint 64
@@ -97,18 +92,15 @@ main_after_while@12:
     intc 4 // 12994
     swap
     replace3 // on error: index access is out of bounds
-    bury 6
-    bytec_0 // 0x0000
-    bury 10
+    bury 2
     intc_1 // 0
-    bury 4
+    bytec_0 // 0x0000
 
 main_while_top@13:
-    dig 3
+    dig 1
     pushint 180
     <
     bz main_after_while@15
-    dig 9
     dup
     intc_1 // 0
     extract_uint16
@@ -117,23 +109,23 @@ main_while_top@13:
     +
     itob
     extract 6 0
-    bury 10
+    cover 3
     swap
     extract 2 0
-    bury 10
+    swap
     intc_0 // 2
     *
-    bury 3
+    cover 2
     intc_1 // 0
-    bury 1
+    bury 5
 
 main_for_header@17:
-    dup
+    dig 4
     dig 3
     <
     bz main_after_for@19
-    dig 8
-    dig 1
+    dup
+    dig 5
     dup
     cover 2
     extract_uint16
@@ -141,64 +133,61 @@ main_for_header@17:
     +
     itob
     extract 6 0
-    dig 9
+    uncover 5
     swap
     concat
-    bury 9
+    cover 4
     intc_0 // 2
     +
-    bury 1
+    bury 5
     b main_for_header@17
 
 main_after_for@19:
-    dig 8
+    dup
     len
-    bury 2
+    cover 3
     intc_1 // 0
-    bury 1
+    bury 6
 
 main_for_header@20:
-    dup
+    dig 5
     intc_0 // 2
     <
     bz main_after_for@22
     pushbytes 0x00020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000420000
-    dig 1
+    dig 6
     dup
     cover 2
     extract_uint16
-    dig 3
+    dig 5
     +
     itob
     extract 6 0
-    dig 9
+    uncover 6
     swap
     concat
-    bury 9
+    cover 5
     intc_0 // 2
     +
-    bury 1
+    bury 6
     b main_for_header@20
 
 main_after_for@22:
-    dig 8
-    dig 3
-    dig 3
+    uncover 2
+    uncover 3
     substring3
-    dig 8
+    uncover 2
     swap
     concat
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000420000
     concat
-    bury 10
-    dig 3
+    swap
     intc_2 // 1
     +
-    bury 4
+    swap
     b main_while_top@13
 
 main_after_while@15:
-    dig 9
     dup
     intc_3 // 170
     callsub dynamic_array_read_dynamic_element
@@ -257,9 +246,9 @@ main_after_while@15:
     concat
     intc_3 // 170
     callsub dynamic_array_replace_dynamic_element
-    dig 7
+    dig 4
     extract 199 1
-    dig 7
+    dig 4
     intc 4 // 12994
     pushint 64
     extract3
@@ -342,7 +331,7 @@ dynamic_array_replace_dynamic_element:
     extract 2 0
     frame_dig -2
     len
-    cover 2
+    cover 3
     dup
     len
     frame_dig -1
@@ -369,7 +358,7 @@ dynamic_array_replace_dynamic_element:
     extract_uint16
     dup2
     -
-    cover 6
+    cover 7
     dig 4
     intc_1 // 0
     uncover 2
@@ -385,37 +374,34 @@ dynamic_array_replace_dynamic_element:
     swap
     intc_0 // 2
     *
-    swap
+    cover 2
 
 dynamic_array_replace_dynamic_element_for_header@2:
-    frame_dig 5
-    frame_dig 4
+    dup
+    dig 3
     <
     bz dynamic_array_replace_dynamic_element_after_for@5
-    frame_dig 3
+    swap
     dup
-    frame_dig 5
-    dup
-    cover 3
+    dig 2
     extract_uint16
-    frame_dig 1
+    dig 6
     +
-    frame_dig 2
+    dig 5
     -
     itob
     extract 6 0
     dig 2
     swap
     replace3
-    frame_bury 3
+    swap
     intc_0 // 2
     +
-    frame_bury 5
     b dynamic_array_replace_dynamic_element_for_header@2
 
 dynamic_array_replace_dynamic_element_after_for@5:
-    frame_dig 0
-    frame_dig 3
+    pop
+    bury 1
     concat
     frame_bury 0
     retsub

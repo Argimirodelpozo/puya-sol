@@ -5,7 +5,6 @@
 main:
     intcblock 0 1 24 6
     bytecblock "c" 0xb30e2ea6 "account1" "account2" 0x151f7c75 TMPL_APPROVAL_C TMPL_CLEAR_C
-    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -94,10 +93,7 @@ main_ternary_merge@21:
     intc_2 // 24
     extract_uint64
     app_params_get AppApprovalProgram
-    swap
-    bury 2
     bz main_ternary_false@23
-    dup
 
 main_ternary_merge@24:
     len
@@ -117,6 +113,7 @@ main_ternary_merge@24:
     return
 
 main_ternary_false@23:
+    pop
     pushbytes 0x
     b main_ternary_merge@24
 

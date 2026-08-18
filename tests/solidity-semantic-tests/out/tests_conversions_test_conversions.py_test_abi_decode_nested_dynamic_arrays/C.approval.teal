@@ -5,9 +5,6 @@
 main:
     intcblock 0 1 2 32
     bytecblock 0x151f7c75 0x00020004000600000000 0x00010000000000000000000000000000000000000000000000000000000000000000 0x0024 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    intc_0 // 0
-    dupn 2
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -198,9 +195,7 @@ main_ternary_false@26:
 
 main_reencBytesArr_route@13:
     txna ApplicationArgs 1
-    dup
-    bury 3
-    dup
+    dupn 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
@@ -220,7 +215,7 @@ main_ternary_merge@37:
     !
     assert // not payable
     bytec_0 // 0x151f7c75
-    dig 2
+    swap
     concat
     log
     intc_1 // 1
@@ -232,9 +227,7 @@ main_ternary_false@31:
 
 main_reencStrArr_route@12:
     txna ApplicationArgs 1
-    dup
-    bury 3
-    dup
+    dupn 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
@@ -267,7 +260,6 @@ main_decBytesArr_route@11:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 3
     txn GroupIndex
     bz main_ternary_false@41
     txn GroupIndex
@@ -278,7 +270,6 @@ main_decBytesArr_route@11:
 main_ternary_merge@42:
     !
     assert // not payable
-    dig 2
     dup
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
@@ -344,7 +335,6 @@ main_decStrArr_route@10:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 3
     txn GroupIndex
     bz main_ternary_false@46
     txn GroupIndex
@@ -355,7 +345,6 @@ main_decStrArr_route@10:
 main_ternary_merge@47:
     !
     assert // not payable
-    dig 2
     dup
     intc_0 // 0
     extract_uint16
@@ -429,16 +418,14 @@ main_ternary_merge@52:
     !
     assert // not payable
     pushbytes 0x0000
-    bury 4
     intc_0 // 0
-    bury 1
 
 main_while_top@53:
     dup
     intc_0 // 0
     <
     bz main_after_while@55
-    dig 3
+    swap
     dup
     intc_0 // 0
     extract_uint16
@@ -449,16 +436,15 @@ main_while_top@53:
     replace2 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    bury 4
-    dup
+    swap
     intc_1 // 1
     +
-    bury 1
     b main_while_top@53
 
 main_after_while@55:
+    pop
     bytec_1 // 0x00020004000600000000
-    dig 4
+    swap
     intc_0 // 0
     callsub dynamic_array_replace_dynamic_element
     pushbytes 0x0003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -974,7 +960,6 @@ main_decStructArr_route@6:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    bury 3
     txn GroupIndex
     bz main_ternary_false@69
     txn GroupIndex
@@ -985,7 +970,6 @@ main_decStructArr_route@6:
 main_ternary_merge@70:
     !
     assert // not payable
-    dig 2
     dup
     intc_0 // 0
     callsub dynamic_array_read_dynamic_element
@@ -1214,42 +1198,37 @@ dynamic_array_replace_byte_length_head:
     swap
     frame_dig -1
     select
-    cover 2
-    swap
+    uncover 2
 
 dynamic_array_replace_byte_length_head_for_header@2:
-    frame_dig 4
-    frame_dig 1
+    dup
+    dig 4
     <
     bz dynamic_array_replace_byte_length_head_after_for@4
-    frame_dig 2
+    swap
     dup
     itob
     extract 6 0
-    frame_dig 3
-    frame_dig 4
-    dup
-    cover 4
+    uncover 3
+    dig 3
     uncover 2
     replace3
     dup
-    frame_bury 3
+    cover 3
     dig 1
     extract_uint16
     intc_2 // 2
     +
     +
-    frame_bury 2
+    swap
     intc_2 // 2
     +
-    frame_bury 4
     b dynamic_array_replace_byte_length_head_for_header@2
 
 dynamic_array_replace_byte_length_head_after_for@4:
-    frame_dig 0
-    frame_dig 3
+    popn 2
+    bury 1
     concat
-    frame_bury 0
     retsub
 
 
@@ -1264,7 +1243,7 @@ dynamic_array_replace_dynamic_element:
     extract 2 0
     frame_dig -2
     len
-    cover 2
+    cover 3
     dup
     len
     frame_dig -1
@@ -1291,7 +1270,7 @@ dynamic_array_replace_dynamic_element:
     extract_uint16
     dup2
     -
-    cover 6
+    cover 7
     dig 4
     intc_0 // 0
     uncover 2
@@ -1307,37 +1286,34 @@ dynamic_array_replace_dynamic_element:
     swap
     intc_2 // 2
     *
-    swap
+    cover 2
 
 dynamic_array_replace_dynamic_element_for_header@2:
-    frame_dig 5
-    frame_dig 4
+    dup
+    dig 3
     <
     bz dynamic_array_replace_dynamic_element_after_for@5
-    frame_dig 3
+    swap
     dup
-    frame_dig 5
-    dup
-    cover 3
+    dig 2
     extract_uint16
-    frame_dig 1
+    dig 6
     +
-    frame_dig 2
+    dig 5
     -
     itob
     extract 6 0
     dig 2
     swap
     replace3
-    frame_bury 3
+    swap
     intc_2 // 2
     +
-    frame_bury 5
     b dynamic_array_replace_dynamic_element_for_header@2
 
 dynamic_array_replace_dynamic_element_after_for@5:
-    frame_dig 0
-    frame_dig 3
+    pop
+    bury 1
     concat
     frame_bury 0
     retsub

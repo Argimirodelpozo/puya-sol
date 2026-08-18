@@ -6,7 +6,7 @@ main:
     intcblock 0 32 1 8 768 128 258
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0x00 0x151f7c75 0x01 0x1c76476f4def4bb94541d57ebba1193381ffa7aa76ada664dd31c16024c43f593034dd2920f673e204fee2811c678745fc819b55d3e9d294e45c9b03a76aef41 0x1213d2149b006137fcfb23036606f848d638d576a120ca981b5b1a5f9300b3ee2276cf730cf493cd95d64677bbb75fc42db72513a4c1e387b476d056f80aa75f21ee6226d31426322afcda621464d0611d226783262e21bb3bc86b537e986237096df1f82dff337dd5972e32a8ad43e28a78a96a823ef1cd4debe12b6552ea5f 0x0f25929bcb43d5a57391564615c9e70a992b10eafa4db109709649cf48c50dd216da2f5cb6be7a0aa72c440c53c9bbdfec6c36c7d515536431b3a865468acbba 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x00020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x0130644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47 0x010000000000000000000000000000000000000000000000000000000000000000 0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002
     intc_0 // 0
-    dupn 15
+    dupn 7
     pushint 4096
     bzero
     dup
@@ -68,7 +68,6 @@ main_ternary_merge@16:
     pushbytes 0x00000000000000000000000000000000000000e40800000000000000008cdcbc
     replace3 // on error: index access is out of bounds
     dup
-    bury 10
     pushbytes 0x000a0aee46a7ea6e80a3675026dfa84019deee2a2dedb1bbe11d7fe124cb3efb4b5a044747b6e9176e13ede3a4dfd0d33ccca6321b9acd23bf3683a60adc0366ebaf1e39e9f0f91fa7ff8047ffd90de08785777fe61c0e3434e728fce4cf35047ddc2e0b64d75ebfa86d7f8f8e08abbe2e7ae6e0a1c0b34d028f19fa56e9450527cb1c36e713d4d54e3a9644dffca1fc524be4868f66572516025a61ca542539d43f042dcc4525b82dfb242b09cb21909d5c22643dcdbe98c4d082cc2877e96b24db17d5d09b4146424bff7e6fb01487c477bbfcd0cdbbc92d5d6457aae0b6717cc502b5636903efbf46db9235bbe74045d21c138897fda32e079040db1a16c1a7a1000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     intc 6 // 258
     pushbytes 0x0f103f14a584d4203c27c26155b2c955f8dfa816980b24ba824e1972d6486a5d0c4165133b9f5be17c804203af781bcf168da7386620479f9b885ecbcd27b17b
@@ -167,17 +166,16 @@ main_ternary_merge@16:
     swap
     concat
     dup
-    bury 5
-    swap
+    uncover 2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
     dup
-    bury 8
+    cover 3
     intc_2 // 1
     itob
     dup
-    bury 8
+    cover 4
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -192,7 +190,7 @@ main_ternary_merge@16:
     cover 2
     substring3
     dup
-    bury 17
+    cover 3
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
     itob
@@ -201,17 +199,14 @@ main_ternary_merge@16:
     intc_0 // 0
     itob
     dup
-    bury 12
     bytec 9 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    bury 3
-    bury 10
+    swap
 
 main_while_top@58:
-    dig 9
-    dig 6
+    dup
+    dig 7
     b<
     bz main_after_while@60
-    dig 9
     dup
     dig 6
     b+
@@ -237,7 +232,7 @@ main_while_top@58:
     intc_3 // 8
     -
     extract_uint64
-    dig 17
+    dig 6
     extract 2 0
     swap
     pushint 64
@@ -252,7 +247,7 @@ main_while_top@58:
     intc_3 // 8
     -
     extract_uint64
-    dig 11
+    dig 9
     extract 2 0
     swap
     intc_1 // 32
@@ -261,28 +256,29 @@ main_while_top@58:
     extract3 // on error: index access is out of bounds
     callsub Pairing.mul
     pop
-    dig 3
+    uncover 2
     swap
     callsub Pairing.add
     popn 2
-    bury 3
+    swap
     bytec 4 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 10
     b main_while_top@58
 
 main_after_while@60:
-    dig 14
+    pop
+    uncover 5
+    pop
+    uncover 5
+    pop
+    uncover 3
     extract 2 64
-    dig 2
-    swap
     callsub Pairing.add
     popn 2
-    bury 2
     dig 2
     extract 0 128
     pushbytes 0x111e129f1cf1097710d41c4ac70fcdfa5ba2023c6ff1cbeac322de49d1b6df7c103188585e2364128fe25c70558f1560f4f9350baf3959e603cc91486e110936
@@ -294,10 +290,11 @@ main_after_while@60:
     callsub Pairing.pairingProd2
     popn 4
     bnz main_after_if_else@62
-    dig 4
+    pop
+    bury 1
+    swap
 
 main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/contracts/snark.sol.Test.__solfn_1495@71:
-    dig 11
     b==
     bz main_else_body@18
     pushbytes 0x634ba617000200165375636365737366756c6c792076657269666965642e
@@ -321,6 +318,8 @@ main_else_body@18:
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/contracts/snark.sol.Test.verifyTx@19
 
 main_after_if_else@62:
+    uncover 3
+    pop
     dig 2
     extract 128 64
     pushbytes 0x06967a1237ebfeca9aaae0d6d0bab8e28c198c5a339ef8a2407e31cdac516db90e4e3ed0898ba2ce904a02b739caf9931f9b43c600154592cee5239435f91f76
@@ -334,6 +333,8 @@ main_after_if_else@62:
     callsub Pairing.pairingProd2
     popn 4
     bnz main_after_if_else@64
+    pop
+    bury 1
     pushint 2
     itob
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/contracts/snark.sol.Test.__solfn_1495@71
@@ -350,6 +351,8 @@ main_after_if_else@64:
     callsub Pairing.pairingProd2
     popn 4
     bnz main_after_if_else@66
+    pop
+    bury 1
     pushint 3
     itob
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/contracts/snark.sol.Test.__solfn_1495@71
@@ -364,11 +367,11 @@ main_after_if_else@66:
     bytec 7 // 0x0f25929bcb43d5a57391564615c9e70a992b10eafa4db109709649cf48c50dd216da2f5cb6be7a0aa72c440c53c9bbdfec6c36c7d515536431b3a865468acbba
     callsub Pairing.add
     popn 2
-    dig 4
+    uncover 3
     swap
     callsub Pairing.add
     pop
-    bury 5
+    cover 3
     callsub Pairing.negate
     pop
     dig 2
@@ -386,19 +389,20 @@ main_after_if_else@66:
     callsub Pairing.pairingProd3
     popn 6
     bnz main_after_if_else@68
+    pop
+    bury 1
     pushint 4
     itob
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/contracts/snark.sol.Test.__solfn_1495@71
 
 main_after_if_else@68:
-    dig 1
     bytec 5 // 0x1c76476f4def4bb94541d57ebba1193381ffa7aa76ada664dd31c16024c43f593034dd2920f673e204fee2811c678745fc819b55d3e9d294e45c9b03a76aef41
     callsub Pairing.add
     popn 2
     pushbytes 0x1abb4a25eb9379ae96c84fff9f0540abcfc0a0d11aeda02d4f37e4baf74cb0c11ff09a73b455eca26257dc97dbe2c2572e162a9eefc4ce83ac7869b267acc4de
     callsub Pairing.negate
     pop
-    dig 4
+    uncover 3
     pushint 640
     intc 5 // 128
     extract3
@@ -418,7 +422,7 @@ main_after_if_else@68:
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/contracts/snark.sol.Test.__solfn_1495@71
 
 main_after_if_else@70:
-    dig 10
+    dup
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/externalContracts/contracts/snark.sol.Test.__solfn_1495@71
 
 main_ternary_false@15:
@@ -438,7 +442,7 @@ main_ternary_merge@24:
     assert // not payable
     intc_1 // 32
     bzero
-    bury 16
+    bury 8
     callsub Pairing.P1
     pushint 5
     itob
@@ -458,8 +462,8 @@ main_ternary_merge@24:
     pushbytes 0x0a09ccf561b55fd99d1c1208dee1162457b57ac5af3759d50671e510e428b2a12e539c423b302d13f4e5773c603948eaf5db5df8ae8a9a9113708390a06410d819b763513924a736e4eebd0d78c91c1bc1d657fee4214057d21414011cfcc7632f8d9f9ab83727c77a2fec063cb7b6e5eb23044ccf535ad49d46d394fb6f6bf6
     replace2 130 // on error: index access is out of bounds
     callsub Pairing.pairing
-    bury 14
-    bury 14
+    bury 7
+    bury 7
     bnz main_after_if_else@26
 
 main_if_body@25:
@@ -479,7 +483,7 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
 
 main_after_if_else@26:
     callsub Pairing.P1
-    dig 13
+    dig 6
     swap
     replace2 2 // on error: index access is out of bounds
     callsub Pairing.P1
@@ -508,12 +512,12 @@ main_after_if_else@26:
     intc_1 // 32
     <=
     assert // overflow
-    dig 18
+    dig 10
     b|
     concat
     replace2 66 // on error: index access is out of bounds
     callsub Pairing.P2
-    dig 13
+    dig 6
     swap
     replace2 2 // on error: index access is out of bounds
     callsub Pairing.P2
@@ -555,12 +559,12 @@ main_ternary_merge@34:
     callsub Pairing.mul
     pop
     dup
-    bury 9
+    bury 5
     extract 0 32
     pushbytes 0x285cb7c6f3f02b845c94e350484cf47ce9f6f245c0c5609ad88aa5b86c4c3397
     b==
     bz main_bool_false@37
-    dig 7
+    dig 3
     extract 32 32
     pushbytes 0x0f6ca982921c98fe59a3d42894ec8e0546704a4236d52d3a87472510067351a3
     b==
@@ -610,12 +614,12 @@ main_ternary_merge@43:
     intc_0 // 0
     itob
     dup
-    bury 6
+    bury 4
     b==
     bz main_bool_false@46
     dup
     extract 32 32
-    dig 4
+    dig 2
     b==
     bz main_bool_false@46
     intc_2 // 1
@@ -688,21 +692,21 @@ main_ternary_merge@52:
     swap
     dup
     cover 2
-    bury 17
+    bury 10
     uncover 2
     callsub Pairing.mul
     pop
     dup
-    bury 9
+    bury 5
     swap
     extract 0 32
     swap
     extract 0 32
     b==
     bz main_bool_false@55
-    dig 13
+    dig 6
     extract 32 32
-    dig 7
+    dig 3
     extract 32 32
     b==
     bz main_bool_false@55
@@ -750,12 +754,12 @@ Pairing.negate:
     intc_0 // 0
     itob
     dup
-    cover 2
+    cover 3
     b==
     bz Pairing.negate_after_if_else@3
     frame_dig -1
     extract 32 32
-    frame_dig 1
+    frame_dig 0
     b==
     bz Pairing.negate_after_if_else@3
     bytec 9 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -790,12 +794,9 @@ Pairing.negate_after_if_else@3:
     intc_1 // 32
     bzero
     b|
-    frame_dig 0
-    swap
     concat
     frame_dig -1
-    uncover 3
-    uncover 3
+    uncover 2
     retsub
 
 
@@ -884,9 +885,8 @@ Pairing.mul:
 Pairing.pairing:
     proto 2 3
     intc_0 // 0
-    dupn 6
     pushbytes ""
-    dupn 2
+    dup
     frame_dig -2
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
@@ -918,17 +918,18 @@ Pairing.pairing:
     intc_3 // 8
     -
     extract_uint64
+    cover 2
     intc_0 // 0
     itob
     pushbytes 0x0000
     intc_0 // 0
 
 Pairing.pairing_while_top@1:
-    frame_dig 17
-    frame_dig 14
+    dup
+    frame_dig 5
     <
     bz Pairing.pairing_after_while@3
-    frame_dig 16
+    swap
     dup
     intc_0 // 0
     extract_uint16
@@ -939,30 +940,26 @@ Pairing.pairing_while_top@1:
     replace2 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    frame_bury 16
-    frame_dig 17
+    swap
     intc_2 // 1
     +
-    frame_bury 17
     b Pairing.pairing_while_top@1
 
 Pairing.pairing_after_while@3:
-    frame_dig 16
-    frame_bury 3
-    frame_dig 15
-    frame_bury 1
+    pop
+    swap
+    dup
 
 Pairing.pairing_while_top@4:
-    frame_dig 1
-    frame_dig 10
+    dup
+    frame_dig 3
     b<
     bz Pairing.pairing_after_while@6
-    frame_dig 1
     dup
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    frame_dig 13
+    dig 3
     dup
     cover 2
     dig 1
@@ -982,7 +979,7 @@ Pairing.pairing_while_top@4:
     dup
     extract 0 32
     dig 3
-    frame_dig 11
+    frame_dig 4
     b*
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -1004,7 +1001,7 @@ Pairing.pairing_while_top@4:
     *
     pushint 2
     +
-    frame_dig 3
+    uncover 8
     swap
     uncover 3
     replace3 // on error: index access is out of bounds
@@ -1163,28 +1160,27 @@ Pairing.pairing_while_top@4:
     +
     swap
     replace3 // on error: index access is out of bounds
-    frame_bury 3
+    cover 2
     bytec 4 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    frame_bury 1
     b Pairing.pairing_while_top@4
 
 Pairing.pairing_after_while@6:
+    pop
     intc_1 // 32
     itob
     dup
-    frame_bury 5
-    frame_dig 12
+    dig 5
     b*
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    frame_dig 13
+    dig 4
     swap
     concat
     dup
@@ -1193,18 +1189,16 @@ Pairing.pairing_after_while@6:
     -
     extract_uint64
     bzero
-    frame_bury 0
-    frame_dig 15
-    frame_bury 2
+    uncover 2
 
 Pairing.pairing_while_top@7:
-    frame_dig 2
-    frame_dig 12
+    dup
+    dig 6
     b<
     bz Pairing.pairing_after_while@15
     intc_2 // 1
     itob
-    frame_dig 2
+    dig 1
     dup
     uncover 2
     b+
@@ -1212,7 +1206,7 @@ Pairing.pairing_while_top@7:
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    frame_dig 5
+    dig 4
     b*
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -1222,7 +1216,7 @@ Pairing.pairing_while_top@7:
     bytec_1 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    frame_dig 13
+    dig 6
     dup
     cover 2
     uncover 3
@@ -1232,14 +1226,14 @@ Pairing.pairing_while_top@7:
     intc_3 // 8
     -
     extract_uint64
-    frame_dig 3
+    dig 6
     extract 2 0
     swap
     intc_1 // 32
     *
     intc_1 // 32
     extract3 // on error: index access is out of bounds
-    frame_bury 4
+    frame_bury 0
     load 0
     store 0
     concat
@@ -1251,16 +1245,16 @@ Pairing.pairing_while_top@7:
     intc_1 // 32
     -
     dup
-    frame_bury 7
-    frame_dig 0
+    frame_bury 1
+    dig 2
     len
     dup
-    frame_bury 9
+    frame_bury 2
     <
     bz Pairing.pairing_ternary_merge@14
     intc_1 // 32
     bzero
-    frame_dig 4
+    frame_dig 0
     concat
     dup
     len
@@ -1268,47 +1262,48 @@ Pairing.pairing_while_top@7:
     -
     intc_1 // 32
     extract3
-    frame_bury 6
-    frame_dig 9
-    frame_dig 7
+    swap
+    frame_dig 2
+    frame_dig 1
     -
     dup
-    frame_bury 8
     intc_1 // 32
     <
     bz Pairing.pairing_ternary_false@11
-    frame_dig 8
 
 Pairing.pairing_ternary_merge@12:
-    frame_dig 6
+    uncover 2
     intc_0 // 0
     uncover 2
     extract3
-    frame_dig 0
-    frame_dig 7
+    uncover 2
+    frame_dig 1
     uncover 2
     replace3
-    frame_bury 0
+    swap
 
 Pairing.pairing_ternary_merge@14:
     load 0
     store 0
-    frame_dig 2
     bytec 4 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    frame_bury 2
     b Pairing.pairing_while_top@7
 
 Pairing.pairing_ternary_false@11:
+    pop
     intc_1 // 32
     b Pairing.pairing_ternary_merge@12
 
 Pairing.pairing_after_while@15:
-    frame_dig 0
+    pop
+    bury 1
+    bury 1
+    bury 1
+    bury 1
     dup
     len
     pushint 384

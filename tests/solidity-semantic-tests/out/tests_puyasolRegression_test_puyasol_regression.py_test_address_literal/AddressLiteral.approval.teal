@@ -5,8 +5,6 @@
 main:
     intcblock 1 0 32
     bytecblock "router" 0x151f7c75 0x00
-    intc_1 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -72,7 +70,6 @@ main_ternary_false@18:
 main_setRouter_route@11:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -88,7 +85,7 @@ main_ternary_merge@24:
     !
     assert // not payable
     bytec_0 // "router"
-    dig 2
+    swap
     app_global_put
     intc_0 // 1
     return
@@ -106,7 +103,6 @@ main_pick_route@10:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@28
     txn GroupIndex
@@ -117,7 +113,7 @@ main_pick_route@10:
 main_ternary_merge@29:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_0 // 1
     <=
     assert // ABI bool validation
@@ -143,7 +139,6 @@ main_ternary_false@28:
 main_eqDead_route@9:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -158,7 +153,6 @@ main_eqDead_route@9:
 main_ternary_merge@37:
     !
     assert // not payable
-    dig 1
     pushbytes 0xdead
     ==
     bytec_2 // 0x00
@@ -219,7 +213,6 @@ main_ternary_false@46:
 main_isRouter_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_2 // 32
     ==
@@ -238,7 +231,6 @@ main_ternary_merge@52:
     bytec_0 // "router"
     app_global_get_ex
     assert // check router exists
-    dig 2
     ==
     bytec_2 // 0x00
     intc_1 // 0

@@ -5,8 +5,6 @@
 main:
     intcblock 1 2 0 8
     bytecblock 0x151f7c75 "l" "small" "__ctor_pending"
-    intc_2 // 0
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -46,7 +44,6 @@ main_after_if_else@2:
 main_l_route@11:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     pushint 32
     ==
@@ -63,7 +60,7 @@ main_ternary_merge@18:
     assert // not payable
     intc_3 // 8
     bzero
-    dig 4
+    swap
     concat
     dup
     len
@@ -92,7 +89,6 @@ main_ternary_false@17:
 main_small_route@10:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     pushint 32
     ==
@@ -109,7 +105,7 @@ main_ternary_merge@23:
     assert // not payable
     intc_3 // 8
     bzero
-    dig 4
+    swap
     concat
     dup
     len
@@ -187,9 +183,7 @@ main_ternary_false@27:
 
 main_h_route@8:
     txna ApplicationArgs 1
-    dup
-    bury 4
-    dup
+    dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_1 // 2
@@ -214,9 +208,7 @@ main_ternary_merge@33:
     box_del
     pop
     bytec_1 // "l"
-    dig 3
-    dup
-    cover 2
+    dig 1
     box_put
     bytec_0 // 0x151f7c75
     swap
@@ -231,9 +223,7 @@ main_ternary_false@32:
 
 main_g_route@7:
     txna ApplicationArgs 1
-    dup
-    bury 2
-    dup
+    dupn 2
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     intc_1 // 2
@@ -259,8 +249,6 @@ main_ternary_merge@38:
     pop
     bytec_2 // "small"
     dig 1
-    dup
-    cover 2
     box_put
     bytec_0 // 0x151f7c75
     swap
@@ -276,7 +264,6 @@ main_ternary_false@37:
 main_f_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     pushint 6
     ==
@@ -292,7 +279,7 @@ main_ternary_merge@43:
     !
     assert // not payable
     pushbytes "s"
-    dig 2
+    swap
     box_put
     intc_0 // 1
     return

@@ -5,8 +5,6 @@
 main:
     intcblock 8 32 1 0
     bytecblock 0x 0x04 0x01 0x02 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
-    intc_3 // 0
-    bytec_0 // ""
     pushint 4096
     bzero
     dup
@@ -1383,16 +1381,14 @@ main_ternary_merge@24:
     !
     assert // not payable
     callsub __solfn_11
-    bury 2
     intc_2 // 1
-    bury 1
 
 main_while_top@25:
     dup
     pushint 40
     <
     bz main_after_while@27
-    dupn 2
+    dup
     itob
     dup
     pushbytes 0x28
@@ -1401,7 +1397,7 @@ main_while_top@25:
     dup
     bytec_1 // 0x04
     b/
-    dig 4
+    dig 3
     b+
     intc_1 // 32
     bzero
@@ -1440,7 +1436,6 @@ main_while_top@25:
     callsub __storage_write
     intc_2 // 1
     +
-    bury 1
     b main_while_top@25
 
 main_after_while@27:

@@ -4,8 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/contracts/checked_modifier_called_by_unchecked.sol.C.approval_program() -> uint64:
 main:
     intcblock 65535 1 8
-    pushbytes ""
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -47,7 +45,6 @@ main_f_route@4:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
     txna ApplicationArgs 2
     dup
     len
@@ -55,7 +52,6 @@ main_f_route@4:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 2
     txna ApplicationArgs 3
     dup
     len
@@ -63,7 +59,6 @@ main_f_route@4:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -74,18 +69,18 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dig 2
+    uncover 2
     intc_0 // 65535
     <=
     assert // ABI validation
-    dig 1
+    swap
     dup
     intc_0 // 65535
     <=
     assert // ABI validation
     intc_0 // 65535
     &
-    dig 1
+    swap
     dup
     intc_0 // 65535
     <=

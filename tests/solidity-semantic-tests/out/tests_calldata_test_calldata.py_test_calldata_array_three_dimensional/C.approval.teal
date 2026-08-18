@@ -6,9 +6,8 @@ main:
     intcblock 2 32 0 1
     bytecblock 0x010000000000000000
     intc_2 // 0
-    dupn 5
+    dup
     pushbytes ""
-    dupn 5
     pushint 4096
     bzero
     dup
@@ -45,63 +44,60 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 8
+    bury 3
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 8
+    cover 2
     intc_0 // 2
     *
-    bury 4
+    swap
     dup
     len
-    bury 2
+    bury 4
     extract 2 0
-    bury 9
-    intc_2 // 0
     bury 5
+    intc_2 // 0
 
 main_for_header@7:
-    dig 4
-    dig 6
+    dup
+    dig 3
     <
     bz main_after_for@12
-    dig 4
+    dup
     intc_0 // 2
     *
-    dig 9
+    dig 6
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    dig 4
     ==
     assert // invalid tail pointer for (len+(len+uint256[])[2][])
     dig 1
     len
     substring3
-    bury 8
+    cover 2
     pushint 4
-    bury 2
+    cover 2
     intc_2 // 0
-    bury 4
 
 main_for_header@9:
-    dig 3
+    dup
     intc_0 // 2
     <
     bz main_after_for@11
-    dig 3
     dup
     intc_0 // 2
     *
-    dig 9
+    dig 5
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 5
+    uncover 6
     dup
     cover 4
     ==
@@ -116,47 +112,45 @@ main_for_header@9:
     intc_0 // 2
     +
     +
-    bury 3
+    cover 3
     intc_3 // 1
     +
-    bury 4
     b main_for_header@9
 
 main_after_for@11:
-    dig 2
-    dig 2
+    pop
+    uncover 3
+    pop
+    swap
+    uncover 2
     +
-    bury 3
-    dig 4
+    swap
     intc_3 // 1
     +
-    bury 5
     b main_for_header@7
 
 main_after_for@12:
-    dig 2
+    pop
     intc_0 // 2
     +
-    dig 1
+    dig 2
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>>
     txna ApplicationArgs 2
     dup
-    bury 13
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    bury 12
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
-    bury 11
+    cover 4
     len
     intc_1 // 32
     ==
@@ -171,10 +165,10 @@ main_after_for@12:
 main_ternary_merge@15:
     !
     assert // not payable
-    dig 5
+    uncover 2
     dup
     itob
-    dig 13
+    uncover 3
     dup
     bytec_0 // 0x010000000000000000
     b<
@@ -193,7 +187,7 @@ main_ternary_merge@15:
     uncover 4
     <
     assert // array index out of bounds
-    dig 13
+    uncover 3
     dup
     bytec_0 // 0x010000000000000000
     b<
@@ -206,7 +200,7 @@ main_ternary_merge@15:
     pushint 8
     -
     extract_uint64
-    dig 10
+    dig 6
     dup
     cover 4
     dig 2
@@ -234,7 +228,7 @@ main_ternary_merge@15:
     extract_uint16 // on error: invalid array length header
     dup
     itob
-    dig 16
+    uncover 7
     dup
     bytec_0 // 0x010000000000000000
     b<

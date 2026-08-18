@@ -4,9 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/delete_transient_storage.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0xf2b65f27 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    bytec_1 // ""
-    dup
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0xf2b65f27 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
     dup
@@ -26,8 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytes "x"
-    bytec_1 // 0x
+    pushbytess "x" 0x
     app_global_put
     pushbytes "a"
     bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
@@ -42,7 +39,7 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytes 0x2d4970c7 // method "f()void"
-    bytec_2 // method "g()void"
+    bytec_1 // method "g()void"
     txna ApplicationArgs 0
     match main_f_route@5 main_g_route@6
     err
@@ -78,22 +75,19 @@ main_ternary_merge@15:
     itob
     b==
     dup
-    bury 3
     bnz main_after_if_else@17
-    bytec_3 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@17:
-    dig 1
     assert
     load 5
     extract 32 32
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     ==
     dup
-    bury 2
     bnz main_after_if_else@19
-    bytec_3 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@19:
@@ -109,7 +103,7 @@ g:
     txn NumAppArgs
     bz g_after_if_else@6
     txna ApplicationArgs 0
-    bytec_2 // method "g()void"
+    bytec_1 // method "g()void"
     ==
     bz g_after_if_else@6
     txn GroupIndex

@@ -5,8 +5,6 @@
 main:
     intcblock 1 0 32
     bytecblock "x" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    intc_1 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -91,8 +89,6 @@ main_ternary_merge@18:
     intc_0 // 1
     itob
     dup
-    bury 3
-    bury 1
 
 main_while_top@20:
     pushint 10
@@ -118,14 +114,12 @@ main_while_top@20:
     bytec_0 // "x"
     swap
     app_global_put
-    dup
     pushbytes 0x01
     b+
     dup
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 1
     b main_while_top@20
 
 main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/return_in_modifier.sol.C.f__mod0_0@25:

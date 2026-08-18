@@ -5,9 +5,6 @@
 main:
     intcblock 32 2 1 0
     bytecblock "a1" "a2" 0x0000 0x151f7c75 "__ctor_pending" 0x0001 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000000
-    intc_3 // 0
-    dupn 7
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -47,7 +44,6 @@ main_after_if_else@2:
 main_selectThenFlipCond_route@9:
     txna ApplicationArgs 1
     dup
-    bury 10
     len
     intc_0 // 32
     ==
@@ -85,7 +81,7 @@ main_ternary_merge@16:
 
 main_after_if_else@19:
     bytec 5 // 0x0001
-    dig 9
+    swap
     concat
     dup
     extract 2 0
@@ -114,7 +110,6 @@ main_ternary_merge@22:
     intc_0 // 32
     /
     itob
-    bury 5
     bytec_1 // "a2"
     box_len
     pop
@@ -133,7 +128,7 @@ main_ternary_merge@25:
     itob
     intc_0 // 32
     bzero
-    dig 6
+    uncover 2
     dig 1
     b|
     cover 2
@@ -167,7 +162,6 @@ main_readThrough_route@8:
     assert // invalid number of bytes for arc4.bool
     intc_3 // 0
     getbit
-    bury 1
     txn GroupIndex
     bz main_ternary_false@29
     txn GroupIndex
@@ -178,7 +172,7 @@ main_readThrough_route@8:
 main_ternary_merge@30:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_2 // 1
     <=
     assert // ABI bool validation
@@ -196,7 +190,7 @@ main_ternary_merge@30:
     box_put
     intc_0 // 32
     bzero
-    bury 7
+    swap
     bytec_0 // "a1"
     intc_3 // 0
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000b
@@ -240,7 +234,6 @@ main_ternary_merge@33:
     intc_0 // 32
     <=
     assert // overflow
-    dig 6
     b|
     bytec_3 // 0x151f7c75
     swap
@@ -266,10 +259,8 @@ main_writeThrough_route@7:
     assert // invalid number of bytes for arc4.bool
     intc_3 // 0
     getbit
-    bury 1
     txna ApplicationArgs 2
     dup
-    bury 10
     len
     intc_0 // 32
     ==
@@ -284,7 +275,8 @@ main_writeThrough_route@7:
 main_ternary_merge@38:
     !
     assert // not payable
-    dupn 2
+    swap
+    dup
     intc_2 // 1
     <=
     assert // ABI bool validation
@@ -314,22 +306,20 @@ main_ternary_merge@38:
     callsub box_dynamic_array_concat_fixed
     bz main_ternary_false@40
     bytec_0 // "a1"
-    bury 3
 
 main_ternary_merge@41:
-    dig 2
+    dup
     box_len
     bury 1
     bnz main_after_if_else@43
-    dig 2
+    dup
     intc_1 // 2
     box_create
     pop
 
 main_after_if_else@43:
-    dig 2
     intc_1 // 2
-    dig 10
+    uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "a1"
     intc_1 // 2
@@ -349,7 +339,6 @@ main_after_if_else@43:
 
 main_ternary_false@40:
     bytec_1 // "a2"
-    bury 3
     b main_ternary_merge@41
 
 main_ternary_false@37:
@@ -365,10 +354,8 @@ main_pushThrough_route@6:
     assert // invalid number of bytes for arc4.bool
     intc_3 // 0
     getbit
-    bury 1
     txna ApplicationArgs 2
     dup
-    bury 10
     len
     intc_0 // 32
     ==
@@ -383,7 +370,8 @@ main_pushThrough_route@6:
 main_ternary_merge@48:
     !
     assert // not payable
-    dupn 2
+    dig 1
+    dup
     intc_2 // 1
     <=
     assert // ABI bool validation
@@ -401,7 +389,7 @@ main_ternary_merge@48:
     box_put
     bz main_ternary_false@50
     bytec_0 // "a1"
-    bury 2
+    swap
 
 main_ternary_merge@51:
     dig 1
@@ -416,16 +404,15 @@ main_ternary_merge@51:
 main_after_if_else@53:
     intc_2 // 1
     itob
-    bury 8
     bytec 5 // 0x0001
-    dig 9
+    dig 2
     concat
     dup
     extract 2 0
     swap
     intc_3 // 0
     extract_uint16 // on error: invalid array length header
-    dig 3
+    dig 4
     dup
     cover 2
     intc_3 // 0
@@ -436,14 +423,12 @@ main_after_if_else@53:
     box_len
     bury 1
     bnz main_after_if_else@55
-    dig 1
+    dig 2
     intc_1 // 2
     box_create
     pop
 
 main_after_if_else@55:
-    dig 8
-    dig 8
     b+
     dup
     bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -457,7 +442,7 @@ main_after_if_else@55:
     intc_0 // 32
     bzero
     dup
-    bury 9
+    cover 2
     b|
     bytec 5 // 0x0001
     swap
@@ -467,7 +452,7 @@ main_after_if_else@55:
     swap
     intc_3 // 0
     extract_uint16 // on error: invalid array length header
-    dig 3
+    uncover 3
     intc_3 // 0
     uncover 3
     uncover 3
@@ -489,7 +474,6 @@ main_ternary_merge@58:
     intc_0 // 32
     /
     itob
-    bury 5
     bytec_1 // "a2"
     box_len
     pop
@@ -506,8 +490,8 @@ main_ternary_merge@61:
     intc_0 // 32
     /
     itob
-    bury 4
-    dup
+    cover 2
+    uncover 3
     bz main_ternary_false@63
     bytec_0 // "a1"
     pushint 34
@@ -515,12 +499,12 @@ main_ternary_merge@61:
     box_extract // on error: index out of bounds
 
 main_ternary_merge@64:
-    dig 5
-    dig 8
+    swap
+    uncover 2
     dup
     cover 2
     b|
-    dig 6
+    uncover 3
     dig 2
     b|
     uncover 3
@@ -559,7 +543,7 @@ main_ternary_false@57:
 
 main_ternary_false@50:
     bytec_1 // "a2"
-    bury 2
+    swap
     b main_ternary_merge@51
 
 main_ternary_false@47:

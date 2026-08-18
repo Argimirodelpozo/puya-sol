@@ -4,8 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/gasleft_decrease.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "v" 0x 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    bytec_1 // ""
+    bytecblock "v" 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
     dup
@@ -26,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "v"
-    bytec_1 // 0x
+    pushbytes 0x
     app_global_put
     intc_0 // 1
     return
@@ -59,13 +58,11 @@ main_ternary_merge@13:
     itob
     b>
     dup
-    bury 2
     bnz main_after_if_else@22
-    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@22:
-    dup
     assert
     pushbytes 0x151f7c7580
     log
@@ -106,9 +103,8 @@ main_ternary_merge@20:
     itob
     b>
     dup
-    bury 2
     bnz main_after_if_else@22
-    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
     b main_after_if_else@22
 

@@ -5,8 +5,6 @@
 main:
     intcblock 1 0 32 5
     bytecblock 0x151f7c75 0x01 0x 0x151f7c758000000000000000000000000000000000000000000000000000000000000000
-    intc_1 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -148,40 +146,36 @@ main_ternary_merge@40:
     pushint 256
     itob
     bytec_1 // 0x01
-    bury 3
     swap
-    bury 4
-    bury 2
 
 main_while_top@42:
-    dig 1
+    dup
     bytec_2 // 0x
     b>
     bz main_after_while@46
-    dig 1
+    dup
     bytec_1 // 0x01
     b&
     bytec_2 // 0x
     b!=
     bz main_after_if_else@45
-    dup
-    dig 3
+    swap
+    dig 2
     b*
-    bury 1
+    swap
 
 main_after_if_else@45:
-    dig 1
     pushbytes 0x02
     b/
-    bury 2
-    dig 2
+    uncover 2
     dup
     b*
-    bury 3
+    cover 2
     b main_while_top@42
 
 main_after_while@46:
-    dupn 2
+    pop
+    dup
     pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     assert // signed exp overflow

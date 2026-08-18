@@ -5,9 +5,6 @@
 main:
     intcblock 32 1 0 8
     bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x7e9f4949 0x2930a603 0xd8ea6643 0x27775eea 0xc7619fcb
-    intc_2 // 0
-    dup
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -49,14 +46,13 @@ main_after_if_else@2:
 main_test_route@10:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 4
+    cover 2
     len
     intc_0 // 32
     ==
@@ -71,7 +67,7 @@ main_test_route@10:
 main_ternary_merge@17:
     !
     assert // not payable
-    dig 2
+    swap
     dup
     pushbytes 0x010000000000000000
     b<
@@ -91,11 +87,10 @@ main_ternary_merge@17:
     swap
     extract_uint64
     dup
-    bury 2
     pushint 5
     ==
     bz main_else_body@20
-    dig 1
+    pop
     callsub e
 
 main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@27:
@@ -119,7 +114,7 @@ main_else_body@20:
     pushint 4
     ==
     bz main_else_body@22
-    dig 1
+    pop
     callsub d
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@27
 
@@ -128,7 +123,7 @@ main_else_body@22:
     pushint 3
     ==
     bz main_else_body@24
-    dig 1
+    pop
     callsub c
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@27
 
@@ -137,16 +132,14 @@ main_else_body@24:
     pushint 2
     ==
     bz main_else_body@26
-    dig 1
+    pop
     callsub b
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@27
 
 main_else_body@26:
-    dup
     intc_1 // 1
     ==
     assert // invalid function pointer
-    dig 1
     callsub a
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@27
 

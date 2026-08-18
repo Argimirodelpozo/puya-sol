@@ -4,8 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/getter_abi_validation.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 255 32 0
-    bytecblock "__ctor_pending" 0x "m" 0x33e718778ba204b3ed25c721118575cd4741421efbd561582240e930386c7034 0xe83617dffddb8a2e73a814f0d9533641410823ac912fecce7516036200347f8b
-    bytec_1 // ""
+    bytecblock "__ctor_pending" "m" 0x33e718778ba204b3ed25c721118575cd4741421efbd561582240e930386c7034 0xe83617dffddb8a2e73a814f0d9533641410823ac912fecce7516036200347f8b
     pushint 4096
     bzero
     dup
@@ -50,7 +49,6 @@ main_m_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
@@ -61,18 +59,18 @@ main_m_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    dupn 2
+    dup
     intc_1 // 255
     <=
     assert // ABI validation
     intc_1 // 255
     &
     itob
-    bytec_2 // "m"
+    bytec_1 // "m"
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    pushbytes 0x
     cover 2
     select
     dup
@@ -105,24 +103,24 @@ main___postInit_route@5:
     bytec_0 // "__ctor_pending"
     intc_3 // 0
     app_global_put
-    bytec_2 // "m"
+    bytec_1 // "m"
     pushint 2
     box_create
     pop
     pushint 99
     itob
-    bytec_3 // 0x33e718778ba204b3ed25c721118575cd4741421efbd561582240e930386c7034
+    bytec_2 // 0x33e718778ba204b3ed25c721118575cd4741421efbd561582240e930386c7034
     box_del
     pop
-    bytec_3 // 0x33e718778ba204b3ed25c721118575cd4741421efbd561582240e930386c7034
+    bytec_2 // 0x33e718778ba204b3ed25c721118575cd4741421efbd561582240e930386c7034
     swap
     box_put
     pushint 42
     itob
-    bytec 4 // 0xe83617dffddb8a2e73a814f0d9533641410823ac912fecce7516036200347f8b
+    bytec_3 // 0xe83617dffddb8a2e73a814f0d9533641410823ac912fecce7516036200347f8b
     box_del
     pop
-    bytec 4 // 0xe83617dffddb8a2e73a814f0d9533641410823ac912fecce7516036200347f8b
+    bytec_3 // 0xe83617dffddb8a2e73a814f0d9533641410823ac912fecce7516036200347f8b
     swap
     box_put
     intc_0 // 1

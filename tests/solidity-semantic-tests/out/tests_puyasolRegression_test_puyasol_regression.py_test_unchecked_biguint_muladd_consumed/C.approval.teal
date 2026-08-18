@@ -5,8 +5,6 @@
 main:
     intcblock 16 1 25 32
     bytecblock 0x0100000000000000000000000000000000 0x151f7c75 0x0100000000000000000000000000000000000000000000000000
-    pushint 0
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -43,14 +41,12 @@ main_after_if_else@2:
 main_umul_route@8:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_0 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 2
     dup
-    bury 4
     len
     intc_0 // 16
     ==
@@ -67,8 +63,7 @@ main_ternary_merge@15:
     assert // not payable
     intc_0 // 16
     bzero
-    dig 4
-    dig 4
+    cover 2
     b*
     bytec_0 // 0x0100000000000000000000000000000000
     b%
@@ -101,14 +96,12 @@ main_ternary_false@14:
 main_mul200_route@7:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_2 // 25
     ==
     assert // invalid number of bytes for arc4.uint200
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_2 // 25
     ==
@@ -127,7 +120,7 @@ main_ternary_merge@20:
     bzero
     intc_3 // 32
     bzero
-    dig 3
+    uncover 2
     dup
     cover 2
     concat
@@ -140,7 +133,7 @@ main_ternary_merge@20:
     b~
     bytec_2 // 0x0100000000000000000000000000000000000000000000000000
     b%
-    dig 6
+    uncover 3
     dup
     uncover 2
     b*
@@ -178,21 +171,19 @@ main_ternary_false@19:
 main_addDiv_route@6:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_0 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 2
     dup
-    bury 4
     len
     intc_0 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 3
     dup
-    bury 2
+    cover 3
     len
     intc_0 // 16
     ==
@@ -209,12 +200,11 @@ main_ternary_merge@25:
     assert // not payable
     intc_0 // 16
     bzero
-    dig 4
-    dig 4
+    cover 2
     b+
     bytec_0 // 0x0100000000000000000000000000000000
     b%
-    dig 2
+    uncover 2
     b/
     dig 1
     swap
@@ -245,14 +235,12 @@ main_ternary_false@24:
 main_mulDiv_route@5:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_0 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_0 // 16
     ==
@@ -271,7 +259,7 @@ main_ternary_merge@30:
     bzero
     intc_3 // 32
     bzero
-    dig 3
+    uncover 2
     dup
     cover 2
     concat
@@ -284,7 +272,7 @@ main_ternary_merge@30:
     b~
     bytec_0 // 0x0100000000000000000000000000000000
     b%
-    dig 6
+    uncover 3
     dup
     uncover 2
     b*

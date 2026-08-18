@@ -4,8 +4,6 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event.sol.ClientReceipt.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    intc_2 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -42,7 +40,6 @@ main_deposit_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
@@ -62,7 +59,6 @@ main_deposit_route@4:
     bz main_else_body@11
     intc_0 // 32
     bzero
-    bury 2
     txn GroupIndex
     bz main_ternary_false@9
     txn GroupIndex
@@ -76,7 +72,7 @@ main_ternary_merge@10:
     load 0
     store 0
     load 0
-    dig 4
+    uncover 3
     dup
     cover 3
     uncover 4
@@ -102,7 +98,7 @@ main_ternary_merge@10:
     swap
     concat
     swap
-    dig 4
+    uncover 2
     concat
     dup
     len
@@ -128,7 +124,6 @@ main_ternary_false@9:
 
 main_else_body@11:
     txn Sender
-    bury 1
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
@@ -141,8 +136,8 @@ main_ternary_merge@14:
     intc_0 // 32
     bzero
     b|
-    dig 1
-    dig 4
+    swap
+    uncover 2
     concat
     swap
     concat

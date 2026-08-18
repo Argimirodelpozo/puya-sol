@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_to_mapping.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2 6
+    intcblock 1 0 2 6
     bytecblock "s" 0x151f7c75 0x00060008000000000000 "__ctor_pending" 0x675a0ee62580be893d086a3f5e65bdf5db5399b9434f5ae41e11b399b3a3dbe7 0xba6cc55c93b5e52160529d54e203fa370297082d2f38f67608ea49fb60c11f4f 0x0ffa993b5c47bfc6b7c2b2b8ee09d01ac715a33caa91878b0daaafd68753f964 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502 0x0006
-    intc_0 // 0
     pushint 4096
     bzero
     dup
@@ -26,9 +25,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_3 // "__ctor_pending"
-    intc_1 // 1
+    intc_0 // 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -44,12 +43,10 @@ main_after_if_else@2:
 
 main_from_calldata_route@9:
     txna ApplicationArgs 1
-    dup
-    bury 2
-    dup
+    dupn 2
     len
     dig 1
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid tuple encoding
     dup
     intc_3 // 6
@@ -59,7 +56,7 @@ main_from_calldata_route@9:
     swap
     dig 2
     substring3
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 8
     +
@@ -74,7 +71,7 @@ main_from_calldata_route@9:
     swap
     dig 3
     substring3
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_2 // 2
     *
@@ -86,7 +83,7 @@ main_from_calldata_route@9:
     txn GroupIndex
     bz main_ternary_false@15
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -98,25 +95,23 @@ main_ternary_merge@16:
     pop
     bytec 4 // 0x675a0ee62580be893d086a3f5e65bdf5db5399b9434f5ae41e11b399b3a3dbe7
     dig 1
-    dup
-    cover 2
     box_put
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@15:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@16
 
 main_from_memory_route@8:
     txn GroupIndex
     bz main_ternary_false@20
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -138,18 +133,18 @@ main_ternary_merge@21:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@20:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@21
 
 main_from_storage_route@7:
     txn GroupIndex
     bz main_ternary_false@25
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -171,18 +166,18 @@ main_ternary_merge@26:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@25:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@26
 
 main_from_state_route@6:
     txn GroupIndex
     bz main_ternary_false@30
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -204,11 +199,11 @@ main_ternary_merge@31:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@30:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@31
 
 main___postInit_route@5:
@@ -220,7 +215,7 @@ main___postInit_route@5:
     ==
     assert // __postInit callable only by the app creator
     bytec_3 // "__ctor_pending"
-    intc_0 // 0
+    intc_1 // 0
     app_global_put
     pushbytes "m"
     intc_2 // 2
@@ -255,7 +250,7 @@ main___postInit_route@5:
     dig 1
     box_put
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16
     dig 1
     intc_2 // 2
@@ -296,7 +291,7 @@ main___postInit_route@5:
     uncover 2
     substring3
     dig 2
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16
     cover 2
     cover 3
@@ -322,5 +317,5 @@ main___postInit_route@5:
     bytec_0 // "s"
     swap
     box_put
-    intc_1 // 1
+    intc_0 // 1
     return

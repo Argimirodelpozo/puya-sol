@@ -5,8 +5,6 @@
 main:
     intcblock 0 1 32 8
     bytecblock "m" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0xc553a2df754adc209e7aee88302f0faedb4643d3c2533c27452682666ded9a9f 0xb4d7435c8eb3298e010b114e2601220ce18f7a973269c1f02ebed48c7aac870b "__ctor_pending" 0x151f7c75 0xc47a0fc777849abe558cd9d5bbd29efeb0d4ea6251d6d7bffa3c67f6dc3a87b2 0x6fea65184e1c923faef54f9acc328f69d4ecd828f2b9d34b66aa02616bfec530
-    intc_0 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -46,14 +44,12 @@ main_after_if_else@2:
 main_n_route@7:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 2
     len
     intc_2 // 32
     ==
@@ -70,7 +66,7 @@ main_ternary_merge@14:
     assert // not payable
     intc_3 // 8
     bzero
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -86,7 +82,7 @@ main_ternary_merge@14:
     assert // array out-of-bounds
     intc_2 // 32
     bzero
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -140,14 +136,12 @@ main_ternary_false@13:
 main_m_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 2
     len
     intc_2 // 32
     ==
@@ -164,7 +158,7 @@ main_ternary_merge@19:
     assert // not payable
     intc_3 // 8
     bzero
-    dig 2
+    uncover 2
     concat
     dup
     len
@@ -186,7 +180,7 @@ main_ternary_merge@19:
     assert // array out-of-bounds
     intc_2 // 32
     bzero
-    dig 2
+    uncover 2
     concat
     dup
     len
