@@ -28,10 +28,23 @@ def test_joint_stream_contains_each_root_call_once() -> None:
         if "#" in call["hash"]
     ]
 
-    assert len(root_calls) == 429
-    assert len({item["call"]["hash"] for item in root_calls}) == 429
+    # Counts derive from the fetched window (originally 429/3/12 at the
+    # 200/200/41 windows) so deepening a window doesn't invalidate the test.
+    expected_roots = sum(
+        1
+        for case in cases.values()
+        for call in case.calls["calls"]
+        if "#" not in call["hash"]
+    )
+    assert len(root_calls) == expected_roots > 0
+    assert len({item["call"]["hash"] for item in root_calls}) == expected_roots
     assert len(creations) == 3
-    assert len(lifted_calls) == 12
+    assert len(lifted_calls) == sum(
+        1
+        for case in cases.values()
+        for call in case.calls["calls"]
+        if "#" in call["hash"]
+    )
     assert all("#" not in item["call"]["hash"] for item in root_calls)
     assert stream == sorted(
         stream,
