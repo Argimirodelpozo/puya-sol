@@ -32,3 +32,16 @@ def test_tmv_body_data(harness):
     )
     got = bytes(harness.call(app, "bodyFirstWord(bytes)", MSG).abi_return)
     assert got == MSG[148:180], got.hex()
+
+
+def test_multivar_blob_repoint(harness):
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_multivar_blob_repoint.sol",
+        contract_name="MultiAssignBlobRepoint",
+        extra_args=["--evm-layout"],
+    )
+    m = bytes(range(1, 41))  # 40 bytes, nonzero first word
+    ret = harness.call(app, "alloc(bytes)", m).abi_return
+    len_plus_tag, first_word = as_int(ret[0]), bytes(ret[1])
+    assert len_plus_tag == 47, len_plus_tag  # 40 + tag 7
+    assert first_word == m[:32], first_word.hex()

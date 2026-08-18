@@ -212,12 +212,13 @@ void AssemblyBuilder::buildAssignment(
 						std::string varName = resolveVarRef(_assign.variableNames[i]);
 						m_localConstants.erase(varName); // reassigned → any recorded constant is stale
 
-						auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
-
-						auto target = awst::makeVarExpression(varName, awst::WType::biguintType(), loc);
-
-						auto assign = awst::makeAssignmentStatement(std::move(target), std::move(retVar), loc);
-						_out.push_back(std::move(assign));
+						auto retIt = m_locals.find(retName);
+						auto const* retType = (retIt != m_locals.end())
+							? retIt->second : awst::WType::biguintType();
+						emitPlainYulAssignment(
+							varName,
+							awst::makeVarExpression(retName, retType, loc),
+							loc, _out);
 					}
 					return;
 				}
@@ -436,6 +437,37 @@ void AssemblyBuilder::buildAssignment(
 		}
 	}
 
+	auto value = buildExpression(*_assign.value);
+	drainPendingStatements(_out);
+	emitPlainYulAssignment(std::move(name), std::move(value), loc, _out);
+}
+
+/// One plain-name Yul write (`x := V`), applying every representation
+/// redirect a Solidity-backed name may carry — signed shadow, blob-backed
+/// pointer, static calldata pointer — plus target-typed coercion. Shared by
+/// the single-var fallback and the multi-var return loop so the redirects
+/// cannot diverge between them again (the multi-var arm previously wrote raw
+/// biguint locals, silently bypassing all three).
+void AssemblyBuilder::emitPlainYulAssignment(
+	std::string name,
+	std::shared_ptr<awst::Expression> value,
+	awst::SourceLocation const& loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// Bare STATIC calldata pointer: repoint through its mutable offset local.
+	if (m_useSyntheticCalldata && m_calldataStaticPtrNames.count(name))
+	{
+		if (!value)
+			return;
+		if (m_seededCalldataPointers)
+			m_seededCalldataPointers->insert(name);
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression("__cd_off_" + name, awst::WType::biguintType(), loc),
+			ensureBiguint(std::move(value), loc), loc));
+		return;
+	}
+
 	// Signed intN (N<=64) local: writes land on its biguint shadow (the raw Yul
 	// word — see the buildBlock prologue); the typed local refreshes at block exit.
 	if (auto shIt = m_signedShadow.find(name); shIt != m_signedShadow.end())
@@ -448,22 +480,17 @@ void AssemblyBuilder::buildAssignment(
 	// (TypedMemView.clone returned its pre-copy 0-length bytes this way).
 	if (auto boIt = m_blobOffsetVars.find(name); boIt != m_blobOffsetVars.end())
 	{
-		auto ptrValue = buildExpression(*_assign.value);
-		drainPendingStatements(_out);
-		if (!ptrValue)
-			ptrValue = awst::makeZero(loc, awst::WType::uint64Type());
+		if (!value)
+			value = awst::makeZero(loc, awst::WType::uint64Type());
 		_out.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(boIt->second, awst::WType::uint64Type(), loc),
-			offsetToUint64(std::move(ptrValue), loc), loc));
+			offsetToUint64(std::move(value), loc), loc));
 		return;
 	}
 
 	auto it = m_locals.find(name);
 	auto const* wtype = (it != m_locals.end()) ? it->second : awst::WType::biguintType();
 	auto target = awst::makeVarExpression(name, wtype, loc);
-
-	auto value = buildExpression(*_assign.value);
-	drainPendingStatements(_out);
 
 	if (!value)
 		value = awst::makeZero(loc, target->wtype);

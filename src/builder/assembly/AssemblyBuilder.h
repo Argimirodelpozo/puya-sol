@@ -316,6 +316,15 @@ private:
 		solidity::yul::Assignment const& _assign,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
+	/// One plain-name Yul write with every Solidity-representation redirect
+	/// (signed shadow, blob-backed pointer, static calldata pointer) plus
+	/// target-typed coercion. Shared by single- and multi-var assignments.
+	void emitPlainYulAssignment(
+		std::string name,
+		std::shared_ptr<awst::Expression> value,
+		awst::SourceLocation const& loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
 	void buildExpressionStatement(
 		solidity::yul::ExpressionStatement const& _stmt,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
