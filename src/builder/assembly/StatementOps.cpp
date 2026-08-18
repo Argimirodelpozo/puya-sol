@@ -441,6 +441,23 @@ void AssemblyBuilder::buildAssignment(
 	if (auto shIt = m_signedShadow.find(name); shIt != m_signedShadow.end())
 		name = shIt->second;
 
+	// Blob-backed memory aggregate: `ret := ptr` REPOINTS the aggregate. READS
+	// of the bare name already resolve to its offset var (CoreTranslation), so
+	// the WRITE must land there too — otherwise the repoint is invisible and
+	// value-use/return materialization reads the stale original allocation
+	// (TypedMemView.clone returned its pre-copy 0-length bytes this way).
+	if (auto boIt = m_blobOffsetVars.find(name); boIt != m_blobOffsetVars.end())
+	{
+		auto ptrValue = buildExpression(*_assign.value);
+		drainPendingStatements(_out);
+		if (!ptrValue)
+			ptrValue = awst::makeZero(loc, awst::WType::uint64Type());
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(boIt->second, awst::WType::uint64Type(), loc),
+			offsetToUint64(std::move(ptrValue), loc), loc));
+		return;
+	}
+
 	auto it = m_locals.find(name);
 	auto const* wtype = (it != m_locals.end()) ? it->second : awst::WType::biguintType();
 	auto target = awst::makeVarExpression(name, wtype, loc);
