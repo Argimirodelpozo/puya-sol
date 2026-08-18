@@ -671,12 +671,18 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                stub_deps: bool = False, script_deps: bool = False,
                script_traces: int = 200,
                relax_pre08: bool = False,
-               parent_hints: list | None = None) -> dict:
+               parent_hints: list | None = None,
+               source_from: str | None = None) -> dict:
     case_dir = CASES / tag
     addr = address.lower()
 
-    # 1. verified source + metadata
-    sc = http_json(f"https://{host}/api/v2/smart-contracts/{address}")
+    # 1. verified source + metadata. --source-from splits the two roles a
+    # proxy fuses: SOURCE (+abi/compiler) from the implementation address,
+    # HISTORY from `address` (the proxy, where the traffic and events live).
+    # The proxy hop itself is never replayed — the implementation deploys
+    # directly, mirroring how delegatecall-based systems are handled.
+    sc = http_json(
+        f"https://{host}/api/v2/smart-contracts/{source_from or address}")
     if not sc.get("source_code"):
         sys.exit(f"[fetch] {tag}: contract not verified on {host}")
     comp = sc.get("compiler_version") or ""
@@ -942,6 +948,11 @@ def main():
     relax_pre08 = "--relax-pre08" in argv
     if relax_pre08:
         argv.remove("--relax-pre08")
+    source_from = None
+    if "--source-from" in argv:
+        i = argv.index("--source-from")
+        source_from = argv[i + 1]
+        del argv[i:i + 2]
     parent_case_tags = []
     while "--parent-case" in argv:
         i = argv.index("--parent-case")
@@ -994,7 +1005,8 @@ def main():
                internal_parents=internal_parents, stub_deps=stub_deps,
                script_deps=script_deps, script_traces=script_traces,
                relax_pre08=relax_pre08,
-               parent_hints=parent_hints)
+               parent_hints=parent_hints,
+               source_from=source_from)
 
 
 if __name__ == "__main__":
