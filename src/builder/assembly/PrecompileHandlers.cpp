@@ -194,10 +194,13 @@ void AssemblyBuilder::handleSha256PrecompileRT(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// SHA-256 output is always 32 bytes.
-	auto extract = awst::makeExtract3(memoryVar(_loc), offsetToUint64(std::move(_inputOffset), _loc), offsetToUint64(std::move(_inputSize), _loc), _loc);
+	// SHA-256 output is always 32 bytes. Input gathered slot-aware at runtime
+	// offsets — the old single-slot memoryVar extract read the wrong (or a
+	// too-short) buffer once the input lived past SLOT_SIZE.
+	auto input = readMemRangeDyn(
+		std::move(_inputOffset), std::move(_inputSize), _loc, _out);
 	auto sha = awst::makeIntrinsicCall("sha256", awst::WType::bytesType(), _loc);
-	sha->stackArgs.push_back(std::move(extract));
+	sha->stackArgs.push_back(std::move(input));
 
 	storeResultToMemoryRT(std::move(sha), std::move(_outputOffset), 1, _loc, _out);
 }
@@ -211,10 +214,14 @@ void AssemblyBuilder::handleIdentityPrecompileRT(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// Copy inputSize bytes from inputOffset to outputOffset.
-	auto extract = awst::makeExtract3(memoryVar(_loc), offsetToUint64(std::move(_inputOffset), _loc), offsetToUint64(std::move(_inputSize), _loc), _loc);
-	auto replace = awst::makeReplace3(memoryVar(_loc), offsetToUint64(std::move(_outputOffset), _loc), std::move(extract), _loc);
-	assignMemoryVar(std::move(replace), _loc, _out);
+	// Copy inputSize bytes from inputOffset to outputOffset, slot-aware at
+	// runtime offsets. The gather snapshots the source first, so overlapping
+	// ranges behave like memmove. (The old single-slot extract3/replace3 on
+	// memoryVar was silently wrong past SLOT_SIZE — TypedMemView.unsafeCopyTo
+	// routes here.)
+	auto data = readMemRangeDyn(
+		std::move(_inputOffset), std::move(_inputSize), _loc, _out);
+	writeMemRangeDyn(std::move(_outputOffset), std::move(data), _loc, _out);
 }
 
 void AssemblyBuilder::handleModExpRT(

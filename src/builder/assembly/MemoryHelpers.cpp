@@ -2,6 +2,7 @@
 /// readMemSlot, padTo32Bytes, concatSlots, storeResultToMemory — scratch-slot memory helpers.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "awst/NameGen.h"
 
 #include <sstream>
 
@@ -127,6 +128,126 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlotsRT(
 		acc = acc ? awst::makeConcat(std::move(acc), std::move(word), _loc) : std::move(word);
 	}
 	return acc;
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDyn(
+	std::shared_ptr<awst::Expression> _offset,
+	std::shared_ptr<awst::Expression> _length,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// Gather [off, off+len) across scratch slots at RUNTIME offset+length:
+	// word-loop of readMemWordDyn into an accumulator, trimmed to len.
+	// Snapshot semantics: the caller holds a VALUE — later writes to the
+	// same region (identity copy, memmove) cannot alias it.
+	using O = awst::UInt64BinaryOperator;
+	int uid = awst::NameGen::next("MemoryHelpers.readRangeDyn");
+	auto nm = [&](char const* t) {
+		return "__memrd_" + std::string(t) + "_" + std::to_string(uid);
+	};
+	auto u64v = [&](std::string const& n) {
+		return awst::makeVarExpression(n, awst::WType::uint64Type(), _loc);
+	};
+	auto bytesv = [&](std::string const& n) {
+		return awst::makeVarExpression(n, awst::WType::bytesType(), _loc);
+	};
+	_out.push_back(awst::makeAssignmentStatement(
+		u64v(nm("off")), offsetToUint64(std::move(_offset), _loc), _loc));
+	_out.push_back(awst::makeAssignmentStatement(
+		u64v(nm("len")), offsetToUint64(std::move(_length), _loc), _loc));
+	_out.push_back(awst::makeAssignmentStatement(
+		bytesv(nm("acc")), awst::makeBytesConstant({}, _loc), _loc));
+	_out.push_back(awst::makeAssignmentStatement(
+		u64v(nm("i")), awst::makeIntegerConstant(uint64_t{0}, _loc), _loc));
+	{
+		auto cond = awst::makeNumericCompare(u64v(nm("i")),
+			awst::NumericComparison::Lt, u64v(nm("len")), _loc);
+		auto body = awst::makeBlock(_loc);
+		body->body.push_back(awst::makeAssignmentStatement(
+			bytesv(nm("acc")),
+			awst::makeConcat(bytesv(nm("acc")),
+				readMemWordDyn(awst::makeUInt64BinOp(u64v(nm("off")), O::Add,
+					u64v(nm("i")), _loc), _loc),
+				_loc), _loc));
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64v(nm("i")),
+			awst::makeUInt64BinOp(u64v(nm("i")), O::Add,
+				awst::makeIntegerConstant(uint64_t{32}, _loc), _loc), _loc));
+		_out.push_back(awst::makeWhileLoop(std::move(cond), std::move(body), _loc));
+	}
+	_out.push_back(awst::makeAssignmentStatement(
+		bytesv(nm("v")),
+		awst::makeExtract3(bytesv(nm("acc")),
+			awst::makeIntegerConstant(uint64_t{0}, _loc), u64v(nm("len")), _loc),
+		_loc));
+	return bytesv(nm("v"));
+}
+
+void AssemblyBuilder::writeMemRangeDyn(
+	std::shared_ptr<awst::Expression> _offset,
+	std::shared_ptr<awst::Expression> _value,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out
+)
+{
+	// Scatter a bytes VALUE to [off, off+len(value)) across scratch slots at a
+	// RUNTIME offset. The value is extended with the destination's own tail
+	// bytes up to the next word boundary, so the word-loop writer's final
+	// word cannot clobber past off+len (mcopy's proven tail-keep; rem==0
+	// idempotently rewrites the untouched next word).
+	using O = awst::UInt64BinaryOperator;
+	int uid = awst::NameGen::next("MemoryHelpers.writeRangeDyn");
+	auto nm = [&](char const* t) {
+		return "__memwr_" + std::string(t) + "_" + std::to_string(uid);
+	};
+	auto u64v = [&](std::string const& n) {
+		return awst::makeVarExpression(n, awst::WType::uint64Type(), _loc);
+	};
+	auto bytesv = [&](std::string const& n) {
+		return awst::makeVarExpression(n, awst::WType::bytesType(), _loc);
+	};
+	_out.push_back(awst::makeAssignmentStatement(
+		u64v(nm("dst")), offsetToUint64(std::move(_offset), _loc), _loc));
+	_out.push_back(awst::makeAssignmentStatement(
+		bytesv(nm("src")), std::move(_value), _loc));
+	_out.push_back(awst::makeAssignmentStatement(
+		u64v(nm("rem")),
+		awst::makeUInt64BinOp(awst::makeLen(bytesv(nm("src")), _loc), O::Mod,
+			awst::makeIntegerConstant(uint64_t{32}, _loc), _loc), _loc));
+	auto lastWordOff = awst::makeUInt64BinOp(
+		awst::makeLen(bytesv(nm("src")), _loc), O::Sub, u64v(nm("rem")), _loc);
+	auto dstLastWord = readMemWordDyn(
+		awst::makeUInt64BinOp(u64v(nm("dst")), O::Add, std::move(lastWordOff), _loc),
+		_loc);
+	auto tailKeep = awst::makeExtract3(std::move(dstLastWord), u64v(nm("rem")),
+		awst::makeUInt64BinOp(awst::makeIntegerConstant(uint64_t{32}, _loc),
+			O::Sub, u64v(nm("rem")), _loc),
+		_loc);
+	_out.push_back(awst::makeAssignmentStatement(
+		bytesv(nm("val")),
+		awst::makeConcat(bytesv(nm("src")), std::move(tailKeep), _loc), _loc));
+	_out.push_back(awst::makeAssignmentStatement(
+		u64v(nm("j")), awst::makeIntegerConstant(uint64_t{0}, _loc), _loc));
+	{
+		auto cond = awst::makeNumericCompare(u64v(nm("j")),
+			awst::NumericComparison::Lt,
+			awst::makeLen(bytesv(nm("val")), _loc), _loc);
+		auto body = awst::makeBlock(_loc);
+		std::vector<std::shared_ptr<awst::Statement>> ws;
+		writeMemWordDyn(
+			awst::makeUInt64BinOp(u64v(nm("dst")), O::Add, u64v(nm("j")), _loc),
+			awst::makeExtract3(bytesv(nm("val")), u64v(nm("j")),
+				awst::makeIntegerConstant(uint64_t{32}, _loc), _loc),
+			_loc, ws);
+		for (auto& st: ws)
+			body->body.push_back(std::move(st));
+		body->body.push_back(awst::makeAssignmentStatement(
+			u64v(nm("j")),
+			awst::makeUInt64BinOp(u64v(nm("j")), O::Add,
+				awst::makeIntegerConstant(uint64_t{32}, _loc), _loc), _loc));
+		_out.push_back(awst::makeWhileLoop(std::move(cond), std::move(body), _loc));
+	}
 }
 
 void AssemblyBuilder::storeResultToMemoryRT(

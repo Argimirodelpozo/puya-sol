@@ -727,34 +727,11 @@ void AssemblyBuilder::buildExpressionStatement(
 				: nullptr;
 			if (!lenConst && args.size() >= 3)
 			{
-				// DYNAMIC length: memmove via materialise-then-write. Read the
-				// whole source range word-by-word into a temp FIRST (snapshot =
-				// overlap-safe by construction), trim to `len`, extend with the
-				// dst's own tail bytes up to a word boundary (so the word-loop
-				// writer's zero-pad never clobbers past dst+len), then write.
-				int uid = awst::NameGen::next("StatementOps.dynamicMcopy");
-				auto nm = [&](char const* t) {
-					return "__mcopyd_" + std::string(t) + "_" + std::to_string(uid);
-				};
-				auto u64v = [&](std::string const& n) {
-					return awst::makeVarExpression(n, awst::WType::uint64Type(), loc);
-				};
-				auto bytesv = [&](std::string const& n) {
-					return awst::makeVarExpression(n, awst::WType::bytesType(), loc);
-				};
-				auto u64ToBig = [&](std::shared_ptr<awst::Expression> e) {
-					return awst::makeAsBiguint(awst::makeItob(std::move(e), loc), loc);
-				};
-				auto addOff = [&](std::shared_ptr<awst::Expression> base,
-					std::shared_ptr<awst::Expression> deltaU64) -> std::shared_ptr<awst::Expression> {
-					return awst::makeUInt64BinOp(std::move(base),
-						awst::UInt64BinaryOperator::Add,
-						std::move(deltaU64), loc);
-				};
-				(void)u64ToBig;
-				// Normalise len AND both pointers to u64 up front (offsets in
-				// this model fit u64; the word helpers' guards do uint64 adds,
-				// and a biguint-backed pointer fed []byte into them).
+				// DYNAMIC length: memmove via the shared range helpers — the
+				// gather snapshots the source first (overlap-safe by
+				// construction) and the writer's tail-keep protects past
+				// dst+len. Offsets normalised to u64 up front (they fit this
+				// model; the word helpers' guards do uint64 adds).
 				auto toU64 = [&](std::shared_ptr<awst::Expression> e)
 					-> std::shared_ptr<awst::Expression> {
 					if (e->wtype == awst::WType::uint64Type())
@@ -763,86 +740,8 @@ void AssemblyBuilder::buildExpressionStatement(
 						awst::makeLeftPad(awst::makeAsBytes(std::move(e), loc),
 							8, loc), 8, loc), loc);
 				};
-				_out.push_back(awst::makeAssignmentStatement(
-					u64v(nm("len")), toU64(args[2]), loc));
-				_out.push_back(awst::makeAssignmentStatement(
-					u64v(nm("dst")), toU64(args[0]), loc));
-				_out.push_back(awst::makeAssignmentStatement(
-					u64v(nm("src")), toU64(args[1]), loc));
-				// snapshot loop: acc = all source words covering [src, src+len)
-				_out.push_back(awst::makeAssignmentStatement(
-					bytesv(nm("acc")), awst::makeBytesConstant({}, loc), loc));
-				_out.push_back(awst::makeAssignmentStatement(
-					u64v(nm("i")), awst::makeIntegerConstant(uint64_t{0}, loc), loc));
-				{
-					auto cond = awst::makeNumericCompare(u64v(nm("i")),
-						awst::NumericComparison::Lt, u64v(nm("len")), loc);
-					auto body = awst::makeBlock(loc);
-					body->body.push_back(awst::makeAssignmentStatement(
-						bytesv(nm("acc")),
-						awst::makeConcat(bytesv(nm("acc")),
-							readMemWordDyn(addOff(u64v(nm("src")), u64v(nm("i"))), loc),
-							loc), loc));
-					body->body.push_back(awst::makeAssignmentStatement(
-						u64v(nm("i")),
-						awst::makeUInt64BinOp(u64v(nm("i")),
-							awst::UInt64BinaryOperator::Add,
-							awst::makeIntegerConstant(uint64_t{32}, loc), loc), loc));
-					_out.push_back(awst::makeWhileLoop(
-						std::move(cond), std::move(body), loc));
-				}
-				// value = acc[0:len] ++ dstTailKeep (up to the word boundary)
-				auto rem = awst::makeUInt64BinOp(u64v(nm("len")),
-					awst::UInt64BinaryOperator::Mod,
-					awst::makeIntegerConstant(uint64_t{32}, loc), loc);
-				_out.push_back(awst::makeAssignmentStatement(
-					u64v(nm("rem")), std::move(rem), loc));
-				auto srcSlice = awst::makeExtract3(bytesv(nm("acc")),
-					awst::makeIntegerConstant(uint64_t{0}, loc),
-					u64v(nm("len")), loc);
-				auto lastWordOff = awst::makeUInt64BinOp(u64v(nm("len")),
-					awst::UInt64BinaryOperator::Sub, u64v(nm("rem")), loc);
-				auto dstLastWord = readMemWordDyn(
-					addOff(u64v(nm("dst")), std::move(lastWordOff)), loc);
-				// Unconditional tail-keep: bytes [rem, 32) of the dst word at
-				// the last word boundary. rem==0 keeps the WHOLE untouched
-				// next word — appended and rewritten identically (idempotent),
-				// which avoids a ternary whose unbalanced branches collided
-				// frame-slot types under `#pragma typetrack false`.
-				auto tailKeep = awst::makeExtract3(std::move(dstLastWord),
-					u64v(nm("rem")),
-					awst::makeUInt64BinOp(
-						awst::makeIntegerConstant(uint64_t{32}, loc),
-						awst::UInt64BinaryOperator::Sub, u64v(nm("rem")), loc),
-					loc);
-				_out.push_back(awst::makeAssignmentStatement(
-					bytesv(nm("val")),
-					awst::makeConcat(std::move(srcSlice), std::move(tailKeep),
-						loc), loc));
-				// word-loop write via the model's own dyn-word writer (the
-				// value is word-aligned by construction above)
-				_out.push_back(awst::makeAssignmentStatement(
-					u64v(nm("j")), awst::makeIntegerConstant(uint64_t{0}, loc), loc));
-				{
-					auto cond = awst::makeNumericCompare(u64v(nm("j")),
-						awst::NumericComparison::Lt,
-						awst::makeLen(bytesv(nm("val")), loc), loc);
-					auto body = awst::makeBlock(loc);
-					std::vector<std::shared_ptr<awst::Statement>> ws;
-					writeMemWordDyn(addOff(u64v(nm("dst")), u64v(nm("j"))),
-						awst::makeExtract3(bytesv(nm("val")), u64v(nm("j")),
-							awst::makeIntegerConstant(uint64_t{32}, loc), loc),
-						loc, ws);
-					for (auto& st: ws)
-						body->body.push_back(std::move(st));
-					body->body.push_back(awst::makeAssignmentStatement(
-						u64v(nm("j")),
-						awst::makeUInt64BinOp(u64v(nm("j")),
-							awst::UInt64BinaryOperator::Add,
-							awst::makeIntegerConstant(uint64_t{32}, loc), loc), loc));
-					_out.push_back(awst::makeWhileLoop(
-						std::move(cond), std::move(body), loc));
-				}
+				auto data = readMemRangeDyn(toU64(args[1]), toU64(args[2]), loc, _out);
+				writeMemRangeDyn(toU64(args[0]), std::move(data), loc, _out);
 				return;
 			}
 			if (!lenConst)

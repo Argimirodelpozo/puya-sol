@@ -393,6 +393,25 @@ void AssemblyBuilder::handleAppCall(
 		if (slots > 0)
 			storeResultToMemory(std::move(sliced), *outOffOpt, slots, _loc, _out);
 	}
+	else if (!outOffOpt || !outSizeOpt)
+	{
+		// RUNTIME output offset/size (the `let p := mload(0x40)` buffer
+		// idiom): the copy was previously SKIPPED with no diagnostic, so the
+		// caller read stale request bytes as if they were returndata. Same
+		// zero-fill-beyond-rds approximation as the constant path; the bzero
+		// intrinsic takes a runtime length. outSize==0 degenerates to an
+		// idempotent tail-keep rewrite of one untouched word.
+		auto outOff = buildExpression(_call.arguments[argBase + 2]);
+		auto outSize = offsetToUint64(
+			buildExpression(_call.arguments[argBase + 3]), _loc);
+		auto sizeOnce = awst::makeEvalOnce(std::move(outSize), _loc);
+		auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
+		pad->stackArgs.push_back(sizeOnce);
+		auto padded = awst::makeConcat(returndataBytes(_loc), std::move(pad), _loc);
+		auto sliced = awst::makeExtract3(std::move(padded),
+			awst::makeIntegerConstant("0", _loc), sizeOnce, _loc);
+		writeMemRangeDyn(std::move(outOff), std::move(sliced), _loc, _out);
+	}
 
 	// 5) itxn submission aborts on failure, so reaching here implies success.
 	if (!_assignTarget.empty())

@@ -804,6 +804,27 @@ private:
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
 
+	/// Gather [off, off+len) across scratch slots at RUNTIME offset+length
+	/// (word-loop of readMemWordDyn). Emits statements into _out; returns a
+	/// bytes VarExpression holding exactly len bytes (a snapshot: later
+	/// writes to the region cannot alias it).
+	std::shared_ptr<awst::Expression> readMemRangeDyn(
+		std::shared_ptr<awst::Expression> _offset,
+		std::shared_ptr<awst::Expression> _length,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
+	/// Scatter a bytes VALUE to [off, off+len(value)) across scratch slots at
+	/// a RUNTIME offset, with mcopy's tail-keep so the word-loop writer never
+	/// clobbers past the end.
+	void writeMemRangeDyn(
+		std::shared_ptr<awst::Expression> _offset,
+		std::shared_ptr<awst::Expression> _value,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
 	/// Pad a biguint expression to exactly 32 zero-padded big-endian bytes.
 	std::shared_ptr<awst::Expression> padTo32Bytes(
 		std::shared_ptr<awst::Expression> _expr,
