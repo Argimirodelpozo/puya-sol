@@ -868,12 +868,26 @@ def main() -> int:
     report = leg.run(args.limit)
     from collections import Counter, defaultdict
 
-    # Identical-payload relayer races (same rule as the AVM driver): compare
-    # the OUTCOME MULTISET within byte-identical payload groups — the chain
-    # accepted exactly one of the group, so does the replay; order is
-    # gas/indexer-environmental.
+    # Identical-payload relayer races — the SAME two-step rule as the AVM
+    # driver (Runner.reclassify_payload_races), so the two legs' printed
+    # summaries mean the same thing. Previously this leg applied only the
+    # plain multiset test, so groups whose history carried a corrupt zero-log
+    # "ok" receipt still printed as mismatches here while the AVM summary
+    # (with the zero-log correction) said none — the round-2 v1 window read
+    # "9029/9029" on one leg and "9024/9029" on the other for identical
+    # behaviour, which is exactly the kind of asymmetry that wastes a triage.
+    zero_log_ok: set = set()
+    for tag in leg.cases:
+        p = args.cases / tag / "logs.json"
+        if p.exists():
+            try:
+                for h, entries in json.loads(p.read_text()).items():
+                    if not entries:
+                        zero_log_ok.add(h)
+            except Exception:
+                pass
     groups = defaultdict(list)
-    matched, total, race_matched = 0, 0, 0
+    matched, total, race_matched, zero_log_corrected = 0, 0, 0, 0
     for data in leg.cases.values():
         for call in data.calls["calls"]:
             h = call["hash"]
@@ -897,13 +911,38 @@ def main() -> int:
             if c.get("sig") == key[1]
             and json.dumps(c.get("args"), sort_keys=True) == key[2]
         ]
+        if len(siblings) < 2:
+            continue
         hist = Counter(bool(historical_ok(c)) for c in siblings)
         seen = Counter(bool(report["statuses"].get(c["hash"])) for c in siblings)
-        if hist == seen:
-            race_matched += len(rows)
+        if hist != seen:
+            # Same one-way evidence rule as the AVM driver: inside a duplicate
+            # group, an "ok" receipt with ZERO logs is self-contradictory for
+            # a state-changing CCTP call — correct it to failed and retry.
+            corrected = [
+                c for c in siblings
+                if historical_ok(c) and c["hash"].split("#")[0] in zero_log_ok
+            ]
+            if not corrected:
+                continue
+            hist = Counter(
+                False if c in corrected else bool(historical_ok(c))
+                for c in siblings
+            )
+            if hist != seen:
+                continue
+            zero_log_corrected += len(corrected)
+        race_matched += len(rows)
+    effective = matched + race_matched
     print(
         f"evm joint leg: {matched}/{total} statuses match history"
-        + (f" (+{race_matched} identical-payload race reordered)" if race_matched else "")
+        + (
+            f" (+{race_matched} identical-payload race reordered"
+            + (f", {zero_log_corrected} zero-log receipt(s) corrected"
+               if zero_log_corrected else "")
+            + f" => effective {effective}/{total})"
+            if race_matched else ""
+        )
     )
     if args.output:
         args.output.write_text(json.dumps(report))
