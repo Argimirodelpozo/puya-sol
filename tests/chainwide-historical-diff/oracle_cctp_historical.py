@@ -133,6 +133,35 @@ def load_json(path: Path) -> Any:
     return json.loads(path.read_text())
 
 
+def _load_verified_receipt_corrections() -> None:
+    """Merge receipt_corrections.json into the metadata table.
+
+    Deep windows reach far past the hand-audited region, and Blockscout's
+    transaction `status` is not always the execution outcome: in the 3000-txn
+    window 13 transactions claim success while their raw trace reports the
+    top-level call Reverted. verify_receipts.py checks such rows against the
+    chain's own trace and records the evidence; loading the file here keeps
+    the corrections in ONE auditable place for both legs, instead of growing
+    a hand-maintained literal. Failures are non-fatal — a missing or broken
+    file simply means no corrections.
+    """
+    path = Path(__file__).parent / "receipt_corrections.json"
+    try:
+        if not path.exists():
+            return
+        data = json.loads(path.read_text())
+    except Exception:
+        return
+    for h, entry in data.items():
+        if not isinstance(entry, dict) or "historical_ok" not in entry:
+            continue
+        MAINNET_RECEIPT_METADATA.setdefault(h, {}).update(
+            {"historical_ok": bool(entry["historical_ok"])})
+
+
+_load_verified_receipt_corrections()
+
+
 def raw20(address: str) -> bytes:
     value = address.lower()
     if value.startswith("0x"):
