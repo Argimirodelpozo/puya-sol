@@ -36,43 +36,47 @@ main:
 
 main_after_if_else@2:
     txn NumAppArgs
-    bnz main_after_if_else@4
+    bnz main_after_if_else@5
+    txn OnCompletion
+    bnz main_after_if_else@5
     intc_0 // 1
     return
 
-main_after_if_else@4:
+main_after_if_else@5:
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_after_if_else@16
+    bz main_after_if_else@18
     pushbytess 0x3fe9558e 0x1bf9882b 0xc599eb05 0x412f5d6f 0x9456342a // method "ping(uint256)uint256", method "__fallback()void", method "__receive()void", method "hits()uint256", method "got()uint256"
     txna ApplicationArgs 0
-    match main_ping_route@9 main___fallback_route@10 main___receive_route@11 main_hits_route@12 main_got_route@13
+    match main_ping_route@11 main___fallback_route@12 main___receive_route@13 main_hits_route@14 main_got_route@15
 
-main_after_if_else@16:
+main_after_if_else@18:
     intc_1 // 0
     bury 1
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@17:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@19:
     dup
-    bnz main_after_if_else@6
+    bnz main_after_if_else@8
+    txn OnCompletion
+    bnz main_after_if_else@8
     callsub __fallback
     intc_0 // 1
     bury 1
 
-main_after_if_else@6:
+main_after_if_else@8:
     return
 
-main_got_route@13:
+main_got_route@15:
     txn GroupIndex
-    bz main_ternary_false@20
+    bz main_ternary_false@22
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+main_ternary_merge@23:
     !
     assert // not payable
     intc_1 // 0
@@ -93,21 +97,21 @@ main_ternary_merge@21:
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@19
 
-main_ternary_false@20:
+main_ternary_false@22:
     intc_1 // 0
-    b main_ternary_merge@21
+    b main_ternary_merge@23
 
-main_hits_route@12:
+main_hits_route@14:
     txn GroupIndex
-    bz main_ternary_false@25
+    bz main_ternary_false@27
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@26:
+main_ternary_merge@28:
     !
     assert // not payable
     intc_1 // 0
@@ -128,24 +132,24 @@ main_ternary_merge@26:
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@19
 
-main_ternary_false@25:
+main_ternary_false@27:
     intc_1 // 0
-    b main_ternary_merge@26
+    b main_ternary_merge@28
 
-main___receive_route@11:
+main___receive_route@13:
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@19
 
-main___fallback_route@10:
+main___fallback_route@12:
     callsub __fallback
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@19
 
-main_ping_route@9:
+main_ping_route@11:
     txna ApplicationArgs 1
     dup
     len
@@ -153,13 +157,13 @@ main_ping_route@9:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@34
+    bz main_ternary_false@36
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@35:
+main_ternary_merge@37:
     !
     assert // not payable
     intc_1 // 0
@@ -196,11 +200,11 @@ main_ternary_merge@35:
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__puya_arc4_router__@19
 
-main_ternary_false@34:
+main_ternary_false@36:
     intc_1 // 0
-    b main_ternary_merge@35
+    b main_ternary_merge@37
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_call_value.sol.AsmCallValueCallee.__fallback() -> void:

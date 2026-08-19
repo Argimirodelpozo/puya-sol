@@ -35,32 +35,38 @@ main_if_body@1:
 
 main_after_if_else@2:
     txn NumAppArgs
+    bnz main_after_if_else@5
+    txn OnCompletion
     bz main_if_body@1
+
+main_after_if_else@5:
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_after_if_else@15
+    bz main_after_if_else@17
     pushbytess 0xfafb6a08 0x1bf9882b 0xc599eb05 0x5d854d0e // method "approve(address,uint256)bool", method "__fallback()void", method "__receive()void", method "allowance(address,address)uint256"
     txna ApplicationArgs 0
-    match main_approve_route@9 main___fallback_route@10 main___receive_route@11 main_allowance_route@12
+    match main_approve_route@11 main___fallback_route@12 main___receive_route@13 main_allowance_route@14
 
-main_after_if_else@15:
+main_after_if_else@17:
     intc_2 // 0
     bury 2
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__puya_arc4_router__@16:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__puya_arc4_router__@18:
     dig 1
-    bnz main_after_if_else@6
+    bnz main_after_if_else@8
+    txn OnCompletion
+    bnz main_after_if_else@8
     callsub __fallback
     intc_1 // 1
     bury 2
 
-main_after_if_else@6:
+main_after_if_else@8:
     dig 1
     return
 
-main_allowance_route@12:
+main_allowance_route@14:
     txna ApplicationArgs 1
     dup
     len
@@ -74,13 +80,13 @@ main_allowance_route@12:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@21
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@22:
     !
     assert // not payable
     extract 0 32
@@ -107,7 +113,7 @@ main_ternary_merge@20:
     dup
     bytec_3 // 0x010000
     b<
-    bz main_else_body@34
+    bz main_else_body@36
     intc_3 // 8
     bzero
     swap
@@ -129,7 +135,7 @@ main_ternary_merge@20:
     bury 5
     box_len
     bury 1
-    bz main_after_if_else@33
+    bz main_after_if_else@35
     dig 1
     pushint 64
     %
@@ -140,7 +146,7 @@ main_ternary_merge@20:
     intc_0 // 32
     box_extract
 
-main_after_inlined___puyasol___storage_read@37:
+main_after_inlined___puyasol___storage_read@39:
     dup
     len
     intc_0 // 32
@@ -153,13 +159,13 @@ main_after_inlined___puyasol___storage_read@37:
     log
     intc_1 // 1
     bury 2
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__puya_arc4_router__@16
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__puya_arc4_router__@18
 
-main_after_if_else@33:
+main_after_if_else@35:
     bytec_0 // 0x
-    b main_after_inlined___puyasol___storage_read@37
+    b main_after_inlined___puyasol___storage_read@39
 
-main_else_body@34:
+main_else_body@36:
     dig 1
     swap
     concat
@@ -176,29 +182,29 @@ main_else_body@34:
     bury 6
     box_len
     bury 1
-    bz main_after_if_else@33
+    bz main_after_if_else@35
     dig 4
     intc_2 // 0
     intc_0 // 32
     box_extract
-    b main_after_inlined___puyasol___storage_read@37
+    b main_after_inlined___puyasol___storage_read@39
 
-main_ternary_false@19:
+main_ternary_false@21:
     intc_2 // 0
-    b main_ternary_merge@20
+    b main_ternary_merge@22
 
-main___receive_route@11:
+main___receive_route@13:
     intc_1 // 1
     bury 2
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__puya_arc4_router__@16
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__puya_arc4_router__@18
 
-main___fallback_route@10:
+main___fallback_route@12:
     callsub __fallback
     intc_1 // 1
     bury 2
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__puya_arc4_router__@16
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__puya_arc4_router__@18
 
-main_approve_route@9:
+main_approve_route@11:
     txna ApplicationArgs 1
     dup
     len
@@ -213,13 +219,13 @@ main_approve_route@9:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@28
+    bz main_ternary_false@30
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@29:
+main_ternary_merge@31:
     !
     assert // not payable
     extract 0 32
@@ -246,7 +252,7 @@ main_ternary_merge@29:
     dup
     bytec_3 // 0x010000
     b<
-    bz main_else_body@40
+    bz main_else_body@42
     intc_3 // 8
     bzero
     swap
@@ -283,14 +289,14 @@ main_ternary_merge@29:
     extract3
     box_replace
 
-main_after_inlined___puyasol___storage_write@41:
+main_after_inlined___puyasol___storage_write@43:
     pushbytes 0x151f7c7580
     log
     intc_1 // 1
     bury 2
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__puya_arc4_router__@16
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__puya_arc4_router__@18
 
-main_else_body@40:
+main_else_body@42:
     swap
     dup
     uncover 2
@@ -320,11 +326,11 @@ main_else_body@40:
     intc_2 // 0
     swap
     box_replace
-    b main_after_inlined___puyasol___storage_write@41
+    b main_after_inlined___puyasol___storage_write@43
 
-main_ternary_false@28:
+main_ternary_false@30:
     intc_2 // 0
-    b main_ternary_merge@29
+    b main_ternary_merge@31
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__fallback() -> void:

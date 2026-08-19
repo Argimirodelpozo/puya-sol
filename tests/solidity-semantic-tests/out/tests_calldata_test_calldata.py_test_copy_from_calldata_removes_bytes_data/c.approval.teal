@@ -33,50 +33,54 @@ main:
 
 main_after_if_else@2:
     txn NumAppArgs
-    bnz main_after_if_else@4
+    bnz main_after_if_else@5
+    txn OnCompletion
+    bnz main_after_if_else@5
     callsub __fallback
     intc_1 // 1
     return
 
-main_after_if_else@4:
+main_after_if_else@5:
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_after_if_else@16
+    bz main_after_if_else@18
     pushbytess 0xbacc49e3 0x22656f1d 0xc96cbcc1 0x70a62364 0x1bf9882b // method "__postInit()void", method "set()bool", method "checkIfDataIsEmpty()bool", method "sendMessage()(bool,byte[])", method "__fallback()void"
     txna ApplicationArgs 0
-    match main___postInit_route@9 main_set_route@10 main_checkIfDataIsEmpty_route@11 main_sendMessage_route@12 main___fallback_route@13
+    match main___postInit_route@11 main_set_route@12 main_checkIfDataIsEmpty_route@13 main_sendMessage_route@14 main___fallback_route@15
 
-main_after_if_else@16:
+main_after_if_else@18:
     intc_0 // 0
     bury 1
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__puya_arc4_router__@17:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__puya_arc4_router__@19:
     dup
-    bnz main_after_if_else@6
+    bnz main_after_if_else@8
+    txn OnCompletion
+    bnz main_after_if_else@8
     callsub __fallback
     intc_1 // 1
     bury 1
 
-main_after_if_else@6:
+main_after_if_else@8:
     return
 
-main___fallback_route@13:
+main___fallback_route@15:
     callsub __fallback
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__puya_arc4_router__@19
 
-main_sendMessage_route@12:
+main_sendMessage_route@14:
     txn GroupIndex
-    bz main_ternary_false@22
+    bz main_ternary_false@24
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@23:
+main_ternary_merge@25:
     !
     assert // not payable
     callsub __fallback
@@ -84,21 +88,21 @@ main_ternary_merge@23:
     log
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__puya_arc4_router__@19
 
-main_ternary_false@22:
+main_ternary_false@24:
     intc_0 // 0
-    b main_ternary_merge@23
+    b main_ternary_merge@25
 
-main_checkIfDataIsEmpty_route@11:
+main_checkIfDataIsEmpty_route@13:
     txn GroupIndex
-    bz main_ternary_false@27
+    bz main_ternary_false@29
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@28:
+main_ternary_merge@30:
     !
     assert // not payable
     bytec_0 // "data"
@@ -118,152 +122,152 @@ main_ternary_merge@28:
     log
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__puya_arc4_router__@19
 
-main_ternary_false@27:
+main_ternary_false@29:
     intc_0 // 0
-    b main_ternary_merge@28
+    b main_ternary_merge@30
 
-main_set_route@10:
+main_set_route@12:
     txn GroupIndex
-    bz main_ternary_false@32
+    bz main_ternary_false@34
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@33:
+main_ternary_merge@35:
     !
     assert // not payable
     txn NumAppArgs
-    bz main_ternary_false@83
+    bz main_ternary_false@85
     txn NumAppArgs
-    bz main_ternary_false@36
+    bz main_ternary_false@38
     txna ApplicationArgs 0
 
-main_ternary_merge@37:
+main_ternary_merge@39:
     txn NumAppArgs
     intc_1 // 1
     >
-    bz main_ternary_false@39
+    bz main_ternary_false@41
     txna ApplicationArgs 1
 
-main_ternary_merge@40:
+main_ternary_merge@42:
     concat
     txn NumAppArgs
     intc_2 // 2
     >
-    bz main_ternary_false@42
+    bz main_ternary_false@44
     txna ApplicationArgs 2
 
-main_ternary_merge@43:
+main_ternary_merge@45:
     concat
     txn NumAppArgs
     intc_3 // 3
     >
-    bz main_ternary_false@45
+    bz main_ternary_false@47
     txna ApplicationArgs 3
 
-main_ternary_merge@46:
+main_ternary_merge@48:
     concat
     txn NumAppArgs
     pushint 4
     >
-    bz main_ternary_false@48
+    bz main_ternary_false@50
     txna ApplicationArgs 4
 
-main_ternary_merge@49:
+main_ternary_merge@51:
     concat
     txn NumAppArgs
     pushint 5
     >
-    bz main_ternary_false@51
+    bz main_ternary_false@53
     txna ApplicationArgs 5
 
-main_ternary_merge@52:
+main_ternary_merge@54:
     concat
     txn NumAppArgs
     pushint 6
     >
-    bz main_ternary_false@54
+    bz main_ternary_false@56
     txna ApplicationArgs 6
 
-main_ternary_merge@55:
+main_ternary_merge@57:
     concat
     txn NumAppArgs
     pushint 7
     >
-    bz main_ternary_false@57
+    bz main_ternary_false@59
     txna ApplicationArgs 7
 
-main_ternary_merge@58:
+main_ternary_merge@60:
     concat
     txn NumAppArgs
     pushint 8
     >
-    bz main_ternary_false@60
+    bz main_ternary_false@62
     txna ApplicationArgs 8
 
-main_ternary_merge@61:
+main_ternary_merge@63:
     concat
     txn NumAppArgs
     pushint 9
     >
-    bz main_ternary_false@63
+    bz main_ternary_false@65
     txna ApplicationArgs 9
 
-main_ternary_merge@64:
+main_ternary_merge@66:
     concat
     txn NumAppArgs
     pushint 10
     >
-    bz main_ternary_false@66
+    bz main_ternary_false@68
     txna ApplicationArgs 10
 
-main_ternary_merge@67:
+main_ternary_merge@69:
     concat
     txn NumAppArgs
     pushint 11
     >
-    bz main_ternary_false@69
+    bz main_ternary_false@71
     txna ApplicationArgs 11
 
-main_ternary_merge@70:
+main_ternary_merge@72:
     concat
     txn NumAppArgs
     pushint 12
     >
-    bz main_ternary_false@72
+    bz main_ternary_false@74
     txna ApplicationArgs 12
 
-main_ternary_merge@73:
+main_ternary_merge@75:
     concat
     txn NumAppArgs
     pushint 13
     >
-    bz main_ternary_false@75
+    bz main_ternary_false@77
     txna ApplicationArgs 13
 
-main_ternary_merge@76:
+main_ternary_merge@78:
     concat
     txn NumAppArgs
     pushint 14
     >
-    bz main_ternary_false@78
+    bz main_ternary_false@80
     txna ApplicationArgs 14
 
-main_ternary_merge@79:
+main_ternary_merge@81:
     concat
     txn NumAppArgs
     pushint 15
     >
-    bz main_ternary_false@81
+    bz main_ternary_false@83
     txna ApplicationArgs 15
 
-main_ternary_merge@82:
+main_ternary_merge@84:
     concat
 
-main_ternary_merge@84:
+main_ternary_merge@86:
     bytec_0 // "data"
     box_del
     pop
@@ -274,98 +278,98 @@ main_ternary_merge@84:
     log
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__puya_arc4_router__@17
-
-main_ternary_false@81:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@82
-
-main_ternary_false@78:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@79
-
-main_ternary_false@75:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@76
-
-main_ternary_false@72:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@73
-
-main_ternary_false@69:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@70
-
-main_ternary_false@66:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@67
-
-main_ternary_false@63:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@64
-
-main_ternary_false@60:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@61
-
-main_ternary_false@57:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@58
-
-main_ternary_false@54:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@55
-
-main_ternary_false@51:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@52
-
-main_ternary_false@48:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@49
-
-main_ternary_false@45:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@46
-
-main_ternary_false@42:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@43
-
-main_ternary_false@39:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@40
-
-main_ternary_false@36:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@37
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__puya_arc4_router__@19
 
 main_ternary_false@83:
     intc_0 // 0
     bzero
     b main_ternary_merge@84
 
-main_ternary_false@32:
+main_ternary_false@80:
     intc_0 // 0
-    b main_ternary_merge@33
+    bzero
+    b main_ternary_merge@81
 
-main___postInit_route@9:
+main_ternary_false@77:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@78
+
+main_ternary_false@74:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@75
+
+main_ternary_false@71:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@72
+
+main_ternary_false@68:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@69
+
+main_ternary_false@65:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@66
+
+main_ternary_false@62:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@63
+
+main_ternary_false@59:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@60
+
+main_ternary_false@56:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@57
+
+main_ternary_false@53:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@54
+
+main_ternary_false@50:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@51
+
+main_ternary_false@47:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@48
+
+main_ternary_false@44:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@45
+
+main_ternary_false@41:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@42
+
+main_ternary_false@38:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@39
+
+main_ternary_false@85:
+    intc_0 // 0
+    bzero
+    b main_ternary_merge@86
+
+main_ternary_false@34:
+    intc_0 // 0
+    b main_ternary_merge@35
+
+main___postInit_route@11:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -382,7 +386,7 @@ main___postInit_route@9:
     pop
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__puya_arc4_router__@19
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__fallback() -> void:

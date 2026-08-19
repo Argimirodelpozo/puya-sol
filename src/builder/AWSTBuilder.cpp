@@ -236,6 +236,16 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	auto sub = std::make_shared<awst::Subroutine>();
 	sub->inlineOpt = false; // Prevent puya from inlining large subroutines
 
+	// EIP-1967 admin-slot uses lowered in this body attach to the contracts
+	// whose call graphs reach this function, not to whichever contract builds
+	// first (BuildArtifacts::noteErc1967AdminUse).
+	struct FreestandingIdGuard
+	{
+		BuildArtifacts& artifacts;
+		~FreestandingIdGuard() { artifacts.currentFreestandingFunctionId = -1; }
+	} freestandingIdGuard{m_session.artifacts};
+	m_session.artifacts.currentFreestandingFunctionId = _func.id();
+
 	awst::SourceLocation loc = m_session.sourceMap.toAwstLoc(
 		_sourceFile, _func.location());
 

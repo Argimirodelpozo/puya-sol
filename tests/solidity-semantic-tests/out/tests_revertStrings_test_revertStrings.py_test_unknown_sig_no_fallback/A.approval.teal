@@ -29,13 +29,17 @@ main_if_body@1:
 
 main_after_if_else@2:
     txn NumAppArgs
+    bnz main_after_if_else@5
+    txn OnCompletion
     bz main_if_body@1
+
+main_after_if_else@5:
     pushbytes 0xc599eb05 // method "__receive()void"
     txna ApplicationArgs 0
-    match main___receive_route@6
+    match main___receive_route@7
     err
 
-main___receive_route@6:
+main___receive_route@7:
     txn OnCompletion
     !
     txn ApplicationID

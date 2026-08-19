@@ -1,3 +1,21 @@
+# Semantic Test Status — v498 (new_review A1-A3: do-while body, dispatch OnCompletion, 1967 attribution)
+
+> **Full run 2026-08-19: 8 failed / 1437 passed / 113 xf / 32 xp** (RESULTS_v498_new_review_a1a2a3.txt).
+> Baseline held; +4 new guard passes. Landed the three verified new_review.md
+> findings: **A1** — a brace-less `do stmt; while (cond);` body was silently
+> DROPPED (side-effecting conditions compiled clean with an empty loop);
+> the do-while arm now builds single statements like the `while` arm.
+> **A2 (security)** — with `receive()`/`fallback()` present, the custom
+> dispatch approved bare and unmatched-selector calls without reading
+> Txn.OnCompletion, so ANY sender could Delete/Update/CloseOut the app; both
+> arms are NoOp-only now, lifecycle completions fall to the router's
+> per-method gating. **A3** — the EIP-1967 admin flag was a unit-global
+> consumed by the FIRST contract built; library/free-function admin asm (the
+> OZ ERC1967Utils shape, incl. host-bound internalized copies) now records
+> per-function ids attributed via each contract's reachability graph.
+> Guards: dowhile_braceless, dispatch_oncompletion, erc1967_lib_multi ×2
+> modes; erc1967_impl grew a `fallback()` pinning the A2×gate interaction.
+
 # Semantic Test Status — v497 (slot-mode addresses are full Algorand accounts)
 
 > **Full run 2026-08-19: 8 failed / 1433 passed / 113 xf / 32 xp** (RESULTS_v497_address_full_width.txt).

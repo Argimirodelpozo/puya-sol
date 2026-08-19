@@ -1,0 +1,251 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_lib_multi.sol.LibProxy.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x703a0000000000000000 0x "__erc1967_admin" 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x67ae7042 // method "__erc1967_update()void"
+    txna ApplicationArgs 0
+    match main___erc1967_update_route@4
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0a4fb6b3 0x4e859a11 0xc46a4b39 0x75d12918 // method "admin()address", method "initAdmin(address)void", method "setValue(uint256)void", method "value()uint256"
+    txna ApplicationArgs 0
+    match main_admin_route@7 main_initAdmin_route@8 main_setValue_route@9 main_value_route@10
+    err
+
+main_value_route@10:
+    txn GroupIndex
+    bz main_ternary_false@16
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@17:
+    !
+    assert // not payable
+    bytec_0 // 0x703a0000000000000000
+    box_len
+    bury 1
+    bz main_after_if_else@38
+    bytec_0 // 0x703a0000000000000000
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+
+main_after_inlined___puyasol___storage_read@42:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_after_if_else@38:
+    bytec_1 // 0x
+    b main_after_inlined___puyasol___storage_read@42
+
+main_ternary_false@16:
+    intc_2 // 0
+    b main_ternary_merge@17
+
+main_setValue_route@9:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    bytec_0 // 0x703a0000000000000000
+    pushint 2048
+    box_create
+    pop
+    intc_0 // 32
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x703a0000000000000000
+    intc_2 // 0
+    uncover 2
+    box_replace
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_initAdmin_route@8:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@26
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@27:
+    !
+    assert // not payable
+    callsub AdminLib.getAdmin
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    ==
+    dup
+    bnz main_after_if_else@29
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000013616c726561647920696e697469616c697a656400000000000000000000000000
+    log
+
+main_after_if_else@29:
+    assert // already initialized
+    callsub AdminLib.setAdmin
+    intc_1 // 1
+    return
+
+main_ternary_false@26:
+    intc_2 // 0
+    b main_ternary_merge@27
+
+main_admin_route@7:
+    txn GroupIndex
+    bz main_ternary_false@33
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@34:
+    !
+    assert // not payable
+    callsub AdminLib.getAdmin
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@33:
+    intc_2 // 0
+    b main_ternary_merge@34
+
+main___erc1967_update_route@4:
+    txn OnCompletion
+    pushint 4 // UpdateApplication
+    ==
+    txn ApplicationID
+    &&
+    assert
+    intc_2 // 0
+    bytec_2 // "__erc1967_admin"
+    app_global_get_ex
+    bytec_1 // 0x
+    cover 2
+    select
+    txn Sender
+    b==
+    assert // ERC-1967: update sender is not the proxy admin
+    pushint 24
+    bzero
+    global CurrentApplicationID
+    itob
+    concat
+    pushbytes 0x0ecb2f31 // method "Upgraded(address)"
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// __solfn_11() -> bytes:
+AdminLib.getAdmin:
+    load 0
+    store 0
+    intc_0 // 32
+    bzero
+    intc_2 // 0
+    bytec_2 // "__erc1967_admin"
+    app_global_get_ex
+    bytec_1 // 0x
+    cover 2
+    select
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    load 0
+    store 0
+    retsub
+
+
+// __solfn_18(a: bytes) -> void:
+AdminLib.setAdmin:
+    proto 1 0
+    load 0
+    store 0
+    bytec_2 // "__erc1967_admin"
+    frame_dig -1
+    app_global_put
+    load 0
+    store 0
+    retsub

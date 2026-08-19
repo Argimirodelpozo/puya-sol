@@ -1095,8 +1095,14 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		auto nameIt = m_exprBuilder->internalizedFunctionNames.find(function->id());
 		if (nameIt == m_exprBuilder->internalizedFunctionNames.end()) continue;
 		clearSuperOverrides();
+		// EVERY host-bound function is internalized into EVERY contract, used
+		// or not — mark the body so EIP-1967 admin-slot uses record under the
+		// function's id and attach via the call graph, not to this contract
+		// unconditionally (BuildArtifacts::noteErc1967AdminUse).
+		m_typeMapper.artifacts().currentFreestandingFunctionId = function->id();
 		auto method = buildFunction(
 			*function, contractName, nameIt->second, /*asInternalCopy=*/true);
+		m_typeMapper.artifacts().currentFreestandingFunctionId = -1;
 		contract->methods.push_back(std::move(method));
 		for (auto& sub: m_modifierSubroutines)
 			contract->methods.push_back(std::move(sub));
@@ -1189,14 +1195,24 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	}
 
 	// EIP-1967 (proxy.md §1): if any admin-slot use was lowered while
-	// translating THIS contract's bodies, synthesize the admin global and the
-	// bare UpdateApplication method gating native updates on it. Snapshot-and-
-	// reset so one contract's proxy machinery never leaks into the next unit
-	// member. Placed after ALL method translation (ordinary externals build in
-	// the loops above, not in buildApprovalProgram).
-	if (m_typeMapper.artifacts().usesErc1967Admin)
+	// translating THIS contract's bodies — or inside a freestanding library/
+	// free function THIS contract's call graph reaches (OZ's ERC1967Utils is a
+	// library, translated before any contract) — synthesize the admin global
+	// and the UpdateApplication method gating native updates on it. Snapshot-
+	// and-reset the direct flag so one contract's proxy machinery never leaks
+	// into the next unit member. Placed after ALL method translation (ordinary
+	// externals build in the loops above, not in buildApprovalProgram).
+	bool usesErc1967Admin = m_typeMapper.artifacts().usesErc1967Admin;
+	m_typeMapper.artifacts().usesErc1967Admin = false;
+	if (!usesErc1967Admin)
+		for (int64_t functionId: m_typeMapper.artifacts().erc1967AdminFunctions)
+			if (m_typeMapper.analysis().isFunctionReachable(_contract.id(), functionId))
+			{
+				usesErc1967Admin = true;
+				break;
+			}
+	if (usesErc1967Admin)
 	{
-		m_typeMapper.artifacts().usesErc1967Admin = false;
 		auto loc = contract->approvalProgram.sourceLocation;
 		contract->appState.push_back(
 			proxies::Erc1967Lowering::adminStateDefinition(loc));

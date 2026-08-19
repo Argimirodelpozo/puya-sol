@@ -32,32 +32,34 @@ main:
 
 main_after_if_else@2:
     txn NumAppArgs
-    bnz main_after_if_else@4
+    bnz main_after_if_else@5
+    txn OnCompletion
+    bnz main_after_if_else@5
     intc_0 // 1
     return
 
-main_after_if_else@4:
+main_after_if_else@5:
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_after_if_else@14
+    bz main_after_if_else@15
     pushbytess 0xbacc49e3 0xc599eb05 0x2d4970c7 0x0a449f0b 0x4b2c0376 // method "__postInit()void", method "__receive()void", method "f()void", method "h()void", method "g()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@7 main___receive_route@8 main_f_route@9 main_h_route@10 main_g_route@11
+    match main___postInit_route@8 main___receive_route@9 main_f_route@10 main_h_route@11 main_g_route@12
 
-main_after_if_else@14:
+main_after_if_else@15:
     err
 
-main_g_route@11:
+main_g_route@12:
     txn GroupIndex
-    bz main_ternary_false@18
+    bz main_ternary_false@19
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+main_ternary_merge@20:
     !
     assert // not payable
     global CurrentApplicationAddress
@@ -74,19 +76,19 @@ main_ternary_merge@19:
     intc_0 // 1
     return
 
-main_ternary_false@18:
+main_ternary_false@19:
     intc_1 // 0
-    b main_ternary_merge@19
+    b main_ternary_merge@20
 
-main_h_route@10:
+main_h_route@11:
     txn GroupIndex
-    bz main_ternary_false@23
+    bz main_ternary_false@24
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+main_ternary_merge@25:
     !
     assert // not payable
     intc_1 // 0
@@ -107,19 +109,19 @@ main_ternary_merge@24:
     intc_0 // 1
     return
 
-main_ternary_false@23:
+main_ternary_false@24:
     intc_1 // 0
-    b main_ternary_merge@24
+    b main_ternary_merge@25
 
-main_f_route@9:
+main_f_route@10:
     txn GroupIndex
-    bz main_ternary_false@28
+    bz main_ternary_false@29
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@29:
+main_ternary_merge@30:
     !
     assert // not payable
     itxn_begin
@@ -138,15 +140,15 @@ main_ternary_merge@29:
     intc_0 // 1
     return
 
-main_ternary_false@28:
+main_ternary_false@29:
     intc_1 // 0
-    b main_ternary_merge@29
+    b main_ternary_merge@30
 
-main___receive_route@8:
+main___receive_route@9:
     intc_0 // 1
     return
 
-main___postInit_route@7:
+main___postInit_route@8:
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called

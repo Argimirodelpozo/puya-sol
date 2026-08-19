@@ -29,40 +29,44 @@ main:
 
 main_after_if_else@2:
     txn NumAppArgs
-    bnz main_after_if_else@4
+    bnz main_after_if_else@5
+    txn OnCompletion
+    bnz main_after_if_else@5
     b __fallback
 
-main_after_if_else@4:
+main_after_if_else@5:
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_after_if_else@13
+    bz main_after_if_else@15
     pushbytess 0x1bf9882b 0x219b312e // method "__fallback()void", method "f()(uint256,uint256)"
     txna ApplicationArgs 0
-    match __fallback main_f_route@10
+    match __fallback main_f_route@12
 
-main_after_if_else@13:
+main_after_if_else@15:
     intc_0 // 0
     bury 1
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/revert_return_area.sol.C.__puya_arc4_router__@14:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/revert_return_area.sol.C.__puya_arc4_router__@16:
     dup
-    bnz main_after_if_else@6
+    bnz main_after_if_else@8
+    txn OnCompletion
+    bnz main_after_if_else@8
     b __fallback
 
-main_after_if_else@6:
+main_after_if_else@8:
     return
 
-main_f_route@10:
+main_f_route@12:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@19
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@20:
     !
     assert // not payable
     global CurrentApplicationAddress
@@ -101,17 +105,17 @@ main_ternary_merge@18:
     len
     intc_3 // 4
     >=
-    bz main_ternary_false@21
+    bz main_ternary_false@23
     dup
     extract 0 4
     pushbytes 0x151f7c75
     ==
 
-main_ternary_merge@22:
-    bz main_ternary_false@24
+main_ternary_merge@24:
+    bz main_ternary_false@26
     extract 4 0
 
-main_ternary_merge@25:
+main_ternary_merge@27:
     dig 1
     concat
     extract 0 32
@@ -146,18 +150,18 @@ main_ternary_merge@25:
     log
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/revert_return_area.sol.C.__puya_arc4_router__@14
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/revert_return_area.sol.C.__puya_arc4_router__@16
 
-main_ternary_false@24:
-    b main_ternary_merge@25
+main_ternary_false@26:
+    b main_ternary_merge@27
 
-main_ternary_false@21:
+main_ternary_false@23:
     intc_0 // 0
-    b main_ternary_merge@22
+    b main_ternary_merge@24
 
-main_ternary_false@17:
+main_ternary_false@19:
     intc_0 // 0
-    b main_ternary_merge@18
+    b main_ternary_merge@20
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/revert_return_area.sol.C.__fallback() -> void:

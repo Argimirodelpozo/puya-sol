@@ -33,44 +33,48 @@ main:
 
 main_after_if_else@2:
     txn NumAppArgs
-    bnz main_after_if_else@4
+    bnz main_after_if_else@5
+    txn OnCompletion
+    bnz main_after_if_else@5
     callsub __fallback
     intc_1 // 1
     return
 
-main_after_if_else@4:
+main_after_if_else@5:
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_after_if_else@16
+    bz main_after_if_else@18
     pushbytess 0xbacc49e3 0x1bf9882b 0x0d0be52f 0xf321bc3d 0x70b65ae3 // method "__postInit()void", method "__fallback()void", method "forward()bool", method "clear()bool", method "val()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@9 main___fallback_route@10 main_forward_route@11 main_clear_route@12 main_val_route@13
+    match main___postInit_route@11 main___fallback_route@12 main_forward_route@13 main_clear_route@14 main_val_route@15
 
-main_after_if_else@16:
+main_after_if_else@18:
     intc_0 // 0
     bury 1
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@17:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@19:
     dup
-    bnz main_after_if_else@6
+    bnz main_after_if_else@8
+    txn OnCompletion
+    bnz main_after_if_else@8
     callsub __fallback
     intc_1 // 1
     bury 1
 
-main_after_if_else@6:
+main_after_if_else@8:
     return
 
-main_val_route@13:
+main_val_route@15:
     txn GroupIndex
-    bz main_ternary_false@20
+    bz main_ternary_false@22
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+main_ternary_merge@23:
     !
     assert // not payable
     itxn_begin
@@ -106,21 +110,21 @@ main_ternary_merge@21:
     log
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@19
 
-main_ternary_false@20:
+main_ternary_false@22:
     intc_0 // 0
-    b main_ternary_merge@21
+    b main_ternary_merge@23
 
-main_clear_route@12:
+main_clear_route@14:
     txn GroupIndex
-    bz main_ternary_false@25
+    bz main_ternary_false@27
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@26:
+main_ternary_merge@28:
     !
     assert // not payable
     bytec_0 // "savedData"
@@ -133,21 +137,21 @@ main_ternary_merge@26:
     log
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@19
 
-main_ternary_false@25:
+main_ternary_false@27:
     intc_0 // 0
-    b main_ternary_merge@26
+    b main_ternary_merge@28
 
-main_forward_route@11:
+main_forward_route@13:
     txn GroupIndex
-    bz main_ternary_false@30
+    bz main_ternary_false@32
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@31:
+main_ternary_merge@33:
     !
     assert // not payable
     bytec_0 // "savedData"
@@ -161,7 +165,7 @@ main_ternary_merge@31:
     intc_2 // 4
     >=
     dup
-    bz main_ternary_false@33
+    bz main_ternary_false@35
     uncover 2
     pop
     bytec_0 // "savedData"
@@ -169,9 +173,9 @@ main_ternary_merge@31:
     intc_2 // 4
     box_extract
 
-main_ternary_merge@34:
+main_ternary_merge@36:
     swap
-    bz main_ternary_false@36
+    bz main_ternary_false@38
     swap
     intc_2 // 4
     -
@@ -180,7 +184,7 @@ main_ternary_merge@34:
     uncover 2
     box_extract
 
-main_ternary_merge@37:
+main_ternary_merge@39:
     intc_0 // 0
     bytec_3 // "rec"
     app_global_get_ex
@@ -202,28 +206,28 @@ main_ternary_merge@37:
     log
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@19
 
-main_ternary_false@36:
+main_ternary_false@38:
     bury 1
     bytec_1 // 0x
-    b main_ternary_merge@37
+    b main_ternary_merge@39
 
-main_ternary_false@33:
+main_ternary_false@35:
     uncover 2
-    b main_ternary_merge@34
+    b main_ternary_merge@36
 
-main_ternary_false@30:
+main_ternary_false@32:
     intc_0 // 0
-    b main_ternary_merge@31
+    b main_ternary_merge@33
 
-main___fallback_route@10:
+main___fallback_route@12:
     callsub __fallback
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@19
 
-main___postInit_route@9:
+main___postInit_route@11:
     bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -277,7 +281,7 @@ main___postInit_route@9:
     app_global_put
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@19
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__fallback() -> void:

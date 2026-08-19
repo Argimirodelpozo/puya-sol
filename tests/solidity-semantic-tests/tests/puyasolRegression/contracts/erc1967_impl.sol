@@ -38,4 +38,11 @@ contract Erc1967Impl {
     }
 
     function setValue(uint256 v) public { value = v; }
+
+    // A real 1967 proxy always has a fallback. Its presence switches dispatch
+    // to the custom (receive/fallback) shape, which pre-A2-fix approved bare
+    // UpdateApplication calls without ever reaching the admin gate — the
+    // bare-update legs below pin that interaction.
+    uint256 public fallbackCount;
+    fallback() external { fallbackCount += 1; }
 }

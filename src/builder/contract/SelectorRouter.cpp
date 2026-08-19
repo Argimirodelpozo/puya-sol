@@ -20,10 +20,15 @@ void emitSelectorDispatch(
 	}
 
 	// Custom dispatch (fallback/receive present):
-	//   NumAppArgs==0 → bare call → receive/fallback + return true
+	//   NumAppArgs==0 && OnCompletion==NoOp → receive/fallback + return true
 	//   else → __did_match = ARC4Router() (assignment → can_exit_early=False)
-	//          if !__did_match → fallback; __did_match = true
+	//          if !__did_match && OnCompletion==NoOp → fallback; __did_match = true
 	//          return __did_match
+	//
+	// Both fallback arms are NoOp-only: EVM's receive/fallback exist for plain
+	// calls, and an unchecked arm would approve lifecycle txns (Delete/Update/
+	// CloseOut) that dodge the router's per-method OnCompletion gating by
+	// arriving bare or with an unmatched selector.
 
 	// isBareCall: pass empty bytes; else pass ApplicationArgs[0].
 	auto makeCall = [&](std::string const& _name,
@@ -61,13 +66,22 @@ void emitSelectorDispatch(
 		return r;
 	};
 
-	// Step 1: bare call (NumAppArgs==0).
+	auto makeIsNoOp = [&]() -> std::shared_ptr<awst::Expression> {
+		auto onCompletion = awst::makeTxn(std::string("OnCompletion"), awst::WType::uint64Type(), _loc);
+		return awst::makeNumericCompare(
+			std::move(onCompletion), awst::NumericComparison::Eq, awst::makeZero(_loc), _loc);
+	};
+
+	// Step 1: bare NoOp call (NumAppArgs==0).
 	{
 		auto numAppArgs = awst::makeTxn(std::string("NumAppArgs"), awst::WType::uint64Type(), _loc);
 
 		auto zero = awst::makeZero(_loc);
 
 		auto isBareCall = awst::makeNumericCompare(std::move(numAppArgs), awst::NumericComparison::Eq, std::move(zero), _loc);
+
+		auto isBareNoOp = awst::makeBoolBinOp(
+			std::move(isBareCall), awst::BinaryBooleanOperator::And, makeIsNoOp(), _loc);
 
 		auto bareBlock = awst::makeBlock(_loc);
 		if (_receiveFunc)
@@ -77,7 +91,7 @@ void emitSelectorDispatch(
 		bareBlock->body.push_back(makeReturnTrue());
 
 		_body.body.push_back(awst::makeIfElse(
-			std::move(isBareCall), std::move(bareBlock), nullptr, _loc));
+			std::move(isBareNoOp), std::move(bareBlock), nullptr, _loc));
 	}
 
 	// Step 2: run ARC4 router; assignment → can_exit_early=False.
@@ -91,12 +105,14 @@ void emitSelectorDispatch(
 		_body.body.push_back(std::move(assignMatch));
 	}
 
-	// Step 3: no-match + fallback exists → call fallback.
+	// Step 3: no-match + NoOp + fallback exists → call fallback.
 	if (_fallbackFunc)
 	{
 		auto matchVarRead = awst::makeVarExpression(matchVarName, awst::WType::boolType(), _loc);
 
-		auto notMatch = awst::makeNot(std::move(matchVarRead), _loc);
+		auto notMatch = awst::makeBoolBinOp(
+			awst::makeNot(std::move(matchVarRead), _loc),
+			awst::BinaryBooleanOperator::And, makeIsNoOp(), _loc);
 
 		auto dispatchBlock = awst::makeBlock(_loc);
 		dispatchBlock->body.push_back(makeCall("__fallback", _fallbackFunc, false));

@@ -305,7 +305,7 @@ void AssemblyBuilder::handleSstore(
 	switch (proxies::Erc1967Lowering::classify(_args[0].get()))
 	{
 	case proxies::Erc1967Slot::Admin:
-		m_typeMapper.artifacts().usesErc1967Admin = true;
+		m_typeMapper.artifacts().noteErc1967AdminUse();
 		proxies::Erc1967Lowering::adminStore(
 			ensureBiguint(_args[1], _loc), _loc, _out);
 		return;

@@ -29,33 +29,37 @@ main:
 
 main_after_if_else@2:
     txn NumAppArgs
-    bnz main_after_if_else@4
+    bnz main_after_if_else@5
+    txn OnCompletion
+    bnz main_after_if_else@5
     pushbytes 0x
     callsub __fallback
     pop
     intc_0 // 1
     return
 
-main_after_if_else@4:
+main_after_if_else@5:
     pushbytes 0x9509a93a // method "__fallback(byte[])byte[]"
     txna ApplicationArgs 0
-    match main___fallback_route@8
+    match main___fallback_route@10
     intc_1 // 0
     bury 1
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_override.sol.A.__puya_arc4_router__@10:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_override.sol.A.__puya_arc4_router__@12:
     dup
-    bnz main_after_if_else@6
+    bnz main_after_if_else@8
+    txn OnCompletion
+    bnz main_after_if_else@8
     txna ApplicationArgs 0
     callsub __fallback
     pop
     intc_0 // 1
     bury 1
 
-main_after_if_else@6:
+main_after_if_else@8:
     return
 
-main___fallback_route@8:
+main___fallback_route@10:
     txn OnCompletion
     !
     txn ApplicationID
@@ -85,7 +89,7 @@ main___fallback_route@8:
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_override.sol.A.__puya_arc4_router__@10
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_override.sol.A.__puya_arc4_router__@12
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_override.sol.A.__fallback(_input: bytes) -> bytes:

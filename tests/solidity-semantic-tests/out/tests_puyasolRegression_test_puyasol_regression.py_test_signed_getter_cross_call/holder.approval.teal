@@ -36,44 +36,48 @@ main:
 
 main_after_if_else@2:
     txn NumAppArgs
-    bnz main_after_if_else@4
+    bnz main_after_if_else@5
+    txn OnCompletion
+    bnz main_after_if_else@5
     callsub __fallback
     intc_0 // 1
     return
 
-main_after_if_else@4:
+main_after_if_else@5:
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_after_if_else@15
+    bz main_after_if_else@17
     pushbytess 0x1bf9882b 0x4334fac7 0x5b56733c 0x1e930e3d // method "__fallback()void", method "set(uint64,uint256)void", method "small()uint256", method "wide()uint256"
     txna ApplicationArgs 0
-    match main___fallback_route@9 main_set_route@10 main_small_route@11 main_wide_route@12
+    match main___fallback_route@11 main_set_route@12 main_small_route@13 main_wide_route@14
 
-main_after_if_else@15:
+main_after_if_else@17:
     intc_1 // 0
     bury 1
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_getter_cross_call.sol.holder.__puya_arc4_router__@16:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_getter_cross_call.sol.holder.__puya_arc4_router__@18:
     dup
-    bnz main_after_if_else@6
+    bnz main_after_if_else@8
+    txn OnCompletion
+    bnz main_after_if_else@8
     callsub __fallback
     intc_0 // 1
     bury 1
 
-main_after_if_else@6:
+main_after_if_else@8:
     return
 
-main_wide_route@12:
+main_wide_route@14:
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@21
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@22:
     !
     assert // not payable
     intc_1 // 0
@@ -94,21 +98,21 @@ main_ternary_merge@20:
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_getter_cross_call.sol.holder.__puya_arc4_router__@16
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_getter_cross_call.sol.holder.__puya_arc4_router__@18
 
-main_ternary_false@19:
+main_ternary_false@21:
     intc_1 // 0
-    b main_ternary_merge@20
+    b main_ternary_merge@22
 
-main_small_route@11:
+main_small_route@13:
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@26
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@27:
     !
     assert // not payable
     intc_1 // 0
@@ -121,11 +125,11 @@ main_ternary_merge@25:
     dup
     pushbytes 0x800000
     b>=
-    bz main_ternary_false@27
+    bz main_ternary_false@29
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     b+
 
-main_ternary_merge@28:
+main_ternary_merge@30:
     dup
     len
     intc_2 // 32
@@ -140,16 +144,16 @@ main_ternary_merge@28:
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_getter_cross_call.sol.holder.__puya_arc4_router__@16
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_getter_cross_call.sol.holder.__puya_arc4_router__@18
 
-main_ternary_false@27:
-    b main_ternary_merge@28
+main_ternary_false@29:
+    b main_ternary_merge@30
 
-main_ternary_false@24:
+main_ternary_false@26:
     intc_1 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@27
 
-main_set_route@10:
+main_set_route@12:
     txna ApplicationArgs 1
     dup
     len
@@ -165,28 +169,28 @@ main_set_route@10:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@32
+    bz main_ternary_false@34
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@33:
+main_ternary_merge@35:
     !
     assert // not payable
     dup
     pushint 8388607
     <=
-    bnz main_bool_true@35
+    bnz main_bool_true@37
     dup
     pushint 18446744073701163008
     >=
-    bz main_bool_false@36
+    bz main_bool_false@38
 
-main_bool_true@35:
+main_bool_true@37:
     intc_0 // 1
 
-main_bool_merge@37:
+main_bool_merge@39:
     assert // ABI validation
     bytec_0 // "small"
     swap
@@ -196,21 +200,21 @@ main_bool_merge@37:
     app_global_put
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_getter_cross_call.sol.holder.__puya_arc4_router__@16
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_getter_cross_call.sol.holder.__puya_arc4_router__@18
 
-main_bool_false@36:
+main_bool_false@38:
     intc_1 // 0
-    b main_bool_merge@37
+    b main_bool_merge@39
 
-main_ternary_false@32:
+main_ternary_false@34:
     intc_1 // 0
-    b main_ternary_merge@33
+    b main_ternary_merge@35
 
-main___fallback_route@9:
+main___fallback_route@11:
     callsub __fallback
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_getter_cross_call.sol.holder.__puya_arc4_router__@16
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_getter_cross_call.sol.holder.__puya_arc4_router__@18
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_getter_cross_call.sol.holder.__fallback() -> void:

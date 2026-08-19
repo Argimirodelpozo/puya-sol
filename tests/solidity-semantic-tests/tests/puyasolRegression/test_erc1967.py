@@ -100,3 +100,45 @@ def test_erc1967_default_mode(harness):
 
 def test_erc1967_evm_layout(harness):
     _run_flow(harness, ["--evm-layout"])
+
+
+# new_review.md A3: admin-slot assembly reached through a LIBRARY (the OZ
+# ERC1967Utils shape) must arm the gate on the contract whose call graph
+# reaches it. The pre-fix unit-global flag was consumed by the FIRST contract
+# built: Unrelated grew the admin global/gate and LibProxy got neither (its
+# admin writes then blew the app's declared schema).
+
+def _run_lib_flow(harness, extra_args):
+    artifacts = harness.compile(
+        "puyasolRegression/contracts/erc1967_lib_multi.sol",
+        extra_args=extra_args,
+    )
+    acct = harness.localnet.account
+
+    # Unrelated (first in the unit, 1967-free) works and carries NO gate.
+    unrelated = harness.deploy(artifacts, "Unrelated")
+    harness.call(unrelated, "setX(uint256)", 5)
+    assert as_int(harness.call(unrelated, "x()").abi_return) == 5
+    with pytest.raises(Exception):
+        _update_app(harness, unrelated, artifacts, "Unrelated",
+                    acct.address, acct.private_key)
+
+    # LibProxy: the gate attaches via the library call graph.
+    proxy = harness.deploy(artifacts, "LibProxy")
+    assert as_int(harness.call(proxy, "admin()").abi_return) == 0
+    harness.call(proxy, "initAdmin(address)", acct.address)
+    got = harness.call(proxy, "admin()").abi_return
+    assert _addr_bytes(got) == decode_address(acct.address)
+
+    harness.call(proxy, "setValue(uint256)", 777)
+    _update_app(harness, proxy, artifacts, "LibProxy",
+                acct.address, acct.private_key)
+    assert as_int(harness.call(proxy, "value()").abi_return) == 777
+
+
+def test_erc1967_library_attribution_default(harness):
+    _run_lib_flow(harness, None)
+
+
+def test_erc1967_library_attribution_evm_layout(harness):
+    _run_lib_flow(harness, ["--evm-layout"])

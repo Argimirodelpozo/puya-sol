@@ -4539,3 +4539,21 @@ def test_evm_selectors_separate_language_values_from_arc4_routes(harness):
     # routing field, not the Solidity-visible selector field.
     assert harness.call(app, "pointerCall(uint256)", 7).abi_return is True
     assert harness.call(app, "pointerCall(uint256)", 8).abi_return is False
+
+
+def test_dowhile_braceless_body(harness):
+    """puyasolRegression/contracts/dowhile_braceless.sol — NOT an o.g. semantic test.
+
+    new_review.md A1: the do-while arm translated the body only when it was a
+    Block, silently DROPPING a brace-less body. With a side-effecting condition
+    (`do acc += 10; while (bump());`) puya's infinite-loop detector stayed
+    quiet and the empty-body function returned 0 where EVM returns 30.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/dowhile_braceless.sol")
+    # n: 0→1→2→3; three iterations of acc += 10.
+    assert as_int(harness.call(app, "bracelessSideEffectCond()").abi_return) == 30
+    # Pure condition: pre-fix this was puya "infinite loop detected".
+    assert as_int(harness.call(app, "bracelessSimple()").abi_return) == 3
+    # Terminating brace-less body.
+    assert as_int(harness.call(app, "bracelessReturn(uint256)", 4).abi_return) == 5

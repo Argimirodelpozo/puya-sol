@@ -280,7 +280,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 	switch (proxies::Erc1967Lowering::classify(_args[0].get()))
 	{
 	case proxies::Erc1967Slot::Admin:
-		m_typeMapper.artifacts().usesErc1967Admin = true;
+		m_typeMapper.artifacts().noteErc1967AdminUse();
 		return proxies::Erc1967Lowering::adminLoad(_loc);
 	case proxies::Erc1967Slot::Implementation:
 		return proxies::Erc1967Lowering::implementationLoad(_loc);

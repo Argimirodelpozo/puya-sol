@@ -1,0 +1,225 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dowhile_braceless.sol.DoWhileBraceless.approval_program() -> uint64:
+main:
+    intcblock 1 32 0 3
+    bytecblock "n" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "n"
+    bytec_3 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x515df0a3 0x21e91346 0x842b72fb 0x962f3a43 // method "bracelessSideEffectCond()uint256", method "bracelessSimple()uint256", method "bracelessReturn(uint256)uint256", method "n()uint256"
+    txna ApplicationArgs 0
+    match main_bracelessSideEffectCond_route@5 main_bracelessSimple_route@6 main_bracelessReturn_route@7 main_n_route@8
+    err
+
+main_n_route@8:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_0 // "n"
+    app_global_get_ex
+    assert // check n exists
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_bracelessReturn_route@7:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_0 // 1
+    itob
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_2 // 0
+    b main_ternary_merge@20
+
+main_bracelessSimple_route@6:
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+
+main_while_top@27:
+    pushbytes 0x01
+    b+
+    dupn 2
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    intc_3 // 3
+    itob
+    b<
+    bnz main_after_if_else@29
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_after_if_else@29:
+    b main_while_top@27
+
+main_ternary_false@25:
+    intc_2 // 0
+    b main_ternary_merge@26
+
+main_bracelessSideEffectCond_route@5:
+    txn GroupIndex
+    bz main_ternary_false@33
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@34:
+    !
+    assert // not payable
+    bytec_3 // 0x
+
+main_while_top@35:
+    pushbytes 0x0a
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    intc_2 // 0
+    bytec_0 // "n"
+    app_global_get_ex
+    assert // check n exists
+    pushbytes 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "n"
+    dig 1
+    app_global_put
+    intc_3 // 3
+    itob
+    b<
+    bnz main_after_if_else@37
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_after_if_else@37:
+    b main_while_top@35
+
+main_ternary_false@33:
+    intc_2 // 0
+    b main_ternary_merge@34
