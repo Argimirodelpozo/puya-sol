@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/destructuring_assignment.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 8
+    intcblock 32 1 0 8
     bytecblock 0x 0x03 0x02 0x01 "__ctor_pending" 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ad0 0x34d579df 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85e 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
-    intc_1 // 0
+    intc_2 // 0
     dupn 4
     bytec_0 // ""
     dupn 2
@@ -29,9 +29,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec 4 // "__ctor_pending"
-    intc_2 // 1
+    intc_1 // 1
     app_global_put
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -52,7 +52,7 @@ main_f_route@7:
     dup
     bury 5
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -64,7 +64,7 @@ main_f_route@7:
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -111,13 +111,13 @@ main_ternary_merge@14:
     extract3
     dup
     bury 12
-    intc_1 // 0
+    intc_2 // 0
     bury 6
     pushint 31
     getbyte
     pushint 2
     %
-    intc_2 // 1
+    intc_1 // 1
     ==
     bz main_after_if_else@40
     intc_3 // 8
@@ -140,7 +140,7 @@ main_ternary_merge@14:
     bury 5
 
 main_after_if_else@40:
-    intc_1 // 0
+    intc_2 // 0
     bury 6
     dig 1
     intc_0 // 32
@@ -176,7 +176,7 @@ main_while_top@47:
     b+
     bytec_0 // 0x
     callsub __storage_write
-    intc_2 // 1
+    intc_1 // 1
     +
     b main_while_top@47
 
@@ -186,9 +186,9 @@ main_after_while@49:
     dig 7
     intc_0 // 32
     dup
-    intc_2 // 1
+    intc_1 // 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     callsub __evm_dynarr_write
     pushint 4
     itob
@@ -208,7 +208,7 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@16:
@@ -302,27 +302,27 @@ main_after_if_else@28:
     bytec_1 // 0x03
     intc_0 // 32
     dup
-    intc_2 // 1
+    intc_1 // 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     callsub __evm_dynarr_read
     pop
     bytec_1 // 0x03
     intc_0 // 32
     dup
-    intc_2 // 1
+    intc_1 // 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     callsub __evm_dynarr_read
     pop
     bytec_1 // 0x03
     intc_0 // 32
     dup
-    intc_2 // 1
+    intc_1 // 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     callsub __evm_dynarr_read
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     itob
     bytec_1 // 0x03
@@ -380,7 +380,7 @@ main_after_if_else@36:
 
 main_if_body@32:
     popn 2
-    intc_2 // 1
+    intc_1 // 1
     b main_after_if_else@34
 
 main_else_body@42:
@@ -388,7 +388,7 @@ main_else_body@42:
     dup
     pushint 2
     *
-    intc_2 // 1
+    intc_1 // 1
     +
     itob
     bytec_3 // 0x01
@@ -402,7 +402,7 @@ main_else_body@42:
     uncover 3
     concat
     bury 8
-    intc_1 // 0
+    intc_2 // 0
     bury 5
 
 main_while_top@43:
@@ -423,13 +423,13 @@ main_while_top@43:
     intc_0 // 32
     extract3
     callsub __storage_write
-    intc_2 // 1
+    intc_1 // 1
     +
     bury 5
     b main_while_top@43
 
 main_ternary_false@13:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@14
 
 main_returnsArray_route@6:
@@ -438,7 +438,7 @@ main_returnsArray_route@6:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main___postInit_route@5:
@@ -450,21 +450,21 @@ main___postInit_route@5:
     ==
     assert // __postInit callable only by the app creator
     bytec 4 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     pushint 7
     itob
     bytec_0 // 0x
     swap
     callsub __storage_write
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
 // __puyasol___storage_read(__slot: bytes) -> bytes:
 __storage_read:
     proto 1 1
-    intc_1 // 0
+    intc_2 // 0
     dup
     bytec_0 // ""
     frame_dig -1
@@ -534,7 +534,7 @@ __storage_read_else_body@4:
     bury 1
     bz __storage_read_after_if_else@3
     frame_dig 0
-    intc_1 // 0
+    intc_2 // 0
     intc_0 // 32
     box_extract
     frame_bury 0
@@ -618,7 +618,7 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    intc_1 // 0
+    intc_2 // 0
     swap
     box_replace
     retsub
@@ -648,7 +648,7 @@ __evm_bytes_read:
     bnz __evm_bytes_read_after_if_else@2
     pushint 2
     /
-    intc_1 // 0
+    intc_2 // 0
     swap
     extract3
     swap
@@ -680,7 +680,7 @@ __evm_bytes_read_after_if_else@2:
     extract3
     keccak256
     bytec_0 // 0x
-    intc_1 // 0
+    intc_2 // 0
 
 __evm_bytes_read_while_top@3:
     dup
@@ -707,14 +707,14 @@ __evm_bytes_read_while_top@3:
     swap
     concat
     swap
-    intc_2 // 1
+    intc_1 // 1
     +
     b __evm_bytes_read_while_top@3
 
 __evm_bytes_read_after_while@5:
     pop
     bury 1
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     extract3
     swap
@@ -725,7 +725,6 @@ __evm_bytes_read_after_while@5:
 __evm_dynarr_read:
     proto 6 1
     bytec_0 // ""
-    intc_1 // 0
     intc_3 // 8
     bzero
     frame_dig -6
@@ -744,6 +743,7 @@ __evm_dynarr_read:
     bzero
     dup
     cover 2
+    dup
     frame_dig -6
     concat
     dup
@@ -753,10 +753,14 @@ __evm_dynarr_read:
     intc_0 // 32
     extract3
     keccak256
+    cover 2
     swap
     itob
     extract 6 2
-    intc_1 // 0
+    swap
+    intc_2 // 0
+    swap
+    cover 5
 
 __evm_dynarr_read_while_top@1:
     dup
@@ -790,7 +794,7 @@ __evm_dynarr_read_while_top@1:
     frame_bury 1
 
 __evm_dynarr_read_after_if_else@4:
-    intc_2 // 1
+    intc_1 // 1
     +
     frame_dig -5
     *
@@ -801,7 +805,7 @@ __evm_dynarr_read_after_if_else@4:
     swap
     frame_dig -5
     extract3
-    cover 2
+    swap
     frame_dig -1
     bz __evm_dynarr_read_else_body@8
     dup
@@ -811,10 +815,10 @@ __evm_dynarr_read_after_if_else@4:
     bnz __evm_dynarr_read_after_if_else@7
     frame_dig -4
     bzero
-    uncover 3
+    uncover 4
     swap
     concat
-    cover 2
+    cover 3
 
 __evm_dynarr_read_after_if_else@7:
     dig 1
@@ -827,9 +831,9 @@ __evm_dynarr_read_after_if_else@7:
     intc_3 // 8
     *
     +
-    uncover 3
+    uncover 2
     btoi
-    intc_1 // 0
+    intc_2 // 0
     !=
     uncover 3
     cover 2
@@ -837,7 +841,7 @@ __evm_dynarr_read_after_if_else@7:
     swap
 
 __evm_dynarr_read_after_if_else@9:
-    intc_2 // 1
+    intc_1 // 1
     +
     b __evm_dynarr_read_while_top@1
 
@@ -846,7 +850,7 @@ __evm_dynarr_read_else_body@8:
     frame_dig -5
     -
     bzero
-    uncover 3
+    uncover 2
     concat
     uncover 2
     swap
@@ -863,8 +867,7 @@ __evm_dynarr_read_after_while@10:
 // __puyasol___evm_dynarr_write(__slot: bytes, __val: bytes, __size: uint64, __aw: uint64, __per: uint64, __mul: uint64, __bp: uint64) -> void:
 __evm_dynarr_write:
     proto 7 0
-    intc_1 // 0
-    dup
+    intc_2 // 0
     intc_3 // 8
     bzero
     frame_dig -7
@@ -876,7 +879,7 @@ __evm_dynarr_write:
     -
     extract_uint64
     frame_dig -6
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16
     dup
     frame_dig -2
@@ -894,6 +897,7 @@ __evm_dynarr_write:
     bzero
     dup
     cover 3
+    dup
     frame_dig -7
     concat
     dup
@@ -903,7 +907,10 @@ __evm_dynarr_write:
     intc_0 // 32
     extract3
     keccak256
-    intc_1 // 0
+    swap
+    intc_2 // 0
+    swap
+    cover 4
 
 __evm_dynarr_write_while_top@1:
     dup
@@ -927,8 +934,8 @@ __evm_dynarr_write_while_top@1:
     b+
     frame_bury 0
     bnz __evm_dynarr_write_ternary_merge@5
-    frame_dig 2
-    frame_bury 1
+    frame_dig 1
+    frame_bury 2
 
 __evm_dynarr_write_ternary_merge@5:
     frame_dig -1
@@ -955,25 +962,25 @@ __evm_dynarr_write_ternary_merge@5:
 __evm_dynarr_write_after_if_else@8:
     uncover 2
     dup
-    intc_2 // 1
+    intc_1 // 1
     +
     frame_dig -5
     *
     intc_0 // 32
     swap
     -
-    frame_dig 1
+    frame_dig 2
     swap
     uncover 3
     replace3
-    frame_bury 1
+    frame_bury 2
     frame_dig -3
-    intc_2 // 1
+    intc_1 // 1
     -
     ==
     bnz __evm_dynarr_write_if_body@10
     dig 2
-    intc_2 // 1
+    intc_1 // 1
     -
     dig 1
     ==
@@ -981,11 +988,11 @@ __evm_dynarr_write_after_if_else@8:
 
 __evm_dynarr_write_if_body@10:
     frame_dig 0
-    frame_dig 1
+    frame_dig 2
     callsub __storage_write
 
 __evm_dynarr_write_after_if_else@11:
-    intc_2 // 1
+    intc_1 // 1
     +
     b __evm_dynarr_write_while_top@1
 
@@ -1008,7 +1015,7 @@ __evm_dynarr_write_else_body@7:
 __evm_dynarr_write_after_while@12:
     pop
     frame_dig -3
-    intc_2 // 1
+    intc_1 // 1
     -
     uncover 2
     dig 1
@@ -1033,7 +1040,7 @@ __evm_dynarr_write_while_top@13:
     b+
     bytec_0 // 0x
     callsub __storage_write
-    intc_2 // 1
+    intc_1 // 1
     +
     b __evm_dynarr_write_while_top@13
 
@@ -1052,7 +1059,7 @@ returnsArray:
     txn GroupIndex
     bz returnsArray_ternary_false@4
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -1065,9 +1072,9 @@ returnsArray_after_if_else@6:
     pushbytes 0x0009000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     intc_0 // 32
     dup
-    intc_2 // 1
+    intc_1 // 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     callsub __evm_dynarr_write
     pushint 2
     itob
@@ -1094,12 +1101,12 @@ returnsArray_after_if_else@6:
     bytec_1 // 0x03
     intc_0 // 32
     dup
-    intc_2 // 1
+    intc_1 // 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     callsub __evm_dynarr_read
     retsub
 
 returnsArray_ternary_false@4:
-    intc_1 // 0
+    intc_2 // 0
     b returnsArray_ternary_merge@5

@@ -1,3 +1,17 @@
+# Semantic Test Status — v496 (slot-mode packed dispatch coverage)
+
+> **Full run 2026-08-19: 8 failed / 1433 passed / 114 xf / 32 xp** (RESULTS_v496_slot_packed_dispatch.txt).
+> Baseline held; +2 passes, +1 pinned xfail. Landed: `__wb` seeded in both
+> EvmSlotStorageDispatch loops — the spurious "potentially used before
+> assignment" warning fired on EVERY --evm-layout build with a mapping and was
+> burying real warnings; generated TEAL is byte-identical (puya DCEs the seed).
+> New guard `puyasolRegression/test_slot_packed_dispatch.py` covers the packed
+> multi-lane loop (uint32[] across word boundaries, uint128[] at the exact
+> 2-per-word boundary, mid-word overwrite, nested mapping of address).
+> ⚠️ It found a REAL slot-mode bug, pinned as a strict xfail: `address[]`
+> whole-aggregate reads slice 20 bytes/element while `addrAt(i)` returns the
+> full 32-byte account — two read paths, one layout, different answers.
+
 # Semantic Test Status — v495 (EIP-1967 Upgraded event + ABI update gate)
 
 > **Full run 2026-08-19: 8 failed / 1431 passed / 113 xf / 32 xp** (RESULTS_v495_upgraded_event.txt).

@@ -588,6 +588,15 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			awst::makeExtract(awst::makeItob(u64Var("__n"), loc), 6, 2, loc), loc));
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64Var("__i"), u64c(0), loc));
+		// Seed __wb so definite assignment is provable. Both loops below only
+		// (re)establish it at a word boundary (__j == 0), and __i starts at 0 so
+		// the first iteration always takes that branch — but puya cannot derive
+		// __j == 0 from __i == 0, so it warned "__wb potentially used before
+		// assignment" on EVERY slot-mode contract with a mapping. Spurious, but
+		// it buries real warnings, and the write path's self-referential
+		// `__wb = (__j == 0) ? bzero(32) : __wb` genuinely reads it first.
+		body->body.push_back(awst::makeAssignmentStatement(
+			bytesVar("__wb"), awst::makeBzero(u64c(32), loc), loc));
 		auto cond = awst::makeNumericCompare(u64Var("__i"),
 			awst::NumericComparison::Lt, u64Var("__nl"), loc);
 		auto loop = awst::makeBlock(loc);
@@ -738,6 +747,15 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			biguintVar("__chunk"), chunkBase(), loc));
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64Var("__i"), u64c(0), loc));
+		// Seed __wb so definite assignment is provable. Both loops below only
+		// (re)establish it at a word boundary (__j == 0), and __i starts at 0 so
+		// the first iteration always takes that branch — but puya cannot derive
+		// __j == 0 from __i == 0, so it warned "__wb potentially used before
+		// assignment" on EVERY slot-mode contract with a mapping. Spurious, but
+		// it buries real warnings, and the write path's self-referential
+		// `__wb = (__j == 0) ? bzero(32) : __wb` genuinely reads it first.
+		body->body.push_back(awst::makeAssignmentStatement(
+			bytesVar("__wb"), awst::makeBzero(u64c(32), loc), loc));
 		// write the new elements (packed: rebuild each word from zero at its
 		// first element, so a partially-filled last word has clean high bytes)
 		{
