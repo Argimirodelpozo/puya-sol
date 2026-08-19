@@ -20,8 +20,13 @@ def _addr_bytes(abi_return):
     return bytes(abi_return)[-32:]
 
 
-def _update_app(harness, app, artifacts, name, sender_addr, sender_sk):
-    """Submit a bare UpdateApplication reusing the app's own programs."""
+def _update_app(harness, app, artifacts, name, sender_addr, sender_sk,
+                bare=False):
+    """Submit a native UpdateApplication reusing the app's own programs.
+
+    The synthesized gate is an ARC-4 ABI method, so the txn carries its
+    selector; bare=True omits it to prove selector-less updates stay closed.
+    """
     client = harness.localnet.algod
     entry = artifacts.by_contract[name]
     approval = base64.b64decode(
@@ -29,11 +34,14 @@ def _update_app(harness, app, artifacts, name, sender_addr, sender_sk):
     clear = base64.b64decode(
         client.compile(entry["clear_teal"].read_text())["result"])
     params = client.suggested_params()
+    from algosdk.abi import Method
+    selector = Method.from_signature("__erc1967_update()void").get_selector()
     txn = transaction.ApplicationUpdateTxn(
-        sender_addr, params, app.app_id, approval, clear)
+        sender_addr, params, app.app_id, approval, clear,
+        app_args=None if bare else [selector])
     signed = txn.sign(sender_sk)
     txid = client.send_transaction(signed)
-    transaction.wait_for_confirmation(client, txid, 4)
+    return transaction.wait_for_confirmation(client, txid, 4)
 
 
 def _run_flow(harness, extra_args):
@@ -65,8 +73,23 @@ def _run_flow(harness, extra_args):
 
     # The native update ceremony works for the admin — and preserves state.
     harness.call(app, "setValue(uint256)", 777)
-    _update_app(harness, app, artifacts, "Erc1967Impl", acct.address, acct.private_key)
+    info = _update_app(
+        harness, app, artifacts, "Erc1967Impl", acct.address, acct.private_key)
+    # The gate emits ARC-28 Upgraded(address) — EIP-1967's event signature —
+    # inside the UpdateApplication txn; the "implementation" is the app's own
+    # identity (bytes24 ++ app id).
+    import base64
+    import hashlib
+    want = (hashlib.new("sha512_256", b"Upgraded(address)").digest()[:4]
+            + bytes(24) + app.app_id.to_bytes(8, "big"))
+    logs = [base64.b64decode(l) for l in info.get("logs") or []]
+    assert want in logs, [l.hex() for l in logs]
     assert as_int(harness.call(app, "value()").abi_return) == 777
+
+    # A selector-less (bare) update is rejected even for the admin.
+    with pytest.raises(Exception):
+        _update_app(harness, app, artifacts, "Erc1967Impl",
+                    acct.address, acct.private_key, bare=True)
     got = harness.call(app, "admin()").abi_return
     assert _addr_bytes(got) == decode_address(acct.address)
 

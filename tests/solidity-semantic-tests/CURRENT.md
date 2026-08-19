@@ -1,3 +1,12 @@
+# Semantic Test Status — v495 (EIP-1967 Upgraded event + ABI update gate)
+
+> **Full run 2026-08-19: 8 failed / 1431 passed / 113 xf / 32 xp** (RESULTS_v495_upgraded_event.txt).
+> Baseline held. The synthesized ERC-1967 gate is now an ARC-4 ABI method
+> (`__erc1967_update()` declared in ARC-56 with call:[UpdateApplication];
+> update txn carries the selector; bare updates rejected) and emits ARC-28
+> `Upgraded(address)` — EIP-1967's event signature — registered in ARC-56
+> (puya only aggregates events from ABI methods, so bare would drop it).
+
 # Semantic Test Status — v494 (EIP-1967 proxy-slot lowering)
 
 > **Full run 2026-08-18: 8 failed / 1431 passed / 113 xf / 32 xp** (RESULTS_v494_erc1967.txt).

@@ -57,9 +57,17 @@ implementation has no proxy surface.
 EIP-1967 slot constants are recognized at asm `sload`/`sstore` sites:
 - **admin slot** reads/writes lower to a synthesized biguint app global
   `__erc1967_admin` (unset reads 0, EVM semantics), and any contract that
-  touches it grows a bare `__erc1967_update` method — allowed only on
-  `OnCompletion == UpdateApplication`, never on create — that asserts
-  `Txn.Sender == admin`. Zero admin ⇒ updates rejected (fail-closed).
+  touches it grows an ARC-4 `__erc1967_update()` method — declared in
+  ARC-56 with `call: ["UpdateApplication"]`, never on create — that asserts
+  `Txn.Sender == admin` and emits ARC-28 **`Upgraded(address)`** (EIP-1967's
+  event signature; the implementation arg is the app's own identity), so
+  indexers see the same upgrade history as on EVM. The update txn carries
+  the method selector in `ApplicationArgs[0]`; zero admin ⇒ rejected, and a
+  selector-less bare update is rejected too (fail-closed both ways).
+  (`AdminChanged`/`BeaconUpgraded` are deliberately NOT synthesized: on EVM
+  those are Solidity-level emits — OZ's ERC1967Utils — which compile
+  through the normal event path already; a raw asm `sstore` to the admin
+  slot emits nothing on EVM and so emits nothing here.)
 - **implementation slot** reads lower to the app's own identity
   (`bytes24 ++ itob(app id)`, the contract-value convention); writes
   (`upgradeTo` bodies) lower to a runtime trap whose message explains the
@@ -72,12 +80,16 @@ admin round-trip, upgradeTo trap, admin-signed native update preserving
 state) in both default and `--evm-layout` modes. `Proxy.sol`/`ERC1967Utils`
 machinery unreached from compiled entry points still DCEs away as before.
 
-**Not covered yet (both modes): mid-history upgrades.** We currently deploy
-one implementation for the whole window. The skipped `upgradeToAndCall`
-calls in the trace tell us exactly when the implementation changed; the
-replay-side fix is an `UpdateApplication` at the historical upgrade block
-with the next implementation's compiled program. Straightforward on the
-oracle leg; needs artifact plumbing (per-implementation out_avm dirs).
+**Mid-history upgrades: ✅** (joint replay `"upgrades"` config). At the
+historical upgrade block the oracle leg re-registers the app with the next
+implementation's compiled program (boxes/globals persist — exactly a native
+`UpdateApplication`), the EVM leg swaps the runtime code at the historical
+address with storage preserved, and both replay the `upgradeToAndCall`
+embedded calldata. Per-implementation artifact dirs (`out_avm_*`) + era-aware
+ARC-56/ABI switching; differ decodes both eras' events. Proven by
+`selftest_joint_upgrade.py` (synthetic two-era contract; an upgrade-missing
+leg diverges in all three lanes). CCTP v1/v2 did not upgrade in-window, so
+their configs carry no entries.
 
 ---
 

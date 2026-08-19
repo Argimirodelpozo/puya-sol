@@ -30,6 +30,40 @@ std::shared_ptr<awst::Expression> adminTarget(awst::SourceLocation const& _loc)
 		awst::WType::biguintType(), _loc);
 }
 
+std::shared_ptr<awst::Expression> ownIdentityBytes(awst::SourceLocation const& _loc)
+{
+	// bytes24 ++ itob(app id): the contract-value convention address(this)
+	// uses; the identity model means the "implementation address" IS the app.
+	return awst::makeConcat(
+		awst::makeBzero(24, _loc),
+		awst::makeItob(
+			awst::makeGlobal("CurrentApplicationID",
+				awst::WType::uint64Type(), _loc),
+			_loc),
+		_loc);
+}
+
+std::shared_ptr<awst::Statement> upgradedEventStatement(
+	awst::SourceLocation const& _loc)
+{
+	// ARC-28 Upgraded(address), the EIP-1967 event signature: the update gate
+	// runs inside the UpdateApplication txn, so this marks each native
+	// upgrade for indexers exactly where EVM's upgradeTo would have emitted.
+	// Statics: WTypes must outlive the AWST; mirrors TypeMapper's address
+	// mapping (ARC4StaticArray<byte,32> aliased "address").
+	static awst::ARC4UIntN const byte8(8);
+	static awst::ARC4StaticArray const addrType(&byte8, 32, "address");
+	static awst::ARC4Struct const upgradedType(
+		"Upgraded", {{"implementation", &addrType}}, true);
+	auto impl = awst::makeReinterpretCast(
+		ownIdentityBytes(_loc), awst::WType::accountType(), _loc);
+	auto value = awst::makeNewStruct(&upgradedType, _loc);
+	value->values["implementation"] =
+		awst::makeARC4Encode(std::move(impl), &addrType, _loc);
+	return awst::makeExpressionStatement(
+		awst::makeEmit("Upgraded(address)", std::move(value), _loc), _loc);
+}
+
 std::shared_ptr<awst::Expression> senderAsBiguint(awst::SourceLocation const& _loc)
 {
 	// msg.sender's stored form everywhere in this compiler is the raw
@@ -79,17 +113,8 @@ void Erc1967Lowering::adminStore(
 std::shared_ptr<awst::Expression> Erc1967Lowering::implementationLoad(
 	awst::SourceLocation const& _loc)
 {
-	// This app IS the implementation: bytes24 ++ itob(app id), the same
-	// contract-value convention address(this) uses.
-	return awst::makeAsBiguint(
-		awst::makeConcat(
-			awst::makeBzero(24, _loc),
-			awst::makeItob(
-				awst::makeGlobal("CurrentApplicationID",
-					awst::WType::uint64Type(), _loc),
-				_loc),
-			_loc),
-		_loc);
+	// This app IS the implementation.
+	return awst::makeAsBiguint(ownIdentityBytes(_loc), _loc);
 }
 
 std::shared_ptr<awst::Statement> Erc1967Lowering::trapStatement(
@@ -139,13 +164,21 @@ awst::ContractMethod Erc1967Lowering::updateGateMethod(
 		awst::makeAssert(std::move(isAdmin), _loc,
 			"ERC-1967: update sender is not the proxy admin"),
 		_loc));
+	body->body.push_back(upgradedEventStatement(_loc));
 	body->body.push_back(awst::makeReturnStatement(nullptr, _loc));
 	method.body = std::move(body);
 
-	awst::ARC4BareMethodConfig config;
+	// ABI (not bare) on purpose: puya aggregates ARC-56 events only from
+	// ABI methods (arc56.py filters isinstance ARC4ABIMethod), so bare would
+	// silently drop the Upgraded registration — and a declared method also
+	// surfaces the update surface in the app spec for ARC-56-aware tooling.
+	// The ceremony gains one field: the update txn carries the method
+	// selector in ApplicationArgs[0]; a BARE update is rejected (fail-closed).
+	awst::ARC4ABIMethodConfig config;
 	config.sourceLocation = _loc;
 	config.allowedCompletionTypes = {4}; // UpdateApplication only
 	config.create = 3;                   // never on create
+	config.name = "__erc1967_update";
 	method.arc4MethodConfig = config;
 	return method;
 }

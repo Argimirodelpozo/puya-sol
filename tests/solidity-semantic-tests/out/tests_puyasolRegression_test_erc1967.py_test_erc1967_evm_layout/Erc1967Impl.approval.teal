@@ -30,8 +30,9 @@ main:
     return
 
 main_after_if_else@2:
-    txn NumAppArgs
-    bz main___erc1967_update@16
+    pushbytes 0x67ae7042 // method "__erc1967_update()void"
+    txna ApplicationArgs 0
+    match main___erc1967_update_route@4
     txn OnCompletion
     !
     assert
@@ -40,30 +41,30 @@ main_after_if_else@2:
     bytec 4 // method "admin()address"
     pushbytess 0x4e859a11 0x49841757 0x866a03ee 0xa0b02ffa 0xc46a4b39 0x75d12918 // method "initAdmin(address)void", method "changeAdmin(address)void", method "implementation()address", method "upgradeTo(address)void", method "setValue(uint256)void", method "value()uint256"
     txna ApplicationArgs 0
-    match main_admin_route@6 main_initAdmin_route@7 main_changeAdmin_route@8 main_implementation_route@9 main_upgradeTo_route@10 main_setValue_route@11 main_value_route@12
+    match main_admin_route@7 main_initAdmin_route@8 main_changeAdmin_route@9 main_implementation_route@10 main_upgradeTo_route@11 main_setValue_route@12 main_value_route@13
     err
 
-main_value_route@12:
+main_value_route@13:
     txn GroupIndex
-    bz main_ternary_false@21
+    bz main_ternary_false@19
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@22:
+main_ternary_merge@20:
     !
     assert // not payable
     bytec_0 // 0x703a0000000000000000
     box_len
     bury 1
-    bz main_after_if_else@67
+    bz main_after_if_else@65
     bytec_0 // 0x703a0000000000000000
     intc_2 // 0
     intc_1 // 32
     box_extract
 
-main_after_inlined___puyasol___storage_read@71:
+main_after_inlined___puyasol___storage_read@69:
     dup
     len
     intc_1 // 32
@@ -79,15 +80,15 @@ main_after_inlined___puyasol___storage_read@71:
     intc_0 // 1
     return
 
-main_after_if_else@67:
+main_after_if_else@65:
     bytec_3 // 0x
-    b main_after_inlined___puyasol___storage_read@71
+    b main_after_inlined___puyasol___storage_read@69
 
-main_ternary_false@21:
+main_ternary_false@19:
     intc_2 // 0
-    b main_ternary_merge@22
+    b main_ternary_merge@20
 
-main_setValue_route@11:
+main_setValue_route@12:
     txna ApplicationArgs 1
     dup
     len
@@ -95,13 +96,13 @@ main_setValue_route@11:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@26
+    bz main_ternary_false@24
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@27:
+main_ternary_merge@25:
     !
     assert // not payable
     bytec_0 // 0x703a0000000000000000
@@ -125,24 +126,24 @@ main_ternary_merge@27:
     intc_0 // 1
     return
 
-main_ternary_false@26:
+main_ternary_false@24:
     intc_2 // 0
-    b main_ternary_merge@27
+    b main_ternary_merge@25
 
-main_upgradeTo_route@10:
+main_upgradeTo_route@11:
     txna ApplicationArgs 1
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@31
+    bz main_ternary_false@29
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@32:
+main_ternary_merge@30:
     !
     assert // not payable
     txn Sender
@@ -150,9 +151,9 @@ main_ternary_merge@32:
     dup
     bury 4
     ==
-    bnz main_bool_true@35
+    bnz main_bool_true@33
     global CallerApplicationID
-    bz main_bool_false@36
+    bz main_bool_false@34
     intc_3 // 24
     bzero
     global CallerApplicationID
@@ -160,40 +161,40 @@ main_ternary_merge@32:
     concat
     dig 2
     ==
-    bz main_bool_false@36
+    bz main_bool_false@34
 
-main_bool_true@35:
+main_bool_true@33:
     intc_0 // 1
 
-main_bool_merge@37:
+main_bool_merge@35:
     dup
-    bnz main_after_if_else@39
+    bnz main_after_if_else@37
     bytec 5 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000096e6f742061646d696e0000000000000000000000000000000000000000000000
     log
 
-main_after_if_else@39:
+main_after_if_else@37:
     assert // not admin
     load 0
     store 0
     err // ERC-1967 upgrade has no in-contract lowering: the AVM upgrade is a native UpdateApplication transaction submitted by the admin with the new compiled program (see proxy.md)
 
-main_bool_false@36:
+main_bool_false@34:
     intc_2 // 0
-    b main_bool_merge@37
+    b main_bool_merge@35
 
-main_ternary_false@31:
+main_ternary_false@29:
     intc_2 // 0
-    b main_ternary_merge@32
+    b main_ternary_merge@30
 
-main_implementation_route@9:
+main_implementation_route@10:
     txn GroupIndex
-    bz main_ternary_false@43
+    bz main_ternary_false@41
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@44:
+main_ternary_merge@42:
     !
     assert // not payable
     load 0
@@ -221,11 +222,11 @@ main_ternary_merge@44:
     intc_0 // 1
     return
 
-main_ternary_false@43:
+main_ternary_false@41:
     intc_2 // 0
-    b main_ternary_merge@44
+    b main_ternary_merge@42
 
-main_changeAdmin_route@8:
+main_changeAdmin_route@9:
     txna ApplicationArgs 1
     dup
     bury 2
@@ -234,13 +235,13 @@ main_changeAdmin_route@8:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@48
+    bz main_ternary_false@46
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@49:
+main_ternary_merge@47:
     !
     assert // not payable
     txn Sender
@@ -248,9 +249,9 @@ main_ternary_merge@49:
     dup
     bury 4
     ==
-    bnz main_bool_true@52
+    bnz main_bool_true@50
     global CallerApplicationID
-    bz main_bool_false@53
+    bz main_bool_false@51
     intc_3 // 24
     bzero
     global CallerApplicationID
@@ -258,18 +259,18 @@ main_ternary_merge@49:
     concat
     dig 2
     ==
-    bz main_bool_false@53
+    bz main_bool_false@51
 
-main_bool_true@52:
+main_bool_true@50:
     intc_0 // 1
 
-main_bool_merge@54:
+main_bool_merge@52:
     dup
-    bnz main_after_if_else@56
+    bnz main_after_if_else@54
     bytec 5 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000096e6f742061646d696e0000000000000000000000000000000000000000000000
     log
 
-main_after_if_else@56:
+main_after_if_else@54:
     assert // not admin
     load 0
     store 0
@@ -281,15 +282,15 @@ main_after_if_else@56:
     intc_0 // 1
     return
 
-main_bool_false@53:
+main_bool_false@51:
     intc_2 // 0
-    b main_bool_merge@54
+    b main_bool_merge@52
 
-main_ternary_false@48:
+main_ternary_false@46:
     intc_2 // 0
-    b main_ternary_merge@49
+    b main_ternary_merge@47
 
-main_initAdmin_route@7:
+main_initAdmin_route@8:
     txna ApplicationArgs 1
     dup
     len
@@ -297,24 +298,24 @@ main_initAdmin_route@7:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@60
+    bz main_ternary_false@58
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@61:
+main_ternary_merge@59:
     !
     assert // not payable
     callsub admin
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     ==
     dup
-    bnz main_after_if_else@63
+    bnz main_after_if_else@61
     pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000013616c726561647920696e697469616c697a656400000000000000000000000000
     log
 
-main_after_if_else@63:
+main_after_if_else@61:
     assert // already initialized
     load 0
     store 0
@@ -326,11 +327,11 @@ main_after_if_else@63:
     intc_0 // 1
     return
 
-main_ternary_false@60:
+main_ternary_false@58:
     intc_2 // 0
-    b main_ternary_merge@61
+    b main_ternary_merge@59
 
-main_admin_route@6:
+main_admin_route@7:
     callsub admin
     bytec_2 // 0x151f7c75
     swap
@@ -339,7 +340,7 @@ main_admin_route@6:
     intc_0 // 1
     return
 
-main___erc1967_update@16:
+main___erc1967_update_route@4:
     txn OnCompletion
     pushint 4 // UpdateApplication
     ==
@@ -355,6 +356,15 @@ main___erc1967_update@16:
     txn Sender
     b==
     assert // ERC-1967: update sender is not the proxy admin
+    intc_3 // 24
+    bzero
+    global CurrentApplicationID
+    itob
+    concat
+    pushbytes 0x0ecb2f31 // method "Upgraded(address)"
+    swap
+    concat
+    log
     intc_0 // 1
     return
 
