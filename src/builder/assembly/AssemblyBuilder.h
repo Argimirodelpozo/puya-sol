@@ -1137,6 +1137,16 @@ private:
 	/// unresolvable memory write and at control-flow boundaries (invalidateMemConstants).
 	std::map<std::string, uint64_t> m_localConstants;
 
+	/// Yul locals let-bound to an EIP-1967 slot constant (decimal value).
+	/// Folded at every bare reference so Erc1967Lowering::classify fires on
+	/// `let s := _ADMIN_SLOT; sstore(s, v)` — the OZ ERC1967Utils body shape.
+	/// Same single-assignment gating as m_localConstants; ONLY the three 1967
+	/// slots are recorded, so nothing else changes lowering. The recording
+	/// let emits NO store (all references fold), so a magic constant
+	/// SURVIVING in the AWST marks a genuine runtime escape
+	/// (Erc1967Lowering::warnEscapedSlotConstants).
+	std::map<std::string, std::string> m_localSlotConstants;
+
 	/// Yul locals that are the target of ANY `:=` assignment anywhere in the current
 	/// assembly block (incl. nested blocks/loops and user function bodies, by ORIGINAL
 	/// name). Such locals never enter m_localConstants: the fold is flow-insensitive,

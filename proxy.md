@@ -54,7 +54,17 @@ the creation transaction's delegatecall trace and replayed as the first call
 implementation has no proxy surface.
 
 **Compile support: ✅ v1** (`src/builder/proxies/Erc1967Lowering`). The three
-EIP-1967 slot constants are recognized at asm `sload`/`sstore` sites:
+EIP-1967 slot constants are recognized at asm `sload`/`sstore` sites —
+directly, or through a single-assignment Yul local (`let s := _ADMIN_SLOT;
+sstore(s, v)`, the OZ `ERC1967Utils` body shape; such lets are folded so the
+slot classifies). A slot constant that instead ESCAPES into runtime data flow
+(function argument, memory store, arithmetic — e.g. OZ
+`StorageSlot.getAddressSlot(SLOT).value`, where the slot travels through a
+param) cannot be classified; the compiler emits a warning naming the slot,
+because storage through a derived slot value is NOT mapped to the lowerings
+below and splits from them. Admin-slot uses reached through a **library or
+free function** attach the gate to every contract whose call graph reaches
+that function (not to whichever contract compiles first).
 - **admin slot** reads/writes lower to a synthesized biguint app global
   `__erc1967_admin` (unset reads 0, EVM semantics), and any contract that
   touches it grows an ARC-4 `__erc1967_update()` method — declared in
@@ -64,6 +74,12 @@ EIP-1967 slot constants are recognized at asm `sload`/`sstore` sites:
   indexers see the same upgrade history as on EVM. The update txn carries
   the method selector in `ApplicationArgs[0]`; zero admin ⇒ rejected, and a
   selector-less bare update is rejected too (fail-closed both ways).
+  The stored admin may be an ACCOUNT (raw 32 bytes, compared against
+  `Txn.Sender` directly) or a CONTRACT identity (`bytes24 ++ app id` — the
+  transparent-proxy ProxyAdmin topology): the gate then matches the sender
+  against that application's ESCROW address via `app_params_get AppAddress`,
+  so an admin app driving an inner `UpdateApplication` authorizes. A missing
+  app reads `exists = false` ⇒ rejected (fail-closed).
   (`AdminChanged`/`BeaconUpgraded` are deliberately NOT synthesized: on EVM
   those are Solidity-level emits — OZ's ERC1967Utils — which compile
   through the normal event path already; a raw asm `sstore` to the admin
@@ -74,6 +90,14 @@ EIP-1967 slot constants are recognized at asm `sload`/`sstore` sites:
   native-update ceremony. The AVM upgrade is the `UpdateApplication`
   transaction itself, submitted by the admin with the new program bytes.
 - **beacon slot** reads/writes trap at runtime (see §4).
+
+⚠️ A contract that touches ONLY the implementation slot (the UUPS §3 shape —
+no admin-slot use anywhere in its call graph) gets **no** update gate: native
+updates stay rejected, i.e. the app is permanently un-updatable. This is
+deliberate fail-closed behaviour — synthesizing an open or implicit gate
+would be worse — but it means a UUPS-style "upgradeable" contract compiled
+today is only upgradeable once it also touches the admin slot (or once the
+§3 `_authorizeUpgrade` mapping lands).
 
 Guard: `puyasolRegression/test_erc1967.py` — full flow (fail-closed update,
 admin round-trip, upgradeTo trap, admin-signed native update preserving

@@ -3,6 +3,7 @@
 
 #include "builder/proxies/Erc1967Lowering.h"
 
+#include "awst/Visit.h"
 #include "Logger.h"
 
 namespace puyasol::builder::proxies
@@ -21,6 +22,15 @@ constexpr char const* ADMIN_SLOT_DEC =
 // keccak256("eip1967.proxy.beacon") - 1
 constexpr char const* BEACON_SLOT_DEC =
 	"74152234768234802001998023604048924213078445070507226371336425913862612794704";
+
+// The same three slots as lowercase hex (no 0x) — the 32-byte BytesConstant
+// spelling a Solidity-level `bytes32 constant` takes outside assembly.
+constexpr char const* IMPL_SLOT_HEX =
+	"360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc";
+constexpr char const* ADMIN_SLOT_HEX =
+	"b53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103";
+constexpr char const* BEACON_SLOT_HEX =
+	"a3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50";
 
 std::shared_ptr<awst::Expression> adminTarget(awst::SourceLocation const& _loc)
 {
@@ -92,6 +102,80 @@ Erc1967Slot Erc1967Lowering::classify(awst::Expression const* _slotExpr)
 	return Erc1967Slot::None;
 }
 
+Erc1967Slot Erc1967Lowering::classifyValue(awst::Expression const* _expr)
+{
+	if (auto slot = classify(_expr); slot != Erc1967Slot::None)
+		return slot;
+	auto const* b = dynamic_cast<awst::BytesConstant const*>(_expr);
+	if (!b || b->value.size() != 32)
+		return Erc1967Slot::None;
+	static char const* hexDigits = "0123456789abcdef";
+	std::string hex;
+	hex.reserve(64);
+	for (uint8_t byte: b->value)
+	{
+		hex.push_back(hexDigits[byte >> 4]);
+		hex.push_back(hexDigits[byte & 0xf]);
+	}
+	if (hex == IMPL_SLOT_HEX)
+		return Erc1967Slot::Implementation;
+	if (hex == ADMIN_SLOT_HEX)
+		return Erc1967Slot::Admin;
+	if (hex == BEACON_SLOT_HEX)
+		return Erc1967Slot::Beacon;
+	return Erc1967Slot::None;
+}
+
+char const* Erc1967Lowering::slotName(Erc1967Slot _slot)
+{
+	switch (_slot)
+	{
+	case Erc1967Slot::Admin: return "admin";
+	case Erc1967Slot::Implementation: return "implementation";
+	case Erc1967Slot::Beacon: return "beacon";
+	case Erc1967Slot::None: break;
+	}
+	return "none";
+}
+
+namespace
+{
+
+void warnEscapedSlot(
+	awst::Expression const& _expression, std::set<Erc1967Slot>& _warned)
+{
+	auto slot = Erc1967Lowering::classifyValue(&_expression);
+	if (slot == Erc1967Slot::None || !_warned.insert(slot).second)
+		return;
+	Logger::instance().warning(
+		std::string("ERC-1967 ") + Erc1967Lowering::slotName(slot)
+		+ " slot constant escapes into a runtime context (function argument, "
+		"memory, or arithmetic) that puya-sol cannot classify — storage "
+		"reads/writes through a DERIVED slot value are NOT lowered to the "
+		"native proxy model and will split from it (e.g. OZ "
+		"StorageSlot.getAddressSlot(SLOT).value). Restructure to sload/sstore "
+		"directly on the slot constant (see proxy.md)",
+		_expression.sourceLocation);
+}
+
+} // namespace
+
+void Erc1967Lowering::warnEscapedSlotConstants(
+	awst::ContractMethod const& _method, std::set<Erc1967Slot>& _warned)
+{
+	awst::visitExpressions(_method, [&](awst::Expression const& e) {
+		warnEscapedSlot(e, _warned);
+	});
+}
+
+void Erc1967Lowering::warnEscapedSlotConstants(
+	awst::Statement const& _root, std::set<Erc1967Slot>& _warned)
+{
+	awst::visitExpressions(_root, [&](awst::Expression const& e) {
+		warnEscapedSlot(e, _warned);
+	});
+}
+
 std::shared_ptr<awst::Expression> Erc1967Lowering::adminLoad(
 	awst::SourceLocation const& _loc)
 {
@@ -157,11 +241,77 @@ awst::ContractMethod Erc1967Lowering::updateGateMethod(
 	method.returnType = awst::WType::voidType();
 
 	auto body = awst::makeBlock(_loc);
-	auto isAdmin = awst::makeNumericCompare(
-		adminLoad(_loc), awst::NumericComparison::Eq,
-		senderAsBiguint(_loc), _loc);
+	auto adminVar = [&] {
+		return awst::makeVarExpression(
+			"__erc1967_gate_admin", awst::WType::biguintType(), _loc);
+	};
+	auto okVar = [&] {
+		return awst::makeVarExpression(
+			"__erc1967_gate_ok", awst::WType::boolType(), _loc);
+	};
+	body->body.push_back(awst::makeAssignmentStatement(
+		adminVar(), adminLoad(_loc), _loc));
+	// Account-form admin: the raw 32-byte account equals the sender.
+	body->body.push_back(awst::makeAssignmentStatement(
+		okVar(),
+		awst::makeNumericCompare(adminVar(), awst::NumericComparison::Eq,
+			senderAsBiguint(_loc), _loc),
+		_loc));
+	// Contract-form admin (bytes24 ++ app id — the ProxyAdmin topology): the
+	// stored word can never equal a sender account (app escrows are sha512_256
+	// digests), so match the sender against that application's ESCROW address
+	// instead — the Txn.Sender an admin app's inner UpdateApplication carries.
+	// Gated on the value fitting uint64; a real account with 24 leading zero
+	// bytes is unconstructible. A missing app reads exists=false (never trust
+	// the value arm: app_params_get pushes uint64 0 for it) — fail closed.
+	{
+		auto isAppForm = awst::makeBoolBinOp(
+			awst::makeNumericCompare(adminVar(), awst::NumericComparison::Ne,
+				awst::makeBiguintConstant("0", _loc), _loc),
+			awst::BinaryBooleanOperator::And,
+			awst::makeNumericCompare(adminVar(), awst::NumericComparison::Lte,
+				awst::makeIntegerConstant("18446744073709551615", _loc,
+					awst::WType::biguintType()), _loc),
+			_loc);
+		auto cond = awst::makeBoolBinOp(
+			awst::makeNot(okVar(), _loc), awst::BinaryBooleanOperator::And,
+			std::move(isAppForm), _loc);
+
+		auto thenBlk = awst::makeBlock(_loc);
+		// Statics: WTypes must outlive the AWST (same pattern as the event).
+		static awst::WTuple const appAddrTuple(
+			{awst::WType::bytesType(), awst::WType::boolType()});
+		auto appId = awst::makeWord32ToUInt64(
+			awst::makeLeftPadToN(
+				awst::makeAsBytes(adminVar(), _loc), 32, _loc),
+			_loc);
+		auto tupleVar = [&] {
+			return awst::makeVarExpression(
+				"__erc1967_gate_app", &appAddrTuple, _loc);
+		};
+		thenBlk->body.push_back(awst::makeAssignmentStatement(
+			tupleVar(),
+			awst::makeAppParamsGet(
+				"AppAddress", std::move(appId), &appAddrTuple, _loc),
+			_loc));
+		auto exists = awst::makeTupleItem(
+			tupleVar(), 1, awst::WType::boolType(), _loc);
+		auto escrow = awst::makeAsBiguint(
+			awst::makeTupleItem(tupleVar(), 0, awst::WType::bytesType(), _loc),
+			_loc);
+		thenBlk->body.push_back(awst::makeAssignmentStatement(
+			okVar(),
+			awst::makeBoolBinOp(
+				std::move(exists), awst::BinaryBooleanOperator::And,
+				awst::makeNumericCompare(std::move(escrow),
+					awst::NumericComparison::Eq, senderAsBiguint(_loc), _loc),
+				_loc),
+			_loc));
+		body->body.push_back(awst::makeIfElse(
+			std::move(cond), std::move(thenBlk), nullptr, _loc));
+	}
 	body->body.push_back(awst::makeExpressionStatement(
-		awst::makeAssert(std::move(isAdmin), _loc,
+		awst::makeAssert(okVar(), _loc,
 			"ERC-1967: update sender is not the proxy admin"),
 		_loc));
 	body->body.push_back(upgradedEventStatement(_loc));

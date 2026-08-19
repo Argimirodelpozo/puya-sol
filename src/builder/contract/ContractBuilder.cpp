@@ -1202,6 +1202,20 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 	// and-reset the direct flag so one contract's proxy machinery never leaks
 	// into the next unit member. Placed after ALL method translation (ordinary
 	// externals build in the loops above, not in buildApprovalProgram).
+	// A 1967 slot constant SURVIVING translation means it escaped into
+	// runtime data flow (classify consumes direct sload/sstore uses; the
+	// let-fold emits no store) — the OZ StorageSlot shape. Warn: storage
+	// through a derived slot value splits from the native proxy model.
+	{
+		std::set<proxies::Erc1967Slot> warned;
+		proxies::Erc1967Lowering::warnEscapedSlotConstants(
+			contract->approvalProgram, warned);
+		proxies::Erc1967Lowering::warnEscapedSlotConstants(
+			contract->clearProgram, warned);
+		for (auto const& method: contract->methods)
+			proxies::Erc1967Lowering::warnEscapedSlotConstants(method, warned);
+	}
+
 	bool usesErc1967Admin = m_typeMapper.artifacts().usesErc1967Admin;
 	m_typeMapper.artifacts().usesErc1967Admin = false;
 	if (!usesErc1967Admin)

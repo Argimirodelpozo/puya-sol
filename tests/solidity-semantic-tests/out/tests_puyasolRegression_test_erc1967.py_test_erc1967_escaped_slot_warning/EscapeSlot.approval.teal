@@ -1,0 +1,92 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_slot_flow.sol.EscapeSlot.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x733ab53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x0a4fb6b3 // method "admin()address"
+    txna ApplicationArgs 0
+    match main_admin_route@4
+    err
+
+main_admin_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    load 0
+    store 0
+    load 0
+    store 0
+    bytec_0 // 0x733ab53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103
+    intc_0 // 32
+    box_create
+    pop
+    bytec_0 // 0x733ab53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 12 20
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

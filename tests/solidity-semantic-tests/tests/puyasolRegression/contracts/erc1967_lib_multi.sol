@@ -25,6 +25,17 @@ contract Unrelated {
     function setX(uint256 v) public { x = v; }
 }
 
+// UUPS shape: implementation slot only, no admin-slot use anywhere. Gets NO
+// update gate — native updates stay rejected (fail-closed, see proxy.md §1).
+contract ImplOnly {
+    bytes32 internal constant _IMPL_SLOT =
+        0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
+
+    function implementation() public view returns (address i) {
+        assembly { i := sload(_IMPL_SLOT) }
+    }
+}
+
 contract LibProxy {
     uint256 public value;
 

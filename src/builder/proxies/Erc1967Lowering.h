@@ -3,6 +3,7 @@
 #include "awst/Node.h"
 
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -43,6 +44,26 @@ public:
 	/// compile-time IntegerConstants) or None.
 	static Erc1967Slot classify(awst::Expression const* _slotExpr);
 
+	/// classify() widened to VALUE positions: also matches a 32-byte
+	/// BytesConstant holding a slot word (the form a Solidity-level
+	/// `bytes32 constant` takes outside assembly).
+	static Erc1967Slot classifyValue(awst::Expression const* _expr);
+
+	/// "admin" / "implementation" / "beacon" for diagnostics.
+	static char const* slotName(Erc1967Slot _slot);
+
+	/// Warn (once per slot kind, via _warned) for every 1967 slot constant
+	/// SURVIVING in a translated body. classify() consumes the constants in
+	/// direct sload/sstore position, so a survivor means the slot value
+	/// escaped into runtime data flow (function argument, memory store,
+	/// arithmetic — e.g. OZ StorageSlot.getAddressSlot(SLOT).value) where
+	/// storage accesses are NOT mapped to the native proxy model and split
+	/// from the synthesized admin global / identity read / traps.
+	static void warnEscapedSlotConstants(
+		awst::ContractMethod const& _method, std::set<Erc1967Slot>& _warned);
+	static void warnEscapedSlotConstants(
+		awst::Statement const& _root, std::set<Erc1967Slot>& _warned);
+
 	/// Admin-slot read: StateGet with a biguint-0 default — an unset admin
 	/// reads as zero, exactly EVM's unset-slot semantics.
 	static std::shared_ptr<awst::Expression> adminLoad(
@@ -71,10 +92,14 @@ public:
 	static awst::AppStorageDefinition adminStateDefinition(
 		awst::SourceLocation const& _loc);
 
-	/// The bare UpdateApplication method gating native updates on the
-	/// 1967 admin: allowed ONLY for OnCompletion=UpdateApplication, body
-	/// asserts Txn.Sender == admin. A zero (never-set) admin locks updates
-	/// out entirely — fail closed.
+	/// The UpdateApplication method gating native updates on the 1967 admin:
+	/// allowed ONLY for OnCompletion=UpdateApplication. The stored admin may
+	/// be an ACCOUNT (raw 32 bytes → compared against Txn.Sender directly) or
+	/// a CONTRACT identity (bytes24 ++ app id, this compiler's contract-value
+	/// convention — the transparent-proxy ProxyAdmin topology): then the
+	/// sender must be that application's ESCROW address, so an admin app
+	/// driving an inner UpdateApplication authorizes. A zero (never-set)
+	/// admin locks updates out entirely — fail closed.
 	static awst::ContractMethod updateGateMethod(
 		std::string const& _cref, awst::SourceLocation const& _loc);
 };

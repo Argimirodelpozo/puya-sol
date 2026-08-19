@@ -7,10 +7,26 @@ implementation slot → the app's own identity; upgradeTo → runtime trap.
 import base64
 
 import pytest
-from algosdk import transaction
+from algosdk import account as algosdk_account, transaction
 from algosdk.encoding import decode_address
 
 from framework import as_int
+
+# Specific rejection only — a broad Exception match would also pass on the
+# known algod-30s-timeout flake class.
+REJECTED = "rejected by ApprovalProgram|logic eval error"
+
+
+def _funded_account(harness, microalgos=1_000_000):
+    """Generate a fresh account and fund it from the dispenser account."""
+    client = harness.localnet.algod
+    acct = harness.localnet.account
+    sk, addr = algosdk_account.generate_account()
+    params = client.suggested_params()
+    pay = transaction.PaymentTxn(acct.address, params, addr, microalgos)
+    txid = client.send_transaction(pay.sign(acct.private_key))
+    transaction.wait_for_confirmation(client, txid, 4)
+    return addr, sk
 
 
 def _addr_bytes(abi_return):
@@ -59,7 +75,7 @@ def _run_flow(harness, extra_args):
     assert as_int(harness.call(app, "implementation()").abi_return) == app.app_id
 
     # Fail closed: with a zero admin, native updates are rejected.
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match=REJECTED):
         _update_app(harness, app, artifacts, "Erc1967Impl", acct.address, acct.private_key)
 
     # Admin round-trips through the synthesized global.
@@ -87,11 +103,28 @@ def _run_flow(harness, extra_args):
     assert as_int(harness.call(app, "value()").abi_return) == 777
 
     # A selector-less (bare) update is rejected even for the admin.
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match=REJECTED):
         _update_app(harness, app, artifacts, "Erc1967Impl",
                     acct.address, acct.private_key, bare=True)
     got = harness.call(app, "admin()").abi_return
     assert _addr_bytes(got) == decode_address(acct.address)
+
+    # Beacon slot has no AVM analogue: both directions trap at runtime.
+    assert harness.call(app, "beacon()", expect_revert=True).reverted
+    assert harness.call(
+        app, "setBeacon(address)", acct.address, expect_revert=True).reverted
+
+    # changeAdmin hands the gate to a second account: the old admin is
+    # rejected, the new admin's native update succeeds.
+    new_addr, new_sk = _funded_account(harness)
+    harness.call(app, "changeAdmin(address)", new_addr)
+    assert _addr_bytes(harness.call(app, "admin()").abi_return) \
+        == decode_address(new_addr)
+    with pytest.raises(Exception, match=REJECTED):
+        _update_app(harness, app, artifacts, "Erc1967Impl",
+                    acct.address, acct.private_key)
+    _update_app(harness, app, artifacts, "Erc1967Impl", new_addr, new_sk)
+    assert as_int(harness.call(app, "value()").abi_return) == 777
 
 
 def test_erc1967_default_mode(harness):
@@ -119,7 +152,7 @@ def _run_lib_flow(harness, extra_args):
     unrelated = harness.deploy(artifacts, "Unrelated")
     harness.call(unrelated, "setX(uint256)", 5)
     assert as_int(harness.call(unrelated, "x()").abi_return) == 5
-    with pytest.raises(Exception):
+    with pytest.raises(Exception, match=REJECTED):
         _update_app(harness, unrelated, artifacts, "Unrelated",
                     acct.address, acct.private_key)
 
@@ -142,3 +175,83 @@ def test_erc1967_library_attribution_default(harness):
 
 def test_erc1967_library_attribution_evm_layout(harness):
     _run_lib_flow(harness, ["--evm-layout"])
+
+
+# ── 1967 slot-constant data flow + admin forms (erc1967_slot_flow.sol) ──────
+
+def test_erc1967_let_bound_slot(harness):
+    """`let s := _ADMIN_SLOT; sstore(s, v)` — the OZ ERC1967Utils body shape.
+
+    The let-bound slot constant is folded so classification fires: the full
+    admin round-trip and gated native update work exactly as with a literal
+    slot argument.
+    """
+    artifacts = harness.compile("puyasolRegression/contracts/erc1967_slot_flow.sol")
+    app = harness.deploy(artifacts, "LetSlot")
+    acct = harness.localnet.account
+
+    assert as_int(harness.call(app, "admin()").abi_return) == 0
+    with pytest.raises(Exception, match=REJECTED):
+        _update_app(harness, app, artifacts, "LetSlot",
+                    acct.address, acct.private_key)
+    harness.call(app, "initAdmin(address)", acct.address)
+    assert _addr_bytes(harness.call(app, "admin()").abi_return) \
+        == decode_address(acct.address)
+    _update_app(harness, app, artifacts, "LetSlot",
+                acct.address, acct.private_key)
+
+
+def test_erc1967_escaped_slot_warning(harness):
+    """A slot constant flowing through a function param (OZ StorageSlot's
+    getAddressSlot) cannot be classified — the compiler must WARN that
+    storage through the derived slot splits from the native proxy model.
+    """
+    harness.compile("puyasolRegression/contracts/erc1967_slot_flow.sol")
+    log = (harness.out_dir / "puya-sol.log").read_text()
+    assert "escapes into a runtime context" in log
+
+
+def test_erc1967_contract_valued_admin(harness):
+    """Admin stored as a CONTRACT — identity form (bytes24 ++ app id, the
+    ProxyAdmin topology) or escrow form (`address(this)`): the gate matches
+    the identity form against that app's ESCROW address via app_params_get,
+    so no EOA can update either way (fail-closed, not open).
+    """
+    artifacts = harness.compile("puyasolRegression/contracts/erc1967_slot_flow.sol")
+    acct = harness.localnet.account
+
+    # Identity form: raw word == bytes24(0) ++ itob(appId).
+    app = harness.deploy(artifacts, "SelfAdmin")
+    harness.call(app, "initAdminApp(uint256)", app.app_id)
+    assert as_int(harness.call(app, "admin()").abi_return) == app.app_id
+    with pytest.raises(Exception, match=REJECTED):
+        _update_app(harness, app, artifacts, "SelfAdmin",
+                    acct.address, acct.private_key)
+    # Structural pin: the gate maps an identity-form admin via its escrow.
+    teal = artifacts.by_contract["SelfAdmin"]["approval_teal"].read_text()
+    assert "app_params_get AppAddress" in teal
+
+    # Escrow form: `address(this)` stores the app's escrow ACCOUNT — the
+    # direct-compare arm applies, and an EOA still can't satisfy it.
+    app2 = harness.deploy(artifacts, "SelfAdmin")
+    harness.call(app2, "initAdminSelf()")
+    with pytest.raises(Exception, match=REJECTED):
+        _update_app(harness, app2, artifacts, "SelfAdmin",
+                    acct.address, acct.private_key)
+
+
+def test_erc1967_impl_only_no_gate(harness):
+    """UUPS shape (implementation slot only, no admin use): NO gate is
+    synthesized — native updates stay rejected, fail-closed (proxy.md §1).
+    """
+    artifacts = harness.compile("puyasolRegression/contracts/erc1967_lib_multi.sol")
+    app = harness.deploy(artifacts, "ImplOnly")
+    acct = harness.localnet.account
+
+    assert as_int(harness.call(app, "implementation()").abi_return) == app.app_id
+    with pytest.raises(Exception, match=REJECTED):
+        _update_app(harness, app, artifacts, "ImplOnly",
+                    acct.address, acct.private_key)
+    with pytest.raises(Exception, match=REJECTED):
+        _update_app(harness, app, artifacts, "ImplOnly",
+                    acct.address, acct.private_key, bare=True)

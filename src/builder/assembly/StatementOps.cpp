@@ -2,6 +2,7 @@
 /// Yul statement translation: variable declarations, assignments, expression statements, function definitions.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/proxies/Erc1967Lowering.h"
 #include "builder/sol-types/FunctionPointerKind.h"
 #include "awst/NameGen.h"
 #include "Logger.h"
@@ -151,6 +152,7 @@ void AssemblyBuilder::buildVariableDeclaration(
 		{
 			m_localConstants[name] = 0;
 		}
+		m_localSlotConstants.erase(name); // same shadowing hygiene
 
 		auto target = awst::makeVarExpression(name, awst::WType::biguintType(), makeLoc(var.debugData));
 
@@ -166,6 +168,21 @@ void AssemblyBuilder::buildVariableDeclaration(
 		{
 			value = awst::makeZero(loc, awst::WType::biguintType());
 		}
+
+		// EIP-1967 slot bound to a single-assignment local: record + fold at
+		// every bare reference (classify() then fires at the sload/sstore
+		// site) and emit NO store — all references fold, and a magic constant
+		// surviving in the AWST is reserved as the "escaped to runtime"
+		// warning signal (Erc1967Lowering::warnEscapedSlotConstants).
+		if (!m_reassignedLocals.count(origName))
+			if (auto const* slotConst =
+					dynamic_cast<awst::IntegerConstant const*>(value.get());
+				slotConst && proxies::Erc1967Lowering::classify(slotConst)
+					!= proxies::Erc1967Slot::None)
+			{
+				m_localSlotConstants[name] = slotConst->value;
+				continue;
+			}
 
 		// Yul values are always 256-bit.
 		value = ensureBiguint(std::move(value), loc);
@@ -211,6 +228,7 @@ void AssemblyBuilder::buildAssignment(
 							: funcDef.returnVariables[i].name.str();
 						std::string varName = resolveVarRef(_assign.variableNames[i]);
 						m_localConstants.erase(varName); // reassigned → any recorded constant is stale
+						m_localSlotConstants.erase(varName);
 
 						auto retIt = m_locals.find(retName);
 						auto const* retType = (retIt != m_locals.end())
@@ -238,6 +256,7 @@ void AssemblyBuilder::buildAssignment(
 	// (repoints go through the mutable __cd_off_/__cd_len_ locals instead).
 	if (!m_calldataParamNames.count(name) && !m_calldataStaticPtrNames.count(name))
 		m_localConstants.erase(name);
+	m_localSlotConstants.erase(name);
 
 	// Bare STATIC calldata pointer write (`s := s2`, `s2 := 4`): repoint —
 	// assign the mutable __cd_off_<name> local; later reads (asm or Solidity

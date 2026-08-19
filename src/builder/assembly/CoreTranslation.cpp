@@ -319,6 +319,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 	if (auto shIt = m_signedShadow.find(name); shIt != m_signedShadow.end())
 		return awst::makeVarExpression(shIt->second, awst::WType::biguintType(), loc);
 
+	// let-bound EIP-1967 slot: fold to the constant so sload/sstore classify
+	// (the recording `let` emitted no store — see buildVariableDeclaration).
+	if (auto sc = m_localSlotConstants.find(name); sc != m_localSlotConstants.end())
+		return awst::makeIntegerConstant(sc->second, loc, awst::WType::biguintType());
+
 	auto it = m_locals.find(name);
 	// Default: all assembly vars are uint256
 	auto const* wtype = (it != m_locals.end()) ? it->second : awst::WType::biguintType();

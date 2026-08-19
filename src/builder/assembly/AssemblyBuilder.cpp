@@ -109,6 +109,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_returnType = _returnType;
 	m_locals.clear();
 	m_localConstants.clear();
+	m_localSlotConstants.clear();
 	m_reassignedLocals.clear();
 	auto const yulFacts = SolcFacts::analyzeYul(_block, _dialect);
 	m_reassignedLocals = yulFacts.assignedVariables;
@@ -763,6 +764,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 
 	m_locals.clear();
 	m_localConstants.clear();
+	m_localSlotConstants.clear();
 	m_calldataParamNames.clear();
 	m_upgradedLocals.clear();
 	m_pendingStatements.clear();

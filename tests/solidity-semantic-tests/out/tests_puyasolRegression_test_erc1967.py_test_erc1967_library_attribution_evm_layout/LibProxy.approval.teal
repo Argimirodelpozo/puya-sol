@@ -3,8 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_lib_multi.sol.LibProxy.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 32 1 0 24
     bytecblock 0x703a0000000000000000 0x "__erc1967_admin" 0x151f7c75
+    intc_2 // 0
+    dup
     pushint 4096
     bzero
     dup
@@ -55,13 +57,13 @@ main_ternary_merge@17:
     bytec_0 // 0x703a0000000000000000
     box_len
     bury 1
-    bz main_after_if_else@38
+    bz main_after_if_else@48
     bytec_0 // 0x703a0000000000000000
     intc_2 // 0
     intc_0 // 32
     box_extract
 
-main_after_inlined___puyasol___storage_read@42:
+main_after_inlined___puyasol___storage_read@52:
     dup
     len
     intc_0 // 32
@@ -77,9 +79,9 @@ main_after_inlined___puyasol___storage_read@42:
     intc_1 // 1
     return
 
-main_after_if_else@38:
+main_after_if_else@48:
     bytec_1 // 0x
-    b main_after_inlined___puyasol___storage_read@42
+    b main_after_inlined___puyasol___storage_read@52
 
 main_ternary_false@16:
     intc_2 // 0
@@ -198,10 +200,46 @@ main___erc1967_update_route@4:
     bytec_1 // 0x
     cover 2
     select
+    dup
+    bury 3
     txn Sender
     b==
+    dup
+    bnz main_after_if_else@44
+    dig 2
+    bytec_1 // 0x
+    b!=
+    bz main_after_if_else@44
+    dig 2
+    pushbytes 0xffffffffffffffff
+    b<=
+    bz main_after_if_else@44
+    pop
+    intc_0 // 32
+    bzero
+    dig 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_3 // 24
+    extract_uint64
+    app_params_get AppAddress
+    swap
+    bury 2
+    bz main_bool_false@42
+    dup
+    txn Sender
+    b==
+    bz main_bool_false@42
+    intc_1 // 1
+
+main_after_if_else@44:
     assert // ERC-1967: update sender is not the proxy admin
-    pushint 24
+    intc_3 // 24
     bzero
     global CurrentApplicationID
     itob
@@ -212,6 +250,10 @@ main___erc1967_update_route@4:
     log
     intc_1 // 1
     return
+
+main_bool_false@42:
+    intc_2 // 0
+    b main_after_if_else@44
 
 
 // __solfn_11() -> bytes:

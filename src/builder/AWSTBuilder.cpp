@@ -15,6 +15,7 @@
 #include "builder/sol-types/OverloadSuffix.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/proxies/Erc1967Lowering.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "Logger.h"
 
@@ -825,6 +826,16 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 			auto defReturn = awst::makeReturnStatement(StorageMapper::makeDefaultValue(sub->returnType, loc), loc);
 			sub->body->body.push_back(std::move(defReturn));
 		}
+	}
+
+	// 1967 slot constants surviving in a library/free body escaped into
+	// runtime data flow (the OZ StorageSlot shape) — warn here; contract
+	// bodies get the same scan in ContractBuilder.
+	if (sub->body)
+	{
+		std::set<builder::proxies::Erc1967Slot> warned;
+		builder::proxies::Erc1967Lowering::warnEscapedSlotConstants(
+			*sub->body, warned);
 	}
 
 	return sub;

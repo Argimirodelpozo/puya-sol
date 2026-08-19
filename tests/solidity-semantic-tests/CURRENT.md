@@ -1,3 +1,26 @@
+# Semantic Test Status — v499 (ERC-1967 follow-ons: slot data flow, contract admins)
+
+> **Full run 2026-08-19: 8 failed / 1441 passed / 113 xf / 32 xp** (RESULTS_v499_erc1967_followons.txt).
+> Baseline held; +4 new guard passes. Landed the 1967 re-review follow-ons
+> (splitter interaction skipped — splitter deprecated pending redesign):
+> **F3** — a slot constant let-bound before sload/sstore (`let s :=
+> _ADMIN_SLOT`, the OZ ERC1967Utils body shape) now FOLDS so classification
+> fires (m_localSlotConstants, magic values only, no store emitted); a slot
+> constant that instead escapes into runtime data flow (function argument —
+> the OZ StorageSlot.getAddressSlot shape) is caught by a post-AWST scan
+> that WARNS the derived-slot storage splits from the native proxy model.
+> **F4** — the update gate now accepts a CONTRACT-identity admin
+> (bytes24 ++ app id, the ProxyAdmin topology): matched against that app's
+> ESCROW address via app_params_get AppAddress (exists=false ⇒ fail-closed);
+> account-form admins compare directly as before. Confirmed: Solidity
+> `address(this)` stores the ESCROW form, contract-typed values the identity
+> form — the gate handles both. **F5** — guards grew: beacon read/write
+> traps, changeAdmin hand-off to a funded second account, let-bound-slot
+> round-trip, escaped-slot warning, contract-valued-admin (both forms,
+> fail-closed), UUPS impl-slot-only shape pinned as natively un-updatable
+> (documented in proxy.md §1); broad pytest.raises tightened to the specific
+> rejection match.
+
 # Semantic Test Status — v498 (new_review A1-A3: do-while body, dispatch OnCompletion, 1967 attribution)
 
 > **Full run 2026-08-19: 8 failed / 1437 passed / 113 xf / 32 xp** (RESULTS_v498_new_review_a1a2a3.txt).
