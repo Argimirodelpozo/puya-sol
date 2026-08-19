@@ -98,6 +98,7 @@ set(SOURCES
 	src/builder/sol-types/ConversionPlan.cpp
 
 	# Storage, type, and intrinsic mappers
+	src/builder/proxies/Erc1967Lowering.cpp
 	src/builder/storage/StorageMapper.cpp
 	src/builder/storage/StoragePlace.cpp
 	src/builder/storage/StorageLayout.cpp

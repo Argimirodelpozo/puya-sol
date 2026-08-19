@@ -53,15 +53,24 @@ the creation transaction's delegatecall trace and replayed as the first call
 `changeAdmin`, `upgradeTo`) are recognized and skipped — a directly-deployed
 implementation has no proxy surface.
 
-**Compile support: 🔶** Recognize the system (a contract whose fallback is
-the 1967 delegatecall idiom + its implementation) and:
-- compile ONLY the implementation, emitting an approval program whose
-  `OnCompletion == UpdateApplication` branch enforces the 1967 admin check
-  (admin address in a state slot, seeded from the proxy ctor args);
-- hard-error on `upgradeTo`/`upgradeToAndCall` **bodies** with a message
-  explaining the native-update ceremony, rather than on the whole system;
-- treat `Proxy.sol`/`ERC1967Utils` machinery as dead code (puya's DCE already
-  strips unreached bodies once the delegatecall sites are unreachable).
+**Compile support: ✅ v1** (`src/builder/proxies/Erc1967Lowering`). The three
+EIP-1967 slot constants are recognized at asm `sload`/`sstore` sites:
+- **admin slot** reads/writes lower to a synthesized biguint app global
+  `__erc1967_admin` (unset reads 0, EVM semantics), and any contract that
+  touches it grows a bare `__erc1967_update` method — allowed only on
+  `OnCompletion == UpdateApplication`, never on create — that asserts
+  `Txn.Sender == admin`. Zero admin ⇒ updates rejected (fail-closed).
+- **implementation slot** reads lower to the app's own identity
+  (`bytes24 ++ itob(app id)`, the contract-value convention); writes
+  (`upgradeTo` bodies) lower to a runtime trap whose message explains the
+  native-update ceremony. The AVM upgrade is the `UpdateApplication`
+  transaction itself, submitted by the admin with the new program bytes.
+- **beacon slot** reads/writes trap at runtime (see §4).
+
+Guard: `puyasolRegression/test_erc1967.py` — full flow (fail-closed update,
+admin round-trip, upgradeTo trap, admin-signed native update preserving
+state) in both default and `--evm-layout` modes. `Proxy.sol`/`ERC1967Utils`
+machinery unreached from compiled entry points still DCEs away as before.
 
 **Not covered yet (both modes): mid-history upgrades.** We currently deploy
 one implementation for the whole window. The skipped `upgradeToAndCall`

@@ -6,6 +6,8 @@
 #include "builder/storage/StorageMapper.h" // makeStateGetWithDefault (box-keyed struct sstore)
 #include "builder/sol-types/TypeCoercion.h" // isNegativeSigned (shared sign-bit test)
 #include "Logger.h"
+#include "builder/proxies/Erc1967Lowering.h"
+#include "builder/BuildArtifacts.h"
 
 #include <sstream>
 
@@ -294,6 +296,37 @@ void AssemblyBuilder::handleSstore(
 {
 	if (!checkArity(_args, 2, "sstore", _loc))
 		return;
+
+	// EIP-1967 proxy slots (proxy.md §1): admin writes land on the
+	// synthesized global (arming the native-update gate); implementation/
+	// beacon writes are runtime traps — upgradeTo lowers to the native
+	// UpdateApplication ceremony, and unreachable sites strip via DCE
+	// (the delegatecall precedent).
+	switch (proxies::Erc1967Lowering::classify(_args[0].get()))
+	{
+	case proxies::Erc1967Slot::Admin:
+		m_typeMapper.artifacts().usesErc1967Admin = true;
+		proxies::Erc1967Lowering::adminStore(
+			ensureBiguint(_args[1], _loc), _loc, _out);
+		return;
+	case proxies::Erc1967Slot::Implementation:
+		Logger::instance().warning(
+			"ERC-1967 implementation-slot write (upgradeTo) lowers to a runtime "
+			"failure — the AVM upgrade is a native UpdateApplication submitted "
+			"by the admin with the new program (see proxy.md)", _loc);
+		_out.push_back(proxies::Erc1967Lowering::trapStatement(
+			proxies::Erc1967Slot::Implementation, /*_isStore=*/true, _loc));
+		return;
+	case proxies::Erc1967Slot::Beacon:
+		Logger::instance().warning(
+			"ERC-1967 beacon slot write lowers to a runtime failure (see "
+			"proxy.md)", _loc);
+		_out.push_back(proxies::Erc1967Lowering::trapStatement(
+			proxies::Erc1967Slot::Beacon, /*_isStore=*/true, _loc));
+		return;
+	case proxies::Erc1967Slot::None:
+		break;
+	}
 
 	// sstore(info.slot, packedWord): box-keyed ARC4 struct sentinel (V4 Pool.updateTick).
 	// EVM packs fields into a 256-bit slot; rebuild the box bytes field-by-field

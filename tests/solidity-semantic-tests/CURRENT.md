@@ -1,3 +1,13 @@
+# Semantic Test Status — v494 (EIP-1967 proxy-slot lowering)
+
+> **Full run 2026-08-18: 8 failed / 1431 passed / 113 xf / 32 xp** (RESULTS_v494_erc1967.txt).
+> Same 8 baseline fails; +2 new passes = `puyasolRegression/test_erc1967.py`
+> (default + --evm-layout). Landed: `src/builder/proxies/Erc1967Lowering` —
+> EIP-1967 admin slot → synthesized `__erc1967_admin` app global + bare
+> `__erc1967_update` UpdateApplication gate (fail-closed on zero admin);
+> implementation slot reads → own app identity; impl/beacon writes and beacon
+> reads → runtime traps pointing at the native-update ceremony (proxy.md §1).
+
 # Semantic Test Status — v488 (EvmFeaturePolicy + canonical storage identity)
 
 > **Full run 2026-08-17: 8 failed / 1421 passed / 113 xf / 32 xp** (was 11f/1407p/105xf/32xp).

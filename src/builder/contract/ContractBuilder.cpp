@@ -17,6 +17,7 @@
 #include "builder/storage/StorageLayout.h"
 #include "builder/BuildArtifacts.h"
 #include "Logger.h"
+#include "builder/proxies/Erc1967Lowering.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libyul/AST.h>
@@ -1185,6 +1186,22 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		for (auto& subroutine: m_dispatchSubroutines)
 			if (subroutine && subroutine->body)
 				awst::visitExpressions(*subroutine->body, scopeStorageCall);
+	}
+
+	// EIP-1967 (proxy.md §1): if any admin-slot use was lowered while
+	// translating THIS contract's bodies, synthesize the admin global and the
+	// bare UpdateApplication method gating native updates on it. Snapshot-and-
+	// reset so one contract's proxy machinery never leaks into the next unit
+	// member. Placed after ALL method translation (ordinary externals build in
+	// the loops above, not in buildApprovalProgram).
+	if (m_typeMapper.artifacts().usesErc1967Admin)
+	{
+		m_typeMapper.artifacts().usesErc1967Admin = false;
+		auto loc = contract->approvalProgram.sourceLocation;
+		contract->appState.push_back(
+			proxies::Erc1967Lowering::adminStateDefinition(loc));
+		contract->methods.push_back(
+			proxies::Erc1967Lowering::updateGateMethod(contract->id, loc));
 	}
 
 	return contract;

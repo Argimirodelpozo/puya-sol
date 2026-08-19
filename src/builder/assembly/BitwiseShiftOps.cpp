@@ -6,6 +6,8 @@
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"
+#include "builder/proxies/Erc1967Lowering.h"
+#include "builder/BuildArtifacts.h"
 #include "awst/NameGen.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
@@ -272,6 +274,26 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
 {
 	if (!checkArity(_args, 1, "sload", _loc))
 		return nullptr;
+
+	// EIP-1967 proxy slots (proxy.md §1): admin → synthesized global,
+	// implementation → this app's own identity, beacon → runtime trap.
+	switch (proxies::Erc1967Lowering::classify(_args[0].get()))
+	{
+	case proxies::Erc1967Slot::Admin:
+		m_typeMapper.artifacts().usesErc1967Admin = true;
+		return proxies::Erc1967Lowering::adminLoad(_loc);
+	case proxies::Erc1967Slot::Implementation:
+		return proxies::Erc1967Lowering::implementationLoad(_loc);
+	case proxies::Erc1967Slot::Beacon:
+		Logger::instance().warning(
+			"ERC-1967 beacon slot read lowers to a runtime failure — this call "
+			"site REVERTS if ever reached (see proxy.md)", _loc);
+		m_pendingStatements.push_back(proxies::Erc1967Lowering::trapStatement(
+			proxies::Erc1967Slot::Beacon, /*_isStore=*/false, _loc));
+		return awst::makeBiguintConstant("0", _loc);
+	case proxies::Erc1967Slot::None:
+		break;
+	}
 
 	// CONSTANT slot → route directly to the named variable's storage (scalar
 	// global / array length / array element). See SlotRoute.
