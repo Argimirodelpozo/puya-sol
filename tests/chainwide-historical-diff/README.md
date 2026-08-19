@@ -116,10 +116,29 @@ The complete campaign was validated on 2026-08-17: all 429 root calls were
 executed, all 429 AVM statuses matched their Ethereum mainnet receipts, and no
 call was skipped.
 
-The same driver was also validated against a disposable wider corpus containing
-the first 500 MessageTransmitter calls, the first 500 TokenMessenger calls, and
-all 29 direct TokenMinter calls. All 1,029 root calls matched, with zero skipped
-calls and zero mismatches. The wider receipt audit found one additional stale
+**Deep windows, 2026-08-19.** Both CCTP versions were re-run at depth —
+**10,078 root calls in total, with zero compiler divergences**:
+
+| lane | window | root calls | statuses | findings | events (both legs) | storage |
+|---|---|---|---|---|---|---|
+| v1 | 3000/contract | 6029 | 6029 ✅ | 0 | 5956 | 2995 slots |
+| v2 | 2000/contract | 4049 | 4049 ✅ | 0 | 4005 | 2010 slots |
+
+On every one of those calls the AVM leg and the independent py-evm leg agreed
+with **each other** (`status_avm_vs_evm_div: 0`). The only disagreements were
+with the historical *labels*: 13 v1 transactions that Blockscout reports as
+successful, whose raw trace reports the top-level call `Reverted`, whose
+receipts carry zero logs, and whose calldata selectors (`0xa3fc34a3`,
+`0x230b6b40`) are not present in the contract's deployed bytecode at all — a
+contract with no fallback cannot succeed on them. All 13 are chain-verified
+via `verify_receipts.py` and recorded in `receipt_corrections.json`. The v2
+window needed **no** corrections, which is the expected shape: the stale
+labels cluster in 2023-era history, not in recent blocks.
+
+Earlier, the same driver was validated against a disposable wider corpus
+containing the first 500 MessageTransmitter calls, the first 500 TokenMessenger
+calls, and all 29 direct TokenMinter calls. All 1,029 root calls matched, with
+zero skipped calls and zero mismatches. That audit found one additional stale
 Blockscout success label, retained in `MAINNET_RECEIPT_METADATA` alongside the
 three already known corrections.
 
