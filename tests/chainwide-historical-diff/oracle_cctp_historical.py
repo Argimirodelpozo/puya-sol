@@ -865,6 +865,21 @@ class Runner:
             (data.case["creation"] for data in self.cases.values()),
             key=lambda creation: (int(creation["block"]), int(creation["ts"])),
         )
+        # A case fetched without a resolvable creation txn carries block/ts 0,
+        # and the stub then deploys one step EARLIER than that — a negative
+        # uint64 the oracle rejects with an opaque unmarshal error. Say what
+        # is actually wrong instead.
+        if int(first["ts"]) <= 0 or int(first["block"]) <= 0:
+            broken = [
+                tag for tag, data in self.cases.items()
+                if not int(data.case["creation"].get("block") or 0)
+                or not int(data.case["creation"].get("ts") or 0)
+            ]
+            raise RuntimeError(
+                f"case(s) {broken} have an unresolved creation block/ts "
+                f"(0) — re-fetch them or restore creation from a backup; "
+                f"every deploy timestamp derives from it"
+            )
         stub_registry = load_json(
             self.cases_path / STUB_SOURCE["tag"] / "registry.json"
         )

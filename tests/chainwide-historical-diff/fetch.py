@@ -934,8 +934,14 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
             ai = http_json(f"https://{host}/api/v2/addresses/{address}")
         except Exception:
             ai = {}
+        # Blockscout spells this field BOTH ways across versions; checking
+        # only one silently yields block/ts 0, which poisons every downstream
+        # deploy timestamp (min(creation)-1 = -1 → the oracle rejects a
+        # negative uint64) — and the corpus looks fetched, just wrong.
         creation = {"creator": (ai.get("creator_address_hash") or "").lower() or None,
-                    "hash": ai.get("creation_tx_hash"), "ts": 0, "block": 0}
+                    "hash": (ai.get("creation_tx_hash")
+                             or ai.get("creation_transaction_hash")),
+                    "ts": 0, "block": 0}
         # Factory-created contracts (CCTP v2's proxies) have NO txlist creation
         # row, and a zero block/ts poisons downstream deploy timestamps
         # (min(creation)-1 = -1 → the oracle rejects a negative uint64).
@@ -953,6 +959,10 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                         (ct.get("from") or {}).get("hash") or "").lower() or None
             except Exception as e:
                 print(f"[fetch] {tag}: creation txn lookup failed: {e}")
+    if not creation.get("block") or not creation.get("ts"):
+        print(f"[fetch] {tag}: ⚠ CREATION BLOCK/TS UNRESOLVED "
+              f"(block={creation.get('block')} ts={creation.get('ts')}) — "
+              f"replay deploy timestamps will be wrong; fix before replaying")
 
     # INTERNAL CALLS (contract-to-contract traffic): merged into the same
     # ordered stream as the direct txns. For router-driven tokens this is most
