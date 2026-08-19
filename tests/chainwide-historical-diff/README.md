@@ -150,6 +150,44 @@ Use `--no-pre08-compat` to demonstrate the unmodified pragma-relaxed artifact's
 known semantic failure. Unit tests for the stream, corrections, address model,
 and compatibility-patch guards live in `test_oracle_cctp_historical.py`.
 
+### Mid-history upgrades
+
+A joint config may carry an `"upgrades"` list; each entry swaps a case's
+implementation at its historical upgrade point, in stream order:
+
+```json
+"upgrades": [{
+  "tag": "cctp2_transmitter",
+  "block": 21500000, "txindex": 12, "ts": 1730000000,
+  "hash": "0x<upgradeToAndCall txn>", "impl": "0x<new implementation>",
+  "contract": "MessageTransmitterV2",
+  "avm_artifact": "cctp2_transmitter/out_avm_v3",
+  "abi": "cctp2_transmitter/abi_v3.json",
+  "src": "cctp2_transmitter/src_v3",
+  "multifile": null,
+  "ctor_args": [],
+  "init_sig": "initializeV3(address)", "init_args": [{"__dep__": "0x..."}],
+  "sender": "0x<historical upgrade sender>"
+}]
+```
+
+- **AVM leg**: the app spec is re-registered with the new artifact's approval
+  program — boxes and globals persist, which is byte-for-byte what an
+  admin-signed native `UpdateApplication` does (proxy.md §1). The era's
+  ARC-56 switches with it, so later calls encode against the live
+  implementation.
+- **EVM leg**: the new implementation is compiled and scratch-deployed in
+  phase A (its constructor runs, baking immutables into the runtime code);
+  at the upgrade point the chain is rebuilt with that code at the historical
+  address, storage preserved — the same snapshot mechanism as re-homing.
+- **Both legs** then replay `init_sig`/`init_args` (the historical
+  `upgradeToAndCall` embedded calldata), and the differ merges the new era's
+  ARC-56 events and solc ABI into its decode indexes.
+
+`selftest_joint_upgrade.py` proves the path end-to-end with a synthetic
+two-era contract whose upgrade changes all three lanes (a V2-only revert, a
+V2-only event, doubled credits in storage); it must finish with 0 findings.
+
 ## Architecture
 
 ```

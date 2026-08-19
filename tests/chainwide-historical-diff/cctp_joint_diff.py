@@ -41,6 +41,7 @@ HERE = Path(__file__).parent
 DRIVER = runpy.run_path(str(HERE / "oracle_cctp_historical.py"))
 CASE_CONFIG = DRIVER["CASE_CONFIG"]
 STUB_CONFIG = DRIVER["STUB_CONFIG"]
+UPGRADES = DRIVER["UPGRADES"]  # apply_joint_config mutates in place
 historical_ok = DRIVER["historical_ok"]
 
 APP_TO_TAG = {cfg["app_id"]: tag for tag, cfg in CASE_CONFIG.items()}
@@ -152,10 +153,18 @@ def decode_abi_data(types: list[str], data: bytes, fold_addr) -> list[Any]:
 # ── AVM ARC-28 log decoding ──────────────────────────────────────────────────
 def arc56_event_index(cases_dir: Path) -> dict[bytes, tuple[str, dict]]:
     out: dict[bytes, tuple[str, dict]] = {}
-    for tag, cfg in CASE_CONFIG.items():
-        arc = json.loads(
-            (cases_dir / tag / "out_avm" / f"{cfg['contract']}.arc56.json").read_text()
-        )
+    arcs = [
+        cases_dir / tag / "out_avm" / f"{cfg['contract']}.arc56.json"
+        for tag, cfg in CASE_CONFIG.items()
+    ]
+    # Mid-history upgrades: post-upgrade eras can emit events the original
+    # implementation never declared.
+    arcs.extend(
+        cases_dir / e["avm_artifact"] / f"{e['contract']}.arc56.json"
+        for e in UPGRADES
+    )
+    for path in arcs:
+        arc = json.loads(path.read_text())
         for ev in arc.get("events") or []:
             sig = ev["name"] + "(" + ",".join(a["type"] for a in ev["args"]) + ")"
             out[hashlib.new("sha512_256", sig.encode()).digest()[:4]] = (
@@ -329,6 +338,11 @@ def main() -> int:
             for h, entries in json.loads(p.read_text()).items():
                 hist_logs.setdefault(h, entries)
         abis[tag] = json.loads((args.cases / tag / "case.json").read_text())["abi"]
+    for i, entry in enumerate(UPGRADES):
+        if entry.get("abi"):
+            abis[f"__upgrade_{i}"] = json.loads(
+                (args.cases / entry["abi"]).read_text()
+            )
 
     topic_index = solc_event_index(abis)
     arc_index = arc56_event_index(args.cases)

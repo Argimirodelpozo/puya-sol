@@ -63,6 +63,15 @@ STUB_SOURCE = {"tag": "cctp_minter"}
 # Config-era calls replayed right after a case deploys (v2: the proxy's
 # historical initialize calldata, decoded to plain values by gen_v2_config).
 INIT_CALLS: list[dict[str, Any]] = []
+# Mid-history implementation upgrades (proxy.md §1 "mid-history upgrades"):
+# each entry swaps a case's program at its historical block — the AVM leg's
+# native UpdateApplication (program replaced, boxes/globals persist), the EVM
+# leg's code swap at the historical address. Entry shape:
+#   {tag, block, txindex, ts, hash?, impl?,          — stream placement
+#    contract, avm_artifact,                          — new AVM artifacts dir
+#    abi?, src?, multifile?, ctor_args?,              — EVM leg + differ inputs
+#    init_sig?, init_args?, sender?}                  — upgradeToAndCall data
+UPGRADES: list[dict[str, Any]] = []
 
 
 def apply_joint_config(config: dict[str, Any]) -> None:
@@ -86,6 +95,7 @@ def apply_joint_config(config: dict[str, Any]) -> None:
         {item["address"].lower(): item["app_id"] for item in ALL_CONFIG}
     )
     INIT_CALLS[:] = config.get("init_calls") or []
+    UPGRADES[:] = config.get("upgrades") or []
     MAINNET_RECEIPT_METADATA.update(config.get("receipt_metadata") or {})
 P0 = (b"p:" + bytes(8)).hex()
 SIGNATURE = re.compile(r"^([^()]*)\((.*)\)$")
@@ -308,6 +318,24 @@ def historical_stream(cases: dict[str, CaseData]) -> list[dict[str, Any]]:
                 "case_index": -1,
                 "serial": serial,
                 "timestamp": int(creation["ts"]),
+            }
+        )
+        serial += 1
+    tag_order = {tag: i for i, tag in enumerate(cases)}
+    for upgrade_index, entry in enumerate(UPGRADES):
+        # The upgrade txn owns its (block, txindex); case_index -1 keeps it
+        # ahead of any call sharing a missing txindex in the same block.
+        stream.append(
+            {
+                "kind": "upgrade",
+                "tag": entry["tag"],
+                "block": int(entry["block"]),
+                "txindex": entry.get("txindex", -1),
+                "case_order": tag_order[entry["tag"]],
+                "case_index": -1,
+                "serial": serial,
+                "upgrade_index": upgrade_index,
+                "upgrade": entry,
             }
         )
         serial += 1
@@ -559,6 +587,38 @@ class Runner:
         self.artifacts["StubERC20"] = self.api.artifact(
             cases_path, STUB_SOURCE["tag"], "StubERC20"
         )
+        # Per-tag CURRENT era: replay_call always encodes against the arc56 of
+        # the implementation live at that point in the stream.
+        self.era_arc56 = {tag: data.arc56 for tag, data in self.cases.items()}
+        self.upgrade_artifacts: list[tuple[dict[str, Any], dict[str, Any]]] = []
+        self.upgrades_applied: list[dict[str, Any]] = []
+        for entry in UPGRADES:
+            art_dir = cases_path / entry["avm_artifact"]
+            contract = entry["contract"]
+            source = (art_dir / f"{contract}.approval.teal").read_text()
+            applied: list[str] = []
+            if pre08_compat:
+                source, applied = pre08_compat_teal(source)
+            if applied:
+                self.compatibility_patches[
+                    f"upgrade:{entry['tag']}#{len(self.upgrade_artifacts)}"
+                ] = applied
+            self.upgrade_artifacts.append(
+                (
+                    {
+                        "name": contract,
+                        "source": source,
+                        "clear": (art_dir / f"{contract}.clear.teal").read_text(),
+                        "approval_size": (
+                            art_dir / f"{contract}.approval.bin"
+                        ).stat().st_size,
+                        "clear_size": (
+                            art_dir / f"{contract}.clear.bin"
+                        ).stat().st_size,
+                    },
+                    load_json(art_dir / f"{contract}.arc56.json"),
+                )
+            )
         self.cases_path = cases_path
         self.continue_after_divergence = continue_after_divergence
         self.steps: list[dict[str, Any]] = []
@@ -824,6 +884,55 @@ class Runner:
                     f"{data.config['contract']} historical initialize failed: {record}"
                 )
 
+    def apply_upgrade(self, item: dict[str, Any]) -> None:
+        """Native UpdateApplication at the historical upgrade block.
+
+        Re-registering the app spec swaps the approval program while the
+        app's boxes and globals persist — byte-for-byte what an admin-signed
+        UpdateApplication does on chain (proxy.md §1). The historical
+        upgradeToAndCall's embedded calldata, if any, replays right after.
+        """
+        entry = item["upgrade"]
+        data = self.cases[entry["tag"]]
+        artifact, arc56 = self.upgrade_artifacts[item["upgrade_index"]]
+        self.world.latest_timestamp = int(entry["ts"])
+        self.world.round = int(entry["block"])
+        creator = (bytes(12) + raw20(data.registry["creator"])).hex()
+        self.world.register_application(
+            self.app_spec(data.config["app_id"], artifact, creator)
+        )
+        self.era_arc56[data.tag] = arc56
+        step = {
+            "kind": "native-update",
+            "tag": data.tag,
+            "contract": entry["contract"],
+            "block": int(entry["block"]),
+            "historical_hash": entry.get("hash"),
+            "new_implementation": entry.get("impl"),
+        }
+        self.steps.append(step)
+        self.upgrades_applied.append(step)
+        if entry.get("init_sig"):
+            sender = (
+                (bytes(12) + raw20(entry["sender"])).hex()
+                if entry.get("sender")
+                else creator
+            )
+            response, record = self.call_app(
+                name=f"upgrade initialize {entry['contract']} {entry['init_sig']}",
+                app_id=data.config["app_id"],
+                arc56=arc56,
+                signature=entry["init_sig"],
+                values=[data.resolve(v) for v in entry.get("init_args") or []],
+                sender=sender,
+            )
+            record.update({"kind": "upgrade-initialize"})
+            self.steps.append(record)
+            if response.get("result") != "ACCEPT":
+                raise RuntimeError(
+                    f"{entry['contract']} upgrade initialize failed: {record}"
+                )
+
     def replay_call(self, item: dict[str, Any]) -> bool:
         data = self.cases[item["tag"]]
         call = item["call"]
@@ -841,7 +950,7 @@ class Runner:
         response, record = self.call_app(
             name=f"historical {data.config['contract']}[{call['i']}] {call['sig']}",
             app_id=data.config["app_id"],
-            arc56=data.arc56 if call.get("sig") else None,
+            arc56=self.era_arc56[data.tag] if call.get("sig") else None,
             signature=call["sig"],
             values=[data.resolve(value) for value in call["args"]]
             if call.get("args") is not None
@@ -935,6 +1044,9 @@ class Runner:
                 continue
             if limit is not None and replayed >= limit:
                 break
+            if item["kind"] == "upgrade":
+                self.apply_upgrade(item)
+                continue
             matched = self.replay_call(item)
             replayed += 1
             if not matched and not self.continue_after_divergence:
@@ -970,6 +1082,7 @@ class Runner:
                     "the cached corpus itself is unchanged"
                 ),
                 "pre08_compatibility_patches": self.compatibility_patches,
+                "mid_history_upgrades": self.upgrades_applied,
                 "pre08_compatibility_boundary": (
                     "The known TypedMemView uint8 wrap is restored; this is not a "
                     "general emulation of every Solidity 0.7 unchecked arithmetic op."

@@ -128,6 +128,11 @@ class JointEvmLeg:
         self.steps: list[dict[str, Any]] = []
         self.statuses: dict[str, bool] = {}
         self.logs: dict[str, list[dict[str, Any]]] = {}
+        # Mid-history upgrades: runtime code + ABI per DRIVER["UPGRADES"]
+        # entry, harvested by a phase-A scratch deploy (ctor runs, so
+        # immutables are baked into the harvested code).
+        self.upgrade_code: list[bytes] = []
+        self.upgrade_abi: list[list] = []
 
     # ── chain setup ──────────────────────────────────────────────────────
     def all_senders(self) -> set[bytes]:
@@ -158,6 +163,9 @@ class JointEvmLeg:
                 else item["txn"]["from"].lower()
             )
             out.add(self.to_local20(raw))
+        for entry in DRIVER["UPGRADES"]:
+            if entry.get("sender"):
+                out.add(self.to_local20(entry["sender"]))
         return out
 
     def build_chain(self) -> None:
@@ -485,6 +493,139 @@ class JointEvmLeg:
             raise RuntimeError(f"{data.config['contract']} deploy failed: {comp.error}")
         self.local[data.config["address"].lower()] = created
 
+    # ── mid-history upgrades (mirror of Runner.apply_upgrade) ────────────
+    def compile_upgrade(self, entry: dict[str, Any]) -> tuple:
+        """Compile an upgrade's source tree (multifile or prepared.sol)."""
+        import tempfile
+
+        src = self.cases_dir / entry["src"]
+        mf = entry.get("multifile")
+        tmp = Path(tempfile.mkdtemp(prefix="cctp-evm-upg-"))
+        if mf:
+            tree = tmp / "src"
+            shutil.copytree(src, tree)
+            self.patch_tree(tree)
+            unit = compile_unit(
+                tree / mf["main"],
+                extra_sources=[tree / f for f in mf["files"]],
+                import_dir=tree,
+                remappings=mf["remappings"],
+            )
+        else:
+            tree = tmp
+            (tree / "prepared.sol").write_text((src / "prepared.sol").read_text())
+            self.patch_tree(tree)
+            unit = compile_unit(tree / "prepared.sol")
+        for key, art in unit.items():
+            if str(key).endswith(f":{entry['contract']}"):
+                return art, unit, str(key)
+        raise RuntimeError(f"{entry['contract']} not found in {src}")
+
+    def harvest_upgrades(self) -> None:
+        """Phase A: scratch-deploy each new implementation for its runtime
+        code. The ctor runs (immutables bake into the code); its storage
+        writes land at the scratch address, which the re-home never carries —
+        exactly right, since a proxied implementation's own storage is dead."""
+        from eth_abi import encode
+
+        for entry in DRIVER["UPGRADES"]:
+            data = self.cases[entry["tag"]]
+            art, unit, fq = self.compile_upgrade(entry)
+            self.upgrade_abi.append(art["abi"])
+            ctor_types = []
+            for item in art["abi"]:
+                if item.get("type") == "constructor":
+                    ctor_types = [inp["type"] for inp in item.get("inputs", [])]
+            resolved = [
+                self._coerce(t, self.resolve_arg(data, t, v))
+                for t, v in zip(ctor_types, entry.get("ctor_args") or [])
+            ]
+            creator = self.to_local20(data.registry["creator"])
+            payload = self.resolve_bin(unit, fq, creator) + (
+                encode(ctor_types, resolved) if ctor_types else b""
+            )
+            ok, comp, created = self.execute(
+                creator, None, payload, f"scratch-deploy upgrade {entry['contract']}"
+            )
+            if not ok or not created:
+                raise RuntimeError(
+                    f"upgrade {entry['contract']} scratch deploy failed: {comp.error}"
+                )
+            self.upgrade_code.append(self.chain.get_vm().state.get_code(created))
+
+    def apply_upgrade(self, item: dict[str, Any]) -> None:
+        """Swap the historical address's code at the upgrade block.
+
+        py-evm state writes outside apply_transaction don't persist, so the
+        proven mechanism is the re-home one: snapshot every account and
+        rebuild the genesis with the new runtime code at the target — its
+        storage (the proxy's, in EVM terms) carries over untouched."""
+        from eth_tester import PyEVMBackend
+        from eth_tester.backends.pyevm.main import get_default_genesis_params
+
+        entry = item["upgrade"]
+        data = self.cases[entry["tag"]]
+        hist = data.config["address"].lower()
+        accounts: dict[bytes, dict[str, Any]] = {}
+        for h, local in self.local.items():
+            accounts[bytes.fromhex(h[2:])] = self.snapshot_account(local)
+        for lib20 in self.lib_addresses.values():
+            accounts[lib20] = self.snapshot_account(lib20)
+        accounts[bytes.fromhex(hist[2:])]["code"] = self.upgrade_code[
+            item["upgrade_index"]
+        ]
+        funded = set(self.all_senders())
+        funded.update(
+            self.to_local20(d.registry["creator"]) for d in self.cases.values()
+        )
+        funded.add(self.stub_creator)
+        for sender in funded:
+            if sender not in accounts:
+                accounts[sender] = {
+                    "balance": 10**24,
+                    "nonce": 0,
+                    "code": b"",
+                    "storage": {},
+                }
+            else:
+                accounts[sender]["balance"] = 10**24
+        genesis = get_default_genesis_params(
+            {"timestamp": max(62, int(entry["ts"])) - 1, "gas_limit": 60_000_000}
+        )
+        self.backend = PyEVMBackend(
+            genesis_parameters=genesis, genesis_state=accounts
+        )
+        self.chain = self.backend.chain
+        self.steps.append(
+            {
+                "name": f"code swap {entry['contract']} at {hist} "
+                f"(block {entry['block']})",
+                "ok": True,
+                "error": None,
+            }
+        )
+        self.abis[data.tag] = self.upgrade_abi[item["upgrade_index"]]
+        if entry.get("init_sig"):
+            sender = self.to_local20(
+                entry["sender"] if entry.get("sender") else data.registry["creator"]
+            )
+            payload = self.encode_call(
+                self.abis[data.tag],
+                entry["init_sig"],
+                data,
+                entry.get("init_args") or [],
+            )
+            ok, comp, _ = self.execute(
+                sender,
+                self.local[hist],
+                payload,
+                f"upgrade initialize {entry['contract']}",
+            )
+            if not ok:
+                raise RuntimeError(
+                    f"{entry['contract']} upgrade initialize failed: {comp.error}"
+                )
+
     # ── USDC reconstruction (mirror of seed_usdc) ────────────────────────
     def seed_usdc(self, data: CaseData, call: dict[str, Any], sender20: bytes) -> None:
         amount = int(call["args"][0])
@@ -598,6 +739,7 @@ class JointEvmLeg:
         for item in historical_stream(self.cases):
             if item["kind"] == "create":
                 self.deploy_case(self.cases[item["tag"]])
+        self.harvest_upgrades()
         # Phase B: re-home everything at historical addresses and replay.
         self.rehome_to_historical()
         # Config era (v2): replay each proxy's historical initialize calldata
@@ -623,6 +765,9 @@ class JointEvmLeg:
                 continue
             if limit is not None and replayed >= limit:
                 break
+            if item["kind"] == "upgrade":
+                self.apply_upgrade(item)
+                continue
             data = self.cases[item["tag"]]
             call = item["call"]
             sender_marker = (call.get("sender") or {}).get("__addr__")
