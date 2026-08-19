@@ -419,11 +419,24 @@ DynElemMetrics dynElemMetrics(
 	m.size = puyasol::builder::SlotHandleAccess::layoutFor(_elemType).size;
 	if (m.size == 0 || m.size > 32)
 		return m;
+	bool const isAddress = _elemW == awst::WType::accountType()
+		|| _elemW->name() == "address";
+	// An address ELEMENT of a dynamic array occupies a whole slot on its own
+	// (20 bytes packs 1-per-slot either way), and the writer stores the full
+	// 32-byte Algorand account there. Slicing the EVM 20-byte width back out
+	// silently dropped the account's high 12 bytes, so the aggregate read
+	// disagreed with the element-wise read of the SAME storage. Addresses are
+	// Algorand accounts here, so take the whole word.
+	//
+	// Deliberately scoped to the alone-in-a-slot case — the same rule the
+	// packed-slot-address getter uses. An address PACKED beside other fields
+	// keeps its 20-byte EVM width, so struct layouts stay asm-compatible.
+	if (isAddress && m.size == 20)
+		m.size = 32;
 	m.perSlot = 32u / m.size;
 	if (auto const* ui = dynamic_cast<awst::ARC4UIntN const*>(_elemW))
 		m.arc4Width = static_cast<unsigned>(ui->n()) / 8u;
-	else if (_elemW == awst::WType::accountType()
-		|| _elemW->name() == "address")
+	else if (isAddress)
 		m.arc4Width = 32;
 	else if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_elemW))
 		m.arc4Width = static_cast<unsigned>(sa->arraySize());

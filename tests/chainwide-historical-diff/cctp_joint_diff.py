@@ -53,16 +53,67 @@ HIST_TO_TAG[STUB_CONFIG["address"].lower()] = "stub_usdc"
 
 
 # ── canonical address folding ────────────────────────────────────────────────
+# A Solidity `address` has three legitimate spellings on the AVM leg, and
+# requiring byte equality against the EVM leg's 20-byte form would report all
+# but the second as divergences:
+#   bytes24 ++ app_id              a tracked contract's value form
+#   pad12   ++ raw20               an untracked address (EOAs, foreign tokens)
+#   the app ACCOUNT, 32 real bytes  sha512_256("appID" ++ app_id) — what
+#                                   Txn.Sender and address(this) carry, and
+#                                   what slot storage now keeps for an address
+#                                   element (it holds the whole account rather
+#                                   than the EVM low-20 truncation)
+# All three denote one entity; fold every spelling to the historical address
+# so comparisons are about VALUES, not representation.
+def _account_of(app_id: int) -> bytes:
+    return hashlib.new("sha512_256", b"appID" + int(app_id).to_bytes(8, "big")
+                       ).digest()
+
+
+AVM_ACCOUNT_TO_HIST: dict[bytes, str] = {}
+
+
+def rebuild_account_table() -> None:
+    AVM_ACCOUNT_TO_HIST.clear()
+    for app_id, hist in APP_TO_HIST.items():
+        AVM_ACCOUNT_TO_HIST[_account_of(app_id)] = hist
+
+
 def fold_avm_address(word: bytes) -> str:
-    """32-byte AVM address value → 20-byte historical hex."""
+    """Any AVM spelling of an address → its 20-byte historical hex."""
     if word[:24] == bytes(24):
         app_id = int.from_bytes(word[24:], "big")
         hist = APP_TO_HIST.get(app_id)
         if hist is not None:
             return hist
+    hist = AVM_ACCOUNT_TO_HIST.get(word)
+    if hist is not None:
+        return hist
     if word[:12] == bytes(12):
         return "0x" + word[12:].hex()
     return "0x" + word.hex()  # full 32B — surfaced as-is (unexpected)
+
+
+def addresses_agree(avm_word: bytes, evm_word: bytes) -> bool:
+    """True when both words denote the same address in different spellings.
+
+    Only ever consulted AFTER an exact comparison failed, and only accepts a
+    pair that both fold to the SAME historical address — so it waives
+    representation, never a value difference.
+    """
+    if avm_word == evm_word:
+        return True
+    folded_avm = fold_avm_address(avm_word)
+    if not folded_avm.startswith("0x") or len(folded_avm) != 42:
+        return False          # did not resolve to an address at all
+    if evm_word[:12] == bytes(12):
+        folded_evm = "0x" + evm_word[12:].hex()
+    else:
+        folded_evm = fold_avm_address(evm_word)
+    return folded_avm == folded_evm and int(folded_avm, 16) != 0
+
+
+rebuild_account_table()
 
 
 def make_evm_folder(local_addresses: dict[str, str]):
@@ -316,6 +367,7 @@ def main() -> int:
         HIST_TO_TAG.clear()
         HIST_TO_TAG.update({c["address"].lower(): t for t, c in CASE_CONFIG.items()})
         HIST_TO_TAG[STUB_CONFIG["address"].lower()] = "stub_usdc"
+        rebuild_account_table()
         BLOB_FOLDS.clear()
         for cfg in [*CASE_CONFIG.values(), STUB_CONFIG]:
             hist32 = bytes(12) + bytes.fromhex(cfg["address"][2:])
@@ -495,7 +547,12 @@ def main() -> int:
                     if any(aw):
                         counts["storage_slots_matched"] += 1
                     continue
-                # fold address-shaped words through the translation tables
+                # Representation-only difference? Both words must fold to the
+                # SAME historical address, so this waives spelling, never a
+                # value change (addresses_agree).
+                if addresses_agree(aw, ew):
+                    counts["storage_slots_matched_address_folded"] += 1
+                    continue
                 fa = fold_avm_address(aw)
                 fe = fold_evm("0x" + ew[12:].hex()) if ew[:12] == bytes(12) else None
                 if fe is not None and fa == fe:

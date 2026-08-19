@@ -1,3 +1,14 @@
+# Semantic Test Status — v497 (slot-mode addresses are full Algorand accounts)
+
+> **Full run 2026-08-19: 8 failed / 1433 passed / 113 xf / 32 xp** (RESULTS_v497_address_full_width.txt).
+> Baseline held. DECIDED: a slot-mode `address` is an ALGORAND ACCOUNT, not an
+> EVM 20-byte truncation. A dynamic-array address element now takes the whole
+> 32-byte slot word, so the aggregate read agrees with the element-wise read
+> (it previously zeroed the account's high 12 bytes). Scoped to alone-in-a-slot
+> elements — an address PACKED beside other fields keeps its 20-byte EVM width,
+> so struct layouts stay asm-compatible. The v496 xfail is now a plain
+> assertion in `test_slot_packed_dispatch.py`.
+
 # Semantic Test Status — v496 (slot-mode packed dispatch coverage)
 
 > **Full run 2026-08-19: 8 failed / 1433 passed / 114 xf / 32 xp** (RESULTS_v496_slot_packed_dispatch.txt).

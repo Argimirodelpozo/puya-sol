@@ -90,38 +90,22 @@ def _run(harness, extra_args):
     after = [as_int(v) for v in harness.call(app, "allSmalls()").abi_return]
     assert after == expected, after
 
-    # ── address[] element-wise: full account round-trips ──────────────────
+    # ── address[] : full 32-byte Algorand accounts, both read paths ───────
+    # The aggregate read and the element-wise read must agree. They did not:
+    # the aggregate sliced the EVM 20-byte address width out of a slot that
+    # holds a whole account, zeroing its high 12 bytes. Addresses here are
+    # Algorand accounts, so the whole word is the value.
     harness.call(app, "pushAddr(address)", acct.address)
     harness.call(app, "pushAddr(address)", other)
     assert _addr(harness.call(app, "addrAt(uint256)", 1).abi_return) == \
         _addr(other)
-    return app, acct, other
+    addrs = harness.call(app, "allAddrs()").abi_return
+    assert [_addr(a) for a in addrs] == [_addr(acct.address), _addr(other)]
 
 
 def test_slot_packed_dispatch_default_mode(harness):
-    app, acct, other = _run(harness, None)
-    # No dispatcher in this mode: the aggregate read agrees with the
-    # element-wise one, which is the behaviour the slot mode must match.
-    addrs = harness.call(app, "allAddrs()").abi_return
-    assert [_addr(a) for a in addrs] == [_addr(acct.address), _addr(other)]
+    _run(harness, None)
 
 
 def test_slot_packed_dispatch_evm_layout(harness):
     _run(harness, ["--evm-layout"])
-
-
-@pytest.mark.xfail(
-    reason="slot-mode address[]: the whole-aggregate read slices __size=20 "
-           "bytes per element (EVM address width, per EvmSlotStorageDispatch's "
-           "'20 stored, 32 encoded' model), but the write path stored the full "
-           "32-byte account — addrAt(i) returns it intact while allAddrs() "
-           "returns it with the high 12 bytes zeroed. Two read paths, one "
-           "layout, different answers. Fixing it is a design call: store 20 "
-           "(EVM-faithful, truncates real AVM accounts) or read 32 "
-           "(AVM-faithful, breaks asm parity for address arrays).",
-    strict=True,
-)
-def test_slot_address_array_aggregate_width_evm_layout(harness):
-    app, acct, other = _run(harness, ["--evm-layout"])
-    addrs = harness.call(app, "allAddrs()").abi_return
-    assert [_addr(a) for a in addrs] == [_addr(acct.address), _addr(other)]
