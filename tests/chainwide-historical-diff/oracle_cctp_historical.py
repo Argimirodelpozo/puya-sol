@@ -290,6 +290,35 @@ def encode_method(
     return encoded
 
 
+def count_opup_txns(txns: list[dict[str, Any]]) -> tuple[int, int]:
+    """(opup inner txns, total inner txns) at any depth.
+
+    An OpUp escalation is an ephemeral application CREATE whose completion is
+    DeleteApplication (ApplicationID 0, OnCompletion 5) — puya's ensure_budget
+    and the v1 replay shim both use it. Counting them is the only budget
+    signal this driver can collect for free: the oracle's apply path reports
+    no opcode figures, so a replay that merely passes says nothing about cost.
+    Each one is a real transaction with a real fee, which makes the count the
+    metric a deployment actually pays.
+
+    Note what it measures: the OpUp loop tops up to its TARGET, so the count
+    reflects the budget REQUESTED, not consumed. It is a cost and regression
+    signal at a fixed target, not a measurement of headroom — for that, bisect
+    the target itself (see budget_probe.py / CCTP_ENSURE_BUDGET).
+    """
+    opup = total = 0
+    for txn in txns or []:
+        u64 = txn.get("u64") or {}
+        total += 1
+        if int(u64.get("ApplicationID") or 0) == 0 and \
+                int(u64.get("OnCompletion") or 0) == 5:
+            opup += 1
+        sub_opup, sub_total = count_opup_txns(txn.get("inner_txns") or [])
+        opup += sub_opup
+        total += sub_total
+    return opup, total
+
+
 def flatten_inner_logs(txns: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Depth-first (program-order) log entries from a nested inner-txn tree."""
     out: list[dict[str, Any]] = []
@@ -1047,6 +1076,9 @@ class Runner:
             "logs": list(response.get("logs") or []),
             "inner_logs": flatten_inner_logs(response.get("inners_after") or []),
         }
+        opup, inner_total = count_opup_txns(response.get("inners_after") or [])
+        result["opup_inner_txns"] = opup
+        result["inner_txns"] = inner_total
         self.results.append(result)
         if not matched:
             self.tainted = True
@@ -1238,6 +1270,45 @@ class Runner:
             "initialization_and_dependency_steps": self.steps,
             "results": self.results,
             "final_storage": self.dump_slot_storage(),
+            "budget_profile": self.budget_profile(),
+        }
+
+    def budget_profile(self) -> dict[str, Any]:
+        """Per-method OpUp cost, so budget is visible in every run.
+
+        The replay hands each call the protocol maximum pooled budget plus
+        OpUp escalation, which means a green run cannot by itself show that a
+        method is affordable. This surfaces what each entry point had to buy:
+        methods needing zero OpUp run inside pooled budget, and the rest carry
+        an inner transaction (and fee) per 700 opcodes bought.
+        """
+        from collections import defaultdict
+
+        per_sig: dict[str, list[int]] = defaultdict(list)
+        for r in self.results:
+            if r.get("opup_inner_txns") is None or not r.get("signature"):
+                continue
+            per_sig[r["signature"]].append(int(r["opup_inner_txns"]))
+        profile = {}
+        for sig, counts in sorted(per_sig.items()):
+            counts.sort()
+            profile[sig] = {
+                "calls": len(counts),
+                "opup_max": counts[-1],
+                "opup_median": counts[len(counts) // 2],
+                "opup_total": sum(counts),
+                # Each OpUp is a fee-paying inner txn at the 1000 microAlgo
+                # minimum; this is the floor a real deployment pays for budget.
+                "min_fee_microalgo_max_call": counts[-1] * 1000,
+            }
+        return {
+            "ensure_budget_target": _ensure_budget_target(),
+            "pooled_group_budget": 16 * 700,
+            "note": (
+                "opup counts reflect the budget REQUESTED at this target, not "
+                "consumed; bisect CCTP_ENSURE_BUDGET to measure the requirement"
+            ),
+            "per_method": profile,
         }
 
     def dump_slot_storage(self) -> dict[str, dict[str, str]]:

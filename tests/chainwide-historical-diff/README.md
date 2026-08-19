@@ -177,6 +177,29 @@ budget viability is demonstrated only for a build that adds it.
 Sub-call budget is not separately bounded: the figures above are per root call
 with its whole inner-transaction tree included.
 
+**Every run now carries a budget profile.** Each OpUp escalation is an
+ephemeral application create-and-delete (`ApplicationID 0`,
+`OnCompletion 5`) in the inner-transaction tree, so the driver counts them per
+call and reports `budget_profile` alongside the statuses — no extra cost, and
+it makes budget visible in ordinary runs instead of only under investigation:
+
+| method | OpUp txns per call | fee floor per call |
+|---|---|---|
+| `replaceDepositForBurn` | 53 | 53,000 µAlgo |
+| `receiveMessage` | 49 | 49,000 µAlgo |
+| `depositForBurn`, `mint`, `burn`, all admin methods | 0 | 0 — fits pooled budget |
+
+Read those as the budget **requested** at the current 45,000 target, not
+consumed: the OpUp loop tops up to its target, so the count tracks the target.
+Against the measured 12-14k requirement, a 16,000 target would need about 4
+OpUps instead of 49 — roughly a 12x reduction in the fee a caller pays for
+budget. `budget_probe.py` bisects the requirement and is worth re-running each
+round: if it climbs, something made the compiled code more expensive, which a
+pass/fail replay cannot see because the ceiling hides it until deployment.
+
+Only `receiveMessage` and `replaceDepositForBurn` need OpUp at all; the entire
+deposit and admin surface runs inside the pooled group budget.
+
 The result is intentionally a **CCTP receipt-status replay**, not a claim of
 full Ethereum-state equivalence:
 
