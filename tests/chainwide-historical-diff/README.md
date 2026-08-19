@@ -142,6 +142,41 @@ zero skipped calls and zero mismatches. That audit found one additional stale
 Blockscout success label, retained in `MAINNET_RECEIPT_METADATA` alongside the
 three already known corrections.
 
+### Opcode budget: what the replay does and does not prove
+
+Every replayed call is handed a full 16-transaction group — the protocol's
+**maximum pooled budget, 11,200 opcodes** — plus OpUp escalation and a
+`fee=100_000` credit to pay for the ephemeral OpUp application calls. So a
+green run means "nothing exceeded that envelope", NOT "fits in a default
+budget". The oracle's apply path reports no cost figures, so consumption is
+not recorded per call either.
+
+To turn that into a measurement, the v1 shim's OpUp target is parametrised
+(`CCTP_ENSURE_BUDGET`, default 45000) and bisected over a 120-call sample:
+
+| target | result |
+|---|---|
+| 45000 (default) | 120/120 |
+| 18000 / 16000 / 14000 | 120/120 |
+| **12000** | **31/120 — 89 `receiveMessage` calls fail with "dynamic cost" budget panics** |
+| 6000 | 29/120 |
+
+So `receiveMessage` needs **between 12k and 14k opcodes**, and the 45k default
+carries roughly 3x headroom. The load-bearing consequence: that requirement is
+**above the 11,200 protocol maximum for a fully-pooled 16-txn group**, so CCTP's
+`receiveMessage` cannot run on the AVM from pooled budget alone — it *must* buy
+budget via OpUp, at the cost of extra inner transactions and their fees.
+
+That is realistic for **v2**, which compiles the escalation in through
+`--ensure-budget` (receiveMessage:45000, handleReceiveMessage:30000,
+depositForBurn/mint/burn:20000) exactly as a real deployment would ship it.
+For **v1** the escalation is a TEAL shim the *harness* patches in, declared in
+`pre08_compatibility_patches` — a stock v1 build does not carry it, so v1's
+budget viability is demonstrated only for a build that adds it.
+
+Sub-call budget is not separately bounded: the figures above are per root call
+with its whole inner-transaction tree included.
+
 The result is intentionally a **CCTP receipt-status replay**, not a claim of
 full Ethereum-state equivalence:
 

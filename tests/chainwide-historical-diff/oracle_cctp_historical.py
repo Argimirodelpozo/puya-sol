@@ -431,6 +431,17 @@ def load_oracle_api(prover_root: Path) -> Any:
     return importlib.import_module("cctp_replay")
 
 
+def _ensure_budget_target() -> int:
+    """OpUp target for the v1 receive/replace shim.
+
+    Parametrised so the replay can MEASURE what these entry points actually
+    need instead of only proving they fit under a generous ceiling: lowering
+    it until calls start failing bounds the real requirement. Default is the
+    historical 45000, so ordinary runs are unchanged.
+    """
+    return int(os.environ.get("CCTP_ENSURE_BUDGET", "45000"))
+
+
 def pre08_compat_teal(source: str) -> tuple[str, list[str]]:
     """Restore the intentional uint8 wrap used by CCTP's Solidity-0.7 TMV.
 
@@ -470,7 +481,7 @@ def pre08_compat_teal(source: str) -> tuple[str, list[str]]:
         patched = patched.replace(
             route,
             route
-            + "    pushint 45000\n"
+            + f"    pushint {_ensure_budget_target()}\n"
             + "    pushint 0\n"
             + "    callsub __historical_ensure_budget\n"
             + "    txna ApplicationArgs 1\n"
@@ -484,7 +495,7 @@ def pre08_compat_teal(source: str) -> tuple[str, list[str]]:
         patched = patched.replace(
             replace_route,
             replace_route
-            + "    pushint 45000\n"
+            + f"    pushint {_ensure_budget_target()}\n"
             + "    pushint 0\n"
             + "    callsub __historical_ensure_budget\n",
             1,
@@ -553,7 +564,9 @@ __historical_ensure_budget_while:
 __historical_ensure_budget_done:
     retsub
 """
-        applied.append("receiveMessage/replaceMessage ensure_budget(45000) OpUp shim")
+        applied.append(
+            f"receiveMessage/replaceMessage ensure_budget"
+            f"({_ensure_budget_target()}) OpUp shim")
         applied.append("receiveMessage forwards exact signed message bytes[116:]")
         applied.append("replaceMessage caller-app comparison uses address low 64 bits")
     return patched, applied
