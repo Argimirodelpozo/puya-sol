@@ -146,6 +146,34 @@ full Ethereum-state equivalence:
   (`unresolved root subroutine id '__solfn_1385'`) and is not hidden by this
   replay.
 
+### Corrupt "ok" receipts inside duplicate-payload groups
+
+A relayer race puts the SAME attested message on chain twice. CCTP's
+`usedNonces` means the chain accepted exactly one of them — but the indexer
+can report "ok" for both, and the replay (which accepts whichever copy it
+sees first) then looks like it diverged.
+
+The driver corrects this from evidence, never by assumption. Within a
+byte-identical payload group whose outcome multiset does not match history,
+an "ok" row whose receipt carries **zero logs** is corrected to failed: a
+successful CCTP call always emits (Mint + Transfer + MintAndWithdraw +
+MessageReceived), so a logless success is self-contradictory. Every
+correction is recorded per row in `scope.zero_log_receipt_corrections` with
+its hash and the evidence, alongside the hand-audited
+`MAINNET_RECEIPT_METADATA` entries. The correction can only ever turn a
+claimed success into a failure, only inside a duplicate group, and only with
+the logs to prove it — guarded by three tests in
+`test_oracle_cctp_historical.py`.
+
+Worked example (transmitter calls 798/799, sourceDomain 3 nonce 682, three
+minutes apart): 798's receipt has zero logs, 799's has all four, so the chain
+rejected 798 and accepted 799 while the replay does the reverse. Ordering is
+gas-environmental; neither leg models it.
+
+`triage_joint.py <report>` sorts whatever is left into buckets —
+`avm_rejects_ok` first, since that is the class that contains real compiler
+bugs — and is the fastest way to read a deep window's status mismatches.
+
 Use `--no-pre08-compat` to demonstrate the unmodified pragma-relaxed artifact's
 known semantic failure. Unit tests for the stream, corrections, address model,
 and compatibility-patch guards live in `test_oracle_cctp_historical.py`.

@@ -624,6 +624,9 @@ class Runner:
         self.steps: list[dict[str, Any]] = []
         self.results: list[dict[str, Any]] = []
         self.tainted = False
+        # Evidence-based receipt corrections made during this run (never
+        # silent: every entry names the hash and the evidence).
+        self.receipt_corrections: list[dict[str, Any]] = []
 
     def app_spec(
         self, app_id: int, artifact: dict[str, Any], creator: str, *, current=False
@@ -992,6 +995,34 @@ class Runner:
             self.tainted = True
         return matched
 
+    def zero_log_ok_hashes(self) -> set[str]:
+        """Hashes whose receipt says "ok" but carries NO logs at all.
+
+        A state-changing CCTP method that succeeded always emits (a real
+        receiveMessage produces Mint + Transfer + MintAndWithdraw +
+        MessageReceived). An "ok" receipt with zero entries is therefore
+        self-contradictory — the indexer's status field is stale. The differ
+        already refuses to compare events for these (corrupt_empty_receipt);
+        this exposes the same evidence to the STATUS comparison, which is
+        where a duplicate-delivery race otherwise reads as a divergence.
+
+        Only hashes present in logs.json are considered: a missing entry means
+        "not fetched", which is not evidence of anything.
+        """
+        out: set[str] = set()
+        for tag in CASE_CONFIG:
+            path = self.cases_path / tag / "logs.json"
+            if not path.exists():
+                continue
+            try:
+                logs = load_json(path)
+            except Exception:
+                continue
+            for h, entries in logs.items():
+                if not entries:
+                    out.add(h)
+        return out
+
     def reclassify_payload_races(self) -> None:
         """Identical-payload relayer races: outcome MULTISET comparison.
 
@@ -1003,9 +1034,18 @@ class Runner:
         accepted exactly one of the group; so does the replay. When the
         group's historical and observed outcome multisets agree, the order is
         environmental, not semantic: mark those rows matched with a note.
+
+        When they do NOT agree, one more evidence-based correction applies
+        before giving up: within a duplicate-payload group, an "ok" row whose
+        receipt carries zero logs did not actually succeed (CCTP's usedNonces
+        makes a second delivery of one attested message impossible, so the
+        chain cannot have accepted both). Those rows' historical truth is
+        corrected to failed — explicitly, per row, and recorded in the report
+        — and the multiset test is retried.
         """
         from collections import Counter, defaultdict
 
+        zero_log_ok = self.zero_log_ok_hashes()
         groups: dict[tuple, list[dict[str, Any]]] = defaultdict(list)
         for r in self.results:
             data = self.cases.get(r["tag"])
@@ -1023,14 +1063,47 @@ class Runner:
                 continue
             hist = Counter(bool(r["historical_ok"]) for r in rows)
             seen = Counter(r["oracle_result"] == "ACCEPT" for r in rows)
+            note = (
+                "identical-payload race: outcome multiset matches history; "
+                "order is gas/indexer-environmental"
+            )
+            if hist != seen:
+                # Correct provably-corrupt "ok" receipts inside THIS duplicate
+                # group, then retry. Never touches rows outside a duplicate
+                # group, and never turns a failure into a success.
+                corrected = [
+                    r for r in rows
+                    if r["historical_ok"] and r["hash"].split("#")[0] in zero_log_ok
+                ]
+                if not corrected:
+                    continue
+                hist = Counter(
+                    False if r in corrected else bool(r["historical_ok"])
+                    for r in rows
+                )
+                if hist != seen:
+                    continue
+                for r in corrected:
+                    r["historical_ok_corrected"] = False
+                    self.receipt_corrections.append({
+                        "hash": r["hash"],
+                        "signature": r["signature"],
+                        "reason": (
+                            "duplicate attested payload whose 'ok' receipt has "
+                            "ZERO logs — a successful CCTP call always emits, "
+                            "and usedNonces forbids a second delivery"
+                        ),
+                    })
+                note = (
+                    "identical-payload race: an 'ok' receipt in the group has "
+                    "zero logs (corrupt indexer status) — corrected to failed, "
+                    "after which the outcome multiset matches history"
+                )
             if hist == seen:
                 for r in rows:
                     if not r["matched_status"]:
                         r["matched_status"] = True
-                        r["status_note"] = (
-                            "identical-payload race: outcome multiset matches "
-                            "history; order is gas/indexer-environmental"
-                        )
+                        r["status_note"] = note
 
     def run(self, limit: int | None) -> dict[str, Any]:
         self.deploy_dependency()
@@ -1077,6 +1150,7 @@ class Runner:
                 ),
                 "comparison": "historical receipt status vs oracle ACCEPT/reject",
                 "mainnet_receipt_metadata_corrections": MAINNET_RECEIPT_METADATA,
+                "zero_log_receipt_corrections": self.receipt_corrections,
                 "artifact_source": (
                     "cached corpus TEAL copied to a temporary directory and patched; "
                     "the cached corpus itself is unchanged"
