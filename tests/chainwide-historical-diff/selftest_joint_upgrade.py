@@ -193,6 +193,59 @@ def build_case() -> None:
     }, (HERE / "joint_config_upgtest.json").open("w"), indent=1)
 
 
+def build_generator_inputs() -> None:
+    """Synthesize what fetch.py would have written, so gen_upgrades.py runs
+    on the same two-era case: upgrades.json + upgrade_0/prepared.sol, with an
+    upgradeToAndCall blob whose embedded init calldata is EMPTY."""
+    import shutil
+
+    case_dir = CASES / TAG
+    up_dir = case_dir / "upgrade_0"
+    up_dir.mkdir(exist_ok=True)
+    (up_dir / "prepared.sol").write_text(V2)
+    shutil.rmtree(up_dir / "out_avm", ignore_errors=True)
+    impl = "0x" + "d" * 40
+    blob = ("0x4f1ef286"
+            + "00" * 12 + impl[2:]                      # address impl
+            + f"{0x40:064x}" + f"{0:064x}")             # bytes data = ""
+    json.dump({
+        "address": ADDRESS,
+        "upgrades": [{
+            "hash": "0x" + "e" * 64, "impl": impl,
+            "block": UPGRADE_BLOCK, "txindex": 0,
+            "ts": 1700000000 + UPGRADE_BLOCK,
+            "dir": "upgrade_0", "sender": CREATOR,
+            "init_calldata": [blob],
+            "name": "Counter", "compiler_version": "v0.8.26",
+            "abi": json.loads((case_dir / "abi_v2.json").read_text()),
+            "ctor_args_hex": "00" * 32,                 # uint256 seed = 0
+            "multifile": None,
+        }],
+    }, (case_dir / "upgrades.json").open("w"), indent=1)
+
+
+def check_generated_entries(config_path: Path) -> int:
+    got = json.loads(config_path.read_text())["upgrades"]
+    bad = 0
+    if len(got) != 1:
+        print(f"[upgtest] ✗ generator emitted {len(got)} entries, wanted 1")
+        return 1
+    e = got[0]
+    want = {"tag": TAG, "block": UPGRADE_BLOCK, "contract": "Counter",
+            "avm_artifact": f"{TAG}/upgrade_0/out_avm",
+            "abi": f"{TAG}/upgrade_0/abi.json", "src": f"{TAG}/upgrade_0",
+            "ctor_args": [0], "init_sig": None}
+    for k, v in want.items():
+        if e.get(k) != v:
+            print(f"[upgtest] ✗ generated entry {k}: {e.get(k)!r} != {v!r}")
+            bad += 1
+    if not (CASES / TAG / "upgrade_0" / "out_avm" / "Counter.approval.bin"
+            ).exists():
+        print("[upgtest] ✗ generator did not compile the era's AVM artifact")
+        bad += 1
+    return bad
+
+
 def run(cmd: list[str], label: str) -> subprocess.CompletedProcess:
     print(f"[upgtest] {label}: {' '.join(str(c) for c in cmd[:3])} ...")
     res = subprocess.run([str(c) for c in cmd], capture_output=True, text=True,
@@ -250,8 +303,38 @@ def main() -> int:
     if not any("code swap" in s["name"] for s in evm["steps"]):
         print("[upgtest] ✗ upgrade did not apply on the EVM leg")
         bad += 1
+
+    # ── generator path: fetch-shaped upgrades.json → gen_upgrades.py →
+    # entries + compiled artifacts → the SAME green replay.
+    build_generator_inputs()
+    gen_config = HERE / "joint_config_upgtest_gen.json"
+    base = json.loads(config.read_text())
+    base.pop("upgrades", None)
+    gen_config.write_text(json.dumps(base, indent=1))
+    res = run([EVM_PY, HERE / "gen_upgrades.py", TAG, "--into", gen_config],
+              "generator")
+    if res.returncode != 0:
+        print("[upgtest] ✗ gen_upgrades.py failed")
+        return 1
+    bad += check_generated_entries(gen_config)
+    res = run([EVM_PY, HERE / "cctp_evm_leg.py", CASES, "--config", gen_config,
+               "--output", evm_out], "EVM leg (generated config)")
+    bad += res.returncode != 0
+    res = run(["python3", HERE / "oracle_cctp_historical.py", CASES,
+               "--prover-root", PROVER, "--config", gen_config,
+               "--continue-after-divergence", "--output", avm_out],
+              "AVM leg (generated config)")
+    bad += res.returncode != 0
+    res = run(["python3", HERE / "cctp_joint_diff.py", CASES, "--avm", avm_out,
+               "--evm", evm_out, "--config", gen_config],
+              "differ (generated config)")
+    if res.returncode != 0:
+        print("[upgtest] ✗ differ findings under the GENERATED config")
+        bad += 1
+
     print("\n[upgtest] " + ("FAILED" if bad else
-                            "OK — upgrade applied on both legs, 0 findings"))
+                            "OK — upgrade applied on both legs, 0 findings "
+                            "(hand + generated configs)"))
     return 1 if bad else 0
 
 

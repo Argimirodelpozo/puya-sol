@@ -184,9 +184,35 @@ implementation at its historical upgrade point, in stream order:
   `upgradeToAndCall` embedded calldata), and the differ merges the new era's
   ARC-56 events and solc ABI into its decode indexes.
 
+**Harvesting is automatic.** `fetch.py` scans the proxy's
+`Upgraded(address)` logs whenever `--source-from` is given (opt-in via
+`--upgrades` otherwise; both indexed and non-indexed event forms are parsed
+— OZ vs the older Zeppelin AdminUpgradeabilityProxy, e.g. USDC). Every
+event up to and including the first attachment of the `--source-from`
+implementation is the initial era — the attachment can post-date the
+creation block on factory-deployed proxies (CCTP v2), and treating it as an
+upgrade would double-replay initialize. Later in-window events are
+materialized into `cases/<tag>/upgrade_<i>/` (source tree, ABI, ctor args,
+the upgrade txn's calls into the proxy) and recorded in
+`cases/<tag>/upgrades.json`; a direct `upgradeTo`/`upgradeToAndCall` txlist
+scan backstops logless hosts. Then:
+
+```bash
+../WIP/tiny-fuzzing-oracle/.evmvenv/bin/python gen_upgrades.py <tag> \
+    --into joint_config_X.json
+```
+
+decodes each era's init calldata and ctor args into marker form, compiles
+the era with puya-sol `--evm-layout` into `upgrade_<i>/out_avm`, and merges
+ready-to-run entries into the joint config. An unverified era aborts the
+generator — the replay cannot cross an upgrade whose source is unknown;
+narrow the window instead.
+
 `selftest_joint_upgrade.py` proves the path end-to-end with a synthetic
 two-era contract whose upgrade changes all three lanes (a V2-only revert, a
-V2-only event, doubled credits in storage); it must finish with 0 findings.
+V2-only event, doubled credits in storage), through BOTH the hand-written
+config and the fetch-shaped `upgrades.json` → `gen_upgrades.py` pipeline;
+it must finish with 0 findings.
 
 ## Architecture
 

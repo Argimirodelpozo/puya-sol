@@ -666,13 +666,210 @@ def fetch_dep(host: str, address: str, dep_dir, depth: int, seen: set) -> dict |
     return dep
 
 
+# ── mid-history upgrade harvesting (proxy.md §1, README "Mid-history
+# upgrades"). Detection is event-first: EIP-1967 proxies emit
+# Upgraded(address indexed implementation) from the PROXY address, which
+# catches ProxyAdmin-routed upgrades that txlist can never show (they are
+# internal calls of a ProxyAdmin root txn). Direct upgradeTo/upgradeToAndCall
+# root txns are scanned as a fallback for logless hosts.
+UPGRADED_TOPIC = (
+    "0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b"
+)
+UPGRADE_SELECTORS = {"0x3659cfe6": "upgradeTo",
+                     "0x4f1ef286": "upgradeToAndCall"}
+
+
+def _int(x) -> int:
+    s = str(x or 0)
+    return int(s, 16) if s.startswith("0x") else int(s)
+
+
+def materialize_impl_source(host: str, impl: str, dest, relax_pre08: bool):
+    """Verified source of an implementation → dest/ (prepared.sol or src/
+    tree), same layout fetch_case materializes for a case. None if
+    unverified."""
+    try:
+        sc = http_json(f"https://{host}/api/v2/smart-contracts/{impl}")
+    except Exception:
+        return None
+    if not sc.get("source_code"):
+        return None
+    dest.mkdir(parents=True, exist_ok=True)
+    (dest / "prepared.sol").write_text(
+        relax_pragma(sc["source_code"], pre08=relax_pre08))
+    mf = None
+    extra = sc.get("additional_sources") or []
+    if extra:
+        main_rel = str(sc.get("file_path") or "Main.sol").lstrip("/") or "Main.sol"
+        tree = {main_rel: relax_pragma(sc["source_code"], pre08=relax_pre08)}
+        for f in extra:
+            tree[str(f["file_path"]).lstrip("/")] = relax_pragma(
+                f.get("source_code", ""), pre08=relax_pre08)
+        src_root = dest / "src"
+        shutil.rmtree(src_root, ignore_errors=True)
+        for rel, content in tree.items():
+            p = src_root / rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(content)
+        mf = {"main": main_rel, "files": sorted(tree),
+              "remappings": [r.lstrip(":") for r in
+                             (sc.get("compiler_settings") or {}).get(
+                                 "remappings") or []]}
+    return {"name": sc.get("name"),
+            "compiler_version": sc.get("compiler_version"),
+            "abi": sc.get("abi") or [],
+            "ctor_args_hex": (sc.get("constructor_args") or ""
+                              ).removeprefix("0x"),
+            "multifile": mf}
+
+
+def _upgrade_events(host: str, address: str) -> list[dict]:
+    """Upgraded(address) log entries on the proxy, oldest first."""
+    try:
+        rows = http_json(
+            f"https://{host}/api?module=logs&action=getLogs&fromBlock=0"
+            f"&toBlock=latest&address={address}&topic0={UPGRADED_TOPIC}"
+        ).get("result") or []
+    except Exception:
+        rows = []
+    if not isinstance(rows, list):
+        return []
+    out = []
+    for e in rows:
+        # OZ proxies index the implementation (topics[1]); the older Zeppelin
+        # AdminUpgradeabilityProxy (e.g. USDC) leaves it non-indexed in data.
+        topics = e.get("topics") or []
+        word = topics[1] if len(topics) > 1 and topics[1] else e.get("data")
+        if not word or len(str(word)) < 42:
+            continue
+        out.append({
+            "hash": e.get("transactionHash"),
+            "impl": "0x" + str(word)[2:66][-40:].lower(),
+            "block": _int(e.get("blockNumber")),
+            "txindex": _int(e.get("transactionIndex")),
+            "ts": _int(e.get("timeStamp")),
+        })
+    return sorted(out, key=lambda x: (x["block"], x["txindex"]))
+
+
+def _proxy_calls_in_txn(host: str, address: str, txhash: str) -> list[str]:
+    """Calldata of every external call INTO the proxy in one txn's trace —
+    the upgradeToAndCall blob (whose bytes arg is the init calldata) plus any
+    sibling config calls, same harvesting shape as gen_v2_config's
+    creation-era pass."""
+    out = []
+    try:
+        for entry in http_json(
+                f"https://{host}/api/v2/transactions/{txhash}/raw-trace"):
+            act = entry.get("action", {})
+            inp = act.get("input") or ""
+            if (act.get("to") or "").lower() != address.lower() or not inp:
+                continue
+            if (act.get("from") or "").lower() == address.lower():
+                continue
+            out.append(inp)
+    except Exception:
+        pass
+    return out
+
+
+def fetch_upgrades(host: str, address: str, tag: str, case_dir, txns: list,
+                   creation: dict, relax_pre08: bool,
+                   source_from: str | None = None) -> None:
+    """Detect in-window implementation upgrades and materialize each era.
+
+    Writes cases/<tag>/upgrades.json + upgrade_<i>/ source dirs. The joint
+    config entries (init decode, marker form, AVM artifacts) come from
+    gen_upgrades.py, which consumes this file.
+    """
+    addr = address.lower()
+    events = _upgrade_events(host, address)
+    # txlist fallback for direct (EOA-admin) proxies: root calls carrying the
+    # upgrade selectors that the log scan missed.
+    seen_hashes = {e["hash"] for e in events}
+    for t in txns:
+        inp = (t.get("input") or "").lower()
+        if inp[:10] not in UPGRADE_SELECTORS or t["hash"] in seen_hashes:
+            continue
+        events.append({"hash": t["hash"],
+                       "impl": "0x" + inp[10 + 24:10 + 64],
+                       "block": int(t["block"]),
+                       "txindex": int(t.get("txindex") or 0),
+                       "ts": int(t["ts"])})
+    events.sort(key=lambda x: (x["block"], x["txindex"]))
+    if not events:
+        return
+    creation_block = int(creation.get("block") or 0)
+    window_end = max((int(t["block"]) for t in txns), default=creation_block)
+    # The replay's first era is the --source-from implementation, so every
+    # event up to and including its FIRST attachment is the initial era —
+    # the attachment can post-date the creation block (factory-deployed
+    # proxies wire the implementation in a follow-up txn), and treating it
+    # as an upgrade would double-replay initialize. Without --source-from,
+    # fall back to the creation-block rule.
+    first_era_end = -1
+    if source_from:
+        for i, e in enumerate(events):
+            if e["impl"] == source_from.lower():
+                first_era_end = i
+                break
+        if first_era_end < 0:
+            print(f"[fetch] {tag}: ⚠ --source-from {source_from} never "
+                  f"appears in the Upgraded history — era alignment unknown")
+    initial = (events[: first_era_end + 1] if first_era_end >= 0
+               else [e for e in events if e["block"] <= creation_block])
+    if initial:
+        print(f"[fetch] {tag}: initial implementation {initial[-1]['impl']} "
+              f"(attached block {initial[-1]['block']})")
+        if len(initial) > 1:
+            print(f"[fetch] {tag}: ⚠ {len(initial) - 1} pre-source_from "
+                  f"era(s) exist — history before block "
+                  f"{initial[-1]['block']} ran DIFFERENT code")
+    rest = events[len(initial):] if first_era_end >= 0 else [
+        e for e in events if e["block"] > creation_block]
+    in_window = [e for e in rest if e["block"] <= window_end]
+    skipped = [e for e in rest if e["block"] > window_end]
+    if skipped:
+        print(f"[fetch] {tag}: {len(skipped)} upgrade(s) beyond the harvested "
+              f"window (block > {window_end}) — not materialized")
+    if not in_window:
+        return
+    upgrades = []
+    for i, e in enumerate(in_window):
+        dest = case_dir / f"upgrade_{i}"
+        meta = materialize_impl_source(host, e["impl"], dest, relax_pre08)
+        if meta is None:
+            print(f"[fetch] {tag}: upgrade {i} impl {e['impl']} NOT verified "
+                  f"— era recorded without source; replay cannot cross it")
+            upgrades.append({**e, "dir": f"upgrade_{i}", "unverified": True})
+            continue
+        # The upgrade txn's sender gates the init call on both legs.
+        sender = None
+        try:
+            ct = http_json(f"https://{host}/api/v2/transactions/{e['hash']}")
+            sender = ((ct.get("from") or {}).get("hash") or "").lower() or None
+        except Exception:
+            pass
+        upgrades.append({
+            **e, "dir": f"upgrade_{i}", "sender": sender,
+            "init_calldata": _proxy_calls_in_txn(host, address, e["hash"]),
+            **meta,
+        })
+        print(f"[fetch] {tag}: upgrade {i} @ block {e['block']} → "
+              f"{meta['name']} ({e['impl'][:10]}…) materialized")
+        time.sleep(0.4)
+    dump_json(case_dir / "upgrades.json", {"address": addr,
+                                           "upgrades": upgrades})
+
+
 def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                internal: bool = False, internal_parents: int = 200,
                stub_deps: bool = False, script_deps: bool = False,
                script_traces: int = 200,
                relax_pre08: bool = False,
                parent_hints: list | None = None,
-               source_from: str | None = None) -> dict:
+               source_from: str | None = None,
+               scan_upgrades: bool = False) -> dict:
     case_dir = CASES / tag
     addr = address.lower()
 
@@ -934,6 +1131,15 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
         except Exception as e:
             print(f"[fetch] {tag}: dep-answer harvest failed ({str(e)[:60]}) — "
                   f"stand-ins stay self-address-only")
+    # Mid-history upgrades: on by default for proxy fetches (--source-from
+    # states the case IS a proxy), opt-in via --upgrades otherwise.
+    if source_from or scan_upgrades:
+        try:
+            fetch_upgrades(host, address, tag, case_dir, txns, creation,
+                           relax_pre08, source_from=source_from)
+        except Exception as e:
+            print(f"[fetch] {tag}: upgrade scan failed ({str(e)[:80]}) — "
+                  f"window treated as single-era")
     dump_json(case_dir / "case.json", case)
     mf = case.get("multifile")
     print(f"[fetch] {tag}: {sc.get('name')} solc={comp[:12]} "
@@ -970,6 +1176,9 @@ def main():
         i = argv.index("--source-from")
         source_from = argv[i + 1]
         del argv[i:i + 2]
+    scan_upgrades = "--upgrades" in argv
+    if scan_upgrades:
+        argv.remove("--upgrades")
     parent_case_tags = []
     while "--parent-case" in argv:
         i = argv.index("--parent-case")
@@ -1023,7 +1232,8 @@ def main():
                script_deps=script_deps, script_traces=script_traces,
                relax_pre08=relax_pre08,
                parent_hints=parent_hints,
-               source_from=source_from)
+               source_from=source_from,
+               scan_upgrades=scan_upgrades)
 
 
 if __name__ == "__main__":
