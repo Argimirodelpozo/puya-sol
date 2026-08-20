@@ -16,6 +16,64 @@
 namespace puyasol::builder::eb
 {
 
+std::shared_ptr<awst::Expression> AbiEncoderBuilder::arrayElemTo32(
+	std::shared_ptr<awst::Expression> _elem,
+	solidity::frontend::Type const* _solType,
+	awst::SourceLocation const& _loc)
+{
+	using solidity::frontend::Type;
+	auto cat = _solType ? _solType->category() : Type::Category::Integer;
+
+	// bool → the EVM 0/1 word. The ARC4 backing carries the truth bit in
+	// byte 0's HIGH bit (0x80), so a pad-in-place would encode 0x…80.
+	if (cat == Type::Category::Bool)
+	{
+		std::shared_ptr<awst::Expression> cond;
+		if (_elem->wtype == awst::WType::boolType())
+			cond = std::move(_elem);
+		else
+			cond = awst::makeNumericCompare(
+				awst::makeGetbit(
+					awst::makeAsBytes(std::move(_elem), _loc),
+					awst::makeZero(_loc), _loc),
+				awst::NumericComparison::Ne,
+				awst::makeIntegerConstant("0", _loc), _loc);
+		auto sel = awst::makeIntrinsicCall(
+			"select", awst::WType::uint64Type(), _loc);
+		sel->stackArgs.push_back(awst::makeZero(_loc));
+		sel->stackArgs.push_back(awst::makeOne(_loc));
+		sel->stackArgs.push_back(std::move(cond));
+		return leftPadBytes(awst::makeItob(std::move(sel), _loc), 32, _loc);
+	}
+
+	// Raw bytes at the element's backing width.
+	std::shared_ptr<awst::Expression> bytesExpr;
+	if (_elem->wtype == awst::WType::uint64Type())
+		bytesExpr = awst::makeItob(std::move(_elem), _loc);
+	else if (_elem->wtype == awst::WType::bytesType())
+		bytesExpr = std::move(_elem);
+	else
+		bytesExpr = awst::makeAsBytes(std::move(_elem), _loc);
+
+	// bytesN: EVM left-aligns fixed bytes — pad on the RIGHT.
+	if (cat == Type::Category::FixedBytes)
+	{
+		auto const* fb =
+			dynamic_cast<solidity::frontend::FixedBytesType const*>(_solType);
+		int n = fb ? static_cast<int>(fb->numBytes()) : 32;
+		if (n >= 32)
+			return bytesExpr;
+		return awst::makeConcat(
+			std::move(bytesExpr), awst::makeBzero(32 - n, _loc), _loc);
+	}
+
+	if (auto const* it =
+			dynamic_cast<solidity::frontend::IntegerType const*>(_solType);
+		it && it->isSigned())
+		return signExtendBytesTo32(std::move(bytesExpr), _loc);
+	return leftPadBytes(std::move(bytesExpr), 32, _loc);
+}
+
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::leftPadBytes(
 	std::shared_ptr<awst::Expression> _expr, int _n, awst::SourceLocation const& _loc)
 {
@@ -263,7 +321,6 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 						indexWtype = da->elementType();
 					auto indexExpr = awst::makeIndexExpression(arrayExpr, std::move(idx), indexWtype, _loc);
 
-					auto elemBytes = toPackedBytes(_ctx, std::move(indexExpr), elemSolType, _isPacked, _loc);
 					// EVM packs each array element to a full 32-byte word
 					// in BOTH `abi.encode` AND `abi.encodePacked` modes.
 					// (The Solidity docs on non-standard packed are
@@ -276,21 +333,15 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 					// `abi.encodePacked(uint120[3])` produces 45 bytes
 					// instead of EVM's 96, breaking the keccak hash
 					// (see builtinFunctions/keccak256_packed_complex_types).
-					if (elemBytes)
-					{
-						// Signed integer elements SIGN-extend to the 32-byte
-						// word (negative -> 0xff..<mag>), not zero-pad. The
-						// element arrives as its raw ARC4 width (8 bytes for
-						// int64, 16 for int128, …); signExtendBytesTo32 is
-						// width-agnostic and idempotent so it is safe in both
-						// abi.encode and abi.encodePacked array modes.
-						auto const* eit =
-							dynamic_cast<solidity::frontend::IntegerType const*>(elemSolType);
-						if (eit && eit->isSigned())
-							elemBytes = signExtendBytesTo32(std::move(elemBytes), _loc);
-						else
-							elemBytes = leftPadBytes(std::move(elemBytes), 32, _loc);
-					}
+					// NOT toPackedBytes: its `extract(8-N, N)` truncation
+					// assumes an 8-byte itob input, but elements arrive at
+					// their ARC4 backing width (4 bytes for uint32) — the
+					// extract paniced for every 1-7-byte element type. And
+					// bytesN elements pad RIGHT, arc4-bool elements carry
+					// the truth bit in the HIGH bit — arrayElemTo32 owns
+					// all three rules.
+					auto elemBytes = arrayElemTo32(
+						std::move(indexExpr), elemSolType, _loc);
 					if (!packed)
 						packed = std::move(elemBytes);
 					else
@@ -313,6 +364,67 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 				// the honk transcript (eta and all downstream challenges wrong).
 				std::shared_ptr<awst::Expression> arc4 =
 					awst::makeARC4Encode(std::move(arrayExpr), awst::WType::bytesType(), _loc);
+
+				// bool[]: the ARC-4 body is BIT-packed (2-byte count +
+				// ceil(n/8) bytes) — no byte stride exists, so the generic
+				// strip below would emit the raw bit soup where EVM wants a
+				// full 0/1 word per element. Expand bit-by-bit: element i is
+				// bit 16+i of the encoded value (getbit counts MSB-first).
+				// (Deliberately NOT fixed via computeEncodedElementSize —
+				// teaching it arc4-bool=1 would corrupt its storage-codec
+				// callers, which face the same bit-packing.)
+				if (elemSolType && elemSolType->category() == Type::Category::Bool)
+				{
+					auto uniq = std::to_string(_callNode.id()) + "_" + std::to_string(argIdx);
+					auto bytesVar = [&](std::string const& n) {
+						return awst::makeVarExpression(n, awst::WType::bytesType(), _loc);
+					};
+					auto u64Var = [&](std::string const& n) {
+						return awst::makeVarExpression(n, awst::WType::uint64Type(), _loc);
+					};
+					std::string src = "__pkd_src_" + uniq, out = "__pkd_out_" + uniq,
+						iN = "__pkd_i_" + uniq, nN = "__pkd_n_" + uniq;
+					auto& pre = _ctx.preEffects();
+					pre.push_back(awst::makeAssignmentStatement(
+						bytesVar(src), std::move(arc4), _loc));
+					{
+						auto count = awst::makeIntrinsicCall(
+							"extract_uint16", awst::WType::uint64Type(), _loc);
+						count->stackArgs.push_back(bytesVar(src));
+						count->stackArgs.push_back(awst::makeZero(_loc));
+						pre.push_back(awst::makeAssignmentStatement(
+							u64Var(nN), std::move(count), _loc));
+					}
+					pre.push_back(awst::makeAssignmentStatement(
+						bytesVar(out), awst::makeBytesConstant({}, _loc), _loc));
+					pre.push_back(awst::makeAssignmentStatement(
+						u64Var(iN), awst::makeZero(_loc), _loc));
+
+					auto body = awst::makeBlock(_loc);
+					{
+						auto bit = awst::makeGetbit(bytesVar(src),
+							awst::makeUInt64BinOp(
+								awst::makeIntegerConstant("16", _loc),
+								awst::UInt64BinaryOperator::Add, u64Var(iN), _loc),
+							_loc);
+						auto word = leftPadBytes(
+							awst::makeItob(std::move(bit), _loc), 32, _loc);
+						body->body.push_back(awst::makeAssignmentStatement(
+							bytesVar(out),
+							awst::makeConcat(bytesVar(out), std::move(word), _loc),
+							_loc));
+						body->body.push_back(awst::makeAssignmentStatement(
+							u64Var(iN),
+							awst::makeUInt64BinOp(u64Var(iN),
+								awst::UInt64BinaryOperator::Add, awst::makeOne(_loc), _loc),
+							_loc));
+					}
+					pre.push_back(awst::makeWhileLoop(
+						awst::makeNumericCompare(u64Var(iN), awst::NumericComparison::Lt,
+							u64Var(nN), _loc),
+						std::move(body), _loc));
+					return bytesVar(out);
+				}
 
 				awst::WType const* elemW = _ctx.typeMapper.mapSolTypeToARC4(elemSolType);
 				int elemSize = builder::StorageMapper::computeEncodedElementSize(elemW);
@@ -356,12 +468,9 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 							_loc);
 						auto elem = awst::makeExtract3(bytesVar(src), std::move(pos),
 							awst::makeIntegerConstant(static_cast<uint64_t>(elemSize), _loc), _loc);
-						std::shared_ptr<awst::Expression> elem32;
-						auto const* eit = dynamic_cast<IntegerType const*>(elemSolType);
-						if (eit && eit->isSigned())
-							elem32 = signExtendBytesTo32(std::move(elem), _loc);
-						else
-							elem32 = leftPadBytes(std::move(elem), 32, _loc);
+						// bytesN pads RIGHT, signed sign-extends, else pads
+						// LEFT — arrayElemTo32 owns the padding rules.
+						auto elem32 = arrayElemTo32(std::move(elem), elemSolType, _loc);
 						body->body.push_back(awst::makeAssignmentStatement(
 							bytesVar(out),
 							awst::makeConcat(bytesVar(out), std::move(elem32), _loc), _loc));

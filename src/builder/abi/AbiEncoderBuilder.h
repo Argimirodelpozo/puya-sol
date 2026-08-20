@@ -102,6 +102,18 @@ private:
 		std::shared_ptr<awst::Expression> _expr, int _n,
 		awst::SourceLocation const& _loc);
 
+	/// One ARRAY element → its 32-byte EVM word (both abi.encode and
+	/// abi.encodePacked pad array elements to the full word). Accepts every
+	/// backing the indexers produce: native uint64/biguint/bool, ARC4 values
+	/// at their raw backing width, and raw bytes extracted from an ARC4 body.
+	/// Padding follows the element's SOLIDITY type: bytesN pads RIGHT
+	/// (left-aligned words), signed intN sign-extends, bool normalizes the
+	/// ARC4 high-bit encoding to the 0/1 word, everything else zero-pads LEFT.
+	static std::shared_ptr<awst::Expression> arrayElemTo32(
+		std::shared_ptr<awst::Expression> _elem,
+		solidity::frontend::Type const* _solType,
+		awst::SourceLocation const& _loc);
+
 public:
 	/// Sign-extend a <=32-byte big-endian two's-complement value to a 32-byte
 	/// ABI word: the high bytes are filled with the sign (0xff when byte 0's

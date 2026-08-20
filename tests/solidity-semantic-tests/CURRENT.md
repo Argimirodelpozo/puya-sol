@@ -1,3 +1,26 @@
+# Semantic Test Status — v500 (encodePacked / bytesN padding-and-width family)
+
+> **Full run 2026-08-19: 8 failed / 1442 passed / 113 xf / 32 xp** (RESULTS_v500_packed_padding_family.txt).
+> Baseline held; +1 guard pass. Landed new_review.md B10/B11/B12/C17:
+> **B10** — fixed arrays of 1-7-byte elements hit `extract(8-N, N)` written
+> for 8-byte itob inputs → runtime revert; a new `arrayElemTo32` owns the
+> element→word conversion for every backing (native uint64/biguint/bool,
+> ARC4 raw widths, extracted body bytes). **B11** — bytesN array elements
+> were LEFT-padded to the 32-byte word; EVM left-aligns fixed bytes, so they
+> pad RIGHT now (fixed + dynamic arrays). **B12** — mixed-width bytesN
+> compares/bitwise padded only CONSTANT operands, but solc legally widens
+> bytesM→bytesN right-padded: both compare lowerings + the bitwise op now
+> pad RUNTIME operands too, and `a & b` types its result at the common
+> width. **C17** — `abi.encodePacked(bool[])` emitted the raw ARC-4
+> BIT-packed body; bool arrays now expand bit-by-bit (`getbit`) to one 0/1
+> word per element (arc4-bool's high-bit encoding normalized; fixed bool
+> arrays too). Deliberately NOT via computeEncodedElementSize — teaching it
+> arc4-bool=1 would corrupt its storage-codec callers. 📌 `abi.encode` of a
+> bytesN array stays ARC4-layout by the ARC4-always rule — only the packed
+> family is EVM-shaped. Guard: puyasolRegression/test_encodepacked_padding.py
+> (hand-computed EVM ABI expectations + scalar-width/sign-extension
+> regression legs).
+
 # Semantic Test Status — v499 (ERC-1967 follow-ons: slot data flow, contract admins)
 
 > **Full run 2026-08-19: 8 failed / 1441 passed / 113 xf / 32 xp** (RESULTS_v499_erc1967_followons.txt).

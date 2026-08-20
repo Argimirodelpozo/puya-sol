@@ -89,9 +89,11 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 
 		// EVM bytesN compares 32-byte LEFT-ALIGNED words: bytes22 x == "aa" pads
 		// the literal to the right, and "b" > "aa" (0x62.. > 0x6161..). AVM values
-		// are N raw bytes, so right-pad a shorter CONSTANT operand (BytesConstant,
-		// or the bare 2-byte StringConstant a string literal arrives as) to the
-		// other side's declared bytes[N] width — equality and ordering both.
+		// are N raw bytes, so right-pad the shorter side to the common declared
+		// width — constants fold (BytesConstant, or the bare 2-byte StringConstant
+		// a string literal arrives as); RUNTIME operands pad too, since solc
+		// legally widens bytesM→bytesN (`bytes2 a == bytes4 b`) — equality and
+		// ordering both.
 		if (isBytesBacked)
 		{
 			auto declaredLen = [](awst::Expression const& e) -> size_t {
@@ -100,34 +102,44 @@ std::shared_ptr<awst::Expression> buildBinaryOp(
 						return *bw->length();
 				return 0;
 			};
-			auto padShortConstant = [&](std::shared_ptr<awst::Expression>& expr, size_t targetLen) {
-				std::vector<uint8_t> val;
-				awst::BytesEncoding enc;
+			auto padOperand = [&](std::shared_ptr<awst::Expression>& expr, size_t targetLen) {
+				auto* newType = _ctx.typeMapper.createType<awst::BytesWType>(
+					static_cast<int>(targetLen));
 				if (auto* bc = dynamic_cast<awst::BytesConstant*>(expr.get()))
 				{
 					if (bc->value.size() >= targetLen)
 						return;
-					val = bc->value;
-					enc = bc->encoding;
+					std::vector<uint8_t> val = bc->value;
+					val.resize(targetLen, 0);
+					expr = awst::makeBytesConstant(
+						std::move(val), expr->sourceLocation, bc->encoding, newType);
+					return;
 				}
-				else if (auto* sc = dynamic_cast<awst::StringConstant*>(expr.get()))
+				if (auto* sc = dynamic_cast<awst::StringConstant*>(expr.get()))
 				{
 					if (sc->value.size() > targetLen)
 						return;
-					val.assign(sc->value.begin(), sc->value.end());
-					enc = awst::BytesEncoding::Utf8;
-				}
-				else
+					std::vector<uint8_t> val(sc->value.begin(), sc->value.end());
+					val.resize(targetLen, 0);
+					expr = awst::makeBytesConstant(
+						std::move(val), expr->sourceLocation, awst::BytesEncoding::Utf8, newType);
 					return;
-				val.resize(targetLen, 0);
-				expr = awst::makeBytesConstant(std::move(val), expr->sourceLocation, enc,
-					_ctx.typeMapper.createType<awst::BytesWType>(static_cast<int>(targetLen)));
+				}
+				size_t len = declaredLen(*expr);
+				if (len == 0 || len >= targetLen)
+					return;
+				auto loc = expr->sourceLocation;
+				expr = awst::makeReinterpretCast(
+					awst::makeConcat(
+						awst::makeAsBytes(std::move(expr), loc),
+						awst::makeBzero(static_cast<int>(targetLen - len), loc), loc),
+					newType, loc);
 			};
 			size_t common = std::max(declaredLen(*_left), declaredLen(*_right));
 			if (common > 0)
 			{
-				padShortConstant(_left, common);
-				padShortConstant(_right, common);
+				padOperand(_left, common);
+				padOperand(_right, common);
 			}
 		}
 
