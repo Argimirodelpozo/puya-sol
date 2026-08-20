@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/dirty_memory_dynamic_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 4096 8 0 1
+    intcblock 4096 32 0 1
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000102
     intc_2 // 0
     intc_0 // 4096
     bzero
@@ -52,26 +53,26 @@ main_ternary_merge@9:
     load 0
     pushint 88
     extract_uint64
+    dup
     load 0
     store 0
-    intc_1 // 8
+    pushint 8
     bzero
-    dig 1
+    dup
+    uncover 2
     itob
     pushbytes 0x20
     b+
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dig 1
-    swap
     concat
     dup
     len
-    intc_1 // 8
+    pushint 8
     -
     extract_uint64
     dup
-    pushint 32
+    intc_1 // 32
     +
     pushint 20480
     <=
@@ -79,67 +80,94 @@ main_ternary_merge@9:
     dup
     intc_0 // 4096
     /
+    swap
+    intc_0 // 4096
+    %
+    dup
+    pushint 4064
+    <=
+    bz main_else_body@11
+    swap
     dup
     loads
     uncover 2
-    intc_0 // 4096
-    %
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000102
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000102
     replace3
     stores
+
+main_after_if_else@12:
     load 0
     store 0
     swap
-    pushint 32
+    intc_1 // 32
     +
     dup
     intc_0 // 4096
-    /
+    %
     dup
+    cover 3
+    intc_0 // 4096
+    swap
+    -
+    dup
+    cover 4
+    intc_1 // 32
+    >=
+    dup
+    cover 3
+    bz main_ternary_false@14
+    dup
+    intc_0 // 4096
+    /
+    loads
+    dig 4
+    intc_1 // 32
+    extract3
+
+main_ternary_merge@15:
+    dig 2
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    pushint 8
+    extract3
+    bury 6
+    load 0
+    store 0
+    load 0
+    store 0
+    uncover 2
+    bz main_ternary_false@17
+    uncover 3
+    pop
+    intc_0 // 4096
+    /
     loads
     uncover 2
-    intc_0 // 4096
-    %
-    swap
-    dig 1
-    pushint 32
+    intc_1 // 32
     extract3
-    dig 3
-    swap
+
+main_ternary_merge@18:
     concat
     dup
     len
-    intc_1 // 8
-    -
-    intc_1 // 8
-    extract3
-    bury 4
-    load 0
-    store 0
-    load 0
-    store 0
-    swap
-    loads
-    swap
-    pushint 32
-    extract3
-    concat
-    dup
-    len
-    intc_1 // 8
+    pushint 8
     -
     extract_uint64
     pushint 2
     ==
-    bz main_bool_false@12
+    bz main_bool_false@21
     pushint 2
     itob
     dig 1
     b==
-    bz main_bool_false@12
+    bz main_bool_false@21
     intc_3 // 1
 
-main_bool_merge@13:
+main_bool_merge@22:
     pushbytes 0x00
     intc_2 // 0
     uncover 2
@@ -151,9 +179,91 @@ main_bool_merge@13:
     intc_3 // 1
     return
 
-main_bool_false@12:
+main_bool_false@21:
     intc_2 // 0
-    b main_bool_merge@13
+    b main_bool_merge@22
+
+main_ternary_false@17:
+    intc_0 // 4096
+    /
+    dup
+    loads
+    uncover 3
+    uncover 4
+    dup
+    cover 4
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_1 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@18
+
+main_ternary_false@14:
+    dup
+    intc_0 // 4096
+    /
+    dup
+    loads
+    dig 5
+    dig 7
+    dup
+    cover 4
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_1 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@15
+
+main_else_body@11:
+    swap
+    dup
+    loads
+    intc_0 // 4096
+    uncover 3
+    dup
+    cover 2
+    -
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000102
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_1 // 32
+    dig 3
+    -
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000102
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@12
 
 main_ternary_false@8:
     intc_2 // 0

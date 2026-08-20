@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_pop_call_output.sol.PopCallCaller.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 6
+    intcblock 32 0 4096 1 20480
     bytecblock 0x151f7c75 TMPL_APPROVAL_PopCallCallee TMPL_CLEAR_PopCallCallee
-    pushint 4096
+    intc_2 // 4096
     bzero
     dup
     store 5
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -48,7 +48,7 @@ main_h_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
@@ -58,7 +58,7 @@ main_ternary_merge@9:
     itxn_begin
     bytec_1 // TMPL_APPROVAL_PopCallCallee
     bytec_2 // TMPL_CLEAR_PopCallCallee
-    intc_3 // 6
+    pushint 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
@@ -76,7 +76,7 @@ main_ternary_merge@9:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_2 // 1
+    intc_3 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_1 // 0
@@ -120,7 +120,7 @@ main_ternary_merge@9:
     uncover 2
     pushint 24
     extract_uint64
-    intc_3 // 6
+    pushint 6
     itxn_field TypeEnum
     intc_1 // 0
     itxn_field OnCompletion
@@ -136,33 +136,154 @@ main_ternary_merge@9:
     len
     pushint 4
     >=
-    bz main_ternary_false@12
+    bz main_ternary_false@16
     dup
     extract 0 4
     bytec_0 // 0x151f7c75
     ==
 
-main_ternary_merge@13:
-    bz main_ternary_false@15
+main_ternary_merge@17:
+    bz main_ternary_false@19
     extract 4 0
 
-main_ternary_merge@16:
+main_ternary_merge@20:
     dig 1
     concat
     extract 0 32
-    dig 1
-    swap
-    concat
     dup
+    cover 2
     len
+    dup
     intc_0 // 32
+    %
+    dup
+    cover 3
     -
+    pushint 64
+    +
+    dup
+    intc_2 // 4096
+    %
+    dup
+    cover 2
+    intc_2 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@22
+    pop
+    dup
+    intc_2 // 4096
+    /
+    loads
+    uncover 2
     intc_0 // 32
     extract3
-    load 0
+
+main_ternary_merge@23:
+    intc_0 // 32
+    uncover 4
+    dup
+    cover 2
+    -
+    extract3
+    uncover 3
     swap
-    replace2 64
-    store 0
+    concat
+    swap
+    intc_1 // 0
+
+main_while_top@24:
+    dig 2
+    len
+    dig 1
+    >
+    bz main_after_while@29
+    pushint 64
+    dig 1
+    dup
+    cover 2
+    +
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_2 // 4096
+    /
+    cover 4
+    intc_2 // 4096
+    %
+    dup
+    cover 6
+    dig 5
+    uncover 2
+    intc_0 // 32
+    extract3
+    swap
+    pushint 4064
+    <=
+    bz main_else_body@27
+    uncover 3
+    dup
+    loads
+    uncover 6
+    uncover 3
+    replace3
+    stores
+
+main_after_if_else@28:
+    intc_0 // 32
+    +
+    b main_while_top@24
+
+main_else_body@27:
+    uncover 3
+    dup
+    loads
+    intc_2 // 4096
+    uncover 7
+    dup
+    cover 2
+    -
+    dig 4
+    intc_1 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@28
+
+main_after_while@29:
+    pop
+    bury 1
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     load 0
     extract 64 32
     load 0
@@ -179,15 +300,37 @@ main_ternary_merge@16:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
-main_ternary_false@15:
-    b main_ternary_merge@16
-
-main_ternary_false@12:
+main_ternary_false@22:
+    dig 1
+    intc_2 // 4096
+    /
+    dup
+    loads
+    uncover 4
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
     intc_1 // 0
-    b main_ternary_merge@13
+    swap
+    extract3
+    concat
+    b main_ternary_merge@23
+
+main_ternary_false@19:
+    b main_ternary_merge@20
+
+main_ternary_false@16:
+    intc_1 // 0
+    b main_ternary_merge@17
 
 main_ternary_false@8:
     intc_1 // 0

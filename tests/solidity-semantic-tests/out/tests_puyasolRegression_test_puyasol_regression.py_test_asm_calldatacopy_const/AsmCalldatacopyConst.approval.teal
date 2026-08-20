@@ -142,22 +142,22 @@ main_toHigh_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@25
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@26:
     !
     assert // not payable
     load 0
     store 0
     txn NumAppArgs
-    bz main_ternary_false@27
+    bz main_ternary_false@28
     txna ApplicationArgs 0
 
-main_ternary_merge@28:
+main_ternary_merge@29:
     intc_0 // 32
     bzero
     dup
@@ -181,10 +181,10 @@ main_ternary_merge@28:
     dup
     pushint 36
     >
-    bz main_ternary_false@30
+    bz main_ternary_false@31
     pop
 
-main_ternary_merge@31:
+main_ternary_merge@32:
     intc_0 // 32
     extract3
     load 1
@@ -213,18 +213,18 @@ main_ternary_merge@31:
     intc_1 // 1
     return
 
-main_ternary_false@30:
+main_ternary_false@31:
     bury 1
-    b main_ternary_merge@31
+    b main_ternary_merge@32
 
-main_ternary_false@27:
+main_ternary_false@28:
     intc_2 // 4
     bzero
-    b main_ternary_merge@28
+    b main_ternary_merge@29
 
-main_ternary_false@24:
+main_ternary_false@25:
     intc_3 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@26
 
 main_toLow_route@5:
     txna ApplicationArgs 1
@@ -241,22 +241,22 @@ main_toLow_route@5:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@35
+    bz main_ternary_false@37
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@36:
+main_ternary_merge@38:
     !
     assert // not payable
     load 0
     store 0
     txn NumAppArgs
-    bz main_ternary_false@38
+    bz main_ternary_false@40
     txna ApplicationArgs 0
 
-main_ternary_merge@39:
+main_ternary_merge@41:
     intc_0 // 32
     bzero
     dup
@@ -280,10 +280,10 @@ main_ternary_merge@39:
     dup
     intc_2 // 4
     >
-    bz main_ternary_false@41
+    bz main_ternary_false@43
     pop
 
-main_ternary_merge@42:
+main_ternary_merge@44:
     intc_0 // 32
     extract3
     load 0
@@ -312,15 +312,15 @@ main_ternary_merge@42:
     intc_1 // 1
     return
 
-main_ternary_false@41:
+main_ternary_false@43:
     bury 1
-    b main_ternary_merge@42
+    b main_ternary_merge@44
 
-main_ternary_false@38:
+main_ternary_false@40:
     intc_2 // 4
     bzero
-    b main_ternary_merge@39
+    b main_ternary_merge@41
 
-main_ternary_false@35:
+main_ternary_false@37:
     intc_3 // 0
-    b main_ternary_merge@36
+    b main_ternary_merge@38

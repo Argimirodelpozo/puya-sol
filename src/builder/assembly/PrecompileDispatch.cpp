@@ -2,6 +2,7 @@
 /// EVM precompile dispatch: routes call/staticcall to specific precompile handlers.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "awst/NameGen.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 
@@ -266,7 +267,14 @@ void AssemblyBuilder::handleAppCall(
 	// 2) Split calldata: args[0]=selector(4B), args[1]=rest (EVM-ABI layout).
 	// offsetToUint64, not raw ReinterpretCast: puya rejects biguint→uint64
 	// reinterprets (asm values are biguint).
-	auto inOffAwst = offsetToUint64(buildExpression(_call.arguments[argBase]), _loc);
+	// Pin the input offset: it feeds the selector read AND the body read, so a
+	// `mload(0x40)`-shaped argument must not run twice. An EXPRESSION-level
+	// pin, deliberately: this lowering emits nothing before its own itxn
+	// submit, and inserting statements ahead of the submit reorders it
+	// relative to the caller's pending statements (it broke the grouped
+	// payment leg's receiver).
+	auto inOffAwst = awst::makeEvalOnce(
+		offsetToUint64(buildExpression(_call.arguments[argBase]), _loc), _loc);
 	auto inSizeAwst = offsetToUint64(buildExpression(_call.arguments[argBase + 1]), _loc);
 
 	// Clamp inSize to >= 4 so `bodyLen = inSize - 4` can't underflow into a
@@ -283,13 +291,15 @@ void AssemblyBuilder::handleAppCall(
 			awst::WType::uint64Type(), _loc);
 	}
 
-	// args[0] = first 4 bytes (selector)
-	auto selector = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	selector->stackArgs.push_back(memoryVar(_loc));
-	selector->stackArgs.push_back(inOffAwst);
-	selector->stackArgs.push_back(awst::makeIntegerConstant("4", _loc));
+	// args[0] = first 4 bytes (selector), args[1] = bytes [inOff+4 .. inOff+inSize).
+	// Slot-routed (readMemStackRange is expression-only, so the statement
+	// stream around the itxn is unchanged): the request buffer lives at the
+	// runtime FMP, so the old slot-0 extracts sent the WRONG CALLDATA (or
+	// panicked) for any --evm-memory-slots contract whose buffer passed 4096.
+	// Both reads are itxn ApplicationArgs, hence single stack values.
+	auto selector = readMemStackRange(scratchLayout(), inOffAwst,
+		awst::makeIntegerConstant("4", _loc), _loc);
 
-	// args[1] = bytes [inOff+4 .. inOff+inSize)
 	auto bodyOff = awst::makeIntrinsicCall("+", awst::WType::uint64Type(), _loc);
 	bodyOff->stackArgs.push_back(inOffAwst);
 	bodyOff->stackArgs.push_back(awst::makeIntegerConstant("4", _loc));
@@ -298,10 +308,8 @@ void AssemblyBuilder::handleAppCall(
 	bodyLen->stackArgs.push_back(std::move(inSizeAwst));
 	bodyLen->stackArgs.push_back(awst::makeIntegerConstant("4", _loc));
 
-	auto body = awst::makeIntrinsicCall("extract3", awst::WType::bytesType(), _loc);
-	body->stackArgs.push_back(memoryVar(_loc));
-	body->stackArgs.push_back(std::move(bodyOff));
-	body->stackArgs.push_back(std::move(bodyLen));
+	auto body = readMemStackRange(scratchLayout(), std::move(bodyOff),
+		std::move(bodyLen), _loc);
 
 	// 2b) call's `value` (arguments[2]): attach a grouped payment (M8 — it was
 	// silently dropped). Receiver mirrors the high-level `.call{value:}` leg:
@@ -380,31 +388,24 @@ void AssemblyBuilder::handleAppCall(
 	// prefix-shifted vs what the callee returned); zero-pad so a shorter
 	// returndata still fills outSize (EVM copies min(outSize, rds); the
 	// zero-fill beyond rds is the documented approximation).
-	auto outOffOpt = resolveConstantYulValue(_call.arguments[argBase + 2]);
+	// ONE path for constant and runtime out-offset/size. The constant arm used
+	// to chunk the payload into whole 32-byte words via storeResultToMemory,
+	// which (a) RIGHT-aligned an outSize<32 payload inside a full word where
+	// EVM left-aligns it and leaves the rest of the word untouched, and (b)
+	// panicked for a non-multiple-of-32 outSize (0x24: it extracted a second
+	// 32-byte word from a 36-byte value). writeMemRangeDyn writes exactly
+	// outSize bytes with the destination's own tail preserved.
+	// The zero-fill beyond returndatasize is the documented approximation
+	// (EVM copies min(outSize, rds)); outSize==0 copies nothing.
 	auto outSizeOpt = resolveConstantYulValue(_call.arguments[argBase + 3]);
-	if (outOffOpt && outSizeOpt && *outSizeOpt > 0)
+	if (!outSizeOpt || *outSizeOpt > 0)
 	{
-		auto padded = awst::makeConcat(returndataBytes(_loc),
-			awst::makeBzero(static_cast<int>(*outSizeOpt), _loc), _loc);
-		auto sliced = awst::makeExtract3(std::move(padded),
-			awst::makeIntegerConstant("0", _loc),
-			awst::makeIntegerConstant(std::to_string(*outSizeOpt), _loc), _loc);
-		int slots = static_cast<int>((*outSizeOpt + 31) / 32);
-		if (slots > 0)
-			storeResultToMemory(std::move(sliced), *outOffOpt, slots, _loc, _out);
-	}
-	else if (!outOffOpt || !outSizeOpt)
-	{
-		// RUNTIME output offset/size (the `let p := mload(0x40)` buffer
-		// idiom): the copy was previously SKIPPED with no diagnostic, so the
-		// caller read stale request bytes as if they were returndata. Same
-		// zero-fill-beyond-rds approximation as the constant path; the bzero
-		// intrinsic takes a runtime length. outSize==0 degenerates to an
-		// idempotent tail-keep rewrite of one untouched word.
 		auto outOff = buildExpression(_call.arguments[argBase + 2]);
-		auto outSize = offsetToUint64(
-			buildExpression(_call.arguments[argBase + 3]), _loc);
-		auto sizeOnce = awst::makeEvalOnce(std::move(outSize), _loc);
+		std::shared_ptr<awst::Expression> sizeOnce = outSizeOpt
+			? std::shared_ptr<awst::Expression>(
+				awst::makeIntegerConstant(*outSizeOpt, _loc))
+			: awst::makeEvalOnce(offsetToUint64(
+				buildExpression(_call.arguments[argBase + 3]), _loc), _loc);
 		auto pad = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
 		pad->stackArgs.push_back(sizeOnce);
 		auto padded = awst::makeConcat(returndataBytes(_loc), std::move(pad), _loc);

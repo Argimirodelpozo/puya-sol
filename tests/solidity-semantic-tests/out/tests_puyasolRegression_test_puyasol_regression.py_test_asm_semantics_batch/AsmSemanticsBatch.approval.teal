@@ -287,13 +287,13 @@ main_ternary_false@24:
 
 main_transientSigned_route@5:
     txn GroupIndex
-    bz main_ternary_false@29
+    bz main_ternary_false@31
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+main_ternary_merge@32:
     !
     assert // not payable
     load 5
@@ -308,11 +308,11 @@ main_ternary_merge@30:
     dup
     intc 4 // 2147483648
     >=
-    bz main_ternary_false@32
+    bz main_ternary_false@34
     intc 5 // 18446744069414584320
     +
 
-main_ternary_merge@33:
+main_ternary_merge@35:
     load 5
     pushint 28
     extract_uint32
@@ -321,21 +321,21 @@ main_ternary_merge@33:
     dup
     intc 4 // 2147483648
     >=
-    bz main_ternary_false@35
+    bz main_ternary_false@37
     intc 5 // 18446744069414584320
     +
 
-main_ternary_merge@36:
+main_ternary_merge@38:
     intc_3 // 4294967296
     %
     dup
     intc 4 // 2147483648
     >=
-    bz main_ternary_false@38
+    bz main_ternary_false@40
     intc 5 // 18446744069414584320
     +
 
-main_ternary_merge@39:
+main_ternary_merge@41:
     intc 6 // 9223372036854775808
     ^
     intc 6 // 9223372036854775808
@@ -347,11 +347,11 @@ main_ternary_merge@39:
     dup
     pushbytes 0x80000000
     b>=
-    bz main_ternary_false@41
+    bz main_ternary_false@43
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
     b+
 
-main_ternary_merge@42:
+main_ternary_merge@44:
     dup
     len
     intc_0 // 32
@@ -372,18 +372,18 @@ main_ternary_merge@42:
     intc_1 // 1
     return
 
-main_ternary_false@41:
-    b main_ternary_merge@42
+main_ternary_false@43:
+    b main_ternary_merge@44
 
-main_ternary_false@38:
-    b main_ternary_merge@39
+main_ternary_false@40:
+    b main_ternary_merge@41
 
-main_ternary_false@35:
-    b main_ternary_merge@36
+main_ternary_false@37:
+    b main_ternary_merge@38
 
-main_ternary_false@32:
-    b main_ternary_merge@33
+main_ternary_false@34:
+    b main_ternary_merge@35
 
-main_ternary_false@29:
+main_ternary_false@31:
     intc_2 // 0
-    b main_ternary_merge@30
+    b main_ternary_merge@32

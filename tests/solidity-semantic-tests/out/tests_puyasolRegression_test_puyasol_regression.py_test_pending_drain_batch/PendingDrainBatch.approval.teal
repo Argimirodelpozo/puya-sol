@@ -211,13 +211,13 @@ main_ternary_false@21:
 
 main_doWhileStorage_route@8:
     txn GroupIndex
-    bz main_ternary_false@33
+    bz main_ternary_false@34
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@34:
+main_ternary_merge@35:
     !
     assert // not payable
     pushbytes 0x
@@ -253,7 +253,7 @@ main_ternary_merge@34:
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
 
-main_while_top@35:
+main_while_top@36:
     swap
     pushbytes 0x0a
     b+
@@ -291,7 +291,7 @@ main_while_top@35:
     box_extract // on error: index out of bounds
     dig 3
     b!=
-    bnz main_after_if_else@37
+    bnz main_after_if_else@38
     pop
     bury 1
     dup
@@ -307,12 +307,12 @@ main_while_top@35:
     intc_1 // 1
     return
 
-main_after_if_else@37:
-    b main_while_top@35
+main_after_if_else@38:
+    b main_while_top@36
 
-main_ternary_false@33:
+main_ternary_false@34:
     intc_2 // 0
-    b main_ternary_merge@34
+    b main_ternary_merge@35
 
 main_emitTernary_route@7:
     txna ApplicationArgs 1
@@ -324,13 +324,13 @@ main_emitTernary_route@7:
     intc_2 // 0
     getbit
     txn GroupIndex
-    bz main_ternary_false@41
+    bz main_ternary_false@42
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@42:
+main_ternary_merge@43:
     !
     assert // not payable
     dup
@@ -342,11 +342,11 @@ main_ternary_merge@42:
     bytec_1 // "cnt"
     swap
     app_global_put
-    bz main_ternary_false@44
+    bz main_ternary_false@45
     pushint 7
     itob
 
-main_ternary_merge@45:
+main_ternary_merge@46:
     dup
     len
     intc_0 // 32
@@ -378,7 +378,7 @@ main_ternary_merge@45:
     intc_1 // 1
     return
 
-main_ternary_false@44:
+main_ternary_false@45:
     intc_2 // 0
     bytec_1 // "cnt"
     app_global_get_ex
@@ -393,21 +393,21 @@ main_ternary_false@44:
     swap
     app_global_put
     pushbytes 0x2a
-    b main_ternary_merge@45
+    b main_ternary_merge@46
 
-main_ternary_false@41:
+main_ternary_false@42:
     intc_2 // 0
-    b main_ternary_merge@42
+    b main_ternary_merge@43
 
 main_condWriteback_route@6:
     txn GroupIndex
-    bz main_ternary_false@49
+    bz main_ternary_false@50
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@50:
+main_ternary_merge@51:
     !
     assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
@@ -415,9 +415,9 @@ main_ternary_merge@50:
     intc_1 // 1
     return
 
-main_ternary_false@49:
+main_ternary_false@50:
     intc_2 // 0
-    b main_ternary_merge@50
+    b main_ternary_merge@51
 
 main___postInit_route@5:
     bytec_3 // "__ctor_pending"

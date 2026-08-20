@@ -56,7 +56,7 @@ main_deposit_route@4:
     intc_1 // 1
     <=
     assert // ABI bool validation
-    bz main_else_body@11
+    bz main_else_body@12
     intc_0 // 32
     bzero
     txn GroupIndex
@@ -114,7 +114,7 @@ main_ternary_merge@10:
     load 0
     store 0
 
-main_after_if_else@15:
+main_after_if_else@16:
     intc_1 // 1
     return
 
@@ -122,16 +122,16 @@ main_ternary_false@9:
     intc_2 // 0
     b main_ternary_merge@10
 
-main_else_body@11:
+main_else_body@12:
     txn Sender
     txn GroupIndex
-    bz main_ternary_false@13
+    bz main_ternary_false@14
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@14:
+main_ternary_merge@15:
     itob
     intc_0 // 32
     bzero
@@ -145,8 +145,8 @@ main_ternary_merge@14:
     swap
     concat
     log
-    b main_after_if_else@15
+    b main_after_if_else@16
 
-main_ternary_false@13:
+main_ternary_false@14:
     intc_2 // 0
-    b main_ternary_merge@14
+    b main_ternary_merge@15

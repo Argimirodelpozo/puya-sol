@@ -142,6 +142,27 @@ std::string AssemblyBuilder::resolveVarRef(solidity::yul::Identifier const& _id)
 	return externalRefAwstName(it->second, _id.name.str(), m_declName);
 }
 
+bool AssemblyBuilder::builtinClobbersMemory(std::string const& _name)
+{
+	// Classified by solc's own per-instruction effect table
+	// (SemanticInformation::memory == Write) instead of a hand-list that
+	// drifts as builtins gain handlers. `mstore` is excluded because it tracks
+	// and invalidates per-offset itself; Yul-object builtins with no EVM
+	// opcode (datacopy) keep a one-entry supplement.
+	if (_name == "mstore")
+		return false;
+	if (_name == "datacopy")
+		return true;
+	std::string upper = _name;
+	std::transform(upper.begin(), upper.end(), upper.begin(),
+		[](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+	auto it = solidity::evmasm::c_instructions.find(upper);
+	if (it == solidity::evmasm::c_instructions.end())
+		return false;
+	return solidity::evmasm::SemanticInformation::memory(it->second)
+		== solidity::evmasm::SemanticInformation::Write;
+}
+
 std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 	solidity::yul::Identifier const& _id
 )
@@ -380,30 +401,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		args[ai] = buildExpression(_call.arguments[ai]);
 
 	// Memory writers the content-constant tracker can't model precisely: drop
-	// all "mem_0x*" entries. Classified by solc's own per-instruction effect
-	// table (SemanticInformation::memory == Write) instead of a hand-list
-	// that drifts as builtins gain handlers. mstore itself tracks/invalidates
-	// per-offset; Yul-object builtins with no EVM opcode (datacopy) keep a
-	// one-entry supplement. (After arg translation, so entries recorded by
-	// inlined arg builds die too.)
-	{
-		bool clobbersMemory = false;
-		if (funcName == "datacopy")
-			clobbersMemory = true;
-		else if (funcName != "mstore")
-		{
-			std::string upper = funcName;
-			std::transform(upper.begin(), upper.end(), upper.begin(),
-				[](unsigned char c) { return static_cast<char>(std::toupper(c)); });
-			auto it = solidity::evmasm::c_instructions.find(upper);
-			if (it != solidity::evmasm::c_instructions.end())
-				clobbersMemory =
-					solidity::evmasm::SemanticInformation::memory(it->second)
-						== solidity::evmasm::SemanticInformation::Write;
-		}
-		if (clobbersMemory)
-			invalidateMemConstants();
-	}
+	// all "mem_0x*" entries. (After arg translation, so entries recorded by
+	// inlined arg builds die too.) The statement path runs the same
+	// classification — see buildExpressionStatement.
+	if (builtinClobbersMemory(funcName))
+		invalidateMemConstants();
 
 	// User-defined assembly functions take precedence over builtins.
 	// This matches Yul's scoping rules: a user `function basefee() -> r { ... }`

@@ -3,8 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/tmv_body_slice_len.sol.TmvBodyData.approval_program() -> uint64:
 main:
-    intcblock 32 4096 0 8 20480
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffff 0x20 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000001000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000001000000
+    intcblock 32 4096 0 1 20480 4064
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0xffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000000 0x20 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000001000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000001000000
+    bytec_1 // ""
     intc_1 // 4096
     bzero
     dup
@@ -24,7 +25,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -53,7 +54,7 @@ main_bodyFirstWord_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    pushint 1
+    intc_3 // 1
     -
     gtxns Amount
 
@@ -83,7 +84,7 @@ main_ternary_merge@9:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bytec_1 // 0xffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffff
     b<=
     assert // overflow
     intc_2 // 0
@@ -91,31 +92,49 @@ main_ternary_merge@9:
     callsub TypedMemView.clone
     dup
     len
+    dup
     load 0
     pushint 88
     extract_uint64
     dup
-    cover 2
-    cover 3
-    load 0
-    pushint 24
-    bzero
-    dig 2
-    itob
-    dig 1
-    swap
-    concat
-    uncover 2
-    dig 4
-    uncover 2
-    replace3
-    store 0
-    load 0
-    uncover 3
+    bury 5
+    dup
     intc_0 // 32
     +
     dup
+    cover 3
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    cover 2
+    intc_1 // 4096
+    %
+    dup
+    cover 3
+    pushint 24
+    bzero
+    dup
     cover 5
+    uncover 2
+    itob
+    concat
+    swap
+    intc 5 // 4064
+    <=
+    bz main_else_body@11
+    swap
+    dup
+    loads
+    uncover 3
+    uncover 3
+    replace3
+    stores
+
+main_after_if_else@12:
+    load 0
     uncover 3
     pushint 31
     +
@@ -123,6 +142,7 @@ main_ternary_merge@9:
     /
     intc_0 // 32
     *
+    dig 3
     +
     itob
     uncover 2
@@ -133,21 +153,25 @@ main_ternary_merge@9:
     intc_0 // 32
     bzero
     dup
-    cover 2
+    uncover 3
+    swap
     concat
     dup
+    cover 3
     len
     intc_0 // 32
     -
     intc_2 // 0
 
-main_while_top@10:
+main_while_top@13:
     dup
     dig 2
     <
-    bz main_after_while@12
-    dig 4
+    bz main_after_while@18
+    dig 3
     dig 1
+    dup
+    cover 2
     +
     dup
     intc_0 // 32
@@ -158,56 +182,113 @@ main_while_top@10:
     dup
     intc_1 // 4096
     /
-    dig 4
-    dig 3
-    intc_0 // 32
-    extract3
-    dig 1
-    loads
-    uncover 3
+    cover 3
     intc_1 // 4096
     %
+    dup
+    cover 4
+    dig 8
     uncover 2
+    intc_0 // 32
+    extract3
+    swap
+    intc 5 // 4064
+    <=
+    bz main_else_body@16
+    uncover 2
+    dup
+    loads
+    uncover 4
+    uncover 3
     replace3
     stores
+
+main_after_if_else@17:
     intc_0 // 32
     +
-    b main_while_top@10
+    b main_while_top@13
 
-main_after_while@12:
-    popn 3
+main_else_body@16:
+    uncover 2
+    dup
+    loads
+    intc_1 // 4096
+    uncover 5
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@17
+
+main_after_while@18:
+    popn 2
+    bury 1
     bury 1
     load 0
     store 0
-    intc_3 // 8
+    pushint 8
     bzero
-    uncover 2
+    dig 2
     itob
-    bytec_2 // 0x20
+    bytec 4 // 0x20
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
-    dup
+    dupn 2
     intc_0 // 32
     +
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    intc_1 // 4096
+    %
     dup
+    cover 2
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@20
+    pop
     intc_1 // 4096
     /
     loads
     swap
-    intc_1 // 4096
-    %
     intc_0 // 32
     extract3
+
+main_ternary_merge@21:
     concat
     dup
     len
@@ -222,8 +303,65 @@ main_after_while@12:
     swap
     concat
     log
-    pushint 1
+    intc_3 // 1
     return
+
+main_ternary_false@20:
+    swap
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 3
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@21
+
+main_else_body@11:
+    swap
+    dup
+    loads
+    intc_1 // 4096
+    uncover 4
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@12
 
 main_ternary_false@8:
     intc_2 // 0
@@ -237,7 +375,7 @@ SafeMath.add:
     frame_dig -1
     b+
     dupn 2
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     frame_dig -2
@@ -256,7 +394,7 @@ SafeMath.add_after_if_else@2:
 TypedMemView.isNull:
     proto 1 1
     frame_dig -1
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     ==
     retsub
 
@@ -304,12 +442,12 @@ TypedMemView.unsafeBuildUnchecked:
     bzero
     pushint 3
     bzero
-    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     frame_dig -3
     b|
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x0000000000000000000000000000000000000001000000000000000000000000
+    bytec 7 // 0x0000000000000000000000000000000000000001000000000000000000000000
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -329,7 +467,7 @@ TypedMemView.unsafeBuildUnchecked:
     b|
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x0000000000000000000000000000000000000001000000000000000000000000
+    bytec 7 // 0x0000000000000000000000000000000000000001000000000000000000000000
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -349,7 +487,7 @@ TypedMemView.unsafeBuildUnchecked:
     b|
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000001000000
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000001000000
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -379,7 +517,7 @@ TypedMemView.build:
     extract 64 32
     b>
     bz TypedMemView.build_after_if_else@2
-    pushbytes 0x
+    bytec_1 // 0x
     frame_bury 0
 
 TypedMemView.build_after_if_else@2:
@@ -390,7 +528,7 @@ TypedMemView.build_after_if_else@2:
     frame_dig 0
     b==
     bz TypedMemView.build_after_if_else@4
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     swap
     retsub
 
@@ -408,40 +546,60 @@ TypedMemView.ref:
     proto 2 1
     frame_dig -2
     len
+    dup
     load 0
     pushint 88
     extract_uint64
     dup
-    uncover 2
-    load 0
-    pushint 24
-    bzero
-    dig 2
-    itob
-    dig 1
-    swap
-    concat
-    uncover 2
-    dig 4
-    uncover 2
-    replace3
-    store 0
-    load 0
-    uncover 3
+    cover 3
+    dup
     intc_0 // 32
     +
     dup
-    cover 4
+    cover 3
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    cover 2
+    intc_1 // 4096
+    %
+    dup
+    cover 3
+    pushint 24
+    bzero
+    dup
+    cover 5
+    uncover 2
+    itob
+    concat
+    swap
+    intc 5 // 4064
+    <=
+    bz TypedMemView.ref_else_body@2
+    dig 1
+    dup
+    loads
+    dig 4
     uncover 3
+    replace3
+    stores
+
+TypedMemView.ref_after_if_else@3:
+    load 0
+    uncover 5
     pushint 31
     +
     intc_0 // 32
     /
     intc_0 // 32
     *
+    dig 5
     +
     itob
-    uncover 2
+    uncover 4
     swap
     concat
     replace2 64
@@ -452,19 +610,22 @@ TypedMemView.ref:
     swap
     concat
     dup
-    cover 2
+    cover 4
     len
     intc_0 // 32
     -
+    swap
     intc_2 // 0
 
-TypedMemView.ref_while_top@1:
+TypedMemView.ref_while_top@4:
     dup
-    dig 2
+    dig 3
     <
-    bz TypedMemView.ref_after_while@3
-    dig 2
+    bz TypedMemView.ref_after_while@9
+    dig 4
     dig 1
+    dup
+    cover 2
     +
     dup
     intc_0 // 32
@@ -475,49 +636,100 @@ TypedMemView.ref_while_top@1:
     dup
     intc_1 // 4096
     /
-    dig 5
-    dig 3
-    intc_0 // 32
-    extract3
-    dig 1
-    loads
-    uncover 3
+    cover 4
     intc_1 // 4096
     %
+    dup
+    cover 5
+    dig 9
     uncover 2
+    intc_0 // 32
+    extract3
+    swap
+    intc 5 // 4064
+    <=
+    bz TypedMemView.ref_else_body@7
+    uncover 3
+    dup
+    loads
+    uncover 5
+    uncover 3
     replace3
     stores
+
+TypedMemView.ref_after_if_else@8:
     intc_0 // 32
     +
-    b TypedMemView.ref_while_top@1
+    b TypedMemView.ref_while_top@4
 
-TypedMemView.ref_after_while@3:
-    popn 2
-    bury 1
-    load 0
-    uncover 2
+TypedMemView.ref_else_body@7:
+    uncover 3
     dup
-    intc_1 // 4096
-    /
     loads
-    dig 1
     intc_1 // 4096
-    %
+    uncover 6
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b TypedMemView.ref_after_if_else@8
+
+TypedMemView.ref_after_while@9:
+    pop
+    bury 1
+    uncover 3
+    pop
+    load 0
+    swap
+    intc_1 // 4096
+    dig 3
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz TypedMemView.ref_ternary_false@11
+    pop
+    loads
+    uncover 2
     intc_0 // 32
     extract3
+
+TypedMemView.ref_ternary_merge@12:
     pushint 24
     extract_uint64
-    uncover 2
-    uncover 3
-    uncover 2
+    swap
+    cover 2
     extract3
     len
     itob
     load 0
     store 0
-    swap
+    frame_dig 0
     itob
-    bytec_2 // 0x20
+    bytec 4 // 0x20
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -528,7 +740,63 @@ TypedMemView.ref_after_while@3:
     swap
     uncover 2
     callsub TypedMemView.build
+    swap
     retsub
+
+TypedMemView.ref_ternary_false@11:
+    swap
+    dup
+    loads
+    uncover 4
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b TypedMemView.ref_ternary_merge@12
+
+TypedMemView.ref_else_body@2:
+    dig 1
+    dup
+    loads
+    intc_1 // 4096
+    dig 5
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b TypedMemView.ref_after_if_else@3
 
 
 // __solfn_654(memView: bytes) -> uint64:
@@ -536,7 +804,7 @@ TypedMemView.typeOf:
     proto 1 1
     load 0
     store 0
-    intc_3 // 8
+    pushint 8
     bzero
     pushint 3
     bzero
@@ -550,7 +818,7 @@ TypedMemView.typeOf:
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     load 0
@@ -570,7 +838,7 @@ TypedMemView.loc:
     concat
     pushbytes 0x0000000000000000000000000000000001000000000000000000000000000000
     b/
-    bytec_1 // 0xffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffff
     b&
     load 0
     store 0
@@ -587,9 +855,9 @@ TypedMemView.len:
     frame_dig -1
     swap
     concat
-    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000001000000
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000001000000
     b/
-    bytec_1 // 0xffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffff
     b&
     load 0
     store 0
@@ -605,7 +873,7 @@ TypedMemView.end:
     callsub TypedMemView.len
     b+
     dup
-    bytec_1 // 0xffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffff
     b<=
     assert // overflow
     retsub
@@ -625,7 +893,7 @@ TypedMemView.slice:
     callsub TypedMemView.end
     b>
     bz TypedMemView.slice_after_if_else@2
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     swap
     retsub
 
@@ -644,7 +912,9 @@ TypedMemView.slice_after_if_else@2:
 TypedMemView.unsafeCopyTo:
     proto 2 1
     intc_2 // 0
-    pushbytes ""
+    dup
+    bytec_1 // ""
+    dupn 2
     frame_dig -2
     callsub TypedMemView.notNull
     dup
@@ -677,111 +947,158 @@ TypedMemView.unsafeCopyTo_after_if_else@4:
     b>
     !
     assert // revert
-    intc_3 // 8
+    pushint 8
     bzero
-    dup
-    cover 3
-    dup
-    uncover 2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    cover 2
-    swap
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    pushbytes 0x
-    intc_2 // 0
-
-TypedMemView.unsafeCopyTo_while_top@5:
-    dup
-    dig 3
-    <
-    bz TypedMemView.unsafeCopyTo_after_while@7
-    dig 3
-    dig 1
-    +
     dup
     frame_bury 1
     dup
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_bury 2
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_2 // 0
+    bytec_1 // 0x
+
+TypedMemView.unsafeCopyTo_while_top@5:
+    dig 1
+    dig 3
+    <
+    bz TypedMemView.unsafeCopyTo_after_while@10
+    frame_dig 2
+    dig 2
+    +
+    dup
+    frame_bury 4
+    intc_1 // 4096
+    %
+    dup
+    cover 3
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz TypedMemView.unsafeCopyTo_ternary_false@8
+    pop
+    frame_dig 4
     intc_1 // 4096
     /
     loads
-    swap
-    intc_1 // 4096
-    %
+    uncover 3
     intc_0 // 32
     extract3
-    uncover 2
-    swap
+
+TypedMemView.unsafeCopyTo_ternary_merge@9:
     concat
     swap
     intc_0 // 32
     +
+    swap
     b TypedMemView.unsafeCopyTo_while_top@5
 
-TypedMemView.unsafeCopyTo_after_while@7:
-    pop
-    uncover 2
-    pop
+TypedMemView.unsafeCopyTo_ternary_false@8:
+    frame_dig 4
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 5
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b TypedMemView.unsafeCopyTo_ternary_merge@9
+
+TypedMemView.unsafeCopyTo_after_while@10:
+    bury 1
     intc_2 // 0
     uncover 2
     extract3
-    swap
+    dup
+    frame_dig 1
     frame_dig -1
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     dup
-    cover 2
-    dig 1
+    frame_bury 3
+    swap
     len
     dup
     intc_0 // 32
     %
-    swap
-    dig 1
-    -
-    uncover 2
-    +
     dup
     cover 3
+    -
+    +
+    dup
+    intc_1 // 4096
+    %
+    dup
+    cover 2
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz TypedMemView.unsafeCopyTo_ternary_false@12
+    pop
     dup
     intc_1 // 4096
     /
     loads
-    swap
-    intc_1 // 4096
-    %
+    uncover 2
     intc_0 // 32
     extract3
+
+TypedMemView.unsafeCopyTo_ternary_merge@13:
     intc_0 // 32
-    dig 2
-    -
-    swap
+    uncover 3
+    dup
     cover 2
+    -
     extract3
+    uncover 2
+    swap
     concat
+    swap
     intc_2 // 0
 
-TypedMemView.unsafeCopyTo_while_top@8:
-    dig 1
+TypedMemView.unsafeCopyTo_while_top@14:
+    dig 2
     len
     dig 1
     >
-    bz TypedMemView.unsafeCopyTo_after_while@10
-    dig 3
+    bz TypedMemView.unsafeCopyTo_after_while@19
+    frame_dig 3
     dig 1
+    dup
+    cover 2
     +
     dup
     intc_0 // 32
@@ -792,25 +1109,70 @@ TypedMemView.unsafeCopyTo_while_top@8:
     dup
     intc_1 // 4096
     /
-    dig 3
-    dig 3
-    intc_0 // 32
-    extract3
-    dig 1
-    loads
-    uncover 3
+    cover 3
     intc_1 // 4096
     %
+    dup
+    cover 5
+    dig 6
     uncover 2
+    intc_0 // 32
+    extract3
+    swap
+    intc 5 // 4064
+    <=
+    bz TypedMemView.unsafeCopyTo_else_body@17
+    uncover 2
+    dup
+    loads
+    uncover 5
+    uncover 3
     replace3
     stores
+
+TypedMemView.unsafeCopyTo_after_if_else@18:
     intc_0 // 32
     +
-    b TypedMemView.unsafeCopyTo_while_top@8
+    b TypedMemView.unsafeCopyTo_while_top@14
 
-TypedMemView.unsafeCopyTo_after_while@10:
-    popn 2
-    frame_dig 1
+TypedMemView.unsafeCopyTo_else_body@17:
+    uncover 2
+    dup
+    loads
+    intc_1 // 4096
+    uncover 6
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b TypedMemView.unsafeCopyTo_after_if_else@18
+
+TypedMemView.unsafeCopyTo_after_while@19:
+    pop
+    frame_dig 4
     intc_0 // 32
     +
     intc 4 // 20480
@@ -832,6 +1194,28 @@ TypedMemView.unsafeCopyTo_after_while@10:
     frame_bury 0
     retsub
 
+TypedMemView.unsafeCopyTo_ternary_false@12:
+    dig 1
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 4
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b TypedMemView.unsafeCopyTo_ternary_merge@13
+
 
 // __solfn_1381(memView: bytes) -> bytes:
 TypedMemView.clone:
@@ -839,20 +1223,39 @@ TypedMemView.clone:
     load 0
     pushint 88
     extract_uint64
-    load 0
-    pushint 24
-    bzero
-    swap
-    dig 2
-    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    replace3
-    store 0
-    load 0
-    uncover 2
+    dup
     intc_0 // 32
     +
     dup
-    cover 3
+    cover 2
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    swap
+    intc_1 // 4096
+    %
+    dup
+    cover 2
+    pushint 24
+    bzero
+    swap
+    intc 5 // 4064
+    <=
+    bz TypedMemView.clone_else_body@2
+    swap
+    dup
+    loads
+    uncover 3
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace3
+    stores
+
+TypedMemView.clone_after_if_else@3:
+    load 0
+    dig 2
     itob
     uncover 2
     swap
@@ -863,13 +1266,15 @@ TypedMemView.clone:
     bzero
     intc_2 // 0
 
-TypedMemView.clone_while_top@1:
+TypedMemView.clone_while_top@4:
     dup
     intc_2 // 0
     <
-    bz TypedMemView.clone_after_while@3
+    bz TypedMemView.clone_after_while@9
     dig 2
     dig 1
+    dup
+    cover 2
     +
     dup
     intc_0 // 32
@@ -880,37 +1285,83 @@ TypedMemView.clone_while_top@1:
     dup
     intc_1 // 4096
     /
-    dig 3
-    dig 3
-    intc_0 // 32
-    extract3
-    dig 1
-    loads
-    uncover 3
+    cover 3
     intc_1 // 4096
     %
+    dup
+    cover 4
+    dig 5
     uncover 2
+    intc_0 // 32
+    extract3
+    swap
+    intc 5 // 4064
+    <=
+    bz TypedMemView.clone_else_body@7
+    uncover 2
+    dup
+    loads
+    uncover 4
+    uncover 3
     replace3
     stores
+
+TypedMemView.clone_after_if_else@8:
     intc_0 // 32
     +
-    b TypedMemView.clone_while_top@1
+    b TypedMemView.clone_while_top@4
 
-TypedMemView.clone_after_while@3:
+TypedMemView.clone_else_body@7:
+    uncover 2
+    dup
+    loads
+    intc_1 // 4096
+    uncover 5
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b TypedMemView.clone_after_if_else@8
+
+TypedMemView.clone_after_while@9:
     pop
+    bury 1
     frame_dig -1
     callsub TypedMemView.len
     load 0
     store 0
     load 0
     extract 64 32
-    intc_3 // 8
+    pushint 8
     bzero
     dig 1
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     load 0
@@ -920,7 +1371,7 @@ TypedMemView.clone_after_while@3:
     dig 2
     b+
     dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     frame_dig -1
@@ -935,7 +1386,7 @@ TypedMemView.clone_after_while@3:
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_2 // 0x20
+    bytec 4 // 0x20
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -956,14 +1407,21 @@ TypedMemView.clone_after_while@3:
     intc_0 // 32
     +
     dup
+    cover 4
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
-    dig 2
+    dig 1
     intc_1 // 4096
     /
+    cover 3
+    swap
+    intc_1 // 4096
+    %
+    dup
+    cover 4
+    swap
     uncover 2
-    uncover 4
     concat
     dup
     len
@@ -971,30 +1429,169 @@ TypedMemView.clone_after_while@3:
     -
     intc_0 // 32
     extract3
+    swap
+    intc 5 // 4064
+    <=
+    bz TypedMemView.clone_else_body@11
     dig 1
+    dup
     loads
-    uncover 4
+    dig 4
+    uncover 3
+    replace3
+    stores
+
+TypedMemView.clone_after_if_else@12:
+    load 0
+    store 0
+    intc_1 // 4096
+    dig 2
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz TypedMemView.clone_ternary_false@14
+    pop
+    loads
+    swap
+    intc_0 // 32
+    extract3
+
+TypedMemView.clone_ternary_merge@15:
+    pushint 24
+    extract_uint64
+    dup
+    cover 2
+    dig 1
     intc_1 // 4096
     %
+    dup
+    cover 2
+    intc_1 // 4096
     swap
-    dig 1
+    -
+    dup
+    cover 2
+    <=
+    bz TypedMemView.clone_ternary_false@17
+    pop
+    swap
+    intc_1 // 4096
+    /
+    loads
+    swap
+    uncover 2
+    extract3
+    retsub
+
+TypedMemView.clone_ternary_false@17:
+    uncover 2
+    intc_1 // 4096
+    /
+    dup
+    loads
     uncover 3
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    uncover 3
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    retsub
+
+TypedMemView.clone_ternary_false@14:
+    swap
+    dup
+    loads
+    uncover 3
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b TypedMemView.clone_ternary_merge@15
+
+TypedMemView.clone_else_body@11:
+    dig 1
+    dup
+    loads
+    intc_1 // 4096
+    dig 5
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
     replace3
     dig 2
     swap
     stores
-    load 0
-    store 0
-    load 0
-    uncover 2
+    swap
+    intc_3 // 1
+    +
+    dup
     loads
-    uncover 2
     intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
     extract3
-    pushint 24
-    extract_uint64
+    replace2 0
+    stores
+    b TypedMemView.clone_after_if_else@12
+
+TypedMemView.clone_else_body@2:
     swap
+    dup
+    loads
+    intc_1 // 4096
+    uncover 4
+    dup
     cover 2
+    -
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 0
+    dig 2
     extract3
     swap
-    retsub
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b TypedMemView.clone_after_if_else@3

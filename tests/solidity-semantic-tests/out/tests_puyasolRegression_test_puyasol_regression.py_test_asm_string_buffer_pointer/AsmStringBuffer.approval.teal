@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.approval_program() -> uint64:
 main:
-    intcblock 32 8 1 4096 20480
+    intcblock 32 1 4096 8 20480
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0a 0x30 0x010000000000000000 0x151f7c75 0x01 0x30313233343536373839616263646566 0x0000000000000000000000000000000000000000000000000000000000000010
-    intc_3 // 4096
+    intc_2 // 4096
     bzero
     dup
     store 5
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -48,7 +48,7 @@ main_decInline_route@7:
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -64,7 +64,7 @@ main_ternary_merge@14:
     popn 2
     bytec_3 // "0"
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.decInline@24:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.decInline@30:
     dup
     len
     itob
@@ -75,7 +75,7 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@16:
@@ -84,107 +84,128 @@ main_after_if_else@16:
 
 main_while_top@17:
     dup
-    dig 3
+    dig 2
     b!=
     bz main_after_while@19
-    swap
+    uncover 2
     bytec 6 // 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    swap
+    cover 2
     bytec_2 // 0x0a
     b/
     b main_while_top@17
 
 main_after_while@19:
     pop
-    intc_1 // 8
+    intc_3 // 8
     bzero
     dup
-    cover 3
-    dig 1
+    cover 4
+    dig 2
     concat
     dup
     len
-    intc_1 // 8
+    intc_3 // 8
     -
     extract_uint64
+    dup
+    cover 4
     load 0
     pushint 88
     extract_uint64
     dup
-    cover 2
-    cover 4
-    load 0
-    pushint 24
-    bzero
-    dig 2
-    itob
-    dig 1
-    swap
-    concat
-    uncover 2
-    dig 4
-    uncover 2
-    replace3
-    store 0
-    load 0
-    dig 3
+    cover 6
+    dup
     intc_0 // 32
     +
     dup
+    cover 6
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_2 // 4096
+    /
+    cover 3
+    intc_2 // 4096
+    %
+    dup
+    cover 4
+    pushint 24
+    bzero
+    dup
     cover 7
+    uncover 2
+    itob
+    concat
+    swap
+    pushint 4064
+    <=
+    bz main_else_body@21
+    dig 2
+    dup
+    loads
+    dig 5
     uncover 3
+    replace3
+    stores
+
+main_after_if_else@22:
+    load 0
+    uncover 8
     pushint 31
     +
     intc_0 // 32
     /
     intc_0 // 32
     *
+    dig 8
     +
     itob
-    uncover 2
+    uncover 6
     swap
     concat
     replace2 64
     store 0
     load 0
     store 0
+    uncover 6
     itob
     pushbytes 0x20
-    uncover 2
+    uncover 5
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    swap
+    cover 2
     load 0
     store 0
-    uncover 5
+    uncover 4
 
-main_while_top@20:
+main_while_top@23:
     dup
     dig 2
     b!=
-    bz main_after_while@23
-    uncover 2
+    bz main_after_while@26
+    uncover 3
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    cover 3
+    cover 4
     load 0
     store 0
-    dig 6
+    dig 7
     swap
     concat
     dup
     len
-    intc_1 // 8
+    intc_3 // 8
     -
     extract_uint64
     dup
@@ -194,12 +215,12 @@ main_while_top@20:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_3 // 4096
+    intc_2 // 4096
     /
     dup
     loads
     uncover 2
-    intc_3 // 4096
+    intc_2 // 4096
     %
     intc_0 // 32
     bzero
@@ -228,29 +249,90 @@ main_while_top@20:
     store 0
     bytec_2 // 0x0a
     b/
-    b main_while_top@20
+    b main_while_top@23
 
-main_after_while@23:
-    popn 3
-    uncover 2
+main_after_while@26:
+    popn 2
+    bury 1
+    uncover 3
     pop
     load 0
-    uncover 2
-    dup
-    intc_3 // 4096
-    /
-    loads
     swap
-    intc_3 // 4096
-    %
+    intc_2 // 4096
+    dig 3
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@28
+    pop
+    loads
+    uncover 2
     intc_0 // 32
     extract3
+
+main_ternary_merge@29:
     pushint 24
     extract_uint64
     swap
     cover 2
     extract3
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.decInline@24
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.decInline@30
+
+main_ternary_false@28:
+    swap
+    dup
+    loads
+    uncover 4
+    dig 3
+    extract3
+    swap
+    intc_1 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    pushint 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@29
+
+main_else_body@21:
+    dig 2
+    dup
+    loads
+    intc_2 // 4096
+    dig 6
+    dup
+    cover 2
+    -
+    dig 4
+    pushint 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_1 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@22
 
 main_ternary_false@13:
     pushint 0
@@ -264,13 +346,13 @@ main_hex32_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@28
+    bz main_ternary_false@34
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@29:
+main_ternary_merge@35:
     !
     assert // not payable
     intc_0 // 32
@@ -286,12 +368,12 @@ main_ternary_merge@29:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@28:
+main_ternary_false@34:
     pushint 0
-    b main_ternary_merge@29
+    b main_ternary_merge@35
 
 main_dec_route@5:
     txna ApplicationArgs 1
@@ -301,13 +383,13 @@ main_dec_route@5:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@33
+    bz main_ternary_false@39
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@34:
+main_ternary_merge@40:
     !
     assert // not payable
     callsub Str.toString
@@ -321,12 +403,12 @@ main_ternary_merge@34:
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@33:
+main_ternary_false@39:
     pushint 0
-    b main_ternary_merge@34
+    b main_ternary_merge@40
 
 
 // __solfn_65(value: bytes) -> bytes:
@@ -363,63 +445,82 @@ Str.toString_while_top@3:
 
 Str.toString_after_while@5:
     pop
-    intc_1 // 8
+    intc_3 // 8
     bzero
     dup
-    cover 2
-    uncover 3
-    dup
-    cover 2
+    cover 3
+    dig 2
     concat
     dup
     len
-    intc_1 // 8
+    intc_3 // 8
     -
     extract_uint64
+    dup
+    cover 3
     load 0
     pushint 88
     extract_uint64
     dup
-    cover 2
-    cover 4
-    load 0
-    pushint 24
-    bzero
-    dig 2
-    itob
-    dig 1
-    swap
-    concat
-    uncover 2
-    dig 4
-    uncover 2
-    replace3
-    store 0
-    load 0
-    dig 3
+    cover 5
+    dup
     intc_0 // 32
     +
     dup
+    cover 5
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_2 // 4096
+    /
+    cover 3
+    intc_2 // 4096
+    %
+    dup
+    cover 4
+    pushint 24
+    bzero
+    dup
     cover 7
+    uncover 2
+    itob
+    concat
+    swap
+    pushint 4064
+    <=
+    bz Str.toString_else_body@7
+    dig 2
+    dup
+    loads
+    dig 5
     uncover 3
+    replace3
+    stores
+
+Str.toString_after_if_else@8:
+    load 0
+    uncover 7
     pushint 31
     +
     intc_0 // 32
     /
     intc_0 // 32
     *
+    dig 7
     +
     itob
-    uncover 2
+    uncover 6
     swap
     concat
     replace2 64
     store 0
     load 0
     store 0
+    uncover 5
     itob
     pushbytes 0x20
-    uncover 2
+    uncover 5
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -429,11 +530,11 @@ Str.toString_after_while@5:
     load 0
     store 0
 
-Str.toString_while_top@6:
+Str.toString_while_top@9:
     frame_dig -1
     dig 2
     b!=
-    bz Str.toString_after_while@11
+    bz Str.toString_after_while@14
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -441,12 +542,12 @@ Str.toString_while_top@6:
     dup
     load 0
     store 0
-    dig 5
+    dig 6
     swap
     concat
     dup
     len
-    intc_1 // 8
+    intc_3 // 8
     -
     extract_uint64
     dup
@@ -456,12 +557,12 @@ Str.toString_while_top@6:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_3 // 4096
+    intc_2 // 4096
     /
     dup
     loads
     uncover 2
-    intc_3 // 4096
+    intc_2 // 4096
     %
     intc_0 // 32
     bzero
@@ -488,34 +589,95 @@ Str.toString_while_top@6:
     bytec_2 // 0x0a
     b/
     frame_bury -1
-    b Str.toString_while_top@6
+    b Str.toString_while_top@9
 
-Str.toString_after_while@11:
+Str.toString_after_while@14:
     popn 2
+    uncover 3
+    pop
     load 0
-    uncover 2
-    dup
-    intc_3 // 4096
-    /
-    loads
     swap
-    intc_3 // 4096
-    %
+    intc_2 // 4096
+    dig 3
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz Str.toString_ternary_false@16
+    pop
+    loads
+    uncover 2
     intc_0 // 32
     extract3
+
+Str.toString_ternary_merge@17:
     pushint 24
     extract_uint64
     swap
     cover 2
     extract3
-    swap
     retsub
+
+Str.toString_ternary_false@16:
+    swap
+    dup
+    loads
+    uncover 4
+    dig 3
+    extract3
+    swap
+    intc_1 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    pushint 0
+    swap
+    extract3
+    concat
+    b Str.toString_ternary_merge@17
+
+Str.toString_else_body@7:
+    dig 2
+    dup
+    loads
+    intc_2 // 4096
+    dig 6
+    dup
+    cover 2
+    -
+    dig 4
+    pushint 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_1 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b Str.toString_after_if_else@8
 
 
 // __solfn_161(value: bytes, byteLen: bytes) -> bytes:
 Str.toHexString:
     proto 2 1
-    intc_1 // 8
+    intc_3 // 8
     bzero
     dup
     pushint 2
@@ -539,7 +701,7 @@ Str.toHexString:
     concat
     dup
     len
-    intc_1 // 8
+    intc_3 // 8
     -
     extract_uint64
     bzero
@@ -548,7 +710,7 @@ Str.toHexString:
     pushbytes 0x78
     replace2 1
     swap
-    intc_2 // 1
+    intc_1 // 1
     itob
     b+
     dup
@@ -579,12 +741,12 @@ Str.toHexString_while_top@1:
     concat
     dup
     len
-    intc_1 // 8
+    intc_3 // 8
     -
     extract_uint64
     bytec 7 // 0x30313233343536373839616263646566
     swap
-    intc_2 // 1
+    intc_1 // 1
     extract3
     uncover 5
     dup
@@ -601,7 +763,7 @@ Str.toHexString_while_top@1:
     concat
     dup
     len
-    intc_1 // 8
+    intc_3 // 8
     -
     extract_uint64
     uncover 7
@@ -624,12 +786,12 @@ Str.toHexString_while_top@1:
     concat
     dup
     len
-    intc_1 // 8
+    intc_3 // 8
     -
     extract_uint64
     bytec 7 // 0x30313233343536373839616263646566
     swap
-    intc_2 // 1
+    intc_1 // 1
     extract3
     dig 2
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -646,7 +808,7 @@ Str.toHexString_while_top@1:
     concat
     dup
     len
-    intc_1 // 8
+    intc_3 // 8
     -
     extract_uint64
     swap

@@ -112,7 +112,7 @@ main_while_top@18:
     dup
     dig 4
     b<
-    bz main_after_while@23
+    bz main_after_while@26
     intc_0 // 32
     bzero
     dup
@@ -135,7 +135,7 @@ main_while_top@18:
     select
     bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
-    bz main_else_body@21
+    bz main_else_body@24
     dig 1
     dup
     dig 4
@@ -182,8 +182,13 @@ main_while_top@18:
     dup
     intc_3 // 4096
     /
-    uncover 7
-    uncover 3
+    cover 3
+    intc_3 // 4096
+    %
+    dup
+    cover 4
+    uncover 8
+    uncover 2
     concat
     dup
     len
@@ -191,16 +196,19 @@ main_while_top@18:
     -
     intc_0 // 32
     extract3
-    dig 1
-    loads
-    uncover 3
-    intc_3 // 4096
-    %
+    swap
+    pushint 4064
+    <=
+    bz main_else_body@22
     uncover 2
+    dup
+    loads
+    uncover 4
+    uncover 3
     replace3
     stores
 
-main_after_if_else@22:
+main_after_if_else@25:
     pushbytes 0x01
     b+
     dup
@@ -209,7 +217,42 @@ main_after_if_else@22:
     assert // overflow
     b main_while_top@18
 
-main_else_body@21:
+main_else_body@22:
+    uncover 2
+    dup
+    loads
+    intc_3 // 4096
+    uncover 5
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_1 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@25
+
+main_else_body@24:
     pop
     uncover 4
     pop
@@ -221,9 +264,9 @@ main_else_body@21:
     b<=
     assert // overflow
     swap
-    b main_after_if_else@22
+    b main_after_if_else@25
 
-main_after_while@23:
+main_after_while@26:
     pop
     load 0
     store 0
@@ -232,18 +275,24 @@ main_after_while@23:
     intc_0 // 32
     +
     dup
+    cover 2
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
-    dig 1
+    dup
     intc_3 // 4096
     /
+    swap
+    intc_3 // 4096
+    %
+    dup
+    cover 2
     intc_0 // 32
     bzero
-    uncover 5
+    uncover 6
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    uncover 5
+    uncover 6
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -254,25 +303,35 @@ main_after_while@23:
     -
     intc_0 // 32
     extract3
-    dig 1
-    loads
-    uncover 4
-    intc_3 // 4096
-    %
     swap
+    pushint 4064
+    <=
+    bz main_else_body@28
     dig 1
+    dup
+    loads
+    dig 4
     uncover 3
     replace3
-    dig 2
-    swap
     stores
+
+main_after_if_else@29:
     load 0
     store 0
-    swap
+    intc_3 // 4096
+    dig 2
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@31
+    pop
     loads
     swap
     intc_0 // 32
     extract3
+
+main_ternary_merge@32:
     pushint 24
     extract_uint64
     dup
@@ -293,6 +352,61 @@ main_after_while@23:
     intc_1 // 1
     return
 
+main_ternary_false@31:
+    swap
+    dup
+    loads
+    uncover 3
+    dig 3
+    extract3
+    swap
+    intc_1 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@32
+
+main_else_body@28:
+    dig 1
+    dup
+    loads
+    intc_3 // 4096
+    dig 5
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_1 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@29
+
 main_ternary_false@13:
     intc_2 // 0
     b main_ternary_merge@14
@@ -311,13 +425,13 @@ main_seed_route@6:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@27
+    bz main_ternary_false@36
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@28:
+main_ternary_merge@37:
     !
     assert // not payable
     pushbytes 0xc179e834c1ea500bc2f9f0bfb47f565013c4d45c23975e012d05f78757470fc2
@@ -334,9 +448,9 @@ main_ternary_merge@28:
     intc_1 // 1
     return
 
-main_ternary_false@27:
+main_ternary_false@36:
     intc_2 // 0
-    b main_ternary_merge@28
+    b main_ternary_merge@37
 
 main___postInit_route@5:
     bytec_2 // "__ctor_pending"

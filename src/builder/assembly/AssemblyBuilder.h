@@ -218,6 +218,17 @@ public:
 
 	/// Read a 32-byte EVM-memory word at a DYNAMIC offset via direct scratch
 	/// (`extract3(loads(off/SLOT_SIZE), off%SLOT_SIZE, 32)`). Static so sol-ast can call it.
+	/// Read [off, off+len) from the multi-slot memory blob as a stack VALUE,
+	/// stitching a SLOT_SIZE straddle. Expression-only (emits no statements),
+	/// so it is usable from return-value positions. A stack value is at most
+	/// one AVM element (SLOT_SIZE bytes) and therefore spans at most 2 slots;
+	/// unbounded ranges use readMemRangeDyn's word loop instead.
+	static std::shared_ptr<awst::Expression> readMemStackRange(
+		ScratchLayout const& _scratch,
+		std::shared_ptr<awst::Expression> _offset,
+		std::shared_ptr<awst::Expression> _length,
+		awst::SourceLocation const& _loc);
+
 	static std::shared_ptr<awst::Expression> readMemWordDirect(
 		ScratchLayout const& _scratch,
 		std::shared_ptr<awst::Expression> _offset,
@@ -1160,6 +1171,12 @@ private:
 	/// leaving if/switch/for translation (entries from a conditionally-executed body
 	/// must not survive it; entries from before a loop must not fold inside it).
 	void invalidateMemConstants();
+
+	/// True when this Yul builtin writes EVM memory in a way the "mem_0x*"
+	/// content tracker cannot model precisely (so every entry must be
+	/// dropped). Shared by the expression and statement translation paths so
+	/// the two can't drift. `mstore` is excluded: it tracks per-offset itself.
+	static bool builtinClobbersMemory(std::string const& _name);
 
 	/// Names of calldata PARAMS whose head byte-offset is stashed in m_localConstants (for the
 	/// `.offset`/`.length` suffix + calldataMap paths). A BARE param name used as a value (e.g. as a

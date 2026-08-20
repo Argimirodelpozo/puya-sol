@@ -1,3 +1,41 @@
+# Semantic Test Status — v501 ("who still assumes slot 0" audit)
+
+> **Full run 2026-08-19: 8 failed / 1445 passed / 113 xf / 32 xp** (RESULTS_v501_slot0_audit.txt).
+> Baseline held; +3 guard passes. new_review.md B7/B8/C10/C11 as the single
+> audit pass that entry asked for — the multi-slot memory migration
+> (58fbeea257) had reached the range helpers but not the word/precompile/
+> return paths.
+> **B7** — `readMemWordDirect`/`writeMemWordDirect` (every RUNTIME-offset word
+> access) never stitched a word straddling the 4096-byte slot boundary, so
+> extract3/replace3 ran off the end of the slot and PANICKED on code EVM runs
+> fine; the range word-loops reach them from arbitrary unaligned offsets.
+> Both now route through one shared stitch (`readMemStackRange` for reads, an
+> if/else split for writes). `materializeBlobBytesValue`'s data read was
+> slot-0-only.
+> **B8** — statement-position memory writers (mstore8, mcopy, calldatacopy,
+> returndatacopy, call output copies) never dropped the `mem_0x*` content
+> constants the EXPRESSION path invalidates, so a later constant-folded
+> `keccak256` hashed a STALE word — `sstore(keccak256(...), v)` then wrote the
+> wrong storage slot, silently. The solc-effect-table classification is now a
+> shared helper (`builtinClobbersMemory`) called from both paths, with
+> `pop(call(...))` classified on the inner call.
+> **C10** — `handleAppCall` read the request selector/body from slot 0 (wrong
+> CALLDATA past 4096) and its constant-outSize returndata copy right-aligned
+> an `outSize<32` payload in a full word (EVM left-aligns and leaves the rest
+> untouched) and panicked at `outSize=0x24`. Const and runtime now share the
+> exact-length `writeMemRangeDyn`. ⚠️ The selector/body reads must stay
+> EXPRESSION-only (`readMemStackRange`): a first attempt used the
+> statement-emitting `readMemRangeDyn`, which reordered this lowering relative
+> to the caller's pending statements and broke the grouped payment leg's
+> receiver (`test_asm_call_value`).
+> **C11** — `handleReturn`'s void-payload and EIP-2330 batch-read paths
+> extracted from slot 0.
+> The audit also turned up two sites nobody had filed: the `new bytes` blob
+> alloc wrote its LENGTH word through slot 0 at the runtime FMP, and the
+> array-param seeding loop wrote element 125+ past the end of slot 0.
+> Guard: `puyasolRegression/test_memory_slot_audit.py` (verified red on the
+> pre-fix binary, green after).
+
 # Semantic Test Status — v500 (encodePacked / bytesN padding-and-width family)
 
 > **Full run 2026-08-19: 8 failed / 1442 passed / 113 xf / 32 xp** (RESULTS_v500_packed_padding_family.txt).

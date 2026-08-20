@@ -3,12 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_multislot_rt_copies.sol.MultiSlotRtCopies.approval_program() -> uint64:
 main:
-    intcblock 32 4096 20480 8
-    bytecblock 0x 0x151f7c75 0x20 0x010000000000000000000000000000000000000000000000000000000000000000
-    pushint 0
+    intcblock 32 4096 0 1 20480 4064
+    bytecblock 0x 0x3333333333333333333333333333333333333333333333333333333333333333 0x151f7c75 0x4141414141414141414141414141414141414141414141414141414141414141 0x1111111111111111111111111111111111111111111111111111111111111111 0x2222222222222222222222222222222222222222222222222222222222222222 0x010000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 0
     dup
     bytec_0 // ""
-    dupn 2
+    dupn 4
     intc_1 // 4096
     bzero
     dup
@@ -28,7 +28,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -65,7 +65,7 @@ main_mcopyCross_route@7:
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
-    pushint 1
+    intc_3 // 1
     -
     gtxns Amount
 
@@ -74,186 +74,299 @@ main_ternary_merge@14:
     assert // not payable
     load 0
     store 0
-    intc_3 // 8
+    pushint 8
     bzero
     dup
     cover 4
-    dup
-    uncover 3
+    uncover 2
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     dup
-    cover 2
+    bury 7
     dup
     intc_0 // 32
     +
-    intc_2 // 20480
+    intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
     intc_1 // 4096
     /
-    intc_0 // 32
-    bzero
-    bury 11
-    dup
-    loads
-    uncover 2
-    intc_1 // 4096
-    %
-    pushbytes 0x3333333333333333333333333333333333333333333333333333333333333333
-    replace3
-    stores
-    uncover 2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    bytec_0 // 0x
-    pushint 0
-
-main_while_top@15:
-    dup
-    dig 3
-    <
-    bz main_after_while@17
-    dig 3
-    dig 1
-    +
-    dup
-    bury 8
-    dup
-    intc_1 // 4096
-    /
-    loads
-    swap
-    intc_1 // 4096
-    %
-    intc_0 // 32
-    extract3
-    uncover 2
-    swap
-    concat
-    swap
-    intc_0 // 32
-    +
-    b main_while_top@15
-
-main_after_while@17:
-    pop
-    uncover 2
-    pop
-    pushint 0
-    uncover 2
-    extract3
     cover 2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    cover 2
-    dig 1
-    len
-    dup
-    intc_0 // 32
+    intc_1 // 4096
     %
-    swap
-    dig 1
-    -
-    uncover 2
-    +
     dup
     cover 3
+    intc_0 // 32
+    bzero
+    bury 12
+    intc 5 // 4064
+    <=
+    bz main_else_body@16
+    swap
     dup
-    intc_1 // 4096
-    /
     loads
-    swap
-    intc_1 // 4096
-    %
-    intc_0 // 32
-    extract3
-    intc_0 // 32
+    uncover 3
+    bytec_1 // 0x3333333333333333333333333333333333333333333333333333333333333333
+    replace3
+    stores
+
+main_after_if_else@17:
     dig 2
-    -
     swap
-    cover 2
-    extract3
     concat
-    pushint 0
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_2 // 0
+    bytec_0 // 0x
 
 main_while_top@18:
     dig 1
+    dig 3
+    <
+    bz main_after_while@23
+    dig 7
+    dig 2
+    +
+    dup
+    bury 7
+    intc_1 // 4096
+    %
+    dup
+    cover 3
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@21
+    pop
+    dig 6
+    intc_1 // 4096
+    /
+    loads
+    uncover 3
+    intc_0 // 32
+    extract3
+
+main_ternary_merge@22:
+    concat
+    swap
+    intc_0 // 32
+    +
+    swap
+    b main_while_top@18
+
+main_ternary_false@21:
+    dig 7
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 5
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@22
+
+main_after_while@23:
+    bury 1
+    intc_2 // 0
+    uncover 2
+    extract3
+    dup
+    uncover 3
+    uncover 3
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    uncover 2
+    len
+    dup
+    intc_0 // 32
+    %
+    dup
+    cover 4
+    -
+    +
+    dup
+    intc_1 // 4096
+    %
+    dup
+    cover 2
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@25
+    pop
+    dup
+    intc_1 // 4096
+    /
+    loads
+    uncover 2
+    intc_0 // 32
+    extract3
+
+main_ternary_merge@26:
+    intc_0 // 32
+    uncover 4
+    dup
+    cover 2
+    -
+    extract3
+    uncover 3
+    swap
+    concat
+    swap
+    intc_2 // 0
+
+main_while_top@27:
+    dig 2
     len
     dig 1
     >
-    bz main_after_while@20
+    bz main_after_while@32
     dig 3
     dig 1
+    dup
+    cover 2
     +
     dup
     intc_0 // 32
     +
-    intc_2 // 20480
+    intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
     intc_1 // 4096
     /
-    dig 3
-    dig 3
-    intc_0 // 32
-    extract3
-    dig 1
-    loads
-    uncover 3
+    cover 3
     intc_1 // 4096
     %
+    dup
+    cover 5
+    dig 6
     uncover 2
+    intc_0 // 32
+    extract3
+    swap
+    intc 5 // 4064
+    <=
+    bz main_else_body@30
+    uncover 2
+    dup
+    loads
+    uncover 5
+    uncover 3
     replace3
     stores
+
+main_after_if_else@31:
     intc_0 // 32
     +
-    b main_while_top@18
+    b main_while_top@27
 
-main_after_while@20:
-    popn 2
+main_else_body@30:
+    uncover 2
+    dup
+    loads
+    intc_1 // 4096
+    uncover 6
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@31
+
+main_after_while@32:
+    pop
+    bury 1
     dig 2
     intc_0 // 32
     +
-    intc_2 // 20480
+    intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     intc_0 // 32
     +
-    intc_2 // 20480
+    intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
-    dup
+    dupn 2
     intc_0 // 32
     +
-    intc_2 // 20480
+    intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    intc_1 // 4096
+    %
     dup
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@34
+    pop
+    swap
     intc_1 // 4096
     /
     loads
     swap
-    intc_1 // 4096
-    %
     intc_0 // 32
     extract3
-    dig 4
+
+main_ternary_merge@35:
+    dig 6
     swap
     concat
     dup
@@ -265,15 +378,94 @@ main_after_while@20:
     extract 0 32
     load 0
     store 0
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    pushint 1
+    intc_3 // 1
     return
 
+main_ternary_false@34:
+    uncover 2
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 3
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@35
+
+main_ternary_false@25:
+    dig 1
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 4
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@26
+
+main_else_body@16:
+    swap
+    dup
+    loads
+    intc_1 // 4096
+    uncover 4
+    dup
+    cover 2
+    -
+    bytec_1 // 0x3333333333333333333333333333333333333333333333333333333333333333
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    bytec_1 // 0x3333333333333333333333333333333333333333333333333333333333333333
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@17
+
 main_ternary_false@13:
-    pushint 0
+    intc_2 // 0
     b main_ternary_merge@14
 
 main_shaCross_route@6:
@@ -284,82 +476,125 @@ main_shaCross_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@39
     txn GroupIndex
-    pushint 1
+    intc_3 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@40:
     !
     assert // not payable
     load 0
     store 0
-    intc_3 // 8
+    pushint 8
     bzero
     swap
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
-    dupn 2
+    dup
+    bury 5
+    dup
     intc_0 // 32
     +
-    intc_2 // 20480
+    intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
     intc_1 // 4096
     /
+    swap
+    intc_1 // 4096
+    %
+    dup
+    cover 2
     intc_0 // 32
     bzero
-    cover 2
+    bury 10
+    intc 5 // 4064
+    <=
+    bz main_else_body@42
     dup
     loads
     uncover 2
-    intc_1 // 4096
-    %
-    pushbytes 0x4141414141414141414141414141414141414141414141414141414141414141
+    bytec_3 // 0x4141414141414141414141414141414141414141414141414141414141414141
     replace3
     stores
-    bytec_0 // 0x
-    pushint 0
 
-main_while_top@26:
-    dup
+main_after_if_else@43:
+    intc_2 // 0
+    bytec_0 // 0x
+
+main_while_top@44:
+    dig 1
     intc_0 // 32
     <
-    bz main_after_while@28
-    dig 3
-    dig 1
+    bz main_after_while@49
+    dig 5
+    dig 2
     +
     dup
-    bury 8
+    bury 5
+    intc_1 // 4096
+    %
     dup
+    cover 3
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@47
+    pop
+    dig 4
     intc_1 // 4096
     /
     loads
-    swap
-    intc_1 // 4096
-    %
+    uncover 3
     intc_0 // 32
     extract3
-    uncover 2
-    swap
+
+main_ternary_merge@48:
     concat
     swap
     intc_0 // 32
     +
-    b main_while_top@26
+    swap
+    b main_while_top@44
 
-main_after_while@28:
-    pop
+main_ternary_false@47:
+    dig 5
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 5
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@48
+
+main_after_while@49:
     extract 0 32
     sha256
-    dig 1
-    swap
+    dig 8
+    dup
+    uncover 2
     concat
     dup
     len
@@ -371,10 +606,10 @@ main_after_while@28:
     swap
     replace2 0
     store 0
-    dig 4
+    dig 3
     intc_0 // 32
     +
-    intc_2 // 20480
+    intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     load 0
@@ -389,16 +624,50 @@ main_after_while@28:
     extract 0 32
     load 0
     store 0
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    pushint 1
+    intc_3 // 1
     return
 
-main_ternary_false@24:
-    pushint 0
-    b main_ternary_merge@25
+main_else_body@42:
+    dup
+    loads
+    intc_1 // 4096
+    uncover 3
+    dup
+    cover 2
+    -
+    bytec_3 // 0x4141414141414141414141414141414141414141414141414141414141414141
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    bytec_3 // 0x4141414141414141414141414141414141414141414141414141414141414141
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@43
+
+main_ternary_false@39:
+    intc_2 // 0
+    b main_ternary_merge@40
 
 main_identityCross_route@5:
     txna ApplicationArgs 1
@@ -415,218 +684,359 @@ main_identityCross_route@5:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@32
+    bz main_ternary_false@54
     txn GroupIndex
-    pushint 1
+    intc_3 // 1
     -
     gtxns Amount
 
-main_ternary_merge@33:
+main_ternary_merge@55:
     !
     assert // not payable
     load 0
     store 0
-    intc_3 // 8
+    pushint 8
     bzero
     dup
     cover 3
+    dig 1
+    concat
     dup
-    uncover 2
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    bury 9
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    swap
+    intc_1 // 4096
+    %
     dup
     cover 2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    cover 3
-    dup
-    intc_0 // 32
-    +
-    intc_2 // 20480
-    <=
-    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
-    dup
-    intc_1 // 4096
-    /
     intc_0 // 32
     bzero
-    bury 12
+    swap
+    intc 5 // 4064
+    <=
+    bz main_else_body@57
+    swap
     dup
     loads
-    uncover 2
-    intc_1 // 4096
-    %
-    pushbytes 0x1111111111111111111111111111111111111111111111111111111111111111
+    uncover 3
+    bytec 4 // 0x1111111111111111111111111111111111111111111111111111111111111111
     replace3
     stores
-    bytec_2 // 0x20
+
+main_after_if_else@58:
+    swap
+    pushbytes 0x20
     b+
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    dig 3
+    swap
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     dup
     intc_0 // 32
     +
-    intc_2 // 20480
+    intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
     intc_1 // 4096
     /
+    cover 2
+    intc_1 // 4096
+    %
+    dup
+    intc 5 // 4064
+    <=
+    bz main_else_body@60
+    uncover 2
     dup
     loads
     uncover 2
-    intc_1 // 4096
-    %
-    pushbytes 0x2222222222222222222222222222222222222222222222222222222222222222
+    bytec 5 // 0x2222222222222222222222222222222222222222222222222222222222222222
     replace3
     stores
-    bytec_0 // 0x
-    pushint 0
 
-main_while_top@34:
-    dup
+main_after_if_else@61:
+    bytec_0 // 0x
+    swap
+    intc_2 // 0
+    cover 2
+
+main_while_top@62:
+    dig 2
     pushint 64
     <
-    bz main_after_while@36
-    dig 2
-    dig 1
-    +
-    dup
-    bury 8
-    dup
-    intc_1 // 4096
-    /
-    loads
-    swap
-    intc_1 // 4096
-    %
-    intc_0 // 32
-    extract3
-    uncover 2
-    swap
-    concat
-    swap
-    intc_0 // 32
-    +
-    b main_while_top@34
-
-main_after_while@36:
-    pop
-    bury 1
-    extract 0 64
-    dig 2
-    dig 2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    dup
-    cover 2
-    dig 1
-    len
-    dup
-    intc_0 // 32
-    %
-    swap
-    dig 1
-    -
-    uncover 2
+    bz main_after_while@67
+    dig 9
+    dig 3
     +
     dup
     bury 7
+    intc_1 // 4096
+    %
     dup
+    cover 4
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@65
+    pop
+    dig 6
     intc_1 // 4096
     /
     loads
-    swap
-    intc_1 // 4096
-    %
+    uncover 4
     intc_0 // 32
     extract3
-    intc_0 // 32
-    dig 2
-    -
     swap
+
+main_ternary_merge@66:
     cover 2
+    concat
+    swap
+    uncover 2
+    intc_0 // 32
+    +
+    cover 2
+    b main_while_top@62
+
+main_ternary_false@65:
+    dig 7
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 6
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
     extract3
     concat
-    pushint 0
+    swap
+    b main_ternary_merge@66
 
-main_while_top@37:
-    dig 1
+main_after_while@67:
+    uncover 2
+    pop
+    swap
+    extract 0 64
+    dup
+    cover 4
+    dig 3
+    dig 3
+    concat
+    dup
     len
-    dig 1
-    >
-    bz main_after_while@39
-    dig 2
-    dig 1
-    +
+    pushint 8
+    -
+    extract_uint64
+    dup
+    cover 3
+    swap
+    len
     dup
     intc_0 // 32
-    +
-    intc_2 // 20480
-    <=
-    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    %
     dup
+    cover 5
+    -
+    +
+    dup
+    cover 2
+    intc_1 // 4096
+    %
+    dup
+    cover 3
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@69
+    pop
+    dig 1
     intc_1 // 4096
     /
-    dig 3
-    dig 3
-    intc_0 // 32
-    extract3
-    dig 1
     loads
     uncover 3
-    intc_1 // 4096
-    %
-    uncover 2
-    replace3
-    stores
     intc_0 // 32
-    +
-    b main_while_top@37
+    extract3
+    swap
 
-main_after_while@39:
-    popn 2
-    dig 4
+main_ternary_merge@70:
     intc_0 // 32
-    +
-    intc_2 // 20480
-    <=
-    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    uncover 5
+    dup
+    cover 2
+    -
+    uncover 3
+    cover 2
+    extract3
+    uncover 6
+    swap
+    concat
+    cover 2
+    intc_2 // 0
+    swap
+
+main_while_top@71:
     dig 3
-    intc_0 // 32
+    len
+    dig 2
+    >
+    bz main_after_while@76
+    dig 4
+    dig 2
+    dup
+    cover 2
     +
-    intc_2 // 20480
-    <=
-    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
     intc_0 // 32
     +
-    intc_2 // 20480
+    intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
     intc_1 // 4096
     /
-    loads
-    swap
+    cover 4
     intc_1 // 4096
     %
+    dup
+    cover 6
+    dig 7
+    uncover 2
     intc_0 // 32
     extract3
-    dig 7
+    swap
+    intc 5 // 4064
+    <=
+    bz main_else_body@74
+    uncover 3
+    dup
+    loads
+    uncover 6
+    uncover 3
+    replace3
+    stores
+
+main_after_if_else@75:
+    swap
+    intc_0 // 32
+    +
+    swap
+    b main_while_top@71
+
+main_else_body@74:
+    uncover 3
+    dup
+    loads
+    intc_1 // 4096
+    uncover 7
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@75
+
+main_after_while@76:
+    bury 1
+    uncover 2
+    pop
+    dig 5
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    swap
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dig 1
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    intc_1 // 4096
+    %
+    dup
+    cover 2
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@78
+    pop
+    uncover 2
+    intc_1 // 4096
+    /
+    loads
+    uncover 2
+    intc_0 // 32
+    extract3
+    swap
+
+main_ternary_merge@79:
     dup
     uncover 2
     concat
@@ -637,36 +1047,49 @@ main_after_while@39:
     intc_0 // 32
     extract3
     extract 0 32
+    swap
     uncover 2
-    bytec_2 // 0x20
+    pushbytes 0x20
     b+
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     uncover 3
     swap
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     dup
+    cover 2
+    dup
     intc_0 // 32
     +
-    intc_2 // 20480
+    intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    intc_1 // 4096
+    %
     dup
+    cover 3
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@81
+    pop
+    swap
     intc_1 // 4096
     /
     loads
-    swap
-    intc_1 // 4096
-    %
+    uncover 2
     intc_0 // 32
     extract3
-    uncover 2
-    swap
+
+main_ternary_merge@82:
     concat
     dup
     len
@@ -678,13 +1101,151 @@ main_after_while@39:
     load 0
     store 0
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    pushint 1
+    intc_3 // 1
     return
 
-main_ternary_false@32:
-    pushint 0
-    b main_ternary_merge@33
+main_ternary_false@81:
+    uncover 2
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 4
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@82
+
+main_ternary_false@78:
+    uncover 3
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 4
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    swap
+    b main_ternary_merge@79
+
+main_ternary_false@69:
+    dig 2
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 5
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    swap
+    b main_ternary_merge@70
+
+main_else_body@60:
+    uncover 2
+    dup
+    loads
+    intc_1 // 4096
+    uncover 3
+    dup
+    cover 2
+    -
+    bytec 5 // 0x2222222222222222222222222222222222222222222222222222222222222222
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    bytec 5 // 0x2222222222222222222222222222222222222222222222222222222222222222
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@61
+
+main_else_body@57:
+    swap
+    dup
+    loads
+    intc_1 // 4096
+    uncover 4
+    dup
+    cover 2
+    -
+    bytec 4 // 0x1111111111111111111111111111111111111111111111111111111111111111
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    bytec 4 // 0x1111111111111111111111111111111111111111111111111111111111111111
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@58
+
+main_ternary_false@54:
+    intc_2 // 0
+    b main_ternary_merge@55

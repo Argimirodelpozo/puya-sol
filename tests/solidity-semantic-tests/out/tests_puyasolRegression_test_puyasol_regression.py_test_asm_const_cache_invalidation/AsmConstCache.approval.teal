@@ -159,24 +159,24 @@ main_ternary_false@21:
 
 main_loopFold_route@6:
     txn GroupIndex
-    bz main_ternary_false@26
+    bz main_ternary_false@27
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@27:
+main_ternary_merge@28:
     !
     assert // not payable
     load 0
     store 0
     bytec_2 // 0x
 
-main_while_top@28:
+main_while_top@29:
     dup
     pushbytes 0x03
     b<
-    bz main_after_while@30
+    bz main_after_while@34
     pushint 8
     bzero
     dig 1
@@ -203,15 +203,20 @@ main_while_top@28:
     dup
     intc_3 // 4096
     /
+    cover 2
+    intc_3 // 4096
+    %
+    dup
+    cover 3
     intc_0 // 32
     bzero
-    uncover 3
+    uncover 2
     pushbytes 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    cover 4
+    cover 3
     concat
     dup
     len
@@ -219,17 +224,55 @@ main_while_top@28:
     -
     intc_0 // 32
     extract3
-    dig 1
-    loads
-    uncover 3
-    intc_3 // 4096
-    %
+    swap
+    pushint 4064
+    <=
+    bz main_else_body@32
     uncover 2
+    dup
+    loads
+    uncover 4
+    uncover 3
     replace3
     stores
-    b main_while_top@28
+    b main_while_top@29
 
-main_after_while@30:
+main_else_body@32:
+    uncover 2
+    dup
+    loads
+    intc_3 // 4096
+    uncover 5
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_1 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_while_top@29
+
+main_after_while@34:
     load 0
     extract 160 32
     load 0
@@ -251,19 +294,19 @@ main_after_while@30:
     intc_1 // 1
     return
 
-main_ternary_false@26:
+main_ternary_false@27:
     intc_2 // 0
-    b main_ternary_merge@27
+    b main_ternary_merge@28
 
 main_reassign_route@5:
     txn GroupIndex
-    bz main_ternary_false@34
+    bz main_ternary_false@38
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@35:
+main_ternary_merge@39:
     !
     assert // not payable
     load 0
@@ -297,6 +340,6 @@ main_ternary_merge@35:
     intc_1 // 1
     return
 
-main_ternary_false@34:
+main_ternary_false@38:
     intc_2 // 0
-    b main_ternary_merge@35
+    b main_ternary_merge@39

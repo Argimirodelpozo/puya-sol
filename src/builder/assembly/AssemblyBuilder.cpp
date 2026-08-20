@@ -331,11 +331,12 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitBytesBlobAllo
 		awst::makeExtractUInt64(awst::makeLoadSlot(_scratch.memoryFirst(), _loc), k("88"), _loc), _loc));
 	auto offRead = [&]() { return awst::makeVarExpression(_offVar, u64, _loc); };
 
-	// Write the 32-byte length word at the buffer offset: replace3(blob, off, pad32(len)).
+	// Write the 32-byte length word at the buffer offset. Slot-routed: the
+	// offset IS the FMP, which passes 4096 in any --evm-memory-slots contract
+	// — the old slot-0 replace3 wrote the length into the wrong slot (or
+	// panicked) for every buffer allocated past the first slot.
 	auto lenWord = awst::makeLeftPad(awst::makeItob(lenRead(), _loc), 24, _loc);
-	out.push_back(awst::makeExpressionStatement(awst::makeStoreSlot(_scratch.memoryFirst(),
-		awst::makeReplace3(awst::makeLoadSlot(_scratch.memoryFirst(), _loc), offRead(),
-			std::move(lenWord), _loc), _loc), _loc));
+	writeMemWordDirect(_scratch, offRead(), std::move(lenWord), _loc, out);
 
 	// newFMP = off + 32 + ceil(len/32)*32.
 	auto ceil32 = awst::makeUInt64BinOp(
@@ -396,9 +397,9 @@ void AssemblyBuilder::initializeMemoryBlob(
 			auto index = awst::makeIntegerConstant(i, loc);
 			auto indexExpr = awst::makeIndexExpression(std::move(base), std::move(index), awst::WType::biguintType(), loc);
 			auto padded = padTo32Bytes(std::move(indexExpr), loc);
-			auto offsetConst = awst::makeIntegerConstant(offset, loc);
-			auto replace = awst::makeReplace3(memoryVar(loc), std::move(offsetConst), std::move(padded), loc);
-			assignMemoryVar(std::move(replace), loc, _out);
+			// Slot-routed: element 125 onwards sits past 4096 (0x80 + i*0x20),
+			// which the old slot-0 replace3 wrote off the end of slot 0.
+			writeMemWordConst(offset, std::move(padded), loc, _out);
 		}
 	}
 }

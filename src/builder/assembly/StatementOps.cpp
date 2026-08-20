@@ -629,6 +629,27 @@ void AssemblyBuilder::buildExpressionStatement(
 	{
 		std::string funcName = getFunctionName(call->functionName);
 
+		// Statement-position memory writers must drop the "mem_0x*" content
+		// constants exactly like the expression path does (buildFunctionCall)
+		// — every builtin dispatched below (mstore8, mcopy, calldatacopy,
+		// returndatacopy, codecopy, call/staticcall output copies) reached its
+		// handler WITHOUT invalidating, so a later keccak256/mload folded over
+		// a STALE word: `mstore(0,1) mstore8(0,0xff) sstore(keccak256(0,0x20), v)`
+		// hashed the pre-mstore8 word and wrote the wrong storage slot,
+		// silently. `pop(call(...))` is classified on the inner call, whose
+		// output copy is what writes memory. mstore is excluded (it tracks
+		// per-offset itself); over-invalidating only costs folding, never
+		// correctness.
+		{
+			std::string effective = funcName;
+			if (funcName == "pop" && call->arguments.size() == 1)
+				if (auto const* inner =
+						std::get_if<solidity::yul::FunctionCall>(&call->arguments[0]))
+					effective = getFunctionName(inner->functionName);
+			if (builtinClobbersMemory(effective))
+				invalidateMemConstants();
+		}
+
 		// Pattern checks that need the raw Yul AST must run before arg translation.
 		if (funcName == "mstore" && tryHandleBytesMemoryWrite(*call, loc, _out))
 			return;
