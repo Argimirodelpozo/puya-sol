@@ -36,7 +36,7 @@ from chd_common import (algo_sender_seed, arg_content20,
                         build_dep_tape_plans, bytes32_mapping_key_candidates,
                         tape_script_chunks, canon_value,
                         dump_json, is_platform_limit, load_json,
-                        replay_clock_targets, symbol)
+                        probe_clock_target, replay_clock_targets, symbol)
 from chd_storage import KeyEvidence, NativeStorageReader
 
 from algosdk import encoding
@@ -489,6 +489,13 @@ def read_avm_maps(algod, app_id, arc56, layout, syms, fold, calls=None,
     box_keys = (((arc56.get("state") or {}).get("keys") or {}).get("box") or {})
     roots = {base64.b64decode(spec["key"])
              for spec in box_keys.values() if spec.get("key")}
+    # A declared map's own name is the prefix every derived key chains from, so
+    # the root box is accounted for by definition — counting it as
+    # unattributed reported babydoge's `_balances`/`_allowances` as coverage
+    # holes on a case with no divergences at all.
+    roots |= {name.encode()
+              for name in (((arc56.get("state") or {}).get("maps") or {})
+                           .get("box") or {})}
     unexplained = set(box_values) - reader.matched - raw_names - roots
     groups = {}
     for name in sorted(unexplained):
@@ -1181,6 +1188,12 @@ def main():
     for _ad, _i in (reg.get("deps") or {}).items():
         if _ad in dep_local:
             syms[symbol(f"D{_i}")] = encoding.decode_address(dep_local[_ad])
+    # Same shared instant the EVM leg pins to. Each AVM probe is a real
+    # transaction sealing its own block, so without this the phase answers at
+    # whatever the last replayed entry left behind and every accruing view
+    # drifts against the other leg.
+    probe_time = probe_clock_target(clock_by_index)
+    clock.advance_to(probe_time)
     probe_results = {}
     for probe_index, probe in enumerate(meta.get("probes") or []):
         try:
@@ -1245,6 +1258,7 @@ def main():
                "platform_limits": {str(k): v for k, v in platform_limits.items()},
                "block_ts": block_ts,
                "block_no": block_no,
+               "probe_time": probe_time,
                "app_id": app.app_id})
     n = len(results)
     n_ok = sum(1 for r in results.values() if r["ok"])

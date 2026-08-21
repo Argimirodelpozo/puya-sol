@@ -120,6 +120,22 @@ def replay_clock_targets(calls, base):
     return targets
 
 
+def probe_clock_target(clock_by_index) -> int:
+    """The one instant BOTH legs must evaluate post-replay probes at.
+
+    The replay itself is pinned per entry, but the probe phase was not: the EVM
+    leg answered from whatever pending block py-evm happened to hold while the
+    AVM leg answered at LocalNet's last sealed block. Anything accruing with
+    time then drifts. On Aave that was ~1.1 s of interest — a uniform 1.48e-7 of
+    the window across every asset and every accruing view, which reads exactly
+    like a ray-math miscompile rather than a harness artifact.
+
+    One second past the last replayed entry: both clocks are forward-only, so
+    the shared instant has to sit at or above the end of the schedule.
+    """
+    return (max(clock_by_index.values()) + 1) if clock_by_index else 0
+
+
 def build_dep_tape_plans(case_dir: Path, skipped: set,
                          mapping20: dict | None = None,
                          calls: list | None = None):

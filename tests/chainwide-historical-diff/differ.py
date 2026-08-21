@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from chd_common import dump_json, is_platform_limit, load_json
+from chd_common import dump_json, is_platform_limit, load_json, replay_epoch
 
 # Divergences that are DOCUMENTED EVM-vs-AVM differences, not miscompiles.
 KNOWN_NOISE_GETTERS = {
@@ -20,6 +20,16 @@ KNOWN_NOISE_GETTERS = {
                                    # height vs the AVM round can never match
 }
 _NOISE_SIG_RE = re.compile(r"(DOMAIN_?SEPARATOR|chainid|CHAIN_ID)", re.I)
+
+# Matches replay.py's own drift warning. Measured, not taste: DEGEN replays
+# clean at +938 d and fails near +1500 d, so a year of shift is where a red
+# report stops being trustworthy on its own.
+_EPOCH_SHIFT_MAX = 365 * 24 * 3600
+
+# The buckets that mean "a real difference was observed".
+_REAL_BUCKETS = ("status_div", "value_div", "event_div", "snapshot_div",
+                 "probe_div", "storage_div", "storage_map_div",
+                 "storage_raw_div")
 
 _HEX_RE = re.compile(r"^\??0x[0-9a-fA-F]+$")
 
@@ -88,6 +98,20 @@ def _timestamp_noise(ev_, av_):
     return (isinstance(a, int) and isinstance(b, int)
             and a > 1_500_000_000 and b > 1_500_000_000
             and abs(a - b) < _TS_SKEW_MAX)
+
+
+def _is_default(value) -> bool:
+    """True when a decoded value is entirely the Solidity type default."""
+    if value is None or value is False or value == 0 or value == "":
+        return True
+    if isinstance(value, str):
+        return value.startswith("0x") and not any(
+            char != "0" for char in value[2:])
+    if isinstance(value, (list, tuple)):
+        return all(_is_default(item) for item in value)
+    if isinstance(value, dict):
+        return all(_is_default(item) for item in value.values())
+    return False
 
 
 def _height_skew_noise(ev_, av_, wtxn, evm_no, avm_no):
@@ -259,6 +283,17 @@ def diff_case(case_dir: Path) -> dict:
 
     probes = meta.get("probes") or []
     ep, ap = evm.get("probes") or {}, avm.get("probes") or {}
+    # Report the CLOCK, not just its consequences: probes answered at two
+    # different instants make every accruing view differ by a small, uniform,
+    # entirely plausible-looking amount. Aave's eight assets all drifted by
+    # 1.48e-7 of the window that way, which reads as a ray-math miscompile.
+    e_probe_ts, a_probe_ts = evm.get("probe_time"), avm.get("probe_time")
+    if e_probe_ts and a_probe_ts and int(e_probe_ts) != int(a_probe_ts):
+        findings["probe_clock_skew"] = [
+            {"evm": int(e_probe_ts), "avm": int(a_probe_ts),
+             "delta": int(a_probe_ts) - int(e_probe_ts),
+             "note": "probe phase evaluated at different instants — accruing "
+                     "views differ for that reason alone"}]
     for key in sorted(set(ep) | set(ap), key=int):
         ev_, av_ = ep.get(key), ap.get(key)
         spec = probes[int(key)] if int(key) < len(probes) else {}
@@ -424,11 +459,22 @@ def diff_case(case_dir: Path) -> dict:
                 ev_k, av_k, _last_write(m), evm_block_no, avm_block_no)
             ts_only = (_timestamp_noise(ev_k, av_k)
                        or _timestamp_noise_elems(ev_k, av_k))
+            # An entry holding the type default is indistinguishable from an
+            # absent one on the EVM leg, which reads slots and cannot enumerate
+            # a mapping. A native box storing that default is therefore the
+            # same state, not an extra entry — only a NON-default value present
+            # on one leg alone is a real difference.
+            default_only = ((k not in ee or k not in aa)
+                            and _is_default(av_k if k not in ee else ev_k))
             bucket = ("storage_noise"
-                      if (height_only or ts_only) else "storage_map_div")
+                      if (height_only or ts_only or default_only)
+                      else "storage_map_div")
             f = {"map": m, "key": k, "evm": ev_k, "avm": av_k,
                  "last_write_txn": _last_write(m)}
-            if height_only:
+            if default_only:
+                f["note"] = ("present on one leg holding the type default — "
+                             "the other leg cannot distinguish that from absent")
+            elif height_only:
                 f["note"] = "differs only by the recorded local block-height skew"
             elif ts_only:
                 f["note"] = ("differs only in plausible-timestamp field(s) "
@@ -439,6 +485,22 @@ def diff_case(case_dir: Path) -> dict:
     for c in calls:
         if c.get("skip"):
             skips[c["skip"].split(":")[0]] = skips.get(c["skip"].split(":")[0], 0) + 1
+    # A replay far from its own historical window is an ENVIRONMENT caveat:
+    # LocalNet's clock is a ratchet and py-evm starts at wall clock, so an old
+    # window always runs shifted and time-gated code can fail on one leg alone
+    # (bgb: 192 of 200 txns reverting, reported as 342 divergences). Attach it
+    # ONLY to a red report — the shift is unremarkable on its own, and a
+    # permanent warning on every green case would train the reader to skip it.
+    _shift = int(evm.get("time_base") or 0) - replay_epoch(calls)
+    if _shift > _EPOCH_SHIFT_MAX and any(
+            findings.get(k) for k in _REAL_BUCKETS):
+        findings["clock_epoch_shift"] = [{
+            "shift_days": _shift // 86400,
+            "note": "replayed far from its own historical window — time-gated "
+                    "code can fail on the AVM leg alone, so these divergences "
+                    "may be environmental; `algokit localnet reset` rewinds "
+                    "the chain clock so the window replays at true time"}]
+
     report = {
         "tag": case["tag"], "name": case["name"], "address": case["address"],
         "txns_in_window": len(calls),
@@ -468,9 +530,7 @@ def diff_case(case_dir: Path) -> dict:
 
 def print_report(rep: dict):
     c = rep["counts"]
-    real = sum(c.get(k, 0) for k in ("status_div", "value_div", "event_div",
-                                     "snapshot_div", "probe_div", "storage_div",
-                                     "storage_map_div", "storage_raw_div"))
+    real = sum(c.get(k, 0) for k in _REAL_BUCKETS)
     print(f"\n=== {rep['tag']} ({rep['name']}) — {rep['replayed']}/{rep['txns_in_window']} "
           f"txns replayed on both legs ===")
     print(f"  skips: {rep['skips'] or '{}'}  | avm platform-limits: {rep['platform_limits']}")
@@ -478,8 +538,7 @@ def print_report(rep: dict):
     if probes.get("planned"):
         print(f"  parameterized probes: {probes.get('compared', 0)}/"
               f"{probes['planned']} compared")
-    for k in ("status_div", "value_div", "event_div", "snapshot_div",
-              "probe_div", "storage_div", "storage_map_div", "storage_raw_div"):
+    for k in _REAL_BUCKETS:
         if c.get(k):
             print(f"  ❌ {k}: {c[k]}")
             for f in rep["findings"][k][:5]:
@@ -503,6 +562,10 @@ def print_report(rep: dict):
     for k in ("event_noise", "snapshot_noise", "probe_noise", "storage_noise"):
         if c.get(k):
             print(f"  · {k} (known EVM/AVM difference): {c[k]}")
+    if c.get("clock_epoch_shift"):
+        det = rep["findings"]["clock_epoch_shift"][0]
+        print(f"  ⚠️  replayed +{det['shift_days']}d from its historical window "
+              f"— divergences may be environmental (`algokit localnet reset`)")
     print("  ✅ no divergences" if real == 0 else f"  ❌ {real} REAL divergence(s)")
 
 

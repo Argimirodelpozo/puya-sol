@@ -27,8 +27,8 @@ from chd_common import (ZERO, arg_content20, build_dep_tape_plans,
                         canon_value,
                         call_without_consuming_tapes, dump_json,
                         evm_sender_privkey, load_json, marker_for,
-                        replay_clock_targets, replay_epoch, scale_value,
-                        sender_marker, symbol)
+                        probe_clock_target, replay_clock_targets, replay_epoch,
+                        scale_value, sender_marker, symbol)
 from chd_storage import (EvmStorageReader, KeyEvidence,
                          build_parameterized_getter_probes,
                          grouped_uncovered_slots)
@@ -1097,6 +1097,22 @@ def main():
                 if d:
                     storage_delta[str(i)] = d
                 prev_scalars = cur
+        # Drive the probe phase to the shared instant before reading anything.
+        # Two measured behaviours decide the target, and both are off by one
+        # from the obvious guess: a `.call()` executes against LATEST (not
+        # pending), and `time_travel(t)` leaves latest at t-1. Aiming AT the
+        # instant therefore has the contract observe one second less than the
+        # AVM leg does — which is the whole of Aave's probe divergence, a
+        # uniform 1.48e-7 of accrual on every asset. Aim one past, then record
+        # what the contract will actually see rather than what was requested.
+        probe_time = probe_clock_target(clock_by_index)
+        if pin_time and probe_time:
+            try:
+                tester.time_travel(probe_time + 1)
+            except Exception:
+                # Forward-only; already at or past the target is fine.
+                pass
+            probe_time = int(w3.eth.get_block("latest")["timestamp"])
         probe_results = {}
         for probe_index, probe in enumerate(meta.get("probes") or []):
             try:
@@ -1162,7 +1178,8 @@ def main():
         storage["coverage"] = roots
         return (results, snapshots, probe_results, mismatches,
                 storage_delta, storage,
-                block_ts, block_no, effective_time_base, deployment_time)
+                block_ts, block_no, effective_time_base, deployment_time,
+                probe_time)
 
     # ── closed-world convergence ──────────────────────────────────────────
     # BATCH convergence: one pass collects every mismatch, all get skipped at
@@ -1176,7 +1193,7 @@ def main():
         iterations += 1
         (results, snapshots, probes, mismatches, sdelta, smaps,
          block_ts, block_no, effective_time_base,
-         deployment_time) = run_once(skips)
+         deployment_time, probe_time) = run_once(skips)
         if not mismatches or iterations >= 8:
             break
         for idx, why, detail in mismatches:
@@ -1202,7 +1219,8 @@ def main():
                "block_ts": block_ts,
                "block_no": block_no,
                "time_base": effective_time_base,
-               "deployment_time": deployment_time})
+               "deployment_time": deployment_time,
+               "probe_time": probe_time})
     n_exec = len(results)
     n_ok = sum(1 for r in results.values() if r["ok"])
     print(f"[evm] replayed {n_exec}/{len(calls)} txns "

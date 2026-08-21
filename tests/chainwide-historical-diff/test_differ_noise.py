@@ -81,3 +81,84 @@ def test_equal_timestamps_produce_nothing(tmp_path):
     counts = _counts(tmp_path, evm_val=TS_EVM, avm_val=TS_EVM)
     assert counts["snapshot_div"] == 0 and counts["storage_div"] == 0
     assert counts["storage_map_div"] == 0 and counts["storage_noise"] == 0
+
+
+def _map_case(tmp_path: Path, *, evm_map, avm_map, calls=(),
+              time_base=0) -> Path:
+    d = tmp_path / "maps"
+    d.mkdir()
+
+    def leg(maps):
+        return {"results": {}, "snapshots": {}, "block_no": {},
+                "storage": {"scalars": {}, "maps": maps, "writes": {}},
+                "storage_delta": {}, "time_base": time_base}
+
+    (d / "case.json").write_text(json.dumps(
+        {"tag": "t", "name": "N", "address": "0x0", "abi": []}))
+    (d / "calls.json").write_text(json.dumps(
+        {"meta": {}, "calls": list(calls)}))
+    (d / "evm_results.json").write_text(json.dumps(leg(evm_map)))
+    (d / "avm_results.json").write_text(json.dumps(leg(avm_map)))
+    return d
+
+
+# LocalNet's clock only moves forward, so a batch of replays creeps away from
+# each case's own window until time-gated code fails on the AVM leg alone. bgb
+# reported 342 "REAL divergences" that way, at +572 d.
+HISTORICAL = 1_600_000_000
+
+
+def test_a_shifted_replay_with_divergences_is_flagged(tmp_path):
+    report = diff_case(_map_case(
+        tmp_path, evm_map={"_m": {"«1»": 1}}, avm_map={"_m": {"«1»": 2}},
+        calls=[{"i": 0, "ts": HISTORICAL}],
+        time_base=HISTORICAL + 600 * 86400,
+    ))
+    assert report["counts"]["storage_map_div"] == 1
+    assert report["findings"]["clock_epoch_shift"][0]["shift_days"] == 600
+
+
+def test_a_shifted_replay_with_NO_divergences_is_not_flagged(tmp_path):
+    # An old window ALWAYS replays shifted (py-evm starts at wall clock), so
+    # warning on a clean case would fire nearly every run and teach the reader
+    # to ignore it. The caveat only earns its place next to a red result.
+    report = diff_case(_map_case(
+        tmp_path, evm_map={}, avm_map={},
+        calls=[{"i": 0, "ts": HISTORICAL}],
+        time_base=HISTORICAL + 600 * 86400,
+    ))
+    assert "clock_epoch_shift" not in report["findings"]
+
+
+def test_a_replay_at_its_own_window_is_not_flagged(tmp_path):
+    report = diff_case(_map_case(
+        tmp_path, evm_map={"_m": {"«1»": 1}}, avm_map={"_m": {"«1»": 2}},
+        calls=[{"i": 0, "ts": HISTORICAL}], time_base=HISTORICAL,
+    ))
+    assert report["counts"]["storage_map_div"] == 1
+    assert "clock_epoch_shift" not in report["findings"]
+
+
+def test_entry_present_on_one_leg_holding_the_default_is_noise(tmp_path):
+    # The EVM leg reads slots and cannot enumerate a mapping, so it has no way
+    # to tell a default-valued entry from an absent one.
+    counts = diff_case(_map_case(
+        tmp_path, evm_map={"_m": {}}, avm_map={"_m": {"«D3»": 0}},
+    ))["counts"]
+    assert counts["storage_map_div"] == 0
+    assert counts["storage_noise"] == 1
+
+
+def test_an_all_default_struct_is_noise_too(tmp_path):
+    counts = diff_case(_map_case(
+        tmp_path, evm_map={"_m": {}},
+        avm_map={"_m": {"«1»": [0, 0, False, "0x00"]}},
+    ))["counts"]
+    assert counts["storage_map_div"] == 0
+
+
+def test_a_non_default_entry_on_one_leg_is_still_a_divergence(tmp_path):
+    counts = diff_case(_map_case(
+        tmp_path, evm_map={"_m": {}}, avm_map={"_m": {"«1»": 7}},
+    ))["counts"]
+    assert counts["storage_map_div"] == 1

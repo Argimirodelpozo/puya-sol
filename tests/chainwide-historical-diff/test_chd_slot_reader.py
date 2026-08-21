@@ -287,6 +287,11 @@ def test_recursive_native_and_evm_readers_cover_aave_shaped_state() -> None:
     label = symbol(1)
     evm_addr = bytes.fromhex("12" * 20).rjust(32, b"\0")
     avm_addr = bytes.fromhex("34" * 32)
+    # A Solidity `address` keeps only 20 bytes, so this is the form the account
+    # takes in box keys and stored words — confirmed against a deployed Aave
+    # hub, where keying on the whole 32-byte account matched 0 boxes and the
+    # narrowing matched all 45 that had been missing.
+    avm_narrow = bytes(12) + avm_addr[-20:]
 
     evm_words = {}
     asset_slot = int.from_bytes(_kec((7).to_bytes(32, "big")
@@ -314,19 +319,20 @@ def test_recursive_native_and_evm_readers_cover_aave_shaped_state() -> None:
     def sha(data):
         return hashlib.sha256(data).digest()
     asset_box = sha((7).to_bytes(32, "big") + b"_assets")
-    spoke_box = sha(avm_addr + sha((7).to_bytes(32, "big") + b"_spokes"))
+    spoke_box = sha(avm_narrow + sha((7).to_bytes(32, "big") + b"_spokes"))
     set_prefix = sha((7).to_bytes(32, "big") + b"_sets") + b"_inner"
     boxes = {
         asset_box: abi.ABIType.from_string("(uint256)").encode([11]),
         spoke_box: abi.ABIType.from_string("(uint256)").encode([22]),
         set_prefix: abi.ABIType.from_string("(byte[32][],byte[])").encode(
-            [[list(avm_addr)], []]),
-        sha(avm_addr + set_prefix + b"_positions"): (1).to_bytes(1, "big"),
+            [[list(avm_narrow)], []]),
+        sha(avm_narrow + set_prefix + b"_positions"): (1).to_bytes(1, "big"),
     }
     avm_evidence = KeyEvidence(calls, fns, {label: avm_addr})
     native_reader = NativeStorageReader(
         layout, arc56, boxes, avm_evidence, sha,
-        lambda raw: label if bytes(raw) == avm_addr else "?" + str(raw))
+        lambda raw: (label if bytes(raw) in (avm_addr, avm_narrow)
+                     else "?" + str(raw)))
     native = native_reader.read_maps()
 
     assert evm["maps"]["_assets"] == native["_assets"] == {"#7": [11]}

@@ -146,6 +146,25 @@ class KeyEvidence:
             return "dynamic-bytes", None
         return "unknown", None
 
+    def address_label(self, raw: bytes) -> str | None:
+        """Symbol for a 32-byte word holding an address, or None.
+
+        Matches the registry bytes themselves AND their low-20 narrowing, since
+        that is the form an AVM account takes once it has passed through a
+        Solidity `address`. Requiring an exact 32-byte hit left every
+        sender-held value rendering as raw hex while the EVM leg showed a
+        symbol — two spellings of one account, reported as a divergence.
+        """
+        raw = bytes(raw)
+        if len(raw) != 32:
+            return None
+        narrowed = raw[:12] == b"\0" * 12
+        for label, value in self.syms.items():
+            value = bytes(value)
+            if value == raw or (narrowed and value[-20:] == raw[-20:]):
+                return label
+        return None
+
     def candidates(self, type_doc: dict) -> list[KeyCandidate]:
         kind, width = self._kind(type_doc)
         out: list[KeyCandidate] = []
@@ -177,10 +196,8 @@ class KeyEvidence:
             blobs = set(self._blobs.get(size) or ())
             blobs.add(bytes(size))
             for raw in sorted(blobs):
-                address_label = (next(
-                    (name for name, value in self.syms.items()
-                     if any(raw) and bytes(value) == raw), None)
-                    if size == 32 else None)
+                address_label = (self.address_label(raw)
+                                 if size == 32 and any(raw) else None)
                 out.append(KeyCandidate(address_label or "0x" + raw.hex(), raw))
             return out
         if kind in ("string", "dynamic-bytes"):
@@ -213,8 +230,14 @@ class KeyEvidence:
             elif (kind == "bytes" and isinstance(item, str)
                   and item in self.syms
                   and len(bytes(self.syms[item])) == int(width or 0)):
-                self._blobs.setdefault(int(width or 0), set()).add(
-                    bytes(self.syms[item]))
+                raw = bytes(self.syms[item])
+                self._blobs.setdefault(int(width or 0), set()).add(raw)
+                # Feed the NARROWED word back too. A set of addresses keys its
+                # position map by the value it stored, which for an AVM account
+                # is the low-20 form — so seeding only the registry bytes finds
+                # the set's members and then none of their positions.
+                if int(width or 0) == 32:
+                    self._blobs[32].add(bytes(12) + raw[-20:])
 
 
 def evm_key_bytes(candidate: KeyCandidate, type_doc: dict,
@@ -249,6 +272,30 @@ def avm_key_bytes(candidate: KeyCandidate, type_doc: dict,
     if kind in ("string", "dynamic-bytes"):
         return bytes(sha256(bytes(candidate.value)))
     raise ValueError(f"unsupported mapping key type: {type_doc.get('label')}")
+
+
+def avm_key_forms(candidate: KeyCandidate, type_doc: dict,
+                  sha256: Callable[[bytes], bytes]) -> list[bytes]:
+    """Every byte form this key can take on the AVM leg.
+
+    `address` is the ambiguous one. Under `--contract-abi evm` the contract has
+    ONE 160-bit namespace: `msg.sender` lowers to `bzero(12) ++ Sender[12:32]`
+    and calldata addresses decode 20 bytes zero-extended. So the low-20 form is
+    the only one runtime code can reach, and it is the only one derived here.
+
+    Deliberately NOT also trying the full 32-byte account. A box under that form
+    can only have been written by an address that skipped the narrowing — a
+    constructor argument delivered over the ARC4 lifecycle path (bgb: the ctor
+    mints `_balances[vault]` at the full account while every transfer reads the
+    narrowed key, so the mint is orphaned). The EVM leg holds that same entry,
+    so accepting the full form makes the pair MATCH and reads as clean state;
+    bgb only surfaced because its transfers also reverted. Verified equivalent
+    on the corpus: Aave 79/79 `_spokes` and 0 unattributed boxes either way.
+    """
+    kind, _ = KeyEvidence._kind(type_doc)
+    if kind == "address":
+        return [bytes(candidate.value)[-20:].rjust(32, b"\0")]
+    return [avm_key_bytes(candidate, type_doc, sha256)]
 
 
 def _path_label(parts: tuple[KeyCandidate, ...]) -> str:
@@ -309,8 +356,7 @@ class EvmStorageReader:
             if not str(whole).startswith("?"):
                 return whole, True
         if label == "bytes32" and any(raw):
-            address_label = next((name for name, value in self.evidence.syms.items()
-                                  if bytes(value) == raw), None)
+            address_label = self.evidence.address_label(raw)
             if address_label is not None:
                 return address_label, True
         return self._decode(raw, label, fold), any(raw)
@@ -556,8 +602,7 @@ class NativeStorageReader:
         if byte_match:
             raw = bytes(value or [])
             if len(raw) == 32 and any(raw):
-                address_label = next((name for name, candidate in self.evidence.syms.items()
-                                      if bytes(candidate) == raw), None)
+                address_label = self.evidence.address_label(raw)
                 if address_label is not None:
                     return address_label
             return "0x" + raw.hex()
@@ -597,8 +642,7 @@ class NativeStorageReader:
         if label == "address" and len(raw) == 32:
             return self.fold(raw), True
         if label == "bytes32" and len(raw) == 32 and any(raw):
-            address_label = next((name for name, value in self.evidence.syms.items()
-                                  if bytes(value) == raw), None)
+            address_label = self.evidence.address_label(raw)
             if address_label is not None:
                 return address_label, True
         if label == "bool":
@@ -682,20 +726,22 @@ class NativeStorageReader:
             if self._paths >= self.max_mapping_paths:
                 break
             self._paths += 1
-            encoded = avm_key_bytes(candidate, key_type, self.sha256)
-            derived = self.sha256(encoded + prefix)
             next_parts = parts + (candidate,)
-            if value_type.get("encoding") == "mapping":
-                nested, hit = self._read_mapping(
-                    derived, value_type, path, arc_hint, next_parts)
+            for encoded in avm_key_forms(candidate, key_type, self.sha256):
+                derived = self.sha256(encoded + prefix)
+                if value_type.get("encoding") == "mapping":
+                    nested, hit = self._read_mapping(
+                        derived, value_type, path, arc_hint, next_parts)
+                    if hit:
+                        out.update(nested)
+                        break
+                    continue
+                value, hit = self._read_value(
+                    derived, value_tid, arc_hint,
+                    f"{path}[{_path_label(next_parts)}]")
                 if hit:
-                    out.update(nested)
-                continue
-            value, hit = self._read_value(
-                derived, value_tid, arc_hint,
-                f"{path}[{_path_label(next_parts)}]")
-            if hit:
-                out[_path_label(next_parts)] = value
+                    out[_path_label(next_parts)] = value
+                    break
         return out, bool(out)
 
     def read_maps(self) -> dict:
