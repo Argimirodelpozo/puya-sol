@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections.abc import Mapping
 import urllib.request
 from pathlib import Path
 
@@ -91,71 +92,90 @@ def clock_target(ts, epoch, base):
     return int(base) + max(0, int(ts) - int(epoch or 0))
 
 
-def build_dep_tapes(case_dir: Path, skipped: set, mapping20: dict | None = None,
-                    calls: list | None = None, with_positions: bool = False):
-    """dep addr → ordered 32-byte answer words for THIS attempt's replay.
+def replay_clock_targets(calls, base):
+    """Return one deterministic, strictly increasing timestamp per entry.
 
-    Derived identically on both legs from dep_tape.json + calls.json minus the
-    current skip set, so the two stand-ins consume byte-identical tapes. A
-    tape entry belongs to exactly one DIRECT txn (the harvest guarantees it);
-    entries of skipped txns are dropped, because a skipped txn makes none of
-    its sub-calls. None-valued answers (wider than a word) become tape stalls:
-    everything AFTER one in the same txn is dropped too, since consumption
-    counts would desynchronise.
+    The harvested stream can contain several internal calls from one Ethereum
+    transaction, so equal historical timestamps are common. Py-EVM mines each
+    replay entry in its own block and necessarily advances that block's time;
+    LocalNet can hold time fixed. Letting those defaults stand makes time-based
+    contracts diverge according to harness speed. This schedule preserves every
+    historical gap that is at least one second and applies the same minimal
+    one-second tie break on both legs.
+
+    Include skipped entries in the schedule so convergence passes do not change
+    the timestamps assigned to later calls.
+    """
+    epoch = replay_epoch(calls)
+    previous = int(base or 0) - 1
+    targets = {}
+    for position, call in enumerate(calls or []):
+        target = clock_target(call.get("ts"), epoch, base)
+        if target is None:
+            continue
+        target = max(int(target), previous + 1)
+        key = call.get("i", position)
+        targets[int(key)] = target
+        previous = target
+    return targets
+
+
+def build_dep_tape_plans(case_dir: Path, skipped: set,
+                         mapping20: dict | None = None,
+                         calls: list | None = None):
+    """Build selector-aware, transaction-bounded dependency answer plans.
+
+    This includes calls whose selectors the generic stand-in also implements.
+    A plan entry is served only when both its transaction range and selector
+    match; otherwise the stand-in runs its native behavior. This lets an
+    internal-call replay reproduce external state reads such as ERC-20
+    ``balanceOf`` without letting an unavailable trace consume an answer
+    belonging to a future transaction.
     """
     tp = case_dir / "dep_tape.json"
     if not tp.exists():
-        # MUST respect with_positions: a bare {} unpacks as zero values and
-        # kills every case fetched WITHOUT --script-deps (i.e. the whole
-        # existing corpus). Regression found by the pure-Solidity campaign.
-        return ({}, {}) if with_positions else {}
-    _tj = load_json(tp) or {}
-    tapes = _tj.get("tapes") or {}
-    # Calls the stand-in answers itself never reach the tape-playing fallback,
-    # so their recorded answers must NOT occupy tape slots (they would shift
-    # every later answer by one and desynchronise the whole tape).
-    own = set(_tj.get("stub_selectors") or [])
-    # calls.json does not exist on a case's FIRST EVM run (that leg writes it
-    # at the end) — the oracle passes its in-memory list instead (raft_pm
-    # crashed here fresh; morpho survived only via a stale file).
+        return {}
+    tapes = (load_json(tp) or {}).get("tapes") or {}
     if calls is None:
         calls = (load_json(case_dir / "calls.json") or {}).get("calls") or []
     hash_to_i = {}
     for c in calls:
-        _full = (c.get("hash") or "").lower()
-        # full id first: internal entries are 'parenthash#tracepath' and their
-        # tape entries carry the SAME full id — base-hash fallback covers
-        # direct txns only
-        hash_to_i.setdefault(_full, c["i"])
-        hash_to_i.setdefault(_full.split("#")[0], c["i"])
-    out = {}
-    positions = {}
+        full = (c.get("hash") or "").lower()
+        hash_to_i.setdefault(full, c["i"])
+        hash_to_i.setdefault(full.split("#")[0], c["i"])
+
+    plans = {}
     for addr, entries in tapes.items():
-        words, stalled_txn = [], None
-        pos = {}
-        for e in entries:
-            if own and e.get("sel") in own:
-                continue
-            h = (e.get("hash") or "").lower()
+        answers, selectors, bounds = [], [], {}
+        stalled_txn = None
+        for entry in entries:
+            h = (entry.get("hash") or "").lower()
             i = hash_to_i.get(h)
-            if i is None:
+            if i is None or i in skipped:
                 continue
-            if not with_positions and i in skipped:
-                continue
-            pos.setdefault(i, len(words))
+            start, _ = bounds.setdefault(i, [len(answers), len(answers)])
             if stalled_txn == h:
                 continue
-            w = e.get("out")
-            if w is None:
+            answer = entry.get("out")
+            if answer is None:
                 stalled_txn = h
                 continue
             stalled_txn = None
-            b = bytes.fromhex(w)             # any length; "" = void answer
-            words.append(map_answer_words(b, mapping20 or {}))
-        if words:
-            out[addr.lower()] = words
-            positions[addr.lower()] = pos
-    return (out, positions) if with_positions else out
+            selector = (entry.get("sel") or "").removeprefix("0x")
+            if len(selector) != 8:
+                continue
+            mapped = map_answer_words(bytes.fromhex(answer), mapping20 or {})
+            answers.append(mapped)
+            selectors.append(bytes.fromhex(selector))
+            bounds[i] = [start, len(answers)]
+        if answers:
+            plans[addr.lower()] = {
+                "answers": answers,
+                "selectors": selectors,
+                "bounds": {i: tuple(v) for i, v in bounds.items()
+                           if v[0] != v[1]},
+            }
+    return plans
 
 
 def map_answer_words(answer: bytes, mapping20: dict) -> bytes:
@@ -184,23 +204,29 @@ def map_answer_words(answer: bytes, mapping20: dict) -> bytes:
     return bytes(out)
 
 
-def tape_chunks(words):
-    """Answers (bytes, any length) → __load(bytes32[],uint256[]) call chunks.
-
-    Shared by both legs so grouping is identical. Each answer occupies
-    ceil(len/32) zero-padded words; chunks stay under ~40 words to respect the
-    AVM's 2 KB app-args ceiling."""
-    out, cw, cl = [], [], []
-    for a in words:
-        nw = (len(a) + 31) // 32 if a else 0
-        ws = [a[i * 32:(i + 1) * 32].ljust(32, b"\0") for i in range(nw)]
-        if cw and len(cw) + nw > 40:
-            out.append((cw, cl))
-            cw, cl = [], []
-        cw.extend(ws)
-        cl.append(len(a))
-    if cl:
-        out.append((cw, cl))
+def tape_script_chunks(answers, selectors):
+    """Selector/answer pairs grouped below the AVM app-argument budget."""
+    if len(answers) != len(selectors):
+        raise ValueError("dependency tape selector/answer length mismatch")
+    out, chunk_words, chunk_lens, chunk_selectors = [], [], [], []
+    for answer, selector in zip(answers, selectors):
+        word_count = (len(answer) + 31) // 32 if answer else 0
+        words = [answer[i * 32:(i + 1) * 32].ljust(32, b"\0")
+                 for i in range(word_count)]
+        # The loader has three dynamic-array arguments. Account for answer
+        # words plus one length and selector word per entry; limiting only the
+        # answer words can exceed the group argument budget on void answers.
+        projected_words = len(chunk_words) + word_count
+        projected_entries = len(chunk_lens) + 1
+        if (chunk_lens
+                and 32 * (projected_words + 2 * projected_entries) > 1_200):
+            out.append((chunk_words, chunk_lens, chunk_selectors))
+            chunk_words, chunk_lens, chunk_selectors = [], [], []
+        chunk_words.extend(words)
+        chunk_lens.append(len(answer))
+        chunk_selectors.append(selector.ljust(32, b"\0"))
+    if chunk_lens:
+        out.append((chunk_words, chunk_lens, chunk_selectors))
     return out
 
 
@@ -248,13 +274,20 @@ def bytes32_mapping_key_candidates(calls, fns, keccak_fn):
     return out
 
 
-def should_intercept_dependency_call(tape, selector, passthrough_selectors):
-    """Whether the EVM oracle should serve this call from its answer tape.
+def call_without_consuming_tapes(call, cursors):
+    """Run an EVM preflight without consuming Python-side answer tapes.
 
-    Selectors implemented by the dependency stand-in must execute its bytecode;
-    the tape contains only fallback answers and intentionally omits them.
+    ``eth_call`` rolls EVM state back, but the STATICCALL-compatible dependency
+    interceptor keeps its cursors outside the EVM.  Restoring the complete map
+    makes the subsequently mined transaction observe the same answer sequence,
+    including when the preflight raises.
     """
-    return tape is not None and selector not in passthrough_selectors
+    saved = cursors.copy()
+    try:
+        return call()
+    finally:
+        cursors.clear()
+        cursors.update(saved)
 
 
 def load_json(p: Path):
@@ -441,8 +474,11 @@ def canon_value(v, abi_type: str, fold_addr, components=None):
         return [canon_value(x, m.group(1), fold_addr, components) for x in (v or [])]
     if abi_type == "tuple":
         comps = components or []
-        return [canon_value(x, c.get("type", "uint256"), fold_addr, c.get("components"))
-                for x, c in zip(list(v), comps)]
+        values = ([v.get(c.get("name")) for c in comps]
+                  if isinstance(v, Mapping) else list(v))
+        return [canon_value(x, c.get("type", "uint256"), fold_addr,
+                            c.get("components"))
+                for x, c in zip(values, comps)]
     if abi_type == "address":
         return fold_addr(v)
     if abi_type.startswith("bytes") or abi_type in ("string",):

@@ -22,11 +22,16 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from chd_common import (ZERO, arg_content20, build_dep_tapes, build_registry,
-                        bytes32_mapping_key_candidates, tape_chunks, canon_value,
-                        clock_target, dump_json, evm_sender_privkey, load_json,
-                        marker_for, replay_epoch, scale_value, sender_marker,
-                        should_intercept_dependency_call, symbol)
+from chd_common import (ZERO, arg_content20, build_dep_tape_plans,
+                        build_registry, bytes32_mapping_key_candidates,
+                        canon_value,
+                        call_without_consuming_tapes, dump_json,
+                        evm_sender_privkey, load_json, marker_for,
+                        replay_clock_targets, replay_epoch, scale_value,
+                        sender_marker, symbol)
+from chd_storage import (EvmStorageReader, KeyEvidence,
+                         build_parameterized_getter_probes,
+                         grouped_uncovered_slots)
 
 import solcx
 from eth_abi import decode as _abi_decode_strict
@@ -272,6 +277,9 @@ def main():
                and e.get("stateMutability") in ("view", "pure")]
     snapshot_at = sorted({i for i in range(len(txns)) if (i + 1) % snap_every == 0}
                          | ({len(txns) - 1} if txns else set()))
+    fn_meta = {s: {"inputs": e["inputs"], "outputs": e["outputs"]}
+               for s, e in fns.items()}
+    probes = build_parameterized_getter_probes(abi, calls, fn_meta)
     meta = {"ctor_args": [markerize(v, inp, reg) for v, inp in zip(ctor_vals, ctor_inputs)],
             "dep_ctors": [{"addr": d["addr"],
                            "dir": str(d["dir"].relative_to(case_dir)),
@@ -281,63 +289,28 @@ def main():
                           for d in deps],
             "ctor_inputs": ctor_inputs,
             "getters": getters, "snapshot_at": snapshot_at,
-            "fns": {s: {"inputs": e["inputs"], "outputs": e["outputs"]} for s, e in fns.items()},
+            "probes": probes, "fns": fn_meta,
             "n": len(txns)}
 
-    # Candidate nested-mapping pairs (owner -> spender), taken from what the
-    # replay actually does: each call's sender paired with its address args (plus
-    # itself). Bounds the nested probe to O(txns) reads instead of O(symbols^2).
-    pair_partners: dict = {}
-    def _syms_in(v):
-        if isinstance(v, dict) and set(v) == {"__addr__"}:
-            yield symbol(v["__addr__"])
-        elif isinstance(v, list):
-            for x in v:
-                yield from _syms_in(x)
-    for c in calls:
-        if not c.get("sender") or not c.get("args"):
-            continue
-        s_sym = symbol(c["sender"]["__addr__"])
-        seen_args = [t for a in c["args"] for t in _syms_in(a)]
-        # sender <-> each address arg (covers approve/transferFrom, where the
-        # owner IS the sender) AND arg <-> arg: `permit(owner, spender, ...)`
-        # writes allow[owner][spender] with NEITHER as the sender, so pairing
-        # only against the sender silently skipped every permit-created entry.
-        for a_sym in [s_sym] + seen_args:
-            partners = pair_partners.setdefault(a_sym, set())
-            partners.add(a_sym)
-            for t in [s_sym] + seen_args:
-                partners.add(t)
-
-    # Candidate TRIPLES (owner -> token -> spender) for 3-deep mappings
-    # (Permit2's `allowance`): each call's sender paired with ordered pairs of
-    # its address args. O(txns) like pair_partners, never a cartesian product.
-    addr_triples: list = []
-    for c in calls:
-        if not c.get("sender") or not c.get("args"):
-            continue
-        s_sym = symbol(c["sender"]["__addr__"])
-        seen_args = [t for a in c["args"] for t in _syms_in(a)]
-        for i2 in range(len(seen_args)):
-            for j2 in range(len(seen_args)):
-                if i2 == j2:
-                    continue
-                tri = (s_sym, seen_args[i2], seen_args[j2])
-                if tri not in addr_triples:
-                    addr_triples.append(tri)
-    # Candidate UINT inner keys for mapping(address => mapping(uint => V))
-    # (Permit2's nonceBitmap word positions): small words plus each uint arg's
-    # word index (nonce >> 8), which is how such maps are indexed.
-    uint_inner_keys: list = [0, 1, 2, 3]
-    for c in calls:
-        for a in (c.get("args") or []):
-            if isinstance(a, int) and 0 <= a < (1 << 256):
-                for cand in (a >> 8, a):
-                    if 0 <= cand < 4096 and cand not in uint_inner_keys:
-                        uint_inner_keys.append(cand)
-
     # ── compile once with solcx ───────────────────────────────────────────
-    solcx.set_solc_version("0.8.26")
+    # Use the compiler that produced the deployed bytecode. A fixed 0.8.26
+    # oracle cannot compile newer exact pragmas and may not recognise their
+    # verified EVM target (Polymarket V2 is solc 0.8.34 + Prague). Pre-0.8
+    # cases deliberately pragma-relaxed by the fetcher remain on 0.8.26,
+    # because exact old-solc arithmetic fidelity was explicitly surrendered.
+    solc_version = "0.8.26"
+    if not case.get("pragma_relaxed_from"):
+        match = re.search(r"(?:v)?(0\.8\.\d+)",
+                          str(case.get("compiler_version") or ""))
+        if match:
+            solc_version = match.group(1)
+    try:
+        solcx.set_solc_version(solc_version)
+    except Exception:
+        print(f"[evm] installing verified solc {solc_version}")
+        solcx.install_solc(solc_version, show_progress=False)
+        solcx.set_solc_version(solc_version)
+    print(f"[evm] compiler oracle: solc {solc_version}")
     mf = case.get("multifile")
     settings = {"evmVersion": "paris",
                 "outputSelection": {"*": {"*": ["abi", "evm.bytecode.object",
@@ -557,76 +530,6 @@ def main():
         scalars.append((e["label"], int(e["slot"]), int(e.get("offset", 0)),
                         int(t.get("numberOfBytes", 32)), label))
 
-    # MAPPINGS: read only the keys the registry knows about (bounded by the
-    # window's senders/args) — never an enumeration. Value shapes handled:
-    # scalar, nested mapping, STRUCT (inplace members) and dynamic ARRAY.
-    _TY = layout.get("types") or {}
-
-    def _is_addr_mapping(label):
-        # Solidity >=0.8.18 allows NAMED mapping params, so the label can be
-        # "mapping(address account => uint256)" — matching on "mapping(address =>"
-        # silently skipped those maps (op_gov/_nonces).
-        return bool(re.match(r"^mapping\(address\b", label or ""))
-
-    def _is_b32_mapping(label):
-        # OZ AccessControl's `_roles` is mapping(bytes32 => RoleData) — the role
-        # HASH is the key. Candidate keys come from the replay's own call args
-        # (grantRole/revokeRole take the role as a bytes32), so this stays a
-        # bounded probe, never an enumeration.
-        return bool(re.match(r"^mapping\(bytes32\b", label or ""))
-
-    def _value_shape(tid):
-        """Classify a mapping's value type into something the reader can decode."""
-        vt = _TY.get(tid, {})
-        label, enc = vt.get("label", ""), vt.get("encoding")
-        if _is_addr_mapping(label):
-            return ("mapping", vt)
-        if enc == "inplace" and vt.get("members"):
-            return ("struct", vt)
-        if enc == "dynamic_array":
-            return ("array", vt)
-        if enc == "inplace":
-            return ("scalar", vt)
-        return (None, vt)                    # string/bytes/other: not covered
-
-    # bytes32 keys actually used by this window's calls (marker form {"__b__": hex})
-    # — plus the zero word: OZ's DEFAULT_ADMIN_ROLE is granted in constructors
-    # and never appears in calldata, leaving real role-member state unprobed
-    # (pol's «Z» false divergence: AVM read it, this leg never looked).
-    from eth_utils import keccak
-    b32_keys = ["0" * 64]
-    for kh in bytes32_mapping_key_candidates(calls, fns, keccak):
-        if kh not in b32_keys:
-            b32_keys.append(kh)
-
-    maps = []
-    for e in layout.get("storage") or []:
-        t = _TY.get(e["type"], {})
-        if _is_b32_mapping(t.get("label", "")):
-            kind, vt = _value_shape(t.get("value"))
-            if kind in ("scalar", "struct", "array"):
-                maps.append((e["label"], int(e["slot"]), "b32", (kind, vt)))
-            continue
-        if not _is_addr_mapping(t.get("label", "")):
-            continue
-        _inner = _TY.get(t.get("value"), {}) or {}
-        if re.match(r"^mapping\(uint", _inner.get("label", "") or ""):
-            k2u, vt2u = _value_shape(_inner.get("value"))
-            if k2u in ("scalar", "struct"):
-                maps.append((e["label"], int(e["slot"]), "2u", (k2u, vt2u)))
-            continue
-        kind, vt = _value_shape(t.get("value"))
-        if kind == "mapping":
-            k2, vt2 = _value_shape(vt.get("value"))
-            if k2 == "mapping":                 # depth 3 (Permit2 allowance)
-                k3, vt3 = _value_shape(vt2.get("value"))
-                if k3 in ("scalar", "struct"):
-                    maps.append((e["label"], int(e["slot"]), 3, (k3, vt3)))
-            elif k2 in ("scalar", "struct"):
-                maps.append((e["label"], int(e["slot"]), 2, (k2, vt2)))
-        elif kind in ("scalar", "struct", "array"):
-            maps.append((e["label"], int(e["slot"]), 1, (kind, vt)))
-
     _deployer = [None]                                 # set per run
 
     # ── SSTORE TRACE (the in-process answer to debug_traceTransaction) ────
@@ -637,7 +540,8 @@ def main():
     # journalled away by py-evm but still seen here, so the trace OVER-reports.
     # That is the safe direction — it can only over-state a blind spot, never
     # hide one.
-    _trace = {"sink": None, "addr": None, "txn": None}
+    _trace = {"sink": None, "addr": None, "txn": None,
+              "suppress_addr": None}
 
     def _install_sstore_trace():
         from eth.db.account import AccountDB
@@ -646,6 +550,14 @@ def main():
         _orig = AccountDB.set_storage
 
         def traced(self, address, slot, value):
+            # Proxy-runtime deployment executes the implementation constructor
+            # to obtain its real runtime code (including immutables), but those
+            # constructor SSTOREs belong to the implementation account and are
+            # absent from proxy storage. Suppress only writes to the predicted
+            # CREATE address during that one constructor transaction.
+            if (_trace.get("suppress_addr") is not None
+                    and bytes(address) == _trace["suppress_addr"]):
+                return None
             t, sink = _trace["txn"], _trace["sink"]
             # `txn` is only set around .transact(), so the read-only .call()
             # preflight (which also hits set_storage on a throwaway state)
@@ -679,6 +591,16 @@ def main():
                                 if genesis else PyEVMBackend())
         w3 = Web3(Web3.EthereumTesterProvider(tester))
 
+        # Py-EVM's pending block starts at wall time even when a historical
+        # custom-genesis timestamp was requested. Without an explicit anchor,
+        # the first funding transaction silently jumps there. Anchor before
+        # any setup transaction; the exact replay base is finalized after the
+        # target has been deployed.
+        if pin_time:
+            pending_ts = int(tester.get_block_by_number("pending")["timestamp"])
+            requested = int(time_base or epoch or pending_ts)
+            tester.time_travel(max(requested, pending_ts))
+
         # ── VM-level tape interception ────────────────────────────────────
         # Solidity calls view functions via STATICCALL; a stub whose fallback
         # WRITES (__idx++) reverts there with EMPTY data — which silently
@@ -689,30 +611,31 @@ def main():
         # static context is irrelevant. The AVM leg keeps the on-chain stub
         # tape (no staticcall there; writes are legal).
         _vm_tape = {}      # code_address bytes20 -> list[bytes] answers
+        _vm_selectors = {} # code_address bytes20 -> list[bytes4] selectors
         _vm_cursor = {}    # code_address bytes20 -> int
-        _vm_passthrough = {}  # code_address bytes20 -> selectors stub handles
+        _vm_limit = {}     # code_address bytes20 -> current transaction end
         _backend = tester.backend
         _vmclass = _backend.chain.get_vm().__class__
         _compclass = _vmclass._state_class.computation_class
         # dicts live ON the class so convergence re-runs (fresh backend,
         # already-patched class) rebind cleanly instead of serving the first
         # run's closures
-        _compclass._chd_tape_dicts = (_vm_tape, _vm_cursor, _vm_passthrough)
+        _compclass._chd_tape_dicts = (
+            _vm_tape, _vm_selectors, _vm_cursor, _vm_limit)
         if not getattr(_compclass, "_chd_tape_patched", False):
             _orig_apply = _compclass.apply_computation.__func__
             def _tape_apply(cls, state, message, tc, **kw):
-                _t, _k, _p = getattr(cls, "_chd_tape_dicts", ({}, {}, {}))
+                _t, _s, _k, _l = getattr(
+                    cls, "_chd_tape_dicts", ({}, {}, {}, {}))
                 ca = bytes(getattr(message, "code_address", b"") or b"")
                 tape = _t.get(ca)
                 sel = bytes(message.data[:4])
-                # The tape builder deliberately omits selectors implemented
-                # by StubERC20.  Let those execute normally; intercepting all
-                # calls made mint() consume the next void burn() answer and
-                # manufactured empty-data closed-world reverts on CCTP.
-                if should_intercept_dependency_call(
-                        tape, sel, _p.get(ca, set())):
-                    k = _k.get(ca, 0)
-                    ans = tape[k] if k < len(tape) else bytes(12) + ca
+                k = _k.get(ca, 0)
+                selectors = _s.get(ca, ())
+                if (tape is not None and k < _l.get(ca, 0)
+                        and k < len(tape) and k < len(selectors)
+                        and selectors[k] == sel):
+                    ans = tape[k]
                     _k[ca] = k + 1
                     import os as _os
                     if _os.environ.get("CHD_TAPE_DEBUG"):
@@ -835,47 +758,46 @@ def main():
             _m20[bytes.fromhex(reg["creator"][2:])] = bytes(12) + bytes.fromhex(a0[2:])
         for _a, _loc in _dep_local.items():
             _m20[bytes.fromhex(_a[2:])] = bytes(12) + bytes.fromhex(_loc[2:])
-        # FULL tape + absolute per-txn positions: a locally-reverted txn rolls
-        # its __idx bump back, so without seeking, the NEXT txn reads the
-        # reverted one's answers and one bad txn desyncs the whole suffix.
-        dep_tapes, dep_pos = build_dep_tapes(case_dir, set(), _m20,
-                                             calls=calls, with_positions=True)
-        _tape_doc = (load_json(case_dir / "dep_tape.json")
-                     if (case_dir / "dep_tape.json").exists() else {})
-        _stub_selectors = {
-            bytes.fromhex(s.removeprefix("0x"))
-            for s in (_tape_doc.get("stub_selectors") or [])
-            if len(s.removeprefix("0x")) == 8
-        }
+        # Selector-aware, transaction-bounded plans keep a missing or reverted
+        # call from shifting the dependency answers consumed by later calls.
+        dep_plans = build_dep_tape_plans(case_dir, set(), _m20, calls=calls)
         _dep_seek = {}
         for d in deps:
-            _tape = dep_tapes.get(d["addr"].lower())
-            if not _tape or d["addr"] not in _dep_local:
+            _plan = dep_plans.get(d["addr"].lower())
+            if not _plan or d["addr"] not in _dep_local:
                 continue
             _ca = bytes.fromhex(_dep_local[d["addr"]][2:].lower())
-            _vm_tape[_ca] = _tape
-            _vm_passthrough[_ca] = _stub_selectors
-            print(f"[evm] dep tape ARMED at VM: {len(_tape)} answer(s) "
+            _vm_tape[_ca] = _plan["answers"]
+            _vm_selectors[_ca] = _plan["selectors"]
+            print(f"[evm] dep tape ARMED at VM: "
+                  f"{len(_plan['answers'])} answer(s) "
                   f"@ {d['addr'][:10]}…")
             import os as _os
             if _os.environ.get("CHD_TAPE_DEBUG"):
                 print(f"[evm] tape-head {d['addr'][:10]} head="
-                      + " | ".join(a.hex()[:48] for a in _tape[:3]))
-            # per-txn seek value: the txn's own first position, else carry
-            # (where the previous txn's answers ended)
-            _pos = dep_pos.get(d["addr"].lower(), {})
-            _sk, _carry = {}, 0
-            for _c in calls:
-                _i = _c["i"]
-                _carry = _pos.get(_i, _carry)
-                _sk[_i] = _carry
-            _dep_seek[d["addr"].lower()] = (_ca, _sk)
+                      + " | ".join(a.hex()[:48]
+                                   for a in _plan["answers"][:3]))
+            _dep_seek[d["addr"].lower()] = (_ca, _plan["bounds"])
 
         linked_target_bytecode = link_bytecode(
             bytecode, target_link_refs, library_addresses)
         C = w3.eth.contract(abi=abi, bytecode=linked_target_bytecode)
-        txh = C.constructor(*[resolve(m) for m in meta["ctor_args"]]).transact(
-            {"from": a0, "gas": 30_000_000})
+        _install_sstore_trace()
+
+        def _deploy_target(contract):
+            if (case.get("proxy") or {}).get("initializer"):
+                from eth._utils.address import generate_contract_address
+                nonce = w3.eth.get_transaction_count(a0)
+                _trace["suppress_addr"] = generate_contract_address(
+                    bytes.fromhex(a0[2:]), nonce)
+            try:
+                return contract.constructor(
+                    *[resolve(m) for m in meta["ctor_args"]]).transact(
+                    {"from": a0, "gas": 30_000_000})
+            finally:
+                _trace["suppress_addr"] = None
+
+        txh = _deploy_target(C)
         rc = w3.eth.get_transaction_receipt(txh)
         caddr = rc["contractAddress"]
         if not caddr and int(rc.get("gasUsed") or 0) >= 29_000_000:
@@ -919,9 +841,7 @@ def main():
                               f"(optimizer={bool(_st2.get('optimizer'))}, "
                               f"viaIR={bool(_st2.get('viaIR'))}), retrying")
                         C = w3.eth.contract(abi=abi, bytecode=_bc2)
-                        txh = C.constructor(
-                            *[resolve(m) for m in meta["ctor_args"]]).transact(
-                            {"from": a0, "gas": 30_000_000})
+                        txh = _deploy_target(C)
                         rc = w3.eth.get_transaction_receipt(txh)
                         caddr = rc["contractAddress"]
                 except Exception as _e2:
@@ -936,6 +856,8 @@ def main():
                 f"gasUsed={rc.get('gasUsed')}) — ctor likely calls an external "
                 f"contract; not replayable standalone")
         inst = w3.eth.contract(address=caddr, abi=abi)
+        deployment_time = int(
+            w3.eth.get_block(rc["blockNumber"])["timestamp"])
         sstore_trace: dict = {}
         _install_sstore_trace()
         _trace.update(sink=sstore_trace, addr=bytes.fromhex(caddr[2:]), txn=None)
@@ -1005,132 +927,48 @@ def main():
                 out[name] = _decode_slot_bytes(w[32 - off - nb:32 - off], label, fold)
             return out
 
-        def read_maps():
-            """{mapname: {symbol: value}} over registry-known address keys only."""
+        def read_typed_storage():
+            """Walk every solc-declared container recursively.
+
+            Key candidates come from typed replay evidence. No mapping depth,
+            key ordering, struct shape, or array element type is selected here.
+            """
             from eth_utils import keccak
 
-            cur_name = [""]
+            syms = {symbol("C"): bytes.fromhex(a0[2:]).rjust(32, b"\0"),
+                    symbol("Z"): bytes(32)}
+            syms.update({symbol(i): bytes.fromhex(addr[2:]).rjust(32, b"\0")
+                         for i, (addr, _key) in sender_acct.items()})
+            syms.update({symbol(i): arg_content20(i).rjust(32, b"\0")
+                         for i in reg["args"].values()})
+            syms.update({symbol(f"D{i}"):
+                         bytes.fromhex(_dep_local[addr][2:]).rjust(32, b"\0")
+                         for addr, i in (reg.get("deps") or {}).items()
+                         if addr in _dep_local})
+            extras = bytes32_mapping_key_candidates(
+                calls, meta.get("fns") or {}, keccak)
+            evidence = KeyEvidence(
+                calls, meta.get("fns") or {}, syms, extras)
+            written = {slot for slots in sstore_trace.values() for slot in slots}
+            reader = EvmStorageReader(
+                layout,
+                lambda slot: w3.eth.get_storage_at(caddr, slot),
+                evidence, keccak, written)
+            typed = reader.read(fold)
+            seen_slots.update(reader.seen)
+            return typed, reader
 
-            def word(slot_int):
-                seen_slots[slot_int] = cur_name[0]
-                return bytes(w3.eth.get_storage_at(caddr, slot_int)).rjust(32, b"\0")
-
-            def read_at(slot_int, shape):
-                """Decode a mapping VALUE living at `slot_int`.
-
-                scalar -> value | struct -> [members] | array -> [elements].
-                Returns None when the slot is untouched, so an absent entry is
-                distinguishable from a present zero."""
-                kind, vt = shape
-                if kind == "scalar":
-                    raw = word(slot_int)
-                    if not any(raw):
-                        return None
-                    return _decode_slot_bytes(raw, vt.get("label", "uint256"), fold)
-                if kind == "struct":
-                    vals, seen = [], False
-                    for m in vt.get("members") or []:
-                        mt = _TY.get(m["type"], {})
-                        nb, off = int(mt.get("numberOfBytes", 32)), int(m.get("offset", 0))
-                        w = word(slot_int + int(m.get("slot", 0)))
-                        if any(w):
-                            seen = True
-                        vals.append(_decode_slot_bytes(
-                            w[32 - off - nb:32 - off], mt.get("label", "uint256"), fold))
-                    return vals if seen else None
-                if kind == "array":
-                    n = int.from_bytes(word(slot_int), "big")
-                    if not n or n > 512:            # sanity bound
-                        return None if not n else f"<{n} elements>"
-                    base = int.from_bytes(keccak(slot_int.to_bytes(32, "big")), "big")
-                    et = _TY.get(vt.get("base"), {})
-                    esz = int(et.get("numberOfBytes", 32))
-                    ekind = ("struct" if et.get("members") else "scalar", et)
-                    out_l = []
-                    for i in range(n):
-                        # elements pack only when the element fits a word
-                        per = max(1, (esz + 31) // 32)
-                        out_l.append(read_at(base + i * per, ekind))
-                    return out_l
-                return None
-
-            syms = [(symbol("C"), a0), (symbol("Z"), ZERO)]
-            syms += [(symbol(i), sender_acct[i][0]) for i in sender_acct]
-            syms += [(symbol(i), "0x" + arg_content20(i).hex()) for i in reg["args"].values()]
-            syms += [(symbol(f"D{i}"), _dep_local[a])
-                     for a, i in (reg.get("deps") or {}).items()
-                     if a in _dep_local]
-            sym_addr = dict(syms)
-            out = {}
-            for name, slot, depth, vshape in maps:
-                cur_name[0] = name
-                got = {}
-                if depth == "b32":
-                    for kh in b32_keys:
-                        s1 = keccak(bytes.fromhex(kh) + slot.to_bytes(32, "big"))
-                        v = read_at(int.from_bytes(s1, "big"), vshape)
-                        if v is not None:
-                            got["0x" + kh] = v
-                    out[name] = got
-                    continue
-                if depth == 3:
-                    def _kb(x):
-                        return bytes.fromhex(
-                            str(x)[2:].lower().rjust(40, "0")).rjust(32, b"\0")
-                    for (t1, t2, t3) in addr_triples:
-                        a1, a2, a3 = (sym_addr.get(t1), sym_addr.get(t2),
-                                      sym_addr.get(t3))
-                        if a1 is None or a2 is None or a3 is None:
-                            continue
-                        s1 = keccak(_kb(a1) + slot.to_bytes(32, "big"))
-                        s2 = keccak(_kb(a2) + s1)
-                        s3 = keccak(_kb(a3) + s2)
-                        v = read_at(int.from_bytes(s3, "big"), vshape)
-                        if v is not None:
-                            got[f"{t1}->{t2}->{t3}"] = v
-                    out[name] = got
-                    continue
-                if depth == "2u":
-                    for sym_, addr_ in syms:
-                        k1b = bytes.fromhex(
-                            str(addr_)[2:].lower().rjust(40, "0")).rjust(32, b"\0")
-                        s1 = keccak(k1b + slot.to_bytes(32, "big"))
-                        for w in uint_inner_keys:
-                            s2 = keccak(w.to_bytes(32, "big") + s1)
-                            v = read_at(int.from_bytes(s2, "big"), vshape)
-                            if v is not None:
-                                got[f"{sym_}->#{w}"] = v
-                    out[name] = got
-                    continue
-                for sym, addr in syms:
-                    k = bytes.fromhex(str(addr)[2:].lower().rjust(40, "0")).rjust(32, b"\0")
-                    s1 = keccak(k + slot.to_bytes(32, "big"))
-                    if depth == 1:
-                        # An unset entry is an all-zero slot; read_at returns None
-                        # for that. (Testing the DECODED value would be wrong: an
-                        # address folds to the symbol "«Z»", which is truthy.)
-                        v = read_at(int.from_bytes(s1, "big"), vshape)
-                        if v is not None:
-                            got[sym] = v
-                    else:                                  # nested: owner => spender
-                        # Only pairs the replay actually touched. The full
-                        # cartesian product is O(n^2) STORAGE READS (450 symbols
-                        # => 200k reads), which made deep windows unrunnable.
-                        for sym2 in pair_partners.get(sym, ()):
-                            addr2 = sym_addr.get(sym2)
-                            if addr2 is None:
-                                continue
-                            k2 = bytes.fromhex(str(addr2)[2:].lower().rjust(40, "0")).rjust(32, b"\0")
-                            s2 = keccak(k2 + s1)
-                            v = read_at(int.from_bytes(s2, "big"), vshape)
-                            if v is not None:
-                                got[f"{sym}->{sym2}"] = v
-                # Record even when empty: an empty map that WAS read is a real
-                # comparison (both sides empty), whereas a missing entry means no
-                # coverage at all. Conflating them hid that op_gov/_balances was
-                # never diffed.
-                out[name] = got
-            return out
+        if pin_time:
+            # The pending block is the earliest one the first replay entry can
+            # occupy. Build one shared monotonic schedule from that base; the
+            # orchestrator passes the exact result to the AVM leg.
+            pending_ts = int(tester.get_block_by_number("pending")["timestamp"])
+            effective_time_base = max(int(time_base or epoch or pending_ts),
+                                      pending_ts)
+            clock_by_index = replay_clock_targets(calls, effective_time_base)
+        else:
+            effective_time_base = 0
+            clock_by_index = {}
 
         results, snapshots, mismatches, block_ts, block_no = {}, {}, [], {}, {}
         storage_delta, prev_scalars = {}, read_scalars()
@@ -1160,37 +998,39 @@ def main():
             else:
                 sender = resolve(c["sender"])
                 if pin_time:
+                    want = clock_by_index.get(i)
                     try:
                         head = w3.eth.get_block("latest")["timestamp"]
-                        want = (clock_target(c["ts"], epoch, time_base)
-                                if time_base else c["ts"])
                         if want and want > head:
                             tester.time_travel(want)
                     except Exception:
                         pass
-                    # Record what the contract will actually see. The AVM leg
-                    # drives LocalNet's clock to the same historical instants,
-                    # so a disagreement here is a real bug, not leg skew — but
-                    # only if pinning genuinely took effect, hence the record.
+                    # The transaction occupies the NEXT block. Record that
+                    # block, not the current head (which is one block early).
                     try:
                         blk = w3.eth.get_block("latest")
-                        block_ts[str(i)] = blk["timestamp"]
+                        block_ts[str(i)] = want
                         # Local HEIGHT too: a contract storing block.number
                         # writes each leg's own chain height, and the differ
                         # can only absorb that skew if it knows the height at
                         # the writing txn (staup `_locked` = block.number + K).
-                        block_no[str(i)] = blk["number"]
+                        block_no[str(i)] = int(blk["number"]) + 1
                     except Exception:
                         pass
-                for _ca2, _sk in _dep_seek.values():
-                    if i in _sk:
-                        _vm_cursor[_ca2] = _sk[i]
+                for _ca2, _bounds in _dep_seek.values():
+                    start, end = _bounds.get(i, (0, 0))
+                    _vm_cursor[_ca2] = start
+                    _vm_limit[_ca2] = end
                 fn_abi = fns[c["sig"]]
                 fn = inst.get_function_by_signature(c["sig"])
                 args = [resolve(a) for a in c["args"]]
                 try:
-                    ret = fn(*args).call({"from": sender, "gas": 8_000_000,
-                                          "value": c.get("value") or 0})
+                    ret = call_without_consuming_tapes(
+                        lambda: fn(*args).call(
+                            {"from": sender, "gas": 8_000_000,
+                             "value": c.get("value") or 0},
+                            block_identifier="pending"),
+                        _vm_cursor)
                 except Exception as e:
                     # Custom errors hide in e.data / e.args — surface the raw
                     # selector+payload hex, or triage stops at "reverted:".
@@ -1220,6 +1060,15 @@ def main():
                 finally:
                     _trace["txn"] = None
                 rcpt = w3.eth.get_transaction_receipt(txh2)
+                if pin_time:
+                    actual_block = w3.eth.get_block(rcpt["blockNumber"])
+                    actual_ts = int(actual_block["timestamp"])
+                    if want is not None and actual_ts != int(want):
+                        raise RuntimeError(
+                            f"replay clock mismatch at {i}: scheduled {want}, "
+                            f"mined {actual_ts}")
+                    block_ts[str(i)] = actual_ts
+                    block_no[str(i)] = int(rcpt["blockNumber"])
                 if rcpt["status"] != 1:
                     mismatches.append((i, "call-ok-transact-fail", c["sig"]))
                     _take_snap(i)
@@ -1248,10 +1097,37 @@ def main():
                 if d:
                     storage_delta[str(i)] = d
                 prev_scalars = cur
-        storage = {"scalars": read_scalars(), "maps": read_maps()}
+        probe_results = {}
+        for probe_index, probe in enumerate(meta.get("probes") or []):
+            try:
+                source_txn = probe.get("source_txn")
+                if source_txn is not None:
+                    for _ca2, bounds in _dep_seek.values():
+                        start, end = bounds.get(int(source_txn), (0, 0))
+                        _vm_cursor[_ca2] = start
+                        _vm_limit[_ca2] = end
+                fn = inst.get_function_by_signature(probe["sig"])
+                args = [resolve(value) for value in probe.get("args") or []]
+                value = call_without_consuming_tapes(
+                    lambda: fn(*args).call({"from": a0}), _vm_cursor)
+                values = (list(value) if len(probe["outputs"]) > 1
+                          else [value])
+                probe_results[str(probe_index)] = {
+                    "ok": True,
+                    "ret": [canon_value(v, output["type"], fold,
+                                        output.get("components"))
+                            for v, output in zip(values, probe["outputs"])]}
+            except Exception as exc:
+                probe_results[str(probe_index)] = {
+                    "ok": False, "revert": str(exc)[:160]}
+
+        storage, typed_reader = read_typed_storage()
+        # Keep the inexpensive per-transaction scalar reader as the delta
+        # source; the recursive reader's scalar result should be identical.
+        storage["scalars"] = read_scalars()
         # Attribute every traced write. Executed-txn writes only: a skipped txn
         # never ran, and a reverted one is journalled back.
-        writes, blind = {}, {}
+        writes, blind_int = {}, {}
         for t, slots in sstore_trace.items():
             if t not in results or not results[t].get("ok"):
                 continue
@@ -1260,12 +1136,33 @@ def main():
             writes[str(t)] = {"n": len(slots), "names": names,
                               "unattributed": len(unknown)}
             for sl in unknown:
-                blind.setdefault(str(sl), []).append(t)
+                blind_int.setdefault(sl, []).append(t)
         storage["writes"] = writes
-        storage["blind_slots"] = {k: v[:5] for k, v in list(blind.items())[:40]}
-        storage["blind_slot_count"] = len(blind)
-        return (results, snapshots, mismatches, storage_delta, storage,
-                block_ts, block_no)
+        # Persist every unresolved identity and a useful grouping. The former
+        # 40-slot truncation made post-run ownership analysis impossible.
+        storage["blind_slots"] = {
+            str(slot): txns for slot, txns in sorted(blind_int.items())}
+        storage["blind_slot_count"] = len(blind_int)
+        storage["blind_slot_groups"] = grouped_uncovered_slots(
+            blind_int, blind_int, calls)
+        def canonical_raw_slot(slot):
+            word = bytes(w3.eth.get_storage_at(caddr, slot)).rjust(32, b"\0")
+            folded = fold("0x" + word[-20:].hex())
+            return (folded if any(word) and not str(folded).startswith("?")
+                    else int.from_bytes(word, "big"))
+        storage["raw_slots"] = {
+            str(slot): canonical_raw_slot(slot) for slot in sorted(blind_int)}
+        roots = {}
+        for slot, owner in typed_reader.seen.items():
+            root = owner.split("[", 1)[0].split(".", 1)[0]
+            item = roots.setdefault(root, {"slots_read": 0,
+                                           "written_slots_read": 0})
+            item["slots_read"] += 1
+            item["written_slots_read"] += int(slot in typed_reader.written_slots)
+        storage["coverage"] = roots
+        return (results, snapshots, probe_results, mismatches,
+                storage_delta, storage,
+                block_ts, block_no, effective_time_base, deployment_time)
 
     # ── closed-world convergence ──────────────────────────────────────────
     # BATCH convergence: one pass collects every mismatch, all get skipped at
@@ -1273,15 +1170,18 @@ def main():
     # Results after the first mismatch in a pass may be state-forked, so we
     # always take the results of the FINAL clean pass.
     skips = dict(ext_skips)
+    skip_details = {}
     iterations = 0
     while True:
         iterations += 1
-        (results, snapshots, mismatches, sdelta, smaps,
-         block_ts, block_no) = run_once(skips)
+        (results, snapshots, probes, mismatches, sdelta, smaps,
+         block_ts, block_no, effective_time_base,
+         deployment_time) = run_once(skips)
         if not mismatches or iterations >= 8:
             break
         for idx, why, detail in mismatches:
             skips[idx] = f"closed-world:{why}"
+            skip_details[str(idx)] = {"kind": why, "detail": detail}
         shown = "; ".join(f"#{i}:{w}:{d[:340]}" for i, w, d in mismatches[:3])
         print(f"[evm] converge pass {iterations}: +{len(mismatches)} skip(s)  {shown}",
               file=sys.stderr)
@@ -1293,12 +1193,16 @@ def main():
     dump_json(case_dir / "evm_results.json",
               {"iterations": iterations,
                "skips": {str(k): v for k, v in skips.items()},
+               "skip_details": skip_details,
                "results": {str(k): v for k, v in results.items()},
                "snapshots": snapshots,
+               "probes": probes,
                "storage_delta": sdelta,
                "storage": smaps,
                "block_ts": block_ts,
-               "block_no": block_no})
+               "block_no": block_no,
+               "time_base": effective_time_base,
+               "deployment_time": deployment_time})
     n_exec = len(results)
     n_ok = sum(1 for r in results.values() if r["ok"])
     print(f"[evm] replayed {n_exec}/{len(calls)} txns "

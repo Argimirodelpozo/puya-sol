@@ -71,7 +71,9 @@ def _chain_now() -> int:
 
 
 def replay(tag: str, max_txns: int = 300, snapshot_every: int = 25,
-           evm_layout: bool = False, evm_memory: bool = False) -> dict:
+           evm_layout: bool = False, evm_memory: bool = False,
+           split_config: str | None = None,
+           force_delegate: list[str] | None = None) -> dict:
     case_dir = CASES / tag
     case = load_json(case_dir / "case.json")
     skips: dict[int, str] = {}
@@ -92,18 +94,29 @@ def replay(tag: str, max_txns: int = 300, snapshot_every: int = 25,
         # does the base become "just ahead of the chain" and the epoch shift.
         epoch = replay_epoch(case.get("txns") or [])
         base = max(_chain_now() + 1, epoch)
-        if attempt == 1:
-            print(f"  [clock] {'historical' if base == epoch else 'shifted +%dd' % ((base - epoch) // 86400)}"
-                  f" — both legs pinned to the same instants")
         _run([str(EVM_PY), str(HERE / "evm_leg.py"), str(case_dir),
               json.dumps({"max_txns": max_txns, "snapshot_every": snapshot_every,
                           "pin_time": True, "time_base": base,
                           "skips": {str(k): v for k, v in skips.items()}})], "evm")
+        evm_clock = load_json(case_dir / "evm_results.json")
+        effective_base = int(evm_clock.get("time_base") or base)
+        deployment_time = int(
+            evm_clock.get("deployment_time") or effective_base)
+        if attempt == 1:
+            shift = effective_base - epoch
+            label = ("historical" if shift == 0
+                     else f"shifted +{shift // 86400}d")
+            print(f"  [clock] {label} — shared monotonic schedule, "
+                  f"base={effective_base}")
         _run(["python3", str(HERE / "avm_leg.py"), str(case_dir),
               json.dumps({"skips": [str(k) for k in skips],
-                          "pin_time": True, "time_base": base,
+                          "pin_time": True,
+                          "time_base": effective_base,
+                          "deployment_time": deployment_time,
                           "evm_layout": evm_layout,
-                          "evm_memory": evm_memory})], "avm")
+                          "evm_memory": evm_memory,
+                          "split_config": split_config,
+                          "force_delegate": force_delegate or []})], "avm")
         pl = load_json(case_dir / "avm_results.json").get("platform_limits") or {}
         new = {int(k): f"avm-platform-limit:{v[:40]}" for k, v in pl.items()
                if int(k) not in skips}
@@ -128,6 +141,10 @@ def main():
     address = opt("--address")
     max_txns = opt("--max-txns", 300, int)
     snap = opt("--snapshot-every", 25, int)
+    split_config = opt("--split-config")
+    force_delegate_raw = opt("--force-delegate")
+    force_delegate = ([x.strip() for x in force_delegate_raw.split(",")
+                       if x.strip()] if force_delegate_raw else [])
     force_fetch = "--fetch" in argv
     if force_fetch:
         argv.remove("--fetch")
@@ -149,7 +166,8 @@ def main():
 
     print(f"[replay] {tag}: max_txns={max_txns}"
           + (" [--evm-layout]" if evm_layout else ""))
-    print_report(replay(tag, max_txns, snap, evm_layout, evm_memory))
+    print_report(replay(tag, max_txns, snap, evm_layout, evm_memory,
+                        split_config, force_delegate))
 
 
 if __name__ == "__main__":

@@ -48,10 +48,11 @@ python3 replay.py usde --evm-layout                 # FULL EVM semantics (storag
 python3 replay.py morpho --evm-layout               # (--evm-memory is folded into --evm-layout now)
 python3 batch.py --evm-layout --max-txns 200 --only usde,degen
 
-# Before a batch: rewind LocalNet's clock so cases replay at TRUE historical
-# time. Each replay ratchets it forward by that window's span and it never
-# comes back, so a long batch drifts years into the future (see the clock note
-# under "Scope & constraints"). Nothing in this suite persists on LocalNet.
+# Before a batch: rewind LocalNet's clock. Each replay ratchets it forward by
+# that window's span and it never comes back, so a long batch drifts years into
+# the future (see the clock note under "Scope & constraints"). Py-EVM's
+# pending block starts at wall time, so the shared epoch is normally shifted;
+# historical DELTAS are preserved. Nothing in this suite persists on LocalNet.
 algokit localnet reset
 
 # INTERNAL (contract-to-contract) CALLS merged into the stream — for a
@@ -540,13 +541,17 @@ skips and must be reported separately.
   txns gains nothing without a deeper window.
 - Reverted historical txns are replayed and must revert on both legs (payload
   compared) — signal, not noise.
-- **Block time is pinned on both legs, but the epoch may shift.** Both legs
-  drive their clock to the same replayed instants, so `block.timestamp` agrees
-  and every observable duration (cooldowns, vesting, permit expiry) is exact.
-  The *absolute* epoch is only historical when LocalNet's clock still sits
-  before the window; otherwise both legs replay the same deltas from a shared
-  base just ahead of it. Two algod dev-mode facts force this, and both are the
-  opposite of the obvious guess:
+- **Block time is pinned on both legs, but the epoch normally shifts.** Py-EVM
+  finalizes a reachable base from its pending block after setup; that exact base
+  and the target constructor's actual deployment timestamp are then handed to
+  the AVM leg. Every entry receives a timestamp from one shared, strictly
+  increasing schedule. Historical gaps are preserved exactly; entries sharing
+  a timestamp (usually internal calls recovered from one Ethereum transaction)
+  receive deterministic one-second tie breaks because Py-EVM mines each entry
+  in its own block. There is no timestamp tolerance in the differ: unequal
+  timestamp-derived values are real findings.
+
+  Two algod dev-mode facts shape the AVM side:
 
   - `global LatestTimestamp` reports the **previous** block's timestamp, so
     reaching an instant means sealing a block at it and *then* calling.
@@ -558,20 +563,18 @@ skips and must be reported separately.
 
   So the clock is a **ratchet**: each replay advances it by that window's whole
   historical span and it never comes back. `algokit localnet reset` rewinds it
-  to 0 (verified) — and from 0 every historical epoch is reachable, so a reset
-  before a batch is what buys true historical replay. The AVM leg deliberately
-  does *not* restore the clock to wall clock afterwards: that would ratchet
-  past the next case's window and force every later replay onto a shifted
-  epoch. Drift beyond 30 days prints a warning, because a far-future epoch
-  fails time-gated constructors — DEGEN deploys at 2026 and fails at 2028, and
-  the case then drops out looking like an unrelated harness error.
+  to 0 (verified), preventing one case from pushing the next farther into the
+  future. The AVM leg deliberately does *not* restore the clock to wall clock
+  afterwards. Drift beyond 30 days prints a warning, because a far-future epoch
+  can fail time-gated constructors and make a case disappear for an unrelated
+  reason.
 
   The shared base is re-derived per convergence attempt — the previous
   attempt's AVM run pushed the clock forward, and a base fixed once would
   silently disable pinning on every re-run after a platform-limit skip.
 
-  Cost: one extra sealing block per distinct timestamp (58 for permit2's 66
-  calls), since a call observes the *previous* block's time.
+  Cost: one extra sealing block per executed entry (plus the initial deployment
+  anchor), since a call observes the *previous* block's time.
 
 ## Results
 
@@ -788,6 +791,7 @@ environment-noise class documented above.
 - `value_div` — both succeeded, return values differ.
 - `event_div` — emitted events differ (count, name, or args).
 - `snapshot_div` — zero-arg getter state drifted between legs.
+- `probe_div` — an ABI-driven parameterized view returned/reverted differently.
 - `storage_div` / `storage_map_div` — state differs by Solidity variable name.
   Mapping divergences carry `last_write_txn`, the last txn that wrote that map,
   so the cause is localised instead of just "the end states differ".
@@ -803,17 +807,8 @@ whitelisted away wholesale:
 - **chain id** — `DOMAIN_SEPARATOR()`, `chainId()`, and `eip712Domain()`, whose
   field 3 is the chain id (compared **masked**: the other six fields still have
   to match exactly, so a real divergence there is still reported).
-- **block height** — `clock()` (ERC-6372).
-- **timestamps** — largely eliminated by clock pinning (below). What remains is
-  py-evm advancing its own clock one second per mined block, which drifts
-  against the AVM whenever several calls share a historical second. Applied to
-  scalars, getter snapshots, *and element-wise inside struct/array map values*
-  (Permit2 fills `PackedAllowance.expiration` with `now`), gated on both values
-  being plausible unix times within 300 s — measured agreement across permit2's
-  window was `[-5, +1]` s. A genuinely wrong field (0, a counter, a hash) is
-  never absorbed. This window was **7 days** before pinning, wide enough to
-  swallow a real bug.
-- **uniform offsets** — every entry of a map differing by the same delta.
+- **block height** — `clock()` (ERC-6372), classified only when the value delta
+  matches the per-transaction EVM/AVM heights recorded by the replay.
 
 Coverage warnings (⚠️) matter as much as divergences here: a comparison that
 never happened reports as zero divergences, which looks exactly like a pass.
@@ -822,6 +817,12 @@ never happened reports as zero divergences, which looks exactly like a pass.
 - `storage_maps_unavailable` — EVM found mapping state, AVM found none.
 - `storage_blind_slots` — slots the EVM leg *saw written* that no probe reads.
 - `storage_boxes_unattributed` — boxes on chain that no derived key matched.
+- `storage_raw_div` / `storage_raw_uncompared` — an `s:<slot>` native AVM box
+  differs from its exact EVM word, or the EVM trace did not capture that word.
+
+The warning payloads are grouped rather than sampled away: blind EVM slots are
+grouped by physical class and writing signature, and unattributed AVM boxes by
+name/value shape. Every unresolved slot identity is retained in the leg result.
 
 ## Storage tracing
 
@@ -835,24 +836,27 @@ more robust than decoding an opcode stream. Two things fall out of it:
    the readers actually looked at. A slot written but never read is state the
    differ is *blind* to, and it says so rather than counting it clean.
 
-### Mapping shapes the readers cover
+### Recursive storage coverage
 
-Both legs derive candidate keys **forward** (the hash is one-way but never
-needs inverting) and stay O(txns) — never a cartesian product over symbols:
+Both legs now use one solc-`storageLayout` type walk. Mapping depth is not a
+case distinction: the reader recursively follows mapping values, structs,
+fixed/dynamic arrays, packed elements, and structs that themselves contain
+mappings. Keys are encoded from the declared Solidity key type. Candidates
+come recursively from typed calldata and sender/dependency identities; values
+discovered in storage feed later levels, so an `EnumerableSet` value array, for
+example, supplies the keys for its position mapping. Context relationships
+bound large nested domains without assuming a specific depth or contract.
 
-| shape | key source |
-|---|---|
-| `mapping(address => V)` | every registry symbol |
-| `mapping(address => mapping(address => V))` | sender ↔ address-arg pairs the replay actually made |
-| `mapping(address => mapping(address => mapping(address => V)))` | (sender, arg_i, arg_j) triples — Permit2 `allowance` |
-| `mapping(address => mapping(uint => V))` | small word indices + each uint arg's `>> 8` — Permit2 `nonceBitmap` |
-| `mapping(bytes32 => V)` | bytes32 args seen in calls (OZ AccessControl roles) |
+The native leg aligns that tree with the ARC-56 of the **artifact actually
+deployed**, not a top-level filename that may be stale after splitting. The
+slot-layout AVM mode delegates to the same recursive reader over its
+reconstructed slot map, instead of maintaining a second collection of mapping
+shape branches.
 
-Values decode as scalar, struct (per-member) or dynamic array. Extending this
-is how a *vacuous* pass becomes a real one: Permit2 first replayed "clean" with
-`allowance` and `nonceBitmap` reported **uncompared** and 50 blind slots —
-adding depth-3 and uint-inner-key support immediately surfaced three real
-entries to compare (which then proved to be timestamp skew).
+Parameterized view probes are ABI-driven and final-state-only. They reuse
+typed values observed together in replay calls, with a bounded number per
+method. They supplement direct storage comparison without recognising names
+such as `getAsset` or `getSpoke`.
 
 The AVM leg mirrors (2) by enumerating the app's real boxes and reporting any
 that no forward-derived key matched. That is the only check that can catch a

@@ -36,7 +36,7 @@ BUCKETS = [
     (r"assembly",                           "inline assembly (other)"),
     (r"blockhash",                          "blockhash"),
     (r"selfdestruct",                       "selfdestruct"),
-    (r"exceeds AVM 8KB|extra_pages",        "8KB program cap"),
+    (r"exceeds AVM (?:8KB|16KB)|extra_pages", "program cap"),
     (r"assignment target type differs",     "type mismatch (POSSIBLE BUG)"),
     (r"unsupported type cast|cannot coerce", "type coercion gap (POSSIBLE BUG)"),
 ]

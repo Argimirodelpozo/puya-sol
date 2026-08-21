@@ -19,8 +19,14 @@ from chd_common import (CASES, EVM_PY, ZERO, dump_json, http_json, load_json,
 
 
 def _decode_ctor_addresses(abi, ctor_hex):
-    """Address-typed constructor args (incl. address[] elements), decoded via
-    the EVM venv's eth_abi (the system python doesn't carry it)."""
+    """Recursively collect address-typed constructor values.
+
+    Solidity constructors can nest addresses under arbitrary tuple/array
+    combinations (for example ``tuple(address,address,...)`` in Polymarket
+    V2). Preserve the ABI component tree while walking the values returned by
+    ``eth_abi``; inspecting only the canonical type string loses tuple
+    component types and silently drops every nested dependency.
+    """
     import json as _json
     import subprocess
     ctor = next((e for e in abi if e.get("type") == "constructor"), None)
@@ -29,29 +35,66 @@ def _decode_ctor_addresses(abi, ctor_hex):
     script = (
         "import sys, json\n"
         "from eth_abi import decode\n"
-        "types, hexdata = json.loads(sys.argv[1]), sys.argv[2]\n"
+        "specs, hexdata = json.loads(sys.argv[1]), sys.argv[2]\n"
+        "def ctype(s):\n"
+        "    t = s['type']\n"
+        "    if t.startswith('tuple'):\n"
+        "        return '(' + ','.join(ctype(c) for c in s.get('components', [])) + ')' + t[5:]\n"
+        "    return t\n"
+        "types = [ctype(s) for s in specs]\n"
         "vals = decode(types, bytes.fromhex(hexdata))\n"
         "out = []\n"
-        "def walk(v, t):\n"
+        "def walk(v, s):\n"
+        "    t = s['type']\n"
         "    if t == 'address': out.append(v.lower())\n"
         "    elif t.endswith(']'):\n"
-        "        base = t[:t.rindex('[')]\n"
+        "        base = dict(s)\n"
+        "        base['type'] = t[:t.rindex('[')]\n"
         "        for x in v: walk(x, base)\n"
-        "for v, t in zip(vals, types): walk(v, t)\n"
+        "    elif t == 'tuple':\n"
+        "        for x, c in zip(v, s.get('components', [])): walk(x, c)\n"
+        "for v, s in zip(vals, specs): walk(v, s)\n"
         "print(json.dumps(out))\n")
-    def ctype(inp):
-        t = inp["type"]
-        if t.startswith("tuple"):
-            return "(" + ",".join(ctype(c) for c in inp.get("components", [])) + ")" + t[len("tuple"):]
-        return t
-    types = [ctype(i) for i in ctor["inputs"]]
+    specs = ctor["inputs"]
     try:
         p2 = subprocess.run([str(EVM_PY), "-c", script,
-                             _json.dumps(types), ctor_hex],
+                             _json.dumps(specs), ctor_hex],
                             capture_output=True, text=True, timeout=60)
         return _json.loads(p2.stdout.strip() or "[]")
     except Exception:
         return []
+
+
+def _proxy_constructor_setup(smart_contract: dict) -> tuple[str | None, str | None]:
+    """Return ``(initial_implementation, initializer_calldata)`` for a proxy.
+
+    Blockscout exposes constructor values together with their ABI descriptors.
+    Keep this proxy-family agnostic: identify the implementation by the
+    constructor parameter name (``logic``/``implementation``) and the
+    initializer as the sole non-empty dynamic ``bytes`` argument. This covers
+    transparent/ERC1967 and immutable-admin variants without baking in one
+    constructor shape or initializer signature. Ambiguity is rejected.
+    """
+    decoded = smart_contract.get("decoded_constructor_args") or []
+    implementation = None
+    initializers = []
+    for item in decoded:
+        if not isinstance(item, (list, tuple)) or len(item) != 2:
+            continue
+        value, spec = item
+        if not isinstance(spec, dict):
+            continue
+        typ = str(spec.get("type") or "")
+        name = str(spec.get("name") or "").lower().lstrip("_")
+        if typ == "address" and ("implementation" in name or "logic" in name):
+            if isinstance(value, str) and value.startswith("0x") and len(value) == 42:
+                implementation = value.lower()
+        if typ == "bytes" and isinstance(value, str):
+            value = value.lower()
+            if value.startswith("0x") and len(value) >= 10:
+                initializers.append(value)
+    initializer = initializers[0] if len(initializers) == 1 else None
+    return implementation, initializer
 
 
 def harvest_callees(host: str, address: str, hashes: list, sink: dict,
@@ -76,28 +119,16 @@ def harvest_callees(host: str, address: str, hashes: list, sink: dict,
             if not isinstance(e, dict) or e.get("type") != "call":
                 continue
             act = e.get("action") or {}
-            if (act.get("from") or "").lower() != addr:
+            call_type = act.get("callType") or "call"
+            is_dependency_call = call_type in ("call", "staticcall")
+            if (not is_dependency_call
+                    or (act.get("from") or "").lower() != addr):
                 continue
             tgt = (act.get("to") or "").lower()
             if tgt and tgt != addr and tgt != ZERO:
                 sink[tgt] = sink.get(tgt, 0) + 1
         time.sleep(0.6)
 
-
-
-def _stub_selectors() -> list:
-    """4-byte selectors the stand-in handles itself (never reach the fallback)."""
-    sigs = ["name()", "symbol()", "decimals()", "totalSupply()",
-            "balanceOf(address)", "transfer(address,uint256)",
-            "transferFrom(address,address,uint256)",
-            "approve(address,uint256)", "allowance(address,address)",
-            "mint(address,uint256)", "burn(address,uint256)",
-            "__load(bytes32[],uint256[])"]
-    try:
-        from eth_utils import keccak
-    except Exception:
-        return []
-    return ["0x" + keccak(text=s).hex()[:8] for s in sigs]
 
 
 def harvest_dep_answers(host: str, address: str, case_dir, txns, dep_addrs,
@@ -147,7 +178,11 @@ def harvest_dep_answers(host: str, address: str, case_dir, txns, dep_addrs,
             if not isinstance(e, dict) or e.get("type") != "call":
                 continue
             act = e.get("action") or {}
-            if (act.get("from") or "").lower() != addr:
+            # A proxy's DELEGATECALL selects the code being replayed; it is
+            # not an external dependency and must never become a stand-in.
+            # Only calls with a distinct callee context need scripted answers.
+            if ((act.get("callType") or "call") not in ("call", "staticcall")
+                    or (act.get("from") or "").lower() != addr):
                 continue
             to = (act.get("to") or "").lower()
             if not to or to == addr:
@@ -180,7 +215,7 @@ def harvest_dep_answers(host: str, address: str, case_dir, txns, dep_addrs,
     arg_deps = []
     cands = sorted(((a, v) for a, v in per_callee.items()
                     if a not in deps and a not in senders and len(v) >= 1),
-                   key=lambda kv: -len(kv[1]))[:12]
+                   key=lambda kv: -len(kv[1]))
     for a, v in cands:
         depdir = case_dir / "deps" / f"argdep_{a[2:10]}"
         d = write_stub_dep(host, a, depdir)
@@ -192,12 +227,7 @@ def harvest_dep_answers(host: str, address: str, case_dir, txns, dep_addrs,
     if arg_deps:
         dump_json(case_dir / "arg_deps.json", {"arg_deps": arg_deps})
     if tapes:
-        # The stand-in answers these selectors from its OWN logic, so those
-        # calls never reach the tape-playing fallback. Recording them would
-        # shift every later answer by one — the tape must contain exactly the
-        # calls the fallback will see.
-        dump_json(case_dir / "dep_tape.json",
-                  {"tapes": tapes, "stub_selectors": _stub_selectors()})
+        dump_json(case_dir / "dep_tape.json", {"tapes": tapes})
         print("[fetch] dep answers scripted: "
               + ", ".join(f"{a[:10]}…×{len(v)}" for a, v in tapes.items()))
 
@@ -241,6 +271,7 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
         parents.append((h, int(blk or 0), int(txi or 0), int(ts or 0)))
     page = 1
     while len(parents) < max_parents:
+        before_page = len(parents)
         try:
             d = http_json(f"https://{host}/api?module=account&action=tokentx"
                           f"&contractaddress={address}"
@@ -264,7 +295,10 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
                             int(r.get("timeStamp") or 0)))
             if len(parents) >= max_parents:
                 break
-        if len(rows) < 1000:
+        if len(rows) < 1000 or len(parents) == before_page:
+            if len(rows) == 1000 and len(parents) == before_page:
+                print("[fetch] token-transfer index repeated a full page; "
+                      "stopping pagination with the unique parents retained")
             break
         page += 1
         time.sleep(0.4)
@@ -276,6 +310,7 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
     if len(parents) < max_parents:
         page = 1
         while len(parents) < max_parents:
+            before_page = len(parents)
             try:
                 d = http_json(f"https://{host}/api?module=logs&action=getLogs"
                               f"&address={address}"
@@ -301,7 +336,10 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
                                 _i("timeStamp")))
                 if len(parents) >= max_parents:
                     break
-            if len(rows) < 1000:
+            if len(rows) < 1000 or len(parents) == before_page:
+                if len(rows) == 1000 and len(parents) == before_page:
+                    print("[fetch] log index repeated a full page; stopping "
+                          "pagination with the unique parents retained")
                 break
             page += 1
             time.sleep(0.4)
@@ -310,6 +348,7 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
 
     out = []
     dropped = 0
+    dropped_parents = []
     processed = 0
     for processed, (h, blk, txi, ts) in enumerate(parents, 1):
         if len(out) >= max_calls:
@@ -319,7 +358,7 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
         # still lose — a silently-partial internal-call set would overstate
         # replay coverage.
         tr = None
-        for attempt in range(3):
+        for attempt in range(5):
             try:
                 tr = http_json(
                     f"https://{host}/api/v2/transactions/{h}/raw-trace",
@@ -332,6 +371,8 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
                   f"{len(out)} call(s) into target", flush=True)
         if tr is None:
             dropped += 1
+            dropped_parents.append({"hash": h, "block": blk,
+                                    "txindex": txi, "ts": ts})
             continue
         if not isinstance(tr, list):
             continue
@@ -340,13 +381,16 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
             if not isinstance(e, dict) or e.get("type") != "call":
                 continue
             act = e.get("action") or {}
+            call_type = act.get("callType") or "call"
+            is_dependency_call = call_type in ("call", "staticcall")
             # Calls OUT of the contract, harvested from traces we already
             # fetched. These are the external contracts it genuinely depends
             # on — the ones whose absence makes a txn revert locally and get
             # dropped by the closed-world filter. Far better targeted than
             # "every address that appears in an argument", which is mostly
             # transfer recipients.
-            if callee_sink is not None and (act.get("from") or "").lower() == addr:
+            if (callee_sink is not None and is_dependency_call
+                    and (act.get("from") or "").lower() == addr):
                 tgt = (act.get("to") or "").lower()
                 if tgt and tgt != addr and tgt != ZERO:
                     callee_sink[tgt] = callee_sink.get(tgt, 0) + 1
@@ -354,7 +398,8 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
             # txns will need (the whole setAdmin era makes owner() calls that
             # only exist in parent traces). Attributed to their owning
             # internal entry after the walk, once all traceAddresses are seen.
-            if tape_sink is not None and (act.get("from") or "").lower() == addr:
+            if (tape_sink is not None and is_dependency_call
+                    and (act.get("from") or "").lower() == addr):
                 _to = (act.get("to") or "").lower()
                 if _to and _to != addr:
                     _out = ((e.get("result") or {}).get("output")
@@ -367,7 +412,7 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
                 continue                  # root call == the direct txn
             if (act.get("to") or "").lower() != addr:
                 continue
-            if (act.get("callType") or "call") != "call":
+            if call_type != "call":
                 continue                  # staticcall = view; delegatecall N/A
             inp = act.get("input") or "0x"
             if len(inp) < 10:
@@ -415,6 +460,7 @@ def fetch_internal_calls(host: str, address: str, block_lo: int, block_hi: int,
             "parents_selected": len(parents),
             "parents_processed": processed,
             "parent_traces_unavailable": dropped,
+            "unavailable_parents": dropped_parents,
             "calls_into_target": len(out),
             "max_parents": max_parents,
             "max_calls": max_calls,
@@ -435,50 +481,86 @@ _STUB_ERC20 = """// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 contract StubERC20 {
-    // name/symbol as PURE functions, not initialised state: an aggregate state
-    // initializer is not supported under --evm-storage-layout, and the dep is
-    // compiled with whatever mode the case runs in.
-    function name() external pure returns (string memory) { return "%(name)s"; }
-    function symbol() external pure returns (string memory) { return "%(sym)s"; }
-    uint8 public constant decimals = %(dec)d;
-    uint256 public totalSupply;
-    mapping(address => uint256) public balanceOf;
-    mapping(address => mapping(address => uint256)) public allowance;
+    uint8 internal constant __decimals = %(dec)d;
+    uint256 internal __totalSupply;
+    mapping(address => uint256) internal __balanceOf;
+    mapping(address => mapping(address => uint256)) internal __allowance;
     mapping(address => mapping(address => bool)) public isApprovedForAll;
 
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint256 value);
 
+    function name() external returns (string memory) {
+        (bool scripted, bytes memory answer) = _scriptedAnswer();
+        if (scripted) assembly { return(add(answer, 32), mload(answer)) }
+        return "%(name)s";
+    }
+    function symbol() external returns (string memory) {
+        (bool scripted, bytes memory answer) = _scriptedAnswer();
+        if (scripted) assembly { return(add(answer, 32), mload(answer)) }
+        return "%(sym)s";
+    }
+    function decimals() external returns (uint8) {
+        (bool scripted, bytes memory answer) = _scriptedAnswer();
+        if (scripted) assembly { return(add(answer, 32), mload(answer)) }
+        return __decimals;
+    }
+    function totalSupply() external returns (uint256) {
+        (bool scripted, bytes memory answer) = _scriptedAnswer();
+        if (scripted) assembly { return(add(answer, 32), mload(answer)) }
+        return __totalSupply;
+    }
+    function balanceOf(address account) external returns (uint256) {
+        (bool scripted, bytes memory answer) = _scriptedAnswer();
+        if (scripted) assembly { return(add(answer, 32), mload(answer)) }
+        return __balanceOf[account];
+    }
+    function allowance(address owner, address spender) external returns (uint256) {
+        (bool scripted, bytes memory answer) = _scriptedAnswer();
+        if (scripted) assembly { return(add(answer, 32), mload(answer)) }
+        return __allowance[owner][spender];
+    }
+
     function approve(address s, uint256 v) external returns (bool) {
-        allowance[msg.sender][s] = v;
+        (bool scripted, bytes memory answer) = _scriptedAnswer();
+        if (scripted) assembly { return(add(answer, 32), mload(answer)) }
+        __allowance[msg.sender][s] = v;
         emit Approval(msg.sender, s, v);
         return true;
     }
 
     function transfer(address t, uint256 v) external returns (bool) {
-        balanceOf[msg.sender] -= v;
-        balanceOf[t] += v;
+        (bool scripted, bytes memory answer) = _scriptedAnswer();
+        if (scripted) assembly { return(add(answer, 32), mload(answer)) }
+        __balanceOf[msg.sender] -= v;
+        __balanceOf[t] += v;
         emit Transfer(msg.sender, t, v);
         return true;
     }
 
     function transferFrom(address f, address t, uint256 v) external returns (bool) {
-        uint256 a = allowance[f][msg.sender];
-        if (a != type(uint256).max) allowance[f][msg.sender] = a - v;
-        balanceOf[f] -= v;
-        balanceOf[t] += v;
+        (bool scripted, bytes memory answer) = _scriptedAnswer();
+        if (scripted) assembly { return(add(answer, 32), mload(answer)) }
+        uint256 a = __allowance[f][msg.sender];
+        if (a != type(uint256).max) __allowance[f][msg.sender] = a - v;
+        __balanceOf[f] -= v;
+        __balanceOf[t] += v;
         emit Transfer(f, t, v);
         return true;
     }
 
     function mint(address t, uint256 v) external returns (bool) {
-        balanceOf[t] += v;
-        totalSupply += v;
+        (bool scripted, bytes memory answer) = _scriptedAnswer();
+        if (scripted) assembly { return(add(answer, 32), mload(answer)) }
+        __balanceOf[t] += v;
+        __totalSupply += v;
         emit Transfer(address(0), t, v);
         return true;
     }
 
     function setApprovalForAll(address op, bool ok) external {
+        (bool scripted, bytes memory answer) = _scriptedAnswer();
+        if (scripted) assembly { return(add(answer, 32), mload(answer)) }
         isApprovedForAll[msg.sender][op] = ok;
     }
 
@@ -495,19 +577,28 @@ contract StubERC20 {
     bytes32[] public __words;
     uint256[] public __lens;
     uint256[] public __wstart;
+    bytes32[] public __selectors;
     uint256 public __idx;
+    uint256 public __end;
     // Absolute tape addressing: the legs seek before every replayed txn, so
     // a locally-reverted txn (whose __idx bump rolls back with it) can never
     // shift the answers the NEXT txn reads. Without this, one bad txn
     // desynchronised the whole suffix.
-    function __seek(uint256 k) external {
+    function __seek(uint256 k, uint256 end) external {
         __idx = k;
+        __end = end;
     }
-    function __load(bytes32[] calldata w, uint256[] calldata lens) external {
+    function __load(
+        bytes32[] calldata w,
+        uint256[] calldata lens,
+        bytes32[] calldata selectors
+    ) external {
+        require(lens.length == selectors.length);
         uint256 wi = 0;
         for (uint256 i = 0; i < lens.length; i++) {
             __wstart.push(__words.length);
             __lens.push(lens[i]);
+            __selectors.push(selectors[i]);
             uint256 nw = (lens[i] + 31) / 32;
             for (uint256 j = 0; j < nw; j++) {
                 __words.push(w[wi + j]);
@@ -524,8 +615,12 @@ contract StubERC20 {
     // the stub, which keeps answering. Word-decoded as a number this is a
     // large value; either way both legs see the SAME thing, so the differ's
     // verdict is unaffected. Fidelity to the real chain stays NOT claimed.
-    fallback() external payable {
-        if (__idx < __lens.length) {
+    function _scriptedAnswer() internal returns (bool, bytes memory) {
+        if (
+            __idx < __end &&
+            __idx < __lens.length &&
+            __selectors[__idx] == bytes32(msg.sig)
+        ) {
             uint256 len = __lens[__idx];
             uint256 base = __wstart[__idx];
             __idx++;
@@ -537,14 +632,16 @@ contract StubERC20 {
                     mstore(add(w, add(32, mul(j, 32))), x)
                 }
             }
-            assembly {
-                return(add(w, 32), len)
-            }
+            assembly { mstore(w, len) }
+            return (true, w);
         }
-        assembly {
-            mstore(0x00, address())
-            return(0x00, 0x20)
-        }
+        return (false, new bytes(0));
+    }
+
+    fallback(bytes calldata) external payable returns (bytes memory) {
+        (bool scripted, bytes memory answer) = _scriptedAnswer();
+        if (scripted) return answer;
+        return abi.encode(address(this));
     }
     receive() external payable {}
 }
@@ -554,10 +651,12 @@ _STUB_ABI = [
     {"type": "constructor", "inputs": []},
     {"type": "function", "name": "__load",
      "inputs": [{"type": "bytes32[]", "name": "w"},
-                {"type": "uint256[]", "name": "lens"}],
+                {"type": "uint256[]", "name": "lens"},
+                {"type": "bytes32[]", "name": "selectors"}],
      "outputs": [], "stateMutability": "nonpayable"},
     {"type": "function", "name": "__seek",
-     "inputs": [{"type": "uint256", "name": "k"}],
+     "inputs": [{"type": "uint256", "name": "k"},
+                {"type": "uint256", "name": "end"}],
      "outputs": [], "stateMutability": "nonpayable"},
     {"type": "function", "name": "decimals", "inputs": [],
      "outputs": [{"type": "uint8", "name": ""}], "stateMutability": "view"},
@@ -573,6 +672,17 @@ _STUB_ABI = [
      "outputs": [{"type": "bool", "name": ""}],
      "stateMutability": "nonpayable"},
 ]
+
+
+def refresh_stub_source(dep_dir: Path, dep: dict,
+                        filename: str = "prepared.sol") -> None:
+    """Regenerate a fetched stand-in from its persisted token metadata."""
+    stub = dep.get("stub_for") or {}
+    name = (stub.get("name") or dep.get("name") or "Stub")[:32]
+    symbol = (stub.get("symbol") or "STUB")[:16]
+    decimals = int(stub.get("decimals") or 18)
+    (dep_dir / filename).write_text(
+        _STUB_ERC20 % {"name": name, "sym": symbol, "dec": decimals})
 
 
 def write_stub_dep(host: str, address: str, dep_dir) -> dict | None:
@@ -621,11 +731,10 @@ def write_stub_dep(host: str, address: str, dep_dir) -> dict | None:
     except Exception:
         pass
     dep_dir.mkdir(parents=True, exist_ok=True)
-    (dep_dir / "prepared.sol").write_text(
-        _STUB_ERC20 % {"name": name, "sym": sym, "dec": dec})
     dep = {"address": addr, "name": "StubERC20", "compiler_version": "0.8.x",
            "abi": _STUB_ABI, "ctor_args_hex": "", "ctor_deps": [], "stub": True,
            "stub_for": {"name": name, "symbol": sym, "decimals": dec}}
+    refresh_stub_source(dep_dir, dep)
     dump_json(dep_dir / "case.json", dep)
     return dep
 
@@ -869,9 +978,27 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                relax_pre08: bool = False,
                parent_hints: list | None = None,
                source_from: str | None = None,
-               scan_upgrades: bool = False) -> dict:
+               scan_upgrades: bool = False,
+               creation_override: dict | None = None) -> dict:
     case_dir = CASES / tag
     addr = address.lower()
+
+    # A proxy constructor normally delegatecalls its implementation's
+    # initializer. Our cross-VM model deploys that implementation directly, so
+    # retain the delegatecall as a semantic setup call or both local legs begin
+    # in an impossible, uninitialised state. Only use it when the selected
+    # source was also the constructor implementation; later implementations
+    # belong to the upgrade-era path below.
+    proxy_initial_impl = None
+    proxy_initializer = None
+    if source_from:
+        try:
+            proxy_sc = http_json(
+                f"https://{host}/api/v2/smart-contracts/{address}")
+            proxy_initial_impl, proxy_initializer = _proxy_constructor_setup(proxy_sc)
+        except Exception as e:
+            print(f"[fetch] {tag}: proxy constructor metadata unavailable "
+                  f"({str(e)[:60]}) — initializer not materialized")
 
     # 1. verified source + metadata. --source-from splits the two roles a
     # proxy fuses: SOURCE (+abi/compiler) from the implementation address,
@@ -959,6 +1086,16 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                         (ct.get("from") or {}).get("hash") or "").lower() or None
             except Exception as e:
                 print(f"[fetch] {tag}: creation txn lookup failed: {e}")
+    # Some explorers omit creation metadata for contracts created inside a
+    # factory transaction. Allow authoritative externally-resolved metadata
+    # to fill that gap without baking a site-specific scraper into the fetcher.
+    if creation_override:
+        creation = {
+            "creator": creation_override["creator"].lower(),
+            "hash": creation_override["hash"].lower(),
+            "ts": int(creation_override["ts"]),
+            "block": int(creation_override["block"]),
+        }
     if not creation.get("block") or not creation.get("ts"):
         print(f"[fetch] {tag}: ⚠ CREATION BLOCK/TS UNRESOLVED "
               f"(block={creation.get('block')} ts={creation.get('ts')}) — "
@@ -988,7 +1125,8 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
         internal_coverage = {}
         ic = fetch_internal_calls(
             host, address, _lo, _hi,
-            {t["hash"].lower() for t in txns}, max_parents=internal_parents,
+            {t["hash"].lower() for t in txns},
+            max_parents=internal_parents, max_calls=max_txns,
             callee_sink=callees,
             tape_sink=internal_tapes if script_deps else None,
             parent_hints=parent_hints,
@@ -1023,6 +1161,32 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
         "abi": abi,
         "txns": txns,
     }
+    if source_from:
+        case["proxy"] = {
+            "implementation": source_from.lower(),
+            "constructor_implementation": proxy_initial_impl,
+        }
+        if (proxy_initializer
+                and (proxy_initial_impl is None
+                     or proxy_initial_impl == source_from.lower())):
+            # This delegatecall ran inside the successful creation transaction.
+            # The creator is mapped exactly like every other historical sender.
+            setup = {
+                "hash": f"{creation['hash']}#proxy-constructor-initializer",
+                "from": creation["creator"],
+                "input": proxy_initializer,
+                "value": 0,
+                "hist_ok": True,
+                "ts": int(creation["ts"]),
+                "block": int(creation["block"]),
+                "txindex": -1,
+                "internal": True,
+                "setup": "proxy-constructor-initializer",
+            }
+            case["txns"] = [setup, *txns]
+            case["proxy"]["initializer"] = proxy_initializer
+            print(f"[fetch] {tag}: proxy constructor initializer "
+                  f"{proxy_initializer[:10]} materialized as setup call")
     if "0.8." not in comp:
         case["pragma_relaxed_from"] = comp
     if internal:
@@ -1087,7 +1251,11 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                 _re.findall(r"0x([0-9a-fA-F]{40})\b", sc["source_code"])}
     # Callees first, most-called first: they are the evidenced dependencies,
     # while literals are merely addresses that appear in the text.
-    ranked = [a for a, _ in sorted(callees.items(), key=lambda kv: -kv[1])][:8]
+    # Scripted runtime dependencies are modeled from their observed call
+    # boundary below. They are not constructor dependencies and should not be
+    # redeployed from implementation source merely because they were called.
+    ranked = ([] if script_deps else
+              [a for a, _ in sorted(callees.items(), key=lambda kv: -kv[1])])
     if ranked:
         print(f"[fetch] {tag}: {len(callees)} callee(s) observed in traces, "
               f"trying top {len(ranked)} as dependencies")
@@ -1159,8 +1327,86 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
     return case
 
 
+def recover_unavailable_parents(host: str, tag: str) -> None:
+    """Retry only the parent traces explicitly missed by a completed fetch."""
+    case_dir = CASES / tag
+    case = load_json(case_dir / "case.json") or {}
+    coverage = ((case.get("fetch_coverage") or {}).get("internal") or {})
+    missing = coverage.get("unavailable_parents") or []
+    if not missing:
+        print(f"[fetch] {tag}: no unavailable parent traces")
+        return
+
+    recovered_tapes = {}
+    recovery_coverage = {}
+    recovered = fetch_internal_calls(
+        host, case["address"],
+        min(int(p["block"]) for p in missing),
+        max(int(p["block"]) for p in missing),
+        {t["hash"].lower() for t in case.get("txns") or []
+         if not t.get("internal")},
+        max_parents=len(missing), max_calls=10**9,
+        tape_sink=recovered_tapes,
+        parent_hints=[(p["hash"], p["block"], p["txindex"], p["ts"])
+                      for p in missing],
+        coverage_sink=recovery_coverage)
+
+    txns = list(case.get("txns") or [])
+    known = {t["hash"] for t in txns}
+    txns.extend(t for t in recovered if t["hash"] not in known)
+    txns.sort(key=lambda t: (t["block"], t.get("txindex", 0),
+                             t.get("trace_pos", -1)))
+    case["txns"] = txns
+
+    # Rebuild scripting from the prior plan plus newly recovered subcalls.
+    prior_tapes = ((load_json(case_dir / "dep_tape.json") or {}).get("tapes")
+                   or {})
+    for addr, entries in recovered_tapes.items():
+        prior_tapes.setdefault(addr, []).extend(entries)
+    harvest_dep_answers(
+        host, case["address"], case_dir, txns,
+        [d["addr"] for d in case.get("ctor_deps") or []],
+        max_traces=len(txns), extra_tapes=prior_tapes)
+    arg_doc = load_json(case_dir / "arg_deps.json") or {}
+    case["arg_deps"] = arg_doc.get("arg_deps") or []
+
+    unavailable = recovery_coverage.get("unavailable_parents") or []
+    internal_count = sum(1 for t in txns
+                         if t.get("internal") and not t.get("setup"))
+    coverage.update({
+        "parent_traces_unavailable": len(unavailable),
+        "unavailable_parents": unavailable,
+        "calls_into_target": internal_count,
+        "calls_retained": internal_count,
+        "transactions_retained": len(txns)
+            - sum(1 for t in txns if t.get("setup")),
+    })
+    dump_json(case_dir / "case.json", case)
+    print(f"[fetch] {tag}: recovered {len(recovered)} internal call(s); "
+          f"{len(unavailable)} parent trace(s) remain unavailable")
+
+
 def main():
     argv = list(sys.argv[1:])
+    if len(argv) == 3 and argv[0] == "--recover-unavailable":
+        recover_unavailable_parents(argv[1], argv[2])
+        return
+    if len(argv) == 2 and argv[0] == "--refresh-stubs":
+        case_dir = CASES / argv[1]
+        case = load_json(case_dir / "case.json") or {}
+        refreshed = 0
+        for spec in ((case.get("ctor_deps") or [])
+                     + (case.get("arg_deps") or [])):
+            dep_dir = case_dir / spec["dir"]
+            dep = load_json(dep_dir / "case.json") or {}
+            if dep.get("stub"):
+                refresh_stub_source(dep_dir, dep)
+                refreshed += 1
+            elif dep.get("stub_abi"):
+                refresh_stub_source(dep_dir, dep, "stub_fallback.sol")
+                refreshed += 1
+        print(f"[fetch] {argv[1]}: refreshed {refreshed} stand-in source(s)")
+        return
     max_txns = 300
     if "--max-txns" in argv:
         i = argv.index("--max-txns")
@@ -1189,6 +1435,18 @@ def main():
     scan_upgrades = "--upgrades" in argv
     if scan_upgrades:
         argv.remove("--upgrades")
+    creation_override = None
+    if "--creation" in argv:
+        i = argv.index("--creation")
+        raw = argv[i + 1]
+        del argv[i:i + 2]
+        parts = raw.split(",")
+        if len(parts) != 4:
+            sys.exit("[fetch] --creation expects HASH,BLOCK,UNIX_TS,CREATOR")
+        creation_override = {
+            "hash": parts[0], "block": int(parts[1]),
+            "ts": int(parts[2]), "creator": parts[3],
+        }
     parent_case_tags = []
     while "--parent-case" in argv:
         i = argv.index("--parent-case")
@@ -1243,7 +1501,8 @@ def main():
                relax_pre08=relax_pre08,
                parent_hints=parent_hints,
                source_from=source_from,
-               scan_upgrades=scan_upgrades)
+               scan_upgrades=scan_upgrades,
+               creation_override=creation_override)
 
 
 if __name__ == "__main__":

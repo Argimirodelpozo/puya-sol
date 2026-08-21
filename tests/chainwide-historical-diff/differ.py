@@ -29,10 +29,11 @@ def _hex_norm(v):
     '?0x00…5e7ec' and '?0x…0005e7ec' are the same value at different widths."""
     if isinstance(v, list):
         return [_hex_norm(x) for x in v]
+    if isinstance(v, dict):
+        return {key: _hex_norm(value) for key, value in v.items()}
     if isinstance(v, str) and _HEX_RE.match(v):
         return int(v.lstrip("?"), 16)
     return v
-
 
 
 # How far apart two legs' clocks can plausibly be. Both legs now drive their
@@ -74,10 +75,11 @@ def _timestamp_noise_elems(ev_, av_):
 
 
 def _timestamp_noise(ev_, av_):
-    """Deploy-time wall-clock skew: a ctor storing block.timestamp lands a few
-    minutes apart on the two legs (EVM leg runs, then the AVM leg deploys).
-    Two plausible-unix-timestamp values within 2h of each other are the run
-    itself, not a compilation divergence (ena/lastMintTimestamp)."""
+    """Deploy-time clock skew: a ctor storing block.timestamp lands a little
+    apart on the two legs (the EVM leg runs, then the AVM leg deploys). Two
+    plausible-unix-timestamp values within `_TS_SKEW_MAX` of each other are the
+    run itself, not a compilation divergence (ena/lastMintTimestamp,
+    cow/timestampLastMinting, pol/lastMint)."""
     def flat(v):
         if isinstance(v, list) and len(v) == 1:
             return v[0]
@@ -163,6 +165,7 @@ def diff_case(case_dir: Path) -> dict:
     avm_block_no = avm.get("block_no") or {}
     findings = {"status_div": [], "value_div": [], "event_div": [],
                 "event_noise": [], "snapshot_div": [], "snapshot_noise": [],
+                "probe_div": [], "probe_noise": [],
                 "storage_noise": []}
 
     by_i = {c["i"]: c for c in calls}
@@ -254,6 +257,26 @@ def diff_case(case_dir: Path) -> dict:
             findings[bucket].append({"after_txn": int(k), "getter": sig,
                                      "evm": ev_, "avm": av_})
 
+    probes = meta.get("probes") or []
+    ep, ap = evm.get("probes") or {}, avm.get("probes") or {}
+    for key in sorted(set(ep) | set(ap), key=int):
+        ev_, av_ = ep.get(key), ap.get(key)
+        spec = probes[int(key)] if int(key) < len(probes) else {}
+        where = {"probe": int(key), "getter": spec.get("sig"),
+                 "args": spec.get("args")}
+        if ev_ is None or av_ is None:
+            findings["probe_noise"].append({
+                **where, "note": "probe absent on one leg"})
+        elif ev_.get("ok") != av_.get("ok"):
+            findings["probe_div"].append({**where, "evm": ev_, "avm": av_})
+        elif not ev_.get("ok"):
+            # Revert text is VM-specific; matching status is the observable.
+            continue
+        elif ev_.get("ret") != av_.get("ret") \
+                and _hex_norm(ev_.get("ret")) != _hex_norm(av_.get("ret")):
+            findings["probe_div"].append({**where, "evm": ev_.get("ret"),
+                                           "avm": av_.get("ret")})
+
     # ── storage diffing (by Solidity variable NAME, across two storage models) ──
     es, as_ = evm.get("storage") or {}, avm.get("storage") or {}
     findings["storage_div"], findings["storage_map_div"] = [], []
@@ -301,14 +324,14 @@ def diff_case(case_dir: Path) -> dict:
         # choice (e.g. immutables/constants not materialised as app state), not
         # a value divergence — flag separately from a genuine value mismatch.
         bucket = "storage_div" if (var in e_sc and var in a_sc) else "storage_noise"
-        if _timestamp_noise(ev_, av_):
-            bucket = "storage_noise"
         # An EIP-712 domain separator CACHED IN STORAGE is the same chain-id
         # noise the getter rule already covers — it hashes chainid in, so the
         # two legs must differ. Only the getter spelling was classified, so a
         # contract that caches it in a state var (wallettok) reported it as a
         # real divergence.
         if _NOISE_SIG_RE.search(var):
+            bucket = "storage_noise"
+        if _timestamp_noise(ev_, av_):
             bucket = "storage_noise"
         if _height_skew_noise(ev_, av_, _last_change(var),
                               evm_block_no, avm_block_no):
@@ -319,6 +342,8 @@ def diff_case(case_dir: Path) -> dict:
     e_m, a_m = es.get("maps") or {}, as_.get("maps") or {}
     declared = set(a_m.pop("__declared__", []) or [])
     stray_boxes = a_m.pop("__unattributed_boxes__", 0) or 0
+    stray_groups = a_m.pop("__unattributed_box_groups__", {}) or {}
+    unsupported = a_m.pop("__unsupported__", []) or []
     # COVERAGE, not correctness: a mapping the contract declares but that the EVM
     # side never read is compared against NOTHING, which would otherwise be
     # indistinguishable from "clean". op_gov/_balances and opmint9/_balances were
@@ -329,6 +354,10 @@ def diff_case(case_dir: Path) -> dict:
         findings["storage_maps_uncompared"] = [
             {"maps": uncompared,
              "note": "declared by the contract but NOT diffed — no coverage here"}]
+    if unsupported:
+        findings.setdefault("storage_maps_uncompared", []).append(
+            {"maps": unsupported,
+             "note": "ARC-56 mapping has no corresponding solc layout root"})
     # Guard against a VACUOUS pass: if the EVM side found mapping state but the
     # AVM side reported none, the comparison did not happen — surface that
     # explicitly instead of silently counting zero divergences.
@@ -347,13 +376,32 @@ def diff_case(case_dir: Path) -> dict:
     if stray_boxes:
         findings["storage_boxes_unattributed"] = [
             {"boxes": stray_boxes,
+             "groups": stray_groups,
              "note": "boxes on chain that no derived mapping key matched — "
                      "either a shape the reader skips or a wrong key derivation"}]
     writes = es.get("writes") or {}
-    if es.get("blind_slot_count"):
+    e_raw, a_raw = es.get("raw_slots") or {}, as_.get("raw_slots") or {}
+    raw_compared = set(e_raw) & set(a_raw)
+    for slot in sorted(raw_compared, key=int):
+        if not _same_word(e_raw[slot], a_raw[slot]):
+            findings.setdefault("storage_raw_div", []).append(
+                {"slot": slot, "evm": e_raw[slot], "avm": a_raw[slot]})
+    raw_uncompared = sorted(set(a_raw) - set(e_raw), key=int)
+    if raw_uncompared:
+        findings["storage_raw_uncompared"] = [{
+            "slots": raw_uncompared,
+            "note": "native s:<slot> boxes whose EVM word was not captured"}]
+    blind_slots = es.get("blind_slots") or {}
+    residual_blind = {slot: txns for slot, txns in blind_slots.items()
+                      if slot not in raw_compared}
+    residual_blind_count = max(
+        len(residual_blind),
+        int(es.get("blind_slot_count") or 0) - len(raw_compared))
+    if residual_blind_count:
         findings["storage_blind_slots"] = [
-            {"slots": es["blind_slot_count"],
-             "sample": list((es.get("blind_slots") or {}).items())[:5],
+            {"slots": residual_blind_count,
+             "groups": es.get("blind_slot_groups") or {},
+             "sample": list(residual_blind.items())[:12],
              "note": "written by the contract but read by NO differ probe — "
                      "not compared on either leg"}]
 
@@ -361,42 +409,6 @@ def diff_case(case_dir: Path) -> dict:
         """Localise a map divergence to the last txn that wrote that map."""
         hits = [int(i) for i, w in writes.items() if mapname in (w.get("names") or ())]
         return max(hits) if hits else None
-
-    def _uniform_offset(diffs):
-        """Signature of a BLOCK/TIME base difference rather than a miscompile.
-
-        The EVM leg pins block numbers and timestamps to historical values; the
-        AVM leg cannot (LocalNet's round is whatever it is). A contract storing
-        `block.number + period` therefore differs on EVERY entry by the SAME
-        constant, with every other field equal. staup does exactly that
-        (`_locked[a] = lockAddressInfo(block.number + blocklockperiod, true)`):
-        16 entries, one delta of 487989, bool matching on all 16.
-
-        Requires >= 2 entries and one distinct non-zero delta, so it cannot
-        absorb a one-off wrong value. Still reported — as noise, not a finding.
-        """
-        if len(diffs) < 2:
-            return None
-        deltas = set()
-        for ev_, av_ in diffs:
-            e_l = ev_ if isinstance(ev_, list) else [ev_]
-            a_l = av_ if isinstance(av_, list) else [av_]
-            if len(e_l) != len(a_l):
-                return None
-            d = None
-            for x, y in zip(e_l, a_l):
-                if x == y:
-                    continue
-                if not (isinstance(x, int) and isinstance(y, int)) \
-                        or isinstance(x, bool) or isinstance(y, bool):
-                    return None          # a non-numeric field differs => real
-                if d is not None:
-                    return None          # two numeric fields differ => real
-                d = y - x
-            if d in (None, 0):
-                return None
-            deltas.add(d)
-        return deltas.pop() if len(deltas) == 1 else None
 
     for m in sorted(set(e_m) & set(a_m)):
         if m.startswith("__"):
@@ -406,24 +418,21 @@ def diff_case(case_dir: Path) -> dict:
         # names forward through puya-sol's hash), so entries compare 1:1.
         keys = [k for k in sorted(set(ee) | set(aa))
                 if not _same_word(ee.get(k), aa.get(k))]
-        off = _uniform_offset([(ee.get(k), aa.get(k)) for k in keys])
         for k in keys:
             ev_k, av_k = ee.get(k), aa.get(k)
+            height_only = _height_skew_noise(
+                ev_k, av_k, _last_write(m), evm_block_no, avm_block_no)
             ts_only = (_timestamp_noise(ev_k, av_k)
-                       or _timestamp_noise_elems(ev_k, av_k)
-                       or _height_skew_noise(ev_k, av_k, _last_write(m),
-                                             evm_block_no, avm_block_no))
+                       or _timestamp_noise_elems(ev_k, av_k))
             bucket = ("storage_noise"
-                      if (off is not None or ts_only) else "storage_map_div")
+                      if (height_only or ts_only) else "storage_map_div")
             f = {"map": m, "key": k, "evm": ev_k, "avm": av_k,
                  "last_write_txn": _last_write(m)}
-            if off is not None:
-                f["note"] = (f"uniform +{off} on every entry — EVM/AVM block or "
-                             "timestamp base, not a value divergence")
+            if height_only:
+                f["note"] = "differs only by the recorded local block-height skew"
             elif ts_only:
-                f["note"] = ("differs only in plausible-timestamp field(s) — the "
-                             "EVM leg time-travels to each txn's historical "
-                             "timestamp, the AVM leg runs at LocalNet wall clock")
+                f["note"] = ("differs only in plausible-timestamp field(s) "
+                             "within the two legs' residual clock skew")
             findings.setdefault(bucket, []).append(f)
 
     skips = {}
@@ -438,6 +447,20 @@ def diff_case(case_dir: Path) -> dict:
         "platform_limits": len(avm.get("platform_limits") or {}),
         "findings": findings,
         "counts": {k: len(v) for k, v in findings.items()},
+        "coverage": {
+            "parameterized_probes": {
+                "planned": len(probes),
+                "compared": len(set(ep) & set(ap)),
+                "evm_successes": sum(bool(item.get("ok")) for item in ep.values()),
+                "avm_successes": sum(bool(item.get("ok")) for item in ap.values()),
+            },
+            "mapping_roots_declared": sorted(declared),
+            "mapping_roots_compared": sorted(
+                declared & set(e_m) & set(a_m)),
+            "raw_slots_compared": len(raw_compared),
+            "evm": es.get("coverage") or {},
+            "avm": as_.get("coverage") or {},
+        },
     }
     dump_json(case_dir / "report.json", report)
     return report
@@ -446,13 +469,18 @@ def diff_case(case_dir: Path) -> dict:
 def print_report(rep: dict):
     c = rep["counts"]
     real = sum(c.get(k, 0) for k in ("status_div", "value_div", "event_div",
-                                     "snapshot_div", "storage_div", "storage_map_div"))
+                                     "snapshot_div", "probe_div", "storage_div",
+                                     "storage_map_div", "storage_raw_div"))
     print(f"\n=== {rep['tag']} ({rep['name']}) — {rep['replayed']}/{rep['txns_in_window']} "
           f"txns replayed on both legs ===")
     print(f"  skips: {rep['skips'] or '{}'}  | avm platform-limits: {rep['platform_limits']}")
+    probes = (rep.get("coverage") or {}).get("parameterized_probes") or {}
+    if probes.get("planned"):
+        print(f"  parameterized probes: {probes.get('compared', 0)}/"
+              f"{probes['planned']} compared")
     for k in ("status_div", "value_div", "event_div", "snapshot_div",
-              "storage_div", "storage_map_div"):
-        if c[k]:
+              "probe_div", "storage_div", "storage_map_div", "storage_raw_div"):
+        if c.get(k):
             print(f"  ❌ {k}: {c[k]}")
             for f in rep["findings"][k][:5]:
                 print(f"       {f}")
@@ -468,8 +496,12 @@ def print_report(rep: dict):
         det = rep["findings"]["storage_blind_slots"][0]
         print(f"  ⚠️  storage_blind_slots: {det['slots']} slot(s) written but "
               f"never probed — not compared")
-    for k in ("event_noise", "snapshot_noise", "storage_noise"):
-        if c[k]:
+    if c.get("storage_raw_uncompared"):
+        det = rep["findings"]["storage_raw_uncompared"][0]
+        print(f"  ⚠️  storage_raw_uncompared: {len(det['slots'])} raw slot(s) "
+              f"not captured on EVM")
+    for k in ("event_noise", "snapshot_noise", "probe_noise", "storage_noise"):
+        if c.get(k):
             print(f"  · {k} (known EVM/AVM difference): {c[k]}")
     print("  ✅ no divergences" if real == 0 else f"  ❌ {real} REAL divergence(s)")
 
