@@ -376,9 +376,14 @@ struct FunctionContext: Context
 	std::map<std::string, unsigned> paramBitWidths;
 	/// solc callable AST identity, used to scope synthesized helpers.
 	int64_t callableId = 0;
-	/// Declared solc param types by BARE name (possible_solc item 2); feeds
+	/// Declared solc param types by BARE name; feeds
 	/// AssemblyBuilder's EVM-ABI calldata layout. Assigned after construction.
 	std::map<std::string, solidity::frontend::Type const*> paramSolTypes;
+
+	/// Declared Solidity return components. Assembly `return(start,size)` uses
+	/// these to recursively decode the EVM ABI region into the method's AWST
+	/// return value instead of recognizing individual aggregate shapes.
+	std::vector<solidity::frontend::Type const*> returnSolTypes;
 
 	/// Struct storage-ref params passed as a box-key handle (bytes) because the
 	/// body uses `param.slot` in asm (solady storage-lib idiom). name → the ARC4

@@ -1,6 +1,6 @@
 // CUSTOM (puya-sol regression): selectors for methods with struct/array/
 // enum parameters must expand to the ARC4 tuple form the callee router
-// dispatches on, not "struct Name". See EVM_DIVERGENCE.md encoding seam #2.
+// dispatches on, not "struct Name".
 contract C {
     struct P { uint a; uint b; }
     struct Nested { P p; uint8 c; }

@@ -10,6 +10,12 @@
 namespace puyasol::builder
 {
 
+enum class ContractAbi
+{
+	Arc4,
+	Evm,
+};
+
 /// Target choices and unit-wide storage facts for one compiler invocation.
 /// Builder services receive this through TypeMapper instead of consulting
 /// mutable process-global switches.
@@ -18,6 +24,11 @@ struct TargetProfile
 	bool evmStorageLayout = false;
 	bool evmMemoryLayout = false;
 	bool evmSelectors = false;
+	/// Wire protocol at the AVM application entry/return boundary. This does
+	/// not alter Solidity `abi.*` expression semantics. The EVM profile also
+	/// normalises ambient address identities (e.g. msg.sender/caller()) to the
+	/// same 160-bit namespace used by decoded address arguments.
+	ContractAbi contractAbi = ContractAbi::Arc4;
 	bool viaIRSequencing = false;
 	bool denseOnlyStorage = false;
 	bool singlePageStorage = false;

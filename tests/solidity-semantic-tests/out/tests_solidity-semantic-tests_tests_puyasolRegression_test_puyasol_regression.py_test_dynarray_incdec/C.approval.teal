@@ -5,9 +5,6 @@
 main:
     intcblock 16 8 1 0 255
     bytecblock 0x010000000000000000 "a" "c" 0x151f7c75 "b" 0x01 "__ctor_pending" 0x0001 0xffffffffffffffffffffffffffffffff
-    intc_3 // 0
-    dup
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -47,7 +44,6 @@ main_after_if_else@2:
 main_getC_route@16:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     pushint 32
     ==
@@ -62,7 +58,6 @@ main_getC_route@16:
 main_ternary_merge@23:
     !
     assert // not payable
-    dig 2
     dup
     bytec_0 // 0x010000000000000000
     b<
@@ -100,7 +95,6 @@ main_ternary_false@22:
 main_incC_route@15:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     pushint 32
     ==
@@ -115,7 +109,6 @@ main_incC_route@15:
 main_ternary_merge@28:
     !
     assert // not payable
-    dig 2
     dup
     bytec_0 // 0x010000000000000000
     b<
@@ -167,7 +160,6 @@ main_pushC_route@14:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@32
     txn GroupIndex
@@ -178,7 +170,7 @@ main_pushC_route@14:
 main_ternary_merge@33:
     !
     assert // not payable
-    dupn 2
+    dup
     intc 4 // 255
     <=
     assert // ABI validation
@@ -215,7 +207,6 @@ main_ternary_false@32:
 main_getB_route@13:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     pushint 32
     ==
@@ -230,7 +221,6 @@ main_getB_route@13:
 main_ternary_merge@38:
     !
     assert // not payable
-    dig 2
     dup
     bytec_0 // 0x010000000000000000
     b<
@@ -289,7 +279,6 @@ main_ternary_false@37:
 main_incB_route@12:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     pushint 32
     ==
@@ -304,7 +293,6 @@ main_incB_route@12:
 main_ternary_merge@46:
     !
     assert // not payable
-    dig 2
     dup
     bytec_0 // 0x010000000000000000
     b<
@@ -382,7 +370,6 @@ main_pushB_route@11:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txn GroupIndex
     bz main_ternary_false@50
     txn GroupIndex
@@ -395,7 +382,7 @@ main_ternary_merge@51:
     assert // not payable
     intc_1 // 8
     bzero
-    dig 1
+    swap
     itob
     dig 1
     swap
@@ -436,7 +423,6 @@ main_ternary_false@50:
 main_getA_route@10:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     pushint 32
     ==
@@ -451,7 +437,6 @@ main_getA_route@10:
 main_ternary_merge@56:
     !
     assert // not payable
-    dig 2
     dup
     bytec_0 // 0x010000000000000000
     b<
@@ -504,7 +489,6 @@ main_ternary_false@55:
 main_decA_route@9:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     pushint 32
     ==
@@ -519,7 +503,6 @@ main_decA_route@9:
 main_ternary_merge@61:
     !
     assert // not payable
-    dig 2
     dup
     bytec_0 // 0x010000000000000000
     b<
@@ -574,7 +557,6 @@ main_ternary_false@60:
 main_preIncA_route@8:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     pushint 32
     ==
@@ -589,7 +571,6 @@ main_preIncA_route@8:
 main_ternary_merge@66:
     !
     assert // not payable
-    dig 2
     dup
     bytec_0 // 0x010000000000000000
     b<
@@ -668,7 +649,6 @@ main_ternary_false@65:
 main_postIncA_route@7:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     pushint 32
     ==
@@ -683,7 +663,6 @@ main_postIncA_route@7:
 main_ternary_merge@71:
     !
     assert // not payable
-    dig 2
     dup
     bytec_0 // 0x010000000000000000
     b<
@@ -763,7 +742,6 @@ main_ternary_false@70:
 main_pushA_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 16
     ==
@@ -781,7 +759,7 @@ main_ternary_merge@76:
     intc_0 // 16
     bzero
     dup
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -820,6 +798,10 @@ main___postInit_route@5:
     bytec 6 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
     bytec 6 // "__ctor_pending"
     intc_3 // 0
     app_global_put

@@ -1,4 +1,4 @@
-"""Multi-slot memory audit — "who still assumes slot 0" (new_review.md B7/B8).
+"""Multi-slot memory audit — "who still assumes slot 0".
 
 EVM memory is modeled as N scratch slots of 4096 bytes each. The multi-slot
 migration reached the range helpers but not the runtime-offset word paths:

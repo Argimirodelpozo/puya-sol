@@ -91,6 +91,7 @@ public:
 		awst::WType const* wtype = nullptr;   ///< Scalar: var's wtype; StructMemberArrayRoot: the STRUCT's ARC4Struct
 		std::string dataBase;                 ///< ArrayData: decimal K (region base)
 		std::string fieldName;                ///< StructMemberArrayRoot: the dyn-array member
+		unsigned elementSize = 0;             ///< ArrayRoot/Data: fixed ARC4 element width; 0 means dynamic
 	};
 
 	/// Exact-slot routes (decimal slot string → route) + data regions
@@ -107,6 +108,12 @@ public:
 	void setSignedParamBits(std::map<std::string, unsigned> _m)
 	{
 		m_signedParamBits = std::move(_m);
+	}
+
+	void setReturnSolTypes(
+		std::vector<solidity::frontend::Type const*> _types)
+	{
+		m_returnSolTypes = std::move(_types);
 	}
 
 	/// ARC-4 router selector → Solidity selector mappings for msg.data-style
@@ -205,6 +212,15 @@ public:
 		ScratchLayout const& _scratch,
 		int _size, awst::SourceLocation const& _loc, int _uniqueId);
 
+	/// Bind `_offVar` to the current FMP and advance it by a runtime-sized,
+	/// 32-byte-rounded region.  This is the common allocator for recursive EVM
+	/// memory aggregates; emitBytesBlobAlloc additionally writes a length word.
+	static std::vector<std::shared_ptr<awst::Statement>> emitMemoryAlloc(
+		ScratchLayout const& _scratch,
+		std::shared_ptr<awst::Expression> _sizeU64,
+		std::string const& _offVar,
+		int _uniqueId, awst::SourceLocation const& _loc);
+
 	/// Allocate a `new bytes(len)` / `new string(len)` in the memory blob for asm use:
 	/// binds `_offVar` (uint64) to the current FMP (the EVM pointer), writes the
 	/// 32-byte length word at that offset, and bumps FMP by 32 + ceil(len/32)*32.
@@ -272,6 +288,17 @@ public:
 		ScratchLayout const& _scratch,
 		std::shared_ptr<awst::Expression> _offset,
 		std::shared_ptr<awst::Expression> _value32,
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>& _out
+	);
+
+	/// Write exactly one byte at a dynamic EVM-memory offset.  Unlike the word
+	/// writer this remains valid at the last byte of a scratch slot/blob and is
+	/// used for Solidity bytes/string element stores.
+	static void writeMemByteDirect(
+		ScratchLayout const& _scratch,
+		std::shared_ptr<awst::Expression> _offset,
+		std::shared_ptr<awst::Expression> _valueByte,
 		awst::SourceLocation const& _loc,
 		std::vector<std::shared_ptr<awst::Statement>>& _out
 	);
@@ -577,7 +604,8 @@ private:
 
 	/// Lower `sstore(structRef.slot, packedWord)` for an ARC4 struct in a box (slot 0).
 	/// EVM packs fields into one 256-bit slot; rebuilds the box bytes from `_packed`
-	/// (by EVM byte range) and the existing box for other fields, then writes back.
+	/// and the existing box for other fields. Fixed integers are mapped by byte range;
+	/// Solidity's byte-lane bools are mapped to ARC-4's consecutive packed bool bits.
 	/// Only slot 0 (bare `.slot`) handled; others fall through to the numeric-slot path.
 	void handleBoxKeyedStructSlotStore(
 		std::shared_ptr<awst::BoxValueExpression> const& _slotBox,
@@ -892,6 +920,9 @@ private:
 		std::string name;
 		awst::WType const* type;
 		std::shared_ptr<awst::Expression> dataOff; // uint64 byte index into the data
+		/// add(local, O) absolute offset when O may address the 32-byte length
+		/// header. Null for already-normalized data pointers.
+		std::shared_ptr<awst::Expression> absoluteOff;
 	};
 	std::optional<BytesDataPtrMatch> matchBytesMemoryDataPtr(
 		solidity::yul::Expression const& _addr,
@@ -997,7 +1028,7 @@ private:
 	std::set<std::string> m_calldataStaticPtrNames;
 	std::vector<std::pair<std::string, awst::WType const*>> m_calldataParams;
 	/// Declared solc types of the function's calldata params, by BARE name
-	/// (possible_solc item 2): the EVM-ABI head layout (calldataHeadSize) and
+	/// The EVM-ABI head layout (calldataHeadSize) and
 	/// value widening (sign extension, static-aggregate leaf words) derive
 	/// from these; absent entries fall back to the WType-based heuristics.
 	std::map<std::string, solidity::frontend::Type const*> m_calldataSolTypes;
@@ -1091,15 +1122,20 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// True for a dynamic-ABI calldata param (bytes/string/dynamic array): its head in the
-	/// EVM-ABI blob is a tail POINTER, so .offset/.length must be read at runtime from __cd_blob.
+	/// True when the WType's ARC4 encoding contains a dynamic component. Declared
+	/// solc types remain authoritative where available; this recursive fallback
+	/// also covers fixed arrays/structs containing dynamic members.
 	bool isDynamicCalldataType(awst::WType const* _type) const;
 
-	/// Runtime .offset / .length of a dynamic calldata param, read byte-addressed from __cd_blob:
-	/// headWord = u64@(headPos); .offset = headWord + 36 (4 selector + 32 length word);
-	/// .length = u64@(headWord + 4). _headPos = the param's head byte position (m_localConstants).
-	std::shared_ptr<awst::Expression> calldataDynOffset(uint64_t _headPos, awst::SourceLocation const& _loc);
-	std::shared_ptr<awst::Expression> calldataDynLength(uint64_t _headPos, awst::SourceLocation const& _loc);
+	/// Runtime .offset / .length of a dynamically-encoded calldata param. solc's
+	/// outer type determines whether its tail begins with a length word (T[]) or
+	/// directly with tuple/fixed-array heads (struct / T[][N]).
+	std::shared_ptr<awst::Expression> calldataDynOffset(
+		uint64_t _headPos, solidity::frontend::Type const* _solType,
+		awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> calldataDynLength(
+		uint64_t _headPos, solidity::frontend::Type const* _solType,
+		awst::SourceLocation const& _loc);
 
 	/// Seed mutable `__cd_off_<name>` / `__cd_len_<name>` (offset,length) locals for each dynamic
 	/// calldata param from the blob, so `.offset`/`.length` read them and `x.offset := V` can
@@ -1236,6 +1272,9 @@ private:
 
 	/// Nesting depth of inlined Yul functions; >0 → `leave` emits LoopExit not Return.
 	int m_inlineDepth = 0;
+	/// Active inlined-function leave flag. Nested loops propagate this flag so
+	/// leave exits the synthetic function wrapper, not merely the nearest loop.
+	std::string m_yulLeaveFlag;
 
 	/// Handle a call to a user-defined assembly function by inlining it.
 	std::shared_ptr<awst::Expression> handleUserFunctionCall(
@@ -1337,6 +1376,7 @@ private:
 	std::string m_sourceFile;
 	std::string m_contextName;
 	awst::WType const* m_returnType = nullptr;
+	std::vector<solidity::frontend::Type const*> m_returnSolTypes;
 
 	std::string m_arrayParamName;
 	awst::WType const* m_arrayParamType = nullptr;

@@ -1,0 +1,362 @@
+#include "builder/contract/ContractBuilder.h"
+
+#include "Logger.h"
+#include "builder/SolcFacts.h"
+#include "builder/abi/EvmAbiDecode.h"
+#include "builder/abi/EvmAbiEncode.h"
+#include "builder/codec/EvmValueCodec.h"
+#include "builder/sol-types/OverloadSuffix.h"
+
+#include <libsolidity/ast/AST.h>
+
+namespace puyasol::builder
+{
+using namespace solidity::frontend;
+
+namespace
+{
+std::shared_ptr<awst::Expression> u64(
+	uint64_t value, awst::SourceLocation const& loc)
+{
+	return awst::makeIntegerConstant(value, loc);
+}
+
+std::string methodNameFor(
+	FunctionType const& function, OverloadedNamesSet const& overloaded)
+{
+	if (!function.hasDeclaration())
+		return {};
+	if (auto const* definition =
+			dynamic_cast<FunctionDefinition const*>(&function.declaration()))
+	{
+		std::string name = definition->name();
+		if (overloaded.count(name))
+			appendOverloadSuffix(name, *definition);
+		return name;
+	}
+	if (auto const* variable =
+			dynamic_cast<VariableDeclaration const*>(&function.declaration()))
+		return variable->name();
+	return {};
+}
+
+awst::ContractMethod* findMethod(awst::Contract& contract, std::string const& name)
+{
+	for (auto& method: contract.methods)
+		if (method.memberName == name)
+			return &method;
+	return nullptr;
+}
+
+std::shared_ptr<awst::Expression> appArgCountIs(
+	uint64_t count, awst::SourceLocation const& loc)
+{
+	return awst::makeNumericCompare(
+		awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
+		awst::NumericComparison::Eq, u64(count, loc), loc);
+}
+
+std::shared_ptr<awst::Expression> isNoOp(awst::SourceLocation const& loc)
+{
+	return awst::makeNumericCompare(
+		awst::makeTxn("OnCompletion", awst::WType::uint64Type(), loc),
+		awst::NumericComparison::Eq, u64(0, loc), loc);
+}
+
+void emitReturnLog(
+	std::shared_ptr<awst::Expression> payload,
+	awst::SourceLocation const& loc,
+	std::vector<std::shared_ptr<awst::Statement>>& out)
+{
+	auto log = awst::makeIntrinsicCall("log", awst::WType::voidType(), loc);
+	log->stackArgs.push_back(awst::makeConcat(
+		awst::makeBytesConstant({0x15, 0x1f, 0x7c, 0x75}, loc),
+		std::move(payload), loc));
+	out.push_back(awst::makeExpressionStatement(std::move(log), loc));
+}
+
+void emitNonPayableCheck(
+	awst::SourceLocation const& loc,
+	std::vector<std::shared_ptr<awst::Statement>>& out)
+{
+	// The normal method-body guard is keyed by the ARC4 selector. EVM entry
+	// routes have a different selector, so enforce the same payment rule at the
+	// adapter while the selected external function is known.
+	auto groupIndex = awst::makeTxn(
+		"GroupIndex", awst::WType::uint64Type(), loc);
+	auto hasPrecedingTxn = awst::makeNumericCompare(
+		groupIndex, awst::NumericComparison::Gt, u64(0, loc), loc);
+	auto paymentIndex = awst::makeUInt64BinOp(
+		awst::makeTxn("GroupIndex", awst::WType::uint64Type(), loc),
+		awst::UInt64BinaryOperator::Sub, u64(1, loc), loc);
+	auto amount = awst::makeGtxns(
+		"Amount", std::move(paymentIndex), awst::WType::uint64Type(), loc);
+	auto value = awst::makeConditional(
+		std::move(hasPrecedingTxn), std::move(amount), u64(0, loc),
+		awst::WType::uint64Type(), loc);
+	out.push_back(awst::makeExpressionStatement(
+		awst::makeAssert(
+			awst::makeNumericCompare(std::move(value),
+				awst::NumericComparison::Eq, u64(0, loc), loc),
+			loc, "not payable"), loc));
+}
+}
+
+void ContractBuilder::emitEvmEntryDispatch(
+	ContractDefinition const& contractDefinition,
+	awst::Contract& contract)
+{
+	auto& approval = contract.approvalProgram;
+	if (!approval.body)
+		return;
+	auto const& loc = approval.sourceLocation;
+
+	struct Route
+	{
+		FunctionType const* function = nullptr;
+		awst::ContractMethod* method = nullptr;
+		std::vector<uint8_t> selector;
+	};
+	std::vector<Route> routes;
+	for (auto const& [_, function]: contractDefinition.interfaceFunctionList(true))
+	{
+		if (!function)
+			continue;
+		auto name = methodNameFor(*function, m_overloadedNames);
+		auto* method = findMethod(contract, name);
+		if (!method)
+		{
+			Logger::instance().error(
+				"cannot build EVM entry route for Solidity function '"
+					+ function->externalSignature() + "': generated method '"
+					+ name + "' was not found", loc);
+			continue;
+		}
+		if (!abi::canDecodeEvmAbi(function->parameterTypes())
+			|| !abi::canEncodeEvmAbi(function->returnParameterTypes()))
+		{
+			Logger::instance().error(
+				"Solidity ABI entry route contains a type unsupported by the "
+				"canonical recursive codec: " + function->externalSignature(), loc);
+			continue;
+		}
+		routes.push_back({function, method,
+			SolcFacts::externalSelector(*function)});
+		// The method remains an ordinary callable subroutine, but is no longer
+		// advertised to or dispatched by puya's ARC4 router.
+		method->arc4MethodConfig.reset();
+	}
+
+	// Solidity fallback/receive are owned by this adapter as well. Their full
+	// forwarding behavior is added below; suppress accidental ARC4 exposure.
+	for (auto& method: contract.methods)
+		if (method.memberName == "__fallback" || method.memberName == "__receive")
+			method.arc4MethodConfig.reset();
+	auto const* fallbackDefinition = contractDefinition.fallbackFunction();
+	if (fallbackDefinition && !fallbackDefinition->isImplemented())
+		fallbackDefinition = nullptr;
+	auto const* receiveDefinition = contractDefinition.receiveFunction();
+	if (receiveDefinition && !receiveDefinition->isImplemented())
+		receiveDefinition = nullptr;
+	auto* fallbackMethod = fallbackDefinition
+		? findMethod(contract, "__fallback") : nullptr;
+	auto* receiveMethod = receiveDefinition
+		? findMethod(contract, "__receive") : nullptr;
+
+	// Compiler-private lifecycle methods (notably __postInit) retain ARC4
+	// configs. Give that residual router first refusal without reopening any
+	// public Solidity route under ARC4 selectors.
+	bool hasResidualArc4Route = false;
+	for (auto const& method: contract.methods)
+		if (method.arc4MethodConfig)
+		{
+			hasResidualArc4Route = true;
+			break;
+		}
+	if (hasResidualArc4Route)
+	{
+		std::string didName = "__evm_entry_arc4_internal";
+		auto did = [&]() {
+			return awst::makeVarExpression(didName, awst::WType::boolType(), loc);
+		};
+		approval.body->body.push_back(awst::makeAssignmentStatement(
+			did(), awst::makeARC4Router(awst::WType::boolType(), loc), loc));
+		auto accepted = awst::makeBlock(loc);
+		accepted->body.push_back(awst::makeReturnStatement(awst::makeTrue(loc), loc));
+		approval.body->body.push_back(awst::makeIfElse(
+			did(), std::move(accepted), nullptr, loc));
+	}
+
+	// Empty Solidity calldata selects receive(), or fallback() when receive is
+	// absent. Emit the carrier log even for a void handler so low-level callers
+	// have one deterministic return record to capture.
+	if (receiveMethod || fallbackMethod)
+	{
+		auto* emptyTarget = receiveMethod ? receiveMethod : fallbackMethod;
+		auto const* emptyDefinition = receiveMethod
+			? receiveDefinition : fallbackDefinition;
+		auto condition = awst::makeBoolBinOp(
+			isNoOp(loc), awst::BinaryBooleanOperator::And,
+			appArgCountIs(0, loc), loc);
+		auto body = awst::makeBlock(loc);
+		if (emptyDefinition && !emptyDefinition->isPayable())
+			emitNonPayableCheck(loc, body->body);
+		auto call = awst::makeSubroutineCall(
+			awst::InstanceMethodTarget{emptyTarget->memberName},
+			emptyTarget->returnType, loc);
+		if (emptyDefinition && !emptyDefinition->parameters().empty())
+			awst::pushCallArg(call->args, awst::makeBytesConstant({}, loc));
+		if (emptyTarget->returnType == awst::WType::voidType())
+		{
+			body->body.push_back(awst::makeExpressionStatement(call, loc));
+			emitReturnLog(awst::makeBytesConstant({}, loc), loc, body->body);
+		}
+		else
+			emitReturnLog(call, loc, body->body);
+		body->body.push_back(awst::makeReturnStatement(awst::makeTrue(loc), loc));
+		approval.body->body.push_back(awst::makeIfElse(
+			std::move(condition), std::move(body), nullptr, loc));
+	}
+
+	for (auto const& route: routes)
+	{
+		auto const& paramTypes = route.function->parameterTypes();
+		auto const& returnTypes = route.function->returnParameterTypes();
+		auto selectorMatches = awst::makeBytesComparison(
+			awst::makeAppArg(0, loc), awst::EqualityComparison::Eq,
+			awst::makeBytesConstant(route.selector, loc,
+				awst::BytesEncoding::Base16, awst::WType::bytesType()), loc);
+		auto shapeMatches = awst::makeBoolBinOp(
+			appArgCountIs(2, loc), awst::BinaryBooleanOperator::And,
+			std::move(selectorMatches), loc);
+		auto condition = awst::makeBoolBinOp(
+			isNoOp(loc), awst::BinaryBooleanOperator::And,
+			std::move(shapeMatches), loc);
+		auto body = awst::makeBlock(loc);
+		if (!route.function->isPayable())
+			emitNonPayableCheck(loc, body->body);
+
+		std::vector<std::shared_ptr<awst::Expression>> values;
+		if (!paramTypes.empty())
+		{
+			awst::WType const* decodedType = nullptr;
+			if (paramTypes.size() == 1)
+				decodedType = m_typeMapper.map(paramTypes[0]);
+			else
+			{
+				std::vector<awst::WType const*> tupleTypes;
+				for (auto const* type: paramTypes)
+					tupleTypes.push_back(m_typeMapper.map(type));
+				decodedType = m_typeMapper.createType<awst::WTuple>(
+					std::move(tupleTypes));
+			}
+			auto decoded = abi::decodeEvmAbi(
+				m_typeMapper, awst::makeAppArg(1, loc), paramTypes,
+				decodedType, loc, body->body);
+			if (paramTypes.size() == 1)
+				values.push_back(std::move(decoded));
+			else
+			{
+				auto once = awst::makeEvalOnce(std::move(decoded), loc);
+				auto const* tuple = dynamic_cast<awst::WTuple const*>(decodedType);
+				for (size_t i = 0; i < paramTypes.size(); ++i)
+					values.push_back(awst::makeTupleItem(
+						once, static_cast<int>(i), tuple->types()[i], loc));
+			}
+		}
+
+		auto call = awst::makeSubroutineCall(
+			awst::InstanceMethodTarget{route.method->memberName},
+			route.method->returnType, loc);
+		for (size_t i = 0; i < values.size(); ++i)
+		{
+			auto value = std::move(values[i]);
+			auto const* expected = i < route.method->args.size()
+				? route.method->args[i].wtype : value->wtype;
+			if (value->wtype != expected)
+				value = codec::valueToArc4(
+					m_typeMapper, paramTypes[i], std::move(value), expected, loc);
+			awst::pushCallArg(call->args, std::move(value));
+		}
+
+		std::vector<std::shared_ptr<awst::Expression>> returnValues;
+		if (returnTypes.empty())
+		{
+			body->body.push_back(awst::makeExpressionStatement(call, loc));
+		}
+		else if (returnTypes.size() == 1)
+			returnValues.push_back(call);
+		else
+		{
+			auto once = awst::makeEvalOnce(call, loc);
+			auto const* tuple = dynamic_cast<awst::WTuple const*>(
+				route.method->returnType);
+			for (size_t i = 0; i < returnTypes.size(); ++i)
+				returnValues.push_back(awst::makeTupleItem(
+					once, static_cast<int>(i), tuple->types()[i], loc));
+		}
+		auto encoded = abi::encodeEvmAbi(
+			m_typeMapper, returnTypes, std::move(returnValues), loc, body->body);
+		emitReturnLog(std::move(encoded), loc, body->body);
+		body->body.push_back(awst::makeReturnStatement(awst::makeTrue(loc), loc));
+		approval.body->body.push_back(awst::makeIfElse(
+			std::move(condition), std::move(body), nullptr, loc));
+	}
+
+	// Unmatched non-empty calldata selects fallback(). Reconstruct exactly the
+	// Solidity byte stream from the AVM carrier split: selector ++ ABI body.
+	if (fallbackMethod)
+	{
+		auto hasSelector = awst::makeNumericCompare(
+			awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
+			awst::NumericComparison::Gt, u64(0, loc), loc);
+		auto hasBody = awst::makeNumericCompare(
+			awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
+			awst::NumericComparison::Gt, u64(1, loc), loc);
+		auto bodyBytes = awst::makeConditional(
+			std::move(hasBody), awst::makeAppArg(1, loc),
+			awst::makeBytesConstant({}, loc), awst::WType::bytesType(), loc);
+		auto calldata = awst::makeConditional(
+			std::move(hasSelector),
+			awst::makeConcat(awst::makeAppArg(0, loc), std::move(bodyBytes), loc),
+			awst::makeBytesConstant({}, loc), awst::WType::bytesType(), loc);
+		auto carrierShape = awst::makeBoolBinOp(
+			awst::makeNumericCompare(
+				awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
+				awst::NumericComparison::Gt, u64(0, loc), loc),
+			awst::BinaryBooleanOperator::And,
+			awst::makeNumericCompare(
+				awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
+				awst::NumericComparison::Lte, u64(2, loc), loc), loc);
+		auto condition = awst::makeBoolBinOp(
+			isNoOp(loc), awst::BinaryBooleanOperator::And,
+			std::move(carrierShape), loc);
+		auto fallbackBody = awst::makeBlock(loc);
+		if (fallbackDefinition && !fallbackDefinition->isPayable())
+			emitNonPayableCheck(loc, fallbackBody->body);
+		auto call = awst::makeSubroutineCall(
+			awst::InstanceMethodTarget{fallbackMethod->memberName},
+			fallbackMethod->returnType, loc);
+		if (fallbackDefinition && !fallbackDefinition->parameters().empty())
+			awst::pushCallArg(call->args, std::move(calldata));
+		if (fallbackMethod->returnType == awst::WType::voidType())
+		{
+			fallbackBody->body.push_back(
+				awst::makeExpressionStatement(call, loc));
+			emitReturnLog(awst::makeBytesConstant({}, loc), loc,
+				fallbackBody->body);
+		}
+		else
+			emitReturnLog(call, loc, fallbackBody->body);
+		fallbackBody->body.push_back(
+			awst::makeReturnStatement(awst::makeTrue(loc), loc));
+		approval.body->body.push_back(awst::makeIfElse(
+			std::move(condition), std::move(fallbackBody), nullptr, loc));
+	}
+
+	// No matching Solidity selector and no compiler-private ARC4 route.
+	approval.body->body.push_back(
+		awst::makeReturnStatement(awst::makeFalse(loc), loc));
+}
+
+} // namespace puyasol::builder

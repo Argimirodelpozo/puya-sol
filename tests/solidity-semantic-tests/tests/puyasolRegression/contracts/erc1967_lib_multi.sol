@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// CUSTOM puya-sol regression — new_review.md A3: admin-slot assembly reached
+// CUSTOM puya-sol regression: admin-slot assembly reached
 // through a LIBRARY (OZ's ERC1967Utils shape) must arm the update gate on the
 // contract whose call graph reaches it — not on whichever contract the unit
 // builds first.

@@ -5,6 +5,7 @@
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/Numeric.h>
 #include <libyul/AST.h>
+#include <libyul/Dialect.h>
 #include <libyul/SideEffects.h>
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/NameCollector.h>
@@ -75,10 +76,38 @@ SolcFacts::YulAnalysis SolcFacts::analyzeYul(
 			result.recursiveFunctions.insert(nameString(name));
 	}
 
-	auto sideEffects = SideEffectsPropagator::sideEffects(_dialect, graph);
-	auto const root = sideEffects.find(FunctionHandle{YulName{}});
-	result.usesStorage = root != sideEffects.end()
-		&& root->second.storage != SideEffects::None;
+	// The side-effect propagator deliberately treats an EVM `call` as capable
+	// of touching storage. That is correct for optimizer reordering, but it is
+	// too conservative for our question: only an explicit sload/sstore needs a
+	// concrete host contract and its storage dispatcher. In particular, using
+	// the propagated flag internalized Solady's SafeTransferLib (which only
+	// performs external calls) while leaving its library callers as root
+	// subroutines, producing unresolved cross-scope calls.
+	//
+	// Ask the dialect for the actual storage builtin handles and inspect only
+	// the root plus reachable local Yul functions. This remains independent of
+	// builtin spelling and preserves transitive Yul-function reachability.
+	auto const storageLoad = _dialect.storageLoadFunctionHandle();
+	auto const storageStore = _dialect.storageStoreFunctionHandle();
+	auto callsStorageBuiltin = [&](FunctionHandle const& caller) {
+		auto const found = graph.functionCalls.find(caller);
+		if (found == graph.functionCalls.end())
+			return false;
+		for (auto const& callee: found->second)
+			if (auto const* builtin = std::get_if<BuiltinHandle>(&callee))
+				if ((storageLoad && *builtin == *storageLoad)
+					|| (storageStore && *builtin == *storageStore))
+					return true;
+		return false;
+	};
+	result.usesStorage = callsStorageBuiltin(FunctionHandle{YulName{}});
+	if (!result.usesStorage)
+		for (auto const& name: reachable)
+			if (callsStorageBuiltin(FunctionHandle{name}))
+			{
+				result.usesStorage = true;
+				break;
+			}
 	return result;
 }
 

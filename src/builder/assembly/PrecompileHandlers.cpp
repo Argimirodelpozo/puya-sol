@@ -2,6 +2,7 @@
 /// EVM precompile implementations: ecAdd, ecMul, ecPairing, ecRecover, sha256, modExp, identity.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "awst/NameGen.h"
 #include "Logger.h"
 
 #include <sstream>
@@ -27,11 +28,28 @@ void AssemblyBuilder::handleEcRecover(
 	auto r = padTo32Bytes(readMemSlot(_inputOffset + 0x40, _loc), _loc);
 	auto s = padTo32Bytes(readMemSlot(_inputOffset + 0x60, _loc), _loc);
 
-	// recovery_id = btoi(v - 27)
+	// Bind v once and gate the AVM intrinsic to exactly 27/28. Invalid v makes
+	// EVM ecrecover produce no output, so the destination memory stays intact.
+	std::string vName = "__ecdsa_v_"
+		+ std::to_string(awst::NameGen::next("AssemblyBuilder.ecrecoverV"));
+	m_locals[vName] = awst::WType::biguintType();
+	_out.push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(vName, awst::WType::biguintType(), _loc),
+		std::move(vBiguint), _loc));
+	auto vRead = [&] {
+		return awst::makeVarExpression(vName, awst::WType::biguintType(), _loc);
+	};
+	auto validV = awst::makeBoolBinOp(
+		awst::makeNumericCompare(vRead(), awst::NumericComparison::Eq,
+			awst::makeBiguintConstant("27", _loc), _loc),
+		awst::BinaryBooleanOperator::Or,
+		awst::makeNumericCompare(vRead(), awst::NumericComparison::Eq,
+			awst::makeBiguintConstant("28", _loc), _loc), _loc);
 	auto vMinus27 = makeBigUIntBinOp(
-		std::move(vBiguint), awst::BigUIntBinaryOperator::Sub,
+		vRead(), awst::BigUIntBinaryOperator::Sub,
 		awst::makeBiguintConstant("27", _loc), _loc);
-	auto recoveryId = awst::makeBtoi(awst::makeAsBytes(std::move(vMinus27), _loc), _loc);
+	auto recoveryId = safeBtoi(std::move(vMinus27), _loc);
+	auto validBlock = awst::makeBlock(_loc);
 
 	awst::WType const* tupleTypePtr = m_typeMapper.createType<awst::WTuple>(
 		std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::bytesType()}
@@ -45,7 +63,7 @@ void AssemblyBuilder::handleEcRecover(
 
 	std::string tupleVar = "__ecdsa_result";
 	m_locals[tupleVar] = tupleTypePtr;
-	_out.push_back(awst::makeAssignmentStatement(
+	validBlock->body.push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(tupleVar, tupleTypePtr, _loc), std::move(ecdsaRecover), _loc));
 
 	// keccak256(concat(pubkey_x, pubkey_y)) → last 20 bytes → left-pad to 32
@@ -58,7 +76,9 @@ void AssemblyBuilder::handleEcRecover(
 	auto addr = awst::makeExtract(std::move(hash), 12, 20, _loc);
 	storeResultToMemory(
 		awst::makeAsBiguint(awst::makeLeftPad(std::move(addr), 12, _loc), _loc),
-		_outputOffset, 1, _loc, _out);
+		_outputOffset, 1, _loc, validBlock->body);
+	_out.push_back(awst::makeIfElse(
+		std::move(validV), std::move(validBlock), nullptr, _loc));
 }
 
 // ─── Runtime-offset precompile handlers ─────────────────────────────────────

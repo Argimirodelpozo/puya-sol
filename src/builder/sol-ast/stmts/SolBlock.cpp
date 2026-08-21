@@ -160,6 +160,14 @@ public:
 		auto call = m_blk.builderCtx().buildExpr(_n.externalCall());
 		if (!call)
 			return out;
+		// External calls lower to a value plus queued effects that submit the
+		// inner transaction and capture its return log.  The success binding
+		// consumes that captured value, so preserve the ordinary expression
+		// order: pre-effects, value consumption, then post-effects.
+		auto preEffects = m_blk.builderCtx().takePreEffects();
+		auto postEffects = m_blk.builderCtx().takePostEffects();
+		for (auto& effect: preEffects)
+			out.push_back(std::move(effect));
 		auto const& clauses = _n.clauses();
 		TryCatchClause const* success =
 			clauses.empty() ? nullptr : clauses[0].get();
@@ -199,7 +207,8 @@ public:
 			out.push_back(awst::makeExpressionStatement(std::move(call), loc));
 		else
 			out.push_back(awst::makeExpressionStatement(std::move(call), loc));
-		m_blk.builderCtx().appendEffectsTo(out);
+		for (auto& effect: postEffects)
+			out.push_back(std::move(effect));
 
 		if (success)
 		{

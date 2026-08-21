@@ -1,7 +1,7 @@
 # Semantic Test Status — v501 ("who still assumes slot 0" audit)
 
 > **Full run 2026-08-19: 8 failed / 1445 passed / 113 xf / 32 xp** (RESULTS_v501_slot0_audit.txt).
-> Baseline held; +3 guard passes. new_review.md B7/B8/C10/C11 as the single
+> Baseline held; +3 guard passes. Review items B7/B8/C10/C11 as the single
 > audit pass that entry asked for — the multi-slot memory migration
 > (58fbeea257) had reached the range helpers but not the word/precompile/
 > return paths.
@@ -39,7 +39,7 @@
 # Semantic Test Status — v500 (encodePacked / bytesN padding-and-width family)
 
 > **Full run 2026-08-19: 8 failed / 1442 passed / 113 xf / 32 xp** (RESULTS_v500_packed_padding_family.txt).
-> Baseline held; +1 guard pass. Landed new_review.md B10/B11/B12/C17:
+> Baseline held; +1 guard pass. Landed review items B10/B11/B12/C17:
 > **B10** — fixed arrays of 1-7-byte elements hit `extract(8-N, N)` written
 > for 8-byte itob inputs → runtime revert; a new `arrayElemTo32` owns the
 > element→word conversion for every backing (native uint64/biguint/bool,
@@ -82,10 +82,10 @@
 > (documented in proxy.md §1); broad pytest.raises tightened to the specific
 > rejection match.
 
-# Semantic Test Status — v498 (new_review A1-A3: do-while body, dispatch OnCompletion, 1967 attribution)
+# Semantic Test Status — v498 (do-while body, dispatch OnCompletion, 1967 attribution)
 
 > **Full run 2026-08-19: 8 failed / 1437 passed / 113 xf / 32 xp** (RESULTS_v498_new_review_a1a2a3.txt).
-> Baseline held; +4 new guard passes. Landed the three verified new_review.md
+> Baseline held; +4 new guard passes. Landed the three verified review
 > findings: **A1** — a brace-less `do stmt; while (cond);` body was silently
 > DROPPED (side-effecting conditions compiled clean with an empty loop);
 > the do-while arm now builds single statements like the `while` arm.
@@ -400,7 +400,7 @@
 
 > **feat: --evm-storage-layout differ integration — REAL HISTORIES REPLAY CLEAN, 2026-08-01:**
 > **12 failed / 1393 passed / 107 xf / 30 xp** (zero regressions; the 12 = the known
-> baseline set). The asm-compat-memory-mode.md §5 verification sequence is closed:
+> baseline set). The storage-layout verification sequence is closed:
 > `chainwide-historical-diff/replay.py <tag> --evm-layout` compiles the AVM leg in slot
 > mode and reads its storage via the new chd_slot_reader.py — a slot→word map rebuilt
 > from the "p:"/"s:" boxes, walked with solc's OWN storageLayout (dumped by the EVM leg
@@ -434,7 +434,7 @@
 > storage-param guard are unnecessary in-mode. Whole-STRUCT storage→memory
 > materialisation (readStructElem), struct-element push/pop (EVM zero-on-pop),
 > type-conversion peeling (`bytes(a).length`). REAL-CONTRACT UNLOCK (the
-> asm-compat-memory-mode.md §1 blockers): **kaito ✓ usde ✓ (OZ StorageSlot/
+> original storage-layout blockers): **kaito ✓ usde ✓ (OZ StorageSlot/
 > ShortStrings), degen ✓ (OZ Checkpoints/ERC20Votes) all compile end-to-end to TEAL
 > in-mode**; builder still needs the stage-3 MEMORY mode and uses codesize/
 > extcodesize (unfixable on AVM). New runtime test test_evm_layout_storage_ref_params
@@ -443,7 +443,7 @@
 
 # Semantic Test Status — v474
 
-> **feat: --evm-storage-layout Stage-1 prototype (asm-compat-memory-mode.md), 2026-08-01:**
+> **feat: --evm-storage-layout Stage-1 prototype, 2026-08-01:**
 > **12 failed / 1392 passed / 107 xf / 30 xp** (zero regressions; the 12 = the known
 > baseline set). New opt-in mode backs ALL contract storage with a flat EVM slot space:
 > dense declared slots (< 2^16) in 2048-byte page boxes ("p:" ++ itob(slot/64), one
@@ -515,7 +515,7 @@
 
 # Semantic Test Status — v470
 
-> **fix: storage-layout differential tripwire (possible_solc item 7) + ForInLoop return walker
+> **fix: storage-layout differential tripwire + ForInLoop return walker
 > (item 8 partial), 2026-07-23:** **12 failed / 1361 passed / 109 xf / 28 xp** (canonical
 > baseline; 13th -n2 listing = send_zero_ether race, green standalone).
 > - Item 7: StorageLayout::computeLayout now compares every var's (slot, byteOffset) against
@@ -534,7 +534,7 @@
 # Semantic Test Status — v469
 
 > **fix: __postInit signature via THE shared param namer + bytesN ctor-arg encoding
-> (possible_solc item 4, 2026-07-22):** **12 failed / 1362 passed / 109 xf / 28 xp** (canonical
+> (2026-07-22):** **12 failed / 1362 passed / 109 xf / 28 xp** (canonical
 > baseline; 13th -n2 listing = builtinFunctions test_blobhash block-props race, green
 > standalone). Item 4 scoping outcome: externalSignature/interfaceFunctionList were ALREADY
 > adopted where sound (.selector, error selectors, interfaceId, getter FunctionType both
@@ -549,7 +549,7 @@
 
 # Semantic Test Status — v468
 
-> **fix: call-graph closure for transitive param mutation (possible_solc item 3, 2026-07-22):**
+> **fix: call-graph closure for transitive param mutation (2026-07-22):**
 > **12 failed / 1362 passed / 109 xf / 28 xp** (canonical baseline, zero regressions, no
 > flakes). ParamMutationDetector now marks a param mutated when it is PASSED ON to an internal
 > callee whose corresponding REFERENCE param is (transitively) mutated — via a memoized
@@ -566,7 +566,7 @@
 
 # Semantic Test Status — v467
 
-> **fix: solc-derived EVM-ABI synthetic-calldata layout (possible_solc item 2, 2026-07-22):**
+> **fix: solc-derived EVM-ABI synthetic-calldata layout (2026-07-22):**
 > **12 failed / 1361 passed / 109 xf / 28 xp** (canonical baseline, zero regressions). The
 > `__cd_blob` and the constant-offset calldata map are the EVM-32-byte-word views over our
 > ARC4-packed values; both now derive from the DECLARED solc types (plumbed
@@ -585,7 +585,7 @@
 
 # Semantic Test Status — v466
 
-> **feat: solc-convertibility tripwire in TypeCoercion (possible_solc item 6, 2026-07-22):**
+> **feat: solc-convertibility tripwire in TypeCoercion (2026-07-22):**
 > **12 failed / 1360 passed / 109 xf / 28 xp** (canonical baseline; 13th -n2 listing =
 > test_blobhash block-props race, green standalone). New
 > `TypeCoercion::assertImplicitlyConvertible(src, tgt, loc, site)` hard-errors when solc's
@@ -603,7 +603,7 @@
 
 > **refactor: asm memory-clobber classification via solc's SemanticInformation (2026-07-22):**
 > **12 failed / 1359 passed / 109 xf / 28 xp** (canonical baseline; 13th -n2 listing =
-> known test_send_zero_ether race, passes standalone). possible_solc.md item 1: the
+> known test_send_zero_ether race, passes standalone). The solc-backed layout change:
 > hand-maintained `s_memClobberers` opcode list (13 names, the N1 stale-cache drift source) is
 > replaced by `evmasm::SemanticInformation::memory(instruction) == Write` via the
 > `c_instructions` name lookup. Special cases kept: `mstore` (self-tracks per-offset),

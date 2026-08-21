@@ -1,5 +1,6 @@
 """Tests for the conversions category."""
 import pytest
+from eth_abi import encode as evm_encode
 
 from framework import (
     Harness, lpad, rpad, hex_bytes, ErrorString, Panic, Reverted,
@@ -373,25 +374,17 @@ def test_encodepacked_widths(harness):
     abi.encodePacked uses EVM packed widths. Enum was the bug: packed as the
     8-byte native word instead of its 1-byte uint8 encoding — corrupting
     keccak256(abi.encodePacked(...)) and shifting every following argument.
-    EVM_DIVERGENCE: address packs as the full 32-byte AVM account (EVM packs
-    20) — AVM addresses are natively 32 bytes, so 20-byte packing would
-    truncate a real account."""
+    Addresses are explicitly adapted from the internal 32-byte account to the
+    canonical low 20-byte Solidity address at this ABI boundary."""
     app = harness.compile_and_deploy("conversions/contracts/encodepacked_widths.sol")
     assert bytes(harness.call(app, "pEnum(uint8)", 1).abi_return) == b"\x01"
     assert bytes(harness.call(app, "pMix(uint8,uint8)", 5, 1).abi_return) == b"\x05\x01"
     assert bytes(harness.call(app, "pI8neg()").abi_return) == b"\xfd"
     assert bytes(harness.call(app, "pI128neg()").abi_return) == bytes.fromhex("ff" * 15 + "fd")
-    # EVM_DIVERGENCE: 32-byte account, not EVM's 20.
     from algosdk import account, encoding
     _, addr = account.generate_account()
     r = bytes(harness.call(app, "pAddr(address)", addr).abi_return)
-    assert len(r) == 32 and r == encoding.decode_address(addr)
-
-
-# REMOVED test_abi_encode_signed_aggregate: it asserted EVM 32-byte
-# sign-extension of int128 inside aggregates. abi.encode is now ARC4 (no EVM
-# head/tail / 32-byte sign-extension); the signed round-trip invariant is
-# covered by test_abi_decode_mixed_struct below.
+    assert len(r) == 20 and r == encoding.decode_address(addr)[-20:]
 
 
 def test_abi_decode_mixed_struct(harness):
@@ -404,7 +397,7 @@ def test_abi_decode_mixed_struct(harness):
     the reinterpret mis-read every field from there on (b=-1, c wrong).
     The decode counterpart to the signed-aggregate encode fix; together
     they make abi.decode(abi.encode(P)) round-trip."""
-    from algosdk import account
+    from algosdk import account, encoding
     asint = as_int
     def signed(x, bits=256):
         v = asint(x); return v - (1 << bits) if v >= (1 << (bits - 1)) else v
@@ -413,17 +406,14 @@ def test_abi_decode_mixed_struct(harness):
     rr = harness.call(app, "rt((uint256,int128,address,bool))", [42, -7, a, True]).abi_return
     assert asint(rr[0]) == 42
     assert signed(rr[1]) == -7
-    assert rr[2] == a
+    expected_evm_address = encoding.encode_address(
+        bytes(12) + encoding.decode_address(a)[-20:])
+    assert rr[2] == expected_evm_address
     assert rr[3] is True
     rs = harness.call(app, "rtSmall((int128,uint8,bool))", [-9, 200, True]).abi_return
     assert signed(rs[0]) == -9
     assert asint(rs[1]) == 200
     assert rs[2] is True
-
-
-# REMOVED test_abi_decode_nested_dynamic_hard_errors: it asserted uint128[][]
-# abi.decode hard-errors. Now that abi.decode is an ARC4 reinterpret (not an EVM
-# offset-table walk), there is no per-shape walk to fail-loud on — the case is moot.
 
 
 def test_abi_static_array_subword_decode(harness):
@@ -437,18 +427,12 @@ def test_abi_static_array_subword_decode(harness):
     app = harness.compile_and_deploy("conversions/contracts/abi_static_arr.sol")
     r = harness.call(app, "rtU128()").abi_return
     assert tuple(as_int(x) for x in r) == (11, 22, 33), r
-    # EVM_DIVERGENCE: abi.encode(uint128[3]) is now ARC4 — 3 × 16 bytes = 48
-    # (EVM padded each element to a 32-byte word = 96).
-    assert len(bytes(harness.call(app, "encU128()").abi_return)) == 48
+    assert len(bytes(harness.call(app, "encU128()").abi_return)) == 96
 
 
-# REMOVED test_abi_encode_signed_sign_extends: it asserted EVM 32-byte
-# sign-extension of signed integers in abi.encode. abi.encode is now ARC4 (signed
-# values carry their native ARC4 width, no EVM 32-byte word). The signed
-# round-trip invariant is kept by rtI128 in the contract (exercised below).
 def test_abi_encode_signed_roundtrip(harness):
     """conversions/contracts/abi_static_arr.sol  (CUSTOM)
-    Signed static array survives abi.encode -> abi.decode (ARC4)."""
+    Signed static array survives canonical abi.encode -> abi.decode."""
     app = harness.compile_and_deploy("conversions/contracts/abi_static_arr.sol")
     rt = harness.call(app, "rtI128()").abi_return
     assert tuple(as_signed_int(x) for x in rt) == (-7, 5, -1), rt
@@ -463,9 +447,6 @@ def test_abi_decode_nested_dynamic_arrays(harness):
     hard-error. uint-element nesting round-trips through abi.encode (supported);
     string[]/bytes[] decode a real eth_abi-encoded blob (their abi.ENCODE is a
     separate pre-existing puya-backend limitation)."""
-    # EVM_DIVERGENCE: abi.decode/encode now use ARC4, so inputs are ARC4-encoded
-    # (was eth_abi / EVM head-tail). arc4_encode is the ARC4 oracle.
-    from framework import arc4_encode
     app = harness.compile_and_deploy("conversions/contracts/abi_nested_dyn_decode.sol")
     # uint256[][] round-trip
     r = harness.call(app, "rtU256_2d()").abi_return
@@ -476,11 +457,12 @@ def test_abi_decode_nested_dynamic_arrays(harness):
     # empty inner array edge case
     re = harness.call(app, "rtEmptyInner()").abi_return
     assert tuple(as_int(x) for x in re) == (2, 0, 3), re
-    # string[] decode from an ARC4 blob
-    s = harness.call(app, "decStrArr(byte[])", list(arc4_encode("string[]", ["hi", "abc"]))).abi_return
+    # string[] decode from an independently encoded canonical blob
+    s = harness.call(
+        app, "decStrArr(byte[])",
+        list(evm_encode(["string[]"], [["hi", "abc"]]))).abi_return
     assert s[0] == "hi" and s[1] == "abc" and as_int(s[2]) == 2, s
-    # bytes[] decode from an ARC4 blob (bytes[] == ARC4 byte[][])
-    blob = arc4_encode("byte[][]", [list(b"\xaa\xbb"), list(b"\xcc\xdd\xee")])
+    blob = evm_encode(["bytes[]"], [[b"\xaa\xbb", b"\xcc\xdd\xee"]])
     b = harness.call(app, "decBytesArr(byte[])", list(blob)).abi_return
     assert as_int(b[0]) == 2 and as_int(b[1]) == 2 and as_int(b[2]) == 3, b
     assert bytes(b[3]) == b"\xcc", b  # d[1][0]
@@ -488,10 +470,96 @@ def test_abi_decode_nested_dynamic_arrays(harness):
     rs = harness.call(app, "rtStructArr()").abi_return
     assert as_int(rs[0]) == 42 and rs[1] == "hi" and as_int(rs[2]) == 7 \
         and rs[3] == "world!!" and as_int(rs[4]) == 2, rs
-    # S[] decode cross-checked against an ARC4 blob
-    sblob = arc4_encode("(uint256,string)[]", [[99, "x"], [5, "yz"], [1, ""]])
+    # S[] decode cross-checked against an independent canonical blob
+    sblob = evm_encode(
+        ["(uint256,string)[]"], [[(99, "x"), (5, "yz"), (1, "")]])
     ds = harness.call(app, "decStructArr(byte[])", list(sblob)).abi_return
     assert as_int(ds[0]) == 99 and as_int(ds[1]) == 5 and as_int(ds[2]) == 3, ds
+
+
+def _evm_word(value):
+    return int(value).to_bytes(32, "big")
+
+
+def _evm_bytes_payload(value):
+    value = bytes(value)
+    return _evm_word(len(value)) + value.ljust((len(value) + 31) // 32 * 32, b"\0")
+
+
+def _evm_scalar_array_payload(values):
+    return _evm_word(len(values)) + b"".join(_evm_word(v) for v in values)
+
+
+def _evm_dynamic_children_payload(children):
+    """EVM T[] payload where T is dynamically encoded."""
+    head_size = 32 * len(children)
+    offset = head_size
+    heads = []
+    for child in children:
+        heads.append(_evm_word(offset))
+        offset += len(child)
+    return _evm_word(len(children)) + b"".join(heads) + b"".join(children)
+
+
+def _evm_fixed_dynamic_children_payload(children):
+    """EVM T[N] payload where T is dynamically encoded (no length word)."""
+    offset = 32 * len(children)
+    heads = []
+    for child in children:
+        heads.append(_evm_word(offset))
+        offset += len(child)
+    return b"".join(heads) + b"".join(children)
+
+
+def _evm_single_dynamic(payload):
+    return _evm_word(32) + payload
+
+
+def test_external_evm_abi_decode_recurses(harness):
+    """Canonical EVM head/tail input is transcoded recursively to ARC4.
+
+    This covers narrow elements, fixed-of-dynamic arrays, three dynamic ranks,
+    bytes/string elements, and dynamic structs. None of these payloads comes
+    from puya-sol's encoder; the words are assembled independently below.
+    """
+    app = harness.compile_and_deploy("conversions/contracts/abi_nested_dyn_decode.sol")
+
+    u8 = _evm_single_dynamic(_evm_scalar_array_payload([1, 200, 255]))
+    got = harness.call(app, "decEvmU8(byte[])", list(u8)).abi_return
+    assert tuple(as_int(x) for x in got) == (3, 1, 200, 255), got
+
+    mixed = _evm_single_dynamic(_evm_fixed_dynamic_children_payload([
+        _evm_scalar_array_payload([1, 513]),
+        _evm_scalar_array_payload([9]),
+    ]))
+    got = harness.call(app, "decEvmMixed(byte[])", list(mixed)).abi_return
+    assert tuple(as_int(x) for x in got) == (2, 513, 1, 9), got
+
+    level2_a = _evm_dynamic_children_payload([
+        _evm_scalar_array_payload([7, 8]),
+    ])
+    level2_b = _evm_dynamic_children_payload([
+        _evm_scalar_array_payload([9]),
+        _evm_scalar_array_payload([10]),
+    ])
+    three_d = _evm_single_dynamic(
+        _evm_dynamic_children_payload([level2_a, level2_b]))
+    got = harness.call(app, "decEvm3d(byte[])", list(three_d)).abi_return
+    assert tuple(as_int(x) for x in got) == (2, 8, 2, 10), got
+
+    strings = _evm_single_dynamic(_evm_dynamic_children_payload([
+        _evm_bytes_payload(b"hi"), _evm_bytes_payload(b"abc"),
+    ]))
+    got = harness.call(app, "decStrArr(byte[])", list(strings)).abi_return
+    assert got[0] == "hi" and got[1] == "abc" and as_int(got[2]) == 2, got
+
+    struct_children = []
+    for number, string in ((99, b"x"), (5, b"yz"), (1, b"")):
+        struct_children.append(
+            _evm_word(number) + _evm_word(64) + _evm_bytes_payload(string))
+    structs = _evm_single_dynamic(_evm_dynamic_children_payload(struct_children))
+    got = harness.call(app, "decStructArr(byte[])", list(structs)).abi_return
+    assert tuple(as_int(x) for x in got) == (99, 5, 3), got
 
 
 def test_abi_encode_dynamic_element_arrays(harness):
@@ -503,13 +571,10 @@ def test_abi_encode_dynamic_element_arrays(harness):
     a dynamic ARC4 byte-array type is rejected by puya). Validated byte-exact: a
     decode->re-encode must reproduce the original eth_abi blob. (Building such an
     array via literal element assignment is a separate open codegen gap, #22.)"""
-    # EVM_DIVERGENCE: abi.decode/encode now use ARC4, so inputs are ARC4-encoded
-    # (was eth_abi / EVM head-tail). arc4_encode is the ARC4 oracle.
-    from framework import arc4_encode
     app = harness.compile_and_deploy("conversions/contracts/abi_nested_dyn_decode.sol")
-    blob = arc4_encode("string[]", ["hi", "abc", "Z"])
+    blob = evm_encode(["string[]"], [["hi", "abc", "Z"]])
     assert bytes(harness.call(app, "reencStrArr(byte[])", list(blob)).abi_return) == blob
-    blob2 = arc4_encode("byte[][]", [list(b"\xaa\xbb"), list(b"\xcc\xdd\xee")])
+    blob2 = evm_encode(["bytes[]"], [[b"\xaa\xbb", b"\xcc\xdd\xee"]])
     assert bytes(harness.call(app, "reencBytesArr(byte[])", list(blob2)).abi_return) == blob2
     # full literal-built round-trip: element assignment -> encode -> decode -> read
     s = harness.call(app, "rtStrArr()").abi_return

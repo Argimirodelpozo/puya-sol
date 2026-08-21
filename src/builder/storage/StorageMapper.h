@@ -74,8 +74,8 @@ public:
 	/// runtime, so StateGet's zero-default can't be materialised for large box types.
 	static constexpr int kAvmStackValueMax = 4096;
 
-	/// Element size for an ARC4StaticArray's fixed element type, or 0 if
-	/// the element isn't a fixed-encoded scalar (e.g. dynamic ARC4).
+	/// Element size for an ARC4StaticArray's recursively fixed-width element,
+	/// or 0 for variable-width / bit-packed element encodings.
 	static unsigned arc4StaticArrayElementSize(awst::WType const* _type);
 
 	/// Total encoded bytes for an ARC4StaticArray (`element_size * count`).

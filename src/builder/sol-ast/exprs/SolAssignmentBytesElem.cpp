@@ -5,6 +5,7 @@
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "awst/NameGen.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -49,11 +50,24 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 		_value = std::move(cast);
 	}
 	_value = builder::TypeCoercion::stringToBytes(std::move(_value), m_loc);
+	_value = builder::TypeCoercion::coerceForAssignment(
+		std::move(_value), _indexExpr->wtype, m_loc);
+
+	// The value of `b[i] = x` is x (one byte), not the whole updated byte
+	// array.  Pin x because it feeds both replace3 and the enclosing expression,
+	// then emit the actual container write as an ordered pre-effect.
+	std::string valueName = "__byte_assign_"
+		+ std::to_string(awst::NameGen::next("SolAssignment.byteResult"));
+	auto valueRead = [&]() {
+		return awst::makeVarExpression(valueName, _indexExpr->wtype, m_loc);
+	};
+	m_ctx.queuePreEffect(awst::makeAssignmentStatement(
+		valueRead(), std::move(_value), m_loc));
 
 	auto replace = awst::makeIntrinsicCall("replace3", _indexExpr->base->wtype, m_loc);
 	replace->stackArgs.push_back(_indexExpr->base);
 	replace->stackArgs.push_back(_indexExpr->index);
-	replace->stackArgs.push_back(std::move(_value));
+	replace->stackArgs.push_back(valueRead());
 
 	// For `bytes(x)[i] = …` the IndexExpression base is a ReinterpretCast;
 	// unwrap to give puya a plain lvalue, and align target/value wtypes (string↔bytes).
@@ -65,15 +79,21 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 	// `s.b[i] = v` where s.b is bytes (struct holds it as ARC4 byte[]):
 	// ARC4Decode(FieldExpr) isn't an lvalue in puya — route through NewStruct write-back.
 	if (auto const* decode = dynamic_cast<awst::ARC4Decode const*>(target.get()))
-	{
-		if (auto const* fe = dynamic_cast<awst::FieldExpression const*>(decode->value.get()))
 		{
+			if (auto const* fe = dynamic_cast<awst::FieldExpression const*>(decode->value.get()))
+			{
 			auto const* structType = dynamic_cast<awst::ARC4Struct const*>(fe->base->wtype);
 			if (!structType)
 				if (auto const* sg = dynamic_cast<awst::StateGet const*>(fe->base.get()))
 					structType = dynamic_cast<awst::ARC4Struct const*>(sg->field->wtype);
 			if (structType)
-				return buildStructFieldBytesWrite(fe, structType, std::move(replaceValue));
+			{
+				auto write = buildStructFieldBytesWrite(
+					fe, structType, std::move(replaceValue));
+				m_ctx.queuePreEffect(
+					awst::makeExpressionStatement(std::move(write), m_loc));
+				return valueRead();
+			}
 		}
 	}
 
@@ -83,7 +103,10 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 		replaceValue = std::move(adaptCast);
 	}
 
-	return awst::makeAssignmentExpression(target, std::move(replaceValue), m_loc);
+	auto write = awst::makeAssignmentExpression(
+		std::move(target), std::move(replaceValue), m_loc);
+	m_ctx.queuePreEffect(awst::makeExpressionStatement(std::move(write), m_loc));
+	return valueRead();
 }
 
 } // namespace puyasol::builder::sol_ast

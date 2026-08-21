@@ -2,10 +2,13 @@
 /// Static "extract-named-subroutines" splitter — see SimpleSplitter.h.
 
 #include "experimental/splitter/SimpleSplitter.h"
+#include "experimental/splitter/AwstWalker.h"
+#include "awst/Clone.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
 #include "awst/WType.h"
 
+#include <algorithm>
 #include <deque>
 #include <memory>
 #include <set>
@@ -406,185 +409,30 @@ std::shared_ptr<awst::Block> buildStubBody(
 	return block;
 }
 
-/// Collect SubroutineID target IDs referenced in an expression/statement tree.
-void collectSubroutineIds(awst::Expression const& e, std::set<std::string>& out);
-void collectSubroutineIds(awst::Statement const& s, std::set<std::string>& out);
-
-void collectSubroutineIds(awst::Expression const& e, std::set<std::string>& out)
+/// Collect every call target using the shared exhaustive AWST walker. Keeping
+/// a second, splitter-local recursion ladder caused new expression shapes
+/// (notably CommaExpression) to hide dependencies and leave dangling calls in
+/// extracted helpers. The shallow Block copy lets the rewriter-shaped walker
+/// traverse a const tree; the callback never replaces nodes.
+void collectSubroutineIds(awst::Block const& block, std::set<std::string>& out)
 {
-	if (auto const* sce = dynamic_cast<awst::SubroutineCallExpression const*>(&e))
+	auto view = block;
+	walkBlock(view, [&](awst::Expression const& expr)
+		-> std::shared_ptr<awst::Expression>
 	{
-		if (auto const* id = std::get_if<awst::SubroutineID>(&sce->target))
+		auto const* call =
+			dynamic_cast<awst::SubroutineCallExpression const*>(&expr);
+		if (!call) return nullptr;
+		if (auto const* id = std::get_if<awst::SubroutineID>(&call->target))
 			out.insert(id->target);
-		// InstanceMethodTarget refs need the "memberName:" prefix so callers
-		// route them to the method-lookup path (not the subroutine table).
-		if (auto const* m = std::get_if<awst::InstanceMethodTarget>(&sce->target))
-			out.insert(std::string("memberName:") + m->memberName);
-		if (auto const* sm = std::get_if<awst::InstanceSuperMethodTarget>(&sce->target))
-			out.insert(std::string("memberName:") + sm->memberName);
-		for (auto const& a : sce->args)
-			if (a.value) collectSubroutineIds(*a.value, out);
-		return;
-	}
-	if (auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(&e))
-	{
-		for (auto const& sa : ic->stackArgs)
-			if (sa) collectSubroutineIds(*sa, out);
-		return;
-	}
-	if (auto const* rc = dynamic_cast<awst::ReinterpretCast const*>(&e))
-	{
-		if (rc->expr) collectSubroutineIds(*rc->expr, out);
-		return;
-	}
-	if (auto const* cmp = dynamic_cast<awst::NumericComparisonExpression const*>(&e))
-	{
-		if (cmp->lhs) collectSubroutineIds(*cmp->lhs, out);
-		if (cmp->rhs) collectSubroutineIds(*cmp->rhs, out);
-		return;
-	}
-	if (auto const* bcmp = dynamic_cast<awst::BytesComparisonExpression const*>(&e))
-	{
-		if (bcmp->lhs) collectSubroutineIds(*bcmp->lhs, out);
-		if (bcmp->rhs) collectSubroutineIds(*bcmp->rhs, out);
-		return;
-	}
-	if (auto const* bbo = dynamic_cast<awst::BooleanBinaryOperation const*>(&e))
-	{
-		if (bbo->left) collectSubroutineIds(*bbo->left, out);
-		if (bbo->right) collectSubroutineIds(*bbo->right, out);
-		return;
-	}
-	if (auto const* big = dynamic_cast<awst::BigUIntBinaryOperation const*>(&e))
-	{
-		if (big->left) collectSubroutineIds(*big->left, out);
-		if (big->right) collectSubroutineIds(*big->right, out);
-		return;
-	}
-	if (auto const* u64 = dynamic_cast<awst::UInt64BinaryOperation const*>(&e))
-	{
-		if (u64->left) collectSubroutineIds(*u64->left, out);
-		if (u64->right) collectSubroutineIds(*u64->right, out);
-		return;
-	}
-	if (auto const* notExpr = dynamic_cast<awst::Not const*>(&e))
-	{
-		if (notExpr->expr) collectSubroutineIds(*notExpr->expr, out);
-		return;
-	}
-	if (auto const* ce = dynamic_cast<awst::ConditionalExpression const*>(&e))
-	{
-		if (ce->condition) collectSubroutineIds(*ce->condition, out);
-		if (ce->trueExpr) collectSubroutineIds(*ce->trueExpr, out);
-		if (ce->falseExpr) collectSubroutineIds(*ce->falseExpr, out);
-		return;
-	}
-	if (auto const* ae = dynamic_cast<awst::AssignmentExpression const*>(&e))
-	{
-		if (ae->target) collectSubroutineIds(*ae->target, out);
-		if (ae->value) collectSubroutineIds(*ae->value, out);
-		return;
-	}
-	if (auto const* fe = dynamic_cast<awst::FieldExpression const*>(&e))
-	{
-		if (fe->base) collectSubroutineIds(*fe->base, out);
-		return;
-	}
-	if (auto const* ie = dynamic_cast<awst::IndexExpression const*>(&e))
-	{
-		if (ie->base) collectSubroutineIds(*ie->base, out);
-		if (ie->index) collectSubroutineIds(*ie->index, out);
-		return;
-	}
-	if (auto const* te = dynamic_cast<awst::TupleExpression const*>(&e))
-	{
-		for (auto const& it : te->items)
-			if (it) collectSubroutineIds(*it, out);
-		return;
-	}
-	if (auto const* tie = dynamic_cast<awst::TupleItemExpression const*>(&e))
-	{
-		if (tie->base) collectSubroutineIds(*tie->base, out);
-		return;
-	}
-	if (auto const* ae = dynamic_cast<awst::AssertExpression const*>(&e))
-	{
-		if (ae->condition) collectSubroutineIds(*ae->condition, out);
-		return;
-	}
-	if (auto const* se = dynamic_cast<awst::SingleEvaluation const*>(&e))
-	{
-		if (se->source) collectSubroutineIds(*se->source, out);
-		return;
-	}
-	if (auto const* cit = dynamic_cast<awst::CreateInnerTransaction const*>(&e))
-	{
-		for (auto const& [k, v] : cit->fields)
-			if (v) collectSubroutineIds(*v, out);
-		return;
-	}
-	if (auto const* sit = dynamic_cast<awst::SubmitInnerTransaction const*>(&e))
-	{
-		for (auto const& it : sit->itxns)
-			if (it) collectSubroutineIds(*it, out);
-		return;
-	}
-	// Other expression kinds: no subroutine refs to find.
-}
-
-void collectSubroutineIds(awst::Statement const& s, std::set<std::string>& out)
-{
-	if (auto const* es = dynamic_cast<awst::ExpressionStatement const*>(&s))
-	{
-		if (es->expr) collectSubroutineIds(*es->expr, out);
-		return;
-	}
-	if (auto const* as = dynamic_cast<awst::AssignmentStatement const*>(&s))
-	{
-		if (as->target) collectSubroutineIds(*as->target, out);
-		if (as->value) collectSubroutineIds(*as->value, out);
-		return;
-	}
-	if (auto const* rs = dynamic_cast<awst::ReturnStatement const*>(&s))
-	{
-		if (rs->value) collectSubroutineIds(*rs->value, out);
-		return;
-	}
-	if (auto const* b = dynamic_cast<awst::Block const*>(&s))
-	{
-		for (auto const& st : b->body)
-			if (st) collectSubroutineIds(*st, out);
-		return;
-	}
-	if (auto const* ie = dynamic_cast<awst::IfElse const*>(&s))
-	{
-		if (ie->condition) collectSubroutineIds(*ie->condition, out);
-		if (ie->ifBranch) collectSubroutineIds(*ie->ifBranch, out);
-		if (ie->elseBranch) collectSubroutineIds(*ie->elseBranch, out);
-		return;
-	}
-	if (auto const* wl = dynamic_cast<awst::WhileLoop const*>(&s))
-	{
-		if (wl->condition) collectSubroutineIds(*wl->condition, out);
-		if (wl->loopBody) collectSubroutineIds(*wl->loopBody, out);
-		return;
-	}
-	if (auto const* sw = dynamic_cast<awst::Switch const*>(&s))
-	{
-		if (sw->value) collectSubroutineIds(*sw->value, out);
-		for (auto const& [k, body] : sw->cases)
-		{
-			if (k) collectSubroutineIds(*k, out);
-			if (body) collectSubroutineIds(*body, out);
-		}
-		if (sw->defaultCase) collectSubroutineIds(*sw->defaultCase, out);
-		return;
-	}
-	if (auto const* em = dynamic_cast<awst::Emit const*>(&s))
-	{
-		if (em->value) collectSubroutineIds(*em->value, out);
-		return;
-	}
+		else if (auto const* method =
+			std::get_if<awst::InstanceMethodTarget>(&call->target))
+			out.insert(std::string("memberName:") + method->memberName);
+		else if (auto const* superMethod =
+			std::get_if<awst::InstanceSuperMethodTarget>(&call->target))
+			out.insert(std::string("memberName:") + superMethod->memberName);
+		return nullptr;
+	});
 }
 
 /// Transitive closure of subroutines called from `seeds`, limited to `subById`.
@@ -621,8 +469,11 @@ std::vector<std::shared_ptr<awst::Subroutine>> collectTransitiveDeps(
 std::shared_ptr<awst::Contract> buildHelperContract(
 	awst::Contract const& original,
 	std::vector<std::shared_ptr<awst::Subroutine>> const& subs,
+	std::set<std::string> const& movedMethodNames,
 	int helperIdx,
-	std::map<std::string, uint64_t> const& ensureBudget)
+	std::map<std::string, uint64_t> const& ensureBudget,
+	bool delegateMode,
+	bool evmRouteMode)
 {
 	auto helper = std::make_shared<awst::Contract>();
 	helper->id = original.id + "__Helper" + std::to_string(helperIdx);
@@ -714,6 +565,21 @@ std::shared_ptr<awst::Contract> buildHelperContract(
 		auto body = std::make_shared<awst::Block>();
 		body->sourceLocation = loc;
 
+		// A delegate page temporarily IS the original app's approval program.
+		// Preserve the compiler-generated per-transaction preamble (EVM memory
+		// blobs/FMP, transient storage, and any future target-profile setup).
+		// It is the leading straight-line prefix before the original create
+		// branch. Ordinary sidecar helpers deliberately retain their minimal
+		// router because they have a separate app/runtime context.
+		if (delegateMode && original.approvalProgram.body)
+		{
+			for (auto const& stmt: original.approvalProgram.body->body)
+			{
+				if (std::dynamic_pointer_cast<awst::IfElse>(stmt)) break;
+				body->body.push_back(awst::cloneStmt(stmt));
+			}
+		}
+
 		// `if (Txn.ApplicationID == 0) return true;`
 		auto appId = awst::makeIntrinsicCall("txn", awst::WType::uint64Type(), loc);
 		appId->immediates = {std::string("ApplicationID")};
@@ -730,7 +596,37 @@ std::shared_ptr<awst::Contract> buildHelperContract(
 		ifStmt->ifBranch = std::move(createBranch);
 		body->body.push_back(std::move(ifStmt));
 
-		// `return ARC4Router()`
+		// EVM-profile methods are routed by compiler-generated IfElse adapter
+		// arms rather than ARC4MethodConfig.  Copy only the arm(s) that directly
+		// call a method placed on this page; copying the whole adapter would pull
+		// every public body back into every page and defeat splitting.
+		if (delegateMode && evmRouteMode && original.approvalProgram.body)
+		{
+			for (auto const& stmt: original.approvalProgram.body->body)
+			{
+				if (!std::dynamic_pointer_cast<awst::IfElse>(stmt)) continue;
+				auto candidate = awst::cloneStmt(stmt);
+				bool callsMovedMethod = false;
+				walkStatement(*candidate, [&](awst::Expression const& expr)
+					-> std::shared_ptr<awst::Expression>
+				{
+					auto const* call = dynamic_cast<
+						awst::SubroutineCallExpression const*>(&expr);
+					if (!call) return nullptr;
+					if (auto const* target = std::get_if<
+						awst::InstanceMethodTarget>(&call->target))
+						if (movedMethodNames.count(target->memberName))
+							callsMovedMethod = true;
+					return nullptr;
+				});
+				if (callsMovedMethod)
+					body->body.push_back(std::move(candidate));
+			}
+		}
+
+		// `return ARC4Router()`.  In an EVM page this router exposes only the
+		// compiler-private UpdateApplication hatch; public Solidity methods have
+		// no ARC4 config and enter through the copied adapter arm above.
 		auto routerExpr = std::make_shared<awst::ARC4Router>();
 		routerExpr->sourceLocation = loc;
 		routerExpr->wtype = awst::WType::boolType();
@@ -767,7 +663,8 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 	std::vector<std::shared_ptr<awst::RootNode>> const& _roots,
 	std::vector<std::string> const& _moveNames,
 	int _helperIndex,
-	std::map<std::string, uint64_t> const& _ensureBudget)
+	std::map<std::string, uint64_t> const& _ensureBudget,
+	bool _delegateMode)
 {
 	std::vector<ContractAWST> out;
 
@@ -924,7 +821,7 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 					auto it2 = methodByMember.find(member);
 					if (it2 != methodByMember.end())
 					{
-						// Not inlined: 50+ methods would exceed 8192 bytes.
+						// Not inlined: a large method closure can exceed the program cap.
 						// arc4MethodConfig left empty → internal subroutine only.
 						auto copy = *it2->second;
 						copy.inlineOpt = false;
@@ -949,11 +846,19 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 
 	// Helper contract first (so test harness can deploy it before orchestrator
 	// reads its app id from a template var).
-	auto helper = buildHelperContract(*primary, moved, _helperIndex, _ensureBudget);
+	bool const evmRouteMode = _delegateMode
+		&& std::any_of(movedMethods.begin(), movedMethods.end(),
+			[&](awst::ContractMethod const& method) {
+				return movedMethodNames.count(method.memberName)
+					&& !method.arc4MethodConfig;
+			});
+	auto helper = buildHelperContract(
+		*primary, moved, movedMethodNames, _helperIndex, _ensureBudget,
+		_delegateMode, evmRouteMode);
 
-	// Inject __delegate_update on the helper: if helper bytes run on the orch
-	// mid-dance, the revert UpdateApplication hits the helper's router, which
-	// must admit OC=UpdateApplication via this selector.
+	// A delegate chunk is temporarily installed on the orchestrator app. Its
+	// router must admit the UpdateApplication that restores the main program.
+	if (_delegateMode)
 	{
 		auto loc = helper->sourceLocation;
 		awst::ContractMethod hatch;
@@ -978,7 +883,7 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 	for (auto m : movedMethods)
 	{
 		m.cref = helper->id;
-		if (movedMethodNames.count(m.memberName))
+		if (movedMethodNames.count(m.memberName) && !evmRouteMode)
 		{
 			awst::ARC4ABIMethodConfig abiCfg;
 			abiCfg.sourceLocation = m.sourceLocation;
@@ -1054,14 +959,53 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 			syntheticSub.sourceLocation = m.sourceLocation;
 			m.body = buildStubBody(syntheticSub, helper->name);
 		}
+		if (evmRouteMode && orchContract->approvalProgram.body)
+		{
+			// A state-preserving page owns both the moved body and its canonical
+			// Solidity ABI adapter.  Leaving that adapter on the resident program
+			// duplicates the recursive decoder/encoder (and a now-useless stub
+			// route) in main, often making paging larger than the 16 KiB program it
+			// was meant to rescue.  Remove only approval arms with a direct edge to
+			// a moved method; all other entry routes remain resident.
+			orchContract->approvalProgram.body = awst::cloneBlock(
+				orchContract->approvalProgram.body);
+			auto& statements = orchContract->approvalProgram.body->body;
+			statements.erase(std::remove_if(statements.begin(), statements.end(),
+				[&](std::shared_ptr<awst::Statement> const& stmt) {
+					if (!std::dynamic_pointer_cast<awst::IfElse>(stmt))
+						return false;
+					auto candidate = awst::cloneStmt(stmt);
+					bool callsMovedMethod = false;
+					walkStatement(*candidate, [&](awst::Expression const& expr)
+						-> std::shared_ptr<awst::Expression>
+					{
+						auto const* call = dynamic_cast<
+							awst::SubroutineCallExpression const*>(&expr);
+						if (!call) return nullptr;
+						if (auto const* target = std::get_if<
+							awst::InstanceMethodTarget>(&call->target))
+							if (movedMethodNames.count(target->memberName))
+								callsMovedMethod = true;
+						return nullptr;
+					});
+					return callsMovedMethod;
+				}), statements.end());
+		}
 	}
 
-	// Inject __delegate_update: without it, the orch router rejects OC=UpdateApplication
-	// (`txn OnCompletion; !; assert`), blocking the lonely-chunk's install step.
-	// Body is intentionally unguarded (caller-verification is a TODO).
+	// The orchestrator must admit the UpdateApplication that installs a
+	// delegate chunk. Add one hatch across any number of delegate passes.
 	if (!orchContract && !movedSubNames.empty())
 		orchContract = std::make_shared<awst::Contract>(*primary);
+	bool hasDelegateUpdate = false;
 	if (orchContract)
+		for (auto const& method : orchContract->methods)
+			if (method.memberName == "__delegate_update")
+			{
+				hasDelegateUpdate = true;
+				break;
+			}
+	if (_delegateMode && orchContract && !hasDelegateUpdate)
 	{
 		auto loc = orchContract->sourceLocation;
 		awst::ContractMethod hatch;

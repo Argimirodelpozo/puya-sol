@@ -3,6 +3,147 @@
 namespace puyasol::builder
 {
 
+namespace
+{
+
+std::optional<std::vector<uint8_t>> arc4AggregateDefaultEncoding(
+	std::vector<awst::WType const*> const& _fields)
+{
+	// ARC4 structs and tuples share the same sequence encoding: consecutive
+	// bools form packed runs, fixed fields live in the head, and dynamic fields
+	// contribute a uint16 head offset plus their default encoding in the tail.
+	enum Kind { Bool, Static, Dynamic };
+	struct FieldEncoding { Kind kind; std::vector<uint8_t> bytes; };
+	std::vector<FieldEncoding> encodings;
+	encodings.reserve(_fields.size());
+	int64_t headSize = 0;
+	int boolRun = 0;
+	auto flushBoolRun = [&]() {
+		if (boolRun > 0)
+		{
+			headSize += (boolRun + 7) / 8;
+			boolRun = 0;
+		}
+	};
+	for (auto const* fieldType: _fields)
+	{
+		if (fieldType == awst::WType::arc4BoolType())
+		{
+			encodings.push_back({Bool, {}});
+			boolRun++;
+			continue;
+		}
+		flushBoolRun();
+		auto fieldDefault = arc4DefaultEncoding(fieldType);
+		if (!fieldDefault)
+			return std::nullopt;
+		bool const dynamic = arc4IsDynamic(fieldType);
+		headSize += dynamic ? 2 : static_cast<int64_t>(fieldDefault->size());
+		encodings.push_back({
+			dynamic ? Dynamic : Static, std::move(*fieldDefault)});
+	}
+	flushBoolRun();
+	if (headSize > 0xFFFF)
+		return std::nullopt;
+
+	std::vector<uint8_t> head;
+	std::vector<uint8_t> tail;
+	head.reserve(static_cast<size_t>(headSize));
+	int64_t tailOffset = headSize;
+	int pendingBools = 0;
+	auto emitBoolRun = [&]() {
+		if (pendingBools > 0)
+		{
+			head.insert(
+				head.end(), static_cast<size_t>((pendingBools + 7) / 8), 0);
+			pendingBools = 0;
+		}
+	};
+	for (auto const& encoding: encodings)
+	{
+		if (encoding.kind == Bool)
+		{
+			pendingBools++;
+			continue;
+		}
+		emitBoolRun();
+		if (encoding.kind == Dynamic)
+		{
+			if (tailOffset > 0xFFFF)
+				return std::nullopt;
+			head.push_back(static_cast<uint8_t>((tailOffset >> 8) & 0xFF));
+			head.push_back(static_cast<uint8_t>(tailOffset & 0xFF));
+			tail.insert(tail.end(), encoding.bytes.begin(), encoding.bytes.end());
+			tailOffset += static_cast<int64_t>(encoding.bytes.size());
+		}
+		else
+			head.insert(head.end(), encoding.bytes.begin(), encoding.bytes.end());
+	}
+	emitBoolRun();
+	head.insert(head.end(), tail.begin(), tail.end());
+	return head;
+}
+
+int arc4AggregateEncodedSize(std::vector<awst::WType const*> const& _fields)
+{
+	int total = 0;
+	int boolRun = 0;
+	auto flushBoolRun = [&]() {
+		if (boolRun > 0)
+		{
+			total += (boolRun + 7) / 8;
+			boolRun = 0;
+		}
+	};
+	for (auto const* fieldType: _fields)
+	{
+		if (fieldType == awst::WType::arc4BoolType())
+		{
+			boolRun++;
+			continue;
+		}
+		flushBoolRun();
+		int const fieldSize = computeEncodedElementSize(fieldType);
+		if (fieldSize == 0)
+			return 0;
+		total += fieldSize;
+	}
+	flushBoolRun();
+	return total;
+}
+
+std::vector<awst::WType const*> arc4StructFieldTypes(
+	awst::ARC4Struct const* _type)
+{
+	std::vector<awst::WType const*> result;
+	result.reserve(_type->fields().size());
+	for (auto const& [name, fieldType]: _type->fields())
+		result.push_back(fieldType);
+	return result;
+}
+
+} // namespace
+
+bool isArc4EncodedType(awst::WType const* _type)
+{
+	if (!_type)
+		return false;
+	if (_type == awst::WType::arc4BoolType())
+		return true;
+	switch (_type->kind())
+	{
+	case awst::WTypeKind::ARC4UIntN:
+	case awst::WTypeKind::ARC4UFixedNxM:
+	case awst::WTypeKind::ARC4Tuple:
+	case awst::WTypeKind::ARC4DynamicArray:
+	case awst::WTypeKind::ARC4StaticArray:
+	case awst::WTypeKind::ARC4Struct:
+		return true;
+	default:
+		return false;
+	}
+}
+
 std::shared_ptr<awst::Expression> makeZeroBytesRuntime(
 	int _n,
 	awst::WType const* _targetType,
@@ -88,6 +229,13 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 		auto N = static_cast<int64_t>(arr->arraySize());
 		if (N < 0)
 			return std::nullopt;
+		// ARC4 packs consecutive bool array elements eight per byte. Treat the
+		// complete bool run as the array's element encoding boundary here rather
+		// than pretending every bool occupies a byte. An outer fixed array then
+		// recurses normally and repeats this correctly packed inner encoding, so
+		// bool[M][N][...] needs no rank-specific handling.
+		if (elemT == awst::WType::arc4BoolType())
+			return std::vector<uint8_t>(static_cast<size_t>((N + 7) / 8), 0);
 		auto elemDefault = arc4DefaultEncoding(elemT);
 		if (!elemDefault)
 			return std::nullopt;
@@ -124,78 +272,12 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 	case awst::WTypeKind::ARC4Struct:
 	{
 		auto const* st = static_cast<awst::ARC4Struct const*>(_type);
-		// Field kinds: BOOL (packed 8/byte, MSB-first), static, dynamic.
-		// Consecutive arc4.bool fields share a byte — the same packing
-		// computeEncodedElementSize / puya's reader use; the old code gave
-		// each bool its own head byte, so head offsets disagreed with puya
-		// and a read-modify-write of the default spliced at the wrong spot.
-		enum Kind { Bool, Static, Dynamic };
-		struct FieldEnc { Kind kind; std::vector<uint8_t> bytes; };
-		std::vector<FieldEnc> encs;
-		encs.reserve(st->fields().size());
-		int64_t headSize = 0;
-		int boolRun = 0;
-		auto flushBoolRun = [&]() {
-			if (boolRun > 0)
-			{
-				headSize += (boolRun + 7) / 8;
-				boolRun = 0;
-			}
-		};
-		for (auto const& [name, ft]: st->fields())
-		{
-			if (ft == awst::WType::arc4BoolType())
-			{
-				encs.push_back({Bool, {}});
-				boolRun++;
-				continue;
-			}
-			flushBoolRun();
-			auto fd = arc4DefaultEncoding(ft);
-			if (!fd)
-				return std::nullopt;
-			bool dyn = arc4IsDynamic(ft);
-			headSize += dyn ? 2 : static_cast<int64_t>(fd->size());
-			encs.push_back({dyn ? Dynamic : Static, std::move(*fd)});
-		}
-		flushBoolRun();
-
-		std::vector<uint8_t> head;
-		std::vector<uint8_t> tail;
-		head.reserve(static_cast<size_t>(headSize));
-		int64_t tailOff = headSize;
-		int pendingBools = 0;
-		auto emitBoolByteFlush = [&]() {
-			// All-default bools are false → the packed byte(s) are zero.
-			if (pendingBools > 0)
-			{
-				head.insert(head.end(), static_cast<size_t>((pendingBools + 7) / 8), 0);
-				pendingBools = 0;
-			}
-		};
-		for (auto const& fe: encs)
-		{
-			if (fe.kind == Bool)
-			{
-				pendingBools++;
-				continue;
-			}
-			emitBoolByteFlush();
-			if (fe.kind == Dynamic)
-			{
-				head.push_back(static_cast<uint8_t>((tailOff >> 8) & 0xFF));
-				head.push_back(static_cast<uint8_t>(tailOff & 0xFF));
-				tail.insert(tail.end(), fe.bytes.begin(), fe.bytes.end());
-				tailOff += static_cast<int64_t>(fe.bytes.size());
-			}
-			else
-			{
-				head.insert(head.end(), fe.bytes.begin(), fe.bytes.end());
-			}
-		}
-		emitBoolByteFlush();
-		head.insert(head.end(), tail.begin(), tail.end());
-		return head;
+		return arc4AggregateDefaultEncoding(arc4StructFieldTypes(st));
+	}
+	case awst::WTypeKind::ARC4Tuple:
+	{
+		auto const* tuple = static_cast<awst::ARC4Tuple const*>(_type);
+		return arc4AggregateDefaultEncoding(tuple->types());
 	}
 	case awst::WTypeKind::Bytes:
 	{
@@ -236,37 +318,19 @@ int computeEncodedElementSize(awst::WType const* _type)
 		return static_cast<awst::ARC4UFixedNxM const*>(_type)->n() / 8;
 	case awst::WTypeKind::ARC4Struct:
 	{
-		// arc4.bool fields are packed 8/byte; flush runs on non-bool or end.
-		// Any dynamic non-bool field → whole struct is dynamic (returns 0).
 		auto const* structType = static_cast<awst::ARC4Struct const*>(_type);
-		int total = 0;
-		int boolRun = 0;
-		auto flushBoolRun = [&]() {
-			if (boolRun > 0)
-			{
-				total += (boolRun + 7) / 8;
-				boolRun = 0;
-			}
-		};
-		for (auto const& [name, fieldType]: structType->fields())
-		{
-			if (fieldType == awst::WType::arc4BoolType())
-			{
-				boolRun++;
-				continue;
-			}
-			flushBoolRun();
-			int fieldSize = computeEncodedElementSize(fieldType);
-			if (fieldSize == 0)
-				return 0;
-			total += fieldSize;
-		}
-		flushBoolRun();
-		return total;
+		return arc4AggregateEncodedSize(arc4StructFieldTypes(structType));
+	}
+	case awst::WTypeKind::ARC4Tuple:
+	{
+		auto const* tuple = static_cast<awst::ARC4Tuple const*>(_type);
+		return arc4AggregateEncodedSize(tuple->types());
 	}
 	case awst::WTypeKind::ARC4StaticArray:
 	{
 		auto const* arr = static_cast<awst::ARC4StaticArray const*>(_type);
+		if (arr->elementType() == awst::WType::arc4BoolType())
+			return (arr->arraySize() + 7) / 8;
 		int elemSize = computeEncodedElementSize(arr->elementType());
 		if (elemSize == 0)
 			return 0;

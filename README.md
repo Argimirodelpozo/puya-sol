@@ -88,6 +88,16 @@ as `msg.sig`. This mode changes the internal external-function-pointer encoding
 from 12 to 16 bytes so it can retain both the Solidity selector and ARC-4 route;
 all contracts that exchange such pointers must be compiled with the same mode.
 
+Use `--contract-abi evm` when the AVM application boundary itself should carry
+Solidity ABI data. Calls then use `ApplicationArgs[0]` for the 4-byte keccak
+selector and `ApplicationArgs[1]` for one canonical EVM ABI argument body;
+returns use the usual four-byte AVM return-log carrier followed by canonical EVM
+ABI data. Constructor creation carries one canonical body in `ApplicationArgs[0]`.
+The default remains `--contract-abi arc4`. Solidity `abi.encode*` and
+`abi.decode` are canonical EVM operations in either profile; compiler-native
+ARC4 bytes are available explicitly as `arc4.encode(...)` and
+`arc4.decode(data, (T...))`.
+
 EVM-only environment values are never supplied as unexplained test constants.
 `block.chainid` defaults to the Algorand `GenesisHash` interpreted as a
 `uint256`, and `block.gaslimit` defaults to the current AVM opcode budget. For

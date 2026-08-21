@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// CUSTOM puya-sol regression — new_review.md B7/B8 (the "who still assumes
+// CUSTOM puya-sol regression — the "who still assumes
 // slot 0" audit). EVM memory is modeled as N scratch slots of 4096 bytes; the
 // multi-slot migration reached the range helpers but not the runtime-offset
 // word paths, which neither routed past slot 0 nor stitched a word straddling

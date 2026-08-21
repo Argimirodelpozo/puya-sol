@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_slot_storage_ref_param.sol.AsmSlotStorageRefParam.approval_program() -> uint64:
 main:
     intcblock 1 32 0 8
-    bytecblock "bits" 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75 0x0100
+    bytecblock "bits" 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75 0x0100 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -118,6 +118,8 @@ main_ternary_merge@19:
     dig 1
     swap
     replace2 0
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     intc_3 // 8
     bzero
     uncover 3
@@ -217,7 +219,7 @@ main_ternary_merge@24:
     swap
     intc_0 // 1
     setbit
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     swap
 

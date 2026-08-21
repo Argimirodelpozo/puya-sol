@@ -5,6 +5,7 @@
 #include "builder/itxn/InnerCallHandlers.h"
 #include "awst/NameGen.h"
 #include "builder/EvmFeaturePolicy.h"
+#include "builder/abi/AbiEncoderBuilder.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/contract/StateVarWalker.h"
 #include "builder/itxn/InnerCallInternal.h"
@@ -186,7 +187,7 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 			if (auto const* intType = dynamic_cast<IntegerType const*>(_paramSolType))
 				widthBytes = intType->numBits() / 8;
 			else if (auto const* addr = dynamic_cast<AddressType const*>(_paramSolType))
-				(void)addr, widthBytes = 20;
+				(void)addr, widthBytes = 32; // ARC-4 address is the full AVM account
 		}
 		auto itob = awst::makeItob(std::move(_argExpr), _loc);
 		if (widthBytes <= 8)
@@ -255,6 +256,57 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 		auto rcast = awst::makeAsBytes(std::move(_argExpr), _loc);
 		return rcast;
 	}
+}
+
+std::shared_ptr<awst::Expression> InnerCallHandlers::encodeEvmArgumentBody(
+	ContractContext& _ctx,
+	std::vector<solidity::frontend::ASTPointer<
+		solidity::frontend::Expression const>> const& _args,
+	std::vector<solidity::frontend::Type const*> const& _paramTypes,
+	awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+	std::vector<Type const*> types;
+	std::vector<std::shared_ptr<awst::Expression>> values;
+	for (size_t i = 0; i < _args.size(); ++i)
+	{
+		auto const* sourceType = _args[i]->annotation().type;
+		auto const* targetType = i < _paramTypes.size() && _paramTypes[i]
+			? _paramTypes[i] : sourceType;
+		if (targetType && targetType->category() == Type::Category::StringLiteral)
+			targetType = targetType->mobileType();
+		auto value = _ctx.buildExpr(*_args[i]);
+		if (i < _paramTypes.size() && _paramTypes[i])
+			value = builder::ConversionPlan{
+				sourceType, _paramTypes[i], _ctx.typeMapper.map(_paramTypes[i]),
+				builder::ConversionPlan::Context::AbiArgument}.emit(
+					std::move(value), _loc);
+		types.push_back(targetType);
+		values.push_back(std::move(value));
+	}
+	return AbiEncoderBuilder::encodeValuesAsEvmAbi(
+		_ctx, types, std::move(values), _loc);
+}
+
+std::shared_ptr<awst::TupleExpression>
+InnerCallHandlers::buildEvmApplicationArgs(
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _selector,
+	std::vector<solidity::frontend::ASTPointer<
+		solidity::frontend::Expression const>> const& _args,
+	std::vector<solidity::frontend::Type const*> const& _paramTypes,
+	awst::SourceLocation const& _loc)
+{
+	auto tuple = awst::makeTupleExpression(nullptr, _loc);
+	tuple->items.push_back(std::move(_selector));
+	tuple->items.push_back(encodeEvmArgumentBody(
+		_ctx, _args, _paramTypes, _loc));
+	std::vector<awst::WType const*> wireTypes;
+	for (auto const& item: tuple->items)
+		wireTypes.push_back(item->wtype);
+	tuple->wtype = _ctx.typeMapper.createType<awst::WTuple>(
+		std::move(wireTypes), std::nullopt);
+	return tuple;
 }
 
 // Nested ARC4 type name (struct-field / array-element position).
@@ -559,6 +611,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 					// SPECIFIC function (encodeCall/encodeWithSelector) — resolves
 					// the exact overload directly instead of name+arity.
 					FunctionDefinition const* refFunc = nullptr;
+					// Expression used only to identify the target. A successful direct
+					// rewrite must still evaluate it before the encoded arguments.
+					Expression const* targetIdentityExpr = nullptr;
 					// Method args, normalised across the three encode forms:
 					//   encodeWithSignature("fn(types)", a, b, …) → args spread at indices 1..
 					//   encodeWithSelector(this.fn.selector, a, b, …) → args spread at indices 1..
@@ -580,6 +635,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 					else if (encMA && encMA->memberName() == "encodeWithSelector"
 						&& !encCallExpr->arguments().empty())
 					{
+						targetIdentityExpr = encCallExpr->arguments()[0].get();
 						// `this.fn.selector` = MemberAccess("selector", MemberAccess("fn", this)).
 						if (auto const* selMA = dynamic_cast<MemberAccess const*>(encCallExpr->arguments()[0].get()))
 							if (selMA->memberName() == "selector")
@@ -595,6 +651,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 					else if (encMA && encMA->memberName() == "encodeCall"
 						&& !encCallExpr->arguments().empty())
 					{
+						targetIdentityExpr = encCallExpr->arguments()[0].get();
 						// encodeCall(Contract.fn, (args…)): the fn ref names the exact
 						// function; resolve the same-signature method on `this` by id
 						// (inherited/overridden impl + its return type). Args are a
@@ -697,6 +754,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 						}
 						if (target)
 						{
+							if (targetIdentityExpr)
+								_ctx.evaluateForEffects(*targetIdentityExpr, _loc);
 							// AVM rejects self inner-txn calls; rewrite to direct callsub.
 							// Revert isolation differs: reverts propagate instead of
 							// being caught as success=false.
@@ -707,33 +766,35 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								"calls; revert-isolation semantics may differ.",
 								_loc);
 
-							// Encode a return value as ARC4 — the AVM-native shape that abi.decode round-trips.
-							// This is deliberately NOT EVM-ABI 32-byte padding (accepted divergence):
-							// arc4.uint256 is 32 bytes but arc4.uint8 is 1 byte, etc. Going through the real
-							// ARC4 encoder (not a hand-rolled itob+leftPad) keeps the value's type intact, so
-							// abi.decode(result,(uint)) yields a biguint and downstream arithmetic doesn't hit
-							// a uint64/`b+` mismatch (the hand-rolled path let the optimizer fold a constant
-							// result to uint64, breaking `r += abi.decode(...)`).
-							auto encodeArc4 = [&_loc](std::shared_ptr<awst::Expression> v, awst::WType const* arc4T)
-								-> std::shared_ptr<awst::Expression>
-							{
-								if (!arc4T) arc4T = awst::WType::bytesType();
-								if (v->wtype == arc4T)
-									return awst::makeAsBytes(std::move(v), _loc);
-								auto enc = awst::makeARC4Encode(std::move(v), arc4T, _loc);
-								return awst::makeAsBytes(std::move(enc), _loc);
-							};
-
 							std::string targetName =
 								CallResolver::resolveMethodName(_ctx, *target);
 							size_t nReturns = target->returnParameters().size();
+							auto pushResolvedArgs = [&](auto& call)
+							{
+								for (size_t i = 0; i < resolvedArgs.size(); ++i)
+								{
+									auto const& argument = resolvedArgs[i];
+									auto value = _ctx.buildExpr(*argument);
+									if (i < target->parameters().size())
+									{
+										auto const* parameterType = target->parameters()[i]->type();
+										auto const* parameterWType = _ctx.typeMapper.map(parameterType);
+										value = builder::ConversionPlan{
+											argument->annotation().type,
+											parameterType,
+											parameterWType,
+											builder::ConversionPlan::Context::Argument}.emit(
+												std::move(value), _loc);
+									}
+									awst::pushCallArg(call->args, std::move(value));
+								}
+							};
 							if (nReturns == 0)
 							{
 								auto call = awst::makeSubroutineCall(
 									awst::InstanceMethodTarget{targetName},
 									awst::WType::voidType(), _loc);
-								for (auto const& a : resolvedArgs)
-									awst::pushCallArg(call->args, _ctx.buildExpr(*a));
+								pushResolvedArgs(call);
 								auto stmt = awst::makeExpressionStatement(call, _loc);
 								_ctx.preEffects().push_back(std::move(stmt));
 								return std::make_unique<GenericResultBuilder>(_ctx,
@@ -746,28 +807,30 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								auto call = awst::makeSubroutineCall(
 									awst::InstanceMethodTarget{targetName},
 									retType, _loc);
-								for (auto const& a : resolvedArgs)
-									awst::pushCallArg(call->args, _ctx.buildExpr(*a));
-								auto dataBytes = encodeArc4(std::move(call), _ctx.typeMapper.mapToARC4Type(retType));
+								pushResolvedArgs(call);
+								auto dataBytes = AbiEncoderBuilder::encodeValuesAsEvmAbi(
+									_ctx, {target->returnParameters()[0]->type()},
+									{std::move(call)}, _loc);
 								return std::make_unique<GenericResultBuilder>(_ctx,
 									makeBoolBytesTuple(true, std::move(dataBytes), _loc));
 							}
 
-							// Multi-return: SingleEvaluation so call runs once;
-							// ABI-encode each return element to 32 bytes and concat.
+							// Multi-return: cache the call once, then let the recursive
+							// canonical encoder lay out all static/dynamic return values.
 							std::vector<awst::WType const*> tupleTypes;
+							std::vector<solidity::frontend::Type const*> returnTypes;
 							for (auto const& ret : target->returnParameters())
 							{
 								auto* pt = _ctx.typeMapper.map(ret->type());
 								tupleTypes.push_back(pt ? pt : awst::WType::voidType());
+								returnTypes.push_back(ret->type());
 							}
 							auto* tupleTypeOwned = _ctx.typeMapper.createType<awst::WTuple>(
 								std::move(tupleTypes));
 							auto call = awst::makeSubroutineCall(
 								awst::InstanceMethodTarget{targetName},
 								tupleTypeOwned, _loc);
-							for (auto const& a : resolvedArgs)
-								awst::pushCallArg(call->args, _ctx.buildExpr(*a));
+							pushResolvedArgs(call);
 							// Intentionally RAW makeSingleEvaluation, not makeEvalOnce: the fresh
 							// SE id is IDENTITY-FORCING — it prevents two attrs-equal calls from
 							// merging (see sol-ast-audit) — so the wrap must be unconditional;
@@ -775,16 +838,15 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 							auto cachedCall = awst::makeSingleEvaluation(
 								std::move(call), tupleTypeOwned, awst::nextSingleEvalId(), _loc);
 
-							std::vector<std::shared_ptr<awst::Expression>> parts;
+							std::vector<std::shared_ptr<awst::Expression>> values;
 							for (size_t i = 0; i < nReturns; ++i)
 							{
 								auto* itemType = tupleTypeOwned->types()[i];
 								auto item = awst::makeTupleItem(cachedCall, static_cast<int>(i), itemType, _loc);
-								parts.push_back(encodeArc4(std::move(item), _ctx.typeMapper.mapToARC4Type(itemType)));
+								values.push_back(std::move(item));
 							}
-							std::shared_ptr<awst::Expression> dataBytes = std::move(parts[0]);
-							for (size_t i = 1; i < parts.size(); ++i)
-								dataBytes = awst::makeConcat(std::move(dataBytes), std::move(parts[i]), _loc);
+							auto dataBytes = AbiEncoderBuilder::encodeValuesAsEvmAbi(
+								_ctx, returnTypes, std::move(values), _loc);
 							return std::make_unique<GenericResultBuilder>(_ctx,
 								makeBoolBytesTuple(true, std::move(dataBytes), _loc));
 						}
@@ -802,8 +864,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 				if (result) return result;
 			}
 			// .call(abi.encodeWithSignature/WithSelector(...)): encoder visible at call site —
-			// re-encode as typed inner call instead of forwarding an EVM-shaped blob.
-			// See EVM_DIVERGENCE.md "Encoding model" #1.
+			// preserve the declared argument types while adapting the byte blob to
+			// the selected contract-entry transport.
 			if (encodeMA
 				&& (encodeMA->memberName() == "encodeWithSignature"
 					|| encodeMA->memberName() == "encodeWithSelector")

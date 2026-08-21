@@ -6,6 +6,17 @@ pragma solidity ^0.8.0;
 // returndata copy. All three previously routed through single-slot (or
 // silently skipped) lowerings.
 contract MultiSlotRtCopies {
+    // A Yul low-level call is an expression, not merely a statement or the
+    // direct RHS of a let/assignment. Solady uses this exact compact shape for
+    // ecrecover: the success word (1) doubles as the mload offset while the
+    // precompile writes its result at offset 1.
+    function nestedIdentity(bytes32 x) external view returns (bytes32 y) {
+        assembly {
+            mstore(0x00, x)
+            y := mload(staticcall(gas(), 4, 0x00, 0x20, 0x01, 0x20))
+        }
+    }
+
     // Identity precompile at runtime offsets with src and dst in DIFFERENT
     // scratch slots. Old lowering extract3/replace3'd slot 0 only.
     function identityCross(uint256 srcOff, uint256 dstOff)

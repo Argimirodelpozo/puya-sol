@@ -1,6 +1,8 @@
 #include "builder/abi/AbiSelectorCalldataBuilder.h"
+#include "Logger.h"
 #include "builder/abi/AbiEncoderBuilder.h"
-#include "builder/SelectorSemantics.h"
+#include "builder/SolcFacts.h"
+#include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/itxn/InnerCallHandlers.h"
@@ -35,12 +37,20 @@ std::unique_ptr<InstanceBuilder> handleEncodeCall(
 			? fnType : targetFuncDef->functionType(false);
 		if (!externalType)
 			return nullptr;
-		selector = builder::SelectorSemantics::functionSelector(
-			_ctx, *externalType,
-			InnerCallHandlers::buildMethodSelector(_ctx, targetFuncDef), _loc);
+		selector = awst::makeBytesConstant(
+			builder::SolcFacts::externalSelector(*externalType), _loc,
+			awst::BytesEncoding::Base16, awst::WType::bytesType());
 	}
 	else if (fnType && fnType->kind() == FunctionType::Kind::External)
 	{
+		if (!_ctx.typeMapper.profile().evmSelectors)
+		{
+			Logger::instance().error(
+				"abi.encodeCall with an opaque runtime external-function pointer "
+				"requires --evm-selectors (the default compact pointer stores only "
+				"its ARC4 route, not the Solidity selector)", _loc);
+			return nullptr;
+		}
 		auto fnVal = _ctx.buildExpr(targetFnExpr);
 		if (!fnVal)
 			return nullptr;
@@ -69,9 +79,8 @@ std::unique_ptr<InstanceBuilder> handleEncodeCall(
 	else
 		callArgs.push_back(_callNode.arguments()[1]);
 
-	// Encode each arg at its DECLARED param type (not the source expr type) so
-	// callsite conversions land on the param's ARC4 width (`0x1234`→bytes2,
-	// `"ab"`→bytes2, a small literal→uint256), then ARC4-encode like abi.encode.
+	// Encode each argument at the callee's declared Solidity type. This is
+	// canonical EVM calldata regardless of the contract entry profile.
 	std::vector<solidity::frontend::Type const*> paramTypes;
 	if (targetFuncDef)
 	{
@@ -84,8 +93,20 @@ std::unique_ptr<InstanceBuilder> handleEncodeCall(
 			paramTypes.push_back(pt);
 	}
 
-	parts.push_back(AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(
-		_ctx, callArgs, paramTypes, _loc));
+	std::vector<std::shared_ptr<awst::Expression>> values;
+	for (size_t i = 0; i < callArgs.size(); ++i)
+	{
+		auto value = _ctx.buildExpr(*callArgs[i]);
+		if (i < paramTypes.size() && paramTypes[i])
+			if (auto const* target = _ctx.typeMapper.map(paramTypes[i]))
+				value = builder::ConversionPlan{
+					callArgs[i]->annotation().type, paramTypes[i], target,
+					builder::ConversionPlan::Context::AbiArgument}.emit(
+						std::move(value), _loc);
+		values.push_back(std::move(value));
+	}
+	parts.push_back(AbiEncoderBuilder::encodeValuesAsEvmAbi(
+		_ctx, paramTypes, std::move(values), _loc));
 
 	return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
 }
@@ -134,7 +155,28 @@ std::unique_ptr<InstanceBuilder> handleEncodeWithSelector(
 
 	std::vector<std::shared_ptr<awst::Expression>> parts;
 	parts.push_back(std::move(selector));
-	parts.push_back(AbiEncoderBuilder::encodeArgsAsArc4(_ctx, _callNode, 1, _loc));
+	std::vector<solidity::frontend::Type const*> types;
+	std::vector<std::shared_ptr<awst::Expression>> values;
+	for (size_t i = 1; i < args.size(); ++i)
+	{
+		auto const* sourceType = args[i]->annotation().type;
+		auto const* type = sourceType;
+		if (type)
+			if (auto const* mobile = type->mobileType())
+				type = mobile;
+		types.push_back(type);
+		auto value = _ctx.buildExpr(*args[i]);
+		if (type)
+			if (auto const* target = _ctx.typeMapper.map(type);
+				target && value->wtype != target)
+				value = builder::ConversionPlan{
+					sourceType, type, target,
+					builder::ConversionPlan::Context::AbiArgument}.emit(
+						std::move(value), _loc);
+		values.push_back(std::move(value));
+	}
+	parts.push_back(AbiEncoderBuilder::encodeValuesAsEvmAbi(
+		_ctx, types, std::move(values), _loc));
 	return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
 }
 
@@ -150,21 +192,19 @@ std::unique_ptr<InstanceBuilder> handleEncodeWithSignature(
 
 	std::vector<std::shared_ptr<awst::Expression>> parts;
 
-	// Compatibility mode preserves the ARC-4 selector. --evm-selectors gives
-	// abi.encodeWithSignature its Solidity keccak header; recognised low-level
-	// call shapes translate back to ARC-4 at the transport boundary.
+	// Solidity fixes this selector to keccak256(signature)[:4]. Entry transport
+	// selection must never change the meaning of an `abi.*` expression.
 	if (auto const* sigLit = dynamic_cast<solidity::frontend::Literal const*>(args[0].get()))
 	{
-		parts.push_back(builder::SelectorSemantics::signatureSelector(
-			_ctx, sigLit->value(), _loc));
+		parts.push_back(awst::makeBytesConstant(
+			builder::SolcFacts::externalSelector(sigLit->value()), _loc,
+			awst::BytesEncoding::Base16, awst::WType::bytesType()));
 	}
 	else
 	{
 		auto sigExpr = _ctx.buildExpr(*args[0]);
 		auto hash = awst::makeIntrinsicCall(
-			builder::SelectorSemantics::enabled(_ctx.typeMapper)
-				? "keccak256" : "sha512_256",
-			awst::WType::bytesType(), _loc);
+			"keccak256", awst::WType::bytesType(), _loc);
 		hash->stackArgs.push_back(std::move(sigExpr));
 		parts.push_back(awst::makeExtract(std::move(hash), 0, 4, _loc));
 	}
@@ -172,7 +212,28 @@ std::unique_ptr<InstanceBuilder> handleEncodeWithSignature(
 	if (args.size() == 1)
 		return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
 
-	parts.push_back(AbiEncoderBuilder::encodeArgsAsArc4(_ctx, _callNode, 1, _loc));
+	std::vector<solidity::frontend::Type const*> types;
+	std::vector<std::shared_ptr<awst::Expression>> values;
+	for (size_t i = 1; i < args.size(); ++i)
+	{
+		auto const* sourceType = args[i]->annotation().type;
+		auto const* type = sourceType;
+		if (type)
+			if (auto const* mobile = type->mobileType())
+				type = mobile;
+		types.push_back(type);
+		auto value = _ctx.buildExpr(*args[i]);
+		if (type)
+			if (auto const* target = _ctx.typeMapper.map(type);
+				target && value->wtype != target)
+				value = builder::ConversionPlan{
+					sourceType, type, target,
+					builder::ConversionPlan::Context::AbiArgument}.emit(
+						std::move(value), _loc);
+		values.push_back(std::move(value));
+	}
+	parts.push_back(AbiEncoderBuilder::encodeValuesAsEvmAbi(
+		_ctx, types, std::move(values), _loc));
 	return std::make_unique<GenericAbiResult>(_ctx, AbiEncoderBuilder::concatByteExprs(std::move(parts), _loc));
 }
 

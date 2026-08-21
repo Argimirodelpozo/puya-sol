@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// CUSTOM puya-sol regression — new_review.md A1: the do-while arm translated
+// CUSTOM puya-sol regression: the do-while arm translated
 // the body only when it was a Block, so a brace-less body was silently
 // DROPPED. With a side-effecting condition puya's infinite-loop detector
 // stays quiet and the function compiles clean with an empty loop body.

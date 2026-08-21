@@ -118,23 +118,9 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				return awst::makeZero(m_loc, awst::WType::biguintType());
 			}
 			auto const* elemType = arrT->baseType();
-			auto const* structElem = dynamic_cast<StructType const*>(elemType);
-			auto const* structW = structElem
-				? dynamic_cast<awst::ARC4Struct const*>(m_ctx.typeMapper.map(structElem))
-				: nullptr;
-			bool aggElem = !elemType->isValueType() && !structW;
 			bool mappingElem =
 				dynamic_cast<solidity::frontend::MappingType const*>(elemType)
 					!= nullptr;
-			if (aggElem && !mappingElem
-				&& !EvmSlotLowering::isBytesLike(elemType)
-				&& !dynamic_cast<ArrayType const*>(elemType))
-			{
-				Logger::instance().error(
-					"--evm-storage-layout: push/pop of aggregate elements not "
-					"yet supported", m_loc);
-				return nullptr;
-			}
 			EvmSlotLowering low(m_ctx, m_scope, m_loc);
 			auto base = low.resolve(baseExpr);
 			if (!base)
@@ -177,64 +163,15 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					return awst::makeZero(m_loc, awst::WType::biguintType());
 				}
 				auto addr = low.elemAddr(dataBase, len, elemType);
-				if (aggElem)
+				// The declared element type owns the dispatch. Scalars, structs,
+				// bytes and arbitrarily nested arrays all enter the same recursive
+				// writer used by ordinary assignment; push must not maintain a
+				// second immediate-shape ladder.
+				if (value)
 				{
-					// element region is virgin-zero (pop clears; fresh keccak
-					// space) — empty push() is just len+=1; push(v) writes the
-					// element via the aggregate writers
-					std::vector<std::shared_ptr<awst::Statement>> writesA;
-					if (value)
-					{
-						addr.solType = elemType;
-						addr.wtype = m_ctx.typeMapper.map(elemType);
-						if (EvmSlotLowering::isBytesLike(elemType))
-						{
-							if (value->wtype
-								&& value->wtype->kind() != awst::WTypeKind::Bytes
-								&& value->wtype != awst::WType::stringType())
-								value = awst::makeARC4Decode(std::move(value),
-									awst::WType::bytesType(), m_loc);
-							low.writeBytesValue(addr, std::move(value), writesA);
-						}
-						else if (auto const* eat =
-							dynamic_cast<ArrayType const*>(elemType))
-						{
-							if (!low.writeArrayValue(addr, eat,
-									std::move(value), writesA))
-								return nullptr;
-						}
-					}
-					for (auto& stA: writesA)
-						m_ctx.queuePreEffect(std::move(stA));
-					auto newLenA = awst::makeBigUIntBinOp(len,
-						awst::BigUIntBinaryOperator::Add,
-						awst::makeIntegerConstant("1", m_loc,
-							awst::WType::biguintType()), m_loc);
-					m_ctx.queuePreEffect(builder::SlotHandleAccess::writeSlot(
-						rootSlot, std::move(newLenA), m_loc));
-					// no-arg push() returns a REFERENCE to the new element —
-					// its slot (addr uses the pre-bump length). `push(v)`
-					// returns nothing; zero stands in.
-					if (m_call.arguments().empty())
-						return addr.slot;
-					return awst::makeZero(m_loc, awst::WType::biguintType());
-				}
-				if (value && structW)
-				{
-					// struct element: split into per-slot words at the element base
 					std::vector<std::shared_ptr<awst::Statement>> writes;
-					builder::SlotHandleAccess::writeStructElem(
-						writes, addr.slot, structElem, structW, std::move(value), m_loc);
-					for (auto& st: writes)
-						m_ctx.queuePreEffect(std::move(st));
-				}
-				else if (value)
-				{
-					value = low.coerceToNative(std::move(value), addr);
-					if (!value)
+					if (!low.writeAny(addr, elemType, std::move(value), writes))
 						return nullptr;
-					std::vector<std::shared_ptr<awst::Statement>> writes;
-					low.writeValue(addr, std::move(value), writes);
 					for (auto& st: writes)
 						m_ctx.queuePreEffect(std::move(st));
 				}
@@ -270,7 +207,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 				return awst::makeZero(m_loc, awst::WType::biguintType());
 			}
 			auto addr = low.elemAddr(dataBase, lastIdx, elemType);
-			if (aggElem)
+			if (!elemType->isValueType())
 			{
 				addr.solType = elemType;
 				addr.wtype = m_ctx.typeMapper.map(elemType);
@@ -279,29 +216,6 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 					return nullptr;
 				for (auto& stA: writesA)
 					m_ctx.queuePreEffect(std::move(stA));
-				m_ctx.queuePreEffect(builder::SlotHandleAccess::writeSlot(
-					rootSlot, lastIdx, m_loc));
-				return awst::makeZero(m_loc, awst::WType::biguintType());
-			}
-			if (structW)
-			{
-				// zero every slot of the vacated element (EVM pop clears)
-				unsigned stride = static_cast<unsigned>(structElem->storageSize());
-				std::vector<std::shared_ptr<awst::Statement>> writes;
-				for (unsigned st = 0; st < stride; ++st)
-				{
-					auto slotJ = st == 0 ? addr.slot
-						: awst::makeBigUIntBinOp(addr.slot,
-							awst::BigUIntBinaryOperator::Add,
-							awst::makeIntegerConstant(st, m_loc,
-								awst::WType::biguintType()), m_loc);
-					writes.push_back(builder::SlotHandleAccess::writeSlot(
-						std::move(slotJ),
-						awst::makeIntegerConstant("0", m_loc,
-							awst::WType::biguintType()), m_loc));
-				}
-				for (auto& st2: writes)
-					m_ctx.queuePreEffect(std::move(st2));
 				m_ctx.queuePreEffect(builder::SlotHandleAccess::writeSlot(
 					rootSlot, lastIdx, m_loc));
 				return awst::makeZero(m_loc, awst::WType::biguintType());
@@ -424,6 +338,20 @@ std::shared_ptr<awst::Expression> SolArrayMethod::toAwst()
 		if (auto const* decl = dynamic_cast<VariableDeclaration const*>(
 				ident->annotation().referencedDeclaration))
 		{
+			if (auto const* array = dynamic_cast<ArrayType const*>(decl->type());
+				array && array->isDynamicallySized()
+				&& !array->isByteArrayOrString()
+				&& (memberName == "push" || memberName == "pop"))
+			{
+				auto const& keyParam = m_scope.findMappingKeyParam(decl->id());
+				if (!keyParam.empty())
+					return handleBoxArray(
+						memberName, baseExpr, *decl,
+						awst::makeReinterpretCast(
+							awst::makeVarExpression(
+								keyParam, awst::WType::bytesType(), m_loc),
+							awst::WType::boxKeyType(), m_loc));
+			}
 			if (!decl->isStateVariable())
 			{
 				auto const* alias = m_scope.findStorageAlias(decl->id());

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dowhile_braceless.sol.DoWhileBraceless.approval_program() -> uint64:
 main:
     intcblock 1 32 0 3
-    bytecblock "n" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x
+    bytecblock "n" 0x 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -25,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "n"
-    bytec_3 // 0x
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -55,7 +55,9 @@ main_ternary_merge@15:
     intc_2 // 0
     bytec_0 // "n"
     app_global_get_ex
-    assert // check n exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -64,7 +66,7 @@ main_ternary_merge@15:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -96,7 +98,7 @@ main_ternary_merge@20:
     itob
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dup
@@ -107,7 +109,7 @@ main_ternary_merge@20:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -136,7 +138,7 @@ main_while_top@27:
     pushbytes 0x01
     b+
     dupn 2
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     intc_3 // 3
@@ -151,7 +153,7 @@ main_while_top@27:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -176,23 +178,25 @@ main_bracelessSideEffectCond_route@5:
 main_ternary_merge@34:
     !
     assert // not payable
-    bytec_3 // 0x
+    bytec_1 // 0x
 
 main_while_top@35:
     pushbytes 0x0a
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     intc_2 // 0
     bytec_0 // "n"
     app_global_get_ex
-    assert // check n exists
+    bytec_1 // 0x
+    cover 2
+    select
     pushbytes 0x01
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // "n"
@@ -210,7 +214,7 @@ main_while_top@35:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

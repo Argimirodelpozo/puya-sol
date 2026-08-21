@@ -67,16 +67,10 @@ main_ternary_merge@9:
     callsub TypedMemView.len
     pushint 148
     itob
+    dup2
+    b>=
+    assert // underflow
     swap
-    dig 1
-    b>=
-    assert // underflow
-    dig 1
-    callsub TypedMemView.len
-    dup
-    dig 2
-    b>=
-    assert // underflow
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     dig 1
@@ -571,7 +565,7 @@ TypedMemView.ref:
     pushint 24
     bzero
     dup
-    cover 5
+    cover 6
     uncover 2
     itob
     concat
@@ -596,10 +590,10 @@ TypedMemView.ref_after_if_else@3:
     /
     intc_0 // 32
     *
-    dig 5
+    dig 4
     +
     itob
-    uncover 4
+    uncover 5
     swap
     concat
     replace2 64
@@ -702,10 +696,8 @@ TypedMemView.ref_after_while@9:
     bury 1
     uncover 3
     pop
-    load 0
-    swap
     intc_1 // 4096
-    dig 3
+    dig 2
     -
     dup
     intc_0 // 32
@@ -713,16 +705,46 @@ TypedMemView.ref_after_while@9:
     bz TypedMemView.ref_ternary_false@11
     pop
     loads
-    uncover 2
+    swap
     intc_0 // 32
     extract3
 
 TypedMemView.ref_ternary_merge@12:
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM memory word exceeds uint64
     pushint 24
     extract_uint64
-    swap
+    dup
     cover 2
+    dup
+    intc_1 // 4096
+    <=
+    assert // EVM memory byte value exceeds AVM stack limit
+    dig 1
+    intc_1 // 4096
+    %
+    dup
+    cover 2
+    intc_1 // 4096
+    swap
+    -
+    dup
+    cover 2
+    <=
+    bz TypedMemView.ref_ternary_false@14
+    pop
+    swap
+    intc_1 // 4096
+    /
+    loads
+    swap
+    uncover 2
     extract3
+
+TypedMemView.ref_ternary_merge@15:
     len
     itob
     load 0
@@ -743,11 +765,33 @@ TypedMemView.ref_ternary_merge@12:
     swap
     retsub
 
+TypedMemView.ref_ternary_false@14:
+    uncover 2
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 3
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    uncover 3
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b TypedMemView.ref_ternary_merge@15
+
 TypedMemView.ref_ternary_false@11:
     swap
     dup
     loads
-    uncover 4
+    uncover 3
     dig 3
     extract3
     swap
@@ -811,6 +855,8 @@ TypedMemView.typeOf:
     frame_dig -1
     swap
     concat
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     pushbytes 0x0000000001000000000000000000000000000000000000000000000000000000
     b/
     pushbytes 0xffffffffff
@@ -836,6 +882,8 @@ TypedMemView.loc:
     frame_dig -1
     swap
     concat
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     pushbytes 0x0000000000000000000000000000000001000000000000000000000000000000
     b/
     bytec_2 // 0xffffffffffffffffffffffff
@@ -855,6 +903,8 @@ TypedMemView.len:
     frame_dig -1
     swap
     concat
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     bytec 8 // 0x0000000000000000000000000000000000000000000000000000000001000000
     b/
     bytec_2 // 0xffffffffffffffffffffffff
@@ -912,7 +962,6 @@ TypedMemView.slice_after_if_else@2:
 TypedMemView.unsafeCopyTo:
     proto 2 1
     intc_2 // 0
-    dup
     bytec_1 // ""
     dupn 2
     frame_dig -2
@@ -935,8 +984,6 @@ TypedMemView.unsafeCopyTo_after_if_else@4:
     assert // TypedMemView/copyTo - Invalid pointer deref
     frame_dig -2
     callsub TypedMemView.len
-    dup
-    frame_bury 0
     frame_dig -2
     callsub TypedMemView.loc
     load 0
@@ -945,12 +992,19 @@ TypedMemView.unsafeCopyTo_after_if_else@4:
     extract 64 32
     frame_dig -1
     b>
-    !
-    assert // revert
+    bz TypedMemView.unsafeCopyTo_after_if_else@9
+    load 0
+    store 0
+    load 0
+    extract 96 32
+    log
+    err // revert
+
+TypedMemView.unsafeCopyTo_after_if_else@9:
     pushint 8
     bzero
     dup
-    frame_bury 1
+    frame_bury 0
     dup
     uncover 2
     concat
@@ -959,8 +1013,8 @@ TypedMemView.unsafeCopyTo_after_if_else@4:
     pushint 8
     -
     extract_uint64
-    frame_bury 2
-    swap
+    frame_bury 1
+    dig 1
     concat
     dup
     len
@@ -970,16 +1024,16 @@ TypedMemView.unsafeCopyTo_after_if_else@4:
     intc_2 // 0
     bytec_1 // 0x
 
-TypedMemView.unsafeCopyTo_while_top@5:
+TypedMemView.unsafeCopyTo_while_top@10:
     dig 1
     dig 3
     <
-    bz TypedMemView.unsafeCopyTo_after_while@10
-    frame_dig 2
+    bz TypedMemView.unsafeCopyTo_after_while@15
+    frame_dig 1
     dig 2
     +
     dup
-    frame_bury 4
+    frame_bury 3
     intc_1 // 4096
     %
     dup
@@ -990,9 +1044,9 @@ TypedMemView.unsafeCopyTo_while_top@5:
     dup
     intc_0 // 32
     >=
-    bz TypedMemView.unsafeCopyTo_ternary_false@8
+    bz TypedMemView.unsafeCopyTo_ternary_false@13
     pop
-    frame_dig 4
+    frame_dig 3
     intc_1 // 4096
     /
     loads
@@ -1000,16 +1054,16 @@ TypedMemView.unsafeCopyTo_while_top@5:
     intc_0 // 32
     extract3
 
-TypedMemView.unsafeCopyTo_ternary_merge@9:
+TypedMemView.unsafeCopyTo_ternary_merge@14:
     concat
     swap
     intc_0 // 32
     +
     swap
-    b TypedMemView.unsafeCopyTo_while_top@5
+    b TypedMemView.unsafeCopyTo_while_top@10
 
-TypedMemView.unsafeCopyTo_ternary_false@8:
-    frame_dig 4
+TypedMemView.unsafeCopyTo_ternary_false@13:
+    frame_dig 3
     intc_1 // 4096
     /
     dup
@@ -1028,15 +1082,16 @@ TypedMemView.unsafeCopyTo_ternary_false@8:
     swap
     extract3
     concat
-    b TypedMemView.unsafeCopyTo_ternary_merge@9
+    b TypedMemView.unsafeCopyTo_ternary_merge@14
 
-TypedMemView.unsafeCopyTo_after_while@10:
+TypedMemView.unsafeCopyTo_after_while@15:
     bury 1
     intc_2 // 0
     uncover 2
     extract3
     dup
-    frame_dig 1
+    cover 2
+    frame_dig 0
     frame_dig -1
     concat
     dup
@@ -1045,14 +1100,14 @@ TypedMemView.unsafeCopyTo_after_while@10:
     -
     extract_uint64
     dup
-    frame_bury 3
+    frame_bury 2
     swap
     len
     dup
     intc_0 // 32
     %
     dup
-    cover 3
+    cover 4
     -
     +
     dup
@@ -1066,7 +1121,7 @@ TypedMemView.unsafeCopyTo_after_while@10:
     dup
     intc_0 // 32
     >=
-    bz TypedMemView.unsafeCopyTo_ternary_false@12
+    bz TypedMemView.unsafeCopyTo_ternary_false@17
     pop
     dup
     intc_1 // 4096
@@ -1076,26 +1131,26 @@ TypedMemView.unsafeCopyTo_after_while@10:
     intc_0 // 32
     extract3
 
-TypedMemView.unsafeCopyTo_ternary_merge@13:
+TypedMemView.unsafeCopyTo_ternary_merge@18:
     intc_0 // 32
-    uncover 3
+    uncover 4
     dup
     cover 2
     -
     extract3
-    uncover 2
+    uncover 3
     swap
     concat
     swap
     intc_2 // 0
 
-TypedMemView.unsafeCopyTo_while_top@14:
+TypedMemView.unsafeCopyTo_while_top@19:
     dig 2
     len
     dig 1
     >
-    bz TypedMemView.unsafeCopyTo_after_while@19
-    frame_dig 3
+    bz TypedMemView.unsafeCopyTo_after_while@24
+    frame_dig 2
     dig 1
     dup
     cover 2
@@ -1121,7 +1176,7 @@ TypedMemView.unsafeCopyTo_while_top@14:
     swap
     intc 5 // 4064
     <=
-    bz TypedMemView.unsafeCopyTo_else_body@17
+    bz TypedMemView.unsafeCopyTo_else_body@22
     uncover 2
     dup
     loads
@@ -1130,12 +1185,12 @@ TypedMemView.unsafeCopyTo_while_top@14:
     replace3
     stores
 
-TypedMemView.unsafeCopyTo_after_if_else@18:
+TypedMemView.unsafeCopyTo_after_if_else@23:
     intc_0 // 32
     +
-    b TypedMemView.unsafeCopyTo_while_top@14
+    b TypedMemView.unsafeCopyTo_while_top@19
 
-TypedMemView.unsafeCopyTo_else_body@17:
+TypedMemView.unsafeCopyTo_else_body@22:
     uncover 2
     dup
     loads
@@ -1168,11 +1223,12 @@ TypedMemView.unsafeCopyTo_else_body@17:
     extract3
     replace2 0
     stores
-    b TypedMemView.unsafeCopyTo_after_if_else@18
+    b TypedMemView.unsafeCopyTo_after_if_else@23
 
-TypedMemView.unsafeCopyTo_after_while@19:
+TypedMemView.unsafeCopyTo_after_while@24:
     pop
-    frame_dig 4
+    bury 1
+    frame_dig 3
     intc_0 // 32
     +
     intc 4 // 20480
@@ -1189,12 +1245,12 @@ TypedMemView.unsafeCopyTo_after_while@19:
     callsub TypedMemView.typeOf
     itob
     frame_dig -1
-    frame_dig 0
+    uncover 2
     callsub TypedMemView.unsafeBuildUnchecked
     frame_bury 0
     retsub
 
-TypedMemView.unsafeCopyTo_ternary_false@12:
+TypedMemView.unsafeCopyTo_ternary_false@17:
     dig 1
     intc_1 // 4096
     /
@@ -1214,7 +1270,7 @@ TypedMemView.unsafeCopyTo_ternary_false@12:
     swap
     extract3
     concat
-    b TypedMemView.unsafeCopyTo_ternary_merge@13
+    b TypedMemView.unsafeCopyTo_ternary_merge@18
 
 
 // __solfn_1381(memView: bytes) -> bytes:
@@ -1458,10 +1514,19 @@ TypedMemView.clone_after_if_else@12:
     extract3
 
 TypedMemView.clone_ternary_merge@15:
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM memory word exceeds uint64
     pushint 24
     extract_uint64
     dup
     cover 2
+    dup
+    intc_1 // 4096
+    <=
+    assert // EVM memory byte value exceeds AVM stack limit
     dig 1
     intc_1 // 4096
     %

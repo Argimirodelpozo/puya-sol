@@ -63,6 +63,20 @@ std::shared_ptr<awst::Expression> ContractContext::buildExpr(
 	return std::move(lowered.value);
 }
 
+void ContractContext::evaluateForEffects(
+	solidity::frontend::Expression const& _expr,
+	awst::SourceLocation const& _loc)
+{
+	auto lowered = build(_expr, false);
+	for (auto& statement: lowered.effects.pre)
+		preEffects().push_back(std::move(statement));
+	if (lowered.value)
+		preEffects().push_back(
+			awst::makeExpressionStatement(std::move(lowered.value), _loc));
+	for (auto& statement: lowered.effects.post)
+		preEffects().push_back(std::move(statement));
+}
+
 std::shared_ptr<awst::Expression> ContractContext::buildBinaryOp(
 	solidity::frontend::Token _op,
 	std::shared_ptr<awst::Expression> _left,

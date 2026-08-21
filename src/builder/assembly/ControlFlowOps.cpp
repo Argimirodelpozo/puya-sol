@@ -39,8 +39,13 @@ void AssemblyBuilder::buildIfStatement(
 		if (auto const* exprStmt = std::get_if<solidity::yul::ExpressionStatement>(
 				&_node.body.statements[0]))
 			if (auto const* funcCall = std::get_if<solidity::yul::FunctionCall>(&exprStmt->expression))
-				if (getFunctionName(funcCall->functionName) == "revert")
-					isRevertBody = true;
+				if (getFunctionName(funcCall->functionName) == "revert"
+					&& funcCall->arguments.size() == 2)
+				{
+					auto off = resolveConstantYulValue(funcCall->arguments[0]);
+					auto size = resolveConstantYulValue(funcCall->arguments[1]);
+					isRevertBody = off && size && *off == 0 && *size == 0;
+				}
 	}
 
 	// Condition may produce pending statements; drain before the if (same as buildForLoop).
@@ -132,6 +137,18 @@ void AssemblyBuilder::buildForLoop(
 		_out.push_back(awst::makeWhileLoop(
 			awst::makeTrue(loc), std::move(outerBody), loc));
 	}
+	// A leave inside this Yul loop first exits the nearest AWST loop. Propagate
+	// the per-inline-function flag outward until it reaches the synthetic
+	// function wrapper loop.
+	if (!m_yulLeaveFlag.empty())
+	{
+		auto leaveBlock = awst::makeBlock(loc);
+		leaveBlock->body.push_back(awst::makeLoopExit(loc));
+		_out.push_back(awst::makeIfElse(
+			awst::makeVarExpression(
+				m_yulLeaveFlag, awst::WType::boolType(), loc),
+			std::move(leaveBlock), nullptr, loc));
+	}
 }
 
 void AssemblyBuilder::buildBreakStatement(
@@ -164,7 +181,14 @@ void AssemblyBuilder::buildLeaveStatement(
 	// Inlined Yul functions are wrapped in `while true {…break}`;
 	// `leave` breaks out. Outside an inlined function it's a no-op.
 	if (m_inlineDepth > 0)
+	{
+		if (!m_yulLeaveFlag.empty())
+			_out.push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(
+					m_yulLeaveFlag, awst::WType::boolType(), makeLoc(_node.debugData)),
+				awst::makeTrue(makeLoc(_node.debugData)), makeLoc(_node.debugData)));
 		_out.push_back(awst::makeLoopExit(makeLoc(_node.debugData)));
+	}
 }
 
 void AssemblyBuilder::buildSwitchStatement(

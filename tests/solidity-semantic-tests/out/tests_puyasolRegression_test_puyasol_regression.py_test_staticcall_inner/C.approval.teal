@@ -6,7 +6,8 @@ main:
     intcblock 32 1 0
     bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_2 // 0
-    dupn 3
+    dupn 4
+    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -72,21 +73,22 @@ main_selfStaticInherited_route@9:
 main_ternary_merge@19:
     !
     assert // not payable
-    callsub bar
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
     intc_0 // 32
     bzero
     dup
-    bury 3
-    b|
+    uncover 2
+    callsub bar
+    concat
     dup
     len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     dup
-    cover 2
+    bury 7
+    len
+    dup
     itob
     intc_0 // 32
     itob
@@ -102,19 +104,16 @@ main_bool_merge@22:
 
 main_after_if_else@24:
     assert // inherited encodeCall failed
-    swap
     intc_0 // 32
-    ==
-    bz main_else_body@26
+    >=
+    assert // EVM ABI decode out of bounds
+    dig 5
     extract 0 32
-
-main_after_if_else@27:
     dup
     len
     intc_0 // 32
     <=
     assert // overflow
-    dig 1
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -122,9 +121,6 @@ main_after_if_else@27:
     log
     intc_1 // 1
     return
-
-main_else_body@26:
-    b main_after_if_else@27
 
 main_bool_false@21:
     intc_2 // 0
@@ -142,52 +138,54 @@ main_selfStaticCall_route@8:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@31
+    bz main_ternary_false@28
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@32:
+main_ternary_merge@29:
     !
     assert // not payable
-    callsub foo
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
     intc_0 // 32
     bzero
     dup
     bury 4
-    b|
+    swap
+    callsub foo
+    concat
     dup
     len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     dup
-    cover 2
+    bury 7
+    len
+    dup
+    bury 2
     itob
     intc_0 // 32
     itob
     b==
-    bz main_bool_false@34
+    bz main_bool_false@31
     intc_1 // 1
 
-main_bool_merge@35:
+main_bool_merge@32:
     dup
-    bnz main_after_if_else@37
+    bnz main_after_if_else@34
     pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000011656e636f646543616c6c206661696c6564000000000000000000000000000000
     log
 
-main_after_if_else@37:
+main_after_if_else@34:
     assert // encodeCall failed
-    swap
     intc_0 // 32
-    ==
-    bz main_else_body@39
+    dig 1
+    <=
+    assert // EVM ABI decode out of bounds
+    dig 5
     extract 0 32
-
-main_after_if_else@40:
     dup
     len
     intc_0 // 32
@@ -202,16 +200,13 @@ main_after_if_else@40:
     intc_1 // 1
     return
 
-main_else_body@39:
-    b main_after_if_else@40
-
-main_bool_false@34:
+main_bool_false@31:
     intc_2 // 0
-    b main_bool_merge@35
+    b main_bool_merge@32
 
-main_ternary_false@31:
+main_ternary_false@28:
     intc_2 // 0
-    b main_ternary_merge@32
+    b main_ternary_merge@29
 
 main_selfCall_route@7:
     txna ApplicationArgs 1
@@ -221,58 +216,56 @@ main_selfCall_route@7:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@44
+    bz main_ternary_false@38
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@45:
+main_ternary_merge@39:
     !
     assert // not payable
-    callsub foo
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
     intc_0 // 32
     bzero
     dup
-    bury 5
-    b|
+    uncover 2
+    callsub foo
+    concat
     dup
     len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     dup
-    cover 2
+    bury 5
+    len
+    dup
     itob
     intc_0 // 32
     itob
     b==
-    bz main_bool_false@47
+    bz main_bool_false@41
     intc_1 // 1
 
-main_bool_merge@48:
+main_bool_merge@42:
     dup
-    bnz main_after_if_else@50
+    bnz main_after_if_else@44
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b63616c6c206661696c6564000000000000000000000000000000000000000000
     log
 
-main_after_if_else@50:
+main_after_if_else@44:
     assert // call failed
-    swap
     intc_0 // 32
-    ==
-    bz main_else_body@52
+    >=
+    assert // EVM ABI decode out of bounds
+    dig 3
     extract 0 32
-
-main_after_if_else@53:
     dup
     len
     intc_0 // 32
     <=
     assert // overflow
-    dig 3
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -281,16 +274,13 @@ main_after_if_else@53:
     intc_1 // 1
     return
 
-main_else_body@52:
-    b main_after_if_else@53
-
-main_bool_false@47:
+main_bool_false@41:
     intc_2 // 0
-    b main_bool_merge@48
+    b main_bool_merge@42
 
-main_ternary_false@44:
+main_ternary_false@38:
     intc_2 // 0
-    b main_ternary_merge@45
+    b main_ternary_merge@39
 
 main_selfStatic_route@6:
     txna ApplicationArgs 1
@@ -300,58 +290,56 @@ main_selfStatic_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@57
+    bz main_ternary_false@48
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@58:
+main_ternary_merge@49:
     !
     assert // not payable
-    callsub foo
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
     intc_0 // 32
     bzero
     dup
-    bury 6
-    b|
+    uncover 2
+    callsub foo
+    concat
     dup
     len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     dup
-    cover 2
+    bury 6
+    len
+    dup
     itob
     intc_0 // 32
     itob
     b==
-    bz main_bool_false@60
+    bz main_bool_false@51
     intc_1 // 1
 
-main_bool_merge@61:
+main_bool_merge@52:
     dup
-    bnz main_after_if_else@63
+    bnz main_after_if_else@54
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001173746174696363616c6c206661696c6564000000000000000000000000000000
     log
 
-main_after_if_else@63:
+main_after_if_else@54:
     assert // staticcall failed
-    swap
     intc_0 // 32
-    ==
-    bz main_else_body@65
+    >=
+    assert // EVM ABI decode out of bounds
+    dig 4
     extract 0 32
-
-main_after_if_else@66:
     dup
     len
     intc_0 // 32
     <=
     assert // overflow
-    dig 4
     b|
     bytec_0 // 0x151f7c75
     swap
@@ -360,16 +348,13 @@ main_after_if_else@66:
     intc_1 // 1
     return
 
-main_else_body@65:
-    b main_after_if_else@66
-
-main_bool_false@60:
+main_bool_false@51:
     intc_2 // 0
-    b main_bool_merge@61
+    b main_bool_merge@52
 
-main_ternary_false@57:
+main_ternary_false@48:
     intc_2 // 0
-    b main_ternary_merge@58
+    b main_ternary_merge@49
 
 main_foo_route@5:
     txna ApplicationArgs 1

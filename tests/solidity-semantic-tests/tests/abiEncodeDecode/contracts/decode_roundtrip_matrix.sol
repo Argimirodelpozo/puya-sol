@@ -2,8 +2,6 @@
 pragma solidity ^0.8.0;
 contract C {
     struct S { uint256 a; string s; uint16 b; }
-    // (nested-dynamic-array decode — uint256[][] — is a compile hard-error;
-    //  abi.encode of it is correct, decode is unimplemented. See test.)
     // struct with string round-trip
     function rtStruct() external pure returns (uint256, string memory, uint16) {
         S memory s = S(42, "hi there", 7);

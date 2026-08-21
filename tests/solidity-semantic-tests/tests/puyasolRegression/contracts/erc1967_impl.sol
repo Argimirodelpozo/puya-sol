@@ -41,6 +41,10 @@ contract Erc1967Impl {
 
     function setValue(uint256 v) public { value = v; }
 
+    function rawValue() public view returns (uint256 r) {
+        assembly { r := sload(value.slot) }
+    }
+
     // Beacon slot has no AVM analogue — both directions are runtime traps
     // (compile-time warnings; the call sites revert if reached).
     function beacon() public view returns (address b) {

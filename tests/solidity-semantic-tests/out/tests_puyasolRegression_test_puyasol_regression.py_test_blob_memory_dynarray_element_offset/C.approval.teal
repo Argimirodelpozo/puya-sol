@@ -3,10 +3,12 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/blob_memory_address_write.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 4096 20480
-    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" "_count" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "_list"
-    intc_2 // 0
-    pushbytes ""
+    intcblock 32 0 1 4096 20480 4064
+    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" "_count" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "_list"
+    intc_1 // 0
+    dup
+    bytec_0 // ""
+    dupn 2
     intc_3 // 4096
     bzero
     dup
@@ -26,10 +28,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
-    intc_1 // 1
+    bytec_3 // "__ctor_pending"
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
@@ -47,31 +49,27 @@ main_copyOut_route@7:
     txn GroupIndex
     bz main_ternary_false@13
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 main_ternary_merge@14:
     !
     assert // not payable
-    intc_2 // 0
-    bytec_3 // "_count"
+    intc_1 // 0
+    bytec 4 // "_count"
     app_global_get_ex
-    swap
+    bytec_0 // 0x
+    cover 2
+    select
     dup
-    uncover 2
-    assert // check _count exists
-    intc_2 // 0
+    intc_1 // 0
     itob
     swap
-    load 0
-    pushint 88
-    extract_uint64
-    cover 2
     pushint 8
     bzero
     dup
-    bury 7
+    bury 8
     swap
     concat
     dup
@@ -81,7 +79,9 @@ main_ternary_merge@14:
     extract_uint64
     bury 4
     pushbytes 0x0000
-    intc_2 // 0
+    dup
+    bury 8
+    intc_1 // 0
 
 main_while_top@15:
     dup
@@ -90,34 +90,71 @@ main_while_top@15:
     bz main_after_while@17
     swap
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
-    intc_1 // 1
+    intc_2 // 1
     +
     itob
     extract 6 0
     replace2 0
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
     swap
-    intc_1 // 1
+    intc_2 // 1
     +
     b main_while_top@15
 
 main_after_while@17:
-    popn 2
+    pop
     dup
-
-main_while_top@18:
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
     dup
-    dig 4
-    b<
-    bz main_after_while@26
+    bury 7
+    dup
+    intc_0 // 32
+    *
+    load 0
+    pushint 88
+    extract_uint64
+    load 0
+    pushint 24
+    bzero
+    uncover 3
+    pushint 63
+    +
+    intc_0 // 32
+    /
+    intc_0 // 32
+    *
+    dig 3
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    dup
+    intc_0 // 32
+    +
+    dup
+    cover 6
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_3 // 4096
+    /
+    cover 2
+    intc_3 // 4096
+    %
+    dup
+    cover 4
     intc_0 // 32
     bzero
     dup
-    cover 5
-    dig 1
+    cover 8
+    uncover 2
+    itob
     concat
     dup
     len
@@ -125,53 +162,32 @@ main_while_top@18:
     -
     intc_0 // 32
     extract3
-    bytec 5 // "_list"
-    concat
-    sha256
+    cover 5
+    intc 5 // 4064
+    <=
     dup
-    box_get
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    !=
-    bz main_else_body@24
-    dig 1
-    dup
+    bury 10
+    bz main_else_body@19
+    dupn 2
+    loads
     dig 4
+    uncover 7
+    replace3
+    stores
+
+main_after_if_else@20:
+    intc_1 // 0
+
+main_while_top@21:
     dup
-    cover 3
-    b>=
-    assert // underflow
-    uncover 2
-    box_get
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dig 5
-    intc_0 // 32
-    +
-    uncover 2
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    uncover 3
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
+    dig 11
+    <
+    bz main_after_while@26
     dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dig 9
-    swap
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
     intc_0 // 32
     *
+    dig 8
+    dig 1
     +
     dup
     intc_0 // 32
@@ -182,13 +198,25 @@ main_while_top@18:
     dup
     intc_3 // 4096
     /
-    cover 3
+    cover 5
     intc_3 // 4096
     %
     dup
-    cover 4
-    uncover 8
-    uncover 2
+    cover 2
+    cover 6
+    dig 4
+    extract 2 0
+    swap
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    len
+    pushint 20
+    -
+    pushint 20
+    extract3
+    dig 10
+    swap
     concat
     dup
     len
@@ -197,37 +225,33 @@ main_while_top@18:
     intc_0 // 32
     extract3
     swap
-    pushint 4064
+    intc 5 // 4064
     <=
-    bz main_else_body@22
-    uncover 2
+    bz main_else_body@24
+    uncover 4
     dup
     loads
-    uncover 4
+    uncover 6
     uncover 3
     replace3
     stores
 
 main_after_if_else@25:
-    pushbytes 0x01
-    b+
-    dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    b main_while_top@18
+    intc_2 // 1
+    +
+    b main_while_top@21
 
-main_else_body@22:
-    uncover 2
+main_else_body@24:
+    uncover 4
     dup
     loads
     intc_3 // 4096
-    uncover 5
+    uncover 7
     dup
     cover 2
     -
     dig 4
-    intc_2 // 0
+    intc_1 // 0
     dig 2
     extract3
     swap
@@ -237,7 +261,7 @@ main_else_body@22:
     swap
     stores
     swap
-    intc_1 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -252,50 +276,119 @@ main_else_body@22:
     stores
     b main_after_if_else@25
 
-main_else_body@24:
-    pop
-    uncover 4
-    pop
-    swap
-    pushbytes 0x01
-    b+
-    dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    swap
-    b main_after_if_else@25
-
 main_after_while@26:
     pop
-    load 0
-    store 0
+    bury 1
+    dig 2
+
+main_while_top@27:
+    dup
+    dig 5
+    b<
+    bz main_after_while@38
+    dig 5
+    dig 1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 6 // "_list"
+    concat
+    sha256
+    dup
+    cover 5
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    !=
+    bz main_else_body@36
+    dup
+    dig 4
+    b>=
+    assert // underflow
+    intc_3 // 4096
+    dig 3
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@31
+    pop
+    dig 1
+    loads
+    dig 3
+    intc_0 // 32
+    extract3
+
+main_ternary_merge@32:
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM memory word exceeds uint64
+    dig 1
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dig 5
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 13
     swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
+    pushint 24
+    extract_uint64
+    dig 1
+    >
+    assert // memory array index out of range
+    uncover 5
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    swap
+    intc_0 // 32
+    *
+    dig 8
+    +
     dup
     intc_0 // 32
     +
-    dup
-    cover 2
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
     intc_3 // 4096
     /
-    swap
+    cover 4
     intc_3 // 4096
     %
     dup
     cover 2
-    intc_0 // 32
-    bzero
-    uncover 6
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    uncover 6
-    b-
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
+    cover 5
+    dup
+    len
+    pushint 20
+    -
+    pushint 20
+    extract3
+    dig 9
+    swap
     concat
     dup
     len
@@ -304,9 +397,116 @@ main_after_while@26:
     intc_0 // 32
     extract3
     swap
-    pushint 4064
+    intc 5 // 4064
     <=
-    bz main_else_body@28
+    bz main_else_body@34
+    uncover 3
+    dup
+    loads
+    uncover 5
+    uncover 3
+    replace3
+    stores
+
+main_after_if_else@37:
+    pushbytes 0x01
+    b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b main_while_top@27
+
+main_else_body@34:
+    uncover 3
+    dup
+    loads
+    intc_3 // 4096
+    uncover 6
+    dup
+    cover 2
+    -
+    dig 4
+    intc_1 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_2 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@37
+
+main_ternary_false@31:
+    dig 2
+    dup
+    loads
+    dig 5
+    dig 3
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_1 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@32
+
+main_else_body@36:
+    uncover 4
+    pop
+    uncover 3
+    pushbytes 0x01
+    b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    cover 3
+    b main_after_if_else@37
+
+main_after_while@38:
+    pop
+    load 0
+    store 0
+    uncover 3
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    uncover 3
+    b-
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    bz main_else_body@40
     dig 1
     dup
     loads
@@ -315,7 +515,7 @@ main_after_while@26:
     replace3
     stores
 
-main_after_if_else@29:
+main_after_if_else@41:
     load 0
     store 0
     intc_3 // 4096
@@ -324,35 +524,129 @@ main_after_if_else@29:
     dup
     intc_0 // 32
     >=
-    bz main_ternary_false@31
+    bz main_ternary_false@43
     pop
     loads
     swap
     intc_0 // 32
     extract3
 
-main_ternary_merge@32:
+main_ternary_merge@44:
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM memory word exceeds uint64
     pushint 24
     extract_uint64
     dup
-    itob
-    extract 6 2
-    load 0
-    uncover 2
+    pushint 65535
+    <=
+    assert // EVM memory array exceeds ARC4 uint16 length
+    intc_1 // 0
+    dig 7
+
+main_while_top@45:
+    dig 1
+    dig 3
+    <
+    bz main_after_while@50
+    dig 1
     intc_0 // 32
     *
+    dig 4
+    +
+    dup
+    cover 3
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    intc_3 // 4096
+    %
+    dup
+    cover 4
+    intc_3 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@48
+    pop
+    uncover 2
+    intc_3 // 4096
+    /
+    loads
     uncover 3
+    intc_0 // 32
+    extract3
+
+main_ternary_merge@49:
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    pushbytes 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 2
+    dup
+    cover 2
+    intc_1 // 0
+    extract_uint16
+    +
+    itob
+    extract 6 0
+    replace2 0
+    swap
+    concat
+    swap
+    intc_2 // 1
+    +
+    swap
+    b main_while_top@45
+
+main_ternary_false@48:
+    uncover 3
+    intc_3 // 4096
+    /
+    dup
+    loads
+    uncover 5
+    dig 3
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_1 // 0
     swap
     extract3
     concat
+    b main_ternary_merge@49
+
+main_after_while@50:
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
-main_ternary_false@31:
+main_ternary_false@43:
     swap
     dup
     loads
@@ -360,19 +654,19 @@ main_ternary_false@31:
     dig 3
     extract3
     swap
-    intc_1 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_1 // 0
     swap
     extract3
     concat
-    b main_ternary_merge@32
+    b main_ternary_merge@44
 
-main_else_body@28:
+main_else_body@40:
     dig 1
     dup
     loads
@@ -382,7 +676,7 @@ main_else_body@28:
     cover 2
     -
     dig 4
-    intc_2 // 0
+    intc_1 // 0
     dig 2
     extract3
     swap
@@ -392,7 +686,7 @@ main_else_body@28:
     swap
     stores
     swap
-    intc_1 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -405,10 +699,46 @@ main_else_body@28:
     extract3
     replace2 0
     stores
-    b main_after_if_else@29
+    b main_after_if_else@41
+
+main_else_body@19:
+    dupn 2
+    loads
+    intc_3 // 4096
+    dig 5
+    dup
+    cover 2
+    -
+    uncover 8
+    dup
+    cover 5
+    intc_1 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_2 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@20
 
 main_ternary_false@13:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@14
 
 main_seed_route@6:
@@ -425,13 +755,13 @@ main_seed_route@6:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@36
+    bz main_ternary_false@54
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@37:
+main_ternary_merge@55:
     !
     assert // not payable
     pushbytes 0xc179e834c1ea500bc2f9f0bfb47f565013c4d45c23975e012d05f78757470fc2
@@ -442,33 +772,33 @@ main_ternary_merge@37:
     box_put
     pushint 3
     itob
-    bytec_3 // "_count"
+    bytec 4 // "_count"
     swap
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
-main_ternary_false@36:
-    intc_2 // 0
-    b main_ternary_merge@37
+main_ternary_false@54:
+    intc_1 // 0
+    b main_ternary_merge@55
 
 main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
-    intc_2 // 0
+    bytec_3 // "__ctor_pending"
+    intc_1 // 0
     app_global_put
-    bytec 5 // "_list"
+    bytec 6 // "_list"
     pushint 2
     box_create
     pop
-    bytec_3 // "_count"
-    pushbytes 0x
+    bytec 4 // "_count"
+    bytec_0 // 0x
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return

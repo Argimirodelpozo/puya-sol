@@ -323,32 +323,19 @@ L.bump:
     swap
     dig 1
     b|
-    dig 2
-    intc_0 // 32
-    extract_uint16
-    dig 3
-    len
-    uncover 4
-    cover 2
-    substring3
-    extract 2 0
-    dup
-    len
-    itob
-    extract 6 2
+    uncover 2
     swap
-    concat
-    swap
-    pushbytes 0x0022
-    concat
-    swap
-    concat
+    replace2 0
     frame_dig -3
     box_del
     pop
     frame_dig -3
     swap
     box_put
+    frame_dig -3
+    bytec 4 // "inner"
+    concat
+    swap
     frame_dig -2
     concat
     dup
@@ -357,9 +344,7 @@ L.bump:
     -
     intc_0 // 32
     extract3
-    frame_dig -3
-    bytec 4 // "inner"
-    concat
+    swap
     concat
     sha256
     dup
@@ -373,6 +358,9 @@ L.bump:
 // __solfn_75(self: bytes, ik: bytes) -> bytes, bytes:
 L.rd:
     proto 2 2
+    frame_dig -2
+    bytec 4 // "inner"
+    concat
     frame_dig -2
     box_get
     bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
@@ -389,9 +377,7 @@ L.rd:
     -
     intc_0 // 32
     extract3
-    frame_dig -2
-    bytec 4 // "inner"
-    concat
+    uncover 2
     concat
     sha256
     box_get

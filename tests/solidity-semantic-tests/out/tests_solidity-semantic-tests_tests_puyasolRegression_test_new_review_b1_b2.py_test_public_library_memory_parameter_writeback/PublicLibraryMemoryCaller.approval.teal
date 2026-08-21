@@ -1,0 +1,326 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/new_review_b2_public_library_memory.sol.PublicLibraryMemoryCaller.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    bytecblock 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x8b38efa7 0xb2aa5bfb 0xfc089aa4 0x67be3e2b // method "direct(uint256)(uint256,uint256)", method "attached(uint256)(uint256,uint256)", method "withReturn(uint256)(uint256,uint256,uint256)", method "externalVisibility(uint256)(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_direct_route@5 main_attached_route@6 main_withReturn_route@7 main_externalVisibility_route@8
+    err
+
+main_externalVisibility_route@8:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    bytec_0 // 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    callsub PublicMemoryLib.fillExternal
+    pop
+    dup
+    extract 2 32
+    swap
+    extract 34 32
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_withReturn_route@7:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    bytec_0 // 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    callsub PublicMemoryLib.fillAndSum
+    pop
+    swap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    dig 1
+    extract 2 32
+    uncover 2
+    extract 34 32
+    cover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@19:
+    intc_2 // 0
+    b main_ternary_merge@20
+
+main_attached_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    bytec_0 // 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    callsub PublicMemoryLib.fill
+    pop
+    dup
+    extract 2 32
+    swap
+    extract 34 32
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@24:
+    intc_2 // 0
+    b main_ternary_merge@25
+
+main_direct_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    bytec_0 // 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    callsub PublicMemoryLib.fill
+    pop
+    dup
+    extract 2 32
+    swap
+    extract 34 32
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@29:
+    intc_2 // 0
+    b main_ternary_merge@30
+
+
+// __solfn_24(values: bytes, x: bytes) -> bytes, bytes:
+PublicMemoryLib.fill:
+    proto 2 2
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    dig 1
+    b|
+    frame_dig -2
+    swap
+    replace2 2 // on error: index access is out of bounds
+    frame_bury -2
+    intc_1 // 1
+    itob
+    frame_dig -1
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    frame_dig -2
+    swap
+    replace2 34 // on error: index access is out of bounds
+    dupn 2
+    frame_bury -2
+    retsub
+
+
+// __solfn_57(values: bytes, x: bytes) -> bytes, bytes, bytes:
+PublicMemoryLib.fillAndSum:
+    proto 2 3
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    dig 1
+    b|
+    frame_dig -2
+    swap
+    replace2 2 // on error: index access is out of bounds
+    frame_bury -2
+    intc_1 // 1
+    itob
+    frame_dig -1
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    frame_dig -2
+    swap
+    replace2 34 // on error: index access is out of bounds
+    dup
+    frame_bury -2
+    extract 2 32
+    frame_dig -2
+    extract 34 32
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    frame_dig -2
+    dup
+    retsub
+
+
+// __solfn_80(values: bytes, x: bytes) -> bytes, bytes:
+PublicMemoryLib.fillExternal:
+    proto 2 2
+    frame_dig -1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    dig 1
+    b|
+    frame_dig -2
+    swap
+    replace2 2 // on error: index access is out of bounds
+    frame_bury -2
+    intc_1 // 1
+    itob
+    frame_dig -1
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    frame_dig -2
+    swap
+    replace2 34 // on error: index access is out of bounds
+    dupn 2
+    frame_bury -2
+    retsub

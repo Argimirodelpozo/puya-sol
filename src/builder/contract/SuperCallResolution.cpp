@@ -33,6 +33,7 @@
 /// limitation). Method-body sites are applied strictly per caller.
 
 #include "builder/contract/ContractBuilder.h"
+#include "builder/contract/StateVarWalker.h"
 #include "builder/sol-types/OverloadSuffix.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
@@ -118,15 +119,14 @@ void ContractBuilder::collectSuperCallMetadata(
 
 	// Resolve every call site in one body; register per caller, and eagerly
 	// (into the translator, for the ctor snapshot) when requested.
-	auto processBody = [&](
+	auto processSites = [&](
 		solidity::frontend::FunctionDefinition const& _scopeFn,
 		solidity::frontend::ContractDefinition const& _scopeContract,
+		solidity::frontend::Block const& _body,
 		bool _eager)
 	{
-		if (!_scopeFn.isImplemented())
-			return;
 		SiteCollector collector;
-		_scopeFn.body().accept(collector);
+		_body.accept(collector);
 		for (auto const& site: collector.sites)
 		{
 			auto const* target = site.refDecl;
@@ -153,13 +153,42 @@ void ContractBuilder::collectSuperCallMetadata(
 		}
 	};
 
+	// A function executes the bodies of its applied modifiers too. Resolve the
+	// actual virtual modifier exactly as the modifier inliner does, then attach
+	// every super/base call found there to the enclosing function's override map.
+	auto processFunction = [&](solidity::frontend::FunctionDefinition const& fn,
+		solidity::frontend::ContractDefinition const& scope, bool eager)
+	{
+		if (!fn.isImplemented()) return;
+		processSites(fn, scope, fn.body(), eager);
+		for (auto const& invocation: fn.modifiers())
+		{
+			auto const* mod = dynamic_cast<solidity::frontend::ModifierDefinition const*>(
+				invocation->name().annotation().referencedDeclaration);
+			if (!mod) continue; // base-constructor invocation
+			bool explicitBase = invocation->name().path().size() > 1;
+			if (!explicitBase)
+			{
+				solidity::frontend::ModifierDefinition const* resolved = nullptr;
+				forEachFunctionModifier(_contract, [&](auto const* candidate) {
+					if (!resolved && candidate->name() == mod->name())
+						resolved = candidate;
+				});
+				if (resolved) mod = resolved;
+			}
+			auto const* modScope = mod->annotation().contract;
+			if (modScope)
+				processSites(fn, *modScope, mod->body(), eager);
+		}
+	};
+
 	for (auto const* base: _contract.annotation().linearizedBaseContracts)
 	{
 		for (auto const* func: base->definedFunctions())
 			if (!func->isConstructor())
-				processBody(*func, *base, /*_eager=*/false);
+				processFunction(*func, *base, /*_eager=*/false);
 		if (auto const* ctor = base->constructor())
-			processBody(*ctor, *base, /*_eager=*/true);
+			processFunction(*ctor, *base, /*_eager=*/true);
 	}
 }
 

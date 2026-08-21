@@ -37,11 +37,24 @@ CallPlan CallResolver::plan(solidity::frontend::FunctionCall const& _call)
 			result.transport = CallTransport::Internal;
 
 		auto const* receiver = &member->expression();
-		if (auto const* conversion = dynamic_cast<FunctionCall const*>(receiver);
-			conversion && conversion->annotation().kind.set()
-			&& *conversion->annotation().kind == FunctionCallKind::TypeConversion
-			&& conversion->arguments().size() == 1)
-			receiver = conversion->arguments()[0].get();
+		for (;;)
+		{
+			if (auto const* conversion = dynamic_cast<FunctionCall const*>(receiver);
+				conversion && conversion->annotation().kind.set()
+				&& *conversion->annotation().kind == FunctionCallKind::TypeConversion
+				&& conversion->arguments().size() == 1)
+			{
+				receiver = conversion->arguments()[0].get();
+				continue;
+			}
+			if (auto const* tuple = dynamic_cast<TupleExpression const*>(receiver);
+				tuple && tuple->components().size() == 1 && tuple->components()[0])
+			{
+				receiver = tuple->components()[0].get();
+				continue;
+			}
+			break;
+		}
 		if (auto const* identifier = dynamic_cast<Identifier const*>(receiver);
 			identifier && identifier->name() == "this")
 		{

@@ -3,8 +3,10 @@
 
 #include "builder/sol-ast/stmts/SolEmitStatement.h"
 #include "builder/sol-eb/ContractContext.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/SelectorSemantics.h"
 
 namespace puyasol::builder::sol_ast
 {
@@ -28,42 +30,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		ASTNode::referencedDeclaration(eventCall.expression()));
 	std::string eventName = eventDef ? eventDef->name() : "Event";
 
-	// EVENT-signature namer (ARC-28 topic hash). Deliberately NOT the method-selector
-	// family (eb::solTypeToArc4ParamName): events collapse EVERY biguint-backed int to
-	// "uint256" (no intSelectorName exact-width rule — an int128 event param is
-	// "uint256" here but "uint128" in a method selector) because the topic must match
-	// puya's ARC-28 registration, which derives from the mapped ARC4 wtype. Do not
-	// "unify" this into the selector namer without changing puya's event registration.
-	auto arc4SigName = [this](Type const* _type) -> std::string {
-		auto* wtype = m_blk.typeMapper().map(_type);
-		if (wtype == awst::WType::biguintType()) return "uint256";
-		if (wtype == awst::WType::uint64Type()) return "uint64";
-		if (wtype == awst::WType::boolType()) return "bool";
-		if (wtype == awst::WType::accountType()) return "address";
-		if (wtype == awst::WType::bytesType()) return "byte[]";
-		if (wtype == awst::WType::stringType()) return "string";
-		if (wtype->kind() == awst::WTypeKind::Bytes)
-		{
-			auto const* bw = static_cast<awst::BytesWType const*>(wtype);
-			if (bw->length().has_value())
-				return "byte[" + std::to_string(bw->length().value()) + "]";
-			return "byte[]";
-		}
-		return _type->toString(true);
-	};
-
-	std::string eventSignature = eventName + "(";
-	if (eventDef)
-	{
-		bool first = true;
-		for (auto const& param: eventDef->parameters())
-		{
-			if (!first) eventSignature += ",";
-			eventSignature += arc4SigName(param->type());
-			first = false;
-		}
-	}
-	eventSignature += ")";
+	std::string eventSignature = eventDef
+		? builder::SelectorSemantics::eventSignature(
+			m_blk.builderCtx(), *eventDef)
+		: eventName + "()";
 
 	struct FieldInfo {
 		std::string name;
@@ -112,12 +82,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolEmitStatement::toAwst()
 		auto* arc4Type = m_blk.typeMapper().mapToARC4Type(translated->wtype);
 
 		std::shared_ptr<awst::Expression> arc4Value;
-		// `>= ARC4UIntN` excludes Basic-kind arc4.bool (a native bool arg encodes
-		// correctly below, but an already-encoded arc4.bool would otherwise be
-		// double-encoded). Pass a pre-encoded arc4.bool through as-is.
-		if ((translated->wtype->kind() >= awst::WTypeKind::ARC4UIntN
-				&& translated->wtype->kind() <= awst::WTypeKind::ARC4Struct)
-			|| translated->wtype == awst::WType::arc4BoolType())
+		if (builder::isArc4EncodedType(translated->wtype))
 			arc4Value = std::move(translated);
 		else
 		{

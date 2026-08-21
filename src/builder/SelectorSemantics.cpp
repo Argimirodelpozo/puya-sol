@@ -62,33 +62,61 @@ std::shared_ptr<awst::Expression> SelectorSemantics::eventSelector(
 	return awst::makeReinterpretCast(std::move(hash), _targetType, _loc);
 }
 
+std::string SelectorSemantics::eventSignature(
+	eb::ContractContext& _ctx, EventDefinition const& _event)
+{
+	auto arc4Name = [&](Type const* type) -> std::string {
+		auto const* w = _ctx.typeMapper.map(type);
+		if (w == awst::WType::biguintType()) return "uint256";
+		if (w == awst::WType::uint64Type()) return "uint64";
+		if (w == awst::WType::boolType()) return "bool";
+		if (w == awst::WType::accountType()) return "address";
+		if (w == awst::WType::bytesType()) return "byte[]";
+		if (w == awst::WType::stringType()) return "string";
+		if (auto const* bw = dynamic_cast<awst::BytesWType const*>(w))
+			return bw->length().has_value()
+				? "byte[" + std::to_string(*bw->length()) + "]" : "byte[]";
+		return type ? type->toString(true) : std::string{};
+	};
+	std::string result = _event.name() + "(";
+	for (size_t i = 0; i < _event.parameters().size(); ++i)
+	{
+		if (i) result += ",";
+		result += arc4Name(_event.parameters()[i]->type());
+	}
+	return result + ")";
+}
+
 std::vector<SelectorRoute> SelectorSemantics::routes(eb::ContractContext& _ctx)
 {
 	std::vector<SelectorRoute> result;
-	if (!enabled(_ctx.typeMapper) || !_ctx.currentContract)
+	if (!enabled(_ctx.typeMapper))
 		return result;
 
 	std::set<std::string> seen;
-	for (auto const& [_, function]:
-		_ctx.currentContract->interfaceFunctionList(true))
-	{
-		if (!function)
-			continue;
-		std::string route;
-		if (function->hasDeclaration())
+	std::vector<ContractDefinition const*> contracts;
+	if (_ctx.currentContract)
+		contracts.push_back(_ctx.currentContract);
+	else
+		contracts = _ctx.selectorContracts;
+	for (auto const* contract: contracts)
+		for (auto const& [_, function]: contract->interfaceFunctionList(true))
 		{
-			auto const& declaration = function->declaration();
-			if (auto const* fd = dynamic_cast<FunctionDefinition const*>(&declaration))
-				route = eb::InnerCallHandlers::buildMethodSelector(_ctx, fd);
-			else if (auto const* vd = dynamic_cast<VariableDeclaration const*>(&declaration))
-				route = eb::InnerCallHandlers::buildMethodSelector(
-					_ctx, vd->name(), *function);
+			if (!function) continue;
+			std::string route;
+			if (function->hasDeclaration())
+			{
+				auto const& declaration = function->declaration();
+				if (auto const* fd = dynamic_cast<FunctionDefinition const*>(&declaration))
+					route = eb::InnerCallHandlers::buildMethodSelector(_ctx, fd);
+				else if (auto const* vd = dynamic_cast<VariableDeclaration const*>(&declaration))
+					route = eb::InnerCallHandlers::buildMethodSelector(
+						_ctx, vd->name(), *function);
+			}
+			if (route.empty() || !seen.insert(route).second) continue;
+			result.push_back({
+				std::move(route), SolcFacts::externalSelector(*function)});
 		}
-		if (route.empty() || !seen.insert(route).second)
-			continue;
-		result.push_back({
-			std::move(route), SolcFacts::externalSelector(*function)});
-	}
 	return result;
 }
 

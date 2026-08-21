@@ -4,8 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_multivar_blob_repoint.sol.MultiAssignBlobRepoint.approval_program() -> uint64:
 main:
     intcblock 32 4096 1 0 20480 4064
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x20
-    pushbytes ""
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x20 0x
+    bytec_2 // ""
     intc_1 // 4096
     bzero
     dup
@@ -234,7 +234,7 @@ main_after_while@18:
     pushint 8
     bzero
     dup
-    cover 6
+    cover 5
     swap
     concat
     dup
@@ -243,12 +243,12 @@ main_after_while@18:
     -
     extract_uint64
     dup
-    cover 6
+    cover 4
     dup
     intc_0 // 32
     +
     dup
-    cover 5
+    cover 4
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
@@ -258,9 +258,9 @@ main_after_while@18:
     swap
     intc_1 // 4096
     %
-    cover 4
+    cover 5
     intc_1 // 4096
-    dig 4
+    dig 5
     -
     dup
     intc_0 // 32
@@ -269,7 +269,7 @@ main_after_while@18:
     pop
     swap
     loads
-    uncover 3
+    uncover 4
     intc_0 // 32
     extract3
 
@@ -283,14 +283,14 @@ main_ternary_merge@21:
     -
     intc_0 // 32
     extract3
-    dig 3
+    dig 4
     intc 5 // 4064
     <=
     bz main_else_body@23
     dig 1
     dup
     loads
-    dig 5
+    dig 6
     uncover 3
     replace3
     stores
@@ -312,14 +312,14 @@ main_after_if_else@24:
     -
     extract_uint64
     dup
-    cover 5
+    cover 6
     dup
     intc_0 // 32
     +
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
-    dig 7
+    dig 9
     bytec_1 // 0x20
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -344,7 +344,7 @@ main_after_if_else@24:
     cover 4
     intc_1 // 4096
     %
-    cover 6
+    cover 7
     intc_1 // 4096
     %
     dup
@@ -357,7 +357,7 @@ main_after_if_else@24:
     >=
     bz main_ternary_false@26
     pop
-    uncover 5
+    uncover 6
     intc_1 // 4096
     /
     loads
@@ -375,21 +375,21 @@ main_ternary_merge@27:
     -
     intc_0 // 32
     extract3
-    dig 5
+    dig 6
     intc 5 // 4064
     <=
     bz main_else_body@29
     uncover 3
     dup
     loads
-    uncover 6
+    uncover 7
     uncover 3
     replace3
     stores
 
 main_after_if_else@30:
     load 0
-    uncover 5
+    uncover 7
     pushbytes 0x60
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -407,8 +407,6 @@ main_after_if_else@30:
     store 0
     load 0
     store 0
-    load 0
-    cover 2
     intc_1 // 4096
     dig 4
     -
@@ -423,12 +421,41 @@ main_after_if_else@30:
     extract3
 
 main_ternary_merge@33:
+    dup
+    extract 0 24
+    bytec_2 // 0x
+    b==
+    assert // EVM memory word exceeds uint64
     pushint 24
     extract_uint64
+    dup
+    cover 3
+    dup
+    intc_1 // 4096
+    <=
+    assert // EVM memory byte value exceeds AVM stack limit
+    dig 2
+    intc_1 // 4096
+    %
+    dup
+    cover 3
+    intc_1 // 4096
+    swap
+    -
+    dup
+    cover 2
+    <=
+    bz main_ternary_false@35
+    pop
+    uncover 2
+    intc_1 // 4096
+    /
+    loads
     uncover 2
     uncover 3
-    uncover 2
     extract3
+
+main_ternary_merge@36:
     len
     itob
     pushbytes 0x07
@@ -440,7 +467,7 @@ main_ternary_merge@33:
     assert // overflow
     load 0
     store 0
-    uncover 3
+    uncover 2
     itob
     bytec_1 // 0x20
     b+
@@ -470,7 +497,7 @@ main_ternary_merge@33:
     dup
     intc_0 // 32
     >=
-    bz main_ternary_false@35
+    bz main_ternary_false@38
     pop
     intc_1 // 4096
     /
@@ -479,7 +506,7 @@ main_ternary_merge@33:
     intc_0 // 32
     extract3
 
-main_ternary_merge@36:
+main_ternary_merge@39:
     swap
     dup
     uncover 2
@@ -512,7 +539,7 @@ main_ternary_merge@36:
     intc_2 // 1
     return
 
-main_ternary_false@35:
+main_ternary_false@38:
     swap
     intc_1 // 4096
     /
@@ -526,6 +553,28 @@ main_ternary_false@35:
     +
     loads
     intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@39
+
+main_ternary_false@35:
+    uncover 3
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 4
+    dig 3
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    uncover 4
     uncover 3
     -
     intc_3 // 0
@@ -559,7 +608,7 @@ main_else_body@29:
     dup
     loads
     intc_1 // 4096
-    uncover 7
+    uncover 8
     dup
     cover 2
     -
@@ -590,7 +639,7 @@ main_else_body@29:
     b main_after_if_else@30
 
 main_ternary_false@26:
-    uncover 6
+    uncover 7
     intc_1 // 4096
     /
     dup
@@ -616,7 +665,7 @@ main_else_body@23:
     dup
     loads
     intc_1 // 4096
-    dig 6
+    dig 7
     dup
     cover 2
     -
@@ -650,7 +699,7 @@ main_ternary_false@20:
     uncover 2
     dup
     loads
-    uncover 5
+    uncover 6
     dig 3
     extract3
     swap

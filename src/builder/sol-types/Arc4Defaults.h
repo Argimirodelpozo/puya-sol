@@ -18,6 +18,11 @@
 namespace puyasol::builder
 {
 
+/// True for every WType that is already an ARC4 wire value. Centralises the
+/// classification so bool/tuple/fixed-point additions cannot fall through a
+/// container-specific kind list.
+bool isArc4EncodedType(awst::WType const* _type);
+
 /// Runtime `bzero(_n)` cast to `_targetType`; avoids baking large zero
 /// regions as pushbytes constants (puya ~4KB limit).
 std::shared_ptr<awst::Expression> makeZeroBytesRuntime(
@@ -45,13 +50,12 @@ std::optional<std::vector<uint8_t>> arc4DefaultEncoding(awst::WType const* _type
 /// Returns 0 for variable-length types.
 int computeEncodedElementSize(awst::WType const* _type);
 
-/// Single control point for "this memory aggregate lives in the scratch blob/region model
-/// (a uint64 (region,offset) pointer) rather than as an ARC4 value". True when:
-///   - the encoded size exceeds one memory slot (the original >4KB rule), OR
-///   - it is a 1D array of fixed-size SCALAR elements (handle-model Stage 2): routing these
-///     through the region model makes memory→memory assignment ALIAS (matches EVM). Structs
-///     and nested/dynamic-element arrays are excluded — the blob model is incomplete for them.
-/// Every blob-vs-value threshold site funnels through here so the rule stays consistent.
+/// Single control point for "this memory aggregate lives in the scratch
+/// blob/region model (a uint64 (region,offset) pointer) rather than as an ARC4
+/// value". Currently true when the statically encoded size exceeds one 4-KiB
+/// memory slot. Every blob-vs-value threshold site funnels through here so the
+/// rule stays consistent; see the implementation for the planned alias-model
+/// extension and its prerequisites.
 bool memoryUsesBlob(awst::WType const* _type);
 
 } // namespace puyasol::builder

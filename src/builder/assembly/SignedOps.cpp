@@ -9,10 +9,86 @@
 #include "builder/proxies/Erc1967Lowering.h"
 #include "builder/BuildArtifacts.h"
 
+#include <optional>
 #include <sstream>
 
 namespace puyasol::builder
 {
+
+namespace
+{
+
+/// One scalar field's location in both representations of a box-backed
+/// struct. Solidity allocates bool as an ordinary one-byte storage lane,
+/// whereas ARC-4 packs each consecutive bool run MSB-first into as few bytes
+/// as possible. Integer fields are byte-aligned in both representations.
+struct BoxStructSlotField
+{
+	int arc4Bit = 0;
+	int evmSlot = 0;
+	int evmBit = 0;
+	int evmBits = 0;
+	bool isBool = false;
+};
+
+std::optional<std::vector<BoxStructSlotField>> boxStructSlotLayout(
+	awst::ARC4Struct const& _struct,
+	std::string const& _operation,
+	awst::SourceLocation const& _loc)
+{
+	std::vector<BoxStructSlotField> fields;
+	fields.reserve(_struct.fields().size());
+	int arc4Bit = 0;
+	int evmSlot = 0;
+	int evmBit = 0;
+	for (auto const& [name, fieldType]: _struct.fields())
+	{
+		(void)name;
+		bool const isBool = fieldType == awst::WType::arc4BoolType();
+		int fieldBits = 0;
+		if (isBool)
+			fieldBits = 8; // Solidity storage gives bool a complete byte lane.
+		else if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(fieldType);
+			uintN && (uintN->n() % 8) == 0)
+			fieldBits = uintN->n();
+		else
+		{
+			Logger::instance().error(
+				_operation + " of a box-keyed struct slot supports fixed-width "
+				"integer and bool fields; field type '"
+				+ std::string(fieldType ? fieldType->name() : "<null>")
+				+ "' has no scalar EVM/ARC-4 slot mapping", _loc);
+			return std::nullopt;
+		}
+
+		if (evmBit + fieldBits > 256)
+		{
+			++evmSlot;
+			evmBit = 0;
+		}
+
+		// An ARC-4 bool run occupies consecutive bits. The next non-bool
+		// starts after the run's final (possibly partial) byte.
+		if (!isBool && (arc4Bit % 8) != 0)
+			arc4Bit = ((arc4Bit + 7) / 8) * 8;
+		fields.push_back({arc4Bit, evmSlot, evmBit, fieldBits, isBool});
+		arc4Bit += isBool ? 1 : fieldBits;
+		evmBit += fieldBits;
+		if (evmBit == 256)
+		{
+			++evmSlot;
+			evmBit = 0;
+		}
+	}
+	return fields;
+}
+
+int evmByteOffset(BoxStructSlotField const& _field)
+{
+	return (256 - _field.evmBit - _field.evmBits) / 8;
+}
+
+} // namespace
 
 // Assert a transient slot fits the 4096-byte / 128-slot scratch blob. A
 // keccak-derived mapping slot or a slot >= 128 would otherwise panic opaquely
@@ -262,7 +338,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleSar(
 	if (!checkArity(_args, 2, "sar", _loc))
 		return nullptr;
 
-	auto val = ensureBiguint(_args[1], _loc);
+	auto val = awst::makeEvalOnce(
+		wrapMod256(ensureBiguint(_args[1], _loc), _loc), _loc);
 	std::vector<std::shared_ptr<awst::Expression>> coercedArgs = {_args[0], val};
 	auto shrResult = handleShr(coercedArgs, _loc);
 	auto valNeg = isNegative256(val, _loc);
@@ -366,42 +443,23 @@ void AssemblyBuilder::handleBoxKeyedStructSlotStore(
 	auto const* st = dynamic_cast<awst::ARC4Struct const*>(_slotBox->wtype);
 	if (!st) return; // guaranteed by caller; defensive
 
-	// Compute ARC4 byte offset/width and EVM bit offset per field.
-	// Only byte-aligned ARC4UIntN fields supported (the only shape sliceable losslessly).
-	struct FieldInfo { int arc4Off; int byteW; int evmSlot; int evmBit; };
-	std::vector<FieldInfo> fields;
-	int arc4Off = 0, curSlot = 0, curBit = 0;
-	for (auto const& [fname, fwt]: st->fields())
-	{
-		(void)fname;
-		auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(fwt);
-		if (!uintN || (uintN->n() % 8) != 0)
-		{
-			Logger::instance().error(
-				"sstore to a box-keyed struct slot requires byte-aligned integer "
-				"fields", _loc);
-			return;
-		}
-		int const bits = uintN->n();
-		if (curBit + bits > 256) { curSlot++; curBit = 0; }
-		fields.push_back({arc4Off, bits / 8, curSlot, curBit});
-		curBit += bits;
-		if (curBit == 256) { curSlot++; curBit = 0; }
-		arc4Off += bits / 8;
-	}
+	auto maybeFields = boxStructSlotLayout(*st, "sstore", _loc);
+	if (!maybeFields) return;
+	auto const& fields = *maybeFields;
 
 	// Bare `info.slot` addresses slot 0; add(info.slot,k) arrives as a binop and never reaches here.
 	int const targetSlot = 0;
 
 	// Packed word as 32 big-endian bytes.
-	auto packedBytes = awst::makeLeftPadToN(
-		awst::makeAsBytes(ensureBiguint(_packed, _loc), _loc), 32, _loc);
+	auto packedBytes = awst::makeEvalOnce(awst::makeLeftPadToN(
+		awst::makeAsBytes(ensureBiguint(_packed, _loc), _loc), 32, _loc), _loc);
 
 	// Single 32-byte field (solady Uint8Set/Heap): the box content IS the slot
 	// word. Low-level box_put (create-or-replace) — this works for a RUNTIME box
 	// key from a storage-ref param, where the high-level box-value assignment
 	// below needs a static box declaration and otherwise asserts in puya.
-	if (fields.size() == 1 && fields[0].byteW == 32 && fields[0].evmSlot == 0)
+	if (fields.size() == 1 && !fields[0].isBool
+		&& fields[0].evmBits == 256 && fields[0].evmSlot == 0)
 	{
 		_out.push_back(awst::makeExpressionStatement(
 			awst::makeBoxPut(_slotBox->key, std::move(packedBytes), _loc), _loc));
@@ -415,34 +473,43 @@ void AssemblyBuilder::handleBoxKeyedStructSlotStore(
 			_slotBox->wtype, _loc),
 		_loc);
 
-	// Rebuild struct bytes: written-slot fields from packedBytes (by EVM byte range),
-	// all others from existing box (by ARC4 byte range).
-	std::shared_ptr<awst::Expression> rebuilt;
+	// Overlay written-slot fields onto the existing ARC-4 bytes. Integer
+	// fields replace their byte ranges. Bool fields copy the truth value from
+	// their complete EVM byte lane into the appropriate ARC-4 packed bit.
+	std::shared_ptr<awst::Expression> rebuilt = std::move(existing);
 	for (auto const& fi: fields)
 	{
-		std::shared_ptr<awst::Expression> chunk;
-		if (fi.evmSlot == targetSlot)
+		if (fi.evmSlot != targetSlot)
+			continue;
+		int const byteOffInSlot = evmByteOffset(fi);
+		if (fi.isBool)
 		{
-			// Big-endian byte range within 32-byte slot: [32-(bit+width)/8, 32-bit/8).
-			int const byteOffInSlot = (256 - fi.evmBit - fi.byteW * 8) / 8;
-			chunk = awst::makeExtract3(
+			auto lane = awst::makeExtract3(
 				packedBytes,
 				awst::makeIntegerConstant(static_cast<uint64_t>(byteOffInSlot), _loc),
-				awst::makeIntegerConstant(static_cast<uint64_t>(fi.byteW), _loc),
+				awst::makeIntegerConstant("1", _loc),
 				_loc);
+			auto truth = awst::makeNumericCompare(
+				awst::makeBtoi(std::move(lane), _loc), awst::NumericComparison::Ne,
+				awst::makeZero(_loc), _loc);
+			rebuilt = awst::makeSetbit(
+				std::move(rebuilt),
+				awst::makeIntegerConstant(static_cast<uint64_t>(fi.arc4Bit), _loc),
+				std::move(truth), _loc);
 		}
 		else
-			chunk = awst::makeExtract3(
-				existing,
-				awst::makeIntegerConstant(static_cast<uint64_t>(fi.arc4Off), _loc),
-				awst::makeIntegerConstant(static_cast<uint64_t>(fi.byteW), _loc),
+		{
+			auto chunk = awst::makeExtract3(
+				packedBytes,
+				awst::makeIntegerConstant(static_cast<uint64_t>(byteOffInSlot), _loc),
+				awst::makeIntegerConstant(static_cast<uint64_t>(fi.evmBits / 8), _loc),
 				_loc);
-
-		rebuilt = rebuilt
-			? awst::makeConcat(std::move(rebuilt), std::move(chunk), _loc)
-			: std::move(chunk);
+			rebuilt = awst::makeReplace3(
+				std::move(rebuilt),
+				awst::makeIntegerConstant(static_cast<uint64_t>(fi.arc4Bit / 8), _loc),
+				std::move(chunk), _loc);
+		}
 	}
-	if (!rebuilt) return;
 
 	auto target = awst::makeBoxValueExpression(_slotBox->key, _slotBox->wtype, _loc);
 	auto newVal = awst::makeReinterpretCast(std::move(rebuilt), _slotBox->wtype, _loc);
@@ -462,46 +529,46 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleBoxKeyedStructSlotLoad(
 	auto const* st = dynamic_cast<awst::ARC4Struct const*>(_slotBox->wtype);
 	if (!st) return nullptr;
 
-	struct FieldInfo { int arc4Off; int byteW; int evmSlot; int evmBit; };
-	std::vector<FieldInfo> fields;
-	int arc4Off = 0, curSlot = 0, curBit = 0;
-	for (auto const& [fname, fwt]: st->fields())
-	{
-		(void)fname;
-		auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(fwt);
-		if (!uintN || (uintN->n() % 8) != 0)
-		{
-			Logger::instance().error(
-				"sload from a box-keyed struct slot requires byte-aligned integer "
-				"fields", _loc);
-			return nullptr;
-		}
-		int const bits = uintN->n();
-		if (curBit + bits > 256) { curSlot++; curBit = 0; }
-		fields.push_back({arc4Off, bits / 8, curSlot, curBit});
-		curBit += bits;
-		if (curBit == 256) { curSlot++; curBit = 0; }
-		arc4Off += bits / 8;
-	}
+	auto maybeFields = boxStructSlotLayout(*st, "sload", _loc);
+	if (!maybeFields) return nullptr;
+	auto const& fields = *maybeFields;
 
 	int const targetSlot = 0; // bare `s.slot`; add(s.slot,k) arrives as a binop, not here
-	auto existing = awst::makeAsBytes(
+	auto existing = awst::makeEvalOnce(awst::makeAsBytes(
 		builder::StorageMapper::makeStateGetWithDefault(
 			awst::makeBoxValueExpression(_slotBox->key, _slotBox->wtype, _loc),
 			_slotBox->wtype, _loc),
-		_loc);
+		_loc), _loc);
 
 	std::shared_ptr<awst::Expression> word = awst::makeBzero(32, _loc);
 	for (auto const& fi: fields)
 	{
 		if (fi.evmSlot != targetSlot) continue;
-		int const byteOffInSlot = (256 - fi.evmBit - fi.byteW * 8) / 8;
-		auto chunk = awst::makeExtract3(existing,
-			awst::makeIntegerConstant(static_cast<uint64_t>(fi.arc4Off), _loc),
-			awst::makeIntegerConstant(static_cast<uint64_t>(fi.byteW), _loc), _loc);
-		word = awst::makeReplace3(std::move(word),
-			awst::makeIntegerConstant(static_cast<uint64_t>(byteOffInSlot), _loc),
-			std::move(chunk), _loc);
+		int const byteOffInSlot = evmByteOffset(fi);
+		if (fi.isBool)
+		{
+			auto truth = awst::makeGetbit(
+				existing,
+				awst::makeIntegerConstant(static_cast<uint64_t>(fi.arc4Bit), _loc),
+				_loc);
+			// setbit indexes bytes MSB-first. The canonical EVM bool lives in
+			// the least-significant bit of its one-byte storage lane.
+			word = awst::makeSetbit(
+				std::move(word),
+				awst::makeIntegerConstant(
+					static_cast<uint64_t>(byteOffInSlot * 8 + 7), _loc),
+				std::move(truth), _loc);
+		}
+		else
+		{
+			auto chunk = awst::makeExtract3(existing,
+				awst::makeIntegerConstant(static_cast<uint64_t>(fi.arc4Bit / 8), _loc),
+				awst::makeIntegerConstant(static_cast<uint64_t>(fi.evmBits / 8), _loc),
+				_loc);
+			word = awst::makeReplace3(std::move(word),
+				awst::makeIntegerConstant(static_cast<uint64_t>(byteOffInSlot), _loc),
+				std::move(chunk), _loc);
+		}
 	}
 	return awst::makeAsBiguint(std::move(word), _loc);
 }

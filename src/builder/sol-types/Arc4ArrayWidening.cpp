@@ -36,7 +36,6 @@ std::shared_ptr<awst::Expression> tryWidenArc4StaticArrayInt(
 	auto const* tgtArr = dynamic_cast<awst::ARC4StaticArray const*>(_targetType);
 	if (!srcArr || !tgtArr) return nullptr;
 	if (srcArr->arraySize() != tgtArr->arraySize()) return nullptr;
-	// Element type descriptors {bits, isSigned} (nullopt for non-int elements).
 	auto const src = SolIntType::fromArc4(srcArr->elementType());
 	auto const tgt = SolIntType::fromArc4(tgtArr->elementType());
 	if (!src || !tgt) return nullptr;
@@ -96,6 +95,8 @@ std::shared_ptr<awst::Expression> tryWidenArc4StaticArrayInt(
 		if (!result) result = std::move(widened);
 		else result = awst::makeConcat(std::move(result), std::move(widened), _loc);
 	}
+	if (!result)
+		result = awst::makeBytesConstant({}, _loc);
 
 	return awst::makeReinterpretCast(std::move(result), _targetType, _loc);
 }

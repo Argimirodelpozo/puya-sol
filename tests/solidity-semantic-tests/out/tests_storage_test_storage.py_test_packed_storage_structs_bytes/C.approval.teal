@@ -62,205 +62,37 @@ main_ternary_merge@9:
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    dup
-    extract 32 1
-    dig 1
-    extract 33 1
-    uncover 2
-    extract 1 31
     pushbytes 0x02
-    swap
-    concat
-    uncover 2
-    concat
-    swap
-    concat
+    replace2 0
     dup
-    extract 0 1
-    dig 1
-    extract 32 1
-    dig 2
-    extract 33 1
-    uncover 3
     extract 1 31
-    dup
-    extract 1 1
-    dig 1
-    extract 2 10
-    dig 2
-    extract 12 9
-    uncover 3
-    extract 21 10
     pushbytes 0x03
-    uncover 4
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    uncover 3
-    swap
-    concat
-    uncover 2
-    concat
-    swap
-    concat
+    replace2 0
+    replace2 1
     dup
-    extract 0 1
-    dig 1
-    extract 32 1
-    dig 2
-    extract 33 1
-    uncover 3
     extract 1 31
-    dup
-    extract 0 1
-    dig 1
-    extract 2 10
-    dig 2
-    extract 12 9
-    uncover 3
-    extract 21 10
-    uncover 3
     pushbytes 0x04
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    uncover 3
-    swap
-    concat
-    uncover 2
-    concat
-    swap
-    concat
+    replace2 1
+    replace2 1
     dup
-    extract 0 1
-    dig 1
-    extract 32 1
-    dig 2
-    extract 33 1
-    uncover 3
     extract 1 31
-    dup
-    extract 0 1
-    dig 1
-    extract 1 1
-    dig 2
-    extract 12 9
-    uncover 3
-    extract 21 10
-    uncover 3
-    uncover 3
-    concat
     bytec 4 // 0x31323334353637383930
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    uncover 3
-    swap
-    concat
-    uncover 2
-    concat
-    swap
-    concat
+    replace2 2
+    replace2 1
     dup
-    extract 0 1
-    dig 1
-    extract 32 1
-    dig 2
-    extract 33 1
-    uncover 3
     extract 1 31
-    dup
-    extract 0 1
-    dig 1
-    extract 1 1
-    dig 2
-    extract 2 10
-    uncover 3
-    extract 21 10
-    uncover 3
-    uncover 3
-    concat
-    uncover 2
-    concat
     bytec 5 // 0x313233343536373839
-    concat
-    swap
-    concat
-    uncover 3
-    swap
-    concat
-    uncover 2
-    concat
-    swap
-    concat
+    replace2 12
+    replace2 1
     dup
-    extract 0 1
-    dig 1
-    extract 32 1
-    dig 2
-    extract 33 1
-    uncover 3
     extract 1 31
-    dup
-    extract 0 1
-    dig 1
-    extract 1 1
-    dig 2
-    extract 2 10
-    uncover 3
-    extract 12 9
-    uncover 3
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
     bytec 6 // 0x6162636465666768696a
-    concat
-    uncover 3
-    swap
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    dup
-    extract 0 1
-    dig 1
-    extract 33 1
-    uncover 2
-    extract 1 31
-    uncover 2
-    swap
-    concat
+    replace2 21
+    replace2 1
     pushbytes 0x05
-    concat
-    swap
-    concat
-    dup
-    extract 0 1
-    dig 1
-    extract 32 1
-    uncover 2
-    extract 1 31
-    uncover 2
-    swap
-    concat
-    swap
-    concat
+    replace2 32
     pushbytes 0x06
-    concat
+    replace2 33
     bytec_0 // "data"
     dig 1
     box_put
@@ -346,7 +178,9 @@ main_ternary_merge@9:
     intc_0 // 0
     bytec_3 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_2 // 0x00
+    cover 2
+    select
     btoi
     pushint 7
     ==

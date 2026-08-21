@@ -2,11 +2,11 @@
 #include "builder/ProgramAnalysis.h"
 #include <variant>
 #include "builder/contract/ContractBuilder.h"
+#include "builder/contract/EvmMemoryCodec.h"
 #include "awst/NameGen.h"
 #include "awst/Visit.h"
 #include "builder/NatSpecTags.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
-#include "builder/sol-ast/calls/SolNewExpression.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-ast/StorageRefPointer.h"
@@ -81,171 +81,12 @@ namespace {
 /// aggregate's memory pointer (a uint256 offset), so we promote these to
 /// blob-backed (SolVariableDeclaration) and resolve them to a uint64 offset in
 /// the assembly translator.
-// True iff `_vd` (a local) is initialised by `new T(...)` — walk its scope block
-// for the declaring statement. Used to gate blob-backing of bytes/string asm
-// buffers: only a freshly-`new`ed buffer (the OZ Strings.toString idiom) is
-// promoted to the memory-pointer model; a bytes/string VALUE used in asm
-// (`ret := val`) stays value-model.
-static bool _isNewAllocatedLocal(solidity::frontend::VariableDeclaration const* _vd)
-{
-	using namespace solidity::frontend;
-	auto const* block = dynamic_cast<Block const*>(_vd->scope());
-	if (!block)
-		return false;
-	for (auto const& stmt: block->statements())
-	{
-		auto const* vds = dynamic_cast<VariableDeclarationStatement const*>(stmt.get());
-		if (!vds || !vds->initialValue())
-			continue;
-		bool declares = false;
-		for (auto const& d: vds->declarations())
-			if (d && d->id() == _vd->id())
-				declares = true;
-		if (!declares)
-			continue;
-		auto const* fc = dynamic_cast<FunctionCall const*>(vds->initialValue());
-		return fc && dynamic_cast<NewExpression const*>(&fc->expression()) != nullptr;
-	}
-	return false;
-}
-
-// True iff any of `_targets` (Yul identifier nodes referencing the buffer)
-// appears inside `_e` (a Yul expression subtree).
-static bool _yulExprRefs(
-	solidity::yul::Expression const& _e,
-	std::set<solidity::yul::Identifier const*> const& _targets)
-{
-	using namespace solidity::yul;
-	if (auto const* id = std::get_if<Identifier>(&_e))
-		return _targets.count(id) != 0;
-	if (auto const* fc = std::get_if<FunctionCall>(&_e))
-		for (auto const& arg: fc->arguments)
-			if (_yulExprRefs(arg, _targets))
-				return true;
-	return false;
-}
-
-// True iff the buffer's pointer ESCAPES into another Yul variable within `_b` —
-// i.e. it feeds the RHS of an assignment (`ptr := add(buffer, k)`) or a `let`.
-// This is the exact signal that the value-model store handlers (mstore/mstore8
-// with the buffer directly in the address, e.g. `mstore(add(x,32), w)`) can NOT
-// cover the writes: once the pointer lives in an opaque local, only the blob
-// (memory-pointer) model tracks it. A buffer used solely as a direct store
-// address is left value-model. Recurses into nested control-flow blocks.
-static bool _yulBlockEscapes(
-	solidity::yul::Block const& _b,
-	std::set<solidity::yul::Identifier const*> const& _targets)
-{
-	using namespace solidity::yul;
-	for (auto const& stmt: _b.statements)
-	{
-		bool esc = std::visit([&](auto const& s) -> bool {
-			using T = std::decay_t<decltype(s)>;
-			if constexpr (std::is_same_v<T, Assignment>)
-				return s.value && _yulExprRefs(*s.value, _targets);
-			else if constexpr (std::is_same_v<T, VariableDeclaration>)
-				return s.value && _yulExprRefs(*s.value, _targets);
-			else if constexpr (std::is_same_v<T, Block>)
-				return _yulBlockEscapes(s, _targets);
-			else if constexpr (std::is_same_v<T, If>)
-				return _yulBlockEscapes(s.body, _targets);
-			else if constexpr (std::is_same_v<T, Switch>)
-			{
-				for (auto const& c: s.cases)
-					if (_yulBlockEscapes(c.body, _targets))
-						return true;
-				return false;
-			}
-			else if constexpr (std::is_same_v<T, ForLoop>)
-				return _yulBlockEscapes(s.pre, _targets)
-					|| _yulBlockEscapes(s.post, _targets)
-					|| _yulBlockEscapes(s.body, _targets);
-			else if constexpr (std::is_same_v<T, FunctionDefinition>)
-				return _yulBlockEscapes(s.body, _targets);
-			else
-				return false;
-		}, stmt);
-		if (esc)
-			return true;
-	}
-	return false;
-}
-
-// True iff `_vd`'s memory pointer escapes into a Yul local inside `_asm`.
-static bool _bufferPointerEscapes(
-	solidity::frontend::InlineAssembly const& _asm,
-	solidity::frontend::VariableDeclaration const* _vd)
-{
-	std::set<solidity::yul::Identifier const*> targets;
-	for (auto const& ref: _asm.annotation().externalReferences)
-		if (ref.second.declaration == _vd)
-			targets.insert(ref.first);
-	if (targets.empty())
-		return false;
-	return _yulBlockEscapes(_asm.operations().root(), targets);
-}
-
-// Collect the Identifiers that are ASSIGNMENT TARGETS (`x := …`) anywhere in a
-// Yul block, including nested control flow.
-static void _yulAssignTargets(
-	solidity::yul::Block const& _b,
-	std::set<solidity::yul::Identifier const*>& _out)
-{
-	using namespace solidity::yul;
-	for (auto const& stmt: _b.statements)
-		std::visit([&](auto const& s) {
-			using T = std::decay_t<decltype(s)>;
-			if constexpr (std::is_same_v<T, Assignment>)
-				for (auto const& n: s.variableNames)
-					_out.insert(&n);
-			else if constexpr (std::is_same_v<T, Block>)
-				_yulAssignTargets(s, _out);
-			else if constexpr (std::is_same_v<T, If>)
-				_yulAssignTargets(s.body, _out);
-			else if constexpr (std::is_same_v<T, Switch>)
-				for (auto const& c: s.cases)
-					_yulAssignTargets(c.body, _out);
-			else if constexpr (std::is_same_v<T, ForLoop>)
-			{
-				_yulAssignTargets(s.pre, _out);
-				_yulAssignTargets(s.post, _out);
-				_yulAssignTargets(s.body, _out);
-			}
-			else if constexpr (std::is_same_v<T, FunctionDefinition>)
-				_yulAssignTargets(s.body, _out);
-		}, stmt);
-}
-
-// True iff EVERY reference to `_vd` in `_asm` is an assignment TARGET — the
-// variable only ever receives a whole aggregate (`result := store`) and is
-// never read, indexed, or used as a store address. Such a variable needs no
-// pointer model: the assignment is a plain aggregate copy.
-static bool _onlyWholeAssignTarget(
-	solidity::frontend::InlineAssembly const& _asm,
-	solidity::frontend::VariableDeclaration const* _vd)
-{
-	std::set<solidity::yul::Identifier const*> refs;
-	for (auto const& ref: _asm.annotation().externalReferences)
-		if (ref.second.declaration == _vd)
-			refs.insert(ref.first);
-	if (refs.empty())
-		return false;
-	std::set<solidity::yul::Identifier const*> targets;
-	_yulAssignTargets(_asm.operations().root(), targets);
-	for (auto const* r: refs)
-		if (!targets.count(r))
-			return false;
-	return true;
-}
-
 class AssemblyAggregateScanner: public solidity::frontend::ASTConstVisitor
 {
 public:
 	std::set<int64_t>& ids;
-	bool universalMemory;
-	explicit AssemblyAggregateScanner(
-		std::set<int64_t>& _ids, bool _universalMemory)
-		: ids(_ids), universalMemory(_universalMemory)
+	explicit AssemblyAggregateScanner(std::set<int64_t>& _ids)
+		: ids(_ids)
 	{}
 
 	bool visit(solidity::frontend::InlineAssembly const& _asm) override
@@ -261,29 +102,17 @@ public:
 			auto const* t = vd->type();
 			if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(t))
 			{
-				// Real arrays: always blob-back. bytes/string keep the value model
-				// (dedicated tryHandleBytes* handlers preserve x[i]=/x.length/return x,
-				// incl. direct `mstore(add(x,32), w)` word writes) EXCEPT a freshly-
-				// `new`ed buffer whose pointer ESCAPES into a Yul local — the OZ
-				// Strings.toString idiom (`ptr := add(buffer, k)` + `mstore8(ptr,…)`
-				// + `return buffer`). Only then do the value handlers lose the writes,
-				// so blob-back it (memory-pointer model).
-				// A pure PUN TARGET (`address[] memory result; result := store`)
-				// only ever RECEIVES an aggregate — never read, indexed, or used
-				// as a store address — so it needs no pointer model. Blob-backing
-				// it allocated an EMPTY region at the declaration, and since the
-				// assignment writes the plain local rather than that region, the
-				// later value-use materialised the empty region: OZ
-				// `EnumerableSet.values()` returned [] for a non-empty set. The
-				// named-return spelling of the same idiom was always fine, which
-				// is exactly the inconsistency this removes. Stage 3 keeps the
-				// universal pointer model.
-				if (!universalMemory && _onlyWholeAssignTarget(_asm, vd))
-					continue;
-				if (!at->isByteArrayOrString()
-					|| universalMemory   // stage 3: universal pointer model
-					|| (_isNewAllocatedLocal(vd) && _bufferPointerEscapes(_asm, vd)))
-					ids.insert(vd->id());
+				// A Solidity memory-reference read in Yul is always its numeric EVM
+				// memory pointer. Blob-back every array shape, including bytes/string,
+				// instead of trying to infer pointer semantics from the initializer or
+				// from a few recognized expression shapes. That keeps `add(data, 32)`
+				// correct for values produced by abi.encode*, function calls, casts,
+				// parameters, and arbitrarily nested aggregates.
+				// Whole aggregate assignment is pointer assignment too:
+				// `result := store` repoints result's blob-offset local to store's
+				// offset (AssemblyBuilder::emitPlainYulAssignment). Both operands
+				// therefore stay in this same model; no pun-shape exception is needed.
+				ids.insert(vd->id());
 			}
 			else if (dynamic_cast<solidity::frontend::StructType const*>(t))
 				ids.insert(vd->id());
@@ -320,89 +149,19 @@ bool isUnreachableInternalFunction(
 }
 } // namespace
 
-std::shared_ptr<awst::Expression> materializeBlobStructValue(
+std::shared_ptr<awst::Expression> materializeBlobValue(
 	TypeMapper& _typeMapper,
-	solidity::frontend::StructType const* _structType,
+	solidity::frontend::Type const* _solType,
 	awst::WType const* _wtype,
 	std::string const& _offVar,
-	awst::SourceLocation const& _loc)
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
-	using AB = AssemblyBuilder;
-	auto const* structW = dynamic_cast<awst::ARC4Struct const*>(_wtype);
-	if (!_structType || !structW)
-		return nullptr;
-	auto ns = awst::makeNewStruct(structW, _loc);
-	unsigned mi = 0;
-	for (auto const& m: _structType->structDefinition().members())
-	{
-		if (!m || !m->type())
-			return nullptr;
-		if (!m->type()->isValueType())
-		{
-			Logger::instance().error(
-				"--evm-memory-layout: blob-backed struct with non-value member '"
-				+ m->name() + "' cannot be used as a value", _loc);
-			return nullptr;
-		}
-		awst::WType const* fieldW = nullptr;
-		for (auto const& [fname, ftype]: structW->fields())
-			if (fname == m->name()) { fieldW = ftype; break; }
-		if (!fieldW)
-			return nullptr;
-		// one EVM word per field (the layout emitBlobBackValue wrote)
-		auto word = AB::readMemWordDirect(
-			_typeMapper.profile().scratchLayout,
-			awst::makeUInt64BinOp(
-				awst::makeVarExpression(_offVar, awst::WType::uint64Type(), _loc),
-				awst::UInt64BinaryOperator::Add,
-				awst::makeIntegerConstant(static_cast<uint64_t>(mi * 32), _loc),
-				_loc),
-			_loc);
-		std::shared_ptr<awst::Expression> v;
-		if (auto const* un = dynamic_cast<awst::ARC4UIntN const*>(fieldW))
-		{
-			unsigned nb = static_cast<unsigned>(un->n()) / 8;
-			v = awst::makeReinterpretCast(
-				awst::makeExtract(std::move(word),
-					static_cast<int>(32 - nb), static_cast<int>(nb), _loc),
-				fieldW, _loc);
-		}
-		else if (fieldW == awst::WType::arc4BoolType())
-			v = awst::makeARC4Encode(
-				awst::makeNumericCompare(
-					awst::makeAsBiguint(std::move(word), _loc),
-					awst::NumericComparison::Ne,
-					awst::makeIntegerConstant("0", _loc, awst::WType::biguintType()),
-					_loc), fieldW, _loc);
-		else if (fieldW == awst::WType::boolType())
-			v = awst::makeNumericCompare(
-				awst::makeAsBiguint(std::move(word), _loc),
-				awst::NumericComparison::Ne,
-				awst::makeIntegerConstant("0", _loc, awst::WType::biguintType()), _loc);
-		else if (fieldW == awst::WType::accountType())
-			v = awst::makeAsAccount(std::move(word), _loc);
-		else if (fieldW == awst::WType::biguintType())
-			v = awst::makeAsBiguint(std::move(word), _loc);
-		else if (fieldW == awst::WType::uint64Type())
-			v = awst::makeBtoi(awst::makeExtract(std::move(word), 24, 8, _loc), _loc);
-		else if (auto const* bw = dynamic_cast<awst::BytesWType const*>(fieldW);
-			bw && bw->length().has_value())
-			v = awst::makeReinterpretCast(
-				awst::makeExtract(std::move(word),
-					static_cast<int>(32 - *bw->length()),
-					static_cast<int>(*bw->length()), _loc), fieldW, _loc);
-		else
-		{
-			Logger::instance().error(
-				"--evm-memory-layout: cannot materialise blob struct member '"
-				+ m->name() + "' of type '" + std::string(fieldW->name()) + "'",
-				_loc);
-			return nullptr;
-		}
-		ns->values[m->name()] = std::move(v);
-		mi++;
-	}
-	return ns;
+	return materializeEvmMemoryValue(
+		_typeMapper, _solType, _wtype,
+		awst::makeVarExpression(
+			_offVar, awst::WType::uint64Type(), _loc),
+		_loc, _out);
 }
 
 void emitAsmParamSpills(
@@ -412,8 +171,6 @@ void emitAsmParamSpills(
 	std::string const& _sourceFile,
 	std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
-	if (!_typeMapper.profile().evmMemoryLayout)
-		return;
 	// collect the DECLS asm references (the aggregate scanner only keeps ids)
 	struct DeclScan: solidity::frontend::ASTConstVisitor
 	{
@@ -431,6 +188,11 @@ void emitAsmParamSpills(
 	_block.accept(scan);
 	for (auto const& [id, vd]: scan.decls)
 	{
+		// In default mode the scanner marks exactly the declarations whose Yul
+		// references require pointer semantics. In universal-memory mode it marks
+		// every referenced aggregate. Do not spill unrelated memory parameters.
+		if (!_fn.isAssemblyAggregate(id))
+			continue;
 		if (!vd->isCallableOrCatchParameter()
 			|| vd->referenceLocation()
 				!= solidity::frontend::VariableDeclaration::Location::Memory
@@ -483,144 +245,8 @@ bool emitBlobBackValue(
 	awst::SourceLocation const& loc,
 	std::vector<std::shared_ptr<awst::Statement>>& out)
 {
-	using AB = AssemblyBuilder;
-	using namespace solidity::frontend;
-	auto const* at2 = dynamic_cast<ArrayType const*>(declType);
-	auto const* st2 = dynamic_cast<StructType const*>(declType);
-	std::string vn = "__blobinit_" + std::to_string(uniqueId);
-	if (at2 && at2->isByteArrayOrString())
-	{
-		out.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(vn, awst::WType::bytesType(), loc),
-			awst::makeAsBytes(std::move(value), loc), loc));
-		auto vRef = [&]() { return awst::makeVarExpression(
-			vn, awst::WType::bytesType(), loc); };
-		for (auto& s2: AB::emitBytesBlobAlloc(typeMapper.profile().scratchLayout,
-				awst::makeLen(vRef(), loc), offVar, uniqueId, loc))
-			out.push_back(std::move(s2));
-		AB::writeMemBytesDirect(typeMapper.profile().scratchLayout,
-			awst::makeUInt64BinOp(
-				awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
-				awst::UInt64BinaryOperator::Add,
-				awst::makeIntegerConstant("32", loc), loc),
-			vRef(), uniqueId, loc, out);
-		return true;
-	}
-	if (st2)
-	{
-		auto const* structW = dynamic_cast<awst::ARC4Struct const*>(wtype);
-		out.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(vn, wtype, loc), std::move(value), loc));
-		auto vRef = [&]() { return awst::makeVarExpression(vn, wtype, loc); };
-		auto const& members = st2->structDefinition().members();
-		int sz2 = static_cast<int>(members.size()) * 32;
-		out.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
-			awst::makeExtractUInt64(
-				awst::makeLoadSlot(typeMapper.profile().scratchLayout.memoryFirst(), loc),
-				awst::makeIntegerConstant("88", loc), loc), loc));
-		for (auto& s2: AB::emitFreeMemoryBump(
-				typeMapper.profile().scratchLayout, sz2, loc, uniqueId))
-			out.push_back(std::move(s2));
-		unsigned mi = 0;
-		for (auto const& m2: members)
-		{
-			if (!m2 || !m2->type() || !m2->type()->isValueType())
-			{
-				Logger::instance().error(
-					"--evm-memory-layout: blob-backing struct with non-value "
-					"member '" + (m2 ? m2->name() : "?") + "' is not yet "
-					"supported", loc);
-				return false;
-			}
-			awst::WType const* fieldW = nullptr;
-			if (structW)
-				for (auto const& [fname, ftype]: structW->fields())
-					if (fname == m2->name()) { fieldW = ftype; break; }
-			auto field = awst::makeFieldExpression(vRef(), m2->name(),
-				fieldW ? fieldW : typeMapper.map(m2->type()), loc);
-			std::shared_ptr<awst::Expression> w32;
-			if (field->wtype == awst::WType::arc4BoolType())
-			{
-				auto b2 = awst::makeARC4Decode(std::move(field),
-					awst::WType::boolType(), loc);
-				auto u2 = awst::makeConditional(std::move(b2),
-					awst::makeIntegerConstant("1", loc),
-					awst::makeIntegerConstant("0", loc),
-					awst::WType::uint64Type(), loc);
-				w32 = awst::makeLeftPadToN(awst::makeItob(std::move(u2), loc), 32, loc);
-			}
-			else
-				w32 = awst::makeLeftPadToN(
-					awst::makeAsBytes(std::move(field), loc), 32, loc);
-			std::vector<std::shared_ptr<awst::Statement>> ws2;
-			AB::writeMemWordDirect(typeMapper.profile().scratchLayout,
-				awst::makeUInt64BinOp(
-					awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
-					awst::UInt64BinaryOperator::Add,
-					awst::makeIntegerConstant(static_cast<uint64_t>(mi * 32), loc),
-					loc),
-				std::move(w32), loc, ws2);
-			for (auto& st3: ws2)
-				out.push_back(std::move(st3));
-			mi++;
-		}
-		return true;
-	}
-	if (at2 && computeEncodedElementSize(
-			typeMapper.mapSolTypeToARC4(at2->baseType())) == 32)
-	{
-		out.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(vn, awst::WType::bytesType(), loc),
-			awst::makeAsBytes(std::move(value), loc), loc));
-		auto vRef = [&]() { return awst::makeVarExpression(
-			vn, awst::WType::bytesType(), loc); };
-		if (at2->isDynamicallySized())
-		{
-			auto count = awst::makeExtractUInt16(vRef(),
-				awst::makeIntegerConstant("0", loc), loc);
-			for (auto& s2: AB::emitBytesBlobAlloc(typeMapper.profile().scratchLayout,
-					awst::makeUInt64BinOp(std::move(count),
-						awst::UInt64BinaryOperator::Mult,
-						awst::makeIntegerConstant("32", loc), loc),
-					offVar, uniqueId, loc))
-				out.push_back(std::move(s2));
-			std::vector<std::shared_ptr<awst::Statement>> ws2;
-			AB::writeMemWordDirect(typeMapper.profile().scratchLayout,
-				awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
-				awst::makeLeftPadToN(awst::makeItob(
-					awst::makeExtractUInt16(vRef(),
-						awst::makeIntegerConstant("0", loc), loc), loc), 32, loc),
-				loc, ws2);
-			for (auto& st3: ws2)
-				out.push_back(std::move(st3));
-			AB::writeMemBytesDirect(typeMapper.profile().scratchLayout,
-				awst::makeUInt64BinOp(
-					awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
-					awst::UInt64BinaryOperator::Add,
-					awst::makeIntegerConstant("32", loc), loc),
-				awst::makeExtract(vRef(), 2, 0, loc), uniqueId, loc, out);
-		}
-		else
-		{
-			out.push_back(awst::makeAssignmentStatement(
-				awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
-				awst::makeExtractUInt64(
-					awst::makeLoadSlot(typeMapper.profile().scratchLayout.memoryFirst(), loc),
-					awst::makeIntegerConstant("88", loc), loc), loc));
-			int sz3 = computeEncodedElementSize(wtype);
-			for (auto& s2: AB::emitFreeMemoryBump(typeMapper.profile().scratchLayout,
-					sz3 > 0 ? sz3 : 32, loc, uniqueId))
-				out.push_back(std::move(s2));
-			AB::writeMemBytesDirect(typeMapper.profile().scratchLayout,
-				awst::makeVarExpression(offVar, awst::WType::uint64Type(), loc),
-				vRef(), uniqueId, loc, out);
-		}
-		return true;
-	}
-	Logger::instance().error(
-		"--evm-memory-layout: cannot blob-back this value shape", loc);
-	return false;
+	return spillEvmMemoryValue(typeMapper, declType, wtype, std::move(value),
+		offVar, uniqueId, loc, out);
 }
 
 void markAssemblyAggregates(
@@ -628,8 +254,7 @@ void markAssemblyAggregates(
 	solidity::frontend::Block const& _block)
 {
 	std::set<int64_t> asmAggIds;
-	AssemblyAggregateScanner scanner{
-		asmAggIds, _fn.tr.typeMapper.profile().evmMemoryLayout};
+	AssemblyAggregateScanner scanner{asmAggIds};
 	_block.accept(scanner);
 	for (int64_t id: asmAggIds)
 		_fn.markAssemblyAggregate(id);
@@ -740,6 +365,7 @@ void ContractBuilder::setFunctionContext(
 	ctx.returnType = _returnType;
 	ctx.paramBitWidths = _bitWidths;
 	ctx.paramSolTypes = _paramSolTypes;
+	ctx.returnSolTypes.clear();
 	ctx.namedReturns.clear();
 	ctx.mappingKeyParams.clear();
 	ctx.boxKeyStructParams.clear();
@@ -1082,6 +708,9 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			m_modifierSubroutines.clear();
 		}
 	}
+
+	if (m_typeMapper.profile().contractAbi == ContractAbi::Evm)
+		emitEvmEntryDispatch(_contract, *contract);
 
 	// Emit MRO / fallback / explicit-base super subroutines now that all
 	// regular method bodies are translated.

@@ -42,13 +42,6 @@ private:
 	std::shared_ptr<awst::Expression> handleRegularIndex();
 	std::shared_ptr<awst::Expression> handleSlicedIndex();
 
-	/// Materialize a fixed array read through a slot handle into a memory
-	/// (ARC-4) array value: unrolled packed-aware element reads. nullptr +
-	/// loud error for unsupported shapes (huge/dynamic/exotic elements).
-	std::shared_ptr<awst::Expression> materializeSlotArray(
-		std::shared_ptr<awst::Expression> _baseSlot,
-		solidity::frontend::ArrayType const* _arrType);
-
 	/// Sign-extend a decoded signed sub-256 array element (e.g. `int128`) from
 	/// its raw N-bit two's complement to the canonical 256-bit biguint, so that
 	/// `a[i]` compares/arithmetics equal to a sign-extended scalar of the same

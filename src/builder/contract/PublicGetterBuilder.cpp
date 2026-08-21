@@ -306,13 +306,6 @@ void ContractBuilder::buildPublicStateVariableGetters(
 							if (!m)
 								continue;
 							auto const* mtOfM = m->type();
-							if (dynamic_cast<solidity::frontend::StructType const*>(mtOfM))
-							{
-								// nested-struct member: solc's getter returns a
-								// nested tuple — not modelled yet; skip loudly.
-								supported = false;
-								break;
-							}
 							if (dynamic_cast<solidity::frontend::MappingType const*>(mtOfM))
 								continue;
 							if (auto const* ma2 = dynamic_cast<
@@ -358,7 +351,11 @@ void ContractBuilder::buildPublicStateVariableGetters(
 								&& !fa.byteOffset && aloneInSlot)
 								fa.size = 32;   // matches the write side's widening
 							std::shared_ptr<awst::Expression> item;
-							if (sol_ast::EvmSlotLowering::isBytesLike(mtOfM))
+							if (dynamic_cast<solidity::frontend::StructType const*>(mtOfM))
+								// readStructValue owns the recursive storage projection;
+								// a nested struct is not a distinct getter shape.
+								item = low.readStructValue(fa);
+							else if (sol_ast::EvmSlotLowering::isBytesLike(mtOfM))
 								item = low.readBytesValue(fa);
 							else
 								item = low.readValue(fa);
@@ -370,9 +367,9 @@ void ContractBuilder::buildPublicStateVariableGetters(
 									it2->bits, loc);
 							items.push_back(std::move(item));
 						}
-						if (items.size() == 1)
+						if (supported && items.size() == 1)
 							readExpr = std::move(items[0]);
-						else if (!items.empty())
+						else if (supported && !items.empty())
 						{
 							auto tuple = awst::makeTupleExpression(getter.returnType, loc);
 							for (auto& it3: items)
@@ -471,7 +468,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					if (var->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient
 						&& m_transientStorage.isTransient(*var))
 					{
-						readExpr = m_transientStorage.buildRead(var->name(), readType, loc);
+						readExpr = m_transientStorage.buildRead(*var, readType, loc);
 					}
 					if (!readExpr)
 						readExpr = m_storageMapper.createStateRead(
@@ -542,10 +539,24 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				// Per-key encoding: array-of-mapping levels use uint64 (itob 8B);
 				// mapping levels use declared keyType (biguint → 32B pad).
 				std::vector<awst::WType const*> keyArgEncodingType;
-				std::vector<uint64_t> keyArgStaticLen; // 0 = dynamic, >0 = static N
-				std::vector<bool> keyArgIsArrayLevel;
+					std::vector<uint64_t> keyArgStaticLen; // 0 = dynamic, >0 = static N
+					std::vector<bool> keyArgIsArrayLevel;
+					auto indexedPathReachesMapping = [](
+						solidity::frontend::Type const* type, size_t remainingArgs) {
+						for (size_t i = 0; i < remainingArgs && type; ++i)
+						{
+							if (dynamic_cast<solidity::frontend::MappingType const*>(type))
+								return true;
+							auto const* array = dynamic_cast<
+								solidity::frontend::ArrayType const*>(type);
+							if (!array || array->isByteArrayOrString())
+								return false;
+							type = array->baseType();
+						}
+						return false;
+					};
 
-				while (keyArgCount + indexArgCount < getter.args.size())
+					while (keyArgCount + indexArgCount < getter.args.size())
 				{
 					if (auto const* mt = dynamic_cast<solidity::frontend::MappingType const*>(walkType))
 					{
@@ -560,7 +571,10 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(walkType))
 					{
 						if (at->isByteArrayOrString()) break;
-						if (!inIndexMode && containsMappingType(at->baseType()))
+							auto const consumed = keyArgCount + indexArgCount + 1;
+							auto const remaining = getter.args.size() - consumed;
+							if (!inIndexMode && indexedPathReachesMapping(
+								at->baseType(), remaining))
 						{
 							keyArgEncodingType.push_back(awst::WType::uint64Type());
 							keyArgIsArrayLevel.push_back(true);
@@ -597,12 +611,18 @@ void ContractBuilder::buildPublicStateVariableGetters(
 				}
 				else
 				{
-				// Per-layer hash (mirrors handleMappingAccess writer).
-				std::shared_ptr<awst::Expression> currentPrefix = awst::makeUtf8BytesConstant(
-					binding.name, loc, awst::WType::boxKeyType());
+					// Per-layer hash (mirrors handleMappingAccess writer).
+					std::shared_ptr<awst::Expression> currentPrefix = awst::makeUtf8BytesConstant(
+						binding.name, loc, awst::WType::boxKeyType());
+					solidity::frontend::Type const* keyWalkType = var->type();
+					std::shared_ptr<awst::Expression> currentArrayValue;
+					if (auto const* rootArray = dynamic_cast<
+							solidity::frontend::ArrayType const*>(keyWalkType))
+						currentArrayValue = m_storageMapper.createStateRead(
+							binding.name, m_typeMapper.map(rootArray), binding.kind, loc);
 
-				for (size_t i = 0; i < keyArgCount; ++i)
-				{
+					for (size_t i = 0; i < keyArgCount; ++i)
+					{
 					auto argRef = awst::makeVarExpression(getter.args[i].name, getter.args[i].wtype, loc);
 					auto const* encType = i < keyArgEncodingType.size() ? keyArgEncodingType[i] : argRef->wtype;
 					std::shared_ptr<awst::Expression> encoded = argRef;
@@ -624,9 +644,17 @@ void ContractBuilder::buildPublicStateVariableGetters(
 							// Static: compile-time length N.
 							lengthExpr = awst::makeIntegerConstant(std::to_string(staticN), loc, awst::WType::uint64Type());
 						}
-						else
-						{
-							// Dynamic: length in first 2 bytes of box (ARC4 header).
+							else if (currentArrayValue)
+							{
+								// Consecutive array ranks live inside one serialized ARC4
+								// value. Read the length from that value, not from a
+								// synthetic `prefix ++ index` box.
+								lengthExpr = awst::makeArrayLength(
+									currentArrayValue, awst::WType::uint64Type(), loc);
+							}
+							else
+							{
+								// Dynamic: length in first 2 bytes of box (ARC4 header).
 							// Materialise prefix so bounds-check + next-layer hash don't re-emit.
 							std::string tempName = "__bounds_prefix_" + std::to_string(awst::NameGen::next("PublicGetterBuilder.s_boundsCounter"));
 							auto tempVar = awst::makeVarExpression(tempName, awst::WType::boxKeyType(), loc);
@@ -647,9 +675,42 @@ void ContractBuilder::buildPublicStateVariableGetters(
 						body->body.push_back(awst::makeExpressionStatement(std::move(assertExpr), loc));
 					}
 
-					currentPrefix = awst::makeMappingKeyLayer(
-						std::move(encoded), encType, std::move(currentPrefix), loc);
-				}
+						auto const* arrayStep = dynamic_cast<
+							solidity::frontend::ArrayType const*>(keyWalkType);
+						auto const* mappingStep = dynamic_cast<
+							solidity::frontend::MappingType const*>(keyWalkType);
+						solidity::frontend::Type const* nextType = arrayStep
+							? arrayStep->baseType()
+							: mappingStep ? mappingStep->valueType() : nullptr;
+						if (arrayStep && currentArrayValue
+							&& dynamic_cast<solidity::frontend::ArrayType const*>(nextType))
+						{
+							auto index = TypeCoercion::implicitNumericCast(
+								awst::makeVarExpression(
+									getter.args[i].name, getter.args[i].wtype, loc),
+								awst::WType::uint64Type(), loc);
+							currentArrayValue = awst::makeIndexExpression(
+								currentArrayValue, std::move(index),
+								m_typeMapper.mapSolTypeToARC4(nextType), loc);
+						}
+						else
+							currentArrayValue = nullptr;
+
+						currentPrefix = awst::makeMappingKeyLayer(
+							std::move(encoded), encType, currentPrefix, loc);
+
+						if (mappingStep)
+							if (auto const* nextArray = dynamic_cast<
+									solidity::frontend::ArrayType const*>(nextType))
+							{
+								auto const* nextW = m_typeMapper.map(nextArray);
+								auto box = awst::makeBoxValueExpression(
+									currentPrefix, nextW, loc);
+								currentArrayValue = StorageMapper::makeStateGetWithDefault(
+									std::move(box), nextW, loc);
+							}
+						keyWalkType = nextType;
+					}
 
 				// makeStateGetWithDefault: avoids StateGet for large/dynamic types (>4KB stack cap).
 				auto boxExpr = awst::makeBoxValueExpression(std::move(currentPrefix), storedWType, loc);

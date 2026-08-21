@@ -118,7 +118,8 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	std::string const& _memberName,
 	Expression const& _baseExpr,
-	VariableDeclaration const& _varDecl)
+	VariableDeclaration const& _varDecl,
+	std::shared_ptr<awst::Expression> _runtimeKey)
 {
 	auto const* solArrType = dynamic_cast<ArrayType const*>(_varDecl.type());
 	auto* rawElemType = m_ctx.typeMapper.map(solArrType->baseType());
@@ -135,10 +136,13 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 	// (SolIndexAccess). Gives EVM's "delete leaves data at hash" for free.
 	bool elemIsMapping = dynamic_cast<MappingType const*>(solArrType->baseType()) != nullptr;
 	if (elemIsMapping && (_memberName == "push" || _memberName == "pop"))
-		return handleMappingElementArrayLengthOp(_memberName, _varDecl, arrayVarName);
+		return handleMappingElementArrayLengthOp(
+			_memberName, _varDecl, arrayVarName, std::move(_runtimeKey));
 
 	// Build BoxValueExpression
-	auto boxExpr = builder::StorageMapper::makeTopLevelBoxExpr(arrayVarName, arrWType, m_loc);
+	auto boxExpr = _runtimeKey
+		? awst::makeBoxValueExpression(std::move(_runtimeKey), arrWType, m_loc)
+		: builder::StorageMapper::makeTopLevelBoxExpr(arrayVarName, arrWType, m_loc);
 
 	// StateGet wrapper for reads (returns empty array if box missing)
 	auto emptyArr = awst::makeNewArray(arrWType, m_loc);
@@ -266,14 +270,16 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleMemoryArray(
 std::shared_ptr<awst::Expression> SolArrayMethod::handleMappingElementArrayLengthOp(
 	std::string const& _memberName,
 	solidity::frontend::VariableDeclaration const& /*_varDecl*/,
-	std::string const& _arrayVarName)
+	std::string const& _arrayVarName,
+	std::shared_ptr<awst::Expression> _runtimeKey)
 {
 	// Box: 2-byte big-endian length, no element data.
 	// Read: box_get; empty (deleted/never-created) → len=0; else extract_uint16(0).
 	// Write: itob(new_len) → extract last 2 bytes → box_put.
 
-	auto boxKey = awst::makeUtf8BytesConstant(
-		_arrayVarName, m_loc, awst::WType::boxKeyType());
+	auto boxKey = _runtimeKey ? std::move(_runtimeKey)
+		: awst::makeUtf8BytesConstant(
+			_arrayVarName, m_loc, awst::WType::boxKeyType());
 
 	// Read box bytes (or empty if missing).
 	auto boxRead = [&]() -> std::shared_ptr<awst::Expression> {

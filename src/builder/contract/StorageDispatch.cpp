@@ -55,6 +55,21 @@ void ContractBuilder::buildStorageDispatch(
 			&& m_storageMapper.physicalBindingFor(*variable->declaration).kind
 				== awst::AppStorageKind::Box;
 	};
+	auto stateCellRead = [&](SlotVariable const* v) -> std::shared_ptr<awst::Expression> {
+		if (!v || !v->declaration) return nullptr;
+		auto binding = m_storageMapper.physicalBindingFor(*v->declaration);
+		return m_storageMapper.createStateRead(
+			binding.name, v->wtype, binding.kind, loc);
+	};
+	auto stateCellWrite = [&](SlotVariable const* v,
+		std::shared_ptr<awst::Expression> value)
+		-> std::shared_ptr<awst::Expression>
+	{
+		if (!v || !v->declaration) return nullptr;
+		auto binding = m_storageMapper.physicalBindingFor(*v->declaration);
+		return m_storageMapper.createStateWrite(
+			binding.name, std::move(value), v->wtype, binding.kind, loc);
+	};
 
 	// EVM slot arithmetic wraps mod 2^256 (boundary fixtures repoint an array to
 	// 2^256-5 so base+idx crosses zero and lands on named vars). biguint add does
@@ -84,8 +99,7 @@ void ContractBuilder::buildStorageDispatch(
 	// The var's packed field: s big-endian bytes of its EVM-slot content
 	// (typed cell read → SlotWordCodec).
 	auto packedFieldBytes = [&](SlotVariable const* v) -> std::shared_ptr<awst::Expression> {
-		auto read = m_storageMapper.createStateRead(
-			storageName(v), v->wtype, awst::AppStorageKind::AppGlobal, loc);
+		auto read = stateCellRead(v);
 		return SlotWordCodec::nativeToPackedBytes(std::move(read), v->wtype, v->byteSize, loc);
 	};
 
@@ -141,11 +155,7 @@ void ContractBuilder::buildStorageDispatch(
 			if (!native)
 				continue;   // codec errored loudly
 
-			auto key = awst::makeUtf8BytesConstant(
-				storageName(v), loc, awst::WType::stateKeyType());
-			auto target = awst::makeAppStateExpression(std::move(key), v->wtype, loc);
-			auto assign = awst::makeAssignmentExpression(
-				std::move(target), std::move(native), loc, v->wtype);
+			auto assign = stateCellWrite(v, std::move(native));
 			_blk.body.push_back(awst::makeExpressionStatement(std::move(assign), loc));
 		}
 	};
@@ -173,12 +183,131 @@ void ContractBuilder::buildStorageDispatch(
 
 	// Read the struct var's cell (typed).
 	auto structCellRead = [&](SlotVariable const* v) -> std::shared_ptr<awst::Expression> {
-		auto name = storageName(v);
-		if (usesBoxStorage(v))
-			return StorageMapper::makeStateGetWithDefault(
-				StorageMapper::makeTopLevelBoxExpr(name, v->wtype, loc), v->wtype, loc);
-		return m_storageMapper.createStateRead(
-			name, v->wtype, awst::AppStorageKind::AppGlobal, loc);
+		return stateCellRead(v);
+	};
+
+	// EVM exposes a dynamic array's length in its root slot. Named AVM cells
+	// keep the value itself (ARC4 header/body or raw bytes), so bridge that
+	// representation explicitly for assembly sload/sstore(root).
+	auto dynamicLengthWord = [&](SlotVariable const* v)
+		-> std::shared_ptr<awst::Expression>
+	{
+		auto const* at = v ? dynamic_cast<solidity::frontend::ArrayType const*>(v->solType)
+			: nullptr;
+		if (!at || !at->isDynamicallySized()) return nullptr;
+		auto cell = stateCellRead(v);
+		std::shared_ptr<awst::Expression> len;
+		if (at->isByteArrayOrString())
+			len = awst::makeLen(std::move(cell), loc);
+		else
+			len = awst::makeArrayLength(
+				std::move(cell), awst::WType::uint64Type(), loc);
+		return awst::makeAsBiguint(awst::makeItob(std::move(len), loc), loc);
+	};
+
+	auto emitDynamicLengthStore = [&](SlotVariable const* v, awst::Block& blk) {
+		auto const* at = v ? dynamic_cast<solidity::frontend::ArrayType const*>(v->solType)
+			: nullptr;
+		if (!at || !at->isDynamicallySized() || !usesBoxStorage(v))
+			return false;
+		std::string n = "__dyn_len_"
+			+ std::to_string(awst::NameGen::next("StorageDispatch.dynLen"));
+		auto rawLen = awst::makeExtractLastN(awst::makeLeftPadToN(
+			awst::makeAsBytes(awst::makeVarExpression(
+				"__value", awst::WType::biguintType(), loc), loc), 8, loc), 8, loc);
+		blk.body.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(n, awst::WType::uint64Type(), loc),
+			awst::makeBtoi(std::move(rawLen), loc), loc));
+		auto lenVar = [&] {
+			return awst::makeVarExpression(n, awst::WType::uint64Type(), loc);
+		};
+		auto key = [&] { return makeBytes(storageName(v)); };
+
+		std::shared_ptr<awst::Expression> newSize;
+		bool hasHeader = !at->isByteArrayOrString();
+		if (!hasHeader)
+			newSize = lenVar();
+		else
+		{
+			auto const* da = dynamic_cast<awst::ARC4DynamicArray const*>(v->wtype);
+			int elemSize = da
+				? StorageMapper::computeEncodedElementSize(da->elementType()) : 0;
+			if (elemSize <= 0)
+			{
+				if (!da)
+				{
+					Logger::instance().error(
+						"cannot resize the declared dynamic-array storage type", loc);
+					return true;
+				}
+				// Dynamically encoded children cannot be resized by byte width.
+				// Mutate the declared ARC4 array recursively instead: every push uses
+				// the child's type-directed default, so T[], T[][], structs, and mixed
+				// ranks follow the same path.
+				std::string currentName = "__dyn_cur_"
+					+ std::to_string(awst::NameGen::next("StorageDispatch.dynCurrent"));
+				auto currentVar = [&] {
+					return awst::makeVarExpression(
+						currentName, awst::WType::uint64Type(), loc);
+				};
+				auto target = [&] {
+					return StorageMapper::makeTopLevelBoxExpr(
+						storageName(v), v->wtype, loc);
+				};
+				blk.body.push_back(awst::makeAssignmentStatement(
+					currentVar(), awst::makeArrayLength(
+						stateCellRead(v), awst::WType::uint64Type(), loc), loc));
+
+				auto grow = awst::makeBlock(loc);
+				grow->body.push_back(awst::makeExpressionStatement(
+					awst::makeArrayPushOne(
+						target(), StorageMapper::makeDefaultValue(
+							da->elementType(), loc), v->wtype, loc), loc));
+				grow->body.push_back(awst::makeAssignmentStatement(
+					currentVar(), awst::makeUInt64BinOp(
+						currentVar(), awst::UInt64BinaryOperator::Add,
+						awst::makeIntegerConstant(uint64_t{1}, loc), loc), loc));
+				blk.body.push_back(awst::makeWhileLoop(
+					awst::makeNumericCompare(
+						currentVar(), awst::NumericComparison::Lt, lenVar(), loc),
+					std::move(grow), loc));
+
+				auto shrink = awst::makeBlock(loc);
+				shrink->body.push_back(awst::makeExpressionStatement(
+					awst::makeArrayPop(target(), da->elementType(), loc), loc));
+				shrink->body.push_back(awst::makeAssignmentStatement(
+					currentVar(), awst::makeUInt64BinOp(
+						currentVar(), awst::UInt64BinaryOperator::Sub,
+						awst::makeIntegerConstant(uint64_t{1}, loc), loc), loc));
+				blk.body.push_back(awst::makeWhileLoop(
+					awst::makeNumericCompare(
+						lenVar(), awst::NumericComparison::Lt, currentVar(), loc),
+					std::move(shrink), loc));
+				return true;
+			}
+			newSize = awst::makeUInt64BinOp(
+				awst::makeIntegerConstant(uint64_t{2}, loc),
+				awst::UInt64BinaryOperator::Add,
+				awst::makeUInt64BinOp(lenVar(), awst::UInt64BinaryOperator::Mult,
+					awst::makeIntegerConstant(static_cast<uint64_t>(elemSize), loc), loc), loc);
+		}
+		auto resize = awst::makeIntrinsicCall(
+			"box_resize", awst::WType::voidType(), loc);
+		resize->stackArgs.push_back(key());
+		resize->stackArgs.push_back(std::move(newSize));
+		blk.body.push_back(awst::makeExpressionStatement(std::move(resize), loc));
+		if (hasHeader)
+		{
+			auto hdr = awst::makeExtract(
+				awst::makeItob(lenVar(), loc), 6, 2, loc);
+			auto put = awst::makeIntrinsicCall(
+				"box_replace", awst::WType::voidType(), loc);
+			put->stackArgs.push_back(key());
+			put->stackArgs.push_back(awst::makeIntegerConstant(uint64_t{0}, loc));
+			put->stackArgs.push_back(std::move(hdr));
+			blk.body.push_back(awst::makeExpressionStatement(std::move(put), loc));
+		}
+		return true;
 	};
 	auto structCellTarget = [&](SlotVariable const* v) -> std::shared_ptr<awst::Expression> {
 		auto name = storageName(v);
@@ -323,18 +452,38 @@ void ContractBuilder::buildStorageDispatch(
 					}
 				}
 
+			// The packed-word codec is a LEAF codec. A whole aggregate is never
+			// a scalar just because solc assigns its root a full slot. Dynamic
+			// arrays/bytes expose their length word through the dedicated bridge;
+			// other aggregate slots retain the sparse raw-slot fallback.
+			if (vars.size() == 1 && vars[0]->solType
+				&& !vars[0]->solType->isValueType())
+			{
+				auto aggregateWord = dynamicLengthWord(vars[0]);
+				if (!aggregateWord)
+					continue;
+				auto aggregateBlock = awst::makeBlock(loc);
+				aggregateBlock->body.push_back(
+					awst::makeReturnStatement(std::move(aggregateWord), loc));
+				auto aggregateIf = awst::makeIfElse(
+					std::move(cmp), std::move(aggregateBlock), std::move(elseBlock), loc);
+				auto aggregateElse = awst::makeBlock(loc);
+				aggregateElse->body.push_back(std::move(aggregateIf));
+				elseBlock = std::move(aggregateElse);
+				continue;
+			}
+
 			auto ifBlock = awst::makeBlock(loc);
 			if (si.isDynamic || (vars.size() == 1 && vars[0]->isFullSlot))
 			{
-				// Full-slot single var (or box-backed dynamic root): raw cell bytes
-				// low-aligned into the word — the pre-packing behavior, unchanged.
-				auto get = awst::makeIntrinsicCall("app_global_get", awst::WType::bytesType(), loc);
-				get->stackArgs.push_back(makeBytes(storageName(vars[0])));
-
-				// Left-pad + take last 32 bytes (global slots may be <32 for short ints).
-				auto cat = awst::makeLeftPad(std::move(get), 32, loc);
-				auto extract = awst::makeExtractLastN(std::move(cat), 32, loc);
-				auto cast = awst::makeAsBiguint(std::move(extract), loc);
+				auto cast = dynamicLengthWord(vars[0]);
+				if (!cast)
+				{
+					auto read = stateCellRead(vars[0]);
+					auto raw = SlotWordCodec::nativeToPackedBytes(
+						std::move(read), vars[0]->wtype, 32, loc);
+					cast = awst::makeAsBiguint(std::move(raw), loc);
+				}
 
 				auto ret = awst::makeReturnStatement(std::move(cast), loc);
 				ifBlock->body.push_back(std::move(ret));
@@ -514,22 +663,40 @@ void ContractBuilder::buildStorageDispatch(
 					}
 				}
 
+			// Mirror the read-side aggregate gate. Only a box-backed dynamic
+			// aggregate has a representation-preserving root-word store here;
+			// every other non-value shape must use the sparse fallback rather
+			// than being reinterpreted as a packed scalar.
+			if (vars.size() == 1 && vars[0]->solType
+				&& !vars[0]->solType->isValueType())
+			{
+				auto aggregateBlock = awst::makeBlock(loc);
+				if (!emitDynamicLengthStore(vars[0], *aggregateBlock))
+					continue;
+				aggregateBlock->body.push_back(
+					awst::makeReturnStatement(nullptr, loc));
+				auto aggregateIf = awst::makeIfElse(
+					std::move(cmp), std::move(aggregateBlock), std::move(elseBlock), loc);
+				auto aggregateElse = awst::makeBlock(loc);
+				aggregateElse->body.push_back(std::move(aggregateIf));
+				elseBlock = std::move(aggregateElse);
+				continue;
+			}
+
 			auto ifBlock = awst::makeBlock(loc);
 			if (si.isDynamic || (vars.size() == 1 && vars[0]->isFullSlot))
 			{
-				// Full-slot single var: raw 32-byte put — the pre-packing behavior, unchanged.
-				auto valueVar = awst::makeVarExpression("__value", awst::WType::biguintType(), loc);
-				auto cast = awst::makeAsBytes(std::move(valueVar), loc);
-				auto cat = awst::makeLeftPad(std::move(cast), 32, loc);
-				auto lenCall = awst::makeLen(cat, loc);
-				auto sub32 = awst::makeUInt64BinOp(std::move(lenCall), awst::UInt64BinaryOperator::Sub, makeUint64("32"), loc);
-
-				auto extract = awst::makeExtract3(cat, std::move(sub32), makeUint64("32"), loc);
-				auto put = awst::makeAppGlobalPut(
-					makeBytes(storageName(vars[0])), std::move(extract), loc);
-
-				auto stmt = awst::makeExpressionStatement(std::move(put), loc);
-				ifBlock->body.push_back(std::move(stmt));
+				if (!emitDynamicLengthStore(vars[0], *ifBlock))
+				{
+					auto raw = awst::makeExtractLastN(awst::makeLeftPadToN(
+						awst::makeAsBytes(awst::makeVarExpression(
+							"__value", awst::WType::biguintType(), loc), loc), 32, loc), 32, loc);
+					auto native = SlotWordCodec::packedBytesToNative(
+						std::move(raw), vars[0]->wtype, vars[0]->solType, 32, loc);
+					if (native)
+						ifBlock->body.push_back(awst::makeExpressionStatement(
+							stateCellWrite(vars[0], std::move(native)), loc));
+				}
 
 				auto ret = awst::makeReturnStatement(nullptr, loc);
 				ifBlock->body.push_back(std::move(ret));

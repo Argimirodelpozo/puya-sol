@@ -1510,7 +1510,7 @@
                     "value": "Z+C8Gas",
                     "encoding": "utf8"
                   },
-                  "exists_assertion_message": "check owner exists"
+                  "exists_assertion_message": null
                 },
                 "value": {
                   "_type": "IntrinsicCall",
@@ -2498,10 +2498,9 @@
                                         "end_column": null
                                       },
                                       "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
+                                        "_type": "WType",
+                                        "name": "box_key",
+                                        "immutable": true
                                       },
                                       "value": "VRCW",
                                       "encoding": "utf8"
@@ -2588,10 +2587,9 @@
                                       "end_column": null
                                     },
                                     "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
+                                      "_type": "WType",
+                                      "name": "box_key",
+                                      "immutable": true
                                     },
                                     "value": "VRCW",
                                     "encoding": "utf8"
@@ -2971,7 +2969,7 @@
                 "end_column": null
               },
               "value": {
-                "_type": "AppStateExpression",
+                "_type": "StateGet",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/postinit_creator_only.sol",
                   "line": 10,
@@ -2980,12 +2978,42 @@
                   "column": null,
                   "end_column": null
                 },
-                "wtype": {
-                  "_type": "WType",
-                  "name": "account",
-                  "immutable": true
+                "field": {
+                  "_type": "AppStateExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/postinit_creator_only.sol",
+                    "line": 10,
+                    "end_line": 10,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "account",
+                    "immutable": true
+                  },
+                  "key": {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/postinit_creator_only.sol",
+                      "line": 10,
+                      "end_line": 10,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "state_key",
+                      "immutable": true
+                    },
+                    "value": "Z+C8Gas",
+                    "encoding": "utf8"
+                  },
+                  "exists_assertion_message": null
                 },
-                "key": {
+                "default": {
                   "_type": "BytesConstant",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/postinit_creator_only.sol",
@@ -2997,13 +3025,12 @@
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "state_key",
+                    "name": "account",
                     "immutable": true
                   },
-                  "value": "Z+C8Gas",
-                  "encoding": "utf8"
-                },
-                "exists_assertion_message": "check owner exists"
+                  "value": "0000000000000000000000000000000000000000",
+                  "encoding": "base16"
+                }
               }
             }
           ],

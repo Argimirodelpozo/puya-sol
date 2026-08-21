@@ -22,6 +22,13 @@ public:
 		std::string const& name,
 		solidity::frontend::ArrayType const* arrType,
 		awst::SourceLocation const& loc);
+
+	/// Runtime-key form used by box-keyed storage-ref parameters.
+	static std::shared_ptr<awst::Expression> stateDynArrayLengthForKey(
+		eb::ContractContext& ctx,
+		std::shared_ptr<awst::Expression> key,
+		solidity::frontend::ArrayType const* arrType,
+		awst::SourceLocation const& loc);
 };
 
 } // namespace puyasol::builder::sol_ast

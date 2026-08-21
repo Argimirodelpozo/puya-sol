@@ -6,6 +6,7 @@
 
 #include "builder/itxn/InnerCallHandlers.h"
 #include "builder/EvmFeaturePolicy.h"
+#include "builder/SolcFacts.h"
 #include "awst/NameGen.h"
 #include "builder/itxn/InnerCallInternal.h"
 #include "builder/itxn/CallResolver.h"
@@ -35,9 +36,11 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	auto const& targetFnExpr = *_encodeCallExpr.arguments()[0];
 	FunctionDefinition const* targetFuncDef = nullptr;
 
-	if (auto const* fnType = dynamic_cast<FunctionType const*>(targetFnExpr.annotation().type))
-		if (fnType->hasDeclaration())
-			targetFuncDef = dynamic_cast<FunctionDefinition const*>(&fnType->declaration());
+	auto const* targetFnType = dynamic_cast<FunctionType const*>(
+		targetFnExpr.annotation().type);
+	if (targetFnType && targetFnType->hasDeclaration())
+		targetFuncDef = dynamic_cast<FunctionDefinition const*>(
+			&targetFnType->declaration());
 
 	if (!targetFuncDef)
 		return nullptr;
@@ -80,11 +83,21 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 		else
 			callArgs.push_back(_encodeCallExpr.arguments()[1]);
 
-		auto* retType = _ctx.typeMapper.map(targetFuncDef->returnParameters().size() > 0
-			? targetFuncDef->returnParameters()[0]->type()
-			: nullptr);
-		if (!retType)
-			retType = awst::WType::voidType();
+		size_t const nReturns = targetFuncDef->returnParameters().size();
+		auto* retType = nReturns == 1
+			? _ctx.typeMapper.map(targetFuncDef->returnParameters()[0]->type())
+			: (nReturns == 0 ? awst::WType::voidType() : nullptr);
+		std::vector<awst::WType const*> tupleTypes;
+		if (nReturns > 1)
+		{
+			for (auto const& ret: targetFuncDef->returnParameters())
+			{
+				auto const* wt = _ctx.typeMapper.map(ret->type());
+				tupleTypes.push_back(wt ? wt : awst::WType::voidType());
+			}
+			retType = _ctx.typeMapper.createType<awst::WTuple>(tupleTypes);
+		}
+		if (!retType) retType = awst::WType::voidType();
 		auto call = awst::makeSubroutineCall(
 			awst::InstanceMethodTarget{
 				CallResolver::resolveMethodName(_ctx, *targetFuncDef)}, retType, _loc);
@@ -100,7 +113,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 			_ctx.preEffects().push_back(std::move(stmt));
 			dataBytes = awst::makeBytesConstant({}, _loc);
 		}
-		else
+		else if (nReturns == 1)
 		{
 			if (retType == awst::WType::biguintType())
 			{
@@ -125,16 +138,34 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 				dataBytes = awst::makeBytesConstant({}, _loc);
 			}
 		}
+		else
+		{
+			// A callsub returning a tuple must execute once. Encode every native
+			// component in declaration order so abi.decode sees the complete
+			// returndata rather than only returnParameters()[0].
+			auto cached = awst::makeSingleEvaluation(
+				std::move(call), retType, awst::nextSingleEvalId(), _loc);
+			for (size_t i = 0; i < nReturns; ++i)
+			{
+				auto const* itemW = tupleTypes[i];
+				auto item = awst::makeTupleItem(cached,
+					static_cast<int>(i), itemW, _loc);
+				auto const* arc4W = _ctx.typeMapper.mapToARC4Type(itemW);
+				std::shared_ptr<awst::Expression> part;
+				if (itemW == arc4W)
+					part = awst::makeAsBytes(std::move(item), _loc);
+				else
+					part = awst::makeAsBytes(
+						awst::makeARC4Encode(std::move(item), arc4W, _loc), _loc);
+				dataBytes = dataBytes
+					? awst::makeConcat(std::move(dataBytes), std::move(part), _loc)
+					: std::move(part);
+			}
+		}
 
 		return std::make_unique<GenericResultBuilder>(_ctx,
 			makeBoolBytesTuple(true, std::move(dataBytes), _loc));
 	}
-
-	auto methodConst = awst::makeMethodConstant(
-		buildMethodSelector(_ctx, targetFuncDef), awst::WType::bytesType(), _loc);
-
-	auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
-	argsTuple->items.push_back(std::move(methodConst));
 
 	auto const& argsExpr = *_encodeCallExpr.arguments()[1];
 	std::vector<ASTPointer<Expression const>> callArgs;
@@ -146,6 +177,25 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 	else
 		callArgs.push_back(_encodeCallExpr.arguments()[1]);
 
+	std::vector<Type const*> paramTypes;
+	for (auto const& parameter: targetFuncDef->parameters())
+		paramTypes.push_back(parameter->type());
+	if (_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
+	{
+		auto selector = awst::makeBytesConstant(
+			builder::SolcFacts::externalSelector(*targetFnType), _loc,
+			awst::BytesEncoding::Base16, awst::WType::bytesType());
+		return submitTypedAppCall(_ctx, std::move(_receiver),
+			buildEvmApplicationArgs(_ctx, std::move(selector), callArgs,
+				paramTypes, _loc),
+			std::move(_callValue), _loc);
+	}
+
+	auto methodConst = awst::makeMethodConstant(
+		buildMethodSelector(_ctx, targetFuncDef), awst::WType::bytesType(), _loc);
+	auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
+	argsTuple->items.push_back(std::move(methodConst));
+
 	for (size_t ai = 0; ai < callArgs.size(); ++ai)
 	{
 		auto argExpr = _ctx.buildExpr(*callArgs[ai]);
@@ -155,9 +205,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 		// type-less encoding padded every biguint to 32B, so a uint128 param's callee
 		// decode (16B len-assert) reverted.
 		solidity::frontend::Type const* paramType =
-			ai < targetFuncDef->parameters().size()
-				? targetFuncDef->parameters()[ai]->type()
-				: nullptr;
+			ai < paramTypes.size() ? paramTypes[ai] : nullptr;
 		argsTuple->items.push_back(
 			encodeArgToBytes(_ctx, std::move(argExpr),
 				callArgs[ai]->annotation().type, paramType, _loc));
@@ -236,6 +284,35 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
 	auto const& args = _encodeExpr.arguments();
 	if (args.empty())
 		return nullptr;
+	if (_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
+	{
+		std::shared_ptr<awst::Expression> evmSelector;
+		if (_isSignature)
+		{
+			if (auto const* literal = dynamic_cast<Literal const*>(args[0].get()))
+				evmSelector = awst::makeBytesConstant(
+					builder::SolcFacts::externalSelector(literal->value()), _loc,
+					awst::BytesEncoding::Base16, awst::WType::bytesType());
+			else
+			{
+				auto hash = awst::makeIntrinsicCall(
+					"keccak256", awst::WType::bytesType(), _loc);
+				hash->stackArgs.push_back(
+					awst::makeAsBytes(_ctx.buildExpr(*args[0]), _loc));
+				evmSelector = awst::makeExtract(std::move(hash), 0, 4, _loc);
+			}
+		}
+		else
+			evmSelector = awst::makeAsBytes(_ctx.buildExpr(*args[0]), _loc);
+
+		std::vector<ASTPointer<Expression const>> callArgs;
+		for (size_t i = 1; i < args.size(); ++i)
+			callArgs.push_back(args[i]);
+		return submitTypedAppCall(_ctx, std::move(_receiver),
+			buildEvmApplicationArgs(_ctx, std::move(evmSelector), callArgs,
+				{}, _loc),
+			std::move(_callValue), _loc);
+	}
 
 	std::shared_ptr<awst::Expression> selector;
 	if (_isSignature)
@@ -282,12 +359,21 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
 						ASTNode::referencedDeclaration(functionExpr));
 			}
 		if (target)
+		{
+			// Even when the declaration lets us substitute the ARC-4 selector at
+			// compile time, Solidity still evaluates the selector expression (for
+			// example `(sideEffect(), C.f).selector`).
+			_ctx.evaluateForEffects(*args[0], _loc);
 			selector = awst::makeMethodConstant(
 				buildMethodSelector(_ctx, target), awst::WType::bytesType(), _loc);
+		}
 		else if (getter && targetType)
+		{
+			_ctx.evaluateForEffects(*args[0], _loc);
 			selector = awst::makeMethodConstant(
 				buildMethodSelector(_ctx, getter->name(), *targetType),
 				awst::WType::bytesType(), _loc);
+		}
 		else
 			selector = awst::makeAsBytes(_ctx.buildExpr(*args[0]), _loc);
 	}
@@ -321,15 +407,16 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 		_dataBytes = std::move(cast);
 	}
 
-	// Opaque payload: split [selector, rest]. Works only for single static
-	// 32-byte arg targets (EVM word == ARC4 encoding) or single raw-bytes.
-	// Recognisable abi.encode* shapes are handled before reaching here.
-	Logger::instance().warning(
-		"low-level .call(data) with an opaque payload: forwarding "
-		"[selector, rest] as-is. This matches a puya-sol callee only when "
-		"the target method takes a single static 32-byte argument (or raw "
-		"bytes); multi-argument and dynamic-argument targets cannot be "
-		"reconstructed from an EVM-shaped blob at runtime.", _loc);
+	// Opaque payload splits losslessly into selector + canonical body for an EVM
+	// profile. An ARC4-profile target cannot generically reconstruct individual
+	// ARC4 ApplicationArgs from an opaque EVM head/tail blob.
+	if (_ctx.typeMapper.profile().contractAbi == ContractAbi::Arc4)
+		Logger::instance().warning(
+			"low-level .call(data) with an opaque payload: forwarding "
+			"[selector, rest] as-is. This matches an ARC4-profile puya-sol "
+			"callee only when the target method takes a single static 32-byte "
+			"argument (or raw bytes); use --contract-abi evm for generic "
+			"Solidity calldata forwarding.", _loc);
 	std::string tmpName = "__rawcall_data_" + std::to_string((awst::NameGen::next("InnerCallShapes.s_rawCallTmpCounter") + 1));
 	auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
 	auto tmpAssign = awst::makeAssignmentStatement(tmpTarget, std::move(_dataBytes), _loc);
@@ -400,9 +487,11 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 
 	// Capture THIS submit's log (see captureLastLog: tuple-of-calls clobbering).
 	auto readLog = captureLastLog(_ctx, _loc);
+	auto stripPrefix = awst::makeExtract(
+		std::move(readLog), 4, 0, _loc); // ARC-4 return log prefix
 
 	return std::make_unique<GenericResultBuilder>(_ctx,
-		makeBoolBytesTuple(true, std::move(readLog), _loc));
+		makeBoolBytesTuple(true, std::move(stripPrefix), _loc));
 }
 
 // ── .staticcall(data) precompile routing ──
@@ -425,26 +514,26 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 	{
 		Logger::instance().debug("staticcall precompile 0x01: ecRecover → ecdsa_pk_recover Secp256k1", _loc);
 		// Input: hash[0:32], v[32:64], r[64:96], s[96:128].
-		// recovery_id = v - 27, guarded: AVM panics on underflow (EVM returns empty).
+		// recovery_id is valid only for v=27/28. AVM's recovery intrinsic traps
+		// outside {0,1}, whereas the EVM precompile returns empty returndata.
 		auto msgHash = makeExtract(_inputData, 0, 32, _loc);
 		auto vByte = makeExtract(_inputData, 63, 1, _loc);
 		auto vInt = awst::makeBtoi(std::move(vByte), _loc);
 		auto* u64v = awst::WType::uint64Type();
 		std::string vName = "__ecrec_v_" + std::to_string(
 			awst::NameGen::next("InnerCallShapes.ecrecoverV") + 1);
-		auto bindV = awst::makeAssignmentExpression(
-			awst::makeVarExpression(vName, u64v, _loc), std::move(vInt), _loc, u64v);
+		_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(vName, u64v, _loc), std::move(vInt), _loc));
 		auto vRead = [&]() { return awst::makeVarExpression(vName, u64v, _loc); };
-		auto vGte27 = awst::makeNumericCompare(
-			vRead(), awst::NumericComparison::Gte, awst::makeIntegerConstant("27", _loc), _loc);
+		auto validV = awst::makeBoolBinOp(
+			awst::makeNumericCompare(vRead(), awst::NumericComparison::Eq,
+				awst::makeIntegerConstant("27", _loc), _loc),
+			awst::BinaryBooleanOperator::Or,
+			awst::makeNumericCompare(vRead(), awst::NumericComparison::Eq,
+				awst::makeIntegerConstant("28", _loc), _loc), _loc);
 		auto vMinus27 = awst::makeUInt64BinOp(
 			vRead(), awst::UInt64BinaryOperator::Sub, awst::makeIntegerConstant("27", _loc), _loc);
-		auto guarded = awst::makeConditional(
-			std::move(vGte27), std::move(vMinus27), awst::makeZero(_loc), u64v, _loc);
-		auto recoveryIdComma = awst::makeCommaExpression(u64v, _loc);
-		recoveryIdComma->expressions.push_back(std::move(bindV));
-		recoveryIdComma->expressions.push_back(std::move(guarded));
-		std::shared_ptr<awst::Expression> recoveryId = recoveryIdComma;
+		std::shared_ptr<awst::Expression> recoveryId = std::move(vMinus27);
 		auto r = makeExtract(_inputData, 64, 32, _loc);
 		auto s = makeExtract(_inputData, 96, 32, _loc);
 
@@ -458,9 +547,14 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		ecdsaRecover->stackArgs.push_back(std::move(s));
 
 		std::string tupleVar = "__ecrecover_result_" + std::to_string((awst::NameGen::next("InnerCallShapes.s_ecRecoverTmpCounter") + 1));
-		auto tupleTarget = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
-		auto assignTuple = awst::makeAssignmentStatement(tupleTarget, std::move(ecdsaRecover), _loc);
-		_ctx.preEffects().push_back(std::move(assignTuple));
+		std::string bytesVar = tupleVar + "_bytes";
+		_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(bytesVar, awst::WType::bytesType(), _loc),
+			awst::makeBytesConstant({}, _loc), _loc));
+		auto validBlock = awst::makeBlock(_loc);
+		validBlock->body.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(tupleVar, tupleTypePtr, _loc),
+			std::move(ecdsaRecover), _loc));
 
 		auto tupleRead0 = awst::makeVarExpression(tupleVar, tupleTypePtr, _loc);
 		auto pubkeyX = awst::makeTupleItem(std::move(tupleRead0), 0, awst::WType::bytesType(), _loc);
@@ -472,7 +566,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		auto hash = awst::makeKeccak256(std::move(pubkeyConcat), _loc);
 
 		auto addr20 = makeExtract(std::move(hash), 12, 20, _loc); // keccak256[12:32]
-		resultBytes = awst::makeLeftPad(std::move(addr20), 12, _loc); // left-pad to 32
+		validBlock->body.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(bytesVar, awst::WType::bytesType(), _loc),
+			awst::makeLeftPad(std::move(addr20), 12, _loc), _loc));
+		_ctx.preEffects().push_back(awst::makeIfElse(
+			std::move(validV), std::move(validBlock), nullptr, _loc));
+		resultBytes = awst::makeVarExpression(
+			bytesVar, awst::WType::bytesType(), _loc);
 		break;
 	}
 	case 6: // ecAdd

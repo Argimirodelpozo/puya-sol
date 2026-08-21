@@ -6,7 +6,7 @@ main:
     intcblock 1 16 0 8
     bytecblock "st" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x151f7c75 0x010000000000000000
     intc_2 // 0
-    dupn 3
+    dup
     pushint 4096
     bzero
     dup
@@ -71,7 +71,6 @@ main_ternary_false@14:
 main_setStX_route@7:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_3 // 8
     ==
@@ -91,9 +90,8 @@ main_ternary_merge@20:
     bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    extract 0 32
-    dig 2
-    concat
+    swap
+    replace2 32
     bytec_0 // "st"
     swap
     box_put
@@ -107,7 +105,7 @@ main_ternary_false@19:
 main_getStInner_route@6:
     txna ApplicationArgs 1
     dup
-    bury 5
+    bury 3
     len
     pushint 32
     ==
@@ -124,10 +122,10 @@ main_ternary_merge@25:
     assert // not payable
     pushint 2
     itob
-    dig 4
+    dig 2
     b>
     bz main_else_body@30
-    dig 3
+    dig 1
     dup
     bytec 6 // 0x010000000000000000
     b<
@@ -205,14 +203,13 @@ main_ternary_false@24:
 main_setStInner_route@5:
     txna ApplicationArgs 1
     dup
-    bury 5
+    bury 3
     len
     pushint 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 4
     len
     intc_1 // 16
     ==
@@ -227,7 +224,6 @@ main_setStInner_route@5:
 main_ternary_merge@39:
     !
     assert // not payable
-    dig 2
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -241,27 +237,23 @@ main_ternary_merge@39:
 main_ternary_merge@42:
     pushint 2
     itob
-    dig 4
+    dig 2
     b>
-    bz main_after_if_else@46
-    dig 3
+    bz main_after_if_else@44
+    bytec_0 // "st"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dig 2
+    dup
     bytec 6 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    bytec_0 // "st"
-    box_len
-    bury 1
-    bnz main_after_if_else@45
-    bytec_0 // "st"
-    pushint 40
-    box_create
-    pop
-
-main_after_if_else@45:
     intc_1 // 16
     bzero
     dup
-    dig 2
+    dig 4
     concat
     dup
     len
@@ -277,25 +269,26 @@ main_after_if_else@45:
     b|
     intc_3 // 8
     bzero
-    dig 5
+    uncover 2
     concat
     dup
     len
     intc_3 // 8
     -
     extract_uint64
-    dup
-    pushint 2
-    <
-    assert // index out of bounds
+    dig 2
+    extract 0 32
+    swap
     intc_1 // 16
     *
+    uncover 2
+    replace3 // on error: index access is out of bounds
+    replace2 0
     bytec_0 // "st"
     swap
-    uncover 2
-    box_replace // on error: index out of bounds
+    box_put
 
-main_after_if_else@46:
+main_after_if_else@44:
     intc_0 // 1
     return
 

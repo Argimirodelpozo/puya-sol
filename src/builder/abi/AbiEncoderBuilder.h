@@ -48,6 +48,15 @@ public:
 		std::vector<std::shared_ptr<awst::Expression>> _parts,
 		awst::SourceLocation const& _loc);
 
+	/// Canonical Solidity ABI encoding for already-built values. Layout facts
+	/// come from the corresponding solc types and aggregates recurse without
+	/// rank- or shape-specific branches.
+	static std::shared_ptr<awst::Expression> encodeValuesAsEvmAbi(
+		ContractContext& _ctx,
+		std::vector<solidity::frontend::Type const*> const& _types,
+		std::vector<std::shared_ptr<awst::Expression>> _values,
+		awst::SourceLocation const& _loc);
+
 	/// ARC4-encode an already-built list of argument values into a single bytes
 	/// expression: 0 values → empty bytes; 1 value → that value's ARC4 bytes (NO
 	/// tuple wrapper); N values → an ARC4 tuple. Each value is encoded at
@@ -82,6 +91,13 @@ public:
 		ContractContext& _ctx,
 		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> const& _args,
 		std::vector<solidity::frontend::Type const*> const& _paramTypes,
+		awst::SourceLocation const& _loc);
+
+	/// Explicit `arc4.decode`: deterministic ARC4 validation/decoding with no
+	/// EVM layout sniffing.
+	static std::shared_ptr<awst::Expression> decodeArc4(
+		ContractContext& _ctx,
+		solidity::frontend::FunctionCall const& _callNode,
 		awst::SourceLocation const& _loc);
 
 private:
@@ -137,7 +153,7 @@ private:
 		bool _isPacked,
 		awst::SourceLocation const& _loc);
 
-	/// abi.encode → ARC4 (delegates to encodeArgsAsArc4; no EVM head/tail).
+	/// abi.encode → canonical Solidity ABI head/tail encoding.
 	static std::unique_ptr<InstanceBuilder> handleEncode(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_ref_writethrough.sol.ArrayRefWriteThrough.approval_program() -> uint64:
 main:
     intcblock 1 0 2 64
-    bytecblock "arr" "__ctor_pending"
+    bytecblock "arr" "__ctor_pending" 0x0000
     pushint 4096
     bzero
     dup
@@ -56,7 +56,7 @@ main_ternary_merge@13:
     box_del
     pop
     bytec_0 // "arr"
-    pushbytes 0x0000
+    bytec_2 // 0x0000
     box_put
     bytec_0 // "arr"
     intc_1 // 0
@@ -85,9 +85,21 @@ main_ternary_merge@13:
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     box_splice
     bytec_0 // "arr"
-    intc_2 // 2
+    box_get
+    bytec_2 // 0x0000
+    cover 2
+    select
+    dup
+    extract 2 64
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
-    box_replace
+    replace2 0
+    replace2 2 // on error: index access is out of bounds
+    bytec_0 // "arr"
+    box_del
+    pop
+    bytec_0 // "arr"
+    swap
+    box_put
     bytec_0 // "arr"
     intc_2 // 2
     intc_3 // 64

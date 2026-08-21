@@ -1,4 +1,4 @@
-"""Regression coverage for CODEX_REVIEW item 8's EVM feature policy."""
+"""Regression coverage for the EVM feature policy."""
 
 import pytest
 

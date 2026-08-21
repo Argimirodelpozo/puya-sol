@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_before_storage_array_partial_assignment_same_base_type.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 128
-    bytecblock "large" "__ctor_pending" "small"
+    bytecblock "large" "__ctor_pending" "small" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -120,7 +120,9 @@ main_after_if_else@21:
     intc_1 // 0
     bytec_2 // "small"
     app_global_get_ex
-    assert // check small exists
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushint 64
     bzero
     concat
@@ -150,7 +152,7 @@ main___postInit_route@5:
     box_create
     pop
     bytec_2 // "small"
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     pushbytess "t" 0x
     app_global_put

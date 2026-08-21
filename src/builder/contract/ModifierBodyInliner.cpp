@@ -97,12 +97,18 @@ void dropUnreachableStatements(awst::Block* b)
 /// True for a compile-time zero/default constant. Used to suppress the redundant
 /// `retvar = 0` split from an implicit trailing `return 0`; the var is already
 /// default-initialised and re-assigning risks clobbering a nested `return expr`.
-bool isZeroConstantExpr(awst::Expression const* val)
+bool isDefaultInitExpr(awst::Expression const* val)
 {
 	if (auto const* i = dynamic_cast<awst::IntegerConstant const*>(val))
 		return i->value == "0";
 	if (auto const* b = dynamic_cast<awst::BoolConstant const*>(val))
 		return !b->value;
+	if (dynamic_cast<awst::BytesConstant const*>(val))
+		return true;
+	if (dynamic_cast<awst::NewStruct const*>(val)
+		|| dynamic_cast<awst::NewArray const*>(val)
+		|| dynamic_cast<awst::TupleExpression const*>(val))
+		return true;
 	return false;
 }
 
@@ -169,18 +175,7 @@ void inlineModifiers(
 			if (auto* assign = dynamic_cast<awst::AssignmentStatement*>(it->get()))
 			{
 				auto* target = dynamic_cast<awst::VarExpression*>(assign->target.get());
-				bool isZeroInit = false;
-				auto const* val = assign->value.get();
-				if (auto* intConst = dynamic_cast<awst::IntegerConstant const*>(val))
-					isZeroInit = (intConst->value == "0");
-				else if (auto* boolConst = dynamic_cast<awst::BoolConstant const*>(val))
-					isZeroInit = !boolConst->value;
-				else if (dynamic_cast<awst::BytesConstant const*>(val))
-					isZeroInit = true;
-				else if (dynamic_cast<awst::NewStruct const*>(val)
-					|| dynamic_cast<awst::NewArray const*>(val)
-					|| dynamic_cast<awst::TupleExpression const*>(val))
-					isZeroInit = true;
+				bool isZeroInit = isDefaultInitExpr(assign->value.get());
 
 				if (target && returnParamNames.count(target->name) && isZeroInit
 					&& !seen.count(target->name))
@@ -381,7 +376,7 @@ void inlineModifiers(
 					// Skip `retvar = 0` for synthetic __mod_retval_* (already 0-init);
 					// named return vars can be user-assigned so their `return 0` must emit.
 					if (!isJustRetVar
-						&& !(isZeroConstantExpr(retStmt->value.get())
+						&& !(isDefaultInitExpr(retStmt->value.get())
 							&& retName.rfind("__mod_retval_", 0) == 0))
 					{
 						auto target = awst::makeVarExpression(retName, retStmt->value->wtype, retStmt->sourceLocation);
@@ -444,7 +439,8 @@ void inlineModifiers(
 					? dynamic_cast<awst::VarExpression const*>(assign->target.get())
 					: nullptr;
 				if (targetVar && returnParamNames.count(targetVar->name)
-					&& !hoistedReturnVars.count(targetVar->name))
+					&& !hoistedReturnVars.count(targetVar->name)
+					&& isDefaultInitExpr(assign->value.get()))
 				{
 					modBody->body.push_back(bodyStmt);
 					hoistedReturnVars.insert(targetVar->name);

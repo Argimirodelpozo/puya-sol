@@ -5,7 +5,10 @@
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "awst/NameGen.h"
 #include "builder/SelectorSemantics.h"
+#include "builder/SolcFacts.h"
 #include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/abi/EvmAbiDecode.h"
+#include "builder/abi/EvmAbiEncode.h"
 #include "builder/itxn/CallResolver.h"
 #include "builder/itxn/FunctionPointerDispatchTypes.h"
 #include "builder/sol-types/FunctionPointerKind.h"
@@ -206,6 +209,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 
 	if (isExternal)
 	{
+		bool const evmContractAbi =
+			_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm;
 		// Compatibility layout: appId[8] ++ ARC4-selector[4]. Under
 		// --evm-selectors the pointer carries appId[8] ++ Solidity-selector[4]
 		// ++ ARC4-selector[4], keeping language and transport identities distinct.
@@ -308,6 +313,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		return nullptr;
 
 	bool isExternal = isExternalFunctionPointer(_funcType);
+	bool const evmContractAbi =
+		_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm;
 
 	if (isExternal)
 	{
@@ -329,8 +336,9 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 				awst::WType::uint64Type(), _loc),
 			_loc);
 
-		auto const routeSelectorOffset = static_cast<int>(
-			externalFunctionPointerRouteSelectorOffset(
+		auto const routeSelectorOffset = evmContractAbi
+			? static_cast<int>(externalFunctionPointerSoliditySelectorOffset)
+			: static_cast<int>(externalFunctionPointerRouteSelectorOffset(
 				_ctx.typeMapper.profile()));
 
 		// Map the routing selector → internal id via __sel_to_id_<sig>.
@@ -353,23 +361,41 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		auto selfCall = buildDispatchCall(_ctx, _funcType, std::move(selToIdCall), _args, _loc);
 		awst::WType const* retType = selfCall->wtype;
 
-		// Cross-contract: the explicit ARC-4 field → ApplicationArgs[0].
+		// Cross-contract selector chosen by the contract wire profile.
 		auto sel4 = extractSlice(routeSelectorOffset, 4);
 
 		auto argsTuple = awst::makeTupleExpression(nullptr, _loc);
 		argsTuple->items.push_back(std::move(sel4));
-		for (size_t i = 0; i < _args.size(); ++i)
+		if (evmContractAbi)
 		{
-			solidity::frontend::Type const* paramSolType =
-				i < _funcType->parameterTypes().size() ? _funcType->parameterTypes()[i] : nullptr;
-			// THE shared arg encoder (declared-width biguint, sign-correct,
-			// arrays/structs ARC4-encoded). The private encodeArgForInnerTxn
-			// copy had drifted: negative sub-256 signed args zero-extended
-			// (callee len-assert revert) and aggregates skipped ARC4 entirely
-			// — the fourth copy the AbiCodec consolidation missed.
-			argsTuple->items.push_back(
-				InnerCallHandlers::encodeArgToBytes(
-					_ctx, _args[i], nullptr, paramSolType, _loc));
+			std::vector<std::shared_ptr<awst::Expression>> converted;
+			for (size_t i = 0; i < _args.size(); ++i)
+			{
+				auto const* parameter = i < _funcType->parameterTypes().size()
+					? _funcType->parameterTypes()[i] : nullptr;
+				auto value = _args[i];
+				if (parameter)
+					value = builder::ConversionPlan{
+						nullptr, parameter, _ctx.typeMapper.map(parameter),
+						builder::ConversionPlan::Context::AbiArgument}.emit(
+							std::move(value), _loc);
+				converted.push_back(std::move(value));
+			}
+			argsTuple->items.push_back(abi::encodeEvmAbi(
+				_ctx.typeMapper, _funcType->parameterTypes(),
+				std::move(converted), _loc, _ctx.preEffects()));
+		}
+		else
+		{
+			for (size_t i = 0; i < _args.size(); ++i)
+			{
+				solidity::frontend::Type const* paramSolType =
+					i < _funcType->parameterTypes().size()
+						? _funcType->parameterTypes()[i] : nullptr;
+				argsTuple->items.push_back(
+					InnerCallHandlers::encodeArgToBytes(
+						_ctx, _args[i], nullptr, paramSolType, _loc));
+			}
 		}
 		{
 			std::vector<awst::WType const*> argTypes;
@@ -392,13 +418,31 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		submit->itxns.push_back(std::move(create));
 
 		// Decode LastLog: strip 4-byte ARC4 return prefix, coerce to retType.
-		auto buildInnerTxnResult = [&]() -> std::shared_ptr<awst::Expression> {
+		bool signedNarrowReturn = false;
+		if (_funcType->returnParameterTypes().size() == 1)
+			if (auto it = builder::SolIntType::fromSol(
+					_funcType->returnParameterTypes()[0]);
+				it && it->isSigned && it->bits <= 64)
+				signedNarrowReturn = true;
+		auto buildInnerTxnResult = [&](
+			std::vector<std::shared_ptr<awst::Statement>>& out)
+			-> std::shared_ptr<awst::Expression> {
 			auto readLog = awst::makeItxn("LastLog", awst::WType::bytesType(), _loc);
 			auto strip = awst::makeExtract(std::move(readLog), 4, 0, _loc); // len=0 = extract to end
+			if (evmContractAbi)
+				return abi::decodeEvmAbi(
+					_ctx.typeMapper, std::move(strip),
+					_funcType->returnParameterTypes(), retType, _loc, out);
 			if (retType == awst::WType::bytesType() || retType == awst::WType::voidType())
 				return strip;
 			if (retType == awst::WType::uint64Type())
+			{
+				// Signed <=64-bit public returns are transported as a canonical
+				// uint256 word; the native carrier is its low eight TC bytes.
+				if (signedNarrowReturn)
+					strip = awst::makeExtract(std::move(strip), 24, 8, _loc);
 				return awst::makeBtoi(std::move(strip), _loc);
+			}
 			if (retType == awst::WType::boolType())
 			{
 				// ARC4 bool: byte 0's top bit set → true.
@@ -430,7 +474,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionPointerCa
 		};
 		ifStmt->ifBranch->body.push_back(writeTmp(selfCall));
 		ifStmt->elseBranch->body.push_back(awst::makeExpressionStatement(submit, _loc));
-		ifStmt->elseBranch->body.push_back(writeTmp(buildInnerTxnResult()));
+		ifStmt->elseBranch->body.push_back(writeTmp(
+			buildInnerTxnResult(ifStmt->elseBranch->body)));
 		_ctx.preEffects().push_back(std::move(ifStmt));
 
 		return awst::makeVarExpression(tmpName, retType, _loc);
@@ -779,10 +824,20 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			for (auto const* entry : entries)
 			{
 				if (!entry->funcDef) continue;
-				// MethodConstant = sha512_256(sig)[:4] — same as puya's router and fn-ptr slot.
-				auto methodConst = awst::makeMethodConstant(
-					InnerCallHandlers::buildMethodSelector(_ctx, entry->funcDef),
-					awst::WType::bytesType(), _loc);
+				std::shared_ptr<awst::Expression> methodConst;
+				if (_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
+				{
+					auto const* externalType = entry->funcDef->functionType(false);
+					if (!externalType)
+						continue;
+					methodConst = awst::makeBytesConstant(
+						builder::SolcFacts::externalSelector(*externalType), _loc,
+						awst::BytesEncoding::Base16, awst::WType::bytesType());
+				}
+				else
+					methodConst = awst::makeMethodConstant(
+						InnerCallHandlers::buildMethodSelector(_ctx, entry->funcDef),
+						awst::WType::bytesType(), _loc);
 
 				auto selVar = awst::makeVarExpression("__sel", awst::WType::bytesType(), _loc);
 				auto cmp = awst::makeBytesComparison(std::move(selVar),

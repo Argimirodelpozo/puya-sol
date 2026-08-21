@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_dyntuple_return.sol.Cee.approval_program() -> uint64:
 main:
     intcblock 1 32 16 0
-    bytecblock "hits" 0x151f7c75 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0100000000000000000000000000000000 0xffffffffffffffff 0x8000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    bytecblock "hits" 0x 0x151f7c75 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0100000000000000000000000000000000 0xffffffffffffffff 0x8000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -25,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "hits"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -55,7 +55,9 @@ main_ternary_merge@17:
     intc_3 // 0
     bytec_0 // "hits"
     app_global_get_ex
-    assert // check hits exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -64,7 +66,7 @@ main_ternary_merge@17:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -95,11 +97,13 @@ main_ternary_merge@22:
     intc_3 // 0
     bytec_0 // "hits"
     app_global_get_ex
-    assert // check hits exists
-    bytec_2 // 0x01
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec_3 // 0x01
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // "hits"
@@ -115,36 +119,36 @@ main_ternary_merge@22:
     -
     pushint 8
     extract3
-    bytec 5 // 0xffffffffffffffff
+    bytec 6 // 0xffffffffffffffff
     b&
     dup
-    bytec 6 // 0x8000000000000000
+    bytec 7 // 0x8000000000000000
     b>=
     bz main_ternary_false@45
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
     b+
 
 main_ternary_merge@46:
     swap
-    bytec 4 // 0x0100000000000000000000000000000000
+    bytec 5 // 0x0100000000000000000000000000000000
     b%
-    bytec 8 // 0xffffffffffffffffffffffffffffffff
+    bytec 9 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec 9 // 0x80000000000000000000000000000000
+    bytec 10 // 0x80000000000000000000000000000000
     b>=
     bz main_ternary_false@48
-    bytec 10 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    bytec 11 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
 
 main_ternary_merge@49:
-    bytec 8 // 0xffffffffffffffffffffffffffffffff
+    bytec 9 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec 9 // 0x80000000000000000000000000000000
+    bytec 10 // 0x80000000000000000000000000000000
     b>=
     bz main_ternary_false@51
-    bytec 10 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    bytec 11 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
 
 main_ternary_merge@52:
@@ -168,7 +172,7 @@ main_ternary_merge@52:
     uncover 2
     b|
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -208,11 +212,13 @@ main_ternary_merge@27:
     intc_3 // 0
     bytec_0 // "hits"
     app_global_get_ex
-    assert // check hits exists
-    bytec_2 // 0x01
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec_3 // 0x01
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // "hits"
@@ -227,7 +233,7 @@ main_ternary_merge@27:
     pushint 8
     -
     uncover 2
-    bytec 4 // 0x0100000000000000000000000000000000
+    bytec 5 // 0x0100000000000000000000000000000000
     b%
     intc_2 // 16
     bzero
@@ -251,7 +257,7 @@ main_ternary_merge@27:
     extract3
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -282,11 +288,13 @@ main_ternary_merge@32:
     intc_3 // 0
     bytec_0 // "hits"
     app_global_get_ex
-    assert // check hits exists
-    bytec_2 // 0x01
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec_3 // 0x01
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // "hits"
@@ -302,13 +310,13 @@ main_ternary_merge@32:
     -
     pushint 8
     extract3
-    bytec 5 // 0xffffffffffffffff
+    bytec 6 // 0xffffffffffffffff
     b&
     dup
-    bytec 6 // 0x8000000000000000
+    bytec 7 // 0x8000000000000000
     b>=
     bz main_ternary_false@58
-    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000
     b+
 
 main_ternary_merge@59:
@@ -320,7 +328,7 @@ main_ternary_merge@59:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -354,17 +362,19 @@ main_ternary_merge@37:
     intc_3 // 0
     bytec_0 // "hits"
     app_global_get_ex
-    assert // check hits exists
-    bytec_2 // 0x01
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec_3 // 0x01
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // "hits"
     swap
     app_global_put
-    bytec 4 // 0x0100000000000000000000000000000000
+    bytec 5 // 0x0100000000000000000000000000000000
     b%
     intc_2 // 16
     bzero
@@ -383,7 +393,7 @@ main_ternary_merge@37:
     <=
     assert // overflow
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -414,7 +424,7 @@ main_ternary_merge@42:
     intc_2 // 16
     bzero
     swap
-    bytec 4 // 0x0100000000000000000000000000000000
+    bytec 5 // 0x0100000000000000000000000000000000
     b%
     dig 1
     swap
@@ -433,7 +443,7 @@ main_ternary_merge@42:
     b|
     pushbytes 0x00120002aabb
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

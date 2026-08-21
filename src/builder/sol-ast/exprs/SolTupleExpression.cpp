@@ -1,6 +1,7 @@
 /// @file SolTupleExpression.cpp — tuple/inline-array expression translation.
 
 #include "builder/sol-ast/exprs/SolTupleExpression.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 
@@ -54,10 +55,11 @@ std::shared_ptr<awst::Expression> SolTupleExpression::toAwst()
 						// bytes → ARC4 aggregate (e.g. fn-ptr as ARC4StaticArray<uint8,N>): reinterpret.
 						if (dynamic_cast<awst::BytesWType const*>(val->wtype))
 						{
-							bool isArc4Aggregate =
-								dynamic_cast<awst::ARC4StaticArray const*>(elementType)
-								|| dynamic_cast<awst::ARC4DynamicArray const*>(elementType)
-								|| dynamic_cast<awst::ARC4Struct const*>(elementType);
+							bool const isArc4Aggregate =
+								builder::isArc4EncodedType(elementType)
+								&& elementType != awst::WType::arc4BoolType()
+								&& elementType->kind() != awst::WTypeKind::ARC4UIntN
+								&& elementType->kind() != awst::WTypeKind::ARC4UFixedNxM;
 							if (isArc4Aggregate)
 							{
 								e->values.push_back(awst::makeARC4FromBytes(std::move(val), elementType, m_loc));

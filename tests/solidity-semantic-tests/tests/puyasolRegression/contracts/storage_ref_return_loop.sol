@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 // Guards the storage-ref-pointer return rewrite INSIDE loops: the old
 // hand-rolled walker missed WhileLoop/Switch/ForInLoop containers, so a
 // `return stateVar[i];` inside a while loop skipped the index rewrite
-// (awst::forEachChildBlock consolidation, possible_solc item 8 reassessment).
+// (awst::forEachChildBlock consolidation and return-walker reassessment).
 contract StorageRefReturnLoop {
     uint256[][] grid;
 

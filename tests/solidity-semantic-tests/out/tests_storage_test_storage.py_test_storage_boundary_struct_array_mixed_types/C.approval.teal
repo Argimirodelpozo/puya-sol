@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_struct_array_mixed_types.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 31 1
-    bytecblock 0x 0x01 0x02 0x03 0x00 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x04 0x14 0x08 0x0c 0x10 0x18 0x1c 0x20 0x24 0x0a 0x15 0x05 0x06 0x07 0x09 0x0b 0x0d 0x0e 0x0f 0x11 0x12 0x13 0x16 0x17 0x19 0x1a 0x1b 0x1d 0x1e 0x1f 0x21 0x22 0x23 0x25 0x26 0x27 "__ctor_pending" 0x151f7c75 0x0100000000000000000000000000000000 0x0000000000000000 0x00000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
+    intcblock 32 0 8 31 704
+    bytecblock 0x01 0x02 0x03 0x00 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x04 0x14 0x08 0x0c 0x10 0x18 0x1c 0x20 0x24 "__ctor_pending" 0x151f7c75 0x0a 0x0100000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
     intc_1 // 0
     dupn 3
     pushint 4096
@@ -26,10 +26,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 42 // "__ctor_pending"
-    intc_3 // 1
+    bytec 14 // "__ctor_pending"
+    pushint 1
     app_global_put
-    intc_3 // 1
+    pushint 1
     return
 
 main_after_if_else@2:
@@ -47,7 +47,7 @@ main_canaryValue_route@13:
     txn GroupIndex
     bz main_ternary_false@19
     txn GroupIndex
-    intc_3 // 1
+    pushint 1
     -
     gtxns Amount
 
@@ -64,11 +64,11 @@ main_ternary_merge@20:
     intc_0 // 32
     bzero
     b|
-    bytec 43 // 0x151f7c75
+    bytec 15 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    pushint 1
     return
 
 main_ternary_false@19:
@@ -79,7 +79,7 @@ main_destArray_route@12:
     txn GroupIndex
     bz main_ternary_false@24
     txn GroupIndex
-    intc_3 // 1
+    pushint 1
     -
     gtxns Amount
 
@@ -113,7 +113,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 2
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 2
@@ -126,7 +126,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 3
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 3
@@ -139,7 +139,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 4
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 4
@@ -152,7 +152,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 5
-    bytec 6 // 0x04
+    bytec 5 // 0x04
     b+
     dup
     callsub __storage_read
@@ -166,7 +166,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 7
@@ -179,7 +179,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 8
@@ -192,7 +192,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 8
@@ -205,7 +205,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 9
-    bytec 8 // 0x08
+    bytec 7 // 0x08
     b+
     dup
     callsub __storage_read
@@ -219,7 +219,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 11
@@ -232,7 +232,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 12
@@ -245,7 +245,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 12
@@ -258,7 +258,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 13
-    bytec 9 // 0x0c
+    bytec 8 // 0x0c
     b+
     dup
     callsub __storage_read
@@ -272,7 +272,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 15
@@ -285,7 +285,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 16
@@ -298,7 +298,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 16
@@ -311,7 +311,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 17
-    bytec 10 // 0x10
+    bytec 9 // 0x10
     b+
     dup
     callsub __storage_read
@@ -325,7 +325,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 19
@@ -338,7 +338,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 20
@@ -351,7 +351,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 20
@@ -364,7 +364,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 21
-    bytec 7 // 0x14
+    bytec 6 // 0x14
     b+
     dup
     callsub __storage_read
@@ -378,7 +378,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 23
@@ -391,7 +391,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 24
@@ -404,7 +404,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 24
@@ -417,7 +417,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 25
-    bytec 11 // 0x18
+    bytec 10 // 0x18
     b+
     dup
     callsub __storage_read
@@ -431,7 +431,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 27
@@ -444,7 +444,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 28
@@ -457,7 +457,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 28
@@ -470,7 +470,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 29
-    bytec 12 // 0x1c
+    bytec 11 // 0x1c
     b+
     dup
     callsub __storage_read
@@ -484,7 +484,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 31
@@ -497,7 +497,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 32
@@ -510,7 +510,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 32
@@ -523,7 +523,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 33
-    bytec 13 // 0x20
+    bytec 12 // 0x20
     b+
     dup
     callsub __storage_read
@@ -537,7 +537,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 35
@@ -550,7 +550,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 36
@@ -563,7 +563,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 36
@@ -576,7 +576,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     uncover 37
-    bytec 14 // 0x24
+    bytec 13 // 0x24
     b+
     dup
     callsub __storage_read
@@ -590,7 +590,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 39
@@ -603,7 +603,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 40
@@ -616,7 +616,7 @@ main_ternary_merge@25:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     uncover 40
@@ -637,11 +637,11 @@ main_ternary_merge@25:
     uncover 40
     extract 0 32
     uncover 40
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -663,11 +663,11 @@ main_ternary_merge@25:
     uncover 37
     extract 0 32
     uncover 37
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -689,11 +689,11 @@ main_ternary_merge@25:
     uncover 34
     extract 0 32
     uncover 34
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -715,11 +715,11 @@ main_ternary_merge@25:
     uncover 31
     extract 0 32
     uncover 31
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -741,11 +741,11 @@ main_ternary_merge@25:
     uncover 28
     extract 0 32
     uncover 28
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -767,11 +767,11 @@ main_ternary_merge@25:
     uncover 25
     extract 0 32
     uncover 25
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -793,11 +793,11 @@ main_ternary_merge@25:
     uncover 22
     extract 0 32
     uncover 22
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -819,11 +819,11 @@ main_ternary_merge@25:
     uncover 19
     extract 0 32
     uncover 19
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -845,11 +845,11 @@ main_ternary_merge@25:
     uncover 16
     extract 0 32
     uncover 16
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -871,11 +871,11 @@ main_ternary_merge@25:
     uncover 13
     extract 0 32
     uncover 13
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -907,11 +907,11 @@ main_ternary_merge@25:
     concat
     swap
     concat
-    bytec 43 // 0x151f7c75
+    bytec 15 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    pushint 1
     return
 
 main_ternary_false@24:
@@ -922,7 +922,7 @@ main_boundaryArray_route@11:
     txn GroupIndex
     bz main_ternary_false@29
     txn GroupIndex
-    intc_3 // 1
+    pushint 1
     -
     gtxns Amount
 
@@ -956,7 +956,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 2
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 2
@@ -969,7 +969,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 3
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 3
@@ -982,7 +982,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 4
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 4
@@ -995,7 +995,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 5
-    bytec 6 // 0x04
+    bytec 5 // 0x04
     b+
     dup
     callsub __storage_read
@@ -1009,7 +1009,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 7
@@ -1022,7 +1022,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 8
@@ -1035,7 +1035,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 8
@@ -1048,7 +1048,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 9
-    bytec 8 // 0x08
+    bytec 7 // 0x08
     b+
     dup
     callsub __storage_read
@@ -1062,7 +1062,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 11
@@ -1075,7 +1075,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 12
@@ -1088,7 +1088,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 12
@@ -1101,7 +1101,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 13
-    bytec 9 // 0x0c
+    bytec 8 // 0x0c
     b+
     dup
     callsub __storage_read
@@ -1115,7 +1115,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 15
@@ -1128,7 +1128,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 16
@@ -1141,7 +1141,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 16
@@ -1154,7 +1154,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 17
-    bytec 10 // 0x10
+    bytec 9 // 0x10
     b+
     dup
     callsub __storage_read
@@ -1168,7 +1168,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 19
@@ -1181,7 +1181,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 20
@@ -1194,7 +1194,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 20
@@ -1207,7 +1207,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 21
-    bytec 7 // 0x14
+    bytec 6 // 0x14
     b+
     dup
     callsub __storage_read
@@ -1221,7 +1221,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 23
@@ -1234,7 +1234,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 24
@@ -1247,7 +1247,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 24
@@ -1260,7 +1260,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 25
-    bytec 11 // 0x18
+    bytec 10 // 0x18
     b+
     dup
     callsub __storage_read
@@ -1274,7 +1274,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 27
@@ -1287,7 +1287,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 28
@@ -1300,7 +1300,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 28
@@ -1313,7 +1313,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 29
-    bytec 12 // 0x1c
+    bytec 11 // 0x1c
     b+
     dup
     callsub __storage_read
@@ -1327,7 +1327,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 31
@@ -1340,7 +1340,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 32
@@ -1353,7 +1353,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 32
@@ -1366,7 +1366,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 33
-    bytec 13 // 0x20
+    bytec 12 // 0x20
     b+
     dup
     callsub __storage_read
@@ -1380,7 +1380,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 35
@@ -1393,7 +1393,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 36
@@ -1406,7 +1406,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 36
@@ -1419,7 +1419,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     uncover 37
-    bytec 14 // 0x24
+    bytec 13 // 0x24
     b+
     dup
     callsub __storage_read
@@ -1433,7 +1433,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 1
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     callsub __storage_read
     dig 39
@@ -1446,7 +1446,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 40
@@ -1459,7 +1459,7 @@ main_ternary_merge@30:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     uncover 40
@@ -1480,11 +1480,11 @@ main_ternary_merge@30:
     uncover 40
     extract 0 32
     uncover 40
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1506,11 +1506,11 @@ main_ternary_merge@30:
     uncover 37
     extract 0 32
     uncover 37
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1532,11 +1532,11 @@ main_ternary_merge@30:
     uncover 34
     extract 0 32
     uncover 34
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1558,11 +1558,11 @@ main_ternary_merge@30:
     uncover 31
     extract 0 32
     uncover 31
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1584,11 +1584,11 @@ main_ternary_merge@30:
     uncover 28
     extract 0 32
     uncover 28
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1610,11 +1610,11 @@ main_ternary_merge@30:
     uncover 25
     extract 0 32
     uncover 25
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1636,11 +1636,11 @@ main_ternary_merge@30:
     uncover 22
     extract 0 32
     uncover 22
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1662,11 +1662,11 @@ main_ternary_merge@30:
     uncover 19
     extract 0 32
     uncover 19
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1688,11 +1688,11 @@ main_ternary_merge@30:
     uncover 16
     extract 0 32
     uncover 16
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1714,11 +1714,11 @@ main_ternary_merge@30:
     uncover 13
     extract 0 32
     uncover 13
-    intc_2 // 31
+    intc_3 // 31
     getbyte
     intc_1 // 0
     !=
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1750,11 +1750,11 @@ main_ternary_merge@30:
     concat
     swap
     concat
-    bytec 43 // 0x151f7c75
+    bytec 15 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    pushint 1
     return
 
 main_ternary_false@29:
@@ -1765,7 +1765,7 @@ main_fillDestArray_route@10:
     txn GroupIndex
     bz main_ternary_false@34
     txn GroupIndex
-    intc_3 // 1
+    pushint 1
     -
     gtxns Amount
 
@@ -1786,7 +1786,7 @@ main_while_top@36:
     bz main_after_while@61
     dig 1
     dup
-    bytec 15 // 0x0a
+    bytec 16 // 0x0a
     b<
     assert // array index out of bounds
     pushint 51
@@ -1796,14 +1796,14 @@ main_while_top@36:
     dig 2
     b*
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     swap
     dig 1
     b+
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dup
@@ -1823,10 +1823,10 @@ main_while_top@36:
     dig 4
     b+
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec 44 // 0x0100000000000000000000000000000000
+    bytec 17 // 0x0100000000000000000000000000000000
     b%
     dig 1
     swap
@@ -1843,32 +1843,34 @@ main_while_top@36:
     <=
     assert // overflow
     b|
-    pushint 8
+    intc_2 // 8
     bzero
     pushint 53
     itob
     dig 5
     b+
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
+    dig 1
+    swap
     concat
     dup
     len
-    pushint 8
+    intc_2 // 8
     -
-    pushint 8
+    intc_2 // 8
     extract3
     pushint 54
     itob
-    uncover 5
+    uncover 6
     b+
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 4
+    dig 5
     swap
     concat
     dup
@@ -1877,8 +1879,8 @@ main_while_top@36:
     -
     intc_0 // 32
     extract3
-    uncover 3
-    uncover 3
+    uncover 4
+    uncover 4
     concat
     uncover 2
     concat
@@ -1886,49 +1888,86 @@ main_while_top@36:
     concat
     pushbytes 0x80
     concat
-    dig 2
-    bytec 6 // 0x04
+    dig 3
+    bytec 5 // 0x04
     b*
-    dig 6
+    dig 7
     b+
     dig 1
-    extract 0 32
-    dig 3
-    b|
     extract 0 32
     dig 1
     swap
     callsub __storage_write
     dup
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
-    dig 2
-    extract 48 8
-    dig 4
-    b|
-    extract 24 8
-    bytec 45 // 0x0000000000000000
+    dup
+    callsub __storage_read
+    dig 5
     swap
     concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     dig 3
     extract 32 16
-    uncover 5
+    dig 6
     b|
     extract 16 16
-    concat
+    replace2 16
+    dig 1
+    swap
     callsub __storage_write
     dup
-    bytec_2 // 0x02
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    extract 48 8
+    uncover 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dup
+    bytec_1 // 0x02
     b+
     dig 2
     extract 56 32
     callsub __storage_write
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
+    dup
+    callsub __storage_read
+    uncover 3
     swap
-    pushint 704
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
     getbit
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1936,21 +1975,19 @@ main_while_top@36:
     getbit
     itob
     extract 7 1
-    bytec 46 // 0x00000000000000000000000000000000000000000000000000000000000000
-    swap
-    concat
+    replace2 31
     callsub __storage_write
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bury 2
     b main_while_top@36
 
 main_after_while@61:
-    intc_3 // 1
+    pushint 1
     return
 
 main_ternary_false@34:
@@ -1961,7 +1998,7 @@ main_copyToBoundary_route@9:
     txn GroupIndex
     bz main_ternary_false@42
     txn GroupIndex
-    intc_3 // 1
+    pushint 1
     -
     gtxns Amount
 
@@ -1970,323 +2007,1725 @@ main_ternary_merge@43:
     assert // not payable
     callsub __solfn_39
     callsub __solfn_27
-    dig 1
+    intc_0 // 32
+    bzero
+    dig 2
     callsub __storage_read
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 5
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 6
+    bytec 5 // 0x04
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 10
+    bytec 7 // 0x08
+    b+
+    dup
+    callsub __storage_read
+    dig 10
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 11
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 12
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 12
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 14
+    bytec 8 // 0x0c
+    b+
+    dup
+    callsub __storage_read
+    dig 14
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 15
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 16
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 16
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 18
+    bytec 9 // 0x10
+    b+
+    dup
+    callsub __storage_read
+    dig 18
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 19
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 20
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 20
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 22
+    bytec 6 // 0x14
+    b+
+    dup
+    callsub __storage_read
+    dig 22
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 23
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 24
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 24
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 26
+    bytec 10 // 0x18
+    b+
+    dup
+    callsub __storage_read
+    dig 26
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 27
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 28
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 28
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 30
+    bytec 11 // 0x1c
+    b+
+    dup
+    callsub __storage_read
+    dig 30
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 31
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 32
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 32
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 34
+    bytec 12 // 0x20
+    b+
+    dup
+    callsub __storage_read
+    dig 34
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 35
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 36
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 36
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 38
+    bytec 13 // 0x24
+    b+
+    dup
+    callsub __storage_read
+    dig 38
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 39
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 40
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 40
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 39
+    extract 0 32
+    dig 39
+    extract 16 16
+    uncover 40
+    extract 8 8
+    uncover 40
+    extract 0 32
+    uncover 40
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 36
+    extract 0 32
+    dig 36
+    extract 16 16
+    uncover 37
+    extract 8 8
+    uncover 37
+    extract 0 32
+    uncover 37
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 33
+    extract 0 32
+    dig 33
+    extract 16 16
+    uncover 34
+    extract 8 8
+    uncover 34
+    extract 0 32
+    uncover 34
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 30
+    extract 0 32
+    dig 30
+    extract 16 16
+    uncover 31
+    extract 8 8
+    uncover 31
+    extract 0 32
+    uncover 31
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 27
+    extract 0 32
+    dig 27
+    extract 16 16
+    uncover 28
+    extract 8 8
+    uncover 28
+    extract 0 32
+    uncover 28
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 24
+    extract 0 32
+    dig 24
+    extract 16 16
+    uncover 25
+    extract 8 8
+    uncover 25
+    extract 0 32
+    uncover 25
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 21
+    extract 0 32
+    dig 21
+    extract 16 16
+    uncover 22
+    extract 8 8
+    uncover 22
+    extract 0 32
+    uncover 22
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 18
+    extract 0 32
+    dig 18
+    extract 16 16
+    uncover 19
+    extract 8 8
+    uncover 19
+    extract 0 32
+    uncover 19
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 15
+    extract 0 32
+    dig 15
+    extract 16 16
+    uncover 16
+    extract 8 8
+    uncover 16
+    extract 0 32
+    uncover 16
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 12
+    extract 0 32
+    dig 12
+    extract 16 16
+    uncover 13
+    extract 8 8
+    uncover 13
+    extract 0 32
+    uncover 13
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 9
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 89 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 4
+    swap
+    callsub __storage_write
+    dig 3
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 5
+    b|
+    extract 16 16
+    replace2 16
     dig 1
     swap
     callsub __storage_write
     dup
-    bytec_1 // 0x01
-    b+
-    dig 2
-    bytec_1 // 0x01
-    b+
     callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec_2 // 0x02
-    b+
-    dig 2
-    bytec_2 // 0x02
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec_3 // 0x03
-    b+
-    dig 2
-    bytec_3 // 0x03
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 6 // 0x04
-    b+
-    dig 2
-    bytec 6 // 0x04
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 17 // 0x05
-    b+
-    dig 2
-    bytec 17 // 0x05
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 18 // 0x06
-    b+
-    dig 2
-    bytec 18 // 0x06
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 19 // 0x07
-    b+
-    dig 2
-    bytec 19 // 0x07
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 8 // 0x08
-    b+
-    dig 2
-    bytec 8 // 0x08
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 20 // 0x09
-    b+
-    dig 2
-    bytec 20 // 0x09
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 15 // 0x0a
-    b+
-    dig 2
-    bytec 15 // 0x0a
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 21 // 0x0b
-    b+
-    dig 2
-    bytec 21 // 0x0b
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 9 // 0x0c
-    b+
-    dig 2
-    bytec 9 // 0x0c
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 22 // 0x0d
-    b+
-    dig 2
-    bytec 22 // 0x0d
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 23 // 0x0e
-    b+
-    dig 2
-    bytec 23 // 0x0e
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 24 // 0x0f
-    b+
-    dig 2
-    bytec 24 // 0x0f
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 10 // 0x10
-    b+
-    dig 2
-    bytec 10 // 0x10
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 25 // 0x11
-    b+
-    dig 2
-    bytec 25 // 0x11
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 26 // 0x12
-    b+
-    dig 2
-    bytec 26 // 0x12
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 27 // 0x13
-    b+
-    dig 2
-    bytec 27 // 0x13
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 7 // 0x14
-    b+
-    dig 2
-    bytec 7 // 0x14
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 16 // 0x15
-    b+
-    dig 2
-    bytec 16 // 0x15
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 28 // 0x16
-    b+
-    dig 2
-    bytec 28 // 0x16
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 29 // 0x17
-    b+
-    dig 2
-    bytec 29 // 0x17
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 11 // 0x18
-    b+
-    dig 2
-    bytec 11 // 0x18
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 30 // 0x19
-    b+
-    dig 2
-    bytec 30 // 0x19
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 31 // 0x1a
-    b+
-    dig 2
-    bytec 31 // 0x1a
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 32 // 0x1b
-    b+
-    dig 2
-    bytec 32 // 0x1b
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 12 // 0x1c
-    b+
-    dig 2
-    bytec 12 // 0x1c
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 33 // 0x1d
-    b+
-    dig 2
-    bytec 33 // 0x1d
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 34 // 0x1e
-    b+
-    dig 2
-    bytec 34 // 0x1e
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 35 // 0x1f
-    b+
-    dig 2
-    bytec 35 // 0x1f
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 13 // 0x20
-    b+
-    dig 2
-    bytec 13 // 0x20
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 36 // 0x21
-    b+
-    dig 2
-    bytec 36 // 0x21
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 37 // 0x22
-    b+
-    dig 2
-    bytec 37 // 0x22
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 38 // 0x23
-    b+
-    dig 2
-    bytec 38 // 0x23
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 14 // 0x24
-    b+
-    dig 2
-    bytec 14 // 0x24
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 39 // 0x25
-    b+
-    dig 2
-    bytec 39 // 0x25
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 40 // 0x26
-    b+
-    dig 2
-    bytec 40 // 0x26
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    bytec 41 // 0x27
-    b+
+    dig 4
     swap
-    bytec 41 // 0x27
-    b+
-    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_2 // 8
+    bzero
+    dig 3
+    extract 48 8
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    uncover 2
+    swap
+    replace2 8
+    uncover 2
+    swap
     callsub __storage_write
-    intc_3 // 1
+    dig 4
+    bytec_1 // 0x02
+    b+
+    dig 2
+    extract 56 32
+    callsub __storage_write
+    dig 4
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 5 // 0x04
+    b+
+    dig 2
+    extract 89 89 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 7 // 0x08
+    b+
+    dig 2
+    extract 178 89 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 8 // 0x0c
+    b+
+    dig 2
+    pushints 267 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 9 // 0x10
+    b+
+    dig 2
+    pushints 356 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 6 // 0x14
+    b+
+    dig 2
+    pushints 445 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 10 // 0x18
+    b+
+    dig 2
+    pushints 534 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 11 // 0x1c
+    b+
+    dig 2
+    pushints 623 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 12 // 0x20
+    b+
+    dig 2
+    pushints 712 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    uncover 3
+    bytec 13 // 0x24
+    b+
+    uncover 2
+    pushints 801 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 6
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    uncover 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    pushint 1
     return
 
 main_ternary_false@42:
@@ -2297,7 +3736,7 @@ main_copyFromBoundary_route@8:
     txn GroupIndex
     bz main_ternary_false@47
     txn GroupIndex
-    intc_3 // 1
+    pushint 1
     -
     gtxns Amount
 
@@ -2306,323 +3745,1725 @@ main_ternary_merge@48:
     assert // not payable
     callsub __solfn_27
     callsub __solfn_39
-    dig 1
+    intc_0 // 32
+    bzero
+    dig 2
     callsub __storage_read
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 5
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 6
+    bytec 5 // 0x04
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 7
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 8
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 10
+    bytec 7 // 0x08
+    b+
+    dup
+    callsub __storage_read
+    dig 10
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 11
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 12
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 12
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 14
+    bytec 8 // 0x0c
+    b+
+    dup
+    callsub __storage_read
+    dig 14
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 15
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 16
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 16
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 18
+    bytec 9 // 0x10
+    b+
+    dup
+    callsub __storage_read
+    dig 18
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 19
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 20
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 20
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 22
+    bytec 6 // 0x14
+    b+
+    dup
+    callsub __storage_read
+    dig 22
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 23
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 24
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 24
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 26
+    bytec 10 // 0x18
+    b+
+    dup
+    callsub __storage_read
+    dig 26
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 27
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 28
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 28
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 30
+    bytec 11 // 0x1c
+    b+
+    dup
+    callsub __storage_read
+    dig 30
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 31
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 32
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 32
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 34
+    bytec 12 // 0x20
+    b+
+    dup
+    callsub __storage_read
+    dig 34
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 35
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 36
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 36
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 38
+    bytec 13 // 0x24
+    b+
+    dup
+    callsub __storage_read
+    dig 38
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    bytec_0 // 0x01
+    b+
+    callsub __storage_read
+    dig 39
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_1 // 0x02
+    b+
+    callsub __storage_read
+    dig 40
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    bytec_2 // 0x03
+    b+
+    callsub __storage_read
+    dig 40
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 39
+    extract 0 32
+    dig 39
+    extract 16 16
+    uncover 40
+    extract 8 8
+    uncover 40
+    extract 0 32
+    uncover 40
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 36
+    extract 0 32
+    dig 36
+    extract 16 16
+    uncover 37
+    extract 8 8
+    uncover 37
+    extract 0 32
+    uncover 37
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 33
+    extract 0 32
+    dig 33
+    extract 16 16
+    uncover 34
+    extract 8 8
+    uncover 34
+    extract 0 32
+    uncover 34
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 30
+    extract 0 32
+    dig 30
+    extract 16 16
+    uncover 31
+    extract 8 8
+    uncover 31
+    extract 0 32
+    uncover 31
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 27
+    extract 0 32
+    dig 27
+    extract 16 16
+    uncover 28
+    extract 8 8
+    uncover 28
+    extract 0 32
+    uncover 28
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 24
+    extract 0 32
+    dig 24
+    extract 16 16
+    uncover 25
+    extract 8 8
+    uncover 25
+    extract 0 32
+    uncover 25
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 21
+    extract 0 32
+    dig 21
+    extract 16 16
+    uncover 22
+    extract 8 8
+    uncover 22
+    extract 0 32
+    uncover 22
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 18
+    extract 0 32
+    dig 18
+    extract 16 16
+    uncover 19
+    extract 8 8
+    uncover 19
+    extract 0 32
+    uncover 19
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 15
+    extract 0 32
+    dig 15
+    extract 16 16
+    uncover 16
+    extract 8 8
+    uncover 16
+    extract 0 32
+    uncover 16
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 12
+    extract 0 32
+    dig 12
+    extract 16 16
+    uncover 13
+    extract 8 8
+    uncover 13
+    extract 0 32
+    uncover 13
+    intc_3 // 31
+    getbyte
+    intc_1 // 0
+    !=
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    uncover 4
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    uncover 9
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 89 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 4
+    swap
+    callsub __storage_write
+    dig 3
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 5
+    b|
+    extract 16 16
+    replace2 16
     dig 1
     swap
     callsub __storage_write
     dup
-    bytec_1 // 0x01
-    b+
-    dig 2
-    bytec_1 // 0x01
-    b+
     callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec_2 // 0x02
-    b+
-    dig 2
-    bytec_2 // 0x02
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec_3 // 0x03
-    b+
-    dig 2
-    bytec_3 // 0x03
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 6 // 0x04
-    b+
-    dig 2
-    bytec 6 // 0x04
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 17 // 0x05
-    b+
-    dig 2
-    bytec 17 // 0x05
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 18 // 0x06
-    b+
-    dig 2
-    bytec 18 // 0x06
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 19 // 0x07
-    b+
-    dig 2
-    bytec 19 // 0x07
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 8 // 0x08
-    b+
-    dig 2
-    bytec 8 // 0x08
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 20 // 0x09
-    b+
-    dig 2
-    bytec 20 // 0x09
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 15 // 0x0a
-    b+
-    dig 2
-    bytec 15 // 0x0a
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 21 // 0x0b
-    b+
-    dig 2
-    bytec 21 // 0x0b
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 9 // 0x0c
-    b+
-    dig 2
-    bytec 9 // 0x0c
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 22 // 0x0d
-    b+
-    dig 2
-    bytec 22 // 0x0d
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 23 // 0x0e
-    b+
-    dig 2
-    bytec 23 // 0x0e
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 24 // 0x0f
-    b+
-    dig 2
-    bytec 24 // 0x0f
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 10 // 0x10
-    b+
-    dig 2
-    bytec 10 // 0x10
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 25 // 0x11
-    b+
-    dig 2
-    bytec 25 // 0x11
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 26 // 0x12
-    b+
-    dig 2
-    bytec 26 // 0x12
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 27 // 0x13
-    b+
-    dig 2
-    bytec 27 // 0x13
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 7 // 0x14
-    b+
-    dig 2
-    bytec 7 // 0x14
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 16 // 0x15
-    b+
-    dig 2
-    bytec 16 // 0x15
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 28 // 0x16
-    b+
-    dig 2
-    bytec 28 // 0x16
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 29 // 0x17
-    b+
-    dig 2
-    bytec 29 // 0x17
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 11 // 0x18
-    b+
-    dig 2
-    bytec 11 // 0x18
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 30 // 0x19
-    b+
-    dig 2
-    bytec 30 // 0x19
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 31 // 0x1a
-    b+
-    dig 2
-    bytec 31 // 0x1a
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 32 // 0x1b
-    b+
-    dig 2
-    bytec 32 // 0x1b
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 12 // 0x1c
-    b+
-    dig 2
-    bytec 12 // 0x1c
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 33 // 0x1d
-    b+
-    dig 2
-    bytec 33 // 0x1d
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 34 // 0x1e
-    b+
-    dig 2
-    bytec 34 // 0x1e
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 35 // 0x1f
-    b+
-    dig 2
-    bytec 35 // 0x1f
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 13 // 0x20
-    b+
-    dig 2
-    bytec 13 // 0x20
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 36 // 0x21
-    b+
-    dig 2
-    bytec 36 // 0x21
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 37 // 0x22
-    b+
-    dig 2
-    bytec 37 // 0x22
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 38 // 0x23
-    b+
-    dig 2
-    bytec 38 // 0x23
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 14 // 0x24
-    b+
-    dig 2
-    bytec 14 // 0x24
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 39 // 0x25
-    b+
-    dig 2
-    bytec 39 // 0x25
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    dup
-    bytec 40 // 0x26
-    b+
-    dig 2
-    bytec 40 // 0x26
-    b+
-    callsub __storage_read
-    callsub __storage_write
-    bytec 41 // 0x27
-    b+
+    dig 4
     swap
-    bytec 41 // 0x27
-    b+
-    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_2 // 8
+    bzero
+    dig 3
+    extract 48 8
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    uncover 2
+    swap
+    replace2 8
+    uncover 2
+    swap
     callsub __storage_write
-    intc_3 // 1
+    dig 4
+    bytec_1 // 0x02
+    b+
+    dig 2
+    extract 56 32
+    callsub __storage_write
+    dig 4
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 5 // 0x04
+    b+
+    dig 2
+    extract 89 89 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 7 // 0x08
+    b+
+    dig 2
+    extract 178 89 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 8 // 0x0c
+    b+
+    dig 2
+    pushints 267 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 9 // 0x10
+    b+
+    dig 2
+    pushints 356 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 6 // 0x14
+    b+
+    dig 2
+    pushints 445 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 10 // 0x18
+    b+
+    dig 2
+    pushints 534 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 11 // 0x1c
+    b+
+    dig 2
+    pushints 623 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    dig 3
+    bytec 12 // 0x20
+    b+
+    dig 2
+    pushints 712 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 7
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    uncover 3
+    bytec 13 // 0x24
+    b+
+    uncover 2
+    pushints 801 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    callsub __storage_write
+    dig 1
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 32 16
+    dig 6
+    b|
+    extract 16 16
+    replace2 16
+    dig 1
+    swap
+    callsub __storage_write
+    dup
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    extract 48 8
+    uncover 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dig 1
+    bytec_1 // 0x02
+    b+
+    dig 1
+    extract 56 32
+    callsub __storage_write
+    swap
+    bytec_2 // 0x03
+    b+
+    dup
+    callsub __storage_read
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    extract 7 1
+    replace2 31
+    callsub __storage_write
+    pushint 1
     return
 
 main_ternary_false@47:
@@ -2633,7 +5474,7 @@ main_deleteBoundaryArray_route@7:
     txn GroupIndex
     bz main_ternary_false@52
     txn GroupIndex
-    intc_3 // 1
+    pushint 1
     -
     gtxns Amount
 
@@ -2642,203 +5483,203 @@ main_ternary_merge@53:
     assert // not payable
     callsub __solfn_27
     dup
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 6 // 0x04
+    bytec 5 // 0x04
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 17 // 0x05
+    pushbytes 0x05
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 18 // 0x06
+    pushbytes 0x06
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 19 // 0x07
+    pushbytes 0x07
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 8 // 0x08
+    bytec 7 // 0x08
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 20 // 0x09
+    pushbytes 0x09
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 15 // 0x0a
+    bytec 16 // 0x0a
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 21 // 0x0b
+    pushbytes 0x0b
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 9 // 0x0c
+    bytec 8 // 0x0c
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 22 // 0x0d
+    pushbytes 0x0d
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 23 // 0x0e
+    pushbytes 0x0e
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 24 // 0x0f
+    pushbytes 0x0f
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 10 // 0x10
+    bytec 9 // 0x10
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 25 // 0x11
+    pushbytes 0x11
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 26 // 0x12
+    pushbytes 0x12
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 27 // 0x13
+    pushbytes 0x13
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 7 // 0x14
+    bytec 6 // 0x14
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 16 // 0x15
+    pushbytes 0x15
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 28 // 0x16
+    pushbytes 0x16
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 29 // 0x17
+    pushbytes 0x17
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 11 // 0x18
+    bytec 10 // 0x18
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 30 // 0x19
+    pushbytes 0x19
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 31 // 0x1a
+    pushbytes 0x1a
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 32 // 0x1b
+    pushbytes 0x1b
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 12 // 0x1c
+    bytec 11 // 0x1c
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 33 // 0x1d
+    pushbytes 0x1d
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 34 // 0x1e
+    pushbytes 0x1e
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 35 // 0x1f
+    pushbytes 0x1f
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 13 // 0x20
+    bytec 12 // 0x20
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 36 // 0x21
+    pushbytes 0x21
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 37 // 0x22
+    pushbytes 0x22
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 38 // 0x23
+    pushbytes 0x23
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 14 // 0x24
+    bytec 13 // 0x24
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 39 // 0x25
+    pushbytes 0x25
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
     dup
-    bytec 40 // 0x26
+    pushbytes 0x26
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
-    bytec 41 // 0x27
+    pushbytes 0x27
     b+
-    bytec_0 // 0x
+    pushbytes 0x
     callsub __storage_write
-    intc_3 // 1
+    pushint 1
     return
 
 main_ternary_false@52:
@@ -2849,7 +5690,7 @@ main_fillBoundaryArray_route@6:
     txn GroupIndex
     bz main_ternary_false@57
     txn GroupIndex
-    intc_3 // 1
+    pushint 1
     -
     gtxns Amount
 
@@ -2869,24 +5710,24 @@ main_while_top@59:
     b>
     bz main_after_while@61
     dupn 2
-    bytec 15 // 0x0a
+    bytec 16 // 0x0a
     b<
     assert // array index out of bounds
-    intc_3 // 1
+    pushint 1
     itob
     pushint 5
     itob
     dig 2
     b*
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     swap
     dig 1
     b+
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dup
@@ -2906,10 +5747,10 @@ main_while_top@59:
     dig 4
     b+
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec 44 // 0x0100000000000000000000000000000000
+    bytec 17 // 0x0100000000000000000000000000000000
     b%
     dig 1
     swap
@@ -2926,32 +5767,34 @@ main_while_top@59:
     <=
     assert // overflow
     b|
-    pushint 8
+    intc_2 // 8
     bzero
     pushint 3
     itob
     dig 5
     b+
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
+    dig 1
+    swap
     concat
     dup
     len
-    pushint 8
+    intc_2 // 8
     -
-    pushint 8
+    intc_2 // 8
     extract3
     pushint 4
     itob
-    uncover 5
+    uncover 6
     b+
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 4
+    dig 5
     swap
     concat
     dup
@@ -2960,8 +5803,8 @@ main_while_top@59:
     -
     intc_0 // 32
     extract3
-    uncover 3
-    uncover 3
+    uncover 4
+    uncover 4
     concat
     uncover 2
     concat
@@ -2969,49 +5812,86 @@ main_while_top@59:
     concat
     pushbytes 0x80
     concat
-    dig 2
-    bytec 6 // 0x04
+    dig 3
+    bytec 5 // 0x04
     b*
-    dig 7
+    dig 8
     b+
     dig 1
-    extract 0 32
-    dig 3
-    b|
     extract 0 32
     dig 1
     swap
     callsub __storage_write
     dup
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
-    dig 2
-    extract 48 8
-    dig 4
-    b|
-    extract 24 8
-    bytec 45 // 0x0000000000000000
+    dup
+    callsub __storage_read
+    dig 5
     swap
     concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     dig 3
     extract 32 16
-    uncover 5
+    dig 6
     b|
     extract 16 16
-    concat
+    replace2 16
+    dig 1
+    swap
     callsub __storage_write
     dup
-    bytec_2 // 0x02
+    callsub __storage_read
+    dig 5
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    extract 48 8
+    uncover 5
+    swap
+    concat
+    dup
+    len
+    intc_2 // 8
+    -
+    intc_2 // 8
+    extract3
+    replace2 8
+    callsub __storage_write
+    dup
+    bytec_1 // 0x02
     b+
     dig 2
     extract 56 32
     callsub __storage_write
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
+    dup
+    callsub __storage_read
+    uncover 3
     swap
-    pushint 704
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    intc 4 // 704
     getbit
-    bytec 4 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3019,14 +5899,12 @@ main_while_top@59:
     getbit
     itob
     extract 7 1
-    bytec 46 // 0x00000000000000000000000000000000000000000000000000000000000000
-    swap
-    concat
+    replace2 31
     callsub __storage_write
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bury 1
@@ -3037,20 +5915,20 @@ main_ternary_false@57:
     b main_ternary_merge@58
 
 main___postInit_route@5:
-    bytec 42 // "__ctor_pending"
+    bytec 14 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec 42 // "__ctor_pending"
+    bytec 14 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     callsub __solfn_47
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     callsub __storage_write
-    intc_3 // 1
+    pushint 1
     return
 
 
@@ -3058,7 +5936,7 @@ main___postInit_route@5:
 __storage_read:
     proto 1 1
     frame_dig -1
-    bytec 47 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 18 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_bury -1
     intc_0 // 32
@@ -3071,7 +5949,7 @@ __storage_read:
     -
     intc_0 // 32
     extract3
-    bytec 48 // "s:"
+    bytec 19 // "s:"
     swap
     concat
     dup
@@ -3088,7 +5966,7 @@ __storage_read:
 __storage_write:
     proto 2 0
     frame_dig -2
-    bytec 47 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 18 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_bury -2
     intc_0 // 32
@@ -3102,7 +5980,7 @@ __storage_write:
     -
     intc_0 // 32
     extract3
-    bytec 48 // "s:"
+    bytec 19 // "s:"
     swap
     concat
     dup
@@ -3140,7 +6018,7 @@ __solfn_39:
     store 0
     load 0
     store 0
-    bytec 16 // 0x15
+    pushbytes 0x15
     retsub
 
 
@@ -3150,5 +6028,5 @@ __solfn_47:
     store 0
     load 0
     store 0
-    bytec 7 // 0x14
+    bytec 6 // 0x14
     retsub

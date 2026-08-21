@@ -665,8 +665,6 @@ main_while_top@38:
     bzero
     dig 1
     callsub __storage_read
-    dig 1
-    swap
     concat
     dup
     len
@@ -676,10 +674,10 @@ main_while_top@38:
     extract3
     intc_1 // 8
     bzero
-    dig 4
+    dig 3
     pushbytes 0x04
     b%
-    b|
+    concat
     dup
     len
     intc_1 // 8
@@ -690,10 +688,7 @@ main_while_top@38:
     pushint 24
     swap
     -
-    uncover 2
-    uncover 4
-    b|
-    extract 24 8
+    uncover 3
     replace3
     callsub __storage_write
     intc_2 // 1

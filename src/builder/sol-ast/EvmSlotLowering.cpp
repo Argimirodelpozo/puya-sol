@@ -4,12 +4,15 @@
 /// policy can evolve independently.
 
 #include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/Context.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/SlotHandleAccess.h"
 #include "builder/storage/SlotWordCodec.h"
+#include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-types/TypeCoercion.h"
+#include "builder/sol-types/SolIntType.h"
 #include "awst/NameGen.h"
 #include "Logger.h"
 
@@ -126,6 +129,84 @@ bool EvmSlotLowering::isStorageStateRef(Expression const& _e)
 	return isStorageTypedRoot(*cur);
 }
 
+bool EvmSlotLowering::isSlotHandleRef(
+	Expression const& _e, eb::ContractContext& _ctx, Context& _scope)
+{
+	Expression const* cur = &_e;
+	for (;;)
+	{
+		if (auto const* ia = dynamic_cast<IndexAccess const*>(cur))
+		{
+			cur = &ia->baseExpression();
+			continue;
+		}
+		if (auto const* ma = dynamic_cast<MemberAccess const*>(cur);
+			ma && dynamic_cast<StructType const*>(
+				ma->expression().annotation().type))
+		{
+			cur = &ma->expression();
+			continue;
+		}
+		break;
+	}
+	// Named handles are registered when their declaration/call binding is
+	// lowered.  Do not infer from `storage` alone in the default profile: its
+	// ordinary representation may instead be an ARC4 value or box key.
+	if (auto const* id = dynamic_cast<Identifier const*>(cur))
+	{
+		auto const* vd = dynamic_cast<VariableDeclaration const*>(
+			id->annotation().referencedDeclaration);
+		if (vd && _scope.findSlotStorageRef(vd->id()))
+			return true;
+		return _ctx.typeMapper.profile().evmStorageLayout
+			&& isStorageTypedRoot(*cur);
+	}
+
+	// A storage-returning helper is represented by a slot exactly when its
+	// callable uses inline assembly (`r.slot := ...`) or the whole compilation
+	// uses EVM storage layout.  Inspect the referenced declaration rather than
+	// the final element type, so every array rank and aggregate shape follows
+	// the same route.
+	if (auto const* call = dynamic_cast<FunctionCall const*>(cur))
+	{
+		if (call->annotation().kind.set()
+			&& *call->annotation().kind == FunctionCallKind::TypeConversion
+			&& !call->arguments().empty())
+			return isSlotHandleRef(*call->arguments()[0], _ctx, _scope);
+		auto const* fd = dynamic_cast<FunctionDefinition const*>(
+			ASTNode::referencedDeclaration(call->expression()));
+		if (fd && fd->returnParameters().size() == 1
+			&& fd->returnParameters()[0]->referenceLocation()
+				== VariableDeclaration::Location::Storage)
+		{
+			if (_ctx.typeMapper.profile().evmStorageLayout)
+				return true;
+			// A pure POINTER ALIAS (`r.slot := param.slot` over a one-field
+			// wrapper) denotes the parameter ITSELF, and the default profile
+			// resolves it that way in SolExpressionDispatch::visitMemberAccess.
+			// It uses inline assembly, so claiming it here as a slot handle
+			// captures the write first and routes it through helpers that only
+			// exist under --evm-storage-layout — OZ ShortStrings then fails to
+			// compile at all with an unresolved __puyasol___evm_bytes_write.
+			// Other asm `.slot` helpers (solady's box-key handles) do NOT match
+			// the alias shape and keep the slot-handle route.
+			if (storagePointerAliasParam(*fd))
+				return false;
+			return _ctx.typeMapper.analysis()
+				.callablesWithInlineAssembly.count(fd->id()) != 0;
+		}
+	}
+
+	// Ternaries preserve the slot representation only when both possible refs
+	// do.  Address resolution already gates each arm's effects correctly.
+	if (auto const* cond = dynamic_cast<Conditional const*>(cur))
+		return isSlotHandleRef(cond->trueExpression(), _ctx, _scope)
+			&& isSlotHandleRef(cond->falseExpression(), _ctx, _scope);
+
+	return _ctx.typeMapper.profile().evmStorageLayout
+		&& isStorageTypedRoot(*cur);
+}
+
 std::shared_ptr<awst::Expression> EvmSlotLowering::biguintConst(std::string const& _v)
 {
 	return awst::makeIntegerConstant(_v, m_loc, awst::WType::biguintType());
@@ -181,6 +262,15 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::mappingEntrySlot(
 			&& (keyW == awst::WType::uint64Type() || keyW == awst::WType::biguintType()))
 			_key = TypeCoercion::implicitNumericCast(std::move(_key), keyW, m_loc);
 		auto const* effW = _key->wtype;
+		if (auto it = SolIntType::fromSol(_keyType);
+			it && it->isSigned && it->bits < 256)
+		{
+			// Mapping integer keys are ABI words. Signed sub-word keys are
+			// sign-extended to 256 bits before hashing, not zero-extended.
+			_key = TypeCoercion::signExtendToUint256(
+				std::move(_key), it->bits, m_loc);
+			effW = _key->wtype;
+		}
 		if (auto const* bw = dynamic_cast<awst::BytesWType const*>(effW);
 			bw && bw->length().has_value())
 		{
@@ -228,30 +318,61 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolve(Expression const& 
 		return resolveIndexAccess(*ia);
 	if (auto const* ma = dynamic_cast<MemberAccess const*>(&_e))
 		return resolveMemberAccess(*ma);
-	// Ternary of storage refs (`c ? a1 : a2`): the slot is a runtime select.
-	// Guarded to BARE state-var branches — those resolve without queueing
-	// side effects, so evaluating "both" (as slot constants) is pure; complex
-	// branches (m[k], arr[i]) would run the untaken side's key/index effects.
+	// Ternary of storage refs (`c ? a1 : a2`): resolve each arm in an isolated
+	// effect frame and gate its address-derivation effects with the condition.
+	// This is the same generic sequencing rule used by SolConditional, and lets
+	// indexed/mapped/member paths recurse here without evaluating the untaken
+	// arm (or adding another shape-specific allowance).
 	if (auto const* cond = dynamic_cast<Conditional const*>(&_e))
 	{
-		auto const* ti = dynamic_cast<Identifier const*>(&cond->trueExpression());
-		auto const* fi = dynamic_cast<Identifier const*>(&cond->falseExpression());
-		if (ti && fi)
+		auto loweredCondition = m_ctx.lower(cond->condition(), false);
+		auto condition = std::move(loweredCondition.value);
+		bool const conditionHadPost = !loweredCondition.effects.post.empty();
+		condition = m_ctx.emitSequencedOperand(
+			std::move(loweredCondition.effects), std::move(condition),
+			conditionHadPost, m_loc);
+
+		auto lowerSlotArm = [&](Expression const& _arm) {
+			return m_ctx.lowerOperand([&]() -> std::shared_ptr<awst::Expression> {
+				auto addr = resolve(_arm);
+				return addr ? std::move(addr->slot) : nullptr;
+			}, true);
+		};
+		auto trueArm = lowerSlotArm(cond->trueExpression());
+		auto falseArm = lowerSlotArm(cond->falseExpression());
+		if (condition && trueArm.value && falseArm.value)
 		{
-			auto ta = resolve(*ti);
-			auto fa = resolve(*fi);
-			if (ta && fa)
+			std::shared_ptr<awst::Expression> slot;
+			if (trueArm.effects.empty() && falseArm.effects.empty())
+				slot = awst::makeConditional(
+					std::move(condition), std::move(trueArm.value),
+					std::move(falseArm.value), awst::WType::biguintType(), m_loc);
+			else
 			{
-				auto c = m_ctx.buildExpr(cond->condition());
-				if (!c)
-					return std::nullopt;
-				auto const* t = _e.annotation().type;
-				auto sel = awst::makeConditional(std::move(c),
-					ta->slot, fa->slot, awst::WType::biguintType(), m_loc);
-				return makeLeafAddr(std::move(sel), nullptr,
-					t ? t->storageBytes() : 32, /*alone*/ true, t);
+				std::string tempName = "__evm_slot_cond_" + std::to_string(
+					awst::NameGen::next("EvmSlotLowering.conditional"));
+				auto tempVar = [&]() {
+					return awst::makeVarExpression(
+						tempName, awst::WType::biguintType(), m_loc);
+				};
+				auto trueBlock = eb::ContractContext::makeScopedResultBlock(
+					std::move(trueArm.effects.pre), tempVar(),
+					std::move(trueArm.value), m_loc,
+					std::move(trueArm.effects.post));
+				auto falseBlock = eb::ContractContext::makeScopedResultBlock(
+					std::move(falseArm.effects.pre), tempVar(),
+					std::move(falseArm.value), m_loc,
+					std::move(falseArm.effects.post));
+				m_ctx.preEffects().push_back(awst::makeIfElse(
+					std::move(condition), std::move(trueBlock),
+					std::move(falseBlock), m_loc));
+				slot = tempVar();
 			}
+			auto const* t = _e.annotation().type;
+			return makeLeafAddr(std::move(slot), nullptr,
+				t ? t->storageBytes() : 32, /*alone*/ true, t);
 		}
+		return std::nullopt;
 	}
 	// Type conversion over a storage ref (`bytes(a)` on a storage string):
 	// same location, different label — peel it.
@@ -405,6 +526,21 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolveIndexAccess(
 		std::shared_ptr<awst::Expression> dataBase;
 		if (at->isDynamicallySized())
 		{
+			// The length assertion and keccak data-base calculation are separate
+			// statements.  A storage-returning call may produce the base slot, so
+			// bind it to a real temp rather than sharing an EvalOnce node across
+			// statement boundaries.
+			if (!dynamic_cast<awst::VarExpression const*>(base->slot.get())
+				&& !dynamic_cast<awst::IntegerConstant const*>(base->slot.get()))
+			{
+				std::string sn = "__evm_base_"
+					+ std::to_string(awst::NameGen::next("EvmSlotLowering.base"));
+				m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+					awst::makeVarExpression(sn, awst::WType::biguintType(), m_loc),
+					std::move(base->slot), m_loc));
+				base->slot = awst::makeVarExpression(
+					sn, awst::WType::biguintType(), m_loc);
+			}
 			// Bounds: idx < length word (EVM Panic 0x32 shape). Pin the index —
 			// the assert is a separate pre-statement.
 			if (!dynamic_cast<awst::VarExpression const*>(idx.get())

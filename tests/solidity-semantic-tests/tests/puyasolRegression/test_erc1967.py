@@ -71,6 +71,12 @@ def _run_flow(harness, extra_args):
     # Unset admin slot reads zero (EVM unset-slot semantics).
     assert as_int(harness.call(app, "admin()").abi_return) == 0
 
+    # Proxy-mode deployment defers implementation storage initialization.
+    # Both a typed read and the shared sload dispatcher must therefore map an
+    # absent AVM global to Solidity's zero default, not assert key existence.
+    assert as_int(harness.call(app, "value()").abi_return) == 0
+    assert as_int(harness.call(app, "rawValue()").abi_return) == 0
+
     # Implementation slot = this app's own identity (bytes24 ++ app id).
     assert as_int(harness.call(app, "implementation()").abi_return) == app.app_id
 
@@ -135,7 +141,7 @@ def test_erc1967_evm_layout(harness):
     _run_flow(harness, ["--evm-layout"])
 
 
-# new_review.md A3: admin-slot assembly reached through a LIBRARY (the OZ
+# Admin-slot assembly reached through a LIBRARY (the OZ
 # ERC1967Utils shape) must arm the gate on the contract whose call graph
 # reaches it. The pre-fix unit-global flag was consumed by the FIRST contract
 # built: Unrelated grew the admin global/gate and LibProxy got neither (its

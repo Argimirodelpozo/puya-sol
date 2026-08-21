@@ -36,7 +36,19 @@ void emitSelectorDispatch(
 		bool _isBareCall)
 		-> std::shared_ptr<awst::Statement>
 	{
-		auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{_name}, awst::WType::voidType(), _loc);
+		// Solidity's typed fallback form
+		//
+		//   fallback(bytes calldata) external returns (bytes memory)
+		//
+		// returns RAW EVM returndata.  Keep that value on the subroutine edge and
+		// publish it through the same structured-log carrier low-level inner calls
+		// consume.  Treating every fallback as void discarded the value entirely;
+		// callers then observed successful calls with empty returndata.
+		bool const returnsBytes = _func && _func->isFallback()
+			&& !_func->returnParameters().empty();
+		auto call = awst::makeSubroutineCall(
+			awst::InstanceMethodTarget{_name},
+			returnsBytes ? awst::WType::bytesType() : awst::WType::voidType(), _loc);
 		if (_func && _func->parameters().size() == 1) // fallback takes `bytes calldata _input`
 		{
 			std::shared_ptr<awst::Expression> argExpr;
@@ -53,8 +65,14 @@ void emitSelectorDispatch(
 			awst::pushCallArg(call->args, std::move(argExpr));
 		}
 
-		auto stmt = awst::makeExpressionStatement(call, _loc);
-		return stmt;
+		if (!returnsBytes)
+			return awst::makeExpressionStatement(std::move(call), _loc);
+
+		auto log = awst::makeIntrinsicCall("log", awst::WType::voidType(), _loc);
+		log->stackArgs.push_back(awst::makeConcat(
+			awst::makeBytesConstant({0x15, 0x1f, 0x7c, 0x75}, _loc),
+			std::move(call), _loc));
+		return awst::makeExpressionStatement(std::move(log), _loc);
 	};
 
 	auto makeTrueLit = [&]() {

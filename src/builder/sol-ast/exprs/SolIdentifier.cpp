@@ -88,96 +88,13 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 		// m_blobOffsetVars — this path is the OUTSIDE-asm value-use.)
 		if (auto off = m_scope.findBlobAggregate(varDecl->id()); !off.empty())
 		{
-			using AB = builder::AssemblyBuilder;
 			auto const* vt = m_ctx.typeMapper.map(varDecl->type());
-			// DYNAMIC ARRAY value-use: materialise, don't leak the offset.
-			//
-			// A blob-backed array used as a VALUE (returned, passed, assigned)
-			// must come back out of the blob, exactly like the bytes/string case
-			// below. Leaking the raw uint64 offset instead produced a subroutine
-			// that returns uint64 while its declared return type is the array —
-			// puya rejects the program ("invalid return type
-			// [PrimitiveIRType.uint64], expected EncodedType(...)"). Hit by OZ
-			// EnumerableSet.values(), whose `assembly { result := store }`
-			// pointer-pun blob-backs `result` and then returns it (blocked gho).
-			//
-			// EVM memory layout is [32-byte COUNT][elements]; ARC4 wants a
-			// 2-byte count prefix, so the re-encode is just swapping the header —
-			// valid only while an element occupies 32 bytes in BOTH (address,
-			// bytes32, uint256). Anything else (bool bit-packing, uint8[] at one
-			// byte per element, dynamic elements needing an offset table) would
-			// need a per-element re-encode; refuse loudly rather than emit a
-			// wrong length or a mis-strided read.
-			if (vt && vt->kind() == awst::WTypeKind::ARC4DynamicArray)
-			{
-				auto const* arr = static_cast<awst::ARC4DynamicArray const*>(vt);
-				int esz = builder::computeEncodedElementSize(arr->elementType());
-				if (esz != 32)
-				{
-					Logger::instance().error(
-						"cannot materialise assembly-backed array '" + name
-						+ "': element type '" + arr->elementType()->name()
-						+ "' encodes to " + std::to_string(esz)
-						+ " bytes, not 32, so the EVM memory layout and the ARC4"
-						" layout disagree on stride",
-						m_loc);
-					return awst::makeVarExpression(off, awst::WType::uint64Type(), m_loc);
-				}
-				auto offRead = [&]() {
-					return awst::makeVarExpression(off, awst::WType::uint64Type(), m_loc);
-				};
-				// count = low 8 bytes of the 32-byte count word at the buffer offset
-				auto count = awst::makeEvalOnce(
-					awst::makeExtractUInt64(
-						AB::readMemWordDirect(
-							m_ctx.typeMapper.profile().scratchLayout, offRead(), m_loc),
-						awst::makeIntegerConstant("24", m_loc), m_loc),
-					m_loc);
-				auto dataStart = awst::makeUInt64BinOp(offRead(),
-					awst::UInt64BinaryOperator::Add,
-					awst::makeIntegerConstant("32", m_loc), m_loc);
-				auto byteLen = awst::makeUInt64BinOp(count,
-					awst::UInt64BinaryOperator::Mult,
-					awst::makeIntegerConstant("32", m_loc), m_loc);
-				auto data = awst::makeExtract3(
-					awst::makeLoadSlot(
-						m_ctx.typeMapper.profile().scratchLayout.memoryFirst(), m_loc),
-					std::move(dataStart), std::move(byteLen), m_loc);
-				// ARC4 dynamic array = uint16 count ++ elements
-				auto hdr = awst::makeExtract3(awst::makeItob(count, m_loc),
-					awst::makeIntegerConstant("6", m_loc),
-					awst::makeIntegerConstant("2", m_loc), m_loc);
-				auto val = awst::makeConcat(std::move(hdr), std::move(data), m_loc);
-				return awst::makeReinterpretCast(std::move(val), vt, m_loc);
-			}
-			// blob-backed STRUCT used as a VALUE: materialise from the blob
-			// (leaking the uint64 offset is a puya type mismatch — Morpho's
-			// `idToMarketParams[id] = marketParams`).
-			if (vt && vt->kind() == awst::WTypeKind::ARC4Struct)
-				if (auto const* solSt = dynamic_cast<StructType const*>(varDecl->type()))
-					if (auto mv = builder::materializeBlobStructValue(
-							m_ctx.typeMapper, solSt, vt, off, m_loc))
-						return mv;
-			if (vt != awst::WType::bytesType() && vt != awst::WType::stringType())
-				return awst::makeVarExpression(off, awst::WType::uint64Type(), m_loc);
-			auto offRead = [&]() {
-				return awst::makeVarExpression(off, awst::WType::uint64Type(), m_loc);
-			};
-			// length = low 8 bytes of the 32-byte length word at the buffer offset.
-			auto length = awst::makeExtractUInt64(
-				AB::readMemWordDirect(
-					m_ctx.typeMapper.profile().scratchLayout, offRead(), m_loc),
-				awst::makeIntegerConstant("24", m_loc), m_loc);
-			// data = extract3(blob, offset + 32, length).
-			auto dataStart = awst::makeUInt64BinOp(offRead(),
-				awst::UInt64BinaryOperator::Add, awst::makeIntegerConstant("32", m_loc), m_loc);
-			auto data = awst::makeExtract3(
-				awst::makeLoadSlot(
-					m_ctx.typeMapper.profile().scratchLayout.memoryFirst(), m_loc),
-				std::move(dataStart), std::move(length), m_loc);
-			if (vt == awst::WType::stringType())
-				return awst::makeReinterpretCast(std::move(data), awst::WType::stringType(), m_loc);
-			return std::shared_ptr<awst::Expression>(std::move(data));
+			if (auto value = builder::materializeBlobValue(
+					m_ctx.typeMapper, varDecl->type(), vt, off, m_loc,
+					m_ctx.preEffects()))
+				return value;
+			return awst::makeVarExpression(
+				off, awst::WType::uint64Type(), m_loc);
 		}
 
 		// Struct storage-ref param (e.g. V4 `Pool.State storage self`): travels

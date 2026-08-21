@@ -58,27 +58,25 @@ void emitAsmParamSpills(
 	std::string const& _sourceFile,
 	std::vector<std::shared_ptr<awst::Statement>>& _out);
 
-/// Inverse of `emitBlobBackValue` for STRUCTS: read one EVM word per value
-/// field at `_offVar` and rebuild the ARC4Struct value (blob-backed struct
-/// used as a VALUE — `idToMarketParams[id] = marketParams`). Null + loud
-/// error for non-value members.
-std::shared_ptr<awst::Expression> materializeBlobStructValue(
+/// Inverse of `emitBlobBackValue`: recursively materialise any supported EVM
+/// memory value.  Reference children follow their pointer words and arrays use
+/// solc's memoryStride(); generated loops are appended to `_out`.
+std::shared_ptr<awst::Expression> materializeBlobValue(
 	TypeMapper& _typeMapper,
-	solidity::frontend::StructType const* _structType,
+	solidity::frontend::Type const* _solType,
 	awst::WType const* _wtype,
 	std::string const& _offVar,
-	awst::SourceLocation const& _loc);
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out);
 
 /// True iff any inline-assembly block in `_block` references declaration
 /// `_declId` (used to decide blob-backed named-return materialisation).
 bool blockUsesDeclInAsm(
 	solidity::frontend::Block const& _block, int64_t _declId);
 
-/// --evm-memory-layout: emit statements that ALLOCATE a blob region in EVM
-/// layout for `_value` (bytes/string → [len32][data]; struct → one word per
-/// value field; arrays of 32-byte-encoded elements → [count32]?[elems]) and
-/// bind `_offVar` (uint64) to its base offset. Returns false (+ loud error)
-/// for unsupported shapes.
+/// --evm-memory-layout: recursively allocate and spill `_value` using solc's
+/// memory head/data sizes.  Reference children receive real pointer words;
+/// scalar width conversion is delegated to the shared EVM leaf codec.
 bool emitBlobBackValue(
 	TypeMapper& typeMapper,
 	solidity::frontend::Type const* declType,
@@ -330,6 +328,13 @@ private:
 		awst::Contract& _contractNode,
 		std::string const& _contractName,
 		std::set<std::string>& _translatedFunctions);
+
+	/// Replace public ARC4 exposure with a deterministic Solidity-selector
+	/// adapter. ApplicationArgs[1] is decoded as one canonical EVM ABI tuple;
+	/// method bodies retain their existing native/ARC4-backed representation.
+	void emitEvmEntryDispatch(
+		solidity::frontend::ContractDefinition const& _contract,
+		awst::Contract& _contractNode);
 
 	// ── Super-call resolution (SuperCallResolution.cpp) ──
 	// super.f() / Base.f() resolved via solc's requiredLookup annotation +

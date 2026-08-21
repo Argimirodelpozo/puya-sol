@@ -28,19 +28,19 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 		if (!addr)
 			return nullptr;
 		auto const* resType = m_memberAccess.annotation().type;
-		if (resType && resType->isValueType())
-			return low.readValue(*addr);
-		if (EvmSlotLowering::isBytesLike(resType))
-			return low.readBytesValue(*addr);
-		if (dynamic_cast<solidity::frontend::StructType const*>(resType))
-			return low.readStructValue(*addr);
-		if (auto const* rat = dynamic_cast<solidity::frontend::ArrayType const*>(resType);
-			rat && !rat->isByteArrayOrString())
-			return low.readArrayValue(*addr, rat);
-		Logger::instance().error(
-			"--evm-storage-layout: aggregate struct member used as a value "
-			"is not yet supported", m_loc);
-		return nullptr;
+		return low.readAny(*addr, resType);
+	}
+
+	// Explicit `.slot` handles use the same recursive address/type dispatch.
+	// Peeling the complete member/index chain here avoids duplicating packed,
+	// scalar, struct, and nested-array cases in this expression builder.
+	auto const* slotResultType = m_memberAccess.annotation().type;
+	if (!m_memberAccess.annotation().willBeWrittenTo
+		&& EvmSlotLowering::isSlotHandleRef(m_memberAccess, m_ctx, m_scope))
+	{
+		EvmSlotLowering low(m_ctx, m_scope, m_loc);
+		auto addr = low.resolve(m_memberAccess);
+		return addr ? low.readAny(*addr, slotResultType) : nullptr;
 	}
 
 	// Field read through a LIVE static calldata pointer: `assembly { s := s2 }
@@ -95,57 +95,6 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 							}
 
 	auto base = buildExpr(baseExpression());
-
-	// Struct field through a SLOT HANDLE: base is an EVM slot number bound via
-	// asm `.slot :=`. Handle LOCALS resolve with their declared struct wtype
-	// through the generic identifier path — consult the registry as well.
-	if (base && base->wtype != awst::WType::biguintType()
-		&& !m_memberAccess.annotation().willBeWrittenTo)
-		if (auto const* baseId = dynamic_cast<solidity::frontend::Identifier const*>(&baseExpression()))
-			if (auto const* vd = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
-					baseId->annotation().referencedDeclaration))
-				if (vd->isLocalVariable() && m_scope.findSlotStorageRef(vd->id()))
-					base = awst::makeVarExpression(vd->name(), awst::WType::biguintType(), m_loc);
-	// Writes intercept in SolAssignment (slot-handle field write).
-	if (base && base->wtype == awst::WType::biguintType()
-		&& !m_memberAccess.annotation().willBeWrittenTo)
-		if (auto const* solStruct = dynamic_cast<solidity::frontend::StructType const*>(
-				baseExpression().annotation().type))
-		{
-			auto const& off = solStruct->storageOffsetsOfMember(member);
-			auto const* fieldSolType = m_memberAccess.annotation().type;
-			unsigned size = fieldSolType ? fieldSolType->storageBytes() : 32;
-			auto slotExpr = awst::makeBigUIntBinOp(std::move(base),
-				awst::BigUIntBinaryOperator::Add,
-				awst::makeIntegerConstant(off.first.str(), m_loc, awst::WType::biguintType()),
-				m_loc);
-			std::shared_ptr<awst::Expression> val;
-			if (size == 32 && off.second == 0)
-				val = builder::SlotHandleAccess::readSlot(std::move(slotExpr), m_loc);
-			else
-			{
-				auto word = builder::SlotHandleAccess::readSlot(std::move(slotExpr), m_loc);
-				auto wordB = awst::makeLeftPadToN(
-					awst::makeAsBytes(std::move(word), m_loc), 32, m_loc);
-				unsigned start = 32 - off.second - size;
-				auto raw = awst::makeExtract(std::move(wordB),
-					static_cast<int>(start), static_cast<int>(size), m_loc);
-				val = awst::makeAsBiguint(std::move(raw), m_loc);
-			}
-			// canonical biguint; coerce to the native repr consumers expect
-			if (auto it = builder::SolIntType::fromSol(fieldSolType);
-				it && it->isSigned && it->bits < 256)
-				val = builder::TypeCoercion::signExtendToUint256(std::move(val), it->bits, m_loc);
-			auto const* nativeW = m_ctx.typeMapper.map(fieldSolType);
-			if (nativeW == awst::WType::uint64Type())
-				val = awst::makeBtoi(awst::makeExtractLastN(
-					awst::makeZeroExtendToN(awst::makeAsBytes(std::move(val), m_loc), 32, m_loc),
-					8, m_loc), m_loc);
-			else if (nativeW == awst::WType::boolType())
-				val = awst::makeNumericCompare(std::move(val), awst::NumericComparison::Ne,
-					awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()), m_loc);
-			return val;
-		}
 
 	if (base->wtype && base->wtype->kind() == awst::WTypeKind::ARC4Struct)
 	{

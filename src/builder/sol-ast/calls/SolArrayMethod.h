@@ -18,7 +18,8 @@ private:
 	std::shared_ptr<awst::Expression> handleBoxArray(
 		std::string const& _memberName,
 		solidity::frontend::Expression const& _baseExpr,
-		solidity::frontend::VariableDeclaration const& _varDecl);
+		solidity::frontend::VariableDeclaration const& _varDecl,
+		std::shared_ptr<awst::Expression> _runtimeKey = nullptr);
 
 	/// Handle push/pop on in-memory arrays.
 	std::shared_ptr<awst::Expression> handleMemoryArray(
@@ -39,7 +40,8 @@ private:
 	std::shared_ptr<awst::Expression> handleMappingElementArrayLengthOp(
 		std::string const& _memberName,
 		solidity::frontend::VariableDeclaration const& _varDecl,
-		std::string const& _arrayVarName);
+		std::string const& _arrayVarName,
+		std::shared_ptr<awst::Expression> _runtimeKey = nullptr);
 };
 
 } // namespace puyasol::builder::sol_ast

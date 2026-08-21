@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/new_in_ctor_postinit.sol.ChildNC.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock 0x151f7c75 "__ctor_pending" "tag" "modeVal" "fromArg" "plain" 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8
+    bytecblock 0x 0x151f7c75 "__ctor_pending" "tag" "modeVal" "fromArg" 0x00000000 "plain" 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -53,10 +53,12 @@ main_ternary_merge@17:
     !
     assert // not payable
     intc_2 // 0
-    bytec_2 // "tag"
+    bytec_3 // "tag"
     app_global_get_ex
-    assert // check tag exists
-    bytec_0 // 0x151f7c75
+    bytec 6 // 0x00000000
+    cover 2
+    select
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -79,9 +81,11 @@ main_ternary_merge@22:
     !
     assert // not payable
     intc_2 // 0
-    bytec_3 // "modeVal"
+    bytec 4 // "modeVal"
     app_global_get_ex
-    assert // check modeVal exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -90,7 +94,7 @@ main_ternary_merge@22:
     intc_1 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -113,9 +117,11 @@ main_ternary_merge@27:
     !
     assert // not payable
     intc_2 // 0
-    bytec 4 // "fromArg"
+    bytec 5 // "fromArg"
     app_global_get_ex
-    assert // check fromArg exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -124,7 +130,7 @@ main_ternary_merge@27:
     intc_1 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -147,9 +153,11 @@ main_ternary_merge@32:
     !
     assert // not payable
     intc_2 // 0
-    bytec 5 // "plain"
+    bytec 7 // "plain"
     app_global_get_ex
-    assert // check plain exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -158,7 +166,7 @@ main_ternary_merge@32:
     intc_1 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -201,7 +209,7 @@ main_ternary_merge@37:
     concat
     sha256
     box_get
-    pushbytes 0x
+    bytec_0 // 0x
     cover 2
     select
     dup
@@ -210,7 +218,7 @@ main_ternary_merge@37:
     <=
     assert // overflow
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -241,14 +249,14 @@ main___postInit_route@5:
     pushint 4
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_2 // 0
     app_global_put
     pushbytes "m"
@@ -257,19 +265,19 @@ main___postInit_route@5:
     pop
     pushint 77
     itob
-    bytec 5 // "plain"
+    bytec 7 // "plain"
     swap
     app_global_put
-    bytec 4 // "fromArg"
-    pushbytes 0x
+    bytec 5 // "fromArg"
+    bytec_0 // 0x
     app_global_put
-    bytec_3 // "modeVal"
-    pushbytes 0x
+    bytec 4 // "modeVal"
+    bytec_0 // 0x
     app_global_put
-    bytec_2 // "tag"
-    pushbytes 0x00000000
+    bytec_3 // "tag"
+    bytec 6 // 0x00000000
     app_global_put
-    bytec 4 // "fromArg"
+    bytec 5 // "fromArg"
     dig 3
     app_global_put
     pushint 10
@@ -280,18 +288,18 @@ main___postInit_route@5:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec 6 // 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8
+    bytec 8 // 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8
     box_del
     pop
-    bytec 6 // 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8
+    bytec 8 // 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8
     swap
     box_put
     swap
     itob
-    bytec_3 // "modeVal"
+    bytec 4 // "modeVal"
     swap
     app_global_put
-    bytec_2 // "tag"
+    bytec_3 // "tag"
     swap
     app_global_put
     intc_0 // 1

@@ -25,7 +25,9 @@ from algosdk.atomic_transaction_composer import (
     TransactionWithSigner,
     AccountTransactionSigner,
 )
-from algosdk.transaction import PaymentTxn, ApplicationCallTxn, OnComplete
+from algosdk.transaction import (
+    PaymentTxn, ApplicationCallTxn, BoxReference, OnComplete,
+)
 from algosdk.v2client.models import (
     SimulateRequest,
     SimulateRequestTransactionGroup,
@@ -45,6 +47,132 @@ _needs_populate: set[int] = set()
 # so a final failure can name the REAL first cause.
 _LAST_POPULATE_ERROR: str = ""
 _LAST_POOL_EXEC_ERROR: str = ""
+
+# Keep the resource ceiling in one place. Chainwide replay uses the same
+# calculation to fund deterministic senders before a run; otherwise a clean
+# LocalNet can exhaust a sender while constructing the retry group and surface
+# the main call's secondary opcode-budget error instead.
+_MIN_TXN_FEE = 1_000
+_MAX_GROUP_SIZE = 16
+_MAX_BUDGET_POOL = _MAX_GROUP_SIZE - 1
+_OPUP_DEPTH = 8
+_INNER_TXN_FEE_HEADROOM = 16_000
+
+
+def raw_call_fee_ceiling(*, extra_fee: int = 0,
+                         payment_wei: int = 0,
+                         pool_size: int = _MAX_BUDGET_POOL) -> int:
+    """Maximum committed group fee for one raw call and its OpUp retry.
+
+    Failed optimistic attempts commit no fee. A successful amplified retry
+    commits the main transaction's pooled fee and, for a payable call, the
+    adjacent payment transaction's fee. The transferred value is excluded;
+    callers budget that independently.
+    """
+    pool_size = min(
+        pool_size,
+        _MAX_GROUP_SIZE - 1 - (1 if payment_wei > 0 else 0),
+    )
+    main_fee = (
+        _MIN_TXN_FEE * (pool_size + 2)
+        + extra_fee
+        + _MIN_TXN_FEE * pool_size * _OPUP_DEPTH
+        + _INNER_TXN_FEE_HEADROOM
+    )
+    return main_fee + (_MIN_TXN_FEE if payment_wei > 0 else 0)
+
+
+def _rebalance_group_app_references(atc: AtomicTransactionComposer) -> None:
+    """Keep populated app-call resources below the per-transaction cap.
+
+    Resource population can put foreign apps and named boxes on the same
+    budget-helper transaction until their combined count exceeds
+    MaxAppTotalTxnReferences (8), although those resources are shared by the
+    whole group. Move boxes to spare helpers while translating their app index;
+    resource identity and group visibility stay unchanged.
+    """
+    max_refs = 8
+    app_txns = [item.txn for item in atc.txn_list
+                if isinstance(item.txn, ApplicationCallTxn)]
+
+    def count(txn):
+        return sum(len(getattr(txn, field, None) or []) for field in (
+            "accounts", "foreign_apps", "foreign_assets", "boxes"))
+
+    def box_app_id(txn, box):
+        if box.app_index == 0:
+            return txn.index
+        return (txn.foreign_apps or [])[box.app_index - 1]
+
+    for source in app_txns:
+        while count(source) > max_refs and source.boxes:
+            moved = False
+            for box in list(reversed(source.boxes)):
+                app_id = box_app_id(source, box)
+                for target in app_txns:
+                    if target is source:
+                        continue
+                    target_apps = list(target.foreign_apps or [])
+                    needs_app = app_id != target.index and app_id not in target_apps
+                    if count(target) + 1 + int(needs_app) > max_refs:
+                        continue
+                    if needs_app:
+                        target_apps.append(app_id)
+                        target.foreign_apps = target_apps
+                    target_index = (0 if app_id == target.index
+                                    else target.foreign_apps.index(app_id) + 1)
+                    target.boxes = list(target.boxes or []) + [
+                        BoxReference(target_index, box.name)]
+                    source.boxes.remove(box)
+                    moved = True
+                    break
+                if moved:
+                    break
+            if not moved:
+                break
+
+
+def _group_resource_fingerprint(atc: AtomicTransactionComposer):
+    """Stable shape used to detect progress across partial populate passes."""
+    out = []
+    for item in atc.txn_list:
+        txn = item.txn
+        if not isinstance(txn, ApplicationCallTxn):
+            continue
+        out.append((
+            txn.index,
+            tuple(txn.accounts or []),
+            tuple(txn.foreign_apps or []),
+            tuple(txn.foreign_assets or []),
+            tuple((box.app_index, bytes(box.name)) for box in txn.boxes or []),
+        ))
+    return tuple(out)
+
+
+def _populate_group_resources_progressively(
+        atc: AtomicTransactionComposer, algod, label: str,
+        max_passes: int = 8) -> AtomicTransactionComposer:
+    """Discover resources to a fixed point on one pooled transaction group.
+
+    A simulate pass can add the resources reached so far and then raise on a
+    later budget/resource boundary.  Reusing the mutated group lets the next
+    pass get farther; rebuilding from scratch repeats the same partial result.
+    """
+    global _LAST_POPULATE_ERROR
+    previous = None
+    for _ in range(max_passes):
+        try:
+            atc = au.populate_app_call_resources(atc, algod)
+            _rebalance_group_app_references(atc)
+            return atc
+        except Exception as exc:
+            _LAST_POPULATE_ERROR = f"{label}: {exc}"
+            _rebalance_group_app_references(atc)
+            current = _group_resource_fingerprint(atc)
+            if current == previous:
+                break
+            previous = current
+    return atc
 
 
 @dataclass
@@ -342,7 +470,7 @@ def call(
     try:
         resp = atc.execute(algod, wait_rounds=4)
         abi_return = resp.abi_results[-1].return_value if resp.abi_results else None
-        logs = _collect_logs(resp)
+        logs = _collect_logs(resp, algod)
         return Result(abi_return=abi_return, logs=logs, raw_response=resp)
     except Exception as e:
         if not populated:
@@ -367,7 +495,7 @@ def call(
                 resp = retry_atc.execute(algod, wait_rounds=4)
                 _needs_populate.add(app.app_id)
                 abi_return = resp.abi_results[-1].return_value if resp.abi_results else None
-                logs = _collect_logs(resp)
+                logs = _collect_logs(resp, algod)
                 return Result(abi_return=abi_return, logs=logs, raw_response=resp)
             except Exception as e2:
                 e = e2  # genuine failure — flow into budget/revert handling below
@@ -411,7 +539,7 @@ def call(
             try:
                 resp = mb_atc.execute(algod, wait_rounds=4)
                 abi_return = resp.abi_results[-1].return_value if resp.abi_results else None
-                return Result(abi_return=abi_return, logs=_collect_logs(resp), raw_response=resp)
+                return Result(abi_return=abi_return, logs=_collect_logs(resp, algod), raw_response=resp)
             except Exception as e2:
                 e = e2  # flow into the fee/revert handling below
 
@@ -435,7 +563,7 @@ def call(
             try:
                 resp = fee_atc.execute(algod, wait_rounds=4)
                 abi_return = resp.abi_results[-1].return_value if resp.abi_results else None
-                return Result(abi_return=abi_return, logs=_collect_logs(resp), raw_response=resp)
+                return Result(abi_return=abi_return, logs=_collect_logs(resp, algod), raw_response=resp)
             except Exception as e2:
                 e = e2  # keep the escalated failure for the revert path
 
@@ -572,9 +700,8 @@ def _retry_with_budget_pool(
     # rejected the whole group — surfacing as "cannot exceed MAX_GROUP_SIZE"
     # and, because the txn then ran on the EVM leg only, as phantom storage
     # divergences downstream. Costs 700 opcodes of headroom on payable calls.
-    _MAX_GROUP = 16
     pool_size = min(pool_size,
-                    _MAX_GROUP - 1 - (1 if payment_wei > 0 else 0))
+                    _MAX_GROUP_SIZE - 1 - (1 if payment_wei > 0 else 0))
 
     # Each helper call amplifies via _OPUP_DEPTH inner self-calls (+700 budget
     # each), so the group ceiling is pool_size*(1+_OPUP_DEPTH)*700 ≈ 94k ops.
@@ -588,14 +715,15 @@ def _retry_with_budget_pool(
     #               refs (creation quota for boxes of apps created IN-group —
     #               `new C()`'s __postInit box_create; no named ref can exist
     #               pre-submit). Costs ref slots — hence not the first try.
-    _OPUP_DEPTH = 8 if amplify else 0
+    opup_depth = _OPUP_DEPTH if amplify else 0
     sp_call = algod.suggested_params()
     sp_call.flat_fee = True
     # + 16k headroom: the app under test may emit inner txns of its own
     # (`new C()` = create + __postInit in slot mode) — without this the group
     # is exactly their fees short ("group fee 0.0A too small (need 1mA)").
-    sp_call.fee = (1000 * (pool_size + 2) + extra_fee
-                   + 1000 * pool_size * _OPUP_DEPTH + 16_000)
+    sp_call.fee = (_MIN_TXN_FEE * (pool_size + 2) + extra_fee
+                   + _MIN_TXN_FEE * pool_size * opup_depth
+                   + _INNER_TXN_FEE_HEADROOM)
 
     atc = AtomicTransactionComposer()
     # Dummies FIRST: pooled budget is sequential — an amplifier's OpUp inner
@@ -612,7 +740,7 @@ def _retry_with_budget_pool(
                 ApplicationCallTxn(
                     sender=sender, sp=sp_dummy, index=helper_id,
                     on_complete=OnComplete.NoOpOC, note=os.urandom(8),
-                    app_args=[_OPUP_DEPTH.to_bytes(8, "big")] if amplify else None,
+                    app_args=[opup_depth.to_bytes(8, "big")] if amplify else None,
                     foreign_apps=[target_id] if amplify else None,
                     boxes=[(0, b"")] * 2 if amplify else None,
                 ),
@@ -643,11 +771,8 @@ def _retry_with_budget_pool(
         boxes=boxes,
     )
 
-    try:
-        atc = au.populate_app_call_resources(atc, algod)
-    except Exception as pe:
-        global _LAST_POPULATE_ERROR
-        _LAST_POPULATE_ERROR = f"pool-populate: {pe}"
+    atc = _populate_group_resources_progressively(
+        atc, algod, "pool-populate")
 
     try:
         resp = atc.execute(algod, wait_rounds=4)
@@ -657,13 +782,14 @@ def _retry_with_budget_pool(
         return None
 
     abi_return = resp.abi_results[-1].return_value if resp.abi_results else None
-    logs = _collect_logs(resp)
+    logs = _collect_logs(resp, algod)
     return Result(abi_return=abi_return, logs=logs, raw_response=resp)
 
 
 def _raw_pool_execute(
     algod, localnet, app, sender, signer, *,
-    app_args, payment_wei, extra_fee, amplify, pool_size=15,
+    app_args, payment_wei, extra_fee, amplify, creation_quota=False,
+    pool_size=15,
 ):
     """Raw-call twin of _retry_with_budget_pool (same dummy construction —
     plain round spreads refs, amplified round adds budget + creation quota).
@@ -673,13 +799,16 @@ def _raw_pool_execute(
         target_id = localnet.budget_target_id
     except Exception:
         return None
-    _MAX_GROUP = 16
-    pool_size = min(pool_size, _MAX_GROUP - 1 - (1 if payment_wei > 0 else 0))
-    _OPUP_DEPTH = 8 if amplify else 0
+    pool_size = min(
+        pool_size,
+        _MAX_GROUP_SIZE - 1 - (1 if payment_wei > 0 else 0),
+    )
+    opup_depth = _OPUP_DEPTH if amplify else 0
     sp_call = algod.suggested_params()
     sp_call.flat_fee = True
-    sp_call.fee = (1000 * (pool_size + 2) + extra_fee
-                   + 1000 * pool_size * _OPUP_DEPTH + 16_000)
+    sp_call.fee = (_MIN_TXN_FEE * (pool_size + 2) + extra_fee
+                   + _MIN_TXN_FEE * pool_size * opup_depth
+                   + _INNER_TXN_FEE_HEADROOM)
     atc = AtomicTransactionComposer()
     # Dummies FIRST (see _retry_with_budget_pool): OpUp budget must accrue
     # before the main call executes; payment stays adjacent to the app call.
@@ -691,9 +820,9 @@ def _raw_pool_execute(
             ApplicationCallTxn(
                 sender=sender, sp=sp_dummy, index=helper_id,
                 on_complete=OnComplete.NoOpOC, note=os.urandom(8),
-                app_args=[_OPUP_DEPTH.to_bytes(8, "big")] if amplify else None,
+                app_args=[opup_depth.to_bytes(8, "big")] if amplify else None,
                 foreign_apps=[target_id] if amplify else None,
-                boxes=[(0, b"")] * 2 if amplify else None),
+                boxes=[(0, b"")] * 2 if creation_quota else None),
             signer))
     if payment_wei > 0:
         sp_pay = algod.suggested_params()
@@ -708,14 +837,12 @@ def _raw_pool_execute(
             on_complete=OnComplete.NoOpOC, app_args=app_args,
             note=os.urandom(8)),
         signer))
-    global _LAST_POPULATE_ERROR, _LAST_POOL_EXEC_ERROR
+    global _LAST_POOL_EXEC_ERROR
+    atc = _populate_group_resources_progressively(
+        atc, algod, "raw-pool-populate")
     try:
-        atc = au.populate_app_call_resources(atc, algod)
-    except Exception as pe:
-        _LAST_POPULATE_ERROR = f"raw-pool-populate: {pe}"
-    try:
-        atc.execute(algod, wait_rounds=4)
-        return Result()
+        resp = atc.execute(algod, wait_rounds=4)
+        return Result(logs=_collect_logs(resp, algod), raw_response=resp)
     except Exception as ee:
         _LAST_POOL_EXEC_ERROR = f"raw-pool-exec: {ee}"
         return None
@@ -730,6 +857,7 @@ def call_raw(
     payment_wei: int = 0,
     expect_revert: bool = False,
     extra_fee: int = 0,
+    budget_pool: int = 0,
 ) -> Result:
     """Call an app with a raw 4-byte selector (bypasses ABI method dispatch).
 
@@ -742,6 +870,32 @@ def call_raw(
     algod = localnet.algod
     sender = localnet.account.address
     signer = AccountTransactionSigner(localnet.account.private_key)
+    if budget_pool > 0 and not expect_revert:
+        app_args = ((list(extra_args) or None) if selector is None
+                    else [selector] + list(extra_args))
+        # Match the ABI-call path's two-tier OpUp strategy deterministically.
+        # A caller that explicitly asks for a budget pool has already told us
+        # the raw route may be expensive; waiting for a subsequent plain-call
+        # exception to be classified before trying amplification loses valid
+        # calls when resource population wraps the budget error.
+        # Compute amplification and box-creation quota are independent
+        # resources.  Keeping empty quota refs off the ordinary amplified tier
+        # leaves room under MaxAppTotalTxnReferences for discovered dependency
+        # apps and named boxes; a third tier adds quota only when it is needed.
+        for amplify, creation_quota in (
+                (False, False), (True, False), (True, True)):
+            pooled = _raw_pool_execute(
+                algod, localnet, app, sender, signer,
+                app_args=app_args, payment_wei=payment_wei,
+                extra_fee=extra_fee, amplify=amplify,
+                creation_quota=creation_quota,
+                pool_size=budget_pool)
+            if pooled is not None:
+                return pooled
+        if os.environ.get("CHD_TAPE_DEBUG"):
+            detail = (f"{_LAST_POPULATE_ERROR}; "
+                      f"{_LAST_POOL_EXEC_ERROR}")
+            print(f"[raw-call] proactive pools failed: {detail[:300]}")
     return _raw_call_inner(
         algod, app, sender, signer, selector,
         extra_args=extra_args, payment_wei=payment_wei,
@@ -806,15 +960,15 @@ def _raw_call_inner(
                 atc = au.populate_app_call_resources(atc, algod)
             except Exception as pe:
                 _LAST_POPULATE_ERROR = f"raw-populate: {pe}"
-        atc.execute(algod, wait_rounds=4)
-        return Result()
+        resp = atc.execute(algod, wait_rounds=4)
+        return Result(logs=_collect_logs(resp, algod), raw_response=resp)
     except Exception as e:
         if not populated:
             try:
                 retry_atc = au.populate_app_call_resources(_new_atc(), algod)
-                retry_atc.execute(algod, wait_rounds=4)
+                resp = retry_atc.execute(algod, wait_rounds=4)
                 _needs_populate.add(app.app_id)
-                return Result()
+                return Result(logs=_collect_logs(resp, algod), raw_response=resp)
             except Exception as e2:
                 e = e2
         # Budget/resource shortfall: same two-round dummy pool as the ABI
@@ -822,14 +976,20 @@ def _raw_call_inner(
         # quota). Raw fallback calls WRITE boxes too — without this a
         # slot-mode `fallback() { savedData = msg.data; }` lost its write.
         if localnet is not None and (_is_budget_error(e) or _is_resource_error(e)):
-            for _amp in (False, True):
+            for _amp, _quota in (
+                    (False, False), (True, False), (True, True)):
                 pooled = _raw_pool_execute(
                     algod, localnet, app, sender, signer,
                     app_args=app_args, payment_wei=payment_wei,
-                    extra_fee=extra_fee, amplify=_amp)
+                    extra_fee=extra_fee, amplify=_amp,
+                    creation_quota=_quota)
                 if pooled is not None:
                     _needs_populate.add(app.app_id)
                     return pooled
+            if os.environ.get("CHD_TAPE_DEBUG"):
+                detail = (f"{_LAST_POPULATE_ERROR}; "
+                          f"{_LAST_POOL_EXEC_ERROR}")
+                print(f"[raw-call] retry pools failed: {detail[:300]}")
         sim_result = _simulate_for_revert(algod, _new_atc())
         sim_result.raw_response = str(e)
         if not sim_result.reverted:
@@ -1092,9 +1252,25 @@ def _encode_args(abi_method, args: tuple) -> list:
     return out
 
 
-def _collect_logs(resp) -> list[bytes]:
+def _collect_logs(resp, algod=None) -> list[bytes]:
+    """Collect confirmed top-level logs from ABI and raw ATC responses.
+
+    Current algosdk ``AtomicTransactionResponse`` objects only expose tx ids
+    and ABI results.  Raw calls have no ABI result (and therefore no embedded
+    ``tx_info``), so resolve their confirmed transaction info through algod.
+    """
     logs: list[bytes] = []
-    for tx_info in getattr(resp, "tx_info", None) or []:
+    tx_infos = list(getattr(resp, "tx_info", None) or [])
+    if not tx_infos:
+        tx_infos.extend(
+            result.tx_info
+            for result in (getattr(resp, "abi_results", None) or [])
+            if getattr(result, "tx_info", None)
+        )
+    if not tx_infos and algod is not None:
+        for tx_id in getattr(resp, "tx_ids", None) or []:
+            tx_infos.append(algod.pending_transaction_info(tx_id))
+    for tx_info in tx_infos:
         for log in tx_info.get("logs", []):
             logs.append(encoding.base64.b64decode(log))
     return logs

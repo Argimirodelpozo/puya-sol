@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/crosscontract_keyed_getter.sol.Store.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x151f7c75 "arr" "__ctor_pending" "plain" "mNarrow" 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8 0xac7e8dda9d622b1fd0caaeb828ae111e32c0dbe6c0c46094a23c4cdc18a92984
+    bytecblock 0x151f7c75 "arr" "__ctor_pending" 0x "plain" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "mNarrow" 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8 0xac7e8dda9d622b1fd0caaeb828ae111e32c0dbe6c0c46094a23c4cdc18a92984
     pushint 4096
     bzero
     dup
@@ -53,9 +53,11 @@ main_ternary_merge@17:
     !
     assert // not payable
     intc_2 // 0
-    bytec_3 // "plain"
+    bytec 4 // "plain"
     app_global_get_ex
-    assert // check plain exists
+    bytec_3 // 0x
+    cover 2
+    select
     dup
     len
     intc_0 // 32
@@ -95,7 +97,9 @@ main_ternary_merge@22:
     intc_2 // 0
     bytec_1 // "arr"
     app_global_get_ex
-    assert // check arr exists
+    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_3 // 8
     bzero
     uncover 2
@@ -148,11 +152,11 @@ main_ternary_merge@27:
     -
     intc_0 // 32
     extract3
-    bytec 4 // "mNarrow"
+    bytec 6 // "mNarrow"
     concat
     sha256
     box_get
-    pushbytes 0x
+    bytec_3 // 0x
     cover 2
     select
     dup
@@ -204,7 +208,7 @@ main_ternary_merge@32:
     concat
     sha256
     box_get
-    pushbytes 0x
+    bytec_3 // 0x
     cover 2
     select
     dup
@@ -237,24 +241,24 @@ main_ternary_merge@37:
     assert // not payable
     pushint 500
     itob
-    bytec 5 // 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8
+    bytec 7 // 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8
     box_del
     pop
-    bytec 5 // 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8
+    bytec 7 // 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8
     swap
     box_put
     pushint 900
     itob
-    bytec 6 // 0xac7e8dda9d622b1fd0caaeb828ae111e32c0dbe6c0c46094a23c4cdc18a92984
+    bytec 8 // 0xac7e8dda9d622b1fd0caaeb828ae111e32c0dbe6c0c46094a23c4cdc18a92984
     box_del
     pop
-    bytec 6 // 0xac7e8dda9d622b1fd0caaeb828ae111e32c0dbe6c0c46094a23c4cdc18a92984
+    bytec 8 // 0xac7e8dda9d622b1fd0caaeb828ae111e32c0dbe6c0c46094a23c4cdc18a92984
     swap
     box_put
     intc_2 // 0
     bytec_1 // "arr"
     app_global_get_ex
-    assert // check arr exists
+    assert // state exists
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000016
     replace2 32 // on error: index access is out of bounds
     bytec_1 // "arr"
@@ -282,16 +286,16 @@ main___postInit_route@5:
     pushint 2
     box_create
     pop
-    bytec 4 // "mNarrow"
+    bytec 6 // "mNarrow"
     pushint 2
     box_create
     pop
     bytec_1 // "arr"
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     pushint 77
     itob
-    bytec_3 // "plain"
+    bytec 4 // "plain"
     swap
     app_global_put
     intc_1 // 1

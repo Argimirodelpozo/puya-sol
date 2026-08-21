@@ -7,6 +7,63 @@
 namespace puyasol::builder
 {
 
+namespace
+{
+std::string declarationIdentitySuffix(solidity::frontend::Type const* _type)
+{
+	using namespace solidity::frontend;
+	if (!_type)
+		return {};
+
+	std::string result;
+	if (auto const* definition = _type->typeDefinition())
+		result += "#" + std::to_string(definition->id());
+	else if (auto const* contractType = dynamic_cast<ContractType const*>(_type))
+		result += "#" + std::to_string(contractType->contractDefinition().id());
+
+	if (auto const* arrayType = dynamic_cast<ArrayType const*>(_type))
+		result += declarationIdentitySuffix(arrayType->baseType());
+	else if (auto const* mappingType = dynamic_cast<MappingType const*>(_type))
+	{
+		result += declarationIdentitySuffix(mappingType->keyType());
+		result += declarationIdentitySuffix(mappingType->valueType());
+	}
+	else if (auto const* tupleType = dynamic_cast<TupleType const*>(_type))
+		for (auto const* component: tupleType->components())
+			result += declarationIdentitySuffix(component);
+	else if (auto const* functionType = dynamic_cast<FunctionType const*>(_type))
+	{
+		for (auto const* parameter: functionType->parameterTypes())
+			result += declarationIdentitySuffix(parameter);
+		for (auto const* returnType: functionType->returnParameterTypes())
+			result += declarationIdentitySuffix(returnType);
+	}
+	return result;
+}
+
+bool reachesStructBeingMapped(
+	solidity::frontend::Type const* _type,
+	std::set<int64_t> const& _inProgress,
+	std::set<solidity::frontend::Type const*>& _visiting)
+{
+	using namespace solidity::frontend;
+	if (!_type || !_visiting.insert(_type).second)
+		return false;
+	if (auto const* structure = dynamic_cast<StructType const*>(_type))
+	{
+		if (_inProgress.count(structure->structDefinition().id()))
+			return true;
+		for (auto const& member: structure->structDefinition().members())
+			if (reachesStructBeingMapped(member->type(), _inProgress, _visiting))
+				return true;
+		return false;
+	}
+	if (auto const* array = dynamic_cast<ArrayType const*>(_type))
+		return reachesStructBeingMapped(array->baseType(), _inProgress, _visiting);
+	return false;
+}
+}
+
 awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 {
 	using namespace solidity::frontend;
@@ -15,7 +72,8 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 		return awst::WType::voidType();
 
 	std::string const typeStr = _solType->toString(true);
-	auto it = m_solTypeCache.find(typeStr);
+	std::string const cacheKey = typeStr + declarationIdentitySuffix(_solType);
+	auto it = m_solTypeCache.find(cacheKey);
 	if (it != m_solTypeCache.end())
 		return it->second;
 
@@ -188,7 +246,7 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 	}
 
 	if (result)
-		m_solTypeCache[typeStr] = result;
+		m_solTypeCache[cacheKey] = result;
 	else
 		result = awst::WType::voidType();
 
@@ -307,15 +365,11 @@ awst::WType const* TypeMapper::mapStruct(solidity::frontend::StructType const* _
 		std::vector<std::pair<std::string, awst::WType const*>> projFields;
 		for (auto const& member: structDef.members())
 		{
+			std::set<solidity::frontend::Type const*> visiting;
 			bool recursiveField =
-				member->type()->category() == solidity::frontend::Type::Category::Mapping;
-			if (auto const* arr =
-					dynamic_cast<solidity::frontend::ArrayType const*>(member->type());
-				arr && !arr->isByteArrayOrString())
-				if (auto const* es =
-						dynamic_cast<solidity::frontend::StructType const*>(arr->baseType());
-					es && m_inProgressStructs.count(es->structDefinition().id()))
-					recursiveField = true;
+				member->type()->category() == solidity::frontend::Type::Category::Mapping
+				|| reachesStructBeingMapped(
+					member->type(), m_inProgressStructs, visiting);
 			projFields.emplace_back(
 				member->name(),
 				recursiveField ? awst::WType::bytesType() : mapSolTypeToARC4(member->type()));

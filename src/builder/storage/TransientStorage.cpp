@@ -21,18 +21,19 @@ void TransientStorage::collectVars(
 	m_varById.clear();
 	m_totalSlots = 0;
 
-	// Collect transient vars base-first, de-duplicating by name (same as StorageLayout).
+	// Collect transient vars base-first. Identity is the declaration: two bases may
+	// legitimately declare same-named transient variables and Solidity resolves each
+	// reference to one exact declaration.
 	std::vector<VariableDeclaration const*> allVars;
+	std::set<int64_t> seenIds;
 	forEachStateVarReverse(_contract, [&](auto const* var)
 	{
 		if (var->isConstant() || var->immutable())
 			return;
 		if (var->referenceLocation() != VariableDeclaration::Location::Transient)
 			return;
-		bool alreadySeen = false;
-		for (auto const* existing: allVars)
-			if (existing->name() == var->name()) { alreadySeen = true; break; }
-		if (alreadySeen) return;
+		if (!seenIds.insert(var->id()).second)
+			return;
 		allVars.push_back(var);
 	});
 
@@ -159,10 +160,10 @@ namespace
 }
 
 std::shared_ptr<awst::Expression> TransientStorage::buildRead(
-	std::string const& _name, awst::WType const* _type,
+	VariableDeclaration const& _var, awst::WType const* _type,
 	awst::SourceLocation const& _loc) const
 {
-	auto const* info = getVarInfo(_name);
+	auto const* info = getVarInfoById(_var.id());
 	if (!info)
 		return nullptr;
 
@@ -273,10 +274,10 @@ namespace
 }
 
 std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
-	std::string const& _name, std::shared_ptr<awst::Expression> _value,
+	VariableDeclaration const& _var, std::shared_ptr<awst::Expression> _value,
 	awst::SourceLocation const& _loc) const
 {
-	auto const* info = getVarInfo(_name);
+	auto const* info = getVarInfoById(_var.id());
 	if (!info)
 		return nullptr;
 

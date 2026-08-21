@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/signed_getter_cross_call.sol.reader.approval_program() -> uint64:
 main:
     intcblock 0 1 32 24
-    bytecblock "h" "__ctor_pending" 0x4334fac7 0x151f7c75 TMPL_APPROVAL_holder TMPL_CLEAR_holder
+    bytecblock "h" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x4334fac7 0x151f7c75 TMPL_APPROVAL_holder TMPL_CLEAR_holder
     pushint 4096
     bzero
     dup
@@ -37,7 +37,7 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytes 0xbacc49e3 // method "__postInit()void"
-    bytec_2 // method "set(uint64,uint256)void"
+    bytec_3 // method "set(uint64,uint256)void"
     pushbytess 0xcfa454b1 0xd623918b // method "readSmall()uint256", method "readWide()uint256"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_set_route@6 main_readSmall_route@7 main_readWide_route@8
@@ -58,7 +58,9 @@ main_ternary_merge@15:
     intc_0 // 0
     bytec_0 // "h"
     app_global_get_ex
-    assert // check h exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_3 // 24
     extract_uint64
     pushint 6
@@ -81,7 +83,7 @@ main_ternary_merge@15:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -107,7 +109,9 @@ main_ternary_merge@20:
     intc_0 // 0
     bytec_0 // "h"
     app_global_get_ex
-    assert // check h exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_3 // 24
     extract_uint64
     pushint 6
@@ -140,7 +144,7 @@ main_ternary_merge@23:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -198,7 +202,9 @@ main_bool_merge@32:
     intc_0 // 0
     bytec_0 // "h"
     app_global_get_ex
-    assert // check h exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_3 // 24
     extract_uint64
     pushint 6
@@ -208,7 +214,7 @@ main_bool_merge@32:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "set(uint64,uint256)void"
+    bytec_3 // method "set(uint64,uint256)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
@@ -236,8 +242,8 @@ main___postInit_route@5:
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec 4 // TMPL_APPROVAL_holder
-    bytec 5 // TMPL_CLEAR_holder
+    bytec 5 // TMPL_APPROVAL_holder
+    bytec 6 // TMPL_CLEAR_holder
     pushint 6
     itxn_field TypeEnum
     pushint 16

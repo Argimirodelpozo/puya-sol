@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_functions.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2
-    bytecblock 0x151f7c75 "a" "b" 0xafedb2e5 "x" 0x4b2c0376 0x000000000000000000000000
+    bytecblock 0x151f7c75 "a" "b" 0x000000000000000000000000 0xafedb2e5 "x" 0x4b2c0376
     pushint 4096
     bzero
     dup
@@ -28,15 +28,15 @@ main:
     intc_0 // 0
     app_global_put
     bytec_2 // "b"
-    bytec 6 // 0x000000000000000000000000
+    bytec_3 // 0x000000000000000000000000
     app_global_put
     pushbytes "c"
-    bytec 6 // 0x000000000000000000000000
+    bytec_3 // 0x000000000000000000000000
     app_global_put
     pushbytes "d"
     intc_0 // 0
     app_global_put
-    bytec 4 // "x"
+    bytec 5 // "x"
     intc_0 // 0
     app_global_put
     intc_1 // 1
@@ -49,8 +49,8 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytess 0x0f76205a 0x3a80de26 0x80ee83e3 0x46cfaea3 0x852d088d // method "set()void", method "t1()uint256", method "t2()uint256", method "t3()uint256", method "t4()uint256"
-    bytec 5 // method "g()uint256"
-    bytec_3 // method "h()uint256"
+    bytec 6 // method "g()uint256"
+    bytec 4 // method "h()uint256"
     pushbytes 0xdf01cac5 // method "x()uint64"
     txna ApplicationArgs 0
     match main_set_route@5 main_t1_route@6 main_t2_route@7 main_t3_route@8 main_t4_route@9 main_g_route@10 main_h_route@11 main_x_route@12
@@ -68,9 +68,11 @@ main_ternary_merge@19:
     !
     assert // not payable
     intc_0 // 0
-    bytec 4 // "x"
+    bytec 5 // "x"
     app_global_get_ex
-    assert // check x exists
+    intc_0 // 0
+    cover 2
+    select
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -115,10 +117,10 @@ main_ternary_merge@28:
     intc_0 // 0
     bytec_2 // "b"
     app_global_get_ex
-    swap
+    bytec_3 // 0x000000000000000000000000
+    cover 2
+    select
     dup
-    uncover 2
-    assert // check b exists
     intc_0 // 0
     extract_uint64
     dup
@@ -182,7 +184,9 @@ main_ternary_merge@36:
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
-    assert // check a exists
+    intc_0 // 0
+    cover 2
+    select
     intc_0 // 0
     callsub __funcptr_dispatch_ret_t_uint256
     dup
@@ -218,10 +222,10 @@ main_ternary_merge@41:
     intc_0 // 0
     bytec_2 // "b"
     app_global_get_ex
-    swap
+    bytec_3 // 0x000000000000000000000000
+    cover 2
+    select
     dup
-    uncover 2
-    assert // check b exists
     intc_0 // 0
     extract_uint64
     dup
@@ -285,7 +289,9 @@ main_ternary_merge@49:
     intc_0 // 0
     bytec_1 // "a"
     app_global_get_ex
-    assert // check a exists
+    intc_0 // 0
+    cover 2
+    select
     intc_0 // 0
     callsub __funcptr_dispatch_ret_t_uint256
     dup
@@ -318,7 +324,7 @@ main_set_route@5:
 main_ternary_merge@54:
     !
     assert // not payable
-    bytec 4 // "x"
+    bytec 5 // "x"
     intc_3 // 2
     app_global_put
     pushbytes "d"
@@ -326,14 +332,14 @@ main_ternary_merge@54:
     app_global_put
     global CurrentApplicationID
     itob
-    bytec_3 // method "h()uint256"
+    bytec 4 // method "h()uint256"
     concat
     pushbytes "c"
     swap
     app_global_put
     global CurrentApplicationID
     itob
-    bytec_3 // method "h()uint256"
+    bytec 4 // method "h()uint256"
     concat
     bytec_2 // "b"
     swap
@@ -354,7 +360,7 @@ g:
     txn NumAppArgs
     bz g_after_if_else@6
     txna ApplicationArgs 0
-    bytec 5 // method "g()uint256"
+    bytec 6 // method "g()uint256"
     ==
     bz g_after_if_else@6
     txn GroupIndex
@@ -426,7 +432,7 @@ __funcptr_dispatch_ret_t_uint256_else_body@2:
 __sel_to_id___funcptr_dispatch_ret_t_uint256:
     proto 1 1
     frame_dig -1
-    bytec_3 // method "h()uint256"
+    bytec 4 // method "h()uint256"
     ==
     bz __sel_to_id___funcptr_dispatch_ret_t_uint256_else_body@2
     intc_3 // 2
@@ -434,7 +440,7 @@ __sel_to_id___funcptr_dispatch_ret_t_uint256:
 
 __sel_to_id___funcptr_dispatch_ret_t_uint256_else_body@2:
     frame_dig -1
-    bytec 5 // method "g()uint256"
+    bytec 6 // method "g()uint256"
     ==
     assert // unknown function selector in self-call dispatch
     intc_1 // 1

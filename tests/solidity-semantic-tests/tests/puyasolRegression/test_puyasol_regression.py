@@ -3110,7 +3110,7 @@ def test_ternary_storage_ptr_families(harness):
 def test_asm_cd_layout(harness):
     """puyasolRegression/contracts/asm_cd_layout.sol — NOT an o.g. test.
 
-    solc-derived EVM-ABI synthetic-calldata layout (possible_solc item 2),
+    solc-derived EVM-ABI synthetic-calldata layout,
     EVM-verified vs solc 0.8.20: signed sub-word head words sign-extend;
     static aggregates inline in the head shifting later params; sub-word
     dynamic arrays re-encode to padded words (count + calldatasize match);
@@ -3135,7 +3135,7 @@ def test_asm_cd_layout(harness):
 def test_transitive_param_mutation(harness):
     """puyasolRegression/contracts/transitive_param_mutation.sol — NOT an o.g. test.
 
-    Call-graph closure (possible_solc item 3): params passed on to mutating
+    Call-graph closure: params passed on to mutating
     callees count as mutated, so the caller-side write-back chain survives
     one-hop, two-hop, using-for-bound and memory-ref shapes (EVM-verified).
     """
@@ -3277,6 +3277,21 @@ def test_asm_mem_ptr_roundtrip(harness):
         assert as_int(harness.call(app, "rt2(uint256)", v).abi_return) == v
     for v in (0, 1, 0xdeadbeef, (1 << 160) - 1):
         assert as_int(harness.call(app, "expRt(uint160)", v).abi_return) == v
+
+    # A non-`new` memory buffer has exactly the same Yul pointer semantics.
+    # This is the Aave AuthorityUtils form that used to apply AVM biguint `b+`
+    # to the entire abi.encodeCall byte value instead of to a memory offset.
+    caller = harness.localnet.account.address
+    target = caller
+    selector = bytes.fromhex("12345678")
+    expected = as_bytes(harness.call(
+        app, "expectedEncodedCall(address,address,bytes4)",
+        caller, target, selector).abi_return)
+    echoed = harness.call(
+        app, "echoEncodedCall(address,address,bytes4)",
+        caller, target, selector, extra_fee=10_000).abi_return
+    assert echoed[0] is True
+    assert as_bytes(echoed[1]) == expected
 
 
 def test_asm_mstore_length_word(harness):
@@ -3679,7 +3694,7 @@ def test_mapping_key_collision(harness):
     assert harness.call(app, "getBc(bytes)", b"\x02").abi_return == 9
 
 
-# ── --evm-storage-layout mode (asm-compat-memory-mode.md, stage 1) ──────────
+# ── --evm-storage-layout mode ───────────────────────────────────────────────
 #
 # All storage becomes a flat EVM slot space backed by boxes: dense declared
 # slots (< 2^16) in 2048-byte pages ("p:" ++ itob(slot/64)), hashed slots
@@ -4129,6 +4144,214 @@ _EVM_MEM = ["--evm-memory-layout"]
 _EVM_BOTH = ["--evm-storage-layout", "--evm-memory-layout"]
 
 
+def test_recursive_evm_memory_codec(harness):
+    """ARC4 values spill to and materialise from EVM memory at every rank.
+
+    In particular, uint8/uint16 elements prove this is not the former
+    32-byte-slab shortcut, and nested arrays/struct reference fields prove that
+    child pointer words are followed recursively.
+    """
+    arts = harness.compile(
+        "puyasolRegression/contracts/recursive_evm_memory_codec.sol",
+        extra_args=_EVM_MEM)
+    app = harness.deploy(arts, "RecursiveEvmMemoryCodec",
+                         extra_funding_microalgos=10_000_000)
+    opts = {"extra_fee": 20_000}
+
+    got = harness.call(app, "echoU8(uint8[])", [1, 200, 255], **opts).abi_return
+    assert [as_int(x) for x in got] == [1, 200, 255], got
+
+    got = harness.call(app, "echoFixed(uint8[3])", [7, 8, 9], **opts).abi_return
+    assert [as_int(x) for x in got] == [7, 8, 9], got
+
+    nested = [[1, 513], [], [65535, 9]]
+    got = harness.call(app, "echoNested(uint16[][])", nested, **opts).abi_return
+    assert [[as_int(x) for x in row] for row in got] == nested, got
+
+    three_d = [[[1, 2], []], [[3]], []]
+    got = harness.call(app, "echo3d(uint8[][][])", three_d, **opts).abi_return
+    assert [[[as_int(x) for x in row] for row in plane] for plane in got] == three_d, got
+
+    got = harness.call(
+        app, "editNested(uint16[][])", [[1, 2], [3, 4, 5]], **opts
+    ).abi_return
+    assert tuple(as_int(x) for x in got) == (60000, 3), got
+
+    got = harness.call(
+        app, "edit3d(uint8[][][])", [[[1]], [[2, 3]], []], **opts
+    ).abi_return
+    assert as_int(got) == 250, got
+
+    got = harness.call(app, "editFixed(uint8[3])", [7, 8, 9], **opts).abi_return
+    assert as_int(got) == 200, got
+
+    got = harness.call(
+        app, "buildItem(uint8,uint16[],byte[])", 17, [2, 513], b"abc", **opts
+    ).abi_return
+    assert as_int(got[0]) == 17
+    assert [as_int(x) for x in got[1]] == [2, 513]
+    assert bytes(got[2]) == b"abc"
+
+    got = harness.call(
+        app, "editItem((uint8,uint16[],byte[]))", [17, [2, 513], b"abc"], **opts
+    ).abi_return
+    assert tuple(as_int(x) for x in got[:2]) == (251, 50000), got
+    assert bytes(got[2]) == b"z", got
+
+
+def test_builder_review_signed_mapping_and_full_sparse_slots(harness):
+    """Signed mapping getter keys and full-width sparse slot identities."""
+    arts = harness.compile(
+        "puyasolRegression/contracts/builder_review_remaining.sol",
+        extra_args=["--evm-storage-layout"])
+    app = harness.deploy(arts, "BuilderReviewRemaining",
+                         extra_funding_microalgos=5_000_000)
+    opts = {"extra_fee": 10_000}
+
+    harness.call(app, "setSigned(int24,int24)", -7, -3, **opts)
+    got = harness.call(app, "signedMap(int24)", -7, **opts).abi_return
+    raw = as_int(got)
+    assert raw == (1 << 256) - 3, raw
+
+    harness.call(app, "writeSparseSlots()", **opts)
+    got = harness.call(app, "readSparseSlots()", **opts).abi_return
+    assert tuple(as_int(x) for x in got) == (11, 22), got
+
+    harness.call(app, "writeWrappedSlot()", **opts)
+    got = harness.call(app, "readSparseSlots()", **opts).abi_return
+    assert tuple(as_int(x) for x in got) == (33, 22), got
+
+
+def test_generic_assembly_evm_abi_return(harness):
+    """Assembly return() uses the recursive EVM ABI decoder for every shape."""
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/generic_assembly_abi_return.sol")
+
+    assert as_int(harness.call(app, "scalar()").abi_return) == 513
+
+    got = harness.call(app, "nested()").abi_return
+    assert [[as_int(x) for x in row] for row in got] == [[513, 65535], [7]], got
+
+    got = harness.call(app, "structure()").abi_return
+    assert as_int(got[0]) == 251
+    assert got[1] == "hi"
+    assert [as_int(x) for x in got[2]] == [2, 50000]
+
+    got = harness.call(app, "tupleResult()").abi_return
+    assert as_int(got[0]) == 9
+    assert [as_int(x) for x in got[1]] == [513, 65535]
+    assert got[2] == "ok"
+
+
+def test_recursive_shape_audit(harness):
+    """Aggregate lowering is recursive across ranks and mixed container kinds.
+
+    This is intentionally a breadth test: adding a new ``[][]``-style branch
+    can make the shallow examples pass while deeper or mixed trees still use a
+    different path.  The same contracts exercise rank three, fixed/dynamic
+    mixtures, packed leaves, struct leaves, mapping-bearing leaves, computed
+    slot handles, and assembly-visible array roots.
+    """
+    source = "puyasolRegression/contracts/recursive_shape_audit.sol"
+    opts = {"extra_fee": 30_000}
+
+    # The default storage backend has its own recursive storage-reference
+    # lowering. Multi-box aggregate sizing already has dedicated boundary
+    # tests, so this audit keeps the runtime portion focused on nested paths.
+    default_arts = harness.compile(source)
+    refs = harness.deploy(
+        default_arts, "RecursiveShapeBoxRef",
+        extra_funding_microalgos=10_000_000)
+    harness.call(refs, "seed()", **opts)
+    assert as_int(harness.call(refs, "run()", **opts).abi_return) == 707
+    assert as_int(harness.call(refs, "runElementRef()", **opts).abi_return) == 808
+    got = harness.call(refs, "runNestedRef()", **opts).abi_return
+    assert (as_int(got[0]), got[1]) == (910, True)
+    got = harness.call(refs, "runScalarRef()", **opts).abi_return
+    assert tuple(as_int(x) for x in got) == (2, 520, 616)
+    got = harness.call(refs, "runMixedRef()", **opts).abi_return
+    assert tuple(as_int(x) for x in got) == (717, 818)
+
+    # EVM slot mode uses the solc-layout-driven recursive slot codec.
+    evm_arts = harness.compile(source, extra_args=_EVM_LAYOUT)
+    evm = harness.deploy(
+        evm_arts, "RecursiveShapeEvm",
+        extra_funding_microalgos=30_000_000)
+    harness.call(evm, "replace(uint256[][][])", [[[1, 2]], [[3]]], **opts)
+    assert tuple(as_int(x) for x in harness.call(
+        evm, "summary()", **opts).abi_return) == (2, 1, 2, 1, 2, 3)
+
+    mixed = [[[1], [2]], [[3], [4, 5]]]
+    harness.call(evm, "replaceMixed(uint256[][2][2])", mixed, **opts)
+    assert tuple(as_int(x) for x in harness.call(
+        evm, "mixedSummary()", **opts).abi_return) == (1, 2, 3, 5)
+
+    fixed_leaf = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]]
+    harness.call(evm, "replaceFixedLeaf(uint256[2][2][])", fixed_leaf, **opts)
+    assert tuple(as_int(x) for x in harness.call(
+        evm, "fixedLeafSummary()", **opts).abi_return) == (2, 1, 4, 6, 7)
+
+    mixed_tree = [[[1], [2, 3]], [[4, 5], [6]]]
+    harness.call(evm, "replaceMixedTree(uint256[][2][])", mixed_tree, **opts)
+    assert tuple(as_int(x) for x in harness.call(
+        evm, "mixedTreeSummary()", **opts).abi_return) == (2, 1, 3, 5, 6)
+
+    packed = [[[True, False, True], [False, True, False]]]
+    harness.call(evm, "replacePackedLeaf(bool[3][2][])", packed, **opts)
+    got = harness.call(evm, "packedLeafSummary()", **opts).abi_return
+    assert (as_int(got[0]), *got[1:]) == (1, True, False, True, False, True, False)
+
+    holders = [[[11, True], 12], [[21, False], 22]]
+    harness.call(evm, "replaceHolders(((uint256,bool),uint256)[2])",
+                 holders, **opts)
+    got = harness.call(evm, "holderSummary()", **opts).abi_return
+    assert (as_int(got[0]), got[1], as_int(got[2]),
+            as_int(got[3]), got[4], as_int(got[5])) == (
+                11, True, 12, 21, False, 22)
+
+    harness.call(evm, "pushComplex(uint256[],uint256,bool,uint256)",
+                 [7, 8, 9], 31, True, 32, **opts)
+    got = harness.call(evm, "complexSummary()", **opts).abi_return
+    assert (as_int(got[0]), as_int(got[1]), as_int(got[2]),
+            got[3], as_int(got[4])) == (1, 3, 31, True, 32)
+
+    mapping = harness.deploy(
+        evm_arts, "RecursiveShapeMapping",
+        extra_funding_microalgos=10_000_000)
+    harness.call(mapping, "seed()", **opts)
+    harness.call(mapping, "write(uint256,uint256,uint256,uint256)",
+                 0, 1, 9, 99, **opts)
+    harness.call(mapping, "setMarker(uint256,uint256,uint256)",
+                 0, 1, 77, **opts)
+    assert as_int(harness.call(
+        mapping, "read(uint256,uint256,uint256)", 0, 1, 9,
+        **opts).abi_return) == 99
+
+    slot = harness.deploy(
+        evm_arts, "RecursiveShapeSlotHandle",
+        extra_funding_microalgos=10_000_000)
+    harness.call(slot, "write(uint256,uint256,uint256,uint256,bool)",
+                 1, 1, 1, 515, True, **opts)
+    got = harness.call(slot, "read(uint256,uint256,uint256)", 1, 1, 1,
+                       **opts).abi_return
+    assert (as_int(got[0]), got[1]) == (515, True)
+    got = harness.call(slot, "copied(uint256)", 1, **opts).abi_return
+    assert (as_int(got[0]), got[1], as_int(got[2]), got[3]) == (
+        0, False, 515, True)
+
+    roots = harness.deploy(
+        evm_arts, "RecursiveShapeAsmArrayRoot",
+        extra_funding_microalgos=10_000_000)
+    harness.call(roots, "resizeRoots(uint256,uint256)", 3, 2, **opts)
+    harness.call(roots, "resizeMembers(uint256,uint256)", 4, 1, **opts)
+    assert tuple(as_int(x) for x in harness.call(
+        roots, "lengths()", **opts).abi_return) == (3, 2, 0, 4, 1, 0)
+
+    harness.call(evm, "clearAggregates()", **opts)
+    assert tuple(as_int(x) for x in harness.call(
+        evm, "clearedSummary()", **opts).abi_return) == (0,) * 8
+
+
 def test_evm_layout_unlocks_storage_layout_struct(harness):
     """userDefinedValueType/contracts/storage_layout_struct.sol — a known
     baseline FAIL: `HalfSlot memory x = b; mload(x)` needs the memory struct
@@ -4182,7 +4405,9 @@ def test_asm_extcodesize(harness):
     BMEX's Vesting dependency in the chainwide differ). Was a hard error
     justified as "no way to query whether an address has code", while
     `address(a).code.length` answered the same question via app_params_get.
-    Both spellings now share that lowering.
+    Both spellings now share a non-materialising app-metadata lowering, so
+    contracts whose approval programs exceed the AVM stack-item limit remain
+    queryable as well.
     """
     app = harness.compile_and_deploy(
         "puyasolRegression/contracts/asm_extcodesize.sol",
@@ -4194,6 +4419,8 @@ def test_asm_extcodesize(harness):
                         harness.localnet.account.address).abi_return is False
     assert harness.call(app, "agreesWithDotCode()").abi_return is True
     assert as_int(harness.call(app, "twoReads()").abi_return) > 0
+    assert harness.call(app, "nestedAfterCall()",
+                        extra_fee=10_000).abi_return is True
 
 
 def test_enumerable_set_values(harness):
@@ -4544,7 +4771,7 @@ def test_evm_selectors_separate_language_values_from_arc4_routes(harness):
 def test_dowhile_braceless_body(harness):
     """puyasolRegression/contracts/dowhile_braceless.sol — NOT an o.g. semantic test.
 
-    new_review.md A1: the do-while arm translated the body only when it was a
+    The do-while arm translated the body only when it was a
     Block, silently DROPPING a brace-less body. With a side-effecting condition
     (`do acc += 10; while (bump());`) puya's infinite-loop detector stayed
     quiet and the empty-body function returned 0 where EVM returns 30.

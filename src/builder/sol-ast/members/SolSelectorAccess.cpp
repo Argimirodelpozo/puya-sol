@@ -144,8 +144,14 @@ std::shared_ptr<awst::Expression> SolSelectorAccess::toAwst()
 	{
 		if (funcType->kind() == FunctionType::Kind::Event)
 		{
-			try { sig = funcType->externalSignature(); }
-			catch (...) {}
+			if (!builder::SelectorSemantics::enabled(m_ctx.typeMapper)
+				&& funcType->hasDeclaration())
+				if (auto const* eventDef = dynamic_cast<EventDefinition const*>(
+						&funcType->declaration()))
+					sig = builder::SelectorSemantics::eventSignature(m_ctx, *eventDef);
+			if (sig.empty())
+				try { sig = funcType->externalSignature(); }
+				catch (...) {}
 		}
 		else
 		{

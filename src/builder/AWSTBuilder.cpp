@@ -69,6 +69,13 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	m_session.begin(_compiler, _sourceAliases, std::move(_targetProfile));
 	m_storageMapper = std::make_unique<StorageMapper>(m_session.typeMapper);
 	m_hostBoundFunctions.clear();
+	m_selectorContracts.clear();
+	for (auto const& sourceName: _compiler.sourceNames())
+		for (auto const* contract: solidity::frontend::ASTNode::filteredNodes<
+			solidity::frontend::ContractDefinition>(_compiler.ast(sourceName).nodes()))
+			if (contract && !contract->isInterface() && !contract->abstract()
+				&& !contract->isLibrary())
+				m_selectorContracts.push_back(contract);
 	std::vector<std::shared_ptr<awst::RootNode>> roots;
 
 	registerFunctionIds(_compiler, m_functionSymbols);
@@ -389,11 +396,14 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		m_session.typeMapper, *m_storageMapper, _sourceFile, _libraryName,
 		EMPTY_OVERLOAD_NAMES, m_functionSymbols, m_session.functionPointers
 	);
+	exprBuilder.selectorContracts = m_selectorContracts;
 
 	sol_ast::TranslationContext tr{exprBuilder, m_session.typeMapper, _sourceFile};
 	auto trGuard = exprBuilder.pushScopeRaii(&tr);
 	sol_ast::FunctionContext fnCtx{tr, {}, sub->returnType, {}};
 	fnCtx.callableId = _func.id();
+	for (auto const& rp: _func.returnParameters())
+		fnCtx.returnSolTypes.push_back(rp->type());
 	auto fnGuard = exprBuilder.pushScopeRaii(&fnCtx);
 
 	// Register mapping-storage-ref params (must be after FunctionContext push;
@@ -754,21 +764,19 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 
 			// Include augmented args after named-return values to match sub->returnType.
 			if (returnParams.size() == 1 && totalAugmented2 == 0
-				&& m_session.profile.evmMemoryLayout
 				&& returnParams[0]->referenceLocation()
 					== solidity::frontend::VariableDeclaration::Location::Memory
-				&& [&]{ auto const* at3 = dynamic_cast<
-						solidity::frontend::ArrayType const*>(
-						returnParams[0]->type());
-					return at3 && at3->isByteArrayOrString(); }()
-				&& builder::blockUsesDeclInAsm(_func.body(), returnParams[0]->id()))
+				&& fnCtx.isAssemblyAggregate(returnParams[0]->id())
+				&& !memoryUsesBlob(m_session.typeMapper.map(returnParams[0]->type())))
 			{
-				implicitReturn->value =
-					builder::AssemblyBuilder::materializeBlobBytesValue(
-						m_session.profile.scratchLayout,
-						"__blobagg_off_" + std::to_string(returnParams[0]->id()),
-						dynamic_cast<solidity::frontend::ArrayType const*>(
-							returnParams[0]->type())->isString(), loc);
+				std::vector<std::shared_ptr<awst::Statement>> reads;
+				implicitReturn->value = builder::materializeBlobValue(
+					m_session.typeMapper, returnParams[0]->type(),
+					m_session.typeMapper.map(returnParams[0]->type()),
+					"__blobagg_off_" + std::to_string(returnParams[0]->id()),
+					loc, reads);
+				for (auto& st: reads)
+					sub->body->body.push_back(std::move(st));
 			}
 			else if (returnParams.size() == 1 && totalAugmented2 == 0)
 			{
@@ -805,6 +813,19 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 						tuple->items.push_back(awst::makeVarExpression(
 							"__blobagg_off_" + std::to_string(rp->id()),
 							awst::WType::uint64Type(), loc));
+					else if (rp->referenceLocation()
+							== solidity::frontend::VariableDeclaration::Location::Memory
+						&& fnCtx.isAssemblyAggregate(rp->id()))
+					{
+						std::vector<std::shared_ptr<awst::Statement>> reads;
+						auto value = builder::materializeBlobValue(
+							m_session.typeMapper, rp->type(), rpW,
+							"__blobagg_off_" + std::to_string(rp->id()),
+							loc, reads);
+						for (auto& st: reads)
+							sub->body->body.push_back(std::move(st));
+						tuple->items.push_back(std::move(value));
+					}
 					else
 						tuple->items.push_back(awst::makeVarExpression(rp->name(), rpW, loc));
 				}

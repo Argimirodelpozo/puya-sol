@@ -56,6 +56,8 @@ set(SOURCES
 	src/builder/FunctionIdRegistry.cpp
 	src/builder/SubroutineRegistry.cpp
 	src/builder/contract/ContractBuilder.cpp
+	src/builder/contract/EvmMemoryCodec.cpp
+	src/builder/contract/EvmEntryRouter.cpp
 	src/builder/contract/StorageDispatch.cpp
 	src/builder/contract/EvmSlotStorageDispatch.cpp
 	src/builder/contract/ModifierBodyInliner.cpp
@@ -70,6 +72,7 @@ set(SOURCES
 	src/builder/contract/SuperCallResolution.cpp
 
 	# Builtin support (algorithms with no AVM opcode counterpart)
+	src/builder/builtin/AppCodeSizeLowering.cpp
 	src/builder/builtin/Ripemd160Builder.cpp
 
 	# Assembly builder (split by operation type)
@@ -131,6 +134,9 @@ set(SOURCES
 	src/builder/itxn/AsaIntrinsics.cpp
 	src/builder/storage/StorageBackend.cpp
 	src/builder/abi/AbiEncoderBuilder.cpp
+	src/builder/abi/EvmAbiEncode.cpp
+	src/builder/abi/EvmAbiDecode.cpp
+	src/builder/codec/EvmValueCodec.cpp
 	src/builder/itxn/FunctionPointerBuilder.cpp
 	src/builder/itxn/FunctionPointerDispatchTypes.cpp
 	src/builder/sol-eb/AssignmentHelper.cpp

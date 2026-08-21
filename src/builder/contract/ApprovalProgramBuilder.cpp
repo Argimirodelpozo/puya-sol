@@ -1,4 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
+#include "builder/abi/EvmAbiDecode.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/contract/PostInitTriggers.h"
@@ -366,6 +367,39 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 
 		if (constructor)
 		{
+			if (m_typeMapper.profile().contractAbi == ContractAbi::Evm
+				&& !needsPostInit
+				&& !constructor->parameters().empty())
+			{
+				std::vector<solidity::frontend::Type const*> parameterTypes;
+				std::vector<awst::WType const*> mappedTypes;
+				for (auto const& parameter: constructor->parameters())
+				{
+					parameterTypes.push_back(parameter->type());
+					mappedTypes.push_back(m_typeMapper.map(parameter->type()));
+				}
+				auto const* decodedType = mappedTypes.size() == 1
+					? mappedTypes[0]
+					: m_typeMapper.createType<awst::WTuple>(mappedTypes);
+				auto decoded = abi::decodeEvmAbi(
+					m_typeMapper, awst::makeAppArg(0, method.sourceLocation),
+					parameterTypes, decodedType, method.sourceLocation,
+					createBlock->body);
+				decoded = awst::makeEvalOnce(std::move(decoded), method.sourceLocation);
+				for (size_t i = 0; i < constructor->parameters().size(); ++i)
+				{
+					auto value = constructor->parameters().size() == 1
+						? decoded
+						: awst::makeTupleItem(decoded, static_cast<int>(i),
+							mappedTypes[i], method.sourceLocation);
+					createBlock->body.push_back(awst::makeAssignmentStatement(
+						awst::makeVarExpression(constructor->parameters()[i]->name(),
+							mappedTypes[i], method.sourceLocation),
+						std::move(value), method.sourceLocation));
+				}
+			}
+			else if (m_typeMapper.profile().contractAbi == ContractAbi::Arc4)
+			{
 			// Decode constructor params from ApplicationArgs (ARC4-encoded, one per slot).
 			int argIndex = 0;
 			for (auto const& param: constructor->parameters())
@@ -451,6 +485,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				createBlock->body.push_back(std::move(assignment));
 
 				++argIndex;
+			}
 			}
 
 		}
@@ -829,10 +864,12 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		{
 			// Direct bases: ModifierInvocation on derived ctor or InheritanceSpecifier
 			// on the contract itself.
-			std::set<solidity::frontend::ContractDefinition const*> directBases;
+			std::vector<solidity::frontend::ContractDefinition const*> directBases;
+			std::set<int64_t> seenDirectBaseIds;
 			auto recordBase = [&](solidity::frontend::Declaration const* _ref) {
 				if (auto const* bc = dynamic_cast<solidity::frontend::ContractDefinition const*>(_ref))
-					directBases.insert(bc);
+					if (seenDirectBaseIds.insert(bc->id()).second)
+						directBases.push_back(bc);
 			};
 			if (constructor)
 				for (auto const& mod: constructor->modifiers())
@@ -855,9 +892,46 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				auto const& params = baseCtor->parameters();
 				for (size_t i = 0; i < args.size() && i < params.size(); ++i)
 				{
+					if (params[i]->referenceLocation()
+						== solidity::frontend::VariableDeclaration::Location::Storage)
+					{
+						if (m_typeMapper.profile().evmStorageLayout)
+						{
+							sol_ast::EvmSlotLowering low(
+								*m_exprBuilder, *m_exprBuilder->currentScope,
+								makeLoc(args[i]->location()));
+							if (auto addr = low.resolve(*args[i]))
+							{
+								for (auto& pst: m_exprBuilder->takePreEffects())
+									createBlock->body.push_back(std::move(pst));
+								createBlock->body.push_back(awst::makeAssignmentStatement(
+									awst::makeVarExpression(params[i]->name(),
+										awst::WType::biguintType(), makeLoc(args[i]->location())),
+									addr->slot, makeLoc(args[i]->location())));
+							}
+							continue;
+						}
+					}
 					auto argExpr = m_exprBuilder->buildExpr(*args[i]);
 					if (!argExpr)
 						continue;
+					if (params[i]->referenceLocation()
+						== solidity::frontend::VariableDeclaration::Location::Storage)
+					{
+						sol_ast::StorageAlias alias = [&]() -> sol_ast::StorageAlias {
+							if (dynamic_cast<awst::BytesConstant const*>(argExpr.get()))
+								return sol_ast::StorageAlias::mappingHolder(std::move(argExpr));
+							if (dynamic_cast<awst::IndexExpression const*>(argExpr.get()))
+								return sol_ast::StorageAlias::indexedPath(std::move(argExpr));
+							if (dynamic_cast<awst::FieldExpression const*>(argExpr.get()))
+								return sol_ast::StorageAlias::fieldPath(std::move(argExpr));
+							if (dynamic_cast<awst::TupleItemExpression const*>(argExpr.get()))
+								return sol_ast::StorageAlias::tupleSlice(std::move(argExpr));
+							return sol_ast::StorageAlias::stateRead(std::move(argExpr));
+						}();
+						m_tr->setStorageAlias(params[i]->id(), std::move(alias));
+						continue;
+					}
 					auto* targetType = m_typeMapper.map(params[i]->type());
 					argExpr = TypeCoercion::implicitNumericCast(
 						std::move(argExpr), targetType, makeLoc(args[i]->location()));
@@ -884,7 +958,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				auto const* base = *it;
 				if (base == &_contract)
 					continue;
-				if (directBases.count(base))
+				if (seenDirectBaseIds.count(base->id()))
 					continue;
 
 				auto argIt = explicitBaseArgs.find(base);
@@ -900,9 +974,46 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				// Assign these params into createBlock NOW (so deeper transitives can see them)
 				for (size_t i = 0; i < args.size() && i < params.size(); ++i)
 				{
+					if (params[i]->referenceLocation()
+						== solidity::frontend::VariableDeclaration::Location::Storage)
+					{
+						if (m_typeMapper.profile().evmStorageLayout)
+						{
+							sol_ast::EvmSlotLowering low(
+								*m_exprBuilder, *m_exprBuilder->currentScope,
+								makeLoc(args[i]->location()));
+							if (auto addr = low.resolve(*args[i]))
+							{
+								for (auto& pst: m_exprBuilder->takePreEffects())
+									createBlock->body.push_back(std::move(pst));
+								createBlock->body.push_back(awst::makeAssignmentStatement(
+									awst::makeVarExpression(params[i]->name(),
+										awst::WType::biguintType(), makeLoc(args[i]->location())),
+									addr->slot, makeLoc(args[i]->location())));
+							}
+							continue;
+						}
+					}
 					auto argExpr = m_exprBuilder->buildExpr(*args[i]);
 					if (!argExpr)
 						continue;
+					if (params[i]->referenceLocation()
+						== solidity::frontend::VariableDeclaration::Location::Storage)
+					{
+						sol_ast::StorageAlias alias = [&]() -> sol_ast::StorageAlias {
+							if (dynamic_cast<awst::BytesConstant const*>(argExpr.get()))
+								return sol_ast::StorageAlias::mappingHolder(std::move(argExpr));
+							if (dynamic_cast<awst::IndexExpression const*>(argExpr.get()))
+								return sol_ast::StorageAlias::indexedPath(std::move(argExpr));
+							if (dynamic_cast<awst::FieldExpression const*>(argExpr.get()))
+								return sol_ast::StorageAlias::fieldPath(std::move(argExpr));
+							if (dynamic_cast<awst::TupleItemExpression const*>(argExpr.get()))
+								return sol_ast::StorageAlias::tupleSlice(std::move(argExpr));
+							return sol_ast::StorageAlias::stateRead(std::move(argExpr));
+						}();
+						m_tr->setStorageAlias(params[i]->id(), std::move(alias));
+						continue;
+					}
 					auto* targetType = m_typeMapper.map(params[i]->type());
 					argExpr = TypeCoercion::implicitNumericCast(
 						std::move(argExpr), targetType, makeLoc(args[i]->location()));
@@ -1064,7 +1175,8 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	if (receiveFunc && !receiveFunc->isImplemented())
 		receiveFunc = nullptr;
 
-	emitSelectorDispatch(*body, fallbackFunc, receiveFunc, method.sourceLocation);
+	if (m_typeMapper.profile().contractAbi == ContractAbi::Arc4)
+		emitSelectorDispatch(*body, fallbackFunc, receiveFunc, method.sourceLocation);
 
 	method.body = body;
 
@@ -1125,40 +1237,11 @@ void ContractBuilder::emitBoxCreateForStateVars(
 						if (enc->size() > 0 && enc->size() <= 32768)
 							dynArc4Default = std::move(*enc);
 				}
-				uint64_t elemSize = 32; // default for uint256
+				uint64_t elemSize = 32; // conservative fallback; dynamic defaults use box_put
 				auto const* elemT = sa->elementType();
-				if (elemT)
-				{
-					if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(elemT))
-						elemSize = std::max<uint64_t>(1u, static_cast<uint64_t>(uintN->n() / 8));
-					else if (elemT->kind() == awst::WTypeKind::Bytes)
-					{
-						auto const* bw = dynamic_cast<awst::BytesWType const*>(elemT);
-						if (bw && bw->length().has_value())
-							elemSize = *bw->length();
-					}
-					else if (dynamic_cast<awst::ARC4StaticArray const*>(elemT))
-						// Nested static array (e.g. int256[2][2], element = int256[2]): the element's
-						// byte size is the FULL inner array. The old switch missed this, defaulting to
-						// 32 → under-sized box (64 B for int256[2][2] not 128) → grid[1][j] hit
-						// "replacement end beyond original length". Recurses correctly.
-						elemSize = StorageMapper::arc4StaticArrayTotalBytes(elemT);
-					else if (elemT->kind() == awst::WTypeKind::ARC4Struct)
-					{
-						// STRUCT element (e.g. `S[5] data` where S packs to 55 B): the element's byte
-						// size is the struct's full ARC4 encoding. Same missed-case class as the nested
-						// static array above — without this the default 32 UNDER-SIZED the box (5*32=160
-						// for a struct needing 5*55=275), so element access overran it ("extraction end
-						// 165 is beyond length: 160") and low indices silently read/wrote the wrong
-						// bytes. Latent for ANY Struct[N] state array whose struct isn't exactly 32 B.
-						// Found by the corpus-mutation fuzzer (structs/memory_structs_read_write,
-						// uint16->int160). computeEncodedElementSize returns 0 for a DYNAMIC struct —
-						// keep the existing default in that case (dynArc4Default handles it above).
-						int structSize = builder::computeEncodedElementSize(elemT);
-						if (structSize > 0)
-							elemSize = static_cast<uint64_t>(structSize);
-					}
-				}
+				if (int fixedSize = builder::computeEncodedElementSize(elemT);
+					fixedSize > 0)
+					elemSize = static_cast<uint64_t>(fixedSize);
 				// AVM box cap = 32768 B; oversized → multi-box below.
 				// Record per-box size here.
 				uint64_t size = elemSize * static_cast<uint64_t>(sa->arraySize());

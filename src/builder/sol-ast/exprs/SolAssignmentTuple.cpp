@@ -7,6 +7,7 @@
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4ArrayWidening.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -441,23 +442,8 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		}
 		if (assignTarget->wtype != assignValue->wtype)
 		{
-			bool targetIsArc4 = false;
-			switch (assignTarget->wtype->kind())
-			{
-			case awst::WTypeKind::ARC4UIntN:
-			case awst::WTypeKind::ARC4StaticArray:
-			case awst::WTypeKind::ARC4DynamicArray:
-			case awst::WTypeKind::ARC4Struct:
-				targetIsArc4 = true; break;
-			default: break;
-			}
-			// arc4.bool has kind `Basic` (same as native bool), so the switch misses
-			// it — a tuple/multi-return write into an arc4.bool slot (`(flags[0],
-			// flags[1]) = (b, a)` over a bool[]) would leave the RHS native bool and
-			// puya rejects it ("target type differs"). Twin of the scalar fix in
-			// SolAssignment::applyArc4EncodeIfNeeded / the bool[] read+write fixes.
-			if (assignTarget->wtype == awst::WType::arc4BoolType())
-				targetIsArc4 = true;
+			bool const targetIsArc4 =
+				builder::isArc4EncodedType(assignTarget->wtype);
 			if (targetIsArc4)
 			{
 				assignValue = builder::TypeCoercion::stringToBytes(std::move(assignValue), m_loc);
@@ -575,7 +561,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 					auto* varType = m_ctx.typeMapper.map(srcDecl->type());
 					auto coerced = builder::TypeCoercion::coerceForAssignment(
 						std::move(assignValue), varType, m_loc);
-					auto stmt = m_ctx.transientStorage->buildWrite(srcIdent->name(), coerced, m_loc);
+					auto stmt = m_ctx.transientStorage->buildWrite(*srcDecl, coerced, m_loc);
 					if (stmt)
 						m_ctx.postEffects().push_back(std::move(stmt));
 					continue;

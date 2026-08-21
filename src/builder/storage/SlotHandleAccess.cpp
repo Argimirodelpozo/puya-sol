@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <limits>
 
 namespace puyasol::builder
 {
@@ -95,7 +96,13 @@ SlotHandleAccess::ElemLayout SlotHandleAccess::layoutFor(
 	unsigned bytes = _elemType->storageBytes();
 	if (slots > 1 || bytes == 32)
 	{
-		l.strideSlots = slots > 4096 ? 4096u : static_cast<unsigned>(slots);
+		if (slots > std::numeric_limits<unsigned>::max())
+		{
+			Logger::instance().error(
+				"storage element stride exceeds the compiler's addressable range");
+			return l;
+		}
+		l.strideSlots = static_cast<unsigned>(slots);
 		l.perSlot = 1;
 		l.size = 32;
 	}
@@ -189,6 +196,7 @@ std::shared_ptr<awst::Expression> SlotHandleAccess::readScalarElem(
 	if (_l.perSlot == 1)
 		return readSlot(elemSlot(std::move(_base), std::move(_idx), _l, _loc), _loc);
 	// packed: extract the element's bytes from its word
+	_idx = awst::makeEvalOnce(std::move(_idx), _loc);
 	auto word = readSlot(elemSlot(std::move(_base), _idx, _l, _loc), _loc);
 	auto wordB = awst::makeLeftPadToN(awst::makeAsBytes(std::move(word), _loc), 32, _loc);
 	auto raw = awst::makeExtract3(std::move(wordB), packedBEPos(_idx, _l, _loc),

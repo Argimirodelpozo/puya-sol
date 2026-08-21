@@ -227,7 +227,9 @@ void AssemblyBuilder::buildAssignment(
 							? m_yulSubReturnTemps[i]
 							: funcDef.returnVariables[i].name.str();
 						std::string varName = resolveVarRef(_assign.variableNames[i]);
-						m_localConstants.erase(varName); // reassigned → any recorded constant is stale
+						if (!m_calldataParamNames.count(varName)
+							&& !m_calldataStaticPtrNames.count(varName))
+							m_localConstants.erase(varName);
 						m_localSlotConstants.erase(varName);
 
 						auto retIt = m_locals.find(retName);
@@ -731,8 +733,13 @@ void AssemblyBuilder::buildExpressionStatement(
 		}
 		if (funcName == "stop")
 		{
-			auto retStmt = awst::makeReturnStatement(nullptr, loc);
-			_out.push_back(std::move(retStmt));
+			flushMemoryToScratch(loc, _out);
+			auto halt = awst::makeIntrinsicCall(
+				"return", awst::WType::voidType(), loc);
+			halt->stackArgs.push_back(awst::makeTrue(loc));
+			_out.push_back(
+				awst::makeExpressionStatement(std::move(halt), loc));
+			m_haltEmitted = true;
 			return;
 		}
 		if (funcName == "returndatacopy")

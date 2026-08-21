@@ -99,20 +99,18 @@ private:
 	/// or emits a runtime bytes assignment (mapping-key param).
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleStoragePointerReassign();
 
-	/// `arr[i] = v` for a multi-box array (>32KB). Emits
-	/// box_replace(<name>++itob(page), (i%elemsPerBox)*elemSize, ARC4-encoded-rhs).
+	/// Write anywhere below a multi-box array (>32KB): select the outer
+	/// element-aligned page, recursively mutate that element, and replace it.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleMultiBoxArrayWrite();
 
-	/// `a[i].field = v` / `a[i] = v` where `a` is a box-keyed array REF PARAM (handle
-	/// model): emits box_replace(paramKey, 2 + i*elemSize + fieldOffset, ARC4-encoded-rhs)
-	/// directly, so the write hits the caller's box (a real side-effect, not DCE'd) instead
-	/// of the COW reconstruction that drops it. Single-box, fixed-size struct elements only.
-	std::optional<std::shared_ptr<awst::Expression>> tryHandleBoxedArrayElemWrite();
+	/// Write through any single-box aggregate root (a box-backed state variable
+	/// or a box-keyed storage-ref parameter). Replays an arbitrary member/index
+	/// path over a complete root value and persists it once.
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleBoxedAggregatePathWrite();
 
-	/// `s.field = v` where `s` is a struct storage-ref PARAM carrying a runtime OFFSET (handle-model
-	/// dual handle): emits box_replace(paramKey, offsetVar + fieldOffset, ARC4-rhs) so the write
-	/// hits the element slice the caller passed (`f(arr[i])`), not the whole array box. Whole-box
-	/// callers pass offset 0. Fixed-layout structs only.
+	/// A member-chain write rooted in a struct storage-ref PARAM carrying a
+	/// runtime OFFSET. Rebuilds the complete fixed-layout struct slice and
+	/// replaces it once, so nested structs and packed bool fields are generic.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleOffsetStructRefFieldWrite();
 
 	/// `a[i] = v` for a >4KB blob-backed aggregate. Computes base+i*elemSize,
@@ -129,15 +127,14 @@ private:
 		std::shared_ptr<awst::Expression> _value,
 		solidity::frontend::Token _op);
 
-	/// `arr[i] = v` through a slot handle where elements are PACKED sub-word
-	/// scalars or STRUCTS: re-derive (slot, byteOffset) via SlotHandleAccess —
-	/// the generic slot paths write whole words, wrong for both. Pre-buildExpr
-	/// (controls building of base/idx/rhs itself).
+	/// Any index/member write rooted in a slot handle. Address derivation and
+	/// value dispatch recurse through the declared Solidity type, so packed
+	/// leaves and arbitrary array/struct depth use one path.
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleSlotHandleElemWrite();
 
-	/// `ptr.field = v` where ptr is a struct SLOT HANDLE (biguint): write the
-	/// field's packed bytes into its word (full-word or read-modify-write).
 	std::optional<std::shared_ptr<awst::Expression>> tryHandleSlotHandleFieldWrite();
+	std::optional<std::shared_ptr<awst::Expression>> tryHandleSlotHandleWrite(
+		solidity::frontend::Expression const& _lhs);
 
 	/// `slot = arr` (slot is biguint, arr is static-sized): expand to
 	/// per-element __storage_write(slot+j, arr[j]).

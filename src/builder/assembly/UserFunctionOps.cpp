@@ -232,11 +232,26 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 			else if (auto const* sw = std::get_if<solidity::yul::Switch>(&s))
 				for (auto const& c: sw->cases)
 					scanLeave(c.body.statements);
+			else if (auto const* fl = std::get_if<solidity::yul::ForLoop>(&s))
+			{
+				scanLeave(fl->pre.statements);
+				scanLeave(fl->post.statements);
+				scanLeave(fl->body.statements);
+			}
 		}
 	};
 	scanLeave(funcDef.body.statements);
 
 	std::vector<std::shared_ptr<awst::Statement>> bodyStmts;
+	auto savedLeaveFlag = m_yulLeaveFlag;
+	if (hasLeave)
+	{
+		m_yulLeaveFlag = "__yul_leave_" + std::to_string(uid);
+		_out.push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(
+				m_yulLeaveFlag, awst::WType::boolType(), _loc),
+			awst::makeFalse(_loc), _loc));
+	}
 	++m_inlineDepth;
 	for (auto const& stmt: funcDef.body.statements)
 	{
@@ -247,6 +262,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleUserFunctionCall(
 			break;
 	}
 	--m_inlineDepth;
+	m_yulLeaveFlag = savedLeaveFlag;
 
 	if (hasLeave)
 	{

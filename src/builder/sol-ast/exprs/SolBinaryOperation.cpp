@@ -162,7 +162,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolEbDispatch(
 		std::unique_ptr<eb::InstanceBuilder> clHold, crHold;
 		if (commonSolType && dynamic_cast<IntegerType const*>(commonSolType))
 		{
-			// Tripwire (possible_solc item 6): both operands must be
+			// Solc-convertibility tripwire: both operands must be
 			// solc-implicitly-convertible to the comparison's common type.
 			builder::TypeCoercion::assertImplicitlyConvertible(
 				leftSolType, commonSolType, m_loc, "binop common-type (cmp)");
@@ -213,7 +213,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolEbDispatch(
 			|| builderOp == eb::BuilderBinaryOp::RShift);
 		if (commonSolType && dynamic_cast<IntegerType const*>(commonSolType) && !isShift)
 		{
-			// Tripwire (possible_solc item 6). Pow excluded: solc's commonType
+			// Solc-convertibility tripwire. Pow excluded: solc's commonType
 			// for `**` is the BASE type — the exponent is legitimately not
 			// convertible to it.
 			if (builderOp != eb::BuilderBinaryOp::Pow)

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/super_payable_caller.sol.B.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "total" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock "total" 0x 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -25,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "total"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -55,7 +55,9 @@ main_ternary_merge@15:
     intc_2 // 0
     bytec_0 // "total"
     app_global_get_ex
-    assert // check total exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_0 // 32
@@ -64,7 +66,7 @@ main_ternary_merge@15:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -91,7 +93,7 @@ main_h_route@7:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -114,7 +116,7 @@ main_g_route@6:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -141,18 +143,20 @@ main_ternary_merge@24:
     intc_2 // 0
     bytec_0 // "total"
     app_global_get_ex
-    assert // check total exists
+    bytec_1 // 0x
+    cover 2
+    select
     pushint 2
     itob
     uncover 2
     b*
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // "total"
@@ -166,7 +170,7 @@ main_ternary_merge@24:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -184,11 +188,13 @@ f__impl_17:
     intc_2 // 0
     bytec_0 // "total"
     app_global_get_ex
-    assert // check total exists
+    bytec_1 // 0x
+    cover 2
+    select
     frame_dig -1
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // "total"

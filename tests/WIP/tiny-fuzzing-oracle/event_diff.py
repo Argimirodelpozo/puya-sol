@@ -84,6 +84,129 @@ def decode_avm_logs(raw_response, events):
     return out
 
 
+def _event_arc4_type(spec, nested=False):
+    """ARC4 field type selected by puya-sol for a Solidity event input.
+
+    Top-level Solidity integers have already lowered to the compiler's native
+    uint64/biguint tier when Emit is built; tuple/array elements retain their
+    declared widths in their recursive ARC4 type.  This mirrors that general
+    representation rule and lets page contracts be decoded even when the
+    backend omits event metadata for an internal-only EVM entry method.
+    """
+    t = spec.get("type", "")
+    m = re.match(r"^(.*)(\[[0-9]*\])$", t)
+    if m:
+        elem = dict(spec)
+        elem["type"] = m.group(1)
+        return _event_arc4_type(elem, True) + m.group(2)
+    if t == "tuple":
+        return "(" + ",".join(
+            _event_arc4_type(c, True)
+            for c in spec.get("components") or []) + ")"
+    m = re.match(r"^(u?)int(\d*)$", t)
+    if m:
+        bits = int(m.group(2) or 256)
+        if nested:
+            return ("uint" if m.group(1) else "int") + str(bits)
+        return "uint64" if bits <= 64 else "uint256"
+    if t == "bytes":
+        return "byte[]"
+    m = re.match(r"^bytes(\d+)$", t)
+    if m:
+        return f"byte[{m.group(1)}]"
+    return t
+
+
+def _select_solidity_event(arc_event, event_abi):
+    """Match one compiler event shape to its verified Solidity declaration.
+
+    A Solidity event can have several ARC4 shapes: lowering chooses the native
+    representation of each emit expression, so e.g. the same declared
+    ``uint256`` parameter can be ``uint64`` at a literal call site and
+    ``uint256`` at another.  Names and arity identify ordinary events; argument
+    names plus an exact inferred-shape match disambiguate overloads when the
+    metadata permits it.
+    """
+    arc_args = arc_event.get("args") or []
+    candidates = [
+        event for event in event_abi or []
+        if event.get("type") == "event"
+        and event.get("name") == arc_event.get("name")
+        and len(event.get("inputs") or []) == len(arc_args)
+    ]
+    if not candidates:
+        return None
+
+    arc_types = [str(arg.get("type", "")) for arg in arc_args]
+    arc_names = [str(arg.get("name", "")) for arg in arc_args]
+
+    def score(event):
+        inputs = event.get("inputs") or []
+        inferred = [_event_arc4_type(spec) for spec in inputs]
+        names = [str(spec.get("name", "")) for spec in inputs]
+        return (inferred == arc_types, names == arc_names)
+
+    return max(candidates, key=score)
+
+
+def decode_avm_log_bytes(logs, event_abi, compiler_events=None):
+    """Decode raw AVM log byte strings using verified Solidity event ABIs.
+
+    Unlike ``decode_avm_logs``, this does not require an ABI-method execution
+    response or ARC-56 event registration.  Raw EVM-boundary calls are ordinary
+    ApplicationCall transactions, and state-preserving pages keep public
+    methods internal-only, so neither source is guaranteed to exist.
+    """
+    registry = {}
+
+    # Prefer the exact types recorded by the compiler.  Collecting these from
+    # every emitted artifact covers internal-only methods moved to code pages,
+    # and naturally supports multiple lowering shapes for the same event.
+    for arc_event in compiler_events or []:
+        sol_event = _select_solidity_event(arc_event, event_abi)
+        if sol_event is None:
+            continue
+        types = [str(arg.get("type", ""))
+                 for arg in arc_event.get("args") or []]
+        sig = f"{arc_event['name']}({','.join(types)})"
+        selector = hashlib.new("sha512_256", sig.encode()).digest()[:4]
+        registry[selector] = (sol_event, types)
+
+    # Verified-ABI inference remains a useful fallback for old artifacts that
+    # do not expose an events section.
+    for event in event_abi or []:
+        if event.get("type") != "event":
+            continue
+        types = [_event_arc4_type(i) for i in event.get("inputs") or []]
+        sig = f"{event['name']}({','.join(types)})"
+        selector = hashlib.new("sha512_256", sig.encode()).digest()[:4]
+        registry.setdefault(selector, (event, types))
+
+    out = []
+    for item in logs or []:
+        data = bytes(item)
+        if data.startswith(_RET_PREFIX):
+            continue
+        match = registry.get(data[:4])
+        if not match:
+            continue
+        event, types = match
+        try:
+            # Algorand's address decoder returns base32 strings.  Decode event
+            # addresses as their raw 32-byte carrier so the chainwide fold can
+            # map them to its registry symbols recursively.
+            raw_types = [re.sub(r"\baddress\b", "byte[32]", t)
+                         for t in types]
+            tuple_type = abi.TupleType(
+                [abi.ABIType.from_string(t) for t in raw_types])
+            values = list(tuple_type.decode(data[4:]))
+        except Exception:
+            continue
+        out.append({"name": event["name"], "args": values,
+                    "inputs": event.get("inputs") or []})
+    return out
+
+
 _VALUE_TYPE_RE = re.compile(r"^(address|bool|(u?int)(\d+)?|bytes([0-9]|[12][0-9]|3[0-2]))$")
 
 

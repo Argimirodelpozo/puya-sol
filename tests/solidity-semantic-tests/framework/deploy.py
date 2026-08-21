@@ -11,6 +11,7 @@ import algokit_utils as au
 from algosdk import encoding
 from algosdk.transaction import (
     ApplicationCreateTxn,
+    ApplicationUpdateTxn,
     OnComplete,
     StateSchema,
     PaymentTxn,
@@ -37,15 +38,16 @@ class DeployedApp:
     child_mbr: int = 1_000_000  # microAlgos per child app deployed by ctor
 
 
-def _substitute_template_vars(teal: str, tmpl_path: Path) -> str:
+def _substitute_template_vars(
+    teal: str, tmpl_path: Path, overrides: dict[str, int | str] | None = None
+) -> str:
     """Replace TMPL_* placeholders in TEAL using puya's deploy.tmpl.json."""
-    if not tmpl_path.exists():
-        return teal
     import json
     try:
         data = json.loads(tmpl_path.read_text())
     except (json.JSONDecodeError, OSError):
-        return teal
+        data = {}
+    data.update(overrides or {})
     # Puya's deploy.tmpl.json keys are already literal `TMPL_<name>` strings
     # (matching the placeholders in the TEAL bytecblock); replace verbatim.
     # Values are bare hex (no `0x` prefix) — the bytecblock pseudo-op expects
@@ -57,6 +59,12 @@ def _substitute_template_vars(teal: str, tmpl_path: Path) -> str:
     # the C1 value, producing an odd-length hex constant the assembler
     # rejects ("bytec N is not defined").
     for k, v in sorted(data.items(), key=lambda kv: -len(kv[0])):
+        if isinstance(v, int):
+            # Integer template variables (notably splitter helper app IDs)
+            # appear in `pushint` positions and must stay decimal. Treating
+            # 123 as bytecode hex (`0x123`) silently points at app 291.
+            teal = teal.replace(k, str(v))
+            continue
         s = str(v)
         if all(c in "0123456789abcdefABCDEF" for c in s):
             s = "0x" + s
@@ -83,6 +91,88 @@ def _load_arc56(arc56_path: Path) -> au.Arc56Contract:
     return au.Arc56Contract.from_json(arc56_path.read_text())
 
 
+def compile_programs(
+    localnet: "LocalNet",
+    artifacts: dict,
+    template_values: dict[str, int | str] | None = None,
+) -> tuple[bytes, bytes]:
+    """Compile one artifact pair after applying deploy-time templates."""
+    algod = localnet.algod
+    approval_src = _substitute_template_vars(
+        artifacts["approval_teal"].read_text(),
+        artifacts["approval_teal"].parent / "deploy.tmpl.json",
+        template_values,
+    )
+    clear_src = _substitute_template_vars(
+        artifacts["clear_teal"].read_text(),
+        artifacts["clear_teal"].parent / "deploy.tmpl.json",
+        template_values,
+    )
+    approval = encoding.base64.b64decode(algod.compile(approval_src)["result"])
+    clear = encoding.base64.b64decode(algod.compile(clear_src)["result"])
+    return approval, clear
+
+
+def update_program(
+    localnet: "LocalNet",
+    app_id: int,
+    artifacts: dict,
+    template_values: dict[str, int | str] | None = None,
+    account=None,
+) -> None:
+    """Install compiled artifacts on an existing app via UpdateApplication.
+
+    The target app's approval program must expose the split pipeline's
+    ``__delegate_update`` UpdateApplication route. Storage and application
+    identity remain attached to ``app_id`` across the update.
+    """
+    import hashlib
+
+    approval, clear = compile_programs(localnet, artifacts, template_values)
+    page_size = 2048
+    total = len(approval) + len(clear)
+    if total > 8 * page_size:
+        raise DeployError(
+            f"program exceeds AVM 16KB cap: approval={len(approval)}B + "
+            f"clear={len(clear)}B"
+        )
+    # Consensus v42 charges program I/O in both directions: the update reads
+    # the currently installed program and writes the replacement. Installing
+    # a tiny page over a 15 KiB main therefore still needs read budget. Empty
+    # box refs grant 2 KiB to both pools without exposing an actual box.
+    try:
+        import base64
+        params = localnet.algod.application_info(app_id)["params"]
+        current_total = sum(len(base64.b64decode(params.get(field) or ""))
+                            for field in ("approval-program",
+                                          "clear-state-program"))
+    except Exception:
+        current_total = 8 * page_size
+    charged = max(0, max(total, current_total) - 4 * page_size)
+    program_budget_refs = (charged + page_size - 1) // page_size
+    selector = hashlib.new("sha512_256", b"__delegate_update()void").digest()[:4]
+    sp = localnet.algod.suggested_params()
+    sp.flat_fee = True
+    sp.fee = max(sp.min_fee, 1000) * 8
+    signer_account = account or localnet.account
+    txn = ApplicationUpdateTxn(
+        sender=signer_account.address,
+        sp=sp,
+        index=app_id,
+        approval_program=approval,
+        clear_program=clear,
+        app_args=[selector],
+        boxes=[(0, b"")] * program_budget_refs,
+        note=os.urandom(8),
+    )
+    try:
+        txid = localnet.algod.send_transaction(
+            txn.sign(signer_account.private_key))
+        wait_for_confirmation(localnet.algod, txid, 4)
+    except Exception as exc:
+        raise DeployError(f"update txn failed: {exc}") from exc
+
+
 def deploy(
     localnet: "LocalNet",
     artifacts: dict,
@@ -93,6 +183,9 @@ def deploy(
     postinit_args: list | None = None,
     postinit_budget_pool: int = 0,
     postinit_inner_txns: int = 0,
+    skip_postinit: bool = False,
+    reserve_program_pages: int = 0,
+    template_values: dict[str, int | str] | None = None,
 ) -> DeployedApp:
     """Deploy the given compiled-contract artifacts. Raises DeployError on failure.
 
@@ -105,27 +198,26 @@ def deploy(
     postinit_args: list of Python values for __postInit if your constructor
         body needs to run after the create txn (boxes, etc.). When None,
         __postInit is called with no args if present.
+    skip_postinit: leave a deferred constructor unexecuted. This is used by
+        the proxy-runtime replay model: implementation constructors bake
+        runtime/immutable values but their storage writes occur in the
+        implementation account, never in proxy storage.
     """
     app_spec = _load_arc56(artifacts["arc56"])
     algod = localnet.algod
 
-    approval_src = _substitute_template_vars(
-        artifacts["approval_teal"].read_text(),
-        artifacts["approval_teal"].parent / "deploy.tmpl.json",
-    )
-    clear_src = _substitute_template_vars(
-        artifacts["clear_teal"].read_text(),
-        artifacts["clear_teal"].parent / "deploy.tmpl.json",
-    )
-    approval_bin = encoding.base64.b64decode(algod.compile(approval_src)["result"])
-    clear_bin = encoding.base64.b64decode(algod.compile(clear_src)["result"])
+    approval_bin, clear_bin = compile_programs(
+        localnet, artifacts, template_values)
 
     # algod caps the SUM of approval + clear at (1 + extra_pages) * 2048,
     # not the max of the two individually. snark.sol hits this: approval=6142
     # + clear=4 = 6146, which needs extra_pages=3 (budget 8192), not 2 (6144).
     page_size = 2048
     total_program_bytes = len(approval_bin) + len(clear_bin)
-    extra_pages = max(0, (total_program_bytes - 1) // page_size)
+    extra_pages = max(
+        int(reserve_program_pages),
+        max(0, (total_program_bytes - 1) // page_size),
+    )
 
     # Consensus v42 raises the absolute limit from 3 to 7 extra pages: 16 KiB
     # total. Bytes above the old four-page allowance are charged a small fee
@@ -141,7 +233,8 @@ def deploy(
             f"program exceeds AVM 16KB cap: approval={len(approval_bin)}B + "
             f"clear={len(clear_bin)}B needs extra_pages={extra_pages} "
             f"(max {max_extra_pages}); "
-            "not a compiler bug — split the contract (uros splitter)")
+            "not a compiler bug — use helper extraction or state-preserving "
+            "code paging")
 
     # Encode constructor args (if any) into ApplicationArgs.
     app_args = None
@@ -212,7 +305,7 @@ def deploy(
     postinit_spec = next(
         (m for m in app_spec.methods if m.name == "__postInit"), None
     )
-    if postinit_spec:
+    if postinit_spec and not skip_postinit:
         # Opcode budget is a RESOURCE, not a semantic property: a ctor that
         # initialises aggregates in slot mode costs far more than a scalar one,
         # and the right pool size is not knowable per test. Escalate on the

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_copy.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 24
-    bytecblock 0x05 0x 0x01 0x02 0x03 0x04 0x06 0x07 0x08 0x09 "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
+    bytecblock 0x 0x05 0x01 0x02 0x03 0x04 0x06 0x07 0x08 0x09 "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
     pushint 4096
     bzero
     dup
@@ -64,7 +64,7 @@ main_ternary_merge@17:
     concat
     replace2 64
     store 0
-    callsub getY
+    callsub __solfn_53
     dup
     callsub __storage_read
     dup
@@ -122,7 +122,7 @@ main_ternary_merge@17:
     dig 5
     b|
     dig 6
-    bytec_0 // 0x05
+    bytec_1 // 0x05
     b+
     callsub __storage_read
     dup
@@ -229,7 +229,7 @@ main_ternary_merge@22:
     concat
     replace2 64
     store 0
-    callsub getX
+    callsub __solfn_42
     dup
     callsub __storage_read
     dup
@@ -287,7 +287,7 @@ main_ternary_merge@22:
     dig 5
     b|
     dig 6
-    bytec_0 // 0x05
+    bytec_1 // 0x05
     b+
     callsub __storage_read
     dup
@@ -382,84 +382,230 @@ main_copyYToX_route@8:
 main_ternary_merge@27:
     !
     assert // not payable
-    callsub getX
-    callsub getY
+    callsub __solfn_42
+    callsub __solfn_53
     dup
     callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
     dig 2
-    swap
-    callsub __storage_write
-    dig 1
-    bytec_2 // 0x01
-    b+
-    dig 1
     bytec_2 // 0x01
     b+
     callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    dig 3
+    bytec_3 // 0x02
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    dig 4
+    bytec 4 // 0x03
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 4
+    b|
+    dig 5
+    bytec 5 // 0x04
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 5
+    b|
+    dig 6
+    bytec_1 // 0x05
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 6
+    b|
+    dig 7
+    bytec 6 // 0x06
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 7
+    b|
+    dig 8
+    bytec 7 // 0x07
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 8
+    b|
+    dig 9
+    bytec 8 // 0x08
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 9
+    b|
+    uncover 10
+    bytec 9 // 0x09
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 10
+    b|
+    uncover 9
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    dig 3
+    swap
     callsub __storage_write
+    dig 2
+    bytec_2 // 0x01
+    b+
     dig 1
+    extract 32 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
     bytec_3 // 0x02
     b+
     dig 1
-    bytec_3 // 0x02
-    b+
-    callsub __storage_read
+    extract 64 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    dig 1
+    dig 2
     bytec 4 // 0x03
     b+
     dig 1
-    bytec 4 // 0x03
-    b+
-    callsub __storage_read
+    extract 96 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    dig 1
+    dig 2
     bytec 5 // 0x04
     b+
     dig 1
-    bytec 5 // 0x04
-    b+
-    callsub __storage_read
+    extract 128 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    dig 1
-    bytec_0 // 0x05
+    dig 2
+    bytec_1 // 0x05
     b+
     dig 1
-    bytec_0 // 0x05
-    b+
-    callsub __storage_read
+    extract 160 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    dig 1
+    dig 2
     bytec 6 // 0x06
     b+
     dig 1
-    bytec 6 // 0x06
-    b+
-    callsub __storage_read
+    extract 192 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    dig 1
+    dig 2
     bytec 7 // 0x07
     b+
     dig 1
-    bytec 7 // 0x07
-    b+
-    callsub __storage_read
+    extract 224 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    dig 1
+    dig 2
     bytec 8 // 0x08
     b+
     dig 1
-    bytec 8 // 0x08
-    b+
-    callsub __storage_read
+    pushint 256
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    swap
+    uncover 2
     bytec 9 // 0x09
     b+
     swap
-    bytec 9 // 0x09
-    b+
-    callsub __storage_read
+    pushint 288
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    uncover 2
+    b|
+    extract 0 32
     callsub __storage_write
     intc_1 // 1
     return
@@ -479,53 +625,53 @@ main_clearX_route@7:
 main_ternary_merge@32:
     !
     assert // not payable
-    callsub getX
+    callsub __solfn_42
     dup
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
     dup
     bytec_2 // 0x01
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
     dup
     bytec_3 // 0x02
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
     dup
     bytec 4 // 0x03
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
     dup
     bytec 5 // 0x04
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
     dup
-    bytec_0 // 0x05
+    bytec_1 // 0x05
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
     dup
     bytec 6 // 0x06
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
     dup
     bytec 7 // 0x07
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
     dup
     bytec 8 // 0x08
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
     bytec 9 // 0x09
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
     intc_1 // 1
     return
@@ -545,83 +691,230 @@ main_copyXToY_route@6:
 main_ternary_merge@37:
     !
     assert // not payable
-    callsub getX
-    callsub getY
+    callsub __solfn_42
+    callsub __solfn_53
     dig 1
     callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
     dig 1
+    b|
+    dig 3
+    bytec_2 // 0x01
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    dig 4
+    bytec_3 // 0x02
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    dig 5
+    bytec 4 // 0x03
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 4
+    b|
+    dig 6
+    bytec 5 // 0x04
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 5
+    b|
+    dig 7
+    bytec_1 // 0x05
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 6
+    b|
+    dig 8
+    bytec 6 // 0x06
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 7
+    b|
+    dig 9
+    bytec 7 // 0x07
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 8
+    b|
+    dig 10
+    bytec 8 // 0x08
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 9
+    b|
+    uncover 11
+    bytec 9 // 0x09
+    b+
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 10
+    b|
+    uncover 9
+    uncover 9
+    concat
+    uncover 8
+    concat
+    uncover 7
+    concat
+    uncover 6
+    concat
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    dup
+    extract 0 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    dig 3
     swap
     callsub __storage_write
-    dup
-    bytec_2 // 0x01
-    b+
     dig 2
     bytec_2 // 0x01
     b+
-    callsub __storage_read
+    dig 1
+    extract 32 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    dup
-    bytec_3 // 0x02
-    b+
     dig 2
     bytec_3 // 0x02
     b+
-    callsub __storage_read
+    dig 1
+    extract 64 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    dup
-    bytec 4 // 0x03
-    b+
     dig 2
     bytec 4 // 0x03
     b+
-    callsub __storage_read
+    dig 1
+    extract 96 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    dup
-    bytec 5 // 0x04
-    b+
     dig 2
     bytec 5 // 0x04
     b+
-    callsub __storage_read
+    dig 1
+    extract 128 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    dup
-    bytec_0 // 0x05
-    b+
     dig 2
-    bytec_0 // 0x05
+    bytec_1 // 0x05
     b+
-    callsub __storage_read
+    dig 1
+    extract 160 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    dup
+    dig 2
     bytec 6 // 0x06
     b+
-    dig 2
-    bytec 6 // 0x06
-    b+
-    callsub __storage_read
+    dig 1
+    extract 192 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    dup
-    bytec 7 // 0x07
-    b+
     dig 2
     bytec 7 // 0x07
     b+
-    callsub __storage_read
+    dig 1
+    extract 224 32 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
-    dup
-    bytec 8 // 0x08
-    b+
     dig 2
     bytec 8 // 0x08
     b+
-    callsub __storage_read
+    dig 1
+    pushint 256
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    b|
+    extract 0 32
     callsub __storage_write
+    uncover 2
     bytec 9 // 0x09
     b+
     swap
-    bytec 9 // 0x09
-    b+
-    callsub __storage_read
+    pushint 288
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    uncover 2
+    b|
+    extract 0 32
     callsub __storage_write
     intc_1 // 1
     return
@@ -634,62 +927,66 @@ main___postInit_route@5:
     bytec 10 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
     bytec 10 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    callsub getX
+    callsub __solfn_42
     dup
-    bytec_2 // 0x01
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
     callsub __storage_write
     dup
     bytec_2 // 0x01
     b+
-    bytec_3 // 0x02
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
     callsub __storage_write
     dup
     bytec_3 // 0x02
     b+
-    bytec 4 // 0x03
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     callsub __storage_write
     dup
     bytec 4 // 0x03
     b+
-    bytec 5 // 0x04
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
     callsub __storage_write
     dup
     bytec 5 // 0x04
     b+
-    bytec_0 // 0x05
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
     callsub __storage_write
     dup
-    bytec_0 // 0x05
+    bytec_1 // 0x05
     b+
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
+    callsub __storage_write
+    dup
     bytec 6 // 0x06
-    callsub __storage_write
-    dup
-    bytec 6 // 0x06
     b+
-    bytec 7 // 0x07
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     callsub __storage_write
     dup
     bytec 7 // 0x07
     b+
-    bytec 8 // 0x08
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
     callsub __storage_write
     dup
     bytec 8 // 0x08
     b+
-    bytec 9 // 0x09
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
     callsub __storage_write
     bytec 9 // 0x09
     b+
-    pushbytes 0x0a
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
     callsub __storage_write
     intc_1 // 1
     return
 
 
-// __puyasol___storage_read(__slot: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_copy.sol.C.__storage_read(__slot: bytes) -> bytes:
 __storage_read:
     proto 1 1
     frame_dig -1
@@ -719,7 +1016,7 @@ __storage_read:
     retsub
 
 
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_copy.sol.C.__storage_write(__slot: bytes, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     frame_dig -2
@@ -759,8 +1056,8 @@ __storage_write:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_copy.sol.C.getX() -> bytes:
-getX:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_copy.sol.C.__solfn_42() -> bytes:
+__solfn_42:
     load 0
     store 0
     load 0
@@ -769,11 +1066,11 @@ getX:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_copy.sol.C.getY() -> bytes:
-getY:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_copy.sol.C.__solfn_53() -> bytes:
+__solfn_53:
     load 0
     store 0
     load 0
     store 0
-    bytec_0 // 0x05
+    bytec_1 // 0x05
     retsub

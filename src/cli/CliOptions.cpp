@@ -137,7 +137,10 @@ void printUsage(char const* _progName)
 		<< "                         (separate subroutines per modifier, fresh vars per _ invocation)\n"
 		<< "  --evm-selectors        Expose keccak-based Solidity function/event selectors,\n"
 		<< "                         interface IDs, msg.sig, and selector-bearing ABI values.\n"
-		<< "                         ARC-4 selectors remain the AVM routing identity.\n"
+		<< "                         ARC-4 selectors remain the route in the ARC-4 profile.\n"
+		<< "  --contract-abi <mode>  Contract entry/return wire ABI: arc4 (default) or evm.\n"
+		<< "                         EVM mode takes selector in ApplicationArgs[0] and one\n"
+		<< "                         canonical ABI body blob in ApplicationArgs[1].\n"
 		<< "  --evm-version <name>   EVM version for the Solidity parser. Accepts the same\n"
 		<< "                         names solc supports: homestead..osaka. Default: cancun.\n"
 		<< "  --evm-chain-id <N>     Compile-time uint256 returned by block.chainid. Without\n"
@@ -146,6 +149,11 @@ void printUsage(char const* _progName)
 		<< "                         Without it, current OpcodeBudget is used.\n"
 		<< "  --evm-coinbase <addr>  Compile-time 20-byte hex block.coinbase value. Required\n"
 		<< "                         by sources that read coinbase; AVM has no native analog.\n"
+		<< "  --split-config <path>  JSON helper/page config. Supports extract, helpers,\n"
+		<< "                         and delegate arrays. Delegate methods run as code pages\n"
+		<< "                         on the original app and preserve storage/caller context.\n"
+		<< "  --force-delegate <list> Comma-separated externally routable methods to emit\n"
+		<< "                         as state-preserving code pages.\n"
 		<< "  --fn-split <spec>      Slice a subroutine's body into pieces. Repeatable.\n"
 		<< "                         Format: <SubName>:<idx>,<idx>,...:g<N>[:cross]\n"
 		<< "                           SubName  — name of the awst::Subroutine to split\n"
@@ -175,7 +183,7 @@ void printUsage(char const* _progName)
 		<< "                         into pieces at the given statement indices.\n"
 		<< "                         Each piece becomes its own sidecar Contract,\n"
 		<< "                         called as a chained inner-txn group at use sites.\n"
-		<< "                         Use to fit big helpers into the AVM 8 KB cap.\n"
+		<< "                         Use to fit big helpers into the AVM 16 KiB cap.\n"
 		<< "  --force-inline-sub <Name>  Set inlineOpt=true on every Subroutine or\n"
 		<< "                         ContractMethod whose name matches <Name>. Puya inlines\n"
 		<< "                         the body at every call site, so the subroutine itself\n"
@@ -263,6 +271,16 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.viaYulBehavior = true;
 		else if (arg == "--evm-selectors")
 			opts.evmSelectors = true;
+		else if (arg == "--contract-abi" && i + 1 < _argc)
+		{
+			opts.contractAbi = _argv[++i];
+			if (opts.contractAbi != "arc4" && opts.contractAbi != "evm")
+			{
+				std::cerr << "Error: --contract-abi expects arc4 or evm; got '"
+					<< opts.contractAbi << "'" << std::endl;
+				std::exit(2);
+			}
+		}
 		else if (arg == "--evm-version" && i + 1 < _argc)
 			opts.evmVersion = _argv[++i];
 		else if (arg == "--evm-chain-id" && i + 1 < _argc)

@@ -22,6 +22,21 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 
 	auto const& profile = m_ctx.typeMapper.profile();
 
+	// An EVM ABI boundary gives Solidity one 160-bit address namespace.  Values
+	// decoded from calldata are zero-extended from 20 bytes, so ambient caller
+	// identity must use the same representation; otherwise storing an address
+	// argument and later indexing by msg.sender can never hit the same slot for
+	// an Algorand user account (whose native sender is 32 bytes).
+	if (baseName == "msg" && member == "sender"
+		&& profile.contractAbi == builder::ContractAbi::Evm)
+	{
+		auto sender = awst::makeTxn(
+			"Sender", awst::WType::accountType(), m_loc);
+		auto low160 = awst::makeExtractLastN(std::move(sender), 20, m_loc);
+		return awst::makeAsAccount(
+			awst::makeLeftPadToN(std::move(low160), 32, m_loc), m_loc);
+	}
+
 	// An explicitly configured EVM chain id is exact for replay. Otherwise use
 	// GenesisHash as the AVM-native network identity instead of a plausible
 	// fixed integer shared by every Algorand network.

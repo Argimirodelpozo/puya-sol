@@ -215,7 +215,7 @@ public:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Defense-in-depth tripwire (possible_solc.md item 6): at sites lowering a
+	/// Defense-in-depth tripwire: at sites lowering a
 	/// SOLIDITY implicit conversion, hard-error when solc's own
 	/// `isImplicitlyConvertibleTo` disagrees the pair is legal. The source
 	/// program type-checked, so a trip means OUR plumbing picked the wrong

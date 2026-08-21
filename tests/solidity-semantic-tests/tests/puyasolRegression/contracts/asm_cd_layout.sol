@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 // CUSTOM regression fixture (NOT vendored / not an original Solidity semantic test).
-// Guards the solc-derived EVM-ABI synthetic-calldata layout (possible_solc
-// item 2): signed sub-word params sign-extend in their head word; static
+// Guards the solc-derived EVM-ABI synthetic-calldata layout: signed sub-word
+// params sign-extend in their head word; static
 // aggregates inline in the head (shifting later params); sub-word-element
 // dynamic arrays re-encode to padded 32-byte words; bytes4 left-aligns.
 contract AsmCdLayout {

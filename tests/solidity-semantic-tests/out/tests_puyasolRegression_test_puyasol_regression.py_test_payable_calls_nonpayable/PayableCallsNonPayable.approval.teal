@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/payable_calls_nonpayable.sol.PayableCallsNonPayable.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "last" 0x151f7c75 0x17fa654a
+    bytecblock "last" 0x151f7c75 0x 0x17fa654a
     pushint 4096
     bzero
     dup
@@ -25,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "last"
-    pushbytes 0x
+    bytec_2 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -36,7 +36,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_2 // method "price(uint256)uint256"
+    bytec_3 // method "price(uint256)uint256"
     pushbytess 0xb914487e 0x7ab86e54 0x6b55864f // method "buy(uint256)uint256", method "setLast(uint256)void", method "last()uint256"
     txna ApplicationArgs 0
     match main_price_route@5 main_buy_route@6 main_setLast_route@7 main_last_route@8
@@ -56,7 +56,9 @@ main_ternary_merge@15:
     intc_2 // 0
     bytec_0 // "last"
     app_global_get_ex
-    assert // check last exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
     intc_0 // 32
@@ -151,7 +153,7 @@ price:
     txn NumAppArgs
     bz price_after_if_else@6
     txna ApplicationArgs 0
-    bytec_2 // method "price(uint256)uint256"
+    bytec_3 // method "price(uint256)uint256"
     ==
     bz price_after_if_else@6
     txn GroupIndex

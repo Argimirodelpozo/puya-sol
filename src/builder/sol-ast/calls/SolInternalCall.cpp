@@ -22,9 +22,11 @@
 #include "builder/assembly/AssemblyBuilder.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/ConversionPlan.h"
+#include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageMapper.h"
 #include "Logger.h"
 
+#include <algorithm>
 #include <functional>
 #include <map>
 #include <set>
@@ -237,11 +239,62 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 		}
 	}
 
-	// For a mapping storage-ref param: extract the box-key prefix;
+	struct BoxedArrayPath
+	{
+		Identifier const* root = nullptr;
+		VariableDeclaration const* declaration = nullptr;
+		std::vector<IndexAccess const*> indices;
+	};
+	auto boxedArrayPath = [&](Expression const& expression)
+		-> std::optional<BoxedArrayPath>
+	{
+		BoxedArrayPath result;
+		auto const* cursor = &expression;
+		while (auto const* index = dynamic_cast<IndexAccess const*>(cursor))
+		{
+			if (!index->indexExpression())
+				return std::nullopt;
+			result.indices.push_back(index);
+			cursor = &index->baseExpression();
+		}
+		result.root = dynamic_cast<Identifier const*>(cursor);
+		result.declaration = result.root
+			? dynamic_cast<VariableDeclaration const*>(
+				result.root->annotation().referencedDeclaration) : nullptr;
+		if (!result.declaration || result.indices.empty()
+			|| !dynamic_cast<ArrayType const*>(result.declaration->type()))
+			return std::nullopt;
+		std::reverse(result.indices.begin(), result.indices.end());
+		return result;
+	};
+	auto boxedArrayKey = [&](BoxedArrayPath const& path)
+		-> std::shared_ptr<awst::Expression>
+	{
+		auto const& runtimeKey = m_scope.findMappingKeyParam(path.declaration->id());
+		if (!runtimeKey.empty())
+			return awst::makeVarExpression(
+			runtimeKey, awst::WType::bytesType(), m_loc);
+		if (path.declaration->isStateVariable())
+		{
+			auto binding = m_ctx.storageMapper.physicalBindingFor(*path.declaration);
+			if (binding.kind == awst::AppStorageKind::Box)
+				return awst::makeUtf8BytesConstant(
+					binding.name, m_loc, awst::WType::bytesType());
+		}
+		return nullptr;
+	};
+
+	// For a mapping/storage-ref param: extract the box-key prefix;
 	// callee uses it for box key derivation.
 	auto extractMappingKeyPrefix = [&](Expression const& argExpr)
 		-> std::shared_ptr<awst::Expression>
 	{
+		// Any-rank array element path rooted in one physical box keeps that
+		// root key. A companion byte offset identifies the selected struct.
+		if (auto path = boxedArrayPath(argExpr))
+			if (auto key = boxedArrayKey(*path))
+				return key;
+
 		// Array element (`arr[i]`) passed as a struct ref (handle-model dual handle): the element
 		// is a SLICE of the array's box, not its own box — lift the ARRAY's box key here; the
 		// companion offset arg (offsetForArg) carries header + i*elemSize. Mapping values (`m[k]`)
@@ -325,7 +378,8 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 					vd && vd->isStateVariable() && !vd->isConstant() && !vd->immutable())
 					return awst::makeReinterpretCast(
 						awst::makeConcat(
-							awst::makeUtf8BytesConstant(baseId->name(), m_loc),
+							awst::makeUtf8BytesConstant(
+								m_ctx.storageMapper.physicalBindingFor(*vd).name, m_loc),
 							awst::makeUtf8BytesConstant(ma->memberName(), m_loc),
 							m_loc),
 						awst::WType::bytesType(), m_loc);
@@ -440,29 +494,78 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	if (_funcDef)
 	{
 		auto offsetForArg = [&](Expression const* argExpr) -> std::shared_ptr<awst::Expression> {
-			if (auto const* ia = dynamic_cast<IndexAccess const*>(argExpr))
-				if (ia->indexExpression())
-					if (auto const* at = dynamic_cast<ArrayType const*>(
-							ia->baseExpression().annotation().type))
-						if (!at->isByteArrayOrString() && at->baseType()
-							&& at->baseType()->category() == Type::Category::Struct)
+			if (argExpr)
+				if (auto path = boxedArrayPath(*argExpr))
+					if (auto key = boxedArrayKey(*path))
+					{
+						auto const* rootW = m_ctx.typeMapper.map(path->declaration->type());
+						auto boxKey = awst::makeReinterpretCast(
+							std::move(key), awst::WType::boxKeyType(), m_loc);
+						auto box = awst::makeBoxValueExpression(
+							std::move(boxKey), rootW, m_loc);
+						std::string bytesName = "__sref_path_" + std::to_string(
+							awst::NameGen::next("SolInternalCall.structRefPath"));
+						m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+							awst::makeVarExpression(
+								bytesName, awst::WType::bytesType(), m_loc),
+							awst::makeAsBytes(builder::StorageMapper::makeStateGetWithDefault(
+								std::move(box), rootW, m_loc), m_loc), m_loc));
+						auto bytesVar = [&]() {
+							return awst::makeVarExpression(
+								bytesName, awst::WType::bytesType(), m_loc);
+						};
+						std::shared_ptr<awst::Expression> base =
+							awst::makeIntegerConstant(0, m_loc);
+						Type const* current = path->declaration->type();
+						for (auto const* index: path->indices)
 						{
-							int elemSize = builder::computeEncodedElementSize(
-								m_ctx.typeMapper.mapSolTypeToARC4(at->baseType()));
-							if (elemSize > 0)
+							auto const* array = dynamic_cast<ArrayType const*>(current);
+							if (!array || array->isByteArrayOrString())
+								return awst::makeIntegerConstant(0, m_loc);
+							auto idx = builder::TypeCoercion::checkedIndexToUint64(
+								m_ctx.preEffects(), buildExpr(*index->indexExpression()), m_loc);
+							auto const* elemArc4 =
+								m_ctx.typeMapper.mapSolTypeToARC4(array->baseType());
+							uint64_t header = array->isDynamicallySized() ? 2 : 0;
+							if (builder::arc4IsDynamic(elemArc4))
 							{
-								uint64_t header = at->isDynamicallySized() ? 2 : 0;
-								auto idx = builder::TypeCoercion::implicitNumericCast(
-									buildExpr(*ia->indexExpression()), awst::WType::uint64Type(), m_loc);
-								return awst::makeUInt64BinOp(
+								auto tablePos = awst::makeUInt64BinOp(
+									awst::makeUInt64BinOp(base,
+										awst::UInt64BinaryOperator::Add,
+										awst::makeIntegerConstant(header, m_loc), m_loc),
+									awst::UInt64BinaryOperator::Add,
+									awst::makeUInt64BinOp(std::move(idx),
+										awst::UInt64BinaryOperator::Mult,
+										awst::makeIntegerConstant(2, m_loc), m_loc), m_loc);
+								auto relative = awst::makeBtoi(awst::makeExtract3(
+									bytesVar(), std::move(tablePos),
+									awst::makeIntegerConstant(2, m_loc), m_loc), m_loc);
+								base = awst::makeUInt64BinOp(
+									awst::makeUInt64BinOp(base,
+										awst::UInt64BinaryOperator::Add,
+										awst::makeIntegerConstant(header, m_loc), m_loc),
+									awst::UInt64BinaryOperator::Add,
+									std::move(relative), m_loc);
+							}
+							else
+							{
+								int elemSize = builder::computeEncodedElementSize(elemArc4);
+								if (elemSize <= 0)
+									return awst::makeIntegerConstant(0, m_loc);
+								base = awst::makeUInt64BinOp(
+									awst::makeUInt64BinOp(base,
+										awst::UInt64BinaryOperator::Add,
+										awst::makeIntegerConstant(header, m_loc), m_loc),
+									awst::UInt64BinaryOperator::Add,
 									awst::makeUInt64BinOp(std::move(idx),
 										awst::UInt64BinaryOperator::Mult,
 										awst::makeIntegerConstant(
-											static_cast<uint64_t>(elemSize), m_loc), m_loc),
-									awst::UInt64BinaryOperator::Add,
-									awst::makeIntegerConstant(header, m_loc), m_loc);
+											static_cast<uint64_t>(elemSize), m_loc), m_loc), m_loc);
 							}
+							current = array->baseType();
 						}
+						return base;
+					}
 			return awst::makeIntegerConstant(0, m_loc); // whole-box → offset 0
 		};
 		for (size_t pi = 0; pi < _funcDef->parameters().size(); ++pi)
@@ -742,48 +845,50 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			std::shared_ptr<awst::Expression> writeValue = modifiedArg;
 			if (!fieldPath.empty())
 			{
-				if (fieldPath.size() == 1)
+				// Rebuild the complete ARC4 struct path copy-on-write. The old
+				// implementation spelled out one field and rejected depth > 1,
+				// even though AssignmentHelper already implements the recursive
+				// structural operation used by ordinary nested assignments.
+				std::shared_ptr<awst::Expression> fieldTarget = sr.rootBox
+					? std::static_pointer_cast<awst::Expression>(sr.rootBox)
+					: std::static_pointer_cast<awst::Expression>(sr.rootAppState);
+				bool validPath = fieldTarget != nullptr;
+				for (auto const& fieldName: fieldPath)
 				{
-					auto const* structType =
-						dynamic_cast<awst::ARC4Struct const*>(sr.rootType);
+					auto const* structType = fieldTarget
+						? dynamic_cast<awst::ARC4Struct const*>(fieldTarget->wtype)
+						: nullptr;
+					awst::WType const* fieldType = nullptr;
 					if (structType)
+						for (auto const& [name, type]: structType->fields())
+							if (name == fieldName)
+							{
+								fieldType = type;
+								break;
+							}
+					if (!structType || !fieldType)
 					{
-						std::shared_ptr<awst::Expression> readStruct;
-						if (sr.rootBox)
-						{
-							readStruct = builder::StorageMapper::makeStateGetWithDefault(
-								sr.rootBox, sr.rootType, m_loc);
-						}
-						else
-						{
-							readStruct = sr.rootAppState;
-						}
-
-						auto newStruct = awst::makeStructWithReplacedField(
-							structType, readStruct, fieldPath[0], modifiedArg, m_loc);
-						writeValue = std::move(newStruct);
+						validPath = false;
+						break;
 					}
-					else
-					{
-						// Reached only for a param the mutation detector flagged
-						// as mutated, so dropping the write-back is a guaranteed
-						// silent miscompile — fail loud instead.
-						Logger::instance().error(
-							"callee mutates a field of a non-struct storage-ref "
-							"argument, which cannot be written back on AVM — the "
-							"mutation would be silently lost. Restructure so the "
-							"mutated root is a struct, or pass the field directly.",
-							m_loc);
-						writeValue = nullptr;
-					}
+					fieldTarget = awst::makeFieldExpression(
+						std::move(fieldTarget), fieldName, fieldType, m_loc);
+				}
+				if (validPath)
+				{
+					auto cow = eb::AssignmentHelper::rebuildArc4StructChainCOW(
+						m_ctx, std::move(fieldTarget), std::move(modifiedArg), m_loc);
+					writeValue = std::move(cow.assignValue);
 				}
 				else
 				{
+					// Reached only for a param the mutation detector flagged
+					// as mutated, so dropping the write-back is a guaranteed
+					// silent miscompile — fail loud instead.
 					Logger::instance().error(
-						"callee mutates a nested (>1-deep) field of a storage-ref "
-						"argument (only single-level field write-back is "
-						"supported); the mutation would be silently lost. Pass the "
-						"inner reference directly (e.g. `f(s.inner)` not `f(s)`).",
+						"callee mutates a field path of a non-struct storage-ref "
+						"argument, which cannot be written back on AVM — the "
+						"mutation would be silently lost.",
 						m_loc);
 					writeValue = nullptr;
 				}

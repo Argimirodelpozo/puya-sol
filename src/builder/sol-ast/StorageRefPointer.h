@@ -84,14 +84,12 @@ inline bool isBoxKeyedStorageRef(
 		try { if (s->storageSizeUpperBound() >= 4) return true; } catch (...) {}
 		return false;
 	}
-	// Dynamic arrays of structs travel as a box-key handle (handle-model Stage 1a-arrays):
-	// the ref carries the array's box key; a[i] reads route through the param-keyed box
-	// (handleDynamicArrayAccess), and a[i].field writes go through an offset box_replace
-	// (SolAssignment::tryHandleBoxedArrayElemWrite) so they hit the caller's box. Gated to
-	// struct elements (the field-write use case) to bound the blast radius.
+	// Every recursively dynamic non-bytes array is unconditionally box-backed
+	// by StorageMapper, so its storage-ref representation is the box key too.
+	// This uses solc's recursive ABI-shape fact and therefore covers scalar,
+	// struct, and mixed fixed/dynamic ranks without enumerating leaf shapes.
 	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
-		return arr->isDynamicallySized() && !arr->isByteArrayOrString()
-			&& dynamic_cast<solidity::frontend::StructType const*>(arr->baseType()) != nullptr;
+		return !arr->isByteArrayOrString() && arr->isDynamicallyEncoded();
 	return false;
 }
 

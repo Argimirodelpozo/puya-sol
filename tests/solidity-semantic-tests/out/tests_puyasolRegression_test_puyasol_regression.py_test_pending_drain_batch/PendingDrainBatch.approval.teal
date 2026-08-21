@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/pending_drain_batch.sol.PendingDrainBatch.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock "s" "cnt" 0x151f7c75 "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock "s" "cnt" 0x 0x151f7c75 "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -55,7 +55,9 @@ main_ternary_merge@17:
     intc_2 // 0
     bytec_1 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
     intc_0 // 32
@@ -64,7 +66,7 @@ main_ternary_merge@17:
     intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -127,17 +129,8 @@ main_ternary_merge@25:
     concat
     uncover 4
     dup
-    cover 3
     len
     dup
-    itob
-    uncover 3
-    swap
-    concat
-    uncover 2
-    swap
-    concat
-    swap
     intc_0 // 32
     %
     intc_0 // 32
@@ -147,6 +140,13 @@ main_ternary_merge@25:
     %
     bzero
     uncover 2
+    swap
+    concat
+    swap
+    itob
+    uncover 3
+    swap
+    concat
     swap
     concat
     concat
@@ -188,7 +188,7 @@ main_ternary_merge@29:
     <=
     assert // overflow
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -220,7 +220,7 @@ main_doWhileStorage_route@8:
 main_ternary_merge@35:
     !
     assert // not payable
-    pushbytes 0x
+    bytec_2 // 0x
     bytec_0 // "s"
     box_del
     pop
@@ -258,14 +258,14 @@ main_while_top@36:
     pushbytes 0x0a
     b+
     dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     swap
     pushbytes 0x01
     b+
     dupn 2
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dup
@@ -300,7 +300,7 @@ main_while_top@36:
     <=
     assert // overflow
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -364,14 +364,16 @@ main_ternary_merge@46:
     intc_2 // 0
     bytec_1 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
     intc_0 // 32
     <=
     assert // overflow
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -382,11 +384,13 @@ main_ternary_false@45:
     intc_2 // 0
     bytec_1 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_2 // 0x
+    cover 2
+    select
     pushbytes 0x01
     b+
     dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_1 // "cnt"
@@ -420,14 +424,14 @@ main_ternary_false@50:
     b main_ternary_merge@51
 
 main___postInit_route@5:
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_2 // 0
     app_global_put
     bytec_0 // "s"
@@ -435,7 +439,7 @@ main___postInit_route@5:
     box_create
     pop
     bytec_1 // "cnt"
-    pushbytes 0x
+    bytec_2 // 0x
     app_global_put
     intc_1 // 1
     return

@@ -18,6 +18,7 @@
 #include "Logger.h"
 
 #include <libsolidity/ast/ASTUtils.h>
+#include <libsolidity/ast/ASTVisitor.h>
 #include <libsolidity/ast/Types.h>
 #include <libsolutil/Numeric.h>
 
@@ -101,39 +102,51 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 			auto const* varDecl = dynamic_cast<VariableDeclaration const*>(extInfo.declaration);
 			if (!varDecl || !varDecl->isLocalVariable()) continue;
 
-			// Walk the scope block containing this local var to find its initialiser.
-			auto const* block = dynamic_cast<Block const*>(varDecl->scope());
-			if (!block) continue;
-
-			for (auto const& stmt: block->statements())
+			// solc may report a Block, FunctionDefinition, or ModifierDefinition as
+			// the local's lexical scope. Search that subtree by declaration identity
+			// instead of assuming an immediate block/name match; this also handles
+			// nested scopes and shadowed local names.
+			struct InitializerFinder: ASTConstVisitor
 			{
-				auto const* vds = dynamic_cast<VariableDeclarationStatement const*>(stmt.get());
-				if (!vds || !vds->initialValue()) continue;
-				bool declaresVar = false;
-				for (auto const& vd: vds->declarations())
-					if (vd && vd->name() == varDecl->name()) declaresVar = true;
-				if (!declaresVar) continue;
-
-				// Found the declaration statement. Extract the initialiser.
-				if (auto const* initMA = dynamic_cast<MemberAccess const*>(vds->initialValue()))
+				int64_t targetId;
+				Expression const* initial = nullptr;
+				bool visit(VariableDeclarationStatement const& _stmt) override
 				{
-					auto const* baseId = dynamic_cast<Identifier const*>(&initMA->expression());
-					auto const* baseVar = baseId
-						? dynamic_cast<VariableDeclaration const*>(baseId->annotation().referencedDeclaration)
-						: nullptr;
-					if (baseVar && baseVar->isStateVariable()
-						&& dynamic_cast<StructType const*>(baseVar->type()))
-						memberArrayAliases[varDecl->name()] = {baseVar, initMA->memberName()};
-					break;
+					for (auto const& declaration: _stmt.declarations())
+						if (declaration && declaration->id() == targetId)
+						{
+							initial = _stmt.initialValue();
+							return false;
+						}
+					return true;
 				}
-				auto const* initId = dynamic_cast<Identifier const*>(vds->initialValue());
-				if (!initId) break;
-				auto const* sv = dynamic_cast<VariableDeclaration const*>(
-					initId->annotation().referencedDeclaration);
-				if (sv && sv->isStateVariable())
-					storageLocalAliases[varDecl->name()] = sv;
-				break;
+			} finder;
+			finder.targetId = varDecl->id();
+			if (auto const* scope = varDecl->scope())
+				scope->accept(finder);
+			if (!finder.initial)
+				continue;
+
+			if (auto const* initMA = dynamic_cast<MemberAccess const*>(finder.initial))
+			{
+				auto const* baseId = dynamic_cast<Identifier const*>(&initMA->expression());
+				auto const* baseVar = baseId
+					? dynamic_cast<VariableDeclaration const*>(
+						baseId->annotation().referencedDeclaration)
+					: nullptr;
+				if (baseVar && baseVar->isStateVariable()
+					&& dynamic_cast<StructType const*>(baseVar->type()))
+					memberArrayAliases[varDecl->name()] = {
+						baseVar, initMA->memberName()};
+				continue;
 			}
+			auto const* initId = dynamic_cast<Identifier const*>(finder.initial);
+			if (!initId)
+				continue;
+			auto const* sv = dynamic_cast<VariableDeclaration const*>(
+				initId->annotation().referencedDeclaration);
+			if (sv && sv->isStateVariable())
+				storageLocalAliases[varDecl->name()] = sv;
 		}
 	}
 
@@ -294,21 +307,29 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 					&& m_blk.builderCtx().storageMapper.shouldUseBoxStorage(*svDecl))
 				{
 					auto* arc4Elem = m_blk.typeMapper().mapSolTypeToARC4(arrT->baseType());
-					if (builder::StorageMapper::computeEncodedElementSize(arc4Elem) != 32)
-						return;   // tier-1: 32-byte elements only
+					auto elemSize = builder::StorageMapper::computeEncodedElementSize(arc4Elem);
 					AssemblyBuilder::SlotRoute root;
 					root.kind = AssemblyBuilder::SlotRoute::Kind::ArrayRoot;
 					root.varName = physicalName;
+					root.wtype = m_blk.typeMapper().map(arrT);
+					root.elementSize = elemSize;
 					slotRoutes[vi->slot.str()] = root;
 
-					// K = keccak256(32-byte BE root slot) — compile-time.
-					auto slotWord = solidity::toBigEndian(vi->slot);
-					auto k = solidity::u256(solidity::util::keccak256(slotWord));
-					AssemblyBuilder::SlotRoute data;
-					data.kind = AssemblyBuilder::SlotRoute::Kind::ArrayData;
-					data.varName = physicalName;
-					data.dataBase = k.str();
-					slotDataRegions.push_back(std::move(data));
+					// Raw EVM data slots coincide with ARC4 element boundaries only
+					// for one-word encodings. Root length routing above is generic;
+					// packed and multi-slot data regions remain an explicit layout
+					// boundary instead of being silently mis-routed.
+					if (elemSize == 32)
+					{
+						auto slotWord = solidity::toBigEndian(vi->slot);
+						auto k = solidity::u256(solidity::util::keccak256(slotWord));
+						AssemblyBuilder::SlotRoute data;
+						data.kind = AssemblyBuilder::SlotRoute::Kind::ArrayData;
+						data.varName = physicalName;
+						data.dataBase = k.str();
+						data.elementSize = elemSize;
+						slotDataRegions.push_back(std::move(data));
+					}
 				}
 				else if (vi->isFullSlot
 					&& svDecl->type()->isValueType()   // structs share the slot repr; route can't model them
@@ -346,12 +367,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 				auto const* structType = dynamic_cast<StructType const*>(structVar->type());
 				if (!structWType || !structType) continue;
 
-				// tier-1: dynamic arrays of 32-byte-encoded elements only
+				// The root slot is the element count for every dynamic array.
+				// Element construction is type-directed in the route handler, so
+				// nested/static/dynamic element shapes share this registration.
 				auto const* localArrT = dynamic_cast<ArrayType const*>(varDecl->type());
 				if (!localArrT || !localArrT->isDynamicallySized()
 					|| localArrT->isByteArrayOrString()) continue;
-				auto* arc4Elem = m_blk.typeMapper().mapSolTypeToARC4(localArrT->baseType());
-				if (builder::StorageMapper::computeEncodedElementSize(arc4Elem) != 32) continue;
 
 				auto const* vi = layout->getVarInfoById(structVar->id());
 				if (!vi) continue;
@@ -366,6 +387,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 					m_blk.builderCtx().storageMapper.physicalBindingFor(*structVar).name;
 				r.fieldName = fieldName;
 				r.wtype = structWType;
+				r.elementSize = builder::StorageMapper::computeEncodedElementSize(
+					m_blk.typeMapper().mapSolTypeToARC4(localArrT->baseType()));
 				slotRoutes[slotStr] = r;
 				constants[yulId->name.str()] = slotStr;
 			}
@@ -486,22 +509,13 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 					base = base.substr(0, dot);
 			}
 			auto const* t = m_blk.typeMapper().map(varDecl->type());
-			// A SIZED ReferenceArray (`uint[2] calldata`) is a STATIC pointer
-			// (fixed offset, no length local); only an UNSIZED one is dynamic.
-			// The old unconditional ReferenceArray match in the dynamic branch
-			// swallowed the sized case too, so `uint[2] calldata` got registered
-			// with a nonexistent __cd_len_ (dynamic protocol) — the static
-			// branch's ReferenceArray case was dead.
-			auto const* refArr = dynamic_cast<awst::ReferenceArray const*>(t);
-			bool dynamicRefArr = refArr && !refArr->arraySize();
-			bool sizedRefArr = refArr && refArr->arraySize().has_value();
-			if (t == awst::WType::bytesType() || t == awst::WType::stringType()
-				|| t->kind() == awst::WTypeKind::ARC4DynamicArray
-				|| dynamicRefArr)
+			// solc already owns the recursive ABI rule: a fixed array or struct is
+			// dynamic when any contained member is dynamic. Use that fact instead
+			// of enumerating WType shapes one level at a time.
+			if (varDecl->type()->isDynamicallyEncoded())
 				calldataPointerNames.insert(base);
-			else if (t->kind() == awst::WTypeKind::ARC4Struct
-				|| t->kind() == awst::WTypeKind::ARC4StaticArray
-				|| sizedRefArr)
+			else if (dynamic_cast<solidity::frontend::ReferenceType const*>(
+					varDecl->type()))
 				calldataStaticPtrNames.insert(base);
 		}
 		if (auto blobOff = m_blk.findBlobAggregate(varDecl->id()); !blobOff.empty())
@@ -536,6 +550,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolInlineAssembly::toAwst()
 	asmTranslator.setCalldataStaticPtrNames(std::move(calldataStaticPtrNames));
 	asmTranslator.setSlotRoutes(std::move(slotRoutes), std::move(slotDataRegions));
 	asmTranslator.setSignedParamBits(std::move(signedParamBits));
+	asmTranslator.setReturnSolTypes(m_blk.fn.returnSolTypes);
 	asmTranslator.setSelectorRoutes(
 		builder::SelectorSemantics::routes(m_blk.builderCtx()));
 	auto stmts = asmTranslator.buildBlock(

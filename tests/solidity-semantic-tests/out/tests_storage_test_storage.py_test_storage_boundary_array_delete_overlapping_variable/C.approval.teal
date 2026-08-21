@@ -57,7 +57,9 @@ main_ternary_merge@15:
     intc_2 // 0
     bytec_1 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_0 // 32
@@ -367,15 +369,14 @@ __storage_read:
     bz __storage_read_else_body@2
     intc_0 // 32
     bzero
+    intc_2 // 0
     bytec_1 // "y"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    b|
+    extract 0 32
     retsub
 
 __storage_read_else_body@2:
@@ -417,6 +418,12 @@ __storage_write:
     bzero
     frame_dig -1
     concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     dup
     len
     intc_0 // 32

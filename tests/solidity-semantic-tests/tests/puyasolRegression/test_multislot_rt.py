@@ -6,6 +6,17 @@ import hashlib
 from framework import as_int
 
 
+def test_nested_precompile_expression(harness):
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_multislot_rt_copies.sol",
+        contract_name="MultiSlotRtCopies",
+        extra_args=["--evm-layout"],
+    )
+    value = bytes.fromhex("0123456789abcdef" * 4)
+    got = harness.call(app, "nestedIdentity(bytes32)", value).abi_return
+    assert bytes(got) == value
+
+
 def test_identity_cross_slot(harness):
     app = harness.compile_and_deploy(
         "puyasolRegression/contracts/asm_multislot_rt_copies.sol",

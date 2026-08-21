@@ -79,14 +79,22 @@ FunctionDefinition const* resolveCallTarget(
 		return nullptr;
 	auto const* functionType = dynamic_cast<FunctionType const*>(
 		_call.expression().annotation().type);
-	// Only Solidity internal calls preserve memory/storage reference identity.
-	// `this.f(x)` and other external/delegate calls cross an ABI boundary: a
-	// callee mutating its memory parameter does not mutate the caller's value.
-	if (!functionType || functionType->kind() != FunctionType::Kind::Internal)
-		return nullptr;
-
 	auto const* declaration = referencedFunction(_call);
-	if (!declaration)
+	if (!functionType || !declaration)
+		return nullptr;
+	// Ordinary external/delegate calls cross an ABI boundary and do not
+	// preserve memory/storage reference identity.  Public/external LIBRARY
+	// calls are the exception in this backend: solc types them as DelegateCall,
+	// but CallResolver intentionally lowers them to an internal subroutine.
+	// Keep that call edge so its mutated reference parameters are threaded back
+	// to the caller just like an internal library function's.
+	bool const internalCall =
+		functionType->kind() == FunctionType::Kind::Internal;
+	auto const* declarationScope = declaration->annotation().contract;
+	bool const internalizedLibraryDelegateCall =
+		functionType->kind() == FunctionType::Kind::DelegateCall
+		&& declarationScope && declarationScope->isLibrary();
+	if (!internalCall && !internalizedLibraryDelegateCall)
 		return nullptr;
 	auto const* scope = declaration->annotation().contract;
 	if (!_mostDerived || !scope || scope->isLibrary() || declaration->isFree()

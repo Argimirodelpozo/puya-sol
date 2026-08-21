@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 // address.staticcall(data) now lowers like .call (inner ApplicationCall txn) instead of hard-erroring;
 // a self-staticcall with abi.encodeWithSignature / abi.encodeCall resolves to a direct subroutine call,
-// and the return is ARC4-encoded (round-trips through abi.decode). The EVM read-only guarantee is NOT
+// and the return is canonical EVM-encoded (round-trips through abi.decode). The EVM read-only guarantee is NOT
 // enforced on AVM (documented warning) — that's the accepted divergence.
 contract Base { function bar(uint256 x) external pure returns (uint256) { return x + 7; } }
 contract C is Base {

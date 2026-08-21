@@ -3,9 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_decode_simple.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
-    pushbytes ""
-    dup
+    intcblock 32 1 0 24
     pushint 4096
     bzero
     dup
@@ -51,7 +49,6 @@ main_f_route@4:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    swap
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
@@ -62,55 +59,59 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dig 1
-    len
     dup
+    len
+    intc_0 // 32
+    dig 1
+    <=
+    assert // EVM ABI decode out of bounds
     pushint 64
-    >=
-    bz main_else_body@14
     dig 1
-    extract 34 24
-    pushbytes 0x
-    b==
-    bz main_else_body@14
-    dig 1
+    <=
+    assert // EVM ABI decode out of bounds
+    dig 2
     extract 34 32
     dup
-    len
-    intc_3 // 8
-    -
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
     extract_uint64
     dup
-    bury 6
     intc_0 // 32
     %
-    bnz main_else_body@14
-    dig 4
+    !
+    assert // unaligned EVM ABI offset
+    dup
     intc_0 // 32
     +
     dup
-    bury 5
-    dig 1
+    dig 3
     <=
-    bz main_else_body@14
-    pop
-    extract 2 32
-    swap
-    dup
-    dig 4
+    assert // EVM ABI decode out of bounds
+    dig 3
+    uncover 2
     intc_0 // 32
     extract3
     dup
-    len
-    intc_3 // 8
-    -
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    intc_3 // 24
     extract_uint64
-    dig 3
-    swap
-    extract3
-
-main_after_if_else@15:
-    swap
+    dup
+    pushint 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    dup2
+    +
+    uncover 3
+    <=
+    assert // EVM ABI decode out of bounds
+    uncover 3
+    extract 2 32
     dup
     len
     intc_0 // 32
@@ -119,7 +120,8 @@ main_after_if_else@15:
     intc_0 // 32
     bzero
     b|
-    swap
+    cover 3
+    extract3
     dup
     len
     itob
@@ -137,18 +139,6 @@ main_after_if_else@15:
     log
     intc_1 // 1
     return
-
-main_else_body@14:
-    swap
-    extract 2 32
-    uncover 2
-    dup
-    intc_0 // 32
-    extract_uint16
-    uncover 3
-    substring3
-    extract 2 0
-    b main_after_if_else@15
 
 main_ternary_false@8:
     intc_2 // 0

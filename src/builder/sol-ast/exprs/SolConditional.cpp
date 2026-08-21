@@ -89,10 +89,32 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 			return low.readArrayValue(a, at);
 		return a.slot;
 	};
-	e->trueExpr = materializeSlotRef(
-		std::move(e->trueExpr), m_conditional.trueExpression());
-	e->falseExpr = materializeSlotRef(
-		std::move(e->falseExpr), m_conditional.falseExpression());
+	// Materialising a slot-backed aggregate can itself emit reads/loops.  Keep
+	// those effects in the branch delta; otherwise both arms' materialisation
+	// effects escape to the surrounding statement and run unconditionally.
+	auto matTrue = m_ctx.lowerOperand([&] {
+		return materializeSlotRef(
+			std::move(e->trueExpr), m_conditional.trueExpression());
+	}, true);
+	e->trueExpr = std::move(matTrue.value);
+	trueD.pre.insert(trueD.pre.end(),
+		std::make_move_iterator(matTrue.effects.pre.begin()),
+		std::make_move_iterator(matTrue.effects.pre.end()));
+	trueD.post.insert(trueD.post.end(),
+		std::make_move_iterator(matTrue.effects.post.begin()),
+		std::make_move_iterator(matTrue.effects.post.end()));
+
+	auto matFalse = m_ctx.lowerOperand([&] {
+		return materializeSlotRef(
+			std::move(e->falseExpr), m_conditional.falseExpression());
+	}, true);
+	e->falseExpr = std::move(matFalse.value);
+	falseD.pre.insert(falseD.pre.end(),
+		std::make_move_iterator(matFalse.effects.pre.begin()),
+		std::make_move_iterator(matFalse.effects.pre.end()));
+	falseD.post.insert(falseD.post.end(),
+		std::make_move_iterator(matFalse.effects.post.begin()),
+		std::make_move_iterator(matFalse.effects.post.end()));
 
 	// Coerce branches to target type. For tuples, coerce element-by-element.
 	auto coerceBranch = [&](std::shared_ptr<awst::Expression> branch)

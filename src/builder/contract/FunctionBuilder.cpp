@@ -349,6 +349,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 	// ARC4 methods: remap param types to ARC4; stash decode ops for deferred insertion.
 	struct ParamDecode
 	{
+		size_t argIndex;
 		std::string name;
 		awst::WType const* nativeType;
 		awst::WType const* arc4Type;
@@ -380,7 +381,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				// int256 is already canonical; ≤64-bit is uint64-backed (buildABIEntryChecks).
 				unsigned signedBits =
 					(intInfo && intInfo->isSigned && bits > 64 && bits < 256) ? bits : 0;
-				paramDecodes.push_back({arg.name, arg.wtype, arc4Type, arg.sourceLocation, 0, signedBits});
+				paramDecodes.push_back({pi, arg.name, arg.wtype, arc4Type,
+					arg.sourceLocation, 0, signedBits});
 				// Asm bodies are built (buildBlock) AFTER this loop; defer the ABI wtype change so the Yul
 				// body builds against the native biguint type (set in the decode rename loop below).
 				if (!funcHasInlineAssembly)
@@ -409,7 +411,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			awst::WType const* arc4Type = m_typeMapper.mapToARC4Type(arg.wtype);
 			if (arc4Type != arg.wtype)
 			{
-				paramDecodes.push_back({arg.name, arg.wtype, arc4Type, arg.sourceLocation});
+				paramDecodes.push_back(
+					{pi, arg.name, arg.wtype, arc4Type, arg.sourceLocation});
 				arg.wtype = arc4Type;
 			}
 		}
@@ -439,6 +442,8 @@ awst::ContractMethod ContractBuilder::buildFunction(
 					bitWidths[rp->name()] = it->bits;
 			}
 			setFunctionContext(paramContext, method.returnType, bitWidths, paramSolTypes);
+			for (auto const& rp: _func.returnParameters())
+				m_functionCtx->returnSolTypes.push_back(rp->type());
 		}
 
 
@@ -668,23 +673,23 @@ awst::ContractMethod ContractBuilder::buildFunction(
 							retParams[0]->name()))
 						retStmt->value = TypeCoercion::calldataPointerValueRead(
 							retParams[0]->name(), method.sourceLocation);
-					else if (m_typeMapper.profile().evmMemoryLayout
-						&& retParams[0]->referenceLocation()
+					else if (retParams[0]->referenceLocation()
 							== solidity::frontend::VariableDeclaration::Location::Memory
-						&& [&]{ auto const* at3 = dynamic_cast<
-								solidity::frontend::ArrayType const*>(
-								retParams[0]->type());
-							return at3 && at3->isByteArrayOrString(); }()
-						&& blockUsesDeclInAsm(_func.body(), retParams[0]->id()))
-						// blob-backed named bytes/string return: the asm may
-						// have REPOINTED it (solady toHexString) — materialise
-						// from the (possibly moved) offset var.
-						retStmt->value = AssemblyBuilder::materializeBlobBytesValue(
-							m_typeMapper.profile().scratchLayout,
+						&& m_functionCtx->isAssemblyAggregate(retParams[0]->id())
+						&& !memoryUsesBlob(m_typeMapper.map(retParams[0]->type())))
+					{
+						// Any named memory aggregate exposed to Yul may have been
+						// mutated or repointed. Reconstruct its native value from the
+						// current offset for the implicit Solidity return, at any shape.
+						std::vector<std::shared_ptr<awst::Statement>> reads;
+						retStmt->value = materializeBlobValue(
+							m_typeMapper, retParams[0]->type(),
+							m_typeMapper.map(retParams[0]->type()),
 							"__blobagg_off_" + std::to_string(retParams[0]->id()),
-							dynamic_cast<solidity::frontend::ArrayType const*>(
-								retParams[0]->type())->isString(),
-							method.sourceLocation);
+							method.sourceLocation, reads);
+						for (auto& st: reads)
+							method.body->body.push_back(std::move(st));
+					}
 					else if (m_typeMapper.profile().evmStorageLayout
 						&& retParams[0]->referenceLocation()
 							== solidity::frontend::VariableDeclaration::Location::Storage)
@@ -704,8 +709,23 @@ awst::ContractMethod ContractBuilder::buildFunction(
 								== solidity::frontend::VariableDeclaration::Location::Storage)
 							? awst::WType::biguintType()
 							: m_typeMapper.map(rp->type());
-						auto var = awst::makeVarExpression(rp->name(), vt, method.sourceLocation);
-						tuple->items.push_back(std::move(var));
+						if (rp->referenceLocation()
+								== solidity::frontend::VariableDeclaration::Location::Memory
+							&& m_functionCtx->isAssemblyAggregate(rp->id())
+							&& !memoryUsesBlob(vt))
+						{
+							std::vector<std::shared_ptr<awst::Statement>> reads;
+							auto value = materializeBlobValue(
+								m_typeMapper, rp->type(), vt,
+								"__blobagg_off_" + std::to_string(rp->id()),
+								method.sourceLocation, reads);
+							for (auto& st: reads)
+								method.body->body.push_back(std::move(st));
+							tuple->items.push_back(std::move(value));
+						}
+						else
+							tuple->items.push_back(awst::makeVarExpression(
+								rp->name(), vt, method.sourceLocation));
 					}
 					tuple->wtype = method.returnType;
 					retStmt->value = std::move(tuple);
@@ -890,11 +910,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 				auto const* tgt = std::get_if<awst::InstanceMethodTarget>(&call->target);
 				if (!tgt || tgt->memberName != thisName)
 					return;
-				size_t argI = 0;
 				for (auto const& pd: paramDecodes)
 				{
-					if (argI >= call->args.size()) break;
-					auto& a = call->args[argI++];
+					if (pd.argIndex >= call->args.size()) continue;
+					auto& a = call->args[pd.argIndex];
 					if (!a.value || a.value->wtype == pd.arc4Type)
 						continue;
 					if (a.value->wtype != awst::WType::biguintType())

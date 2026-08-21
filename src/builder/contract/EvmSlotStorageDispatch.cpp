@@ -891,20 +891,16 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 	};
 	buildDynamicArrayWrite();
 
-	// ── __evm_dynarr2_read / __evm_dynarr2_write ──
-	// Dynamic array OF dynamic arrays (uint[][], S[][]): outer count at the
-	// slot, element j's INNER length at keccak256(slot32)+j, inner data at
-	// keccak256(elemSlot32)+i. Both compose the flat __evm_dynarr_* pair per
-	// element and forward the INNER element metrics
-	// (__size/__aw/__per/__mul/__bp)
-	// verbatim. ARC4 form: u16 count ++ u16 heads (offsets relative to the
-	// tuple start, i.e. byte 2) ++ inner tails.
+	// ── Recursive dynamic-array read / write ──
+	// Every dynamic-array layer has the same storage and ARC4 structure. Depth
+	// one delegates to the leaf codec above; greater depths recursively compose
+	// u16 heads and inner tails. T[][][] is therefore the same path as T[][].
 	auto buildNestedDynamicArrayMethods = [&]() {
 		auto metricArgs = [&](std::vector<awst::CallArg>& _args) {
 			for (char const* an: {"__size", "__aw", "__per", "__mul", "__bp"})
 				awst::pushCallArg(_args, an, u64Var(an));
 		};
-		auto innerRead = [&](std::shared_ptr<awst::Expression> _slot) {
+		auto leafRead = [&](std::shared_ptr<awst::Expression> _slot) {
 			auto call = awst::makeSubroutineCall(
 				awst::SubroutineID{"__puyasol___evm_dynarr_read"},
 				awst::WType::bytesType(), loc);
@@ -912,13 +908,37 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			metricArgs(call->args);
 			return std::shared_ptr<awst::Expression>(std::move(call));
 		};
-		auto innerWriteStmt = [&](std::shared_ptr<awst::Expression> _slot,
+		auto leafWriteStmt = [&](std::shared_ptr<awst::Expression> _slot,
 			std::shared_ptr<awst::Expression> _bytes) {
 			auto call = awst::makeSubroutineCall(
 				awst::SubroutineID{"__puyasol___evm_dynarr_write"},
 				awst::WType::voidType(), loc);
 			awst::pushCallArg(call->args, "__slot", std::move(_slot));
 			awst::pushCallArg(call->args, "__val", std::move(_bytes));
+			metricArgs(call->args);
+			return awst::makeExpressionStatement(std::move(call), loc);
+		};
+		auto nextDepth = [&]() {
+			return awst::makeUInt64BinOp(u64Var("__depth"),
+				awst::UInt64BinaryOperator::Sub, u64c(1), loc);
+		};
+		auto innerRead = [&](std::shared_ptr<awst::Expression> _slot) {
+			auto call = awst::makeSubroutineCall(
+				awst::SubroutineID{"__puyasol___evm_dynarr_recursive_read"},
+				awst::WType::bytesType(), loc);
+			awst::pushCallArg(call->args, "__slot", std::move(_slot));
+			awst::pushCallArg(call->args, "__depth", nextDepth());
+			metricArgs(call->args);
+			return std::shared_ptr<awst::Expression>(std::move(call));
+		};
+		auto innerWriteStmt = [&](std::shared_ptr<awst::Expression> _slot,
+			std::shared_ptr<awst::Expression> _bytes) {
+			auto call = awst::makeSubroutineCall(
+				awst::SubroutineID{"__puyasol___evm_dynarr_recursive_write"},
+				awst::WType::voidType(), loc);
+			awst::pushCallArg(call->args, "__slot", std::move(_slot));
+			awst::pushCallArg(call->args, "__val", std::move(_bytes));
+			awst::pushCallArg(call->args, "__depth", nextDepth());
 			metricArgs(call->args);
 			return awst::makeExpressionStatement(std::move(call), loc);
 		};
@@ -949,6 +969,11 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 				va.sourceLocation = loc;
 				_sub.args.push_back(va);
 			}
+			awst::SubroutineArgument depth;
+			depth.name = "__depth";
+			depth.wtype = awst::WType::uint64Type();
+			depth.sourceLocation = loc;
+			_sub.args.push_back(depth);
 			for (char const* an: {"__size", "__aw", "__per", "__mul", "__bp"})
 			{
 				awst::SubroutineArgument a;
@@ -964,12 +989,21 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			awst::ContractMethod sub;
 			sub.sourceLocation = loc;
 			sub.cref = cref;
-			sub.memberName = "__evm_dynarr2_read";
+			sub.memberName = "__evm_dynarr_recursive_read";
 			sub.returnType = awst::WType::bytesType();
 			sub.arc4MethodConfig = std::nullopt;
 			sub.pure = false;
 			mkArgs(sub, /*_withVal=*/false);
 			auto body = awst::makeBlock(loc);
+			{
+				auto base = awst::makeBlock(loc);
+				base->body.push_back(awst::makeReturnStatement(
+					leafRead(slotVar()), loc));
+				body->body.push_back(awst::makeIfElse(
+					awst::makeNumericCompare(u64Var("__depth"),
+						awst::NumericComparison::Lte, u64c(1), loc),
+					std::move(base), nullptr, loc));
+			}
 			body->body.push_back(awst::makeAssignmentStatement(
 				u64Var("__n"), biguintToU64(readWordCall(slotVar())), loc));
 			body->body.push_back(awst::makeAssignmentStatement(
@@ -1017,7 +1051,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			awst::ContractMethod sub;
 			sub.sourceLocation = loc;
 			sub.cref = cref;
-			sub.memberName = "__evm_dynarr2_write";
+			sub.memberName = "__evm_dynarr_recursive_write";
 			sub.returnType = awst::WType::voidType();
 			sub.arc4MethodConfig = std::nullopt;
 			sub.pure = false;
@@ -1039,6 +1073,15 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 						u64c(2), loc), loc), loc);
 			};
 			auto body = awst::makeBlock(loc);
+			{
+				auto base = awst::makeBlock(loc);
+				base->body.push_back(leafWriteStmt(slotVar(), valVar2()));
+				base->body.push_back(awst::makeReturnStatement(nullptr, loc));
+				body->body.push_back(awst::makeIfElse(
+					awst::makeNumericCompare(u64Var("__depth"),
+						awst::NumericComparison::Lte, u64c(1), loc),
+					std::move(base), nullptr, loc));
+			}
 			body->body.push_back(awst::makeAssignmentStatement(
 				u64Var("__old"), biguintToU64(readWordCall(slotVar())), loc));
 			body->body.push_back(awst::makeAssignmentStatement(
@@ -1101,7 +1144,7 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		{"__storage_read", "__storage_write",
 			"__evm_bytes_read", "__evm_bytes_write",
 			"__evm_dynarr_read", "__evm_dynarr_write",
-			"__evm_dynarr2_read", "__evm_dynarr2_write"});
+			"__evm_dynarr_recursive_read", "__evm_dynarr_recursive_write"});
 
 	Logger::instance().debug(
 		"Generated EVM-slot __storage_read/__storage_write (paged<"

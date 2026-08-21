@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/postinit_transitive_ctor_args.sol.D.approval_program() -> uint64:
 main:
     intcblock 1 0 32 2
-    bytecblock "arr" "__ctor_pending" "va" 0x151f7c75 "y2"
+    bytecblock "arr" 0x "__ctor_pending" "va" 0x151f7c75 "y2"
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -53,9 +53,11 @@ main_ternary_merge@15:
     !
     assert // not payable
     intc_1 // 0
-    bytec_2 // "va"
+    bytec_3 // "va"
     app_global_get_ex
-    assert // check va exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -64,7 +66,7 @@ main_ternary_merge@15:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -87,9 +89,11 @@ main_ternary_merge@20:
     !
     assert // not payable
     intc_1 // 0
-    bytec 4 // "y2"
+    bytec 5 // "y2"
     app_global_get_ex
-    assert // check y2 exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -98,7 +102,7 @@ main_ternary_merge@20:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -143,7 +147,7 @@ main_ternary_merge@25:
     swap
     intc_2 // 32
     box_extract // on error: index out of bounds
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -155,32 +159,32 @@ main_ternary_false@24:
     b main_ternary_merge@25
 
 main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     bytec_0 // "arr"
     intc_3 // 2
     box_create
     pop
-    bytec_2 // "va"
-    pushbytes 0x
+    bytec_3 // "va"
+    bytec_1 // 0x
     app_global_put
-    bytec 4 // "y2"
-    pushbytes 0x
+    bytec 5 // "y2"
+    bytec_1 // 0x
     app_global_put
     pushint 5
     itob
-    bytec_2 // "va"
+    bytec_3 // "va"
     pushbytes 0x06
     app_global_put
-    bytec 4 // "y2"
+    bytec 5 // "y2"
     swap
     app_global_put
     bytec_0 // "arr"

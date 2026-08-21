@@ -111,6 +111,13 @@ class Harness:
         resolved = self.resolve_sol_path(sol_path)
         self._compile_count += 1
         compile_dir = self.out_dir / f"compile-{self._compile_count:04d}"
+        # A fresh Harness starts its counter at one, but standalone replay
+        # processes intentionally reuse the same output directory. Remove the
+        # prior process's compile-N tree before compiling: stale top-level
+        # artifacts can otherwise masquerade as the output of a splitter run
+        # whose real artifacts live in nested helper/orchestrator directories.
+        if compile_dir.exists():
+            shutil.rmtree(compile_dir)
         self._compile_dirs.append(compile_dir)
         artifacts = compile_sol(resolved, compile_dir, **opts)
         for src in compile_dir.iterdir():
@@ -127,7 +134,8 @@ class Harness:
         """Deploy a named contract from the compiled artifacts. Raises DeployError on failure.
 
         Accepted deploy_opts: ctor_args, fund_wei, postinit_args,
-        postinit_budget_pool, extra_funding_microalgos.
+        postinit_budget_pool, postinit_inner_txns, skip_postinit,
+        reserve_program_pages, extra_funding_microalgos, and template_values.
         """
         name = artifacts.last_deployable(contract_name)
         if name is None:

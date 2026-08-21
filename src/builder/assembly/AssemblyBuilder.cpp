@@ -311,6 +311,47 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitFreeMemoryBum
 	return out;
 }
 
+std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitMemoryAlloc(
+	ScratchLayout const& _scratch,
+	std::shared_ptr<awst::Expression> _sizeU64,
+	std::string const& _offVar,
+	int _uniqueId, awst::SourceLocation const& _loc)
+{
+	std::vector<std::shared_ptr<awst::Statement>> out;
+	auto const* u64Type = awst::WType::uint64Type();
+	auto constant = [&](uint64_t value) {
+		return awst::makeIntegerConstant(value, _loc);
+	};
+	std::string sizeName = "__memalloc_size_" + std::to_string(_uniqueId);
+	auto size = [&]() {
+		return awst::makeVarExpression(sizeName, u64Type, _loc);
+	};
+	auto offset = [&]() {
+		return awst::makeVarExpression(_offVar, u64Type, _loc);
+	};
+	out.push_back(awst::makeAssignmentStatement(size(), std::move(_sizeU64), _loc));
+	out.push_back(awst::makeAssignmentStatement(
+		offset(),
+		awst::makeExtractUInt64(awst::makeLoadSlot(_scratch.memoryFirst(), _loc),
+			constant(88), _loc), _loc));
+
+	// Solidity keeps the FMP word-aligned even when the logical payload is not.
+	auto rounded = awst::makeUInt64BinOp(
+		awst::makeUInt64BinOp(
+			awst::makeUInt64BinOp(size(), awst::UInt64BinaryOperator::Add,
+				constant(31), _loc),
+			awst::UInt64BinaryOperator::FloorDiv, constant(32), _loc),
+		awst::UInt64BinaryOperator::Mult, constant(32), _loc);
+	auto next = awst::makeUInt64BinOp(
+		offset(), awst::UInt64BinaryOperator::Add, std::move(rounded), _loc);
+	auto nextWord = awst::makeLeftPad(awst::makeItob(std::move(next), _loc), 24, _loc);
+	out.push_back(awst::makeExpressionStatement(
+		awst::makeStoreSlot(_scratch.memoryFirst(),
+			awst::makeReplace3(awst::makeLoadSlot(_scratch.memoryFirst(), _loc),
+				constant(64), std::move(nextWord), _loc), _loc), _loc));
+	return out;
+}
+
 std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::emitBytesBlobAlloc(
 	ScratchLayout const& _scratch,
 	std::shared_ptr<awst::Expression> _lenU64, std::string const& _offVar,

@@ -8,6 +8,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace puyasol::builder::eb
 {
@@ -139,6 +140,28 @@ public:
 		std::shared_ptr<awst::Expression> _arg,
 		solidity::frontend::Type const* _sourceSolType,
 		solidity::frontend::Type const* _paramSolType,
+		awst::SourceLocation const& _loc);
+
+	/// Build the EVM contract-profile transport once for every outgoing call
+	/// shape: ApplicationArgs[0] is the 4-byte Solidity selector and [1] is one
+	/// canonical ABI body. Argument conversions are driven by the declared
+	/// parameter types when available and aggregate layout recurses in the
+	/// shared EVM encoder.
+	static std::shared_ptr<awst::TupleExpression> buildEvmApplicationArgs(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _selector,
+		std::vector<solidity::frontend::ASTPointer<
+			solidity::frontend::Expression const>> const& _args,
+		std::vector<solidity::frontend::Type const*> const& _paramTypes,
+		awst::SourceLocation const& _loc);
+
+	/// Canonical argument body shared by EVM-profile method calls and
+	/// constructor creation (which has no selector).
+	static std::shared_ptr<awst::Expression> encodeEvmArgumentBody(
+		ContractContext& _ctx,
+		std::vector<solidity::frontend::ASTPointer<
+			solidity::frontend::Expression const>> const& _args,
+		std::vector<solidity::frontend::Type const*> const& _paramTypes,
 		awst::SourceLocation const& _loc);
 
 	/// Submit-then-CAPTURE: push `__itxn_log_N = itxn LastLog` into pre-effects

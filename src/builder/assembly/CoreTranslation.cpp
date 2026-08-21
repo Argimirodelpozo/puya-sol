@@ -2,6 +2,7 @@
 /// Core expression translation: dispatch, literals, identifiers, function calls.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/builtin/AppCodeSizeLowering.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/sol-types/FunctionPointerKind.h"
 #include "Logger.h"
@@ -377,6 +378,24 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	auto loc = makeLoc(_call.debugData);
 	std::string funcName = getFunctionName(_call.functionName);
 
+	// A low-level call is an expression in Yul, so it can occur at any depth:
+	// `mload(staticcall(...))`, `and(ok, call(...))`, as an argument to a Yul
+	// helper, etc.  StatementOps handles the top-level let/assign/pop shapes,
+	// but nested calls must go through the exact same dispatcher.  Lower the
+	// side effects into the pending-statement stream and expose the success
+	// word through a fresh local for the enclosing expression.  Do this before
+	// the generic argument walk: handlePrecompileCall owns those raw arguments,
+	// and translating them here as well would evaluate nested side effects twice.
+	if (funcName == "call" || funcName == "staticcall")
+	{
+		std::string resultName = "__lowlevel_call_result_"
+			+ std::to_string(awst::NameGen::next("AssemblyBuilder.lowLevelCallResult"));
+		m_locals[resultName] = awst::WType::biguintType();
+		handlePrecompileCall(
+			_call, resultName, loc, m_pendingStatements, /*_isCall=*/funcName == "call");
+		return awst::makeVarExpression(resultName, awst::WType::biguintType(), loc);
+	}
+
 	// Before translating args, check for Yul-level patterns that need raw AST access.
 	// mload(add(add(bytes_param, 32), offset)) → extract3(param, offset, 32)
 	if (funcName == "mload" && _call.arguments.size() == 1)
@@ -472,60 +491,23 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		return (this->*(it->second))(loc);
 	if (funcName == "extcodesize" && args.size() == 1)
 	{
-		// extcodesize(addr) → the target app's approval-program length, which
-		// is exactly the lowering `address(addr).code.length` already uses
-		// (SolAddressProperty): resolve the app id from the address's last 8
-		// bytes — this compiler's contract-value convention — and read
-		// AppApprovalProgram. A real lookup, NOT the old stub that returned 1
-		// ("everything is a contract") and silently made `extcodesize(a) > 0`
-		// guards always true.
-		//
-		// This was a hard error, justified as "no way to query whether an
-		// arbitrary address has code". `.code.length` disproves that, and the
-		// two spellings ask the same question — so refusing this one only
-		// decided the answer by how the user wrote it. The assembly spelling
-		// is the one OZ's `Address.isContract` compiles to, vendored into a
-		// large share of real contracts (it is what blocks BMEX's `Vesting`).
+		// Resolve the compiler's contract-value address to an application and
+		// query only small metadata. Fetching AppApprovalProgram before taking
+		// `len` fails for programs larger than AVM's stack byte-value limit.
+		// High-level `address.code.length` calls this same shared lowering.
 		auto addrBytes = awst::makeAsBytes(ensureBiguint(args[0], loc), loc);
 		auto appId = awst::makeAsApplication(
 			awst::makeWord32ToUInt64(std::move(addrBytes), loc), loc);
-		auto* tupleType = m_typeMapper.createType<awst::WTuple>(
-			std::vector<awst::WType const*>{
-				awst::WType::bytesType(), awst::WType::boolType()});
-		auto appParamsGet = awst::makeAppParamsGet(
-			"AppApprovalProgram", std::move(appId), tupleType, loc);
-
-		// Stash the (bytes, bool) pair in a temp before reading element 0:
-		// puya miscompiles TupleItemExpression pop ordering over a raw
-		// IntrinsicCall. Same dance as SolAddressProperty, counter-named so two
-		// extcodesize reads in one expression don't share a temp.
-		std::string tmpName = "__asm_extcodesize_" + std::to_string(
-			awst::NameGen::next("AssemblyBuilder.s_extcodesizeTmpCounter") + 1);
-		auto tmpTarget = awst::makeVarExpression(tmpName, tupleType, loc);
-		m_pendingStatements.push_back(
-			awst::makeAssignmentStatement(tmpTarget, std::move(appParamsGet), loc));
 
 		Logger::instance().warning(
 			"`extcodesize(addr)` resolves the app id from the address's last 8 "
-			"bytes (this compiler's contract-value convention) and returns that "
-			"application's approval-program length, matching "
-			"`address(addr).code.length`. An address NOT in that form reads as "
-			"size 0.", loc);
+			"bytes (this compiler's contract-value convention). It returns zero "
+			"for a missing application and the allocated AVM program capacity "
+			"for an existing one; AVM cannot observe an oversized program's exact "
+			"byte length without materialising it.", loc);
 
-		// MUST branch on the exists flag. For a non-existent app the AVM pushes
-		// a uint64 zero as the value REGARDLESS of the field's type, so `len`
-		// on it fails at runtime with "wanted []byte but got uint64" — which is
-		// every EOA, i.e. exactly the case an isContract guard asks about.
-		auto exists = awst::makeTupleItem(
-			awst::makeVarExpression(tmpName, tupleType, loc), 1,
-			awst::WType::boolType(), loc);
-		auto program = awst::makeTupleItem(
-			awst::makeVarExpression(tmpName, tupleType, loc), 0,
-			awst::WType::bytesType(), loc);
-		return awst::makeConditional(
-			std::move(exists), awst::makeLen(std::move(program), loc),
-			awst::makeZero(loc, awst::WType::uint64Type()),
-			awst::WType::uint64Type(), loc);
+		return AppCodeSizeLowering::lower(
+			m_typeMapper, std::move(appId), loc, m_pendingStatements);
 	}
 	if (funcName == "extcodehash")
 	{
@@ -565,9 +547,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	}
 	if (funcName == "caller")
 	{
-		// caller() (EVM CALLER = msg.sender) → txn Sender (32 bytes) → biguint.
-		// Sound: txn Sender is the correct AVM analog of the immediate caller.
+		// caller() (EVM CALLER = msg.sender).  At an EVM ABI boundary all
+		// addresses occupy one 160-bit namespace, including ambient identities;
+		// match high-level msg.sender and canonical calldata addresses.
 		auto sender = awst::makeTxn("Sender", awst::WType::bytesType(), loc);
+		if (m_typeMapper.profile().contractAbi == ContractAbi::Evm)
+			sender = awst::makeExtractLastN(std::move(sender), 20, loc);
 
 		auto cast = awst::makeAsBiguint(std::move(sender), loc);
 		return cast;
@@ -766,18 +751,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		Logger::instance().warning("tstore() in expression context, treating as no-op", loc);
 		return awst::makeVoidConstant(loc);
 	}
-	if (funcName == "call" || funcName == "staticcall")
-	{
-		// call/staticcall in let/assign/pop/statement form is pattern-matched
-		// by those translators. In pure expression context (e.g. the Solady
-		// `if iszero(call(...)) { revert }` ETH-transfer idiom) no such match
-		// exists — folding to constant success would silently drop the call,
-		// so this is the invented-success class the policy hard-errors on.
-		EvmFeaturePolicy::report(
-			EvmFeature::UnknownLowLevelCall, m_typeMapper.profile(), loc);
-		return awst::makeOne(loc, awst::WType::biguintType());
-	}
-
 	// Check for user-defined assembly function — inline in expression context
 	auto asmIt = m_asmFunctions.find(funcName);
 	if (asmIt != m_asmFunctions.end())

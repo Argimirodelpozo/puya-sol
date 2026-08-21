@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_multiple_placeholder.sol.G.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "acc" "ctr" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
+    bytecblock 0x "acc" "ctr" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -24,11 +24,11 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "acc"
-    pushbytes 0x
+    bytec_1 // "acc"
+    bytec_0 // 0x
     app_global_put
-    bytec_1 // "ctr"
-    pushbytes 0x
+    bytec_2 // "ctr"
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -56,9 +56,11 @@ main_ternary_merge@16:
     !
     assert // not payable
     intc_1 // 0
-    bytec_1 // "ctr"
+    bytec_2 // "ctr"
     app_global_get_ex
-    assert // check ctr exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -67,7 +69,7 @@ main_ternary_merge@16:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -90,9 +92,11 @@ main_ternary_merge@21:
     !
     assert // not payable
     intc_1 // 0
-    bytec_0 // "acc"
+    bytec_1 // "acc"
     app_global_get_ex
-    assert // check acc exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -101,7 +105,7 @@ main_ternary_merge@21:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -136,7 +140,7 @@ main_ternary_merge@26:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -165,32 +169,36 @@ main_ternary_merge@31:
     !
     assert // not payable
     intc_1 // 0
-    bytec_1 // "ctr"
+    bytec_2 // "ctr"
     app_global_get_ex
-    assert // check ctr exists
+    bytec_0 // 0x
+    cover 2
+    select
     pushbytes 0x01
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_1 // "ctr"
+    bytec_2 // "ctr"
     swap
     app_global_put
     dup
     callsub addStacked__body_1
     callsub addStacked__body_1
     intc_1 // 0
-    bytec_1 // "ctr"
+    bytec_2 // "ctr"
     app_global_get_ex
-    assert // check ctr exists
+    bytec_0 // 0x
+    cover 2
+    select
     pushbytes 0x01
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_1 // "ctr"
+    bytec_2 // "ctr"
     swap
     app_global_put
     intc_0 // 1
@@ -232,16 +240,18 @@ main_ternary_false@35:
 addTwice__body_0:
     proto 1 0
     intc_1 // 0
-    bytec_0 // "acc"
+    bytec_1 // "acc"
     app_global_get_ex
-    assert // check acc exists
+    bytec_0 // 0x
+    cover 2
+    select
     frame_dig -1
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_0 // "acc"
+    bytec_1 // "acc"
     swap
     app_global_put
     retsub
@@ -251,16 +261,18 @@ addTwice__body_0:
 addStacked__body_1:
     proto 1 0
     intc_1 // 0
-    bytec_0 // "acc"
+    bytec_1 // "acc"
     app_global_get_ex
-    assert // check acc exists
+    bytec_0 // 0x
+    cover 2
+    select
     frame_dig -1
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_0 // "acc"
+    bytec_1 // "acc"
     swap
     app_global_put
     retsub

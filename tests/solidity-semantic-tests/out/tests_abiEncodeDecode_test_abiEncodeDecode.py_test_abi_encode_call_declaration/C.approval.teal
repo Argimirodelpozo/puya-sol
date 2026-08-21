@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_declaration.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 10 10000
+    intcblock 32 1 0
     bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
     pushint 4096
     bzero
@@ -79,22 +79,22 @@ main_test_route@5:
 main_ternary_merge@18:
     !
     assert // not payable
-    intc_1 // 1
-    callsub a
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
     intc_0 // 32
     bzero
     dup
-    cover 2
-    b|
+    intc_1 // 1
+    itob
+    callsub a
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     dup
     len
     dup
-    cover 2
     itob
     intc_0 // 32
     itob
@@ -106,13 +106,10 @@ main_ternary_merge@18:
 
 main_bool_merge@21:
     assert
-    swap
     intc_0 // 32
-    ==
-    bz main_else_body@23
+    >=
+    assert // EVM ABI decode out of bounds
     extract 0 32
-
-main_after_if_else@24:
     dupn 2
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
@@ -121,42 +118,33 @@ main_after_if_else@24:
     itob
     b==
     assert
-    intc_3 // 10
+    pushint 10
+    itob
     callsub b
-    pop
-    intc_3 // 10
-    callsub b
+    dig 2
+    swap
+    concat
     dup
     len
     intc_0 // 32
-    <=
-    assert // overflow
-    dig 2
-    b|
+    -
+    intc_0 // 32
+    extract3
     dup
-    cover 2
-    intc_3 // 10
-    callsub b
-    pop
     len
     dup
-    cover 3
     itob
     dig 5
     b==
-    bz main_bool_false@26
+    bz main_bool_false@23
     intc_1 // 1
 
-main_bool_merge@27:
+main_bool_merge@24:
     assert
-    uncover 2
     intc_0 // 32
-    ==
-    bz main_else_body@29
-    swap
+    >=
+    assert // EVM ABI decode out of bounds
     extract 0 32
-
-main_after_if_else@30:
     b+
     dupn 2
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -167,33 +155,32 @@ main_after_if_else@30:
     b==
     assert
     pushint 100
+    itob
     callsub a
+    dig 2
+    swap
+    concat
     dup
     len
     intc_0 // 32
-    <=
-    assert // overflow
-    dig 2
-    b|
+    -
+    intc_0 // 32
+    extract3
     dup
     len
     dup
-    cover 2
     itob
     dig 5
     b==
-    bz main_bool_false@32
+    bz main_bool_false@26
     intc_1 // 1
 
-main_bool_merge@33:
+main_bool_merge@27:
     assert
-    swap
     intc_0 // 32
-    ==
-    bz main_else_body@35
+    >=
+    assert // EVM ABI decode out of bounds
     extract 0 32
-
-main_after_if_else@36:
     b+
     dupn 2
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -204,33 +191,32 @@ main_after_if_else@36:
     b==
     assert
     pushint 1000
+    itob
     callsub a
+    dig 2
+    swap
+    concat
     dup
     len
     intc_0 // 32
-    <=
-    assert // overflow
-    dig 2
-    b|
+    -
+    intc_0 // 32
+    extract3
     dup
     len
     dup
-    cover 2
     itob
     dig 5
     b==
-    bz main_bool_false@38
+    bz main_bool_false@29
     intc_1 // 1
 
-main_bool_merge@39:
+main_bool_merge@30:
     assert
-    swap
     intc_0 // 32
-    ==
-    bz main_else_body@41
+    >=
+    assert // EVM ABI decode out of bounds
     extract 0 32
-
-main_after_if_else@42:
     b+
     dupn 2
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -240,40 +226,33 @@ main_after_if_else@42:
     itob
     b==
     assert
-    intc 4 // 10000
+    pushint 10000
+    itob
     callsub b
-    pop
-    intc 4 // 10000
-    callsub b
+    dig 2
+    swap
+    concat
     dup
     len
     intc_0 // 32
-    <=
-    assert // overflow
-    dig 2
-    b|
+    -
+    intc_0 // 32
+    extract3
     dup
-    intc 4 // 10000
-    callsub b
-    pop
     len
     dup
-    cover 2
     itob
     uncover 5
     b==
-    bz main_bool_false@44
+    bz main_bool_false@32
     intc_1 // 1
 
-main_bool_merge@45:
+main_bool_merge@33:
     assert
-    swap
     intc_0 // 32
-    ==
-    bz main_else_body@47
+    >=
+    assert // EVM ABI decode out of bounds
     extract 0 32
-
-main_after_if_else@48:
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -297,37 +276,21 @@ main_after_if_else@48:
     intc_1 // 1
     return
 
-main_else_body@47:
-    b main_after_if_else@48
-
-main_bool_false@44:
-    intc_2 // 0
-    b main_bool_merge@45
-
-main_else_body@41:
-    b main_after_if_else@42
-
-main_bool_false@38:
-    intc_2 // 0
-    b main_bool_merge@39
-
-main_else_body@35:
-    b main_after_if_else@36
-
 main_bool_false@32:
     intc_2 // 0
     b main_bool_merge@33
 
-main_else_body@29:
-    swap
-    b main_after_if_else@30
+main_bool_false@29:
+    intc_2 // 0
+    b main_bool_merge@30
 
 main_bool_false@26:
     intc_2 // 0
     b main_bool_merge@27
 
-main_else_body@23:
-    b main_after_if_else@24
+main_bool_false@23:
+    intc_2 // 0
+    b main_bool_merge@24
 
 main_bool_false@20:
     intc_2 // 0

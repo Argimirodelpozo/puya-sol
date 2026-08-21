@@ -4,10 +4,12 @@ pragma solidity ^0.8.20;
 // `extcodesize` in inline assembly is how OpenZeppelin's Address.isContract is
 // written, so it is vendored into a large share of real contracts. It used to
 // be a hard error even though `address(x).code.length` — the same question —
-// was supported; both now share the app_params_get lowering.
+// was supported; both now share a non-materialising app-metadata lowering.
 
 contract Probe {
     uint256 public x;
+
+    fallback() external {}
 }
 
 contract AsmExtcodesize {
@@ -55,5 +57,15 @@ contract AsmExtcodesize {
             s2 := extcodesize(b)
         }
         return s1 + s2;
+    }
+
+    /// Match SafeERC20's nesting: extcodesize shares an expression with the
+    /// returndata opcodes immediately after a low-level call.
+    function nestedAfterCall() external returns (bool success) {
+        address a = address(probe);
+        assembly {
+            success := call(gas(), a, 0, 0, 0, 0, 32)
+            success := and(success, and(iszero(returndatasize()), gt(extcodesize(a), 0)))
+        }
     }
 }

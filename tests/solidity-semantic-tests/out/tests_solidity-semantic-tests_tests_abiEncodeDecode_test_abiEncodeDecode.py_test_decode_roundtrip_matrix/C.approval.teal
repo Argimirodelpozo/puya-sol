@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/decode_roundtrip_matrix.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 64
     pushint 4096
     bzero
     dup
@@ -52,9 +52,25 @@ main_ternary_merge@15:
     global CurrentApplicationAddress
     concat
     dup
+    len
+    dup
+    intc_2 // 64
+    ==
+    bz main_else_body@17
+    pushint 32
+    dig 1
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_2 // 64
+    >=
+    assert // EVM ABI decode out of bounds
+    dup
+    extract 0 32
     extract 0 32
     swap
     extract 32 32
+
+main_after_if_else@18:
     concat
     pushbytes 0x151f7c75
     swap
@@ -63,19 +79,27 @@ main_ternary_merge@15:
     intc_0 // 1
     return
 
+main_else_body@17:
+    pop
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    b main_after_if_else@18
+
 main_ternary_false@14:
     intc_1 // 0
     b main_ternary_merge@15
 
 main_rtStructArr_route@7:
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@22
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@23:
     !
     assert // not payable
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000005000000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003
@@ -83,19 +107,19 @@ main_ternary_merge@20:
     intc_0 // 1
     return
 
-main_ternary_false@19:
+main_ternary_false@22:
     intc_1 // 0
-    b main_ternary_merge@20
+    b main_ternary_merge@23
 
 main_rtTuple_route@6:
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@37
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@38:
     !
     assert // not payable
     pushbytes 0x151f7c75000000000000000900130000000000000201800004deadbeef
@@ -103,19 +127,19 @@ main_ternary_merge@25:
     intc_0 // 1
     return
 
-main_ternary_false@24:
+main_ternary_false@37:
     intc_1 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@38
 
 main_rtStruct_route@5:
     txn GroupIndex
-    bz main_ternary_false@29
+    bz main_ternary_false@49
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+main_ternary_merge@50:
     !
     assert // not payable
     pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a002a000000000000000700086869207468657265
@@ -123,6 +147,6 @@ main_ternary_merge@30:
     intc_0 // 1
     return
 
-main_ternary_false@29:
+main_ternary_false@49:
     intc_1 // 0
-    b main_ternary_merge@30
+    b main_ternary_merge@50

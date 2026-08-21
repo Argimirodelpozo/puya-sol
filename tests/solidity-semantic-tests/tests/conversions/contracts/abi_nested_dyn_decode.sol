@@ -1,12 +1,8 @@
 // CUSTOM: abi.decode of nested-dynamic arrays (elements are themselves dynamic),
 // a recursive EVM offset-table walk that rebuilds the ARC4 layout.
 //
-// uint256[][] / uint256[][][] are tested as full round-trips (abi.encode of
-// uint-element nested arrays is supported). string[] / bytes[] are decoded from
-// a caller-supplied EVM blob instead — abi.ENCODE of string[]/bytes[] is a
-// separate, pre-existing puya-backend limitation (reinterpret-of-bytes to a
-// dynamic ARC4 element is rejected), so the decode is exercised in isolation
-// against a real eth_abi-encoded input.
+// Round-trips cover uint256[][] / uint256[][][] and literal-built dynamic
+// elements. Caller-supplied canonical blobs independently check the decoder.
 contract C {
     struct S { uint256 a; string b; }  // dynamic struct (has a string field)
 
@@ -54,7 +50,7 @@ contract C {
         return (b.length, b[0].length, b[1][2]);
     }
 
-    // string[] decode from a supplied EVM blob (encode of string[] is blocked)
+    // string[] decode from a supplied EVM blob
     function decStrArr(bytes calldata data) public pure returns (string memory, string memory, uint256) {
         string[] memory d = abi.decode(data, (string[]));
         return (d[0], d[1], d.length);
@@ -64,6 +60,23 @@ contract C {
     function decBytesArr(bytes calldata data) public pure returns (uint256, uint256, uint256, bytes1) {
         bytes[] memory d = abi.decode(data, (bytes[]));
         return (d.length, d[0].length, d[1].length, d[1][0]);
+    }
+
+    // External EVM-ABI regressions. The Python test supplies canonical EVM
+    // head/tail bytes independently of this compiler's encoder.
+    function decEvmU8(bytes calldata data) public pure returns (uint256, uint8, uint8, uint8) {
+        uint8[] memory d = abi.decode(data, (uint8[]));
+        return (d.length, d[0], d[1], d[2]);
+    }
+
+    function decEvmMixed(bytes calldata data) public pure returns (uint256, uint16, uint256, uint16) {
+        uint16[][2] memory d = abi.decode(data, (uint16[][2]));
+        return (d[0].length, d[0][1], d[1].length, d[1][0]);
+    }
+
+    function decEvm3d(bytes calldata data) public pure returns (uint256, uint256, uint256, uint256) {
+        uint256[][][] memory d = abi.decode(data, (uint256[][][]));
+        return (d.length, d[0][0][1], d[1].length, d[1][1][0]);
     }
 
     // abi.encode(string[]) / abi.encode(bytes[]) — decode then RE-ENCODE; the

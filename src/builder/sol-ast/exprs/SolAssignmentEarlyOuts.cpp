@@ -15,6 +15,8 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <algorithm>
+
 namespace puyasol::builder::sol_ast
 {
 
@@ -134,10 +136,33 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 
 std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBoxArrayWrite()
 {
-	auto const* lhsIdx = dynamic_cast<IndexAccess const*>(&m_assignment.leftHandSide());
-	if (!lhsIdx) return std::nullopt;
-	auto const* ident = dynamic_cast<Identifier const*>(&lhsIdx->baseExpression());
-	if (!ident) return std::nullopt;
+	Token const op = m_assignment.assignmentOperator();
+
+	// Peel an arbitrary member/index path to the multi-box state variable. The
+	// first index selects one element-aligned page slice; any remaining path is
+	// replayed over that element and the complete element is written back once.
+	std::vector<Expression const*> path;
+	Expression const* cursor = &m_assignment.leftHandSide();
+	for (;;)
+	{
+		if (auto const* index = dynamic_cast<IndexAccess const*>(cursor))
+		{
+			if (!index->indexExpression())
+				return std::nullopt;
+			path.push_back(cursor);
+			cursor = &index->baseExpression();
+			continue;
+		}
+		if (auto const* member = dynamic_cast<MemberAccess const*>(cursor))
+		{
+			path.push_back(cursor);
+			cursor = &member->expression();
+			continue;
+		}
+		break;
+	}
+	auto const* ident = dynamic_cast<Identifier const*>(cursor);
+	if (!ident || path.empty()) return std::nullopt;
 	auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 		ident->annotation().referencedDeclaration);
 	if (!varDecl || !varDecl->isStateVariable()
@@ -146,52 +171,133 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 	auto const* arrWtype = m_ctx.typeMapper.map(varDecl->type());
 	if (!builder::StorageMapper::isMultiBoxArray(arrWtype))
 		return std::nullopt;
-	if (!lhsIdx->indexExpression()) return std::nullopt;
-
-	Token op = m_assignment.assignmentOperator();
-	if (op != Token::Assign)
-		return std::nullopt; // compound assigns on multi-box arrays unsupported
+	std::reverse(path.begin(), path.end());
+	auto const* rootIndex = dynamic_cast<IndexAccess const*>(path.front());
+	if (!rootIndex)
+		return std::nullopt;
 
 	unsigned elemSize = StorageMapper::arc4StaticArrayElementSize(arrWtype);
 	unsigned elemsPerBox = StorageMapper::elementsPerBox(arrWtype);
 	auto const* sa = static_cast<awst::ARC4StaticArray const*>(arrWtype);
 	auto const* elemArc4Type = sa->elementType();
+	if (elemSize == 0 || elemsPerBox == 0)
+		return std::nullopt;
+	if (path.size() > 1
+		&& elemSize > static_cast<unsigned>(StorageMapper::kAvmStackValueMax))
+	{
+		Logger::instance().error(
+			"nested write into a multi-box array element larger than the AVM "
+			"stack-value limit is not representable as one recursive value", m_loc);
+		return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc)};
+	}
 
 	// Pin idx to a temp so page and offset can reference it without re-evaluating side effects.
 	auto idxExpr = builder::TypeCoercion::checkedIndexToUint64(
-		m_ctx.preEffects(), buildExpr(*lhsIdx->indexExpression()), m_loc);
+		m_ctx.preEffects(), buildExpr(*rootIndex->indexExpression()), m_loc);
 	std::string idxVarName = "__mb_widx_" + std::to_string(awst::NameGen::next("SolAssignmentEarlyOuts.s_mbWCounter"));
-	auto idxVar = awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc);
 	m_ctx.preEffects().push_back(
-		awst::makeAssignmentStatement(idxVar, std::move(idxExpr), m_loc));
+		awst::makeAssignmentStatement(
+			awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc),
+			std::move(idxExpr), m_loc));
+	auto idxVar = [&]() {
+		return awst::makeVarExpression(
+			idxVarName, awst::WType::uint64Type(), m_loc);
+	};
+	m_ctx.preEffects().push_back(awst::makeExpressionStatement(
+		awst::makeAssert(
+			awst::makeNumericCompare(idxVar(), awst::NumericComparison::Lt,
+				awst::makeIntegerConstant(
+					static_cast<uint64_t>(sa->arraySize()), m_loc), m_loc),
+			m_loc, "array index out of bounds"), m_loc));
 
-	// page = idx / elemsPerBox
-	auto pageExpr = awst::makeUInt64BinOp(
-		awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc),
-		awst::UInt64BinaryOperator::FloorDiv,
-		awst::makeIntegerConstant(elemsPerBox, m_loc), m_loc);
+	auto makeBoxKey = [&]() {
+		auto page = awst::makeUInt64BinOp(
+			idxVar(), awst::UInt64BinaryOperator::FloorDiv,
+			awst::makeIntegerConstant(elemsPerBox, m_loc), m_loc);
+		auto key = awst::makeConcat(
+			awst::makeUtf8BytesConstant(
+				m_ctx.storageMapper.physicalBindingFor(*varDecl).name,
+				m_loc, awst::WType::boxKeyType()),
+			awst::makeItob(std::move(page), m_loc), m_loc);
+		key->wtype = awst::WType::boxKeyType();
+		return key;
+	};
+	auto makeOffset = [&]() {
+		return awst::makeUInt64BinOp(
+			awst::makeUInt64BinOp(idxVar(), awst::UInt64BinaryOperator::Mod,
+				awst::makeIntegerConstant(elemsPerBox, m_loc), m_loc),
+			awst::UInt64BinaryOperator::Mult,
+			awst::makeIntegerConstant(elemSize, m_loc), m_loc);
+	};
 
-	// offset = (idx % elemsPerBox) * elemSize
-	auto remExpr = awst::makeUInt64BinOp(
-		awst::makeVarExpression(idxVarName, awst::WType::uint64Type(), m_loc),
-		awst::UInt64BinaryOperator::Mod,
-		awst::makeIntegerConstant(elemsPerBox, m_loc), m_loc);
-	auto offsetExpr = awst::makeUInt64BinOp(
-		std::move(remExpr), awst::UInt64BinaryOperator::Mult,
-		awst::makeIntegerConstant(elemSize, m_loc), m_loc);
+	std::shared_ptr<awst::Expression> target;
+	std::string elemName;
+	if (path.size() == 1)
+		target = awst::makeVarExpression("__mb_direct", elemArc4Type, m_loc);
+	else
+	{
+		elemName = "__mb_root_" + std::to_string(
+			awst::NameGen::next("SolAssignmentEarlyOuts.multiBoxRoot"));
+		auto bytes = awst::makeBoxExtract(
+			makeBoxKey(), makeOffset(),
+			awst::makeIntegerConstant(elemSize, m_loc), m_loc);
+		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(elemName, elemArc4Type, m_loc),
+			awst::makeReinterpretCast(
+				std::move(bytes), elemArc4Type, m_loc), m_loc));
+		target = awst::makeVarExpression(elemName, elemArc4Type, m_loc);
 
-	// boxKey = bytes(varName) ++ itob(page)
-	auto nameBytes = awst::makeUtf8BytesConstant(
-		m_ctx.storageMapper.physicalBindingFor(*varDecl).name,
-		m_loc, awst::WType::boxKeyType());
-	auto boxKey = awst::makeConcat(
-		std::move(nameBytes), awst::makeItob(std::move(pageExpr), m_loc), m_loc);
-	boxKey->wtype = awst::WType::boxKeyType();
+		for (size_t i = 1; i < path.size(); ++i)
+		{
+			if (auto const* index = dynamic_cast<IndexAccess const*>(path[i]))
+			{
+				auto nestedIndex = builder::TypeCoercion::checkedIndexToUint64(
+					m_ctx.preEffects(), buildExpr(*index->indexExpression()), m_loc);
+				awst::WType const* nestedElem = nullptr;
+				if (auto const* array = dynamic_cast<awst::ARC4DynamicArray const*>(target->wtype))
+					nestedElem = array->elementType();
+				else if (auto const* array = dynamic_cast<awst::ARC4StaticArray const*>(target->wtype))
+					nestedElem = array->elementType();
+				else if (auto const* array = dynamic_cast<awst::ReferenceArray const*>(target->wtype))
+					nestedElem = array->elementType();
+				if (!nestedElem)
+					return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc)};
+				target = awst::makeIndexExpression(
+					std::move(target), std::move(nestedIndex), nestedElem, m_loc);
+				continue;
+			}
+			auto const* member = dynamic_cast<MemberAccess const*>(path[i]);
+			auto const* structure = member
+				? dynamic_cast<awst::ARC4Struct const*>(target->wtype) : nullptr;
+			awst::WType const* fieldType = nullptr;
+			if (structure)
+				for (auto const& [name, type]: structure->fields())
+					if (name == member->memberName()) { fieldType = type; break; }
+			if (!member || !fieldType)
+				return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc)};
+			target = awst::makeFieldExpression(
+				std::move(target), member->memberName(), fieldType, m_loc);
+		}
+	}
 
-	// rhs → ARC4-encoded element bytes.
 	auto rhs = buildExpr(m_assignment.rightHandSide());
 	auto* expectedNative = m_ctx.typeMapper.map(
-		m_assignment.rightHandSide().annotation().type);
+		m_assignment.leftHandSide().annotation().type);
+	if (op != Token::Assign)
+	{
+		std::shared_ptr<awst::Expression> current = target;
+		if (!awst::structurallyEquivalent(current->wtype, expectedNative))
+			current = awst::makeARC4Decode(
+				std::move(current), expectedNative, m_loc);
+		rhs = widenSignedCompoundRhs(std::move(rhs));
+		if (auto computed = eb::AssignmentHelper::tryComputeCompoundValue(
+				m_ctx, op, m_assignment.leftHandSide().annotation().type,
+				current, rhs, m_loc))
+			rhs = std::move(computed);
+		else
+			rhs = m_ctx.buildBinaryOp(
+				op, std::move(current), std::move(rhs), expectedNative, m_loc);
+	}
 	rhs = builder::TypeCoercion::coerceForAssignment(
 		std::move(rhs), expectedNative, m_loc);
 
@@ -201,27 +307,27 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 	m_ctx.preEffects().push_back(
 		awst::makeAssignmentStatement(valVar, std::move(rhs), m_loc));
 
-	auto valForEncode = awst::makeVarExpression(valVarName, valVar->wtype, m_loc);
+	std::shared_ptr<awst::Expression> stored =
+		awst::makeVarExpression(valVarName, valVar->wtype, m_loc);
+	if (!awst::structurallyEquivalent(stored->wtype, target->wtype))
+		stored = awst::makeARC4Encode(std::move(stored), target->wtype, m_loc);
+
 	std::shared_ptr<awst::Expression> valueBytes;
-	bool valueIsNative = !awst::structurallyEquivalent(
-		valForEncode->wtype, elemArc4Type);
-	if (valueIsNative)
-	{
-		auto encode = awst::makeARC4Encode(
-			std::move(valForEncode),
-			const_cast<awst::WType*>(elemArc4Type), m_loc);
-		valueBytes = awst::makeAsBytes(std::move(encode), m_loc);
-	}
+	if (path.size() == 1)
+		valueBytes = awst::makeAsBytes(std::move(stored), m_loc);
 	else
 	{
-		valueBytes = awst::makeAsBytes(std::move(valForEncode), m_loc);
+		m_ctx.postEffects().push_back(awst::makeAssignmentStatement(
+			std::move(target), std::move(stored), m_loc));
+		valueBytes = awst::makeAsBytes(
+			awst::makeVarExpression(elemName, elemArc4Type, m_loc), m_loc);
 	}
 
 	// box_replace(boxKey, offset, valueBytes)
 	auto replace = awst::makeIntrinsicCall(
 		"box_replace", awst::WType::voidType(), m_loc);
-	replace->stackArgs.push_back(std::move(boxKey));
-	replace->stackArgs.push_back(std::move(offsetExpr));
+	replace->stackArgs.push_back(makeBoxKey());
+	replace->stackArgs.push_back(makeOffset());
 	replace->stackArgs.push_back(std::move(valueBytes));
 	m_ctx.postEffects().push_back(
 		awst::makeExpressionStatement(std::move(replace), m_loc));
@@ -230,166 +336,280 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 }
 
 std::optional<std::shared_ptr<awst::Expression>>
-SolAssignment::tryHandleBoxedArrayElemWrite()
+SolAssignment::tryHandleBoxedAggregatePathWrite()
 {
 	using namespace solidity::frontend;
-	if (m_assignment.assignmentOperator() != Token::Assign)
-		return std::nullopt;
+	Token const op = m_assignment.assignmentOperator();
 
-	// Match `a[i].field = v` (struct-element field write) or `a[i] = v` (whole element).
+	// Collect the complete lvalue path, not a prescribed `a[i].field` shape.
+	// Replaying it over a temporary root value gives one COW algorithm for any
+	// mixture of array indices and nested struct members, regardless of whether
+	// the root aggregate is itself an array or a struct.
+	std::vector<Expression const*> path;
 	Expression const* cursor = &m_assignment.leftHandSide();
-	std::string fieldName;
-	if (auto const* ma = dynamic_cast<MemberAccess const*>(cursor))
+	for (;;)
 	{
-		fieldName = ma->memberName();
-		cursor = &ma->expression();
+		if (auto const* ia = dynamic_cast<IndexAccess const*>(cursor))
+		{
+			if (!ia->indexExpression())
+				return std::nullopt;
+			// Mappings are separate keyed boxes, not fields in the aggregate's
+			// serialized value. Leave any path that crosses one to the mapping
+			// lowerer; COW is only for recursively serializable array/struct paths.
+			if (dynamic_cast<MappingType const*>(
+					ia->baseExpression().annotation().type))
+				return std::nullopt;
+			path.push_back(cursor);
+			cursor = &ia->baseExpression();
+			continue;
+		}
+		if (auto const* ma = dynamic_cast<MemberAccess const*>(cursor);
+			ma && dynamic_cast<StructType const*>(
+				ma->expression().annotation().type))
+		{
+			path.push_back(cursor);
+			cursor = &ma->expression();
+			continue;
+		}
+		break;
 	}
-	auto const* ia = dynamic_cast<IndexAccess const*>(cursor);
-	if (!ia || !ia->indexExpression())
+	if (path.empty())
 		return std::nullopt;
-	auto const* arrType = dynamic_cast<ArrayType const*>(
-		ia->baseExpression().annotation().type);
-	if (!arrType || !arrType->isDynamicallySized() || arrType->isByteArrayOrString())
+	auto const* baseId = dynamic_cast<Identifier const*>(cursor);
+	if (!baseId)
 		return std::nullopt;
-
-	// Only a box-keyed array REF PARAM (handle model); state-var arrays keep the COW path.
-	auto const* baseId = dynamic_cast<Identifier const*>(&ia->baseExpression());
-	if (!baseId) return std::nullopt;
 	auto const* vd = dynamic_cast<VariableDeclaration const*>(
 		baseId->annotation().referencedDeclaration);
-	if (!vd) return std::nullopt;
-	std::string keyParam = m_scope.findMappingKeyParam(vd->id());
-	if (keyParam.empty())
+	if (!vd)
+		return std::nullopt;
+	auto const* rootArray = dynamic_cast<ArrayType const*>(vd->type());
+	auto const* rootStruct = dynamic_cast<StructType const*>(vd->type());
+	if ((!rootArray && !rootStruct)
+		|| (rootArray && rootArray->isByteArrayOrString()))
 		return std::nullopt;
 
-	// Fixed-size struct element → constant offset.
-	auto const* st = dynamic_cast<StructType const*>(arrType->baseType());
-	if (!st) return std::nullopt;
-	auto* elemArc4 = m_ctx.typeMapper.mapSolTypeToARC4(arrType->baseType());
-	int elemSize = builder::computeEncodedElementSize(elemArc4);
-	if (elemSize <= 0) return std::nullopt;
+	std::string keyParam = m_scope.findMappingKeyParam(vd->id());
+	// Offset-carrying struct refs name a slice inside a larger box; their
+	// sibling handler owns that representation. Everything here owns a complete
+	// aggregate box value.
+	if (!m_scope.findStructRefOffset(vd->id()).empty())
+		return std::nullopt;
+	auto binding = m_ctx.storageMapper.physicalBindingFor(*vd);
+	bool const directBox = vd->isStateVariable()
+		&& binding.kind == awst::AppStorageKind::Box;
+	if (keyParam.empty() && !directBox)
+		return std::nullopt;
+	// Direct top-level arrays already have element-oriented box operations that
+	// do not materialise the entire value (and therefore work above 4 KiB).
+	// Runtime-key array refs need this COW path because their key is not static.
+	if (directBox && rootArray)
+		return std::nullopt;
 
-	// Field offset within the element (Σ preceding ARC4 sizes); whole element if no field.
-	uint64_t fieldOff = 0;
-	awst::WType const* slotArc4 = elemArc4;
-	Type const* valSol = arrType->baseType();
-	if (!fieldName.empty())
+	auto const* rootW = m_ctx.typeMapper.map(vd->type());
+	if (!rootW)
+		return std::nullopt;
+	auto makeBox = [&]() {
+		std::shared_ptr<awst::Expression> key;
+		if (!keyParam.empty())
+			key = awst::makeReinterpretCast(
+				awst::makeVarExpression(keyParam, awst::WType::bytesType(), m_loc),
+				awst::WType::boxKeyType(), m_loc);
+		else
+			key = awst::makeUtf8BytesConstant(
+				binding.name, m_loc, awst::WType::boxKeyType());
+		return awst::makeBoxValueExpression(std::move(key), rootW, m_loc);
+	};
+
+	std::string rootName = "__boxref_root_" + std::to_string(
+		awst::NameGen::next("SolAssignment.boxedArrayRoot"));
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(rootName, rootW, m_loc),
+		builder::StorageMapper::makeStateGetWithDefault(makeBox(), rootW, m_loc),
+		m_loc));
+	std::shared_ptr<awst::Expression> target =
+		awst::makeVarExpression(rootName, rootW, m_loc);
+	std::reverse(path.begin(), path.end());
+	for (auto const* step: path)
 	{
-		bool found = false;
-		for (auto const& m: st->structDefinition().members())
+		if (auto const* ia = dynamic_cast<IndexAccess const*>(step))
 		{
-			if (m->name() == fieldName)
-			{
-				slotArc4 = m_ctx.typeMapper.mapSolTypeToARC4(m->type());
-				valSol = m->type();
-				found = true;
-				break;
-			}
-			fieldOff += static_cast<uint64_t>(builder::computeEncodedElementSize(
-				m_ctx.typeMapper.mapSolTypeToARC4(m->type())));
+			auto idx = builder::TypeCoercion::checkedIndexToUint64(
+				m_ctx.preEffects(), buildExpr(*ia->indexExpression()), m_loc);
+			awst::WType const* elemW = nullptr;
+			if (auto const* a = dynamic_cast<awst::ARC4DynamicArray const*>(target->wtype))
+				elemW = a->elementType();
+			else if (auto const* a = dynamic_cast<awst::ARC4StaticArray const*>(target->wtype))
+				elemW = a->elementType();
+			else if (auto const* a = dynamic_cast<awst::ReferenceArray const*>(target->wtype))
+				elemW = a->elementType();
+			if (!elemW)
+				return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc)};
+			target = awst::makeIndexExpression(
+				std::move(target), std::move(idx), elemW, m_loc);
+			continue;
 		}
-		if (!found) return std::nullopt;
+		auto const* ma = dynamic_cast<MemberAccess const*>(step);
+		auto const* structW = ma
+			? dynamic_cast<awst::ARC4Struct const*>(target->wtype) : nullptr;
+		awst::WType const* fieldW = nullptr;
+		if (structW)
+			for (auto const& [name, type]: structW->fields())
+				if (name == ma->memberName()) { fieldW = type; break; }
+		if (!ma || !fieldW)
+			return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc)};
+		target = awst::makeFieldExpression(
+			std::move(target), ma->memberName(), fieldW, m_loc);
 	}
 
-	// box key = the runtime bytes the caller passed; offset = 2 (uint16 len prefix) + i*elemSize + fieldOff.
-	auto boxKey = awst::makeReinterpretCast(
-		awst::makeVarExpression(keyParam, awst::WType::bytesType(), m_loc),
-		awst::WType::boxKeyType(), m_loc);
-	auto idx = builder::TypeCoercion::checkedIndexToUint64(
-		m_ctx.preEffects(), buildExpr(*ia->indexExpression()), m_loc);
-	auto offset = awst::makeUInt64BinOp(
-		awst::makeUInt64BinOp(std::move(idx), awst::UInt64BinaryOperator::Mult,
-			awst::makeIntegerConstant(static_cast<uint64_t>(elemSize), m_loc), m_loc),
-		awst::UInt64BinaryOperator::Add,
-		awst::makeIntegerConstant(static_cast<uint64_t>(2 + fieldOff), m_loc), m_loc);
-
-	// rhs → ARC4 bytes of the slot type; pin to a temp so it's also the assignment result.
-	auto rhs = builder::TypeCoercion::coerceForAssignment(
-		buildExpr(m_assignment.rightHandSide()), m_ctx.typeMapper.map(valSol), m_loc);
-	std::string vn = "__bae_val_" + std::to_string(
-		awst::NameGen::next("SolAssignment.boxedArrayElement"));
-	auto vv = awst::makeVarExpression(vn, rhs->wtype, m_loc);
-	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(vv, std::move(rhs), m_loc));
-	auto valForEnc = awst::makeVarExpression(vn, vv->wtype, m_loc);
-	std::shared_ptr<awst::Expression> valBytes =
-		!awst::structurallyEquivalent(valForEnc->wtype, slotArc4)
-			? awst::makeAsBytes(awst::makeARC4Encode(
-				std::move(valForEnc), const_cast<awst::WType*>(slotArc4), m_loc), m_loc)
-			: awst::makeAsBytes(std::move(valForEnc), m_loc);
-
+	auto const* valueSol = m_assignment.leftHandSide().annotation().type;
+	auto const* nativeW = m_ctx.typeMapper.map(valueSol);
+	auto rhs = buildExpr(m_assignment.rightHandSide());
+	if (op != Token::Assign)
+	{
+		std::shared_ptr<awst::Expression> current = target;
+		if (!awst::structurallyEquivalent(current->wtype, nativeW))
+			current = awst::makeARC4Decode(
+				std::move(current), nativeW, m_loc);
+		rhs = widenSignedCompoundRhs(std::move(rhs));
+		if (auto computed = eb::AssignmentHelper::tryComputeCompoundValue(
+				m_ctx, op, valueSol, current, rhs, m_loc))
+			rhs = std::move(computed);
+		else
+			rhs = m_ctx.buildBinaryOp(
+				op, std::move(current), std::move(rhs), nativeW, m_loc);
+	}
+	rhs = builder::TypeCoercion::coerceForAssignment(
+		std::move(rhs), nativeW, m_loc);
+	rhs = builder::TypeCoercion::signExtendSignedWiden(
+		std::move(rhs), m_assignment.rightHandSide().annotation().type,
+		valueSol, m_loc);
+	if (!rhs)
+		return std::nullopt;
+	std::string valueName = "__boxref_value_" + std::to_string(
+		awst::NameGen::next("SolAssignment.boxedArrayValue"));
+	auto const* valueW = rhs->wtype;
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(valueName, valueW, m_loc), std::move(rhs), m_loc));
+	std::shared_ptr<awst::Expression> stored =
+		awst::makeVarExpression(valueName, valueW, m_loc);
+	if (!awst::structurallyEquivalent(stored->wtype, target->wtype))
+		stored = awst::makeARC4Encode(std::move(stored), target->wtype, m_loc);
+	m_ctx.postEffects().push_back(awst::makeAssignmentStatement(
+		std::move(target), std::move(stored), m_loc));
 	m_ctx.postEffects().push_back(awst::makeExpressionStatement(
-		awst::makeBoxReplace(std::move(boxKey), std::move(offset), std::move(valBytes), m_loc),
+		awst::makeAssignmentExpression(
+			makeBox(), awst::makeVarExpression(rootName, rootW, m_loc), m_loc, rootW),
 		m_loc));
-	return awst::makeVarExpression(vn, vv->wtype, m_loc);
+	return awst::makeVarExpression(valueName, valueW, m_loc);
 }
 
 std::optional<std::shared_ptr<awst::Expression>>
 SolAssignment::tryHandleOffsetStructRefFieldWrite()
 {
-	// `s.field = v` where `s` is a struct storage-ref PARAM carrying a runtime OFFSET (handle-model
-	// dual handle): write the field slice directly via box_replace(key, offsetVar+fieldOff). For a
-	// whole-box caller the offset is 0 — byte-identical to a direct field write at the box head.
-	auto const* member = dynamic_cast<MemberAccess const*>(&m_assignment.leftHandSide());
-	if (!member) return std::nullopt;
-	auto const* baseId = dynamic_cast<Identifier const*>(&member->expression());
-	if (!baseId) return std::nullopt;
+	Token const op = m_assignment.assignmentOperator();
+
+	// Peel every struct-member layer to the offset-carrying ref parameter.
+	// Mutate a temporary of the complete root struct and replace that one ARC4
+	// slice, which naturally handles nested structs and packed bool runs.
+	std::vector<MemberAccess const*> path;
+	Expression const* cursor = &m_assignment.leftHandSide();
+	while (auto const* member = dynamic_cast<MemberAccess const*>(cursor))
+	{
+		path.push_back(member);
+		cursor = &member->expression();
+	}
+	if (path.empty())
+		return std::nullopt;
+	auto const* baseId = dynamic_cast<Identifier const*>(cursor);
+	if (!baseId)
+		return std::nullopt;
 	auto const* vd = dynamic_cast<VariableDeclaration const*>(
 		baseId->annotation().referencedDeclaration);
-	if (!vd) return std::nullopt;
+	if (!vd)
+		return std::nullopt;
 	std::string offVar = m_scope.findStructRefOffset(vd->id());
 	std::string keyParam = m_scope.findMappingKeyParam(vd->id());
-	if (offVar.empty() || keyParam.empty()) return std::nullopt;
-	if (m_assignment.assignmentOperator() != Token::Assign) return std::nullopt; // compound: fall back
-
-	auto const* st = dynamic_cast<StructType const*>(vd->type());
-	if (!st) return std::nullopt;
-	// Dynamic-layout structs would have offset-dependent field positions; leave to the generic path.
-	if (builder::computeEncodedElementSize(m_ctx.typeMapper.mapSolTypeToARC4(vd->type())) <= 0)
+	if (offVar.empty() || keyParam.empty())
+		return std::nullopt;
+	auto const* rootW = dynamic_cast<awst::ARC4Struct const*>(
+		m_ctx.typeMapper.mapSolTypeToARC4(vd->type()));
+	int const rootSize = builder::computeEncodedElementSize(rootW);
+	if (!rootW || rootSize <= 0)
 		return std::nullopt;
 
-	std::string fieldName = member->memberName();
-	uint64_t fieldOff = 0;
-	awst::WType const* slotArc4 = nullptr;
-	Type const* valSol = nullptr;
-	for (auto const& m: st->structDefinition().members())
+	auto makeKey = [&]() {
+		return awst::makeReinterpretCast(
+			awst::makeVarExpression(keyParam, awst::WType::bytesType(), m_loc),
+			awst::WType::boxKeyType(), m_loc);
+	};
+	auto makeOffset = [&]() {
+		return awst::makeVarExpression(
+			offVar, awst::WType::uint64Type(), m_loc);
+	};
+	std::string rootName = "__osref_root_" + std::to_string(
+		awst::NameGen::next("SolAssignment.offsetStructRoot"));
+	auto rootBytes = awst::makeBoxExtract(
+		makeKey(), makeOffset(),
+		awst::makeIntegerConstant(static_cast<uint64_t>(rootSize), m_loc), m_loc);
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(rootName, rootW, m_loc),
+		awst::makeReinterpretCast(std::move(rootBytes), rootW, m_loc), m_loc));
+
+	std::shared_ptr<awst::Expression> target =
+		awst::makeVarExpression(rootName, rootW, m_loc);
+	std::reverse(path.begin(), path.end());
+	for (auto const* member: path)
 	{
-		if (m->name() == fieldName)
-		{
-			slotArc4 = m_ctx.typeMapper.mapSolTypeToARC4(m->type());
-			valSol = m->type();
-			break;
-		}
-		fieldOff += static_cast<uint64_t>(builder::computeEncodedElementSize(
-			m_ctx.typeMapper.mapSolTypeToARC4(m->type())));
+		auto const* structW = dynamic_cast<awst::ARC4Struct const*>(target->wtype);
+		awst::WType const* fieldW = nullptr;
+		if (structW)
+			for (auto const& [name, type]: structW->fields())
+				if (name == member->memberName()) { fieldW = type; break; }
+		if (!fieldW)
+			return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc)};
+		target = awst::makeFieldExpression(
+			std::move(target), member->memberName(), fieldW, m_loc);
 	}
-	if (!slotArc4 || !valSol) return std::nullopt;
 
-	// box key = s's runtime bytes; total offset = offsetVar + fieldOff.
-	auto boxKey = awst::makeReinterpretCast(
-		awst::makeVarExpression(keyParam, awst::WType::bytesType(), m_loc),
-		awst::WType::boxKeyType(), m_loc);
-	auto offset = awst::makeUInt64BinOp(
-		awst::makeVarExpression(offVar, awst::WType::uint64Type(), m_loc),
-		awst::UInt64BinaryOperator::Add,
-		awst::makeIntegerConstant(fieldOff, m_loc), m_loc);
-
-	auto rhs = builder::TypeCoercion::coerceForAssignment(
-		buildExpr(m_assignment.rightHandSide()), m_ctx.typeMapper.map(valSol), m_loc);
-	std::string vn = "__osref_val_" + std::to_string(
-		awst::NameGen::next("SolAssignment.offsetStructRef"));
-	auto vv = awst::makeVarExpression(vn, rhs->wtype, m_loc);
-	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(vv, std::move(rhs), m_loc));
-	auto valForEnc = awst::makeVarExpression(vn, vv->wtype, m_loc);
-	std::shared_ptr<awst::Expression> valBytes =
-		!awst::structurallyEquivalent(valForEnc->wtype, slotArc4)
-			? awst::makeAsBytes(awst::makeARC4Encode(
-				std::move(valForEnc), const_cast<awst::WType*>(slotArc4), m_loc), m_loc)
-			: awst::makeAsBytes(std::move(valForEnc), m_loc);
-
+	auto const* valueSol = m_assignment.leftHandSide().annotation().type;
+	auto const* nativeW = m_ctx.typeMapper.map(valueSol);
+	auto rhs = buildExpr(m_assignment.rightHandSide());
+	if (op != Token::Assign)
+	{
+		std::shared_ptr<awst::Expression> current = target;
+		if (!awst::structurallyEquivalent(current->wtype, nativeW))
+			current = awst::makeARC4Decode(
+				std::move(current), nativeW, m_loc);
+		rhs = widenSignedCompoundRhs(std::move(rhs));
+		if (auto computed = eb::AssignmentHelper::tryComputeCompoundValue(
+				m_ctx, op, valueSol, current, rhs, m_loc))
+			rhs = std::move(computed);
+		else
+			rhs = m_ctx.buildBinaryOp(
+				op, std::move(current), std::move(rhs), nativeW, m_loc);
+	}
+	rhs = builder::TypeCoercion::coerceForAssignment(
+		std::move(rhs), nativeW, m_loc);
+	rhs = builder::TypeCoercion::signExtendSignedWiden(
+		std::move(rhs), m_assignment.rightHandSide().annotation().type,
+		valueSol, m_loc);
+	if (!rhs)
+		return std::nullopt;
+	std::string valueName = "__osref_value_" + std::to_string(
+		awst::NameGen::next("SolAssignment.offsetStructValue"));
+	auto const* valueW = rhs->wtype;
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(valueName, valueW, m_loc), std::move(rhs), m_loc));
+	std::shared_ptr<awst::Expression> stored =
+		awst::makeVarExpression(valueName, valueW, m_loc);
+	if (!awst::structurallyEquivalent(stored->wtype, target->wtype))
+		stored = awst::makeARC4Encode(std::move(stored), target->wtype, m_loc);
+	m_ctx.postEffects().push_back(awst::makeAssignmentStatement(
+		std::move(target), std::move(stored), m_loc));
 	m_ctx.postEffects().push_back(awst::makeExpressionStatement(
-		awst::makeBoxReplace(std::move(boxKey), std::move(offset), std::move(valBytes), m_loc),
-		m_loc));
-	return awst::makeVarExpression(vn, vv->wtype, m_loc);
+		awst::makeBoxReplace(makeKey(), makeOffset(), awst::makeAsBytes(
+			awst::makeVarExpression(rootName, rootW, m_loc), m_loc), m_loc), m_loc));
+	return awst::makeVarExpression(valueName, valueW, m_loc);
 }
 
 } // namespace puyasol::builder::sol_ast

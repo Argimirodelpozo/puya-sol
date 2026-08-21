@@ -1,0 +1,1003 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/slot_packed_dispatch.sol.SlotPackedDispatch.approval_program() -> uint64:
+main:
+    intcblock 1 0 32 8 4294967295
+    bytecblock 0x151f7c75 "smalls" "halves" "addrs" "peers" 0x010000000000000000 "__ctor_pending" "simple" 0x0000000000000000000000000000000000000000000000000000000000000000 0x0001
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 6 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xc83569ea 0x21c4a9e9 0x8ab55d0f 0x5b775e7b 0x08d069e3 0x6170e23d 0x09238e89 0xd6f0f181 0xc08c5a7d 0x4f87c587 0x23d29e40 0x651a9e51 0xa424f92d 0xec62628e 0xf5192559 0xac80b5c6 0x4f8c0fe0 0x382b446c 0x171a9560 // method "__postInit()void", method "setPeer(uint64,address,address)void", method "setSimple(address,address)void", method "peerOf(uint64,address)address", method "pushSmall(uint64)void", method "pushAddr(address)void", method "pushHalf(uint128)void", method "allSmalls()uint32[]", method "allAddrs()address[]", method "allHalves()uint128[]", method "smallsLen()uint256", method "smallAt(uint256)uint64", method "addrAt(uint256)address", method "halfAt(uint256)uint128", method "setSmallAt(uint256,uint64)void", method "peers(uint64,address)address", method "simple(address)address", method "smalls(uint256)uint64", method "addrs(uint256)address", method "halves(uint256)uint128"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_setPeer_route@6 main_setSimple_route@7 main_peerOf_route@8 main_pushSmall_route@9 main_pushAddr_route@10 main_pushHalf_route@11 main_allSmalls_route@12 main_allAddrs_route@13 main_allHalves_route@14 main_smallsLen_route@15 main_smallAt_route@16 main_addrAt_route@17 main_halfAt_route@18 main_setSmallAt_route@19 main_peers_route@20 main_simple_route@21 main_smalls_route@22 main_addrs_route@23 main_halves_route@24
+    err
+
+main_halves_route@24:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    pushint 16
+    bzero
+    intc_3 // 8
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 16
+    *
+    pushint 2
+    +
+    bytec_2 // "halves"
+    swap
+    pushint 16
+    box_extract // on error: index out of bounds
+    dig 1
+    swap
+    concat
+    dup
+    len
+    pushint 16
+    -
+    pushint 16
+    extract3
+    dup
+    len
+    pushint 16
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@30:
+    intc_1 // 0
+    b main_ternary_merge@31
+
+main_addrs_route@23:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    intc_3 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_2 // 32
+    *
+    pushint 2
+    +
+    bytec_3 // "addrs"
+    swap
+    intc_2 // 32
+    box_extract // on error: index out of bounds
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@35:
+    intc_1 // 0
+    b main_ternary_merge@36
+
+main_smalls_route@22:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@40
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@41:
+    !
+    assert // not payable
+    intc_3 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 4
+    *
+    pushint 2
+    +
+    bytec_1 // "smalls"
+    swap
+    pushint 4
+    box_extract // on error: index out of bounds
+    btoi
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@40:
+    intc_1 // 0
+    b main_ternary_merge@41
+
+main_simple_route@21:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@45
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@46:
+    !
+    assert // not payable
+    bytec 7 // "simple"
+    concat
+    sha256
+    box_get
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@45:
+    intc_1 // 0
+    b main_ternary_merge@46
+
+main_peers_route@20:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@50
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@51:
+    !
+    assert // not payable
+    swap
+    dup
+    intc 4 // 4294967295
+    <=
+    assert // ABI validation
+    intc 4 // 4294967295
+    &
+    itob
+    bytec 4 // "peers"
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@50:
+    intc_1 // 0
+    b main_ternary_merge@51
+
+main_setSmallAt_route@19:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txn GroupIndex
+    bz main_ternary_false@55
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@56:
+    !
+    assert // not payable
+    dup
+    intc 4 // 4294967295
+    <=
+    assert // ABI validation
+    intc 4 // 4294967295
+    &
+    dig 1
+    bytec 5 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_1 // "smalls"
+    box_len
+    bury 1
+    bnz main_after_if_else@58
+    bytec_1 // "smalls"
+    pushint 2
+    box_create
+    pop
+
+main_after_if_else@58:
+    itob
+    extract 4 4
+    intc_3 // 8
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 4
+    *
+    pushint 2
+    +
+    bytec_1 // "smalls"
+    swap
+    uncover 2
+    box_replace // on error: index out of bounds
+    intc_0 // 1
+    return
+
+main_ternary_false@55:
+    intc_1 // 0
+    b main_ternary_merge@56
+
+main_halfAt_route@18:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@62
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@63:
+    !
+    assert // not payable
+    dup
+    bytec 5 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    pushint 16
+    bzero
+    intc_3 // 8
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 16
+    *
+    pushint 2
+    +
+    bytec_2 // "halves"
+    swap
+    pushint 16
+    box_extract // on error: index out of bounds
+    dig 1
+    swap
+    concat
+    dup
+    len
+    pushint 16
+    -
+    pushint 16
+    extract3
+    dup
+    len
+    pushint 16
+    <=
+    assert // overflow
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@62:
+    intc_1 // 0
+    b main_ternary_merge@63
+
+main_addrAt_route@17:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@67
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@68:
+    !
+    assert // not payable
+    dup
+    bytec 5 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_3 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_2 // 32
+    *
+    pushint 2
+    +
+    bytec_3 // "addrs"
+    swap
+    intc_2 // 32
+    box_extract // on error: index out of bounds
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@67:
+    intc_1 // 0
+    b main_ternary_merge@68
+
+main_smallAt_route@16:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@72
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@73:
+    !
+    assert // not payable
+    dup
+    bytec 5 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_3 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 4
+    *
+    pushint 2
+    +
+    bytec_1 // "smalls"
+    swap
+    pushint 4
+    box_extract // on error: index out of bounds
+    btoi
+    intc 4 // 4294967295
+    &
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@72:
+    intc_1 // 0
+    b main_ternary_merge@73
+
+main_smallsLen_route@15:
+    txn GroupIndex
+    bz main_ternary_false@77
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@78:
+    !
+    assert // not payable
+    bytec_1 // "smalls"
+    box_len
+    pop
+    pushint 2
+    >=
+    bz main_ternary_false@80
+    bytec_1 // "smalls"
+    box_len
+    pop
+
+main_ternary_merge@81:
+    pushint 2
+    -
+    pushint 4
+    /
+    itob
+    intc_2 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@80:
+    pushint 2
+    b main_ternary_merge@81
+
+main_ternary_false@77:
+    intc_1 // 0
+    b main_ternary_merge@78
+
+main_allHalves_route@14:
+    txn GroupIndex
+    bz main_ternary_false@85
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@86:
+    !
+    assert // not payable
+    bytec_2 // "halves"
+    box_get
+    assert // box exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@85:
+    intc_1 // 0
+    b main_ternary_merge@86
+
+main_allAddrs_route@13:
+    txn GroupIndex
+    bz main_ternary_false@90
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@91:
+    !
+    assert // not payable
+    bytec_3 // "addrs"
+    box_get
+    assert // box exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@90:
+    intc_1 // 0
+    b main_ternary_merge@91
+
+main_allSmalls_route@12:
+    txn GroupIndex
+    bz main_ternary_false@95
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@96:
+    !
+    assert // not payable
+    bytec_1 // "smalls"
+    box_get
+    assert // box exists
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@95:
+    intc_1 // 0
+    b main_ternary_merge@96
+
+main_pushHalf_route@11:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 16
+    ==
+    assert // invalid number of bytes for arc4.uint128
+    txn GroupIndex
+    bz main_ternary_false@100
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@101:
+    !
+    assert // not payable
+    pushint 16
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    pushint 16
+    -
+    pushint 16
+    extract3
+    dup
+    len
+    pushint 16
+    <=
+    assert // overflow
+    b|
+    bytec 9 // 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_2 // "halves"
+    intc_1 // 0
+    uncover 3
+    uncover 3
+    pushint 16
+    callsub box_dynamic_array_concat_fixed
+    intc_0 // 1
+    return
+
+main_ternary_false@100:
+    intc_1 // 0
+    b main_ternary_merge@101
+
+main_pushAddr_route@10:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@105
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@106:
+    !
+    assert // not payable
+    bytec 9 // 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_3 // "addrs"
+    intc_1 // 0
+    uncover 3
+    uncover 3
+    intc_2 // 32
+    callsub box_dynamic_array_concat_fixed
+    intc_0 // 1
+    return
+
+main_ternary_false@105:
+    intc_1 // 0
+    b main_ternary_merge@106
+
+main_pushSmall_route@9:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txn GroupIndex
+    bz main_ternary_false@110
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@111:
+    !
+    assert // not payable
+    dup
+    intc 4 // 4294967295
+    <=
+    assert // ABI validation
+    intc 4 // 4294967295
+    &
+    itob
+    dup
+    bitlen
+    intc_2 // 32
+    <=
+    assert // overflow
+    extract 4 4
+    bytec 9 // 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_1 // "smalls"
+    intc_1 // 0
+    uncover 3
+    uncover 3
+    pushint 4
+    callsub box_dynamic_array_concat_fixed
+    intc_0 // 1
+    return
+
+main_ternary_false@110:
+    intc_1 // 0
+    b main_ternary_merge@111
+
+main_peerOf_route@8:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@115
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@116:
+    !
+    assert // not payable
+    swap
+    dup
+    intc 4 // 4294967295
+    <=
+    assert // ABI validation
+    intc 4 // 4294967295
+    &
+    itob
+    bytec 4 // "peers"
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@115:
+    intc_1 // 0
+    b main_ternary_merge@116
+
+main_setSimple_route@7:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@120
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@121:
+    !
+    assert // not payable
+    bytec 7 // "simple"
+    concat
+    sha256
+    swap
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@120:
+    intc_1 // 0
+    b main_ternary_merge@121
+
+main_setPeer_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    cover 3
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txn GroupIndex
+    bz main_ternary_false@125
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@126:
+    !
+    assert // not payable
+    swap
+    dup
+    intc 4 // 4294967295
+    <=
+    assert // ABI validation
+    intc 4 // 4294967295
+    &
+    itob
+    bytec 4 // "peers"
+    concat
+    sha256
+    concat
+    sha256
+    swap
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@125:
+    intc_1 // 0
+    b main_ternary_merge@126
+
+main___postInit_route@5:
+    bytec 6 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec 6 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec 4 // "peers"
+    pushint 2
+    box_create
+    pop
+    bytec 7 // "simple"
+    pushint 2
+    box_create
+    pop
+    bytec_1 // "smalls"
+    pushint 2
+    box_create
+    pop
+    bytec_3 // "addrs"
+    pushint 2
+    box_create
+    pop
+    bytec_2 // "halves"
+    pushint 2
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// _puya_lib.box_arc4.box_dynamic_array_concat_fixed(box_key: bytes, array_offset: uint64, new_items_bytes: bytes, new_items_count: uint64, fixed_element_size: uint64) -> void:
+box_dynamic_array_concat_fixed:
+    proto 5 0
+    frame_dig -5
+    frame_dig -4
+    pushint 2
+    box_extract
+    btoi
+    frame_dig -5
+    box_len
+    pop
+    frame_dig -2
+    frame_dig -1
+    *
+    +
+    frame_dig -5
+    swap
+    box_resize
+    dup
+    frame_dig -2
+    +
+    itob
+    extract 6 2
+    frame_dig -5
+    frame_dig -4
+    uncover 2
+    box_replace
+    frame_dig -4
+    pushint 2
+    +
+    swap
+    frame_dig -1
+    *
+    +
+    frame_dig -5
+    swap
+    intc_1 // 0
+    frame_dig -3
+    box_splice
+    retsub

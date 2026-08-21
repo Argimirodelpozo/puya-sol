@@ -68,32 +68,29 @@ main_ternary_merge@16:
     txn NumAppArgs
     bz main_ternary_false@18
     txna ApplicationArgs 0
+    cover 2
 
 main_ternary_merge@19:
     pushint 24
     bzero
-    swap
+    cover 3
+    uncover 2
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000020
     concat
-    dig 2
-    itob
-    uncover 2
-    swap
-    concat
-    concat
+    cover 2
     bytec_3 // 0x
     cover 3
     intc_2 // 0
-    cover 3
+    cover 2
 
 main_while_top@20:
-    dig 3
     dig 2
+    dig 1
     <
     bz main_after_while@25
-    dig 2
+    dig 1
     extract 2 0
-    dig 4
+    dig 3
     pushint 2
     *
     pushint 2
@@ -119,10 +116,10 @@ main_ternary_merge@24:
     swap
     concat
     cover 4
-    uncover 3
+    uncover 2
     intc_1 // 1
     +
-    cover 3
+    cover 2
     b main_while_top@20
 
 main_ternary_false@23:
@@ -133,8 +130,12 @@ main_ternary_false@23:
 main_after_while@25:
     bury 1
     bury 1
-    bury 1
+    itob
+    uncover 3
     swap
+    concat
+    uncover 2
+    concat
     concat
     dup
     pushint 28
@@ -195,6 +196,7 @@ main_ternary_false@27:
 main_ternary_false@18:
     pushint 4
     bzero
+    cover 2
     b main_ternary_merge@19
 
 main_ternary_false@15:
@@ -282,7 +284,7 @@ main_f3_route@7:
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    cover 3
+    cover 2
     pushint 2
     +
     swap
@@ -304,26 +306,23 @@ main_ternary_merge@38:
     txn NumAppArgs
     bz main_ternary_false@40
     txna ApplicationArgs 0
+    cover 2
 
 main_ternary_merge@41:
     pushint 24
     bzero
-    swap
+    cover 3
+    uncover 2
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000020
     concat
-    dig 3
-    itob
-    uncover 2
-    swap
-    concat
-    concat
+    cover 2
     bytec_3 // 0x
     cover 3
     intc_2 // 0
 
 main_while_top@42:
     dup
-    dig 4
+    dig 2
     <
     bz main_after_while@44
     dig 2
@@ -345,8 +344,12 @@ main_while_top@42:
 main_after_while@44:
     pop
     bury 1
-    bury 1
+    itob
+    uncover 3
     swap
+    concat
+    uncover 2
+    concat
     concat
     dup
     pushint 28
@@ -492,6 +495,7 @@ main_ternary_false@46:
 main_ternary_false@40:
     pushint 4
     bzero
+    cover 2
     b main_ternary_merge@41
 
 main_ternary_false@37:

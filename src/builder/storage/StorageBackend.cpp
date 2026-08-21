@@ -20,7 +20,7 @@ std::shared_ptr<awst::Expression> StorageBackend::emitReadForVar(
 	awst::SourceLocation const& _loc) const
 {
 	if (isTransient(_var))
-		return m_transient->buildRead(_name, _type, _loc);
+		return m_transient->buildRead(_var, _type, _loc);
 
 	auto binding = m_mapper.physicalBindingFor(_var);
 	return m_mapper.createStateRead(
@@ -34,7 +34,7 @@ std::shared_ptr<awst::Statement> StorageBackend::emitWriteForVar(
 	awst::SourceLocation const& _loc) const
 {
 	if (isTransient(_var))
-		return m_transient->buildWrite(_name, std::move(_value), _loc);
+		return m_transient->buildWrite(_var, std::move(_value), _loc);
 
 	auto binding = m_mapper.physicalBindingFor(_var);
 	auto const* type = _value ? _value->wtype : nullptr;

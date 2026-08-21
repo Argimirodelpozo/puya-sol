@@ -1086,7 +1086,7 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 					abi.create = 3;                   // Disallow
 					abi.name = bp.name;
 					// Each piece gets its own uros chunk so bin-packing
-					// puts it in a separate ≤8KB program; deploy harness
+					// puts it in a separate ≤16 KiB program; deploy harness
 					// (chain_groups.json + deploy.uros.json) wires the chain.
 					abi.chunk = bp.name;
 					m.arc4MethodConfig = abi;

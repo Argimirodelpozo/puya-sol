@@ -21,13 +21,15 @@ namespace puyasol::builder
 namespace
 {
 /// Box-length tuple pieces for a named array box: (count, exists) where
-/// count = (box_len - 2) / 32 (ARC4 dynamic array: 2-byte header + 32B elems).
+/// count = (box_len - 2) / elementSize for a fixed-width ARC4 dynamic array.
 struct BoxCount
 {
 	std::shared_ptr<awst::Expression> count;   // uint64 (guard with exists!)
 	std::shared_ptr<awst::Expression> exists;  // bool
 };
-BoxCount makeArrayBoxCount(std::string const& _name, awst::SourceLocation const& _loc)
+BoxCount makeArrayBoxCount(
+	std::string const& _name, unsigned _elementSize,
+	awst::SourceLocation const& _loc)
 {
 	auto u64c = [&](uint64_t v) { return awst::makeIntegerConstant(v, _loc); };
 	static awst::WTuple s_boxLenTupleType(std::vector<awst::WType const*>{
@@ -36,10 +38,10 @@ BoxCount makeArrayBoxCount(std::string const& _name, awst::SourceLocation const&
 		awst::makeUtf8BytesConstant(_name, _loc), &s_boxLenTupleType, _loc);
 	auto len64 = awst::makeTupleItem(lenTuple, 0, awst::WType::uint64Type(), _loc);
 	auto exists = awst::makeTupleItem(lenTuple, 1, awst::WType::boolType(), _loc);
-	// (len - 2) / 32 — only meaningful when exists (guarded by callers).
+	// (len - 2) / elementSize — only meaningful when exists (guarded by callers).
 	auto count = awst::makeUInt64BinOp(
 		awst::makeUInt64BinOp(std::move(len64), awst::UInt64BinaryOperator::Sub, u64c(2), _loc),
-		awst::UInt64BinaryOperator::FloorDiv, u64c(32), _loc);
+		awst::UInt64BinaryOperator::FloorDiv, u64c(_elementSize), _loc);
 	return {std::move(count), std::move(exists)};
 }
 } // namespace
@@ -68,7 +70,18 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryRouteConstSlotLoad(
 		if (r.kind == SlotRoute::Kind::ArrayRoot)
 		{
 			// EVM: a dynamic array's root slot holds its LENGTH.
-			auto bc = makeArrayBoxCount(r.varName, _loc);
+			if (r.elementSize == 0)
+			{
+				auto box = StorageMapper::makeTopLevelBoxExpr(
+					r.varName, r.wtype, _loc);
+				auto value = StorageMapper::makeStateGetWithDefault(
+					std::move(box), r.wtype, _loc);
+				return awst::makeAsBiguint(awst::makeItob(
+					awst::makeArrayLength(
+						std::move(value), awst::WType::uint64Type(), _loc),
+					_loc), _loc);
+			}
+			auto bc = makeArrayBoxCount(r.varName, r.elementSize, _loc);
 			auto lenOrZero = awst::makeConditional(
 				std::move(bc.exists), std::move(bc.count), u64c(0),
 				awst::WType::uint64Type(), _loc);
@@ -103,7 +116,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryRouteConstSlotLoad(
 		if (slot < base || slot - base >= (boost::multiprecision::cpp_int(1) << 32))
 			continue;
 		uint64_t idx = static_cast<uint64_t>(slot - base);
-		auto bc = makeArrayBoxCount(reg.varName, _loc);
+		auto bc = makeArrayBoxCount(reg.varName, reg.elementSize, _loc);
 		// exists && idx < count → element bytes; else 0 (EVM: popped/beyond-length
 		// slots read zero — pop clears, and our box physically shrinks).
 		auto inRange = awst::makeBoolBinOp(
@@ -146,23 +159,79 @@ bool AssemblyBuilder::tryRouteConstSlotStore(
 		}
 		if (r.kind == SlotRoute::Kind::ArrayRoot)
 		{
-			// sstore(root, L) = SET LENGTH: resize the backing box to 2 + L*32
-			// (box_resize zero-fills growth — matching push()-style zeroing) and
-			// stamp the 2-byte ARC4 count header. box_create when absent
-			// (box_create errors if a box exists at a different size).
+			// sstore(root, L) = SET LENGTH. Fixed-width elements take the
+			// compact box-resize path; dynamic elements recurse through the ARC4
+			// array operations below, so element rank is not part of dispatch.
 			auto newLen = safeBtoi(ensureBiguint(_value, _loc), _loc);
-			// bind once: used in size math + header stamp
+			// bind once: used in size math/loops + header stamp
 			std::string tmp = "__sslot_len_" + std::to_string(awst::NameGen::next("AssemblyBuilder.sslotLen"));
 			_out.push_back(awst::makeAssignmentStatement(
 				awst::makeVarExpression(tmp, awst::WType::uint64Type(), _loc),
 				std::move(newLen), _loc));
 			auto lenVar = [&]() { return awst::makeVarExpression(tmp, awst::WType::uint64Type(), _loc); };
+
+			if (r.elementSize == 0)
+			{
+				auto const* arrayType =
+					dynamic_cast<awst::ARC4DynamicArray const*>(r.wtype);
+				if (!arrayType)
+				{
+					Logger::instance().error(
+						"cannot resize the declared dynamic-array storage type", _loc);
+					return true;
+				}
+				int uid = awst::NameGen::next("AssemblyBuilder.arrayRootResize");
+				std::string curName = "__sslot_cur_" + std::to_string(uid);
+				auto curVar = [&]() {
+					return awst::makeVarExpression(
+						curName, awst::WType::uint64Type(), _loc);
+				};
+				auto boxValue = [&]() {
+					return StorageMapper::makeTopLevelBoxExpr(
+						r.varName, r.wtype, _loc);
+				};
+				auto read = StorageMapper::makeStateGetWithDefault(
+					boxValue(), r.wtype, _loc);
+				_out.push_back(awst::makeAssignmentStatement(
+					curVar(), awst::makeArrayLength(
+						std::move(read), awst::WType::uint64Type(), _loc), _loc));
+
+				auto grow = awst::makeBlock(_loc);
+				grow->body.push_back(awst::makeExpressionStatement(
+					awst::makeArrayPushOne(
+						boxValue(), StorageMapper::makeDefaultValue(
+							arrayType->elementType(), _loc), r.wtype, _loc), _loc));
+				grow->body.push_back(awst::makeAssignmentStatement(
+					curVar(), awst::makeUInt64BinOp(
+						curVar(), awst::UInt64BinaryOperator::Add, u64c(1), _loc), _loc));
+				_out.push_back(awst::makeWhileLoop(
+					awst::makeNumericCompare(
+						curVar(), awst::NumericComparison::Lt, lenVar(), _loc),
+					std::move(grow), _loc));
+
+				auto shrink = awst::makeBlock(_loc);
+				shrink->body.push_back(awst::makeExpressionStatement(
+					awst::makeArrayPop(
+						boxValue(), arrayType->elementType(), _loc), _loc));
+				shrink->body.push_back(awst::makeAssignmentStatement(
+					curVar(), awst::makeUInt64BinOp(
+						curVar(), awst::UInt64BinaryOperator::Sub, u64c(1), _loc), _loc));
+				_out.push_back(awst::makeWhileLoop(
+					awst::makeNumericCompare(
+						lenVar(), awst::NumericComparison::Lt, curVar(), _loc),
+					std::move(shrink), _loc));
+				return true;
+			}
+
+			// Fixed-width values can resize in-place without materialising the
+			// complete box (important for arrays above the AVM stack-value cap).
 			auto newSize = [&]() {
 				return awst::makeUInt64BinOp(u64c(2), awst::UInt64BinaryOperator::Add,
-					awst::makeUInt64BinOp(lenVar(), awst::UInt64BinaryOperator::Mult, u64c(32), _loc), _loc);
+					awst::makeUInt64BinOp(lenVar(), awst::UInt64BinaryOperator::Mult,
+						u64c(r.elementSize), _loc), _loc);
 			};
 
-			auto bc = makeArrayBoxCount(r.varName, _loc);
+			auto bc = makeArrayBoxCount(r.varName, r.elementSize, _loc);
 			auto resizeBlk = awst::makeBlock(_loc);
 			{
 				auto resize = awst::makeIntrinsicCall("box_resize", awst::WType::voidType(), _loc);
@@ -192,8 +261,9 @@ bool AssemblyBuilder::tryRouteConstSlotStore(
 		{
 			// sstore(memberRoot, L) = SET LENGTH of a dyn array living INSIDE a
 			// struct box: COW-rebuild the struct with the member replaced by a
-			// zero-filled length-L array (2-byte BE count ++ L*32 zero bytes) —
-			// EVM length-grow exposes zeroed slots, so fresh zeros match.
+			// default-filled length-L array. Fixed-width elements use a compact
+			// byte construction; dynamically encoded elements use the same
+			// type-directed ArrayExtend loop as `new T[](L)`.
 			auto const* st = dynamic_cast<awst::ARC4Struct const*>(r.wtype);
 			awst::WType const* fieldType = nullptr;
 			if (st)
@@ -210,13 +280,59 @@ bool AssemblyBuilder::tryRouteConstSlotStore(
 				std::move(newLen), _loc));
 			auto lenVar = [&]() { return awst::makeVarExpression(tmp, awst::WType::uint64Type(), _loc); };
 
-			auto hdr = awst::makeExtract3(
-				awst::makeItob(lenVar(), _loc), u64c(6), u64c(2), _loc);
-			auto zeros = awst::makeIntrinsicCall("bzero", awst::WType::bytesType(), _loc);
-			zeros->stackArgs.push_back(awst::makeUInt64BinOp(
-				lenVar(), awst::UInt64BinaryOperator::Mult, u64c(32), _loc));
-			auto fieldVal = awst::makeReinterpretCast(
-				awst::makeConcat(std::move(hdr), std::move(zeros), _loc), fieldType, _loc);
+			std::shared_ptr<awst::Expression> fieldVal;
+			if (r.elementSize > 0)
+			{
+				auto hdr = awst::makeExtract3(
+					awst::makeItob(lenVar(), _loc), u64c(6), u64c(2), _loc);
+				auto zeros = awst::makeIntrinsicCall(
+					"bzero", awst::WType::bytesType(), _loc);
+				zeros->stackArgs.push_back(awst::makeUInt64BinOp(
+					lenVar(), awst::UInt64BinaryOperator::Mult,
+					u64c(r.elementSize), _loc));
+				fieldVal = awst::makeReinterpretCast(
+					awst::makeConcat(std::move(hdr), std::move(zeros), _loc),
+					fieldType, _loc);
+			}
+			else if (auto const* arrayType =
+					dynamic_cast<awst::ARC4DynamicArray const*>(fieldType))
+			{
+				int uid = awst::NameGen::next(
+					"AssemblyBuilder.structMemberArrayResize");
+				std::string arrName = "__sslot_arr_" + std::to_string(uid);
+				std::string idxName = "__sslot_i_" + std::to_string(uid);
+				auto arrVar = [&]() {
+					return awst::makeVarExpression(arrName, fieldType, _loc);
+				};
+				auto idxVar = [&]() {
+					return awst::makeVarExpression(
+						idxName, awst::WType::uint64Type(), _loc);
+				};
+				_out.push_back(awst::makeAssignmentStatement(
+					arrVar(), awst::makeNewArray(fieldType, _loc), _loc));
+				_out.push_back(awst::makeAssignmentStatement(
+					idxVar(), u64c(0), _loc));
+				auto loop = awst::makeBlock(_loc);
+				loop->body.push_back(awst::makeExpressionStatement(
+					awst::makeArrayPushOne(
+						arrVar(), StorageMapper::makeDefaultValue(
+							arrayType->elementType(), _loc), fieldType, _loc), _loc));
+				loop->body.push_back(awst::makeAssignmentStatement(
+					idxVar(), awst::makeUInt64BinOp(
+						idxVar(), awst::UInt64BinaryOperator::Add, u64c(1), _loc),
+					_loc));
+				_out.push_back(awst::makeWhileLoop(
+					awst::makeNumericCompare(
+						idxVar(), awst::NumericComparison::Lt, lenVar(), _loc),
+					std::move(loop), _loc));
+				fieldVal = arrVar();
+			}
+			if (!fieldVal)
+			{
+				Logger::instance().error(
+					"cannot construct the declared dynamic-array member type", _loc);
+				return true;
+			}
 
 			auto box = StorageMapper::makeTopLevelBoxExpr(r.varName, r.wtype, _loc);
 			auto readBase = StorageMapper::makeStateGetWithDefault(box, r.wtype, _loc);
@@ -236,7 +352,7 @@ bool AssemblyBuilder::tryRouteConstSlotStore(
 		if (slot < base || slot - base >= (boost::multiprecision::cpp_int(1) << 32))
 			continue;
 		uint64_t idx = static_cast<uint64_t>(slot - base);
-		auto bc = makeArrayBoxCount(reg.varName, _loc);
+		auto bc = makeArrayBoxCount(reg.varName, reg.elementSize, _loc);
 		auto inRange = awst::makeBoolBinOp(
 			std::move(bc.exists), awst::BinaryBooleanOperator::And,
 			awst::makeNumericCompare(u64c(idx), awst::NumericComparison::Lt,
@@ -374,7 +490,9 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleDiv(
 		return nullptr;
 	// EVM div(a,0)=0; AVM panics.
 	return safeDivMod(
-		_args[0], awst::BigUIntBinaryOperator::FloorDiv, _args[1], _loc
+		wrapMod256(ensureBiguint(_args[0], _loc), _loc),
+		awst::BigUIntBinaryOperator::FloorDiv,
+		wrapMod256(ensureBiguint(_args[1], _loc), _loc), _loc
 	);
 }
 
@@ -424,7 +542,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleShr(
 	// Materialize once: shift feeds both buildPowerOf2 and the <256 conditional
 	// (makeEvalOnce = OperandPlan primitive; skips SE on a constant amount).
 	auto shift = awst::makeEvalOnce(ensureBiguint(_args[0], _loc), _loc);
-	auto value = _args[1];
+	auto value = wrapMod256(ensureBiguint(_args[1], _loc), _loc);
 	auto power = buildPowerOf2(shift, _loc);
 	auto divResult = makeBigUIntBinOp(
 		value, awst::BigUIntBinaryOperator::FloorDiv, std::move(power), _loc

@@ -188,7 +188,10 @@ int main(int _argc, char* _argv[])
 	puyasol::builder::TargetProfile targetProfile{
 		.evmStorageLayout = opts.evmStorageLayout,
 		.evmMemoryLayout = opts.evmMemoryLayout,
-		.evmSelectors = opts.evmSelectors,
+		.evmSelectors = opts.evmSelectors || opts.contractAbi == "evm",
+		.contractAbi = opts.contractAbi == "evm"
+			? puyasol::builder::ContractAbi::Evm
+			: puyasol::builder::ContractAbi::Arc4,
 		.viaIRSequencing = opts.viaYulBehavior,
 		.evmChainId = opts.evmChainId.empty()
 			? std::nullopt : std::optional<std::string>{opts.evmChainId},

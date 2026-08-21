@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/state_smoke_test.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 32 255 0
-    bytecblock "value1" "value2" 0x
+    bytecblock 0x "value1" "value2"
     pushint 4096
     bzero
     dup
@@ -24,11 +24,11 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "value1"
-    bytec_2 // 0x
+    bytec_1 // "value1"
+    bytec_0 // 0x
     app_global_put
-    bytec_1 // "value2"
-    bytec_2 // 0x
+    bytec_2 // "value2"
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -76,7 +76,7 @@ main_ternary_merge@13:
     intc_2 // 255
     &
     bnz main_else_body@15
-    bytec_0 // "value1"
+    bytec_1 // "value1"
     swap
     app_global_put
 
@@ -85,7 +85,7 @@ main_after_if_else@16:
     return
 
 main_else_body@15:
-    bytec_1 // "value2"
+    bytec_2 // "value2"
     swap
     app_global_put
     b main_after_if_else@16
@@ -120,9 +120,11 @@ main_ternary_merge@21:
     &
     bnz main_else_body@23
     intc_3 // 0
-    bytec_0 // "value1"
+    bytec_1 // "value1"
     app_global_get_ex
-    assert // check value1 exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -142,9 +144,11 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
 
 main_else_body@23:
     intc_3 // 0
-    bytec_1 // "value2"
+    bytec_2 // "value2"
     app_global_get_ex
-    assert // check value2 exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32

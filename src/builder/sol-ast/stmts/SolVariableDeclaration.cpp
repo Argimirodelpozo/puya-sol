@@ -433,10 +433,8 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			return result;
 		}
 
-		// Memory aggregate used in inline assembly: give it an ARC4-layout blob
-		// pointer (not EVM-faithful — ARC4 packs differently; add(m,32) skipping a
-		// length word will diverge). `new T[](n)` binds to a fresh FMP region and
-		// bumps FMP; non-`new` falls through to the ensureBiguint backstop.
+		// Memory aggregate used in inline assembly: materialise it in the shared
+		// scratch blob using Solidity's EVM memory layout and bind its base offset.
 		if (initialValue
 			&& decl.referenceLocation() == VariableDeclaration::Location::Memory
 			&& m_blk.isAssemblyAggregate(decl.id()))
@@ -445,19 +443,20 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 			if (auto const* fc = dynamic_cast<FunctionCall const*>(initialValue))
 				if (dynamic_cast<NewExpression const*>(&fc->expression()))
 					newCall = fc;
-			// stage 3 (--evm-memory-layout): ANY initializer — build the VALUE,
-			// allocate its EVM-layout region in the blob, store it, bind the
-			// offset (shared emitBlobBackValue; also used for param spills).
-			if (!newCall && m_blk.typeMapper().profile().evmMemoryLayout)
+			// Any non-`new` initializer whose aggregate is read as a Yul memory
+			// pointer must be spilled into the shared EVM-layout blob. This applies
+			// equally to abi.encode*, calls, casts, and arbitrary expressions; the
+			// scanner already excludes the intentional whole-assignment bridge.
+			// Reuse the previously-built value so side effects run exactly once.
+			if (!newCall)
 			{
 				auto loc2 = m_blk.makeLoc(decl.location());
-				auto v0 = m_blk.builderCtx().buildExpr(*initialValue);
-				if (!v0)
+				if (!value)
 					return result;
 				m_blk.builderCtx().appendEffectsTo(result);
 				std::string offN = "__blobagg_off_" + std::to_string(decl.id());
 				if (builder::emitBlobBackValue(m_blk.typeMapper(), decl.type(),
-						type, std::move(v0), offN,
+						type, std::move(value), offN,
 						static_cast<int>(decl.id()), loc2, result))
 					m_blk.setBlobAggregate(decl.id(), offN);
 				return result;
@@ -469,7 +468,7 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 				// Dynamic bytes/string (`new bytes(n)` / `new string(n)`): the OZ
 				// Strings.toString buffer idiom. Blob-alloc with a runtime length
 				// word so `add(buf,32)` points at the data and a value-read
-				// materialises [len][data]. Real arrays: fixed FMP bump, no len word.
+				// materialises [len][data].
 				auto const* at = dynamic_cast<ArrayType const*>(decl.type());
 				if (at && at->isByteArrayOrString() && !newCall->arguments().empty())
 				{
@@ -482,6 +481,24 @@ std::vector<std::shared_ptr<awst::Statement>> SolVariableDeclaration::toAwst()
 						result.push_back(std::move(s));
 					m_blk.setBlobAggregate(decl.id(), offN);
 					m_blk.builderCtx().appendEffectsTo(result);
+					return result;
+				}
+				// All non-bytes arrays use the recursive EVM-memory writer. Besides
+				// the root length/slots, it allocates every reference child and
+				// writes its pointer, so `new S[](n)`, `new T[][](n)`, and deeper
+				// shapes need no allocation-specific cases here.
+				if (at && !at->isByteArrayOrString())
+				{
+					auto loc2 = m_blk.makeLoc(decl.location());
+					// A runtime-sized `new T[](n)` constructs its native array in
+					// queued pre-effects.  Those must precede the recursive spill;
+					// otherwise the writer reads the generated array local before it
+					// has been initialised.
+					m_blk.builderCtx().appendEffectsTo(result);
+					if (builder::emitBlobBackValue(m_blk.typeMapper(), decl.type(),
+							type, std::move(value), offN,
+							static_cast<int>(decl.id()), loc2, result))
+						m_blk.setBlobAggregate(decl.id(), offN);
 					return result;
 				}
 				result.push_back(awst::makeAssignmentStatement(

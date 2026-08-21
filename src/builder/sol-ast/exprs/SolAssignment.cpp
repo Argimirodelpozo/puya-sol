@@ -18,6 +18,8 @@
 #include "builder/sol-ast/EffectScan.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/contract/ContractBuilder.h"
+#include "builder/contract/EvmMemoryCodec.h"
+#include "builder/codec/EvmValueCodec.h"
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/SlotHandleAccess.h"
@@ -51,7 +53,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 	if (auto r = tryHandleBlobRespill())             return std::move(*r);
 	if (auto r = tryHandleStoragePointerReassign())  return std::move(*r);
 	if (auto r = tryHandleMultiBoxArrayWrite())      return std::move(*r);
-	if (auto r = tryHandleBoxedArrayElemWrite())     return std::move(*r);
+	if (auto r = tryHandleBoxedAggregatePathWrite()) return std::move(*r);
 	if (auto r = tryHandleOffsetStructRefFieldWrite()) return std::move(*r);
 	if (auto r = tryHandleBlobAggregateWrite())      return std::move(*r);
 	if (auto r = tryHandlePushAssignRewrite(op))     return std::move(*r);
@@ -144,7 +146,7 @@ std::shared_ptr<awst::Expression> SolAssignment::toAwst()
 		return nullptr;
 	}
 
-	// Tripwire (possible_solc item 6): a plain `=` must be a solc-legal
+	// Solc-convertibility tripwire: a plain `=` must be a solc-legal
 	// implicit conversion; a trip = wrong src/target annotation plumbing.
 	// Compound ops follow binaryOperatorResult rules instead — skip; tuples
 	// compare element-wise — skip.
@@ -290,70 +292,39 @@ SolAssignment::tryHandleBlobAggregateWrite()
 	if (!off)
 		return std::nullopt;
 
-	// Struct/array copy: write word-by-word via writeMemWordDirect.
-	// Only 32-byte-aligned aggregates (e.g. Honk G1Point = 2×uint256 = 64 B).
-	if (dynamic_cast<ArrayType const*>(lhsType) || dynamic_cast<StructType const*>(lhsType))
-	{
-		int sz = builder::computeEncodedElementSize(m_ctx.typeMapper.map(lhsType));
-		if (sz <= 0 || sz % 32 != 0)
-			return std::nullopt;
-		auto agg = buildExpr(m_assignment.rightHandSide());
-		auto aggBytes = awst::makeAsBytes(std::move(agg), m_loc);
-		std::string offN = "__blobwa_off_" + std::to_string(m_assignment.id());
-		std::string vN = "__blobwa_v_" + std::to_string(m_assignment.id());
-		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc), std::move(off), m_loc));
-		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(vN, awst::WType::bytesType(), m_loc), std::move(aggBytes), m_loc));
-		for (int i = 0; i * 32 < sz; ++i)
-		{
-			auto wordOff = awst::makeUInt64BinOp(
-				awst::makeVarExpression(offN, awst::WType::uint64Type(), m_loc),
-				awst::UInt64BinaryOperator::Add,
-				awst::makeIntegerConstant(static_cast<uint64_t>(i * 32), m_loc), m_loc);
-			auto word = awst::makeExtract3(
-				awst::makeVarExpression(vN, awst::WType::bytesType(), m_loc),
-				awst::makeIntegerConstant(static_cast<uint64_t>(i * 32), m_loc),
-				awst::makeIntegerConstant("32", m_loc), m_loc);
-			builder::AssemblyBuilder::writeMemWordDirect(
-				m_ctx.typeMapper.profile().scratchLayout,
-				std::move(wordOff), std::move(word), m_loc, m_ctx.preEffects());
-		}
-		return std::optional<std::shared_ptr<awst::Expression>>(
-			awst::makeVarExpression(vN, awst::WType::bytesType(), m_loc));
-	}
-
-	// Materialise rhs; coerce to biguint so asBytes gives a valid 32-byte pad
-	// (uint256/Fr stored as a full 32-byte EVM-memory word).
-	auto v = buildExpr(m_assignment.rightHandSide());
-	v = builder::TypeCoercion::implicitNumericCast(
-		std::move(v), awst::WType::biguintType(), m_loc);
-	// implicitNumericCast only converts NUMERIC sources. A byte-shaped value
-	// (account — an address is the 32-byte AVM account word — or bytesN)
-	// passes through unchanged and then mints an assignment whose target is
-	// biguint, which puya rejects far downstream as "assignment target type
-	// differs" (Aave's getReservesList writes `_reservesList[i]`, an address,
-	// into an asm-touched memory array). Reinterpret the bytes as the word's
-	// numeric value; the pad-to-32 below restores the identical bytes.
-	if (v->wtype != awst::WType::biguintType()
-		&& (v->wtype == awst::WType::accountType()
-			|| v->wtype == awst::WType::bytesType()
-			|| (v->wtype && v->wtype->kind() == awst::WTypeKind::Bytes)))
-		v = awst::makeAsBiguint(awst::makeAsBytes(std::move(v), m_loc), m_loc);
-	std::string vN = "__blobassign_v_" + std::to_string(m_assignment.id());
+	// Pin the assignment value in its declared carrier, then let the recursive
+	// EVM-memory writer handle scalar conversion, solc struct/array offsets, and
+	// reference-child allocation.  This replaces the former flat 32-byte copy
+	// and the scalar-everything-is-biguint shortcut.
+	auto const* lhsW = m_ctx.typeMapper.map(lhsType);
+	auto value = builder::TypeCoercion::coerceForAssignment(
+		buildExpr(m_assignment.rightHandSide()), lhsW, m_loc);
+	std::string valueName = "__blobassign_v_" + std::to_string(m_assignment.id());
 	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(vN, awst::WType::biguintType(), m_loc), std::move(v), m_loc));
-
-	// Pad to exactly 32 big-endian bytes and write the blob word.
-	auto vbytes = awst::makeExtractLastN(
-		awst::makeLeftPad(awst::makeAsBytes(
-			awst::makeVarExpression(vN, awst::WType::biguintType(), m_loc), m_loc), 32, m_loc), 32, m_loc);
-	builder::AssemblyBuilder::writeMemWordDirect(
-		m_ctx.typeMapper.profile().scratchLayout,
-		std::move(off), std::move(vbytes), m_loc, m_ctx.preEffects());
-
-	return std::optional<std::shared_ptr<awst::Expression>>(
-		awst::makeVarExpression(vN, awst::WType::biguintType(), m_loc));
+		awst::makeVarExpression(valueName, lhsW, m_loc), std::move(value), m_loc));
+	auto valueRef = [&]() {
+		return awst::makeVarExpression(valueName, lhsW, m_loc);
+	};
+	// bytes/string elements are packed one byte apart in EVM memory; their
+	// Solidity result type is bytes1, but the address is not a 32-byte scalar
+	// slot.  This is a layout distinction, not an element-shape exception.
+	if (auto const* index = dynamic_cast<IndexAccess const*>(&lhs))
+		if (auto const* bytesArray = dynamic_cast<ArrayType const*>(
+				index->baseExpression().annotation().type);
+			bytesArray && bytesArray->isByteArrayOrString())
+		{
+			auto word = builder::codec::valueToEvmWord(
+				m_ctx.typeMapper, lhsType, valueRef(), m_loc);
+			builder::AssemblyBuilder::writeMemByteDirect(
+				m_ctx.typeMapper.profile().scratchLayout, std::move(off),
+				awst::makeExtract(std::move(word), 0, 1, m_loc), m_loc,
+				m_ctx.preEffects());
+			return std::optional<std::shared_ptr<awst::Expression>>(valueRef());
+		}
+	if (!builder::writeEvmMemoryValueAt(m_ctx.typeMapper, lhsType,
+			valueRef(), std::move(off), m_loc, m_ctx.preEffects()))
+		return std::nullopt;
+	return std::optional<std::shared_ptr<awst::Expression>>(valueRef());
 }
 
 std::shared_ptr<awst::Expression>
@@ -375,33 +346,10 @@ SolAssignment::applyEnumRangeCheck(std::shared_ptr<awst::Expression> _value, Tok
 	return val;
 }
 
-namespace
-{
-/// True iff `e` peels (through index layers) to an Identifier registered as a
-/// slot-storage-ref local. Side-effect-free by construction — used to gate the
-/// slot-handle write intercepts BEFORE building any expression (building a
-/// side-effecting base like `m[1].push()` twice would double its effects).
-bool rootsInSlotHandle(
-	solidity::frontend::Expression const& e,
-	puyasol::builder::sol_ast::Context& scope)
-{
-	auto const* cur = &e;
-	while (auto const* ia = dynamic_cast<solidity::frontend::IndexAccess const*>(cur))
-		cur = &ia->baseExpression();
-	auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(cur);
-	if (!id)
-		return false;
-	auto const* vd = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
-		id->annotation().referencedDeclaration);
-	return vd && vd->isLocalVariable() && scope.findSlotStorageRef(vd->id()) != nullptr;
-}
-} // namespace
-
 std::optional<std::shared_ptr<awst::Expression>>
 SolAssignment::tryHandleBlobRespill()
 {
-	if (!m_ctx.typeMapper.profile().evmMemoryLayout
-		|| m_assignment.assignmentOperator() != Token::Assign)
+	if (m_assignment.assignmentOperator() != Token::Assign)
 		return std::nullopt;
 	auto const* lid = dynamic_cast<Identifier const*>(&m_assignment.leftHandSide());
 	if (!lid)
@@ -412,6 +360,11 @@ SolAssignment::tryHandleBlobRespill()
 		|| lvd->referenceLocation() != VariableDeclaration::Location::Memory
 		|| m_scope.findBlobAggregate(lvd->id()).empty())
 		return std::nullopt;
+	// Blob-backing is selected per declaration whenever Yul observes an EVM
+	// pointer, not only by the universal --evm-memory-layout profile. Therefore
+	// every such high-level re-assignment must re-spill/repoint the backing
+	// offset; falling through would attempt to assign to a materialized value
+	// expression (and is not a valid lvalue).
 	auto value = buildExpr(m_assignment.rightHandSide());
 	if (!value)
 		return std::nullopt;
@@ -637,18 +590,36 @@ SolAssignment::tryHandleEvmStorageWrite()
 				value = buildExpr(rhsExpr);
 			if (!value)
 				return std::nullopt;
-			// FIXED array of DYNAMIC elements (uint[][2] = calldata/memory):
-			// per-element head slicing + inner length/keccak-region writes —
-			// only writeArrayValue models that; the slot-route writer below
-			// smears the head/tail encoding across raw words.
-			if (auto const* lelem2 = dynamic_cast<ArrayType const*>(lat->baseType());
-				lelem2 && lelem2->isDynamicallySized()
-				&& !lat->isDynamicallySized() && !lat->isByteArrayOrString())
+			// A value-shaped RHS always goes through the recursive declared-type
+			// writer. The slot copier below is only an exact-layout optimization
+			// for a storage RHS represented by its biguint slot handle; teaching
+			// its scalar loop about every aggregate rank duplicates this codec.
+			if (value->wtype != awst::WType::biguintType())
 			{
 				EvmSlotLowering lowFD(m_ctx, m_scope, m_loc);
 				EvmSlotLowering::Addr la2 = *laddr;
 				la2.solType = lhsType;
 				la2.wtype = m_ctx.typeMapper.map(lhsType);
+				if (la2.wtype && value->wtype != la2.wtype
+					&& value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
+					&& la2.wtype->kind() == awst::WTypeKind::ARC4StaticArray)
+				{
+					std::string wn = "__evm_fwsrc_" + std::to_string(
+						awst::NameGen::next("SolAssignment.evmFixedWidenSrc"));
+					m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+						awst::makeVarExpression(
+							wn, awst::WType::bytesType(), m_loc),
+						awst::makeAsBytes(value, m_loc), m_loc));
+					auto mkSrc = [&, wn]() {
+						return awst::makeVarExpression(
+							wn, awst::WType::bytesType(), m_loc);
+					};
+					if (auto widened = builder::tryWidenArc4StaticArrayInt(
+							value->wtype, la2.wtype, mkSrc, m_loc))
+						value = std::move(widened);
+				}
+				value = TypeCoercion::coerceForAssignment(
+					std::move(value), la2.wtype, m_loc);
 				std::vector<std::shared_ptr<awst::Statement>> wsFD;
 				if (lowFD.writeArrayValue(la2, lat, std::move(value), wsFD))
 				{
@@ -880,198 +851,71 @@ SolAssignment::tryHandleEvmStorageWrite()
 std::optional<std::shared_ptr<awst::Expression>>
 SolAssignment::tryHandleSlotHandleElemWrite()
 {
-	// `arr[i] = v` (and, for PACKED scalars, `arr[i] op= v`) on a slot-handle
-	// base with PACKED sub-word or STRUCT elements. Full-word scalars keep the
-	// generic slot path — its whole-word read-modify-write is correct there,
-	// including compound ops. Packed compound MUST intercept: the generic path
-	// addresses slot base+idx unscaled and clobbers a whole neighboring word.
-	bool isCompound = m_assignment.assignmentOperator() != Token::Assign;
 	auto const* lhs = dynamic_cast<IndexAccess const*>(&m_assignment.leftHandSide());
-	if (!lhs || !lhs->indexExpression()) return std::nullopt;
-	auto const* arrType = dynamic_cast<ArrayType const*>(lhs->baseExpression().annotation().type);
-	if (!arrType || arrType->isDynamicallySized()
-		|| !arrType->dataStoredIn(DataLocation::Storage)) return std::nullopt;
-	auto const* elemType = arrType->baseType();
-	auto const* structElem = dynamic_cast<StructType const*>(elemType);
-	auto layout = builder::SlotHandleAccess::layoutFor(elemType);
-	if (!structElem && layout.perSlot <= 1) return std::nullopt;
-	if (structElem && isCompound) return std::nullopt; // no compound ops on structs
-
-	// Gate on AST shape BEFORE building: the base chain must root in a
-	// slot-handle local (building a side-effecting base twice would double
-	// its effects — e.g. `m[1].push().a = v` box-model writes).
-	if (!rootsInSlotHandle(lhs->baseExpression(), m_scope)) return std::nullopt;
-	auto base = buildExpr(lhs->baseExpression());
-	if (!base) return std::nullopt;
-	if (base->wtype != awst::WType::biguintType())
-	{
-		// Chained bases (`_x[0]`) and struct-typed locals build as biguint
-		// slot math above. A BARE array-typed local builds as its DECLARED
-		// (arc4 array) type instead — read its HANDLE var directly (mirrors
-		// SolIndexAccess's slot-ref path); without this the intercept never
-		// fired for such locals and packed writes fell to the whole-word
-		// wrong-slot path.
-		auto const* baseId = dynamic_cast<Identifier const*>(&lhs->baseExpression());
-		auto const* baseDecl = baseId
-			? dynamic_cast<VariableDeclaration const*>(baseId->annotation().referencedDeclaration)
-			: nullptr;
-		if (!baseDecl) return std::nullopt;
-		base = awst::makeVarExpression(
-			baseDecl->name(), awst::WType::biguintType(), m_loc);
-	}
-	auto idx = buildExpr(*lhs->indexExpression());
-	if (!idx) return std::nullopt;
-	if (idx->wtype == awst::WType::uint64Type())
-		idx = awst::makeAsBiguint(awst::makeItob(std::move(idx), m_loc), m_loc);
-	// FIXED array (guaranteed by the gate above): assert idx < length before
-	// the address math (EVM Panic 0x32; OOB would clobber a neighboring slot).
-	idx = builder::SlotHandleAccess::boundsCheckIndex(
-		m_ctx.preEffects(), std::move(idx), arrType, m_loc);
-
-	std::vector<std::shared_ptr<awst::Statement>> out;
-	if (structElem)
-	{
-		auto const* structW = dynamic_cast<awst::ARC4Struct const*>(
-			m_ctx.typeMapper.map(structElem));
-		if (!structW) return std::nullopt;
-		auto value = buildExpr(m_assignment.rightHandSide());
-		if (!value) return std::nullopt;
-		auto stride = awst::makeIntegerConstant(
-			structElem->storageSize().str(), m_loc, awst::WType::biguintType());
-		auto elemBase = awst::makeBigUIntBinOp(std::move(base),
-			awst::BigUIntBinaryOperator::Add,
-			awst::makeBigUIntBinOp(std::move(idx), awst::BigUIntBinaryOperator::Mult,
-				std::move(stride), m_loc), m_loc);
-		builder::SlotHandleAccess::writeStructElem(
-			out, std::move(elemBase), structElem, structW, std::move(value), m_loc);
-	}
-	else
-	{
-		std::shared_ptr<awst::Expression> value;
-		if (isCompound)
-		{
-			// `p[i] op= v` on a PACKED element: packed-aware read (sign-
-			// extended canonical biguint), compute at the element's Solidity
-			// type, write back sub-word. base/idx are eval-once'd so the read
-			// and the write share one evaluation. The read is cast to the
-			// element's NATIVE carrier first (uint64 for ≤64-bit: low 8 bytes
-			// of the canonical TC = the 64-bit-TC carrier) so the compound
-			// arithmetic keeps checked-overflow semantics at the declared
-			// width (decode-before-arith, as the box-array path does).
-			base = awst::makeEvalOnce(std::move(base), m_loc);
-			idx = awst::makeEvalOnce(std::move(idx), m_loc);
-			auto current = builder::SlotHandleAccess::readScalarElem(
-				base, idx, layout, elemType, m_loc);
-			auto* nativeType = m_ctx.typeMapper.map(elemType);
-			if (nativeType && current->wtype != nativeType)
-				current = builder::TypeCoercion::implicitNumericCast(
-					std::move(current), nativeType, m_loc);
-			auto rhs = buildExpr(m_assignment.rightHandSide());
-			if (!rhs) return std::nullopt;
-			value = applyCompoundAssignment(
-				m_assignment.assignmentOperator(), current, std::move(rhs));
-		}
-		else
-		{
-			value = buildExpr(m_assignment.rightHandSide());
-			if (!value) return std::nullopt;
-		}
-		// canonical biguint value
-		if (value->wtype && value->wtype->kind() == awst::WTypeKind::ARC4UIntN)
-			value = awst::makeARC4Decode(std::move(value), awst::WType::biguintType(), m_loc);
-		else if (value->wtype == awst::WType::uint64Type())
-			value = awst::makeAsBiguint(awst::makeItob(std::move(value), m_loc), m_loc);
-		else if (value->wtype == awst::WType::boolType())
-			value = awst::makeConditional(std::move(value),
-				awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType()),
-				awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()),
-				awst::WType::biguintType(), m_loc);
-		builder::SlotHandleAccess::writeScalarElem(
-			out, std::move(base), std::move(idx), layout, std::move(value), m_loc);
-	}
-	for (auto& st: out)
-		m_ctx.queuePostEffect(std::move(st));
-	return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc, awst::WType::biguintType())};
+	return lhs ? tryHandleSlotHandleWrite(*lhs) : std::nullopt;
 }
 
 std::optional<std::shared_ptr<awst::Expression>>
 SolAssignment::tryHandleSlotHandleFieldWrite()
 {
-	if (m_assignment.assignmentOperator() != Token::Assign) return std::nullopt;
 	auto const* lhs = dynamic_cast<MemberAccess const*>(&m_assignment.leftHandSide());
-	if (!lhs) return std::nullopt;
-	auto const* solStruct = dynamic_cast<StructType const*>(lhs->expression().annotation().type);
-	if (!solStruct || !solStruct->dataStoredIn(DataLocation::Storage)) return std::nullopt;
-	// The handle local resolves with its DECLARED struct wtype through the
-	// generic identifier path — consult the slot-storage-ref registry directly.
-	// ONLY registry-rooted bases: building an arbitrary (possibly
-	// side-effecting) base to inspect its wtype would double its effects.
-	std::shared_ptr<awst::Expression> base;
-	if (auto const* baseId = dynamic_cast<Identifier const*>(&lhs->expression()))
-		if (auto const* vd = dynamic_cast<VariableDeclaration const*>(
-				baseId->annotation().referencedDeclaration))
-			if (vd->isLocalVariable() && m_scope.findSlotStorageRef(vd->id()))
-				base = awst::makeVarExpression(vd->name(), awst::WType::biguintType(), m_loc);
-	if (!base && rootsInSlotHandle(lhs->expression(), m_scope))
-	{
-		base = buildExpr(lhs->expression());
-		if (!base || base->wtype != awst::WType::biguintType())
-			return std::nullopt;
-	}
-	if (!base)
+	return lhs ? tryHandleSlotHandleWrite(*lhs) : std::nullopt;
+}
+
+std::optional<std::shared_ptr<awst::Expression>>
+SolAssignment::tryHandleSlotHandleWrite(Expression const& _lhs)
+{
+	if (!EvmSlotLowering::isSlotHandleRef(_lhs, m_ctx, m_scope))
 		return std::nullopt;
 
-	auto const& off = solStruct->storageOffsetsOfMember(lhs->memberName());
-	auto const* fieldSolType = lhs->annotation().type;
-	unsigned size = fieldSolType ? fieldSolType->storageBytes() : 32;
+	EvmSlotLowering low(m_ctx, m_scope, m_loc);
+	auto addr = low.resolve(_lhs);
+	if (!addr)
+		return std::shared_ptr<awst::Expression>{
+			awst::makeZero(m_loc, awst::WType::biguintType())};
+	auto const* lhsType = _lhs.annotation().type;
+	auto const* lhsW = m_ctx.typeMapper.map(lhsType);
+	addr->solType = lhsType;
+	addr->wtype = lhsW;
 
 	auto value = buildExpr(m_assignment.rightHandSide());
-	if (!value) return std::nullopt;
-	// canonical biguint
-	if (value->wtype && value->wtype->kind() == awst::WTypeKind::ARC4UIntN)
-		value = awst::makeARC4Decode(std::move(value), awst::WType::biguintType(), m_loc);
-	else if (value->wtype == awst::WType::uint64Type())
-		value = awst::makeAsBiguint(awst::makeItob(std::move(value), m_loc), m_loc);
-	else if (value->wtype == awst::WType::boolType())
-		value = awst::makeConditional(std::move(value),
-			awst::makeIntegerConstant("1", m_loc, awst::WType::biguintType()),
-			awst::makeIntegerConstant("0", m_loc, awst::WType::biguintType()),
-			awst::WType::biguintType(), m_loc);
-	if (value->wtype != awst::WType::biguintType()) return std::nullopt;
-
-	auto slotExpr = awst::makeBigUIntBinOp(std::move(base),
-		awst::BigUIntBinaryOperator::Add,
-		awst::makeIntegerConstant(off.first.str(), m_loc, awst::WType::biguintType()), m_loc);
-
-	std::vector<std::shared_ptr<awst::Statement>> out;
-	if (size == 32 && off.second == 0)
-		out.push_back(builder::SlotHandleAccess::writeSlot(
-			std::move(slotExpr), std::move(value), m_loc));
+	if (!value || !lhsType || !lhsW)
+		return std::nullopt;
+	if (m_assignment.assignmentOperator() != Token::Assign)
+	{
+		auto current = low.readAny(*addr, lhsType);
+		if (!current)
+			return std::nullopt;
+		value = applyCompoundAssignment(
+			m_assignment.assignmentOperator(), std::move(current), std::move(value));
+	}
 	else
 	{
-		// packed field: word read-modify-write at compile-time position
-		std::string tmp = "__slotf_" + std::to_string(m_assignment.id());
-		out.push_back(awst::makeAssignmentStatement(
-			awst::makeVarExpression(tmp, awst::WType::biguintType(), m_loc),
-			std::move(slotExpr), m_loc));
-		auto slotVar = [&]() {
-			return awst::makeVarExpression(tmp, awst::WType::biguintType(), m_loc);
-		};
-		unsigned start = 32 - off.second - size;
-		auto fieldB = awst::makeExtract(
-			awst::makeZeroExtendToN(awst::makeAsBytes(std::move(value), m_loc), 32, m_loc),
-			static_cast<int>(32 - size), static_cast<int>(size), m_loc);
-		auto wordB = awst::makeLeftPadToN(awst::makeAsBytes(
-			builder::SlotHandleAccess::readSlot(slotVar(), m_loc), m_loc), 32, m_loc);
-		auto newWord = awst::makeReplace3(std::move(wordB),
-			awst::makeIntegerConstant(static_cast<uint64_t>(start), m_loc),
-			std::move(fieldB), m_loc);
-		out.push_back(builder::SlotHandleAccess::writeSlot(slotVar(),
-			awst::makeAsBiguint(std::move(newWord), m_loc), m_loc));
+		value = builder::TypeCoercion::coerceForAssignment(
+			std::move(value), lhsW, m_loc);
+		value = builder::TypeCoercion::signExtendSignedWiden(
+			std::move(value), m_assignment.rightHandSide().annotation().type,
+			lhsType, m_loc);
 	}
-	for (auto& st: out)
-		m_ctx.queuePostEffect(std::move(st));
-	return std::shared_ptr<awst::Expression>{awst::makeZero(m_loc, awst::WType::biguintType())};
+	if (!value)
+		return std::nullopt;
+
+	// Both the recursive writer and the assignment expression consume the
+	// result. Pin once, then dispatch solely on the declared Solidity type.
+	std::string valName = "__slot_any_" + std::to_string(
+		awst::NameGen::next("SolAssignment.slotAny"));
+	auto const* valueW = value->wtype;
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(valName, valueW, m_loc), std::move(value), m_loc));
+	std::vector<std::shared_ptr<awst::Statement>> out;
+	if (!low.writeAny(*addr, lhsType,
+			awst::makeVarExpression(valName, valueW, m_loc), out))
+		return std::shared_ptr<awst::Expression>{
+			awst::makeZero(m_loc, awst::WType::biguintType())};
+	for (auto& statement: out)
+		m_ctx.queuePostEffect(std::move(statement));
+	return std::shared_ptr<awst::Expression>{
+		awst::makeVarExpression(valName, valueW, m_loc)};
 }
 
 std::optional<std::shared_ptr<awst::Expression>>
@@ -1520,23 +1364,7 @@ SolAssignment::applyArc4EncodeIfNeeded(
 {
 	if (_value->wtype == _target->wtype) return _value;
 
-	bool targetIsArc4 = false;
-	switch (_target->wtype->kind())
-	{
-	case awst::WTypeKind::ARC4UIntN:
-	case awst::WTypeKind::ARC4StaticArray:
-	case awst::WTypeKind::ARC4DynamicArray:
-	case awst::WTypeKind::ARC4Struct:
-		targetIsArc4 = true; break;
-	default: break;
-	}
-	// arc4.bool is an ARC4BasicWType of kind `Basic` (same kind as native bool),
-	// so the switch misses it — assigning a native bool into an arc4.bool slot
-	// (a `bool[]` element write `flags[i] = v`, or an arc4.bool struct field)
-	// then leaves the value native bool and puya rejects it ("target type differs
-	// from expression value type"). Encode it. (Read side fixed in 19d7e1ba32.)
-	if (_target->wtype == awst::WType::arc4BoolType())
-		targetIsArc4 = true;
+	bool const targetIsArc4 = builder::isArc4EncodedType(_target->wtype);
 	if (!targetIsArc4) return _value;
 
 	// Skip encode if types match structurally (TypeMapper may not intern pointers;

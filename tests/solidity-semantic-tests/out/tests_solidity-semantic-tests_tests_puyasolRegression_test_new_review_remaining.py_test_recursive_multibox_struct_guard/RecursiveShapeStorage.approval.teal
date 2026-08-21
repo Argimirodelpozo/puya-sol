@@ -1,0 +1,301 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeStorage.approval_program() -> uint64:
+main:
+    intcblock 1 32 64 8 512
+    bytecblock "__ctor_pending" 0x010000000000000000 "values"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xab5b5146 0x0a839335 0x7798f777 // method "__postInit()void", method "write(uint256,uint256,uint256)void", method "writeFields(uint256,uint256,uint256)void", method "read(uint256)(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_write_route@6 main_writeFields_route@7 main_read_route@8
+    err
+
+main_read_route@8:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_3 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    intc 4 // 512
+    /
+    itob
+    bytec_2 // "values"
+    swap
+    concat
+    swap
+    intc 4 // 512
+    %
+    intc_2 // 64
+    *
+    intc_2 // 64
+    box_extract
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    pushint 0
+    b main_ternary_merge@15
+
+main_writeFields_route@7:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_3 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    pushint 513
+    <
+    assert // array index out of bounds
+    dup
+    intc 4 // 512
+    /
+    itob
+    bytec_2 // "values"
+    swap
+    concat
+    swap
+    intc 4 // 512
+    %
+    intc_2 // 64
+    *
+    dup2
+    intc_2 // 64
+    box_extract
+    uncover 4
+    replace2 0
+    dig 2
+    dig 2
+    uncover 2
+    box_replace
+    dup2
+    intc_2 // 64
+    box_extract
+    uncover 3
+    replace2 32
+    dig 2
+    dig 2
+    uncover 2
+    box_replace
+    dup2
+    intc_2 // 64
+    box_extract
+    dup
+    extract 0 32
+    pushbytes 0x01
+    b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    replace2 0
+    box_replace
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    pushint 0
+    b main_ternary_merge@20
+
+main_write_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    cover 2
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_3 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    pushint 513
+    <
+    assert // array index out of bounds
+    cover 2
+    concat
+    dig 1
+    intc 4 // 512
+    /
+    itob
+    bytec_2 // "values"
+    swap
+    concat
+    uncover 2
+    intc 4 // 512
+    %
+    intc_2 // 64
+    *
+    uncover 2
+    box_replace
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    pushint 0
+    b main_ternary_merge@25
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_0 // "__ctor_pending"
+    pushint 0
+    app_global_put
+    pushbytes 0x76616c7565730000000000000000
+    pushint 32768
+    box_create
+    pop
+    pushbytes 0x76616c7565730000000000000001
+    intc_2 // 64
+    box_create
+    pop
+    intc_0 // 1
+    return

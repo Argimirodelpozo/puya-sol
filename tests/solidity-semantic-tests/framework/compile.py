@@ -140,6 +140,19 @@ def _compute_cache_key(
         "extra_args": list(extra_args or []),
     }
     h.update(json.dumps(flags, sort_keys=True).encode())
+    # Some compiler flags name an input file rather than carrying the input
+    # inline.  Hash the file content as well as the argv spelling; otherwise
+    # editing split.json behind an unchanged `--split-config split.json`
+    # incorrectly reuses the old artifacts.
+    for i, arg in enumerate(extra_args or []):
+        if arg == "--split-config" and i + 1 < len(extra_args or []):
+            cfg = Path((extra_args or [])[i + 1])
+            try:
+                h.update(b"split-output-cache-v2\n")
+                h.update(f"split-config:{cfg}\n".encode())
+                h.update(cfg.read_bytes())
+            except OSError:
+                h.update(b"split-config:missing")
     return h.hexdigest()
 
 
@@ -152,12 +165,14 @@ def _cache_lookup(key: str, out_dir: Path) -> bool:
     if not entry.is_dir():
         return False
     # Sanity check: cache entry must have at least one .arc56.json
-    if not any(entry.glob("*.arc56.json")):
+    if not any(entry.rglob("*.arc56.json")):
         return False
     out_dir.mkdir(parents=True, exist_ok=True)
-    for src in entry.iterdir():
+    for src in entry.rglob("*"):
         if src.is_file():
-            shutil.copy2(src, out_dir / src.name)
+            dst = out_dir / src.relative_to(entry)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
     return True
 
 
@@ -176,9 +191,11 @@ def _cache_store(key: str, out_dir: Path) -> None:
     # Build a sibling tmp dir, copy artifacts in, rename into place.
     tmp = Path(tempfile.mkdtemp(prefix="cache_", dir=str(CACHE_DIR)))
     try:
-        for src in out_dir.iterdir():
+        for src in out_dir.rglob("*"):
             if src.is_file():
-                shutil.copy2(src, tmp / src.name)
+                dst = tmp / src.relative_to(out_dir)
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dst)
         try:
             os.rename(tmp, entry)
             tmp = None  # successful rename — don't clean up
@@ -295,19 +312,25 @@ def _backend_cache_key(
     the backend by a channel other than awst.json/options.json. Returns None if
     the frontend didn't produce the inputs.
     """
-    awst = out_dir / "awst.json"
-    options = out_dir / "options.json"
-    if not awst.is_file() or not options.is_file():
+    awsts = sorted(out_dir.rglob("awst.json"))
+    options = sorted(out_dir.rglob("options.json"))
+    if not awsts or len(awsts) != len(options):
         return None
     h = hashlib.sha256()
     h.update(b"backend_v1\n")
     h.update(f"puya:{_puya_backend_sig()}\n".encode())
     h.update(b"flags:")
     h.update(flags_blob)
-    h.update(b"\nawst:")
-    h.update(awst.read_bytes())
-    h.update(b"\nopts:")
-    h.update(_normalized_options_bytes(options))
+    for awst in awsts:
+        h.update(b"\nawst-path:")
+        h.update(str(awst.relative_to(out_dir)).encode())
+        h.update(b"\nawst:")
+        h.update(awst.read_bytes())
+    for option in options:
+        h.update(b"\nopts-path:")
+        h.update(str(option.relative_to(out_dir)).encode())
+        h.update(b"\nopts:")
+        h.update(_normalized_options_bytes(option))
     return h.hexdigest()
 
 
@@ -319,12 +342,14 @@ def _backend_cache_lookup(key: str, out_dir: Path) -> bool:
     hit (requires at least one .arc56.json, matching _cache_lookup).
     """
     entry = _BACKEND_CACHE_DIR / key
-    if not entry.is_dir() or not any(entry.glob("*.arc56.json")):
+    if not entry.is_dir() or not any(entry.rglob("*.arc56.json")):
         return False
     out_dir.mkdir(parents=True, exist_ok=True)
-    for src in entry.iterdir():
+    for src in entry.rglob("*"):
         if src.is_file():
-            shutil.copy2(src, out_dir / src.name)
+            dst = out_dir / src.relative_to(entry)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
     return True
 
 
@@ -339,9 +364,11 @@ def _backend_cache_store(key: str, out_dir: Path) -> None:
         return
     tmp = Path(tempfile.mkdtemp(prefix="bcache_", dir=str(_BACKEND_CACHE_DIR)))
     try:
-        for src in out_dir.iterdir():
+        for src in out_dir.rglob("*"):
             if src.is_file() and src.name not in _FRONTEND_ONLY_FILES:
-                shutil.copy2(src, tmp / src.name)
+                dst = tmp / src.relative_to(out_dir)
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dst)
         try:
             os.rename(tmp, entry)
             tmp = None
@@ -474,12 +501,12 @@ def compile_sol(
         artifacts = CompiledArtifacts(
             main_source=source_path, main_source_text=main_source_text
         )
-        for arc56 in out_dir.glob("*.arc56.json"):
+        for arc56 in out_dir.rglob("*.arc56.json"):
             name = arc56.stem.replace(".arc56", "")
             artifacts.by_contract[name] = {
                 "arc56": arc56,
-                "approval_teal": out_dir / f"{name}.approval.teal",
-                "clear_teal": out_dir / f"{name}.clear.teal",
+                "approval_teal": arc56.parent / f"{name}.approval.teal",
+                "clear_teal": arc56.parent / f"{name}.clear.teal",
                 "sol_path": source_path,
             }
         return artifacts
@@ -561,12 +588,12 @@ def compile_sol(
     _cache_store(cache_key, out_dir)
 
     artifacts = CompiledArtifacts(main_source=source_path, main_source_text=main_source_text)
-    for arc56 in out_dir.glob("*.arc56.json"):
+    for arc56 in out_dir.rglob("*.arc56.json"):
         name = arc56.stem.replace(".arc56", "")
         artifacts.by_contract[name] = {
             "arc56": arc56,
-            "approval_teal": out_dir / f"{name}.approval.teal",
-            "clear_teal": out_dir / f"{name}.clear.teal",
+            "approval_teal": arc56.parent / f"{name}.approval.teal",
+            "clear_teal": arc56.parent / f"{name}.clear.teal",
             "sol_path": source_path,
         }
     return artifacts

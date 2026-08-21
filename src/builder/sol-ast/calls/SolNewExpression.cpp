@@ -446,22 +446,41 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			create->fields["ClearStateProgram"] = awst::makeTemplateVar(
 				"TMPL_CLEAR_" + childName, awst::WType::bytesType(), m_loc);
 
-			// No __postInit: ctor runs during AppCreate, reading ApplicationArgs[0..N-1].
+			// No __postInit: ctor runs during AppCreate. EVM profile carries one
+			// canonical constructor body; ARC4 profile keeps one encoded arg per slot.
 			if (!childHasPostInit && childCtor && !m_call.arguments().empty())
 			{
-				auto encodedArgs = buildEncodedCtorArgs();
-				if (!encodedArgs.empty())
+				if (m_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
 				{
+					std::vector<Type const*> parameterTypes;
+					for (auto const& parameter: childCtor->parameters())
+						parameterTypes.push_back(parameter->type());
+					auto body = eb::InnerCallHandlers::encodeEvmArgumentBody(
+						m_ctx, m_call.sortedArguments(), parameterTypes, m_loc);
 					auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
-					std::vector<awst::WType const*> argTypes;
-					for (auto& a: encodedArgs)
-					{
-						argTypes.push_back(a->wtype);
-						argsTuple->items.push_back(std::move(a));
-					}
+					argsTuple->items.push_back(std::move(body));
+					std::vector<awst::WType const*> argTypes{
+						awst::WType::bytesType()};
 					argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
 						std::move(argTypes), std::nullopt);
 					create->fields["ApplicationArgs"] = std::move(argsTuple);
+				}
+				else
+				{
+					auto encodedArgs = buildEncodedCtorArgs();
+					if (!encodedArgs.empty())
+					{
+						auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
+						std::vector<awst::WType const*> argTypes;
+						for (auto& argument: encodedArgs)
+						{
+							argTypes.push_back(argument->wtype);
+							argsTuple->items.push_back(std::move(argument));
+						}
+						argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
+							std::move(argTypes), std::nullopt);
+						create->fields["ApplicationArgs"] = std::move(argsTuple);
+					}
 				}
 			}
 
@@ -558,7 +577,7 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 				// collapse to their uint64 carrier, exactly what the callee
 				// publishes; nestedArc4Name would say uint8 and mis-selector).
 				// Replaces a local twin lacking enum/UDVT/bytesN/aggregate
-				// handling (T4 twin drift; possible_solc item 4 scope: wire
+				// handling (T4 twin drift; the shared return-wire scope: wire
 				// sigs must mirror PUYA's wtype-derived naming, never solc's
 				// EVM-canonical spelling).
 				std::string postInitSig = "__postInit(";

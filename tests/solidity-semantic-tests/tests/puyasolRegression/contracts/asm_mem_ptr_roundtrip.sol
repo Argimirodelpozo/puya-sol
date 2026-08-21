@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.17 <0.9.0;
 
+interface IAsmPointerAuthority {
+    function canCall(address caller, address target, bytes4 selector)
+        external view returns (bool immediate, uint32 delay);
+}
+
 // CUSTOM regression fixture (NOT vendored). Guards the memory-pointer-seam
 // round-trip: an asm `mstore` into a `new bytes` buffer must be visible to a
 // later asm `mload` of that same buffer. Such a buffer is blob-backed (scratch
@@ -30,5 +35,29 @@ contract AsmMemPtrRoundtrip {
         bytes memory b = new bytes(20);
         assembly { mstore(add(b, 32), mul(v, exp(256, 12))) }
         assembly { r := div(mload(add(b, 32)), exp(256, 12)) }
+    }
+
+    // Aave AuthorityUtils shape: the buffer is produced by abi.encodeCall,
+    // then consumed DIRECTLY as a Yul pointer (it is never copied into a `let`).
+    // Identity precompile 0x04 echoes the input so the test can compare every
+    // byte and prove both add(data,32) and mload(data) used memory addresses.
+    function echoEncodedCall(address caller, address target, bytes4 selector)
+        external view returns (bool ok, bytes memory out)
+    {
+        bytes memory data = abi.encodeCall(
+            IAsmPointerAuthority.canCall, (caller, target, selector));
+        out = new bytes(data.length);
+        assembly {
+            ok := staticcall(
+                gas(), 4, add(data, 0x20), mload(data),
+                add(out, 0x20), mload(out))
+        }
+    }
+
+    function expectedEncodedCall(address caller, address target, bytes4 selector)
+        external pure returns (bytes memory)
+    {
+        return abi.encodeCall(
+            IAsmPointerAuthority.canCall, (caller, target, selector));
     }
 }

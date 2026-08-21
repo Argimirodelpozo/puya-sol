@@ -33,6 +33,7 @@ struct Options
 	// Opt-in because external function-pointer representation grows to carry
 	// both identities and observable selector values change.
 	bool evmSelectors = false;
+	std::string contractAbi = "arc4";
 	std::string evmVersion;     // empty = compiler default (cancun)
 	// Explicit EVM environment inputs used by the semantic policy. Empty means
 	// use the documented AVM adaptation (chain id / gas limit) or fail where no
@@ -50,14 +51,13 @@ struct Options
 	// (hybrid paged/sparse boxes) instead of per-variable named cells. Makes
 	// assembly slot arithmetic faithful; disables ARC-56 state declarations.
 	bool evmStorageLayout = false;
-	// SimpleSplitter (alternative to UrosSplitter): moves subroutines into a
-	// sibling helper contract (TMPL_<helperName>_APP_ID substitution). Used by
-	// polymarket v1+v2 to keep CTFExchange under 8 KB. Also avoids puyabug.md
-	// #5 (address-param→uint64 over-elision) due to changed orch stack layout.
+	// SimpleSplitter moves pure subroutines into sibling helper apps. Its
+	// delegate mode compiles externally routable methods as state-preserving
+	// code pages which execute on the original app after UpdateApplication.
 	std::string splitConfig;       // --split-config <json-path>
 	std::vector<std::string> forceDelegate; // --force-delegate <names>
 
-	// --pin-to-main: methods that must not be moved into a uros chunk. Pin if:
+	// --pin-to-main: methods that must not be moved into an ordinary sidecar. Pin if:
 	//   * Reads msg.sender — inside a chunk Txn.Sender = orch's app account,
 	//     not the user; every auth check / balances lookup silently misbehaves.
 	//   * Reads address(this) expecting main's address — chunks see __storage.
@@ -67,7 +67,7 @@ struct Options
 	// --fn-split <Name>:<idx>,...:g<N>[:cross]
 	// Slice subroutine body into N+1 pieces at statement indices.
 	// Without :cross, pieces share the same txn frame (scratch 100).
-	// With :cross, pieces live on separate uros chunks and pass state
+	// With :cross, pieces live on separate chunks and pass state
 	// via gload <prev_idx> 100. Repeatable.
 	struct FnSplitSpec
 	{
@@ -93,8 +93,8 @@ struct Options
 	std::vector<std::string> forceNoInlineSubs;
 
 	// --pure-helper-split <SubName>:<idx>,...: slice a pure subroutine before
-	// --deploy-pure-helpers. N indices → N+1 sidecar Contracts (e.g. 14KB →
-	// two 7KB, fitting AVM 8KB cap). Live vars cross splits via scratch 100 +
+	// --deploy-pure-helpers. N indices → N+1 sidecar Contracts (e.g. 30 KiB →
+	// two 15 KiB programs). Live vars cross splits via scratch 100 +
 	// gload. Repeatable.
 	struct PureHelperSplitSpec
 	{

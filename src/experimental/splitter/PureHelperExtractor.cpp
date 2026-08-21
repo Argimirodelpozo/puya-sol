@@ -1059,7 +1059,7 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 		// Lift gate: body ≥ kMinBodyBytes AND body ≥ kItxnOverhead×calls.
 		// More permissive than a global-savings check; accepts lifts that
 		// inflate total footprint by ~helper_overhead to shrink the largest
-		// chunk (the tradeoff we want near the 8 KB cap).
+		// chunk (the tradeoff we want near the 16 KiB cap).
 		(void)kHelperOverhead;
 		(void)reachingMethods;
 		if (callSites == 0) continue;
@@ -1095,7 +1095,7 @@ PureHelperExtractor::Result PureHelperExtractor::extract(
 	}
 
 	// Pass 1.5: apply --pure-helper-split for lifted Subs too large for one
-	// 8 KB sidecar. FunctionSplitter slices into N+1 pieces; each is its own
+	// 16 KiB sidecar. FunctionSplitter slices into N+1 pieces; each is its own
 	// sidecar, chained via inner-txn group with gload live-vars (slot 100).
 	std::map<std::string, std::vector<size_t>> splitByName;
 	for (auto const& s : _splitSpecs)

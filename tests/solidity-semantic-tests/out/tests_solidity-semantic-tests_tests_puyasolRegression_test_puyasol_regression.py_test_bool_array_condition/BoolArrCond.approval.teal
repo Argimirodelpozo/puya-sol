@@ -1,0 +1,447 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/bool_array_condition.sol.BoolArrCond.approval_program() -> uint64:
+main:
+    intcblock 0 8 1 32
+    bytecblock 0x00 0x010000000000000000 0x151f7c75
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4aba6056 0xc076bf70 0x722c4877 0x6ad20241 0x89d305d7 // method "ifElem(bool[],uint256)uint256", method "ternElem(bool[],uint256)uint256", method "reqElem(bool[],uint256)uint256", method "andElem(bool[],uint256,uint256)bool", method "retElem(bool[],uint256)bool"
+    txna ApplicationArgs 0
+    match main_ifElem_route@5 main_ternElem_route@6 main_reqElem_route@7 main_andElem_route@8 main_retElem_route@9
+    err
+
+main_retElem_route@9:
+    txna ApplicationArgs 1
+    dupn 2
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
+    pushint 7
+    +
+    intc_1 // 8
+    /
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.bool>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@15
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@16:
+    !
+    assert // not payable
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_1 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    uncover 2
+    <
+    assert // array index out of bounds
+    pushint 16
+    +
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@15:
+    intc_0 // 0
+    b main_ternary_merge@16
+
+main_andElem_route@8:
+    txna ApplicationArgs 1
+    dupn 2
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
+    pushint 7
+    +
+    intc_1 // 8
+    /
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.bool>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    swap
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_1 // 8
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    dig 4
+    <
+    assert // array index out of bounds
+    pushint 16
+    +
+    dig 4
+    swap
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    bz main_else_body@23
+    swap
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    uncover 2
+    <
+    assert // array index out of bounds
+    pushint 16
+    +
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+
+main_after_if_else@24:
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_else_body@23:
+    popn 4
+    intc_0 // 0
+    b main_after_if_else@24
+
+main_ternary_false@20:
+    intc_0 // 0
+    b main_ternary_merge@21
+
+main_reqElem_route@7:
+    txna ApplicationArgs 1
+    dupn 2
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
+    pushint 7
+    +
+    intc_1 // 8
+    /
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.bool>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_1 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    uncover 2
+    <
+    assert // array index out of bounds
+    pushint 16
+    +
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    assert
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000003
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@28:
+    intc_0 // 0
+    b main_ternary_merge@29
+
+main_ternElem_route@6:
+    txna ApplicationArgs 1
+    dupn 2
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
+    pushint 7
+    +
+    intc_1 // 8
+    /
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.bool>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@33
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@34:
+    !
+    assert // not payable
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_1 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    uncover 2
+    <
+    assert // array index out of bounds
+    pushint 16
+    +
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    pushints 9 7
+    uncover 2
+    select
+    itob
+    intc_3 // 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@33:
+    intc_0 // 0
+    b main_ternary_merge@34
+
+main_ifElem_route@5:
+    txna ApplicationArgs 1
+    dupn 2
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    cover 2
+    pushint 7
+    +
+    intc_1 // 8
+    /
+    pushint 2
+    +
+    swap
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.bool>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@38
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@39:
+    !
+    assert // not payable
+    dup
+    bytec_1 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_1 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_1 // 8
+    -
+    extract_uint64
+    dup
+    uncover 2
+    <
+    assert // array index out of bounds
+    pushint 16
+    +
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    bz main_after_if_else@41
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/bool_array_condition.sol.BoolArrCond.ifElem@42:
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_after_if_else@41:
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/bool_array_condition.sol.BoolArrCond.ifElem@42
+
+main_ternary_false@38:
+    intc_0 // 0
+    b main_ternary_merge@39

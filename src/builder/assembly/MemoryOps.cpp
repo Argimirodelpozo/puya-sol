@@ -3,7 +3,11 @@
 /// Uses scratch-slot-backed bytes blob for EVM memory simulation.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/abi/EvmAbiDecode.h"
+#include "builder/codec/EvmValueCodec.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "awst/NameGen.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "Logger.h"
 
 #include <sstream>
@@ -387,6 +391,43 @@ void AssemblyBuilder::writeMemWordDirect(
 		std::move(thenBlk), std::move(elseBlk), _loc));
 }
 
+void AssemblyBuilder::writeMemByteDirect(
+	ScratchLayout const& _scratch,
+	std::shared_ptr<awst::Expression> _offset,
+	std::shared_ptr<awst::Expression> _valueByte,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
+	using O = awst::UInt64BinaryOperator;
+	auto offset = awst::makeEvalOnce(std::move(_offset), _loc);
+	auto inBounds = awst::makeNumericCompare(offset,
+		awst::NumericComparison::Lt,
+		awst::makeIntegerConstant(static_cast<uint64_t>(
+			_scratch.memoryCount()) * SLOT_SIZE, _loc), _loc);
+	_out.push_back(awst::makeExpressionStatement(
+		awst::makeAssert(std::move(inBounds), _loc,
+			"EVM memory byte access exceeds configured scratch slots"), _loc));
+	auto slot = awst::makeUInt64BinOp(offset, O::FloorDiv,
+		awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc), _loc);
+	if (_scratch.memoryFirst() != 0)
+		slot = awst::makeUInt64BinOp(std::move(slot), O::Add,
+			awst::makeIntegerConstant(
+				static_cast<uint64_t>(_scratch.memoryFirst()), _loc), _loc);
+	auto sub = awst::makeUInt64BinOp(offset, O::Mod,
+		awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc), _loc);
+	auto slotOnce = awst::makeEvalOnce(std::move(slot), _loc);
+	auto loadsCall = awst::makeIntrinsicCall(
+		"loads", awst::WType::bytesType(), _loc);
+	loadsCall->stackArgs.push_back(slotOnce);
+	auto replaced = awst::makeReplace3(
+		std::move(loadsCall), std::move(sub), std::move(_valueByte), _loc);
+	auto storesCall = awst::makeIntrinsicCall(
+		"stores", awst::WType::voidType(), _loc);
+	storesCall->stackArgs.push_back(slotOnce);
+	storesCall->stackArgs.push_back(std::move(replaced));
+	_out.push_back(awst::makeExpressionStatement(std::move(storesCall), _loc));
+}
+
 std::shared_ptr<awst::Expression> AssemblyBuilder::tryHandleBytesMemoryRead(
 	solidity::yul::Expression const& _addrExpr,
 	awst::SourceLocation const& _loc
@@ -440,19 +481,18 @@ std::optional<AssemblyBuilder::BytesDataPtrMatch> AssemblyBuilder::matchBytesMem
 		|| addCall->arguments.size() != 2)
 		return std::nullopt;
 
-	// Case 1: add(m, O) / add(O, m) → data offset = O − 32 (O skips the length
-	// word). A CONSTANT O < 32 targets the length word itself — not a data write,
-	// leave it to the generic path (old behaviour).
+	// Case 1: add(m, O) / add(O, m). O may address the length header at runtime;
+	// retain it as an absolute offset so no eager `O - 32` can underflow.
 	for (int i = 0; i < 2; ++i)
 		if (auto bl = asBytesLocal(addCall->arguments[i]))
 		{
 			auto c = resolveConstantYulValue(addCall->arguments[1 - i]);
-			if (c && *c < 32)
-				return std::nullopt;
 			auto oExpr = offsetToUint64(buildExpression(addCall->arguments[1 - i]), _loc);
-			auto off = awst::makeUInt64BinOp(std::move(oExpr), awst::UInt64BinaryOperator::Sub,
-				awst::makeIntegerConstant("32", _loc), _loc);
-			return BytesDataPtrMatch{bl->first, bl->second, std::move(off)};
+			if (c && *c >= 32)
+				return BytesDataPtrMatch{bl->first, bl->second,
+					awst::makeIntegerConstant(*c - 32, _loc), nullptr};
+			return BytesDataPtrMatch{
+				bl->first, bl->second, nullptr, std::move(oExpr)};
 		}
 
 	// Case 2: add(add(m, 32), k) / commuted → data offset = k.
@@ -467,7 +507,7 @@ std::optional<AssemblyBuilder::BytesDataPtrMatch> AssemblyBuilder::matchBytesMem
 			auto c = resolveConstantYulValue(inner->arguments[1 - j]);
 			if (bl && c && *c == 32)
 				return BytesDataPtrMatch{bl->first, bl->second,
-					offsetToUint64(buildExpression(addCall->arguments[1 - i]), _loc)};
+					offsetToUint64(buildExpression(addCall->arguments[1 - i]), _loc), nullptr};
 		}
 	}
 
@@ -482,6 +522,95 @@ void AssemblyBuilder::emitGuardedBytesDataWrite(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
+	if (_m.absoluteOff)
+	{
+		// Split at the header boundary lazily. For O<32, operate on a virtual
+		// `[length-word ++ data]` image, then project its possibly-updated length
+		// and data back into the value local.
+		std::string pfx = "__memhdr_"
+			+ std::to_string(awst::NameGen::next("MemoryOps.headerOverlap"));
+		auto u64v = [&](std::string const& suffix) {
+			return awst::makeVarExpression(
+				pfx + suffix, awst::WType::uint64Type(), _loc);
+		};
+		auto bytesv = [&](std::string const& suffix) {
+			return awst::makeVarExpression(
+				pfx + suffix, awst::WType::bytesType(), _loc);
+		};
+		auto varRef = [&]() {
+			return awst::makeVarExpression(_m.name, _m.type, _loc);
+		};
+		_out.push_back(awst::makeAssignmentStatement(
+			u64v("_off"), std::move(_m.absoluteOff), _loc));
+
+		auto dataBlock = awst::makeBlock(_loc);
+		BytesDataPtrMatch dataMatch{
+			_m.name, _m.type,
+			awst::makeUInt64BinOp(u64v("_off"), awst::UInt64BinaryOperator::Sub,
+				awst::makeIntegerConstant(uint64_t{32}, _loc), _loc), nullptr};
+		emitGuardedBytesDataWrite(
+			std::move(dataMatch), _value32, _sliceLen, _loc, dataBlock->body);
+
+		auto headerBlock = awst::makeBlock(_loc);
+		auto header = awst::makeLeftPadToN(
+			awst::makeItob(awst::makeLen(varRef(), _loc), _loc), 32, _loc);
+		auto image = awst::makeConcat(std::move(header), varRef(), _loc);
+		image = awst::makeConcat(
+			std::move(image), awst::makeBzero(32, _loc), _loc);
+		std::shared_ptr<awst::Expression> slice = _sliceLen == 1
+			? std::shared_ptr<awst::Expression>(awst::makeExtract(
+				_value32, 31, 1, _loc))
+			: _value32;
+		headerBlock->body.push_back(awst::makeAssignmentStatement(
+			bytesv("_img"), awst::makeReplace3(
+				std::move(image), u64v("_off"), std::move(slice), _loc), _loc));
+		auto newLenWord = [&] {
+			return awst::makeExtract(bytesv("_img"), 0, 32, _loc);
+		};
+		headerBlock->body.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(awst::makeNumericCompare(
+				awst::makeAsBiguint(awst::makeExtract(newLenWord(), 0, 24, _loc), _loc),
+				awst::NumericComparison::Eq,
+				awst::makeIntegerConstant("0", _loc, awst::WType::biguintType()), _loc),
+				_loc, "bytes memory length exceeds AVM range"), _loc));
+		headerBlock->body.push_back(awst::makeAssignmentStatement(
+			u64v("_len"), awst::makeBtoi(
+				awst::makeExtract(newLenWord(), 24, 8, _loc), _loc), _loc));
+		headerBlock->body.push_back(awst::makeAssignmentStatement(
+			u64v("_avail"), awst::makeUInt64BinOp(
+				awst::makeLen(bytesv("_img"), _loc),
+				awst::UInt64BinaryOperator::Sub,
+				awst::makeIntegerConstant(uint64_t{32}, _loc), _loc), _loc));
+		auto dataAll = [&] {
+			return awst::makeExtract3(bytesv("_img"),
+				awst::makeIntegerConstant(uint64_t{32}, _loc), u64v("_avail"), _loc);
+		};
+		std::shared_ptr<awst::Expression> shrunk = awst::makeExtract3(
+			dataAll(), awst::makeZero(_loc), u64v("_len"), _loc);
+		std::shared_ptr<awst::Expression> grown = awst::makeConcat(
+			dataAll(), awst::makeBzero(awst::makeUInt64BinOp(
+				u64v("_len"), awst::UInt64BinaryOperator::Sub,
+				u64v("_avail"), _loc), _loc), _loc);
+		if (_m.type == awst::WType::stringType())
+		{
+			shrunk = awst::makeReinterpretCast(
+				std::move(shrunk), _m.type, _loc);
+			grown = awst::makeReinterpretCast(
+				std::move(grown), _m.type, _loc);
+		}
+		headerBlock->body.push_back(awst::makeAssignmentStatement(
+			varRef(), awst::makeConditional(
+				awst::makeNumericCompare(u64v("_len"),
+					awst::NumericComparison::Lte, u64v("_avail"), _loc),
+				std::move(shrunk), std::move(grown), _m.type, _loc), _loc));
+
+		_out.push_back(awst::makeIfElse(
+			awst::makeNumericCompare(u64v("_off"),
+				awst::NumericComparison::Gte,
+				awst::makeIntegerConstant(uint64_t{32}, _loc), _loc),
+			std::move(dataBlock), std::move(headerBlock), _loc));
+		return;
+	}
 	// The local stays a VALUE (raw bytes, no length header); the generic path
 	// would `b+` on that value and revert past 64 bytes (AVM bigint-op operand
 	// limit). Write in place instead:
@@ -526,6 +655,33 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::emitGuardedBytesDataRead(
 	awst::SourceLocation const& _loc
 )
 {
+	if (_m.absoluteOff)
+	{
+		auto absolute = awst::makeEvalOnce(
+			std::move(_m.absoluteOff), _loc);
+		auto varRef = [&]() {
+			return awst::makeVarExpression(_m.name, _m.type, _loc);
+		};
+		auto header = awst::makeLeftPadToN(
+			awst::makeItob(awst::makeLen(varRef(), _loc), _loc), 32, _loc);
+		auto image = awst::makeConcat(std::move(header), varRef(), _loc);
+		image = awst::makeConcat(
+			std::move(image), awst::makeBzero(32, _loc), _loc);
+		auto headerRead = awst::makeAsBiguint(
+			awst::makeExtract3(std::move(image), absolute,
+				awst::makeIntegerConstant(uint64_t{32}, _loc), _loc), _loc);
+		BytesDataPtrMatch dataMatch{
+			_m.name, _m.type,
+			awst::makeUInt64BinOp(absolute, awst::UInt64BinaryOperator::Sub,
+				awst::makeIntegerConstant(uint64_t{32}, _loc), _loc), nullptr};
+		auto dataRead = emitGuardedBytesDataRead(
+			std::move(dataMatch), _loc);
+		return awst::makeConditional(
+			awst::makeNumericCompare(absolute, awst::NumericComparison::Gte,
+				awst::makeIntegerConstant(uint64_t{32}, _loc), _loc),
+			std::move(dataRead), std::move(headerRead),
+			awst::WType::biguintType(), _loc);
+	}
 	// Inverse of emitGuardedBytesDataWrite. The local is a VALUE (raw bytes, no
 	// length header); read a 32-byte MSB-first word at data offset `off`. Clamp
 	// so extract3 stays in-bounds even past the buffer end (EVM mload of fresh /
@@ -924,45 +1080,41 @@ void AssemblyBuilder::handleReturn(
 		return;
 	}
 
-	// EIP-2330 batch-read idiom (Extsload/Exttload): assembly hand-builds an
-	// EVM-ABI-encoded `bytes32[]` in memory and returns it with a runtime
-	// offset/size — `return(start, sub(end, start))`. The memory region is full
-	// EVM ABI:  [0x00] 0x20 offset word | [0x20] uint256 length | [0x40..] elems.
-	// The AVM method return type is an ARC4 dynamic array of `byte[32]`, whose
-	// layout is `uint16 length ++ elements` (elements are 32-byte static, so no
-	// per-element offset table). Convert by stitching the ARC4 length prefix
-	// (the low 2 bytes of the EVM length word) onto the element bytes, then
-	// reinterpret as the return type. Guarded to `byte[32]` elements only — any
-	// other element type falls through to the errors below rather than emitting
-	// a silently-wrong layout.
-	if (auto const* dynArr = dynamic_cast<awst::ARC4DynamicArray const*>(m_returnType);
-		dynArr && dynArr->elementType()->name() == "byte[32]"
-		&& !resolveConstantOffset(_args[0]))
+	// A runtime return region is standard EVM ABI. Decode it through the same
+	// recursive type-directed codec used by abi.decode: solc supplies every
+	// head stride/dynamic fact, so bytes32[], narrow arrays, nested arrays,
+	// structs, and tuples do not need separate assembly-return branches.
+	if (!m_frameIsProgram && !m_returnSolTypes.empty() && m_returnType
+		&& abi::canDecodeEvmAbi(m_returnSolTypes)
+		&& (m_returnSolTypes.size() == 1
+			? m_returnType->kind() != awst::WTypeKind::WTuple
+			: (dynamic_cast<awst::WTuple const*>(m_returnType)
+				&& static_cast<awst::WTuple const*>(m_returnType)->types().size()
+					== m_returnSolTypes.size())))
 	{
-		// Both reads are slot-routed (the region sits at the runtime FMP; the
-		// old slot-0 extracts read the wrong bytes past 4096).
-		// count (ARC4 uint16) = last 2 bytes of the EVM length word at start+0x20
-		auto countOff = awst::makeUInt64BinOp(
+		auto region = readMemRangeDyn(
 			offsetToUint64(_args[0], _loc),
-			awst::UInt64BinaryOperator::Add,
-			awst::makeIntegerConstant(uint64_t{0x3E}, _loc), _loc);
-		auto countBytes = readMemRangeDyn(std::move(countOff),
-			awst::makeIntegerConstant(uint64_t{2}, _loc), _loc, _out);
-
-		// elements = region[start+0x40 .. start+size)  → (size - 0x40) bytes
-		auto elemsOff = awst::makeUInt64BinOp(
-			offsetToUint64(_args[0], _loc),
-			awst::UInt64BinaryOperator::Add,
-			awst::makeIntegerConstant(uint64_t{0x40}, _loc), _loc);
-		auto elemsLen = awst::makeUInt64BinOp(
-			offsetToUint64(_args[1], _loc),
-			awst::UInt64BinaryOperator::Sub,
-			awst::makeIntegerConstant(uint64_t{0x40}, _loc), _loc);
-		auto elemsBytes = readMemRangeDyn(
-			std::move(elemsOff), std::move(elemsLen), _loc, _out);
-
-		auto arc4Bytes = awst::makeConcat(std::move(countBytes), std::move(elemsBytes), _loc);
-		auto returnValue = awst::makeReinterpretCast(std::move(arc4Bytes), m_returnType, _loc);
+			offsetToUint64(_args[1], _loc), _loc, _out);
+		auto returnValue = abi::decodeEvmAbi(
+			m_typeMapper, std::move(region), m_returnSolTypes,
+			m_returnType, _loc, _out);
+		if (m_returnSolTypes.size() == 1
+			&& returnValue && returnValue->wtype != m_returnType)
+		{
+			auto const* solType = m_returnSolTypes[0];
+			auto kind = m_returnType->kind();
+			if (kind == awst::WTypeKind::ARC4Struct
+				|| kind == awst::WTypeKind::ARC4StaticArray
+				|| kind == awst::WTypeKind::ARC4DynamicArray)
+				returnValue = codec::valueToArc4(m_typeMapper, solType,
+					std::move(returnValue), m_returnType, _loc);
+			else if (m_returnType == awst::WType::biguintType())
+				returnValue = awst::makeAsBiguint(codec::valueToEvmWord(
+					m_typeMapper, solType, std::move(returnValue), _loc), _loc);
+			else
+				returnValue = TypeCoercion::coerceForAssignment(
+					std::move(returnValue), m_returnType, _loc);
+		}
 
 		if (m_frameIsProgram)
 		{
@@ -1042,9 +1194,7 @@ void AssemblyBuilder::emitArc4ReturnHalt(
 	flushMemoryToScratch(_loc, _out);
 
 	std::shared_ptr<awst::Expression> arc4Value = std::move(_value);
-	bool alreadyArc4 = arc4Value->wtype
-		&& arc4Value->wtype->kind() >= awst::WTypeKind::ARC4UIntN
-		&& arc4Value->wtype->kind() <= awst::WTypeKind::ARC4Struct;
+	bool const alreadyArc4 = isArc4EncodedType(arc4Value->wtype);
 	if (!alreadyArc4)
 	{
 		auto* arc4Type = m_typeMapper.mapToARC4Type(

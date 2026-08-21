@@ -49,7 +49,7 @@ public:
 		bool didExtract = false;
 	};
 
-	/// Per-helper body split for subs that exceed the 8 KB AVM page cap.
+	/// Per-helper body split for subs that exceed the 16 KiB AVM program cap.
 	/// PureHelperExtractor emits one sidecar per piece and rewrites call
 	/// sites to inner-txn-group all pieces (live state via scratch-slot-100 +
 	/// gload prologue from FunctionSplitter).

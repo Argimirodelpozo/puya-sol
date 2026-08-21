@@ -91,6 +91,14 @@ public:
 	std::shared_ptr<awst::Expression> buildExpr(
 		solidity::frontend::Expression const& _expr);
 
+	/// Evaluate a Solidity expression whose value is intentionally discarded.
+	/// This preserves the complete pre/value/post sequence at the current
+	/// evaluation position; callers must not merely call buildExpr() and drop
+	/// the returned AWST node, because the value node itself may carry effects.
+	void evaluateForEffects(
+		solidity::frontend::Expression const& _expr,
+		awst::SourceLocation const& _loc);
+
 	/// Fallback binary operation when the type-specific builder does not handle it.
 	std::shared_ptr<awst::Expression> buildBinaryOp(
 		solidity::frontend::Token _op,
@@ -131,6 +139,10 @@ public:
 	std::string const& contractName;
 	/// Current contract (nullptr during free-function translation).
 	solidity::frontend::ContractDefinition const* currentContract = nullptr;
+	/// Deployable contracts in this compilation unit. Freestanding library/free
+	/// subroutines use their union when translating runtime ARC-4 selectors to
+	/// Solidity selectors under --evm-selectors.
+	std::vector<solidity::frontend::ContractDefinition const*> selectorContracts;
 
 	// ── Function resolution tables (external, by reference) ──
 	std::unordered_set<std::string> const& overloadedNames;

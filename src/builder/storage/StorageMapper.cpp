@@ -181,31 +181,17 @@ std::shared_ptr<awst::Statement> StorageMapper::makeEnsureRootBoxForWrite(
 
 // ── Multi-box helpers ──
 
-// Multi-box: supports scalar elements (ARC4UIntN / fixed bytes) and nested
-// ARC4StaticArray of scalars only. Struct elements need copy-on-write
-// (box_extract → modify → box_replace); not implemented — fall back to warning.
+// Multi-box pages are element-aligned. Any recursively fixed-width ARC4
+// element can use the same protocol; only variable-width and bit-packed bool
+// elements return zero from computeEncodedElementSize and stay out.
 unsigned StorageMapper::arc4StaticArrayElementSize(awst::WType const* _type)
 {
 	auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_type);
 	if (!sa) return 0;
 	auto const* elem = sa->elementType();
 	if (!elem) return 0;
-	if (auto const* uintN = dynamic_cast<awst::ARC4UIntN const*>(elem))
-		return std::max<unsigned>(1u, static_cast<unsigned>(uintN->n() / 8));
-	if (elem->kind() == awst::WTypeKind::Bytes)
-	{
-		auto const* bw = dynamic_cast<awst::BytesWType const*>(elem);
-		if (bw && bw->length().has_value())
-			return static_cast<unsigned>(*bw->length());
-	}
-	if (auto const* nestedSa = dynamic_cast<awst::ARC4StaticArray const*>(elem))
-	{
-		// Nested static array: recurse.
-		unsigned innerElem = arc4StaticArrayElementSize(nestedSa);
-		if (innerElem > 0)
-			return innerElem * static_cast<unsigned>(nestedSa->arraySize());
-	}
-	return 0;
+	int const size = builder::computeEncodedElementSize(elem);
+	return size > 0 ? static_cast<unsigned>(size) : 0;
 }
 
 uint64_t StorageMapper::arc4StaticArrayTotalBytes(awst::WType const* _type)
@@ -254,41 +240,25 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 	if (type->category() == solidity::frontend::Type::Category::Mapping)
 		return true;
 
-	// Dynamic arrays/bytes → box. Strings stay in global state (typically short).
-	if (auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(type))
-	{
-		if (arrType->isDynamicallySized() && !arrType->isString())
-			return true;
-		// Static outer array with dynamic element (e.g. uint[][2]): 2-slot
-		// upper bound misleads — encoded payload can be arbitrary.
-		if (!arrType->isDynamicallySized())
-		{
-			auto const* baseType = arrType->baseType();
-			while (auto const* innerArr = dynamic_cast<solidity::frontend::ArrayType const*>(baseType))
-			{
-				if (innerArr->isDynamicallySized() && !innerArr->isString())
-					return true;
-				baseType = innerArr->baseType();
-			}
-		}
-	}
-
-	// A struct containing a MAPPING → box, unconditionally. `isBoxKeyedStorageRef`
-	// already routes every storage ref to such a struct through a runtime box-key
-	// PREFIX (it short-circuits on containsMappingType), and its own comment
-	// promises that predicate "AGREES with the var-level boxing decision — no
-	// mismatch". It did not: a SMALL mapping-containing struct ref-passed only to
-	// a LIBRARY is absent from the ref-passed analysis (which skips libraries by
-	// design) and passes the size heuristic, so it lived in app-global state while
-	// every ref to it read a box that was never written. That read does not fail —
-	// it yields an EMPTY value, so `EnumerableSet.values()` returned `[]` for a
-	// non-empty set (OZ AddressSet is exactly this shape: `bytes32[] _values` next
-	// to `mapping(bytes32 => uint256) _indexes`). `.length()`/`at(i)`/`add()` all
-	// use the global-state path and answered correctly, which is what made it look
-	// like an assembly-pun bug rather than a storage-placement one.
-	if (dynamic_cast<solidity::frontend::StructType const*>(type)
-		&& containsMappingType(type))
+	// `Type::isDynamicallyEncoded()` is solc's recursive ABI predicate, but it
+	// deliberately assumes ABI-encodable input and asserts on mappings. Peel
+	// that storage-only family first; containsMappingType itself recurses through
+	// arbitrary array/struct depth and is also an unconditional boxing reason.
+	// This must agree with the box-key storage-ref representation, including
+	// structs passed only through library functions.
+	if (containsMappingType(type))
 		return true;
+
+	// Any recursively dynamic aggregate → box. solc owns the recursion rule,
+	// so arrays, fixed arrays containing dynamics, and structs containing any of
+	// those all follow one placement policy. Strings themselves retain the
+	// historical global-state choice because they are typically short.
+	if (type->isDynamicallyEncoded())
+	{
+		auto const* arrType = dynamic_cast<solidity::frontend::ArrayType const*>(type);
+		if (!arrType || !arrType->isString())
+			return true;
+	}
 
 	// Structs passed by reference somewhere → box (handle-model Stage 1b): boxing makes the
 	// ref a box-key handle that writes through into contract methods. Targeted to ref-passed
@@ -302,12 +272,25 @@ bool StorageMapper::shouldUseBoxStorage(solidity::frontend::VariableDeclaration 
 	{
 		auto slotsUpperBound = type->storageSizeUpperBound();
 		unsigned estimatedBytes = static_cast<unsigned>(slotsUpperBound) * 32;
-	unsigned keyBytes = static_cast<unsigned>(storageNameFor(_var).size());
+		unsigned keyBytes = static_cast<unsigned>(storageNameFor(_var).size());
 		unsigned maxValueBytes = (128 > keyBytes) ? (128 - keyBytes) : 0;
 		if (estimatedBytes > maxValueBytes)
 			return true;
 	}
-	catch (...) {}
+	catch (std::exception const& e)
+	{
+		Logger::instance().error(
+			"could not determine storage size for state variable '" + _var.name()
+			+ "': " + e.what() + "; conservatively using box storage");
+		return true;
+	}
+	catch (...)
+	{
+		Logger::instance().error(
+			"could not determine storage size for state variable '" + _var.name()
+			+ "'; conservatively using box storage");
+		return true;
+	}
 
 	return false;
 }
@@ -455,11 +438,12 @@ std::shared_ptr<awst::Expression> StorageMapper::createStateRead(
 	if (_kind == awst::AppStorageKind::Box)
 		return makeStateGetWithDefault(std::move(target), _type, _loc);
 
-	// AppGlobal: assert the var exists. Safe — every global is pre-written in
-	// emitStateVarInit, so the assert never fires.
-	if (auto app = std::dynamic_pointer_cast<awst::AppStateExpression>(target))
-		app->existsAssertionMessage = "check " + _varName + " exists";
-	return target;
+	// Solidity storage is zero-initialised even when no physical AVM cell has
+	// been written yet. Normal deployments eagerly seed globals, but proxies,
+	// deferred constructors, upgrades, and deleted cells legitimately leave a
+	// key absent. Treat every missing AppGlobal exactly like a missing box: use
+	// the type-directed Solidity default instead of asserting existence.
+	return makeStateGetWithDefault(std::move(target), _type, _loc);
 }
 
 std::shared_ptr<awst::Expression> StorageMapper::createStateWrite(

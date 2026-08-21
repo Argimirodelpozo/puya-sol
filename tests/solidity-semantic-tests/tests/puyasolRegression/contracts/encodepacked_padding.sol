@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-// CUSTOM puya-sol regression — new_review.md B10/B11/B12/C17: the
+// CUSTOM puya-sol regression: the
 // encodePacked / bytesN padding-and-width family.
 contract PackedPadding {
     // B12: solc legally widens bytesM→bytesN (right-padded); the compare and

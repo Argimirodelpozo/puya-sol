@@ -3,6 +3,7 @@
 
 #include "builder/sol-eb/SolArrayBuilder.h"
 #include "awst/NameGen.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 
@@ -83,16 +84,11 @@ std::unique_ptr<InstanceBuilder> SolArrayBuilder::index(
 	// element is a recursion-projection (elemType=`S__rec` != full S) and decoding it
 	// to the full struct is both invalid in an lvalue (`s.x[i].v = …`) and semantically
 	// wrong — the projection carries the fields needed for the access.
+	bool const aggregateProjection =
+		elemType->kind() == awst::WTypeKind::ARC4Struct
+		|| elemType->kind() == awst::WTypeKind::ARC4Tuple;
 	bool needsDecode = !awst::structurallyEquivalent(elemType, expectedType)
-		&& (elemType->kind() == awst::WTypeKind::ARC4StaticArray
-			|| elemType->kind() == awst::WTypeKind::ARC4UIntN
-			|| elemType->kind() == awst::WTypeKind::ARC4DynamicArray
-			// arc4.bool is an ARC4BasicWType of kind `Basic` (same kind as native
-			// `bool`), so the kind checks above miss it — a `bool[]` element then
-			// stays arc4.bool and, used directly as a condition (`if (flags[i])`),
-			// trips the puya backend ("IfElse.condition expected bool"). Decode it
-			// to native bool. Found via OZ MerkleProof.multiProofVerify.
-			|| elemType == awst::WType::arc4BoolType());
+		&& builder::isArc4EncodedType(elemType) && !aggregateProjection;
 
 	std::shared_ptr<awst::Expression> result = std::move(e);
 	bool signExtendElem = false;

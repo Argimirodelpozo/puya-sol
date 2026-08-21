@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/packed_slot_word_dispatch.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 8 255
-    bytecblock "a" "b" "c" "d" "e" 0x151f7c75
+    bytecblock "a" "b" "c" "d" "e" 0x0000000000000000 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -34,7 +34,7 @@ main:
     intc_0 // 0
     app_global_put
     bytec_3 // "d"
-    pushbytes 0x0000000000000000
+    bytec 5 // 0x0000000000000000
     app_global_put
     bytec 4 // "e"
     intc_0 // 0
@@ -69,13 +69,17 @@ main_ternary_merge@15:
     intc_0 // 0
     bytec_0 // "a"
     app_global_get_ex
-    assert // check a exists
+    intc_0 // 0
+    cover 2
+    select
     intc 4 // 255
     &
     intc_0 // 0
     bytec_1 // "b"
     app_global_get_ex
-    assert // check b exists
+    intc_0 // 0
+    cover 2
+    select
     itob
     pushbytes 0xffffffff
     b&
@@ -98,15 +102,21 @@ main_ternary_merge@18:
     intc_0 // 0
     bytec_2 // "c"
     app_global_get_ex
-    assert // check c exists
+    intc_0 // 0
+    cover 2
+    select
     intc_0 // 0
     bytec_3 // "d"
     app_global_get_ex
-    assert // check d exists
+    bytec 5 // 0x0000000000000000
+    cover 2
+    select
     intc_0 // 0
     bytec 4 // "e"
     app_global_get_ex
-    assert // check e exists
+    intc_0 // 0
+    cover 2
+    select
     uncover 4
     itob
     uncover 4
@@ -121,7 +131,7 @@ main_ternary_merge@18:
     uncover 3
     setbit
     concat
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -330,7 +340,9 @@ main_ternary_merge@37:
     intc_0 // 0
     bytec 4 // "e"
     app_global_get_ex
-    assert // check e exists
+    intc_0 // 0
+    cover 2
+    select
     intc_0 // 0
     !=
     itob
@@ -341,25 +353,33 @@ main_ternary_merge@37:
     intc_0 // 0
     bytec_3 // "d"
     app_global_get_ex
-    assert // check d exists
+    bytec 5 // 0x0000000000000000
+    cover 2
+    select
     concat
     intc_0 // 0
     bytec_2 // "c"
     app_global_get_ex
-    assert // check c exists
+    intc_0 // 0
+    cover 2
+    select
     itob
     concat
     intc_0 // 0
     bytec_1 // "b"
     app_global_get_ex
-    assert // check b exists
+    intc_0 // 0
+    cover 2
+    select
     itob
     extract 4 4
     concat
     intc_0 // 0
     bytec_0 // "a"
     app_global_get_ex
-    assert // check a exists
+    intc_0 // 0
+    cover 2
+    select
     itob
     extract 7 1
     concat
@@ -375,7 +395,7 @@ main_ternary_merge@37:
     intc_2 // 32
     bzero
     b|
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log

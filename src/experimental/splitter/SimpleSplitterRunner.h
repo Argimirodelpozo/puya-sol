@@ -15,7 +15,6 @@ namespace puyasol::splitter
 /// writes each helper/orchestrator to its own subdirectory under outputDir
 /// with awst.json, options.json, and (if puyaPath set) puya invocation.
 ///
-/// Separate pipeline from UrosSplitter — don't configure both for the same invocation.
 class SimpleSplitterRunner
 {
 public:
@@ -24,8 +23,8 @@ public:
 		/// Path to `--split-config <json>`. Empty string = no config file
 		/// (no extraction unless `forceDelegate` is non-empty).
 		std::string splitConfigPath;
-		/// Function names that should each become their own one-method
-		/// helper extraction (from `--force-delegate <list>`).
+		/// Externally routable method names that should each become their own
+		/// state-preserving code page (from `--force-delegate <list>`).
 		std::vector<std::string> forceDelegate;
 		/// Per-method ensure_budget targets — threaded through to
 		/// `SimpleSplitter::split`'s helper-method-body injection.

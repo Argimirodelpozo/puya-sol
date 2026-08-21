@@ -3,7 +3,10 @@
 /// Migrated from FunctionCallBuilder.cpp lines 3662-4084.
 
 #include "builder/sol-ast/calls/SolExternalCall.h"
+#include "builder/SolcFacts.h"
+#include "builder/abi/EvmAbiDecode.h"
 #include "builder/itxn/InnerCallHandlers.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -127,8 +130,27 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 
 	auto readLog = eb::InnerCallHandlers::captureLastLog(m_ctx, m_loc);
 
-	// Strip 4-byte ARC4 return prefix
+	// Strip the 4-byte AVM return-log carrier prefix.
 	auto stripPrefix = awst::makeExtract(std::move(readLog), 4, 0, m_loc);
+	if (m_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
+	{
+		std::vector<Type const*> components;
+		if (auto const* tuple = dynamic_cast<TupleType const*>(_solReturnType))
+			for (auto const* component: tuple->components())
+				components.push_back(component);
+		else
+			components.push_back(_solReturnType);
+		if (!abi::canDecodeEvmAbi(components))
+		{
+			Logger::instance().error(
+				"external return type is not representable in canonical Solidity ABI",
+				m_loc);
+			return awst::makeBytesConstant({}, m_loc);
+		}
+		return abi::decodeEvmAbi(
+			m_ctx.typeMapper, std::move(stripPrefix), components, _returnType,
+			m_loc, m_ctx.preEffects());
+	}
 
 	if (_returnType == awst::WType::biguintType())
 	{
@@ -264,10 +286,7 @@ std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 
 	// ARC4 aggregate return types — reinterpret the raw bytes
 	if (_returnType
-		&& (_returnType->kind() == awst::WTypeKind::ARC4DynamicArray
-			|| _returnType->kind() == awst::WTypeKind::ARC4StaticArray
-			|| _returnType->kind() == awst::WTypeKind::ARC4Struct
-			|| _returnType->kind() == awst::WTypeKind::ARC4UIntN
+		&& (builder::isArc4EncodedType(_returnType)
 			|| _returnType->kind() == awst::WTypeKind::ReferenceArray))
 	{
 		auto cast = awst::makeReinterpretCast(std::move(stripPrefix), _returnType, m_loc);
@@ -313,13 +332,26 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 
 	auto baseTranslated = buildExpr(memberAccess->expression());
 
-	// Build method selector
-	auto methodConst = awst::makeMethodConstant(
-		buildMethodSelector(*memberAccess), awst::WType::bytesType(), m_loc);
-
-	// Build ApplicationArgs tuple
-	auto argsTuple = awst::makeTupleExpression(nullptr, m_loc);
-	argsTuple->items.push_back(std::move(methodConst));
+	// Build selector. The selected contract profile owns the transport; Solidity
+	// `abi.*` expression semantics remain canonical independently.
+	std::shared_ptr<awst::Expression> selector;
+	if (m_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
+	{
+		auto const* functionType = dynamic_cast<FunctionType const*>(
+			memberAccess->annotation().type);
+		if (!functionType)
+		{
+			Logger::instance().error(
+				"cannot derive Solidity selector for external call", m_loc);
+			return awst::makeVoidConstant(m_loc);
+		}
+		selector = awst::makeBytesConstant(
+			builder::SolcFacts::externalSelector(*functionType), m_loc,
+			awst::BytesEncoding::Base16, awst::WType::bytesType());
+	}
+	else
+		selector = awst::makeMethodConstant(
+			buildMethodSelector(*memberAccess), awst::WType::bytesType(), m_loc);
 
 	// Get parameter types for encoding
 	auto const* extRefDecl = memberAccess->annotation().referencedDeclaration;
@@ -340,29 +372,35 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 				paramSolTypes.push_back(t);
 	}
 
-	// Add call arguments
-	size_t argIdx = 0;
-	for (auto const& arg: m_call.sortedArguments())
+	std::shared_ptr<awst::TupleExpression> argsTuple;
+	if (m_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
 	{
-		Type const* paramType = (argIdx < paramSolTypes.size()) ? paramSolTypes[argIdx] : nullptr;
-		++argIdx;
-
-		// Inline array literals (`f([a, b])`) build as a normal array
-		// expression and go through the SAME shared ARC4 encoder as every
-		// other arg — the old hand-rolled 32-byte-word concat was correct only
-		// for uint256/uint>=129 static-array elements: it zero-extended narrow
-		// and signed elements and emitted no uint16 length header for dynamic
-		// (`uint[]`) params, so the callee's ARC4 decode read garbage.
-		auto argExpr = buildExpr(*arg);
-		argsTuple->items.push_back(eb::InnerCallHandlers::encodeArgToBytes(
-			m_ctx, std::move(argExpr), arg->annotation().type, paramType, m_loc));
+		std::vector<ASTPointer<Expression const>> args;
+		for (auto const& argument: m_call.sortedArguments())
+			args.push_back(argument);
+		argsTuple = eb::InnerCallHandlers::buildEvmApplicationArgs(
+			m_ctx, std::move(selector), args, paramSolTypes, m_loc);
 	}
-
-	// Build WTuple type for args
-	std::vector<awst::WType const*> argTypes;
-	for (auto const& item: argsTuple->items)
-		argTypes.push_back(item->wtype);
-	argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(std::move(argTypes), std::nullopt);
+	else
+	{
+		argsTuple = awst::makeTupleExpression(nullptr, m_loc);
+		argsTuple->items.push_back(std::move(selector));
+		size_t argIdx = 0;
+		for (auto const& arg: m_call.sortedArguments())
+		{
+			Type const* paramType = argIdx < paramSolTypes.size()
+				? paramSolTypes[argIdx] : nullptr;
+			++argIdx;
+			auto argExpr = buildExpr(*arg);
+			argsTuple->items.push_back(eb::InnerCallHandlers::encodeArgToBytes(
+				m_ctx, std::move(argExpr), arg->annotation().type, paramType, m_loc));
+		}
+		std::vector<awst::WType const*> argTypes;
+		for (auto const& item: argsTuple->items)
+			argTypes.push_back(item->wtype);
+		argsTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
+			std::move(argTypes), std::nullopt);
+	}
 
 	// Convert receiver to app ID
 	auto appId = addressToAppId(std::move(baseTranslated));

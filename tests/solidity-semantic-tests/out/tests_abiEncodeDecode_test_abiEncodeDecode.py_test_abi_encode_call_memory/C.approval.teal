@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_memory.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 24 16
-    bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x40e33532 TMPL_APPROVAL_D TMPL_CLEAR_D
+    intcblock 1 0 16 4
+    bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0xa7a0d53740e33532 TMPL_APPROVAL_D TMPL_CLEAR_D
     intc_1 // 0
     dup
     pushbytes ""
@@ -36,8 +36,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_1 // method "something()void"
-    pushbytes 0x32064c45 // method "test()byte[4]"
+    pushbytess 0x40e33532 0x32064c45 // method "something()void", method "test()byte[4]"
     txna ApplicationArgs 0
     match main_something_route@5 main_test_route@6
     err
@@ -54,12 +53,12 @@ main_ternary_merge@13:
     !
     assert // not payable
     load 0
-    intc_2 // 24
+    pushint 24
     bzero
     dig 1
     pushint 88
     extract_uint64
-    intc_2 // 24
+    pushint 32
     +
     itob
     concat
@@ -67,9 +66,9 @@ main_ternary_merge@13:
     store 0
     global CurrentApplicationID
     itob
-    bytec_1 // method "something()void"
+    bytec_1 // 0xa7a0d53740e33532
     concat
-    pushbytes 0x000000000000000000000000000000000000000000000000
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     swap
     replace2 0 // on error: index access is out of bounds
     itxn_begin
@@ -77,9 +76,9 @@ main_ternary_merge@13:
     bytec_3 // TMPL_CLEAR_D
     pushint 6
     itxn_field TypeEnum
-    intc_3 // 16
+    intc_2 // 16
     itxn_field GlobalNumUint
-    intc_3 // 16
+    intc_2 // 16
     itxn_field GlobalNumByteSlice
     intc_1 // 0
     itxn_field Fee
@@ -102,13 +101,13 @@ main_ternary_merge@13:
     itxn_field Amount
     itxn_submit
     itob
-    bytec_1 // method "something()void"
+    bytec_1 // 0xa7a0d53740e33532
     concat
-    replace2 12 // on error: index access is out of bounds
+    replace2 16 // on error: index access is out of bounds
     dup
-    extract 12 12 // on error: index access is out of bounds
+    extract 16 16 // on error: index access is out of bounds
     swap
-    extract 0 12 // on error: index access is out of bounds
+    extract 0 16 // on error: index access is out of bounds
     extract 8 4
     dup
     bury 5
@@ -117,7 +116,7 @@ main_ternary_merge@13:
     swap
     len
     itob
-    pushint 4
+    intc_3 // 4
     itob
     dup
     bury 5
@@ -143,7 +142,7 @@ main_bool_merge@18:
 
 main_after_if_else@20:
     assert
-    pushint 4
+    intc_3 // 4
     bzero
     dig 4
     dig 1

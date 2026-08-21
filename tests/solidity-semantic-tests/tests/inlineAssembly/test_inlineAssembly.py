@@ -853,6 +853,38 @@ def test_sstore_box_struct_slot(harness):
     assert as_int(harness.call(app, "getB(uint256)", 7).abi_return) == (1 << 256) - 222
     assert as_int(harness.call(app, "getC(uint256)", 7).abi_return) == 0xdeadbeef
 
+    # The same layout walker must bridge Solidity's one-byte bool lanes and
+    # ARC-4's consecutive MSB-first bool bits. Use two bools so this detects a
+    # one-off implementation that only understands a leading standalone bool.
+    rest = (1 << 239) + 0x123456789
+    assert not harness.call(app, "setBoolUntouched(uint256,uint256)", 9, 0xfeedface).reverted
+    assert not harness.call(
+        app, "setBoolPacked(uint256,bool,bool,uint240)", 9, True, False, rest
+    ).reverted
+    got = harness.call(app, "getBoolPacked(uint256)", 9).abi_return
+    assert got[0] is True
+    assert got[1] is False
+    assert as_int(got[2]) == rest
+    assert as_int(got[3]) == 0xfeedface
+    assert as_int(harness.call(app, "loadBoolPackedWord(uint256)", 9).abi_return) == (
+        (rest << 16) | 1
+    )
+
+    # Flip both bits and the integer payload to cover clearing an existing
+    # ARC-4 bit as well as setting the next bit in the same packed run.
+    rest2 = 0xabcdef
+    assert not harness.call(
+        app, "setBoolPacked(uint256,bool,bool,uint240)", 9, False, True, rest2
+    ).reverted
+    got2 = harness.call(app, "getBoolPacked(uint256)", 9).abi_return
+    assert got2[0] is False
+    assert got2[1] is True
+    assert as_int(got2[2]) == rest2
+    assert as_int(got2[3]) == 0xfeedface
+    assert as_int(harness.call(app, "loadBoolPackedWord(uint256)", 9).abi_return) == (
+        (rest2 << 16) | (1 << 8)
+    )
+
 
 def test_balancedelta_int128(harness):
     """inlineAssembly/contracts/balancedelta_int128.sol

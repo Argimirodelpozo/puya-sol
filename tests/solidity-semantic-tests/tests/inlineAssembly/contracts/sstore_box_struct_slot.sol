@@ -14,6 +14,19 @@ contract SstorePackTest {
 
     mapping(uint256 => Packed) data;
 
+    // Solidity allocates each bool a byte in storage, while ARC-4 packs this
+    // consecutive run into the high two bits of one byte. `rest` fills the
+    // remainder of EVM slot 0, and `untouched` proves the conversion does not
+    // overwrite later slots.
+    struct BoolPacked {
+        bool first;
+        bool second;
+        uint240 rest;
+        uint256 untouched;
+    }
+
+    mapping(uint256 => BoolPacked) boolData;
+
     /// Pack `a` (low) and `b` (high) into slot 0 with one sstore, leaving `c`
     /// untouched — the exact shape of Pool.updateTick's final write.
     function setPacked(uint256 key, uint128 a, int128 b) public {
@@ -40,5 +53,37 @@ contract SstorePackTest {
 
     function getC(uint256 key) public view returns (uint256) {
         return data[key].c;
+    }
+
+    function setBoolPacked(
+        uint256 key,
+        bool first,
+        bool second,
+        uint240 rest
+    ) public {
+        BoolPacked storage p = boolData[key];
+        assembly ("memory-safe") {
+            sstore(p.slot, or(or(first, shl(8, second)), shl(16, rest)))
+        }
+    }
+
+    function setBoolUntouched(uint256 key, uint256 value) public {
+        boolData[key].untouched = value;
+    }
+
+    function getBoolPacked(uint256 key)
+        public
+        view
+        returns (bool first, bool second, uint240 rest, uint256 untouched)
+    {
+        BoolPacked storage p = boolData[key];
+        return (p.first, p.second, p.rest, p.untouched);
+    }
+
+    function loadBoolPackedWord(uint256 key) public view returns (uint256 word) {
+        BoolPacked storage p = boolData[key];
+        assembly ("memory-safe") {
+            word := sload(p.slot)
+        }
     }
 }

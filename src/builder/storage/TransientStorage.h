@@ -61,13 +61,17 @@ public:
 	TransientVar const* getVarInfoById(int64_t _declId) const;
 
 	/// Read expression for a transient variable: extract + type coercion.
+	/// Declaration identity is required because inherited contracts may contain
+	/// distinct transient variables with the same source name.
 	std::shared_ptr<awst::Expression> buildRead(
-		std::string const& _name, awst::WType const* _type,
+		solidity::frontend::VariableDeclaration const& _var,
+		awst::WType const* _type,
 		awst::SourceLocation const& _loc) const;
 
 	/// Write statement for a transient variable (truncates to declared byte width).
 	std::shared_ptr<awst::Statement> buildWrite(
-		std::string const& _name, std::shared_ptr<awst::Expression> _value,
+		solidity::frontend::VariableDeclaration const& _var,
+		std::shared_ptr<awst::Expression> _value,
 		awst::SourceLocation const& _loc) const;
 
 private:

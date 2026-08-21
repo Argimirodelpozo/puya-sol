@@ -4,6 +4,7 @@
 
 #include "builder/sol-ast/members/SolLengthAccess.h"
 #include "Logger.h"
+#include "builder/builtin/AppCodeSizeLowering.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/StorageMapper.h"
@@ -48,6 +49,64 @@ IndexRangeAccess const* peelToSlice(Expression const& expr)
 std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 {
 	auto const& baseExpr = baseExpression();
+
+	// `addressExpr.code.length` must not build the intermediate `.code` bytes.
+	// Approval programs can be larger than AVM's maximum stack byte value, so
+	// fetching AppApprovalProgram merely to apply `len` fails for exactly the
+	// larger contracts that this predicate is commonly used to inspect.  Query
+	// small application metadata instead; Yul extcodesize uses the same helper.
+	if (auto const* codeAccess = dynamic_cast<MemberAccess const*>(&baseExpr);
+		codeAccess && codeAccess->memberName() == "code")
+	{
+		// EVM stores runtime code only after initcode completes.
+		if (m_scope.isInConstructor())
+			return awst::makeZero(m_loc, awst::WType::uint64Type());
+
+		auto const& addressExpr = codeAccess->expression();
+		// Literal/precompile/EOA addresses are not applications under the
+		// compiler's contract-value convention and therefore have no code.
+		if (auto const* fc = dynamic_cast<FunctionCall const*>(&addressExpr);
+			fc && fc->annotation().kind.set()
+			&& *fc->annotation().kind == FunctionCallKind::TypeConversion
+			&& fc->arguments().size() == 1)
+		{
+			if (auto const* lit = dynamic_cast<Literal const*>(fc->arguments()[0].get());
+				lit && lit->token() == Token::Number)
+			{
+				return awst::makeZero(m_loc, awst::WType::uint64Type());
+			}
+		}
+
+		auto address = buildExpr(addressExpr);
+		std::shared_ptr<awst::Expression> application;
+		if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(address.get());
+			intrinsic && intrinsic->opCode == "global"
+			&& !intrinsic->immediates.empty()
+			&& std::holds_alternative<std::string>(intrinsic->immediates[0])
+			&& std::get<std::string>(intrinsic->immediates[0])
+				== "CurrentApplicationAddress")
+		{
+			application = awst::makeAsApplication(
+				awst::makeGlobal("CurrentApplicationID",
+					awst::WType::uint64Type(), m_loc), m_loc);
+		}
+		else
+		{
+			Logger::instance().warning(
+				"`address(addr).code.length` resolves the application id from "
+				"the address's last 8 bytes (this compiler's contract-value "
+				"convention). It returns zero for a missing application and the "
+				"allocated AVM program capacity for an existing one; AVM cannot "
+				"observe an oversized program's exact byte length without "
+				"materialising it.", m_loc);
+			application = awst::makeAsApplication(
+				awst::makeWord32ToUInt64(awst::makeAsBytes(address, m_loc), m_loc),
+				m_loc);
+		}
+
+		return AppCodeSizeLowering::lower(
+			m_ctx.typeMapper, std::move(application), m_loc, m_ctx.preEffects());
+	}
 
 	// Slice length: `x[s:e].length`, or the cast form `uint256[](x[s:e]).length`.
 	// Walk the slice chain, emit bounds asserts, and compute
@@ -189,6 +248,26 @@ std::shared_ptr<awst::Expression> SolLengthAccess::toAwst()
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 				ident->annotation().referencedDeclaration))
 		{
+			if (auto const* arrType = dynamic_cast<ArrayType const*>(varDecl->type());
+				arrType && !arrType->isByteArrayOrString())
+			{
+				auto const& keyParam = m_scope.findMappingKeyParam(varDecl->id());
+				if (!keyParam.empty())
+				{
+					if (!arrType->isDynamicallySized())
+						return awst::makeIntegerConstant(
+							arrType->length().str(), m_loc,
+							arrType->length() > std::numeric_limits<uint64_t>::max()
+								? awst::WType::biguintType()
+								: awst::WType::uint64Type());
+					auto key = awst::makeReinterpretCast(
+						awst::makeVarExpression(
+							keyParam, awst::WType::bytesType(), m_loc),
+						awst::WType::boxKeyType(), m_loc);
+					return stateDynArrayLengthForKey(
+						m_ctx, std::move(key), arrType, m_loc);
+				}
+			}
 			if (varDecl->isStateVariable()
 				&& !varDecl->isConstant()
 				&& !varDecl->immutable()
@@ -271,6 +350,17 @@ std::shared_ptr<awst::Expression> SolLengthAccess::stateDynArrayLength(
 	solidity::frontend::ArrayType const* _arrType,
 	awst::SourceLocation const& _loc)
 {
+	return stateDynArrayLengthForKey(
+		_ctx, awst::makeUtf8BytesConstant(
+			_name, _loc, awst::WType::boxKeyType()), _arrType, _loc);
+}
+
+std::shared_ptr<awst::Expression> SolLengthAccess::stateDynArrayLengthForKey(
+	eb::ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _boxKey,
+	solidity::frontend::ArrayType const* _arrType,
+	awst::SourceLocation const& _loc)
+{
 	// Use the width-preserving Sol→ARC4 map (not map()+mapToARC4Type,
 	// which erases sub-256 widths to biguint→32) so the divisor
 	// matches the stride push/index store at (SolArrayMethod uses
@@ -284,13 +374,11 @@ std::shared_ptr<awst::Expression> SolLengthAccess::stateDynArrayLength(
 	// (contents, exists); ternary on exists so an uninit box reads as length 0.
 	if (elemSize == 0)
 	{
-		auto boxKey = awst::makeUtf8BytesConstant(_name, _loc);
-
 		auto* getTupleType = _ctx.typeMapper.createType<awst::WTuple>(
 			std::vector<awst::WType const*>{
 				awst::WType::bytesType(), awst::WType::boolType()});
 		auto boxGet = awst::makeIntrinsicCall("box_get", getTupleType, _loc);
-		boxGet->stackArgs.push_back(std::move(boxKey));
+		boxGet->stackArgs.push_back(_boxKey);
 
 		auto contents = awst::makeTupleItem(boxGet, 0, awst::WType::bytesType(), _loc);
 
@@ -307,9 +395,8 @@ std::shared_ptr<awst::Expression> SolLengthAccess::stateDynArrayLength(
 			awst::WType::uint64Type(), _loc);
 	}
 
-	auto boxKey = awst::makeUtf8BytesConstant(_name, _loc);
 	auto boxLen = builder::StorageMapper::makeBoxLenTuple(
-		_ctx.typeMapper, std::move(boxKey), _loc);
+		_ctx.typeMapper, std::move(_boxKey), _loc);
 	auto lenVal = awst::makeTupleItem(std::move(boxLen), 0, awst::WType::uint64Type(), _loc);
 
 	auto elemSizeConst = awst::makeIntegerConstant(elemSize, _loc);

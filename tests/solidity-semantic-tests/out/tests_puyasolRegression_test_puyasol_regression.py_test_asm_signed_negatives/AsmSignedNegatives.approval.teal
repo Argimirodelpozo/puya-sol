@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_signed_negatives.sol.AsmSignedNegatives.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 0x03 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000004
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x03 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000004
     pushint 4096
     bzero
     dup
@@ -57,10 +57,14 @@ main_ternary_merge@14:
     assert // not payable
     load 0
     store 0
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     dup
     bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b>=
     bz main_ternary_false@18
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000004
     b/
     pushbytes 0xc000000000000000000000000000000000000000000000000000000000000000
@@ -85,6 +89,8 @@ main_ternary_merge@20:
     return
 
 main_ternary_false@18:
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000004
     b/
     b main_ternary_merge@20
@@ -118,23 +124,23 @@ main_ternary_merge@25:
     dup
     bz main_ternary_false@31
     bz main_ternary_false@28
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     swap
     b-
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 main_ternary_merge@29:
     bytec_3 // 0x03
     b%
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     swap
     b-
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 main_ternary_merge@36:
@@ -160,12 +166,12 @@ main_ternary_false@28:
 
 main_ternary_false@31:
     bz main_ternary_false@33
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     swap
     b-
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 main_ternary_merge@34:
@@ -204,30 +210,30 @@ main_ternary_merge@42:
     b>=
     dup
     pushbytes 0x
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     uncover 2
     select
     pushbytes 0x
     b!=
     bz main_ternary_false@48
     bz main_ternary_false@45
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     swap
     b-
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 main_ternary_merge@46:
     bytec_3 // 0x03
     b/
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     swap
     b-
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 main_ternary_merge@53:
@@ -253,12 +259,12 @@ main_ternary_false@45:
 
 main_ternary_false@48:
     bz main_ternary_false@50
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     swap
     b-
-    bytec_0 // 0x01
+    bytec_1 // 0x01
     b+
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
 
 main_ternary_merge@51:

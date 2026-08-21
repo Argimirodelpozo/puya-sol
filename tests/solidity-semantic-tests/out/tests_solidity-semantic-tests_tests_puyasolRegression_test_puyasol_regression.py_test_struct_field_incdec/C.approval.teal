@@ -5,10 +5,6 @@
 main:
     intcblock 1 8 0 16 255
     bytecblock "st" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000 "o" 0x0100 0x00000000000000000000000000000000000000000000000000000000 0xff 0x80 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0xffffffffffffffff 0x8000000000000000 0x010000000000000000
-    intc_2 // 0
-    dupn 2
-    pushbytes ""
-    dupn 3
     pushint 4096
     bzero
     dup
@@ -205,7 +201,6 @@ main_ternary_false@45:
 main_setO_route@14:
     txna ApplicationArgs 1
     dup
-    bury 6
     len
     intc_1 // 8
     ==
@@ -217,10 +212,9 @@ main_setO_route@14:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
     txna ApplicationArgs 3
     dup
-    bury 7
+    cover 2
     len
     intc_3 // 16
     ==
@@ -251,7 +245,7 @@ main_bool_merge@55:
     assert // ABI validation
     pushint 4
     bzero
-    dig 1
+    swap
     itob
     extract 4 4
     dig 1
@@ -269,13 +263,13 @@ main_bool_merge@55:
     <=
     assert // overflow
     b|
-    dig 5
+    uncover 2
     swap
     concat
     intc_3 // 16
     bzero
     dup
-    dig 8
+    uncover 3
     concat
     dup
     len
@@ -852,10 +846,9 @@ main_setSt_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 4
     txna ApplicationArgs 2
     dup
-    bury 8
+    cover 2
     len
     intc_3 // 16
     ==
@@ -867,7 +860,7 @@ main_setSt_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 3
+    swap
     txna ApplicationArgs 4
     dup
     len
@@ -875,7 +868,6 @@ main_setSt_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 2
     txn GroupIndex
     bz main_ternary_false@114
     txn GroupIndex
@@ -886,11 +878,11 @@ main_setSt_route@5:
 main_ternary_merge@115:
     !
     assert // not payable
-    dig 3
+    dig 1
     pushint 127
     <=
     bnz main_bool_true@117
-    dig 3
+    dig 1
     pushint 18446744073709551488
     >=
     bz main_bool_false@118
@@ -900,7 +892,6 @@ main_bool_true@117:
 
 main_bool_merge@119:
     assert // ABI validation
-    dig 1
     dup
     intc 4 // 255
     <=
@@ -909,7 +900,7 @@ main_bool_merge@119:
     &
     intc_0 // 1
     bzero
-    dig 5
+    uncover 2
     itob
     extract 7 1
     dig 1
@@ -930,7 +921,7 @@ main_bool_merge@119:
     intc_3 // 16
     bzero
     dup
-    dig 10
+    uncover 5
     concat
     dup
     len
@@ -946,7 +937,7 @@ main_bool_merge@119:
     b|
     intc_1 // 8
     bzero
-    dig 6
+    uncover 4
     itob
     dig 1
     swap

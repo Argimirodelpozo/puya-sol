@@ -37,6 +37,17 @@ public:
 	/// immutables and transient vars are excluded (they are not in slot space).
 	static bool isStorageStateRef(solidity::frontend::Expression const& _e);
 
+	/// True when an access chain peels through any number of array indices and
+	/// struct members to an expression whose runtime representation is a
+	/// biguint slot handle.  This includes registered storage locals/parameters,
+	/// computed storage refs returned by `.slot` assembly helpers, and every
+	/// storage ref in EVM-layout mode.  Keeping the representation test here
+	/// lets scalar and aggregate reads/writes share the same recursive lowering.
+	static bool isSlotHandleRef(
+		solidity::frontend::Expression const& _e,
+		eb::ContractContext& _ctx,
+		Context& _scope);
+
 	/// A leaf word address: `slot` (biguint) with an intra-slot byte window.
 	/// `byteOffset` null means 0. `size`==32 with zero offset is the aligned
 	/// full-word fast path.
@@ -77,11 +88,10 @@ public:
 	/// format). Returns `string`-typed when the leaf is a string.
 	std::shared_ptr<awst::Expression> readBytesValue(Addr const& _a);
 
-	/// Whole-array write into storage: dynamic 32-byte-elem arrays via the
-	/// __evm_dynarr_write runtime subroutine (writes length + elements,
-	/// clears the shrink tail); fixed arrays (len<=64) unrolled per element
-	/// (scalar / struct / bytes-like elems). Returns false (with an error
-	/// logged) for shapes still unsupported.
+	/// Whole-array write into storage. Dynamic-array chains use the recursive
+	/// runtime codec (writes lengths + elements and clears shrink tails); fixed
+	/// arrays (len<=64) recurse per element. Returns false with a diagnostic for
+	/// representations the codec cannot express.
 	/// `delete` on an aggregate: zero the value-slot span, recurse into
 	/// bytes/array members for their keccak-region data, dynamic arrays via
 	/// __evm_dynarr_write with an empty payload (EVM delete clears elements).
@@ -95,6 +105,12 @@ public:
 		solidity::frontend::Type const* _t,
 		std::shared_ptr<awst::Expression> _value,
 		std::vector<std::shared_ptr<awst::Statement>>& _out);
+
+	/// Read a value of any materialisable declared type from a slot address.
+	/// This is the read-side twin of writeAny and is the recursion point used by
+	/// aggregate containers; mappings deliberately have no value materialisation.
+	std::shared_ptr<awst::Expression> readAny(
+		Addr const& _a, solidity::frontend::Type const* _t);
 
 	bool clearAggregate(
 		Addr const& _a,
@@ -118,8 +134,8 @@ public:
 	/// ctx.preEffects()). Null + loud error when `_a` isn't a struct.
 	std::shared_ptr<awst::Expression> readStructValue(Addr const& _a);
 
-	/// Materialise a FIXED array at `_a.slot` as a NewArray value (unrolled
-	/// per-element reads, capped at 64). Null + loud error otherwise.
+	/// Materialise an array at `_a.slot`; dynamic-array chains use the runtime
+	/// codec and fixed arrays recurse with an unroll cap of 64 per level.
 	std::shared_ptr<awst::Expression> readArrayValue(
 		Addr const& _a, solidity::frontend::ArrayType const* _at);
 

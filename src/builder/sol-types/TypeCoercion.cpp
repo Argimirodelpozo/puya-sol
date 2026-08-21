@@ -921,8 +921,7 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 		return tuple;
 	}
 
-	// ARC4Struct → BytesConstant of zeros at the encoded width (preferred)
-	// or NewStruct with field defaults (fallback for dynamic structs).
+	// ARC4 aggregate → a valid encoded default at the recursive width.
 	//
 	// Why prefer the BytesConstant: puya's NewStruct encoder has a bug
 	// when one or more fields are arc4.bool. The encoder packs consecutive
@@ -934,7 +933,8 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 	// zero-filled bytes literal at the correct encoded size we skip puya's
 	// encoder entirely for the all-zero case — what comes out is what puya
 	// *should* have produced for an all-zero default. See puyabug.md §2.
-	if (_type->kind() == awst::WTypeKind::ARC4Struct)
+	if (_type->kind() == awst::WTypeKind::ARC4Struct
+		|| _type->kind() == awst::WTypeKind::ARC4Tuple)
 	{
 		int encodedSize = computeEncodedElementSize(_type);
 		if (encodedSize > 0)
@@ -962,11 +962,18 @@ std::shared_ptr<awst::Expression> TypeCoercion::makeDefaultValue(
 		// NewStruct + recursive defaults. May still hit the puya
 		// bool-packing bug if any field is arc4.bool — not reached today
 		// by AAVE V4 / the bundled tests.
-		auto const* structType = static_cast<awst::ARC4Struct const*>(_type);
-		auto expr = awst::makeNewStruct(_type, _loc);
-		for (auto const& [name, fieldType]: structType->fields())
-			expr->values[name] = makeDefaultValue(fieldType, _loc);
-		return expr;
+		if (auto const* structType = dynamic_cast<awst::ARC4Struct const*>(_type))
+		{
+			auto expr = awst::makeNewStruct(_type, _loc);
+			for (auto const& [name, fieldType]: structType->fields())
+				expr->values[name] = makeDefaultValue(fieldType, _loc);
+			return expr;
+		}
+		auto const* tupleType = static_cast<awst::ARC4Tuple const*>(_type);
+		auto tuple = awst::makeTupleExpression(_type, _loc);
+		for (auto const* componentType: tupleType->types())
+			tuple->items.push_back(makeDefaultValue(componentType, _loc));
+		return tuple;
 	}
 
 	// ReferenceArray → NewArray with default elements

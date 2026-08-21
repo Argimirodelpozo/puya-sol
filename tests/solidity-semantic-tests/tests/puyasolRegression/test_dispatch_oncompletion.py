@@ -1,6 +1,6 @@
 """Custom selector dispatch must gate receive/fallback on OnCompletion.
 
-new_review.md A2: with receive()/fallback() present, the hand-written dispatch
+With receive()/fallback() present, the hand-written dispatch
 approved bare (NumAppArgs==0) and unmatched-selector calls without reading
 Txn.OnCompletion — a 0-argument DeleteApplication/UpdateApplication/CloseOut
 entered the receive() arm and returned approval, so anyone could delete or

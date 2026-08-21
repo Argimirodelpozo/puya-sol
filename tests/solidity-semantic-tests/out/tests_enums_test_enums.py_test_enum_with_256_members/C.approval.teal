@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_with_256_members.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 255 0 8
+    intcblock 1 255 0 24
     bytecblock 0x151f7c75
     pushint 4096
     bzero
@@ -60,20 +60,19 @@ main_decodeEnum_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    dup
     len
     pushint 32
-    ==
-    bz main_else_body@17
-    pop
+    >=
+    assert // EVM ABI decode out of bounds
     extract 2 32
     dup
-    len
-    intc_3 // 8
-    -
+    extract 0 24
+    intc_3 // 24
+    bzero
+    ==
+    assert // invalid EVM ABI enum padding
+    intc_3 // 24
     extract_uint64
-
-main_after_if_else@18:
     dup
     pushint 256
     <
@@ -88,11 +87,6 @@ main_after_if_else@18:
     intc_0 // 1
     return
 
-main_else_body@17:
-    bury 1
-    btoi
-    b main_after_if_else@18
-
 main_ternary_false@14:
     intc_2 // 0
     b main_ternary_merge@15
@@ -101,18 +95,18 @@ main_enumToInt_route@7:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txn GroupIndex
-    bz main_ternary_false@22
+    bz main_ternary_false@19
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@23:
+main_ternary_merge@20:
     !
     assert // not payable
     dup
@@ -135,26 +129,26 @@ main_ternary_merge@23:
     intc_0 // 1
     return
 
-main_ternary_false@22:
+main_ternary_false@19:
     intc_2 // 0
-    b main_ternary_merge@23
+    b main_ternary_merge@20
 
 main_intToEnum_route@6:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
     txn GroupIndex
-    bz main_ternary_false@27
+    bz main_ternary_false@24
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@28:
+main_ternary_merge@25:
     !
     assert // not payable
     dup
@@ -177,19 +171,19 @@ main_ternary_merge@28:
     intc_0 // 1
     return
 
-main_ternary_false@27:
+main_ternary_false@24:
     intc_2 // 0
-    b main_ternary_merge@28
+    b main_ternary_merge@25
 
 main_getMinMax_route@5:
     txn GroupIndex
-    bz main_ternary_false@32
+    bz main_ternary_false@29
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@33:
+main_ternary_merge@30:
     !
     assert // not payable
     pushbytes 0x151f7c75000000000000000000000000000000ff
@@ -197,6 +191,6 @@ main_ternary_merge@33:
     intc_0 // 1
     return
 
-main_ternary_false@32:
+main_ternary_false@29:
     intc_2 // 0
-    b main_ternary_merge@33
+    b main_ternary_merge@30

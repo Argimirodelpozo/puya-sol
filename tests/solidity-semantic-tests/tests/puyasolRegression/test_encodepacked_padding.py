@@ -1,4 +1,4 @@
-"""encodePacked / bytesN padding-and-width family (new_review.md B10/B11/B12/C17).
+"""encodePacked / bytesN padding-and-width regression family.
 
 B10: fixed arrays of 1-7-byte elements hit an extract(8-N, N) truncation
      written for 8-byte itob inputs → runtime revert.

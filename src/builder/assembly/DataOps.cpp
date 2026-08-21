@@ -19,30 +19,36 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldataload(
 	if (!checkArity(_args, 1, "calldataload", _loc))
 		return nullptr;
 
+	// Once a block needs the synthetic EVM-calldata view, ALL loads in that
+	// block must read that view. This includes constant offsets: a constant can
+	// point into a dynamic tail, and the head word of a dynamically encoded
+	// parameter is its offset rather than the parameter's decoded value. The
+	// old split sent those two shapes through m_calldataMap and either rejected
+	// them or returned the wrong word.
+	if (m_useSyntheticCalldata)
+	{
+		// EVM calldataload ZERO-PADS reads at/past calldatasize; a bare
+		// extract3 would panic when off+32 > len(blob) (the standard
+		// tail-word loop `calldataload(off+i)` with a non-word-multiple
+		// length hits this). Append 32 zero bytes and clamp the start to
+		// len: extract3(blob ++ bzero(32), min(off,len), 32) reads real
+		// bytes then the appended zeros — all-zero when off >= len.
+		auto blob = awst::makeEvalOnce(
+			awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc), _loc);
+		auto len = awst::makeLen(blob, _loc);
+		auto off = awst::makeEvalOnce(offsetToUint64(_args[0], _loc), _loc);
+		auto safeOff = awst::makeConditional(
+			awst::makeNumericCompare(off, awst::NumericComparison::Lt, len, _loc),
+			off, awst::makeLen(blob, _loc), awst::WType::uint64Type(), _loc);
+		auto padded = awst::makeConcat(blob, awst::makeBzero(32, _loc), _loc);
+		auto extractCall = awst::makeExtract3(std::move(padded), std::move(safeOff),
+			awst::makeIntegerConstant("32", _loc), _loc);
+		return awst::makeAsBiguint(std::move(extractCall), _loc);
+	}
+
 	auto offset = resolveConstantOffset(_args[0]);
 	if (!offset)
 	{
-		// Dynamic offset: read from __cd_blob (EVM-ABI layout) when present.
-		if (m_useSyntheticCalldata)
-		{
-			// EVM calldataload ZERO-PADS reads at/past calldatasize; a bare
-			// extract3 would panic when off+32 > len(blob) (the standard
-			// tail-word loop `calldataload(off+i)` with a non-word-multiple
-			// length hits this). Append 32 zero bytes and clamp the start to
-			// len: extract3(blob ++ bzero(32), min(off,len), 32) reads real
-			// bytes then the appended zeros — all-zero when off >= len.
-			auto blob = awst::makeEvalOnce(
-				awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc), _loc);
-			auto len = awst::makeLen(blob, _loc);
-			auto off = awst::makeEvalOnce(offsetToUint64(_args[0], _loc), _loc);
-			auto safeOff = awst::makeConditional(
-				awst::makeNumericCompare(off, awst::NumericComparison::Lt, len, _loc),
-				off, awst::makeLen(blob, _loc), awst::WType::uint64Type(), _loc);
-			auto padded = awst::makeConcat(blob, awst::makeBzero(32, _loc), _loc);
-			auto extractCall = awst::makeExtract3(std::move(padded), std::move(safeOff),
-				awst::makeIntegerConstant("32", _loc), _loc);
-			return awst::makeAsBiguint(std::move(extractCall), _loc);
-		}
 		Logger::instance().error(
 			"calldataload with non-constant offset not supported", _loc
 		);

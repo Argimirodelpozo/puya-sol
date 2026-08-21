@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 // CUSTOM regression fixture (NOT vendored / not an original Solidity semantic test).
-// Guards the call-graph closure in ParamMutationDetector (possible_solc item
-// 3): a param passed on to another callee that mutates it must count as
+// Guards the call-graph closure in ParamMutationDetector: a param passed on
+// to another callee that mutates it must count as
 // mutated — pre-fix, the caller-side write-back was silently dropped.
 library LibMut {
     function bumpVia(TransParamMut.S storage q, uint256 v) internal {

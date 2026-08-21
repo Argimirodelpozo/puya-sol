@@ -5,7 +5,6 @@
 main:
     intcblock 1 0 24 88
     bytecblock 0xfffffffffffffffd 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000005
-    intc_1 // 0
     pushint 4096
     bzero
     dup
@@ -73,7 +72,6 @@ main_ternary_merge@18:
 main_ternary_merge@21:
     bytec_0 // 0xfffffffffffffffd
     replace2 24
-    bury 1
     bytec_2 // 0x0000000000000005
     intc_1 // 0
     getbyte
@@ -85,8 +83,6 @@ main_ternary_merge@21:
 main_ternary_merge@24:
     bytec_2 // 0x0000000000000005
     replace2 24
-    dig 1
-    swap
     concat
     dup
     len
@@ -149,13 +145,13 @@ main_ternary_false@28:
 
 main_encI64arr_route@9:
     txn GroupIndex
-    bz main_ternary_false@51
+    bz main_ternary_false@54
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@52:
+main_ternary_merge@55:
     !
     assert // not payable
     load 0
@@ -175,19 +171,19 @@ main_ternary_merge@52:
     intc_0 // 1
     return
 
-main_ternary_false@51:
+main_ternary_false@54:
     intc_1 // 0
-    b main_ternary_merge@52
+    b main_ternary_merge@55
 
 main_encI64_route@8:
     txn GroupIndex
-    bz main_ternary_false@56
+    bz main_ternary_false@59
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@57:
+main_ternary_merge@60:
     !
     assert // not payable
     pushbytes 0x151f7c750008fffffffffffffffd
@@ -195,19 +191,19 @@ main_ternary_merge@57:
     intc_0 // 1
     return
 
-main_ternary_false@56:
+main_ternary_false@59:
     intc_1 // 0
-    b main_ternary_merge@57
+    b main_ternary_merge@60
 
 main_rtU128_route@7:
     txn GroupIndex
-    bz main_ternary_false@61
+    bz main_ternary_false@64
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@62:
+main_ternary_merge@65:
     !
     assert // not payable
     load 0
@@ -227,19 +223,19 @@ main_ternary_merge@62:
     intc_0 // 1
     return
 
-main_ternary_false@61:
+main_ternary_false@64:
     intc_1 // 0
-    b main_ternary_merge@62
+    b main_ternary_merge@65
 
 main_encI128_route@6:
     txn GroupIndex
-    bz main_ternary_false@66
+    bz main_ternary_false@72
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@67:
+main_ternary_merge@73:
     !
     assert // not payable
     load 0
@@ -259,19 +255,19 @@ main_ternary_merge@67:
     intc_0 // 1
     return
 
-main_ternary_false@66:
+main_ternary_false@72:
     intc_1 // 0
-    b main_ternary_merge@67
+    b main_ternary_merge@73
 
 main_encU128_route@5:
     txn GroupIndex
-    bz main_ternary_false@71
+    bz main_ternary_false@77
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@72:
+main_ternary_merge@78:
     !
     assert // not payable
     load 0
@@ -291,6 +287,6 @@ main_ternary_merge@72:
     intc_0 // 1
     return
 
-main_ternary_false@71:
+main_ternary_false@77:
     intc_1 // 0
-    b main_ternary_merge@72
+    b main_ternary_merge@78

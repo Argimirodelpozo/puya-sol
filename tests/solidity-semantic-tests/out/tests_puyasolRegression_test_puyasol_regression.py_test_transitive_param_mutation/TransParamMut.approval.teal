@@ -82,7 +82,14 @@ main_ternary_merge@20:
     !
     assert // not payable
     bytec_0 // "s"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000014
+    replace2 0
+    bytec_0 // "s"
+    swap
     box_put
     pushint 7
     itob
@@ -118,7 +125,14 @@ main_ternary_merge@25:
     !
     assert // not payable
     bytec_0 // "s"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
+    replace2 0
+    bytec_0 // "s"
+    swap
     box_put
     bytec_0 // "s"
     callsub __solfn_51
@@ -151,7 +165,14 @@ main_ternary_merge@30:
     !
     assert // not payable
     bytec_0 // "s"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
+    replace2 0
+    bytec_0 // "s"
+    swap
     box_put
     bytec_0 // "s"
     callsub __solfn_51
@@ -181,6 +202,7 @@ LibMut.bumpVia:
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
+    dup
     extract 0 32
     frame_dig -1
     b+
@@ -196,6 +218,7 @@ LibMut.bumpVia:
     intc_2 // 32
     bzero
     b|
+    replace2 0
     frame_dig -2
     swap
     box_put
@@ -210,6 +233,7 @@ __solfn_51:
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
+    dup
     extract 0 32
     pushbytes 0x01
     b+
@@ -225,6 +249,7 @@ __solfn_51:
     intc_2 // 32
     bzero
     b|
+    replace2 0
     frame_dig -1
     swap
     box_put

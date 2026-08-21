@@ -56,6 +56,7 @@ private:
 	/// Free/library functions whose lowering needs a concrete host contract
 	/// (function-pointer dispatch or default-layout inline storage assembly).
 	std::vector<solidity::frontend::FunctionDefinition const*> m_hostBoundFunctions;
+	std::vector<solidity::frontend::ContractDefinition const*> m_selectorContracts;
 
 	// ── Build phases (executed in order from build()) ──
 	// Phase 1: registerFunctionIds → m_functionSymbols.
