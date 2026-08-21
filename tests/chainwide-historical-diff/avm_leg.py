@@ -662,21 +662,43 @@ def main():
     # calldata; ARC4 remains the native transport only for harness-private
     # lifecycle methods and dependency tape loaders.
     _main_args = list(_main_args or []) + ["--contract-abi", "evm"]
+    # A dep that must ROUTE a call has to be built with its CALLER's wire ABI.
+    # Deps were compiled with the mode flags only, so their routers dispatched
+    # ARC-4 method selectors while the contract under test called them with EVM
+    # 4-byte ones: no route matched, the stub's catch-all fallback answered with
+    # its own address, and the caller's bool decode failed ("invalid EVM ABI
+    # bool") -- 278 status divergences on cctp_messenger's AVM leg alone, purely
+    # a build-flag mismatch.
+    #
+    # But ONLY for deps with no answer tape. A TAPE-DRIVEN dep is meant to be
+    # answered from its `__fallback`, which is where an unmatched selector lands
+    # either way, so its router ABI is irrelevant -- and building it EVM-side
+    # would strip the ARC-4 configs the harness needs to LOAD that tape
+    # (`__load`/`__seek` survive as ARC-4 routes only in the default profile;
+    # under --contract-abi evm a dep exposes `__postInit()` and nothing else,
+    # which broke every one of Aave's 18 deps with "method not found in
+    # app_spec"). Split-config/force-delegate stay main-contract-only.
+    _tape_path = case_dir / "dep_tape.json"
+    _taped_deps = {a.lower() for a in
+                   (((load_json(_tape_path) or {}).get("tapes") or {})
+                    if _tape_path.exists() else {})}
     dep_apps = []
     dep_app_byaddr = {}
     for dspec in meta.get("dep_ctors") or []:
         dep_sol = case_dir / dspec["dir"] / "prepared.sol"
         try:
             try:
-                darts = h.compile(dep_sol,
-                                  extra_args=_mode_args)
+                _abi_args = (_mode_args
+                             if dspec["addr"].lower() in _taped_deps
+                             else list(_mode_args or []) + ["--contract-abi", "evm"])
+                darts = h.compile(dep_sol, extra_args=_abi_args)
                 dapp = h.deploy(darts, dspec.get("name"),
                                 ctor_args=[resolve(m) for m in dspec["args"]] or None)
             except Exception:
                 _fb = case_dir / dspec["dir"] / "stub_fallback.sol"
                 if not _fb.exists():
                     raise
-                darts = h.compile(_fb, extra_args=_mode_args)
+                darts = h.compile(_fb, extra_args=_abi_args)
                 dapp = h.deploy(darts, "StubERC20")
                 print(f"[avm] dep {dspec.get('name')}: generic stand-in "
                       f"deployed instead (real dep failed on this leg)")

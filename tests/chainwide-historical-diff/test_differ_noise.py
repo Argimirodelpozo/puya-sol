@@ -162,3 +162,19 @@ def test_a_non_default_entry_on_one_leg_is_still_a_divergence(tmp_path):
         tmp_path, evm_map={"_m": {}}, avm_map={"_m": {"«1»": 7}},
     ))["counts"]
     assert counts["storage_map_div"] == 1
+
+
+def test_a_mostly_skipped_run_is_flagged_as_near_vacuous(tmp_path, capsys):
+    """A ✅ over 3% of the window must not look like a ✅ over all of it."""
+    from differ import print_report
+    print_report({"tag": "t", "name": "N", "txns_in_window": 300, "replayed": 20,
+                  "skips": {"closed-world": 280}, "platform_limits": 0,
+                  "findings": {}, "counts": {}})
+    assert "20/300" in capsys.readouterr().out
+
+
+def test_a_full_run_is_not_flagged(tmp_path, capsys):
+    from differ import print_report
+    print_report({"tag": "t", "name": "N", "txns_in_window": 557, "replayed": 554,
+                  "skips": {}, "platform_limits": 0, "findings": {}, "counts": {}})
+    assert "vacuous" not in capsys.readouterr().out

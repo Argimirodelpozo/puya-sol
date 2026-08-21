@@ -534,6 +534,15 @@ def print_report(rep: dict):
     print(f"\n=== {rep['tag']} ({rep['name']}) — {rep['replayed']}/{rep['txns_in_window']} "
           f"txns replayed on both legs ===")
     print(f"  skips: {rep['skips'] or '{}'}  | avm platform-limits: {rep['platform_limits']}")
+    # COVERAGE, loudly. A run whose closed-world filter dropped most of the
+    # window prints the same ✅ as a full one: cctp_messenger replayed 20 of 300
+    # txns and read as clean, and the 280 skips were a dep that could not route
+    # a call at all. Surface the ratio next to the verdict, not in the JSON.
+    _win = int(rep.get("txns_in_window") or 0)
+    _ran = int(rep.get("replayed") or 0)
+    if _win and _ran / _win < 0.5:
+        print(f"  ⚠️  only {_ran}/{_win} txns replayed ({100 * _ran / _win:.0f}%) — "
+              f"a verdict over this little of the window is close to vacuous")
     probes = (rep.get("coverage") or {}).get("parameterized_probes") or {}
     if probes.get("planned"):
         print(f"  parameterized probes: {probes.get('compared', 0)}/"
