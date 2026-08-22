@@ -3,6 +3,7 @@
 ///   tryHandleMultiBoxArrayWrite
 #include "builder/sol-ast/exprs/SolAssignment.h"
 #include "awst/NameGen.h"
+#include "builder/sol-ast/EffectScan.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-eb/AssignmentHelper.h"
 #include "builder/storage/StorageBackend.h"
@@ -408,6 +409,31 @@ SolAssignment::tryHandleBoxedAggregatePathWrite()
 	auto const* rootW = m_ctx.typeMapper.map(vd->type());
 	if (!rootW)
 		return std::nullopt;
+
+	// Build the RHS BEFORE snapshotting the box, and when it can write state,
+	// PIN it to its own pre-statement so the write actually happens first.
+	// Solidity evaluates a compound assignment's RHS fully, then reads the
+	// target's old value, so `s.f = 5; s.f += bump(s)` (bump does `p.f += 1`
+	// and returns 100) is 6 + 100. Leaving the call inside the value
+	// expression put it AFTER the snapshot statement, which read a stale 5 —
+	// and worse, wrote that stale whole-struct copy back over bump's store,
+	// losing the callee's write to every OTHER field too. Building earlier
+	// without pinning changes nothing: the call still evaluates where the
+	// expression sits.
+	//
+	// This is the last point where the handler can still decline; building the
+	// RHS any earlier would double-evaluate it in the caller.
+	auto rhs = buildExpr(m_assignment.rightHandSide());
+	if (rhs && EffectScan::mayWrite(m_assignment.rightHandSide()))
+	{
+		std::string pinName = "__boxref_rhs_" + std::to_string(
+			awst::NameGen::next("SolAssignment.boxedPathRhs"));
+		auto const* pinW = rhs->wtype;
+		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(pinName, pinW, m_loc), std::move(rhs), m_loc));
+		rhs = awst::makeVarExpression(pinName, pinW, m_loc);
+	}
+
 	auto makeBox = [&]() {
 		std::shared_ptr<awst::Expression> key;
 		if (!keyParam.empty())
@@ -463,7 +489,6 @@ SolAssignment::tryHandleBoxedAggregatePathWrite()
 
 	auto const* valueSol = m_assignment.leftHandSide().annotation().type;
 	auto const* nativeW = m_ctx.typeMapper.map(valueSol);
-	auto rhs = buildExpr(m_assignment.rightHandSide());
 	if (op != Token::Assign)
 	{
 		std::shared_ptr<awst::Expression> current = target;
