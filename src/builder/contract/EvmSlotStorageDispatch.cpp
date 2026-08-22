@@ -19,41 +19,44 @@
 
 namespace puyasol::builder
 {
-void ContractBuilder::buildEvmSlotStorageDispatch(
-	StorageRuntimePlan const& _storagePlan,
-	awst::Contract* _contractNode,
-	std::string const& _contractName
-)
+namespace
 {
-	auto const& layout = _storagePlan.solidityLayout;
-
-	// Dense-only: every runtime slot is provably < 2^16 — no mapping / dynamic
-	// array / bytes / string anywhere in the persistent layout (their slots are
-	// keccak-derived) and no inline assembly (arbitrary computed slots). The
-	// sparse "s:" arms and the mod-2^256 slot wrap are then dead weight — a
-	// scalar-only contract pays a few hundred bytes of unreachable code
-	// (pushed external_call_signed_narrow_return's child-embed over the 8KB cap).
-	// UNIT-GLOBAL, not per-contract: the runtime subroutines share one
-	// SubroutineID across the whole unit, so variant bodies clobber each other
-	// (AWSTBuilder pre-scans and sets the flags before any contract builds).
-	bool const denseOnly = m_typeMapper.profile().denseOnlyStorage;
-
-	std::string cref = m_sourceFile + "." + _contractName;
+/// The seven runtime subroutines of the EVM-slot storage model, plus the
+/// expression factories they share.
+///
+/// These were seven immediately-invoked `[&]` lambdas inside one 1,100-line
+/// function, so every helper below was a capture and the whole file had to be
+/// read as a unit. As members the bodies are unchanged -- `loc`, `cref`,
+/// `denseOnly` and the factories resolve as members rather than captures.
+struct EvmSlotCodec
+{
+	TypeMapper& m_typeMapper;
 	awst::SourceLocation loc;
-	loc.file = m_sourceFile;
+	std::string cref;
+	/// Every runtime slot is provably < 2^16, so the sparse arms and the
+	/// mod-2^256 wrap are dead weight. Unit-global -- see the caller.
+	bool denseOnly = false;
+	/// Dense-only AND <= 64 slots: constant page-0 key, no mod, and no 8-byte
+	/// normalisation before btoi.
+	bool singlePage = false;
+	std::string s64Name = "__eslot64";
 
-	auto makeUint64 = [&](std::string const& val) {
+	auto makeUint64(std::string const& val) const
+	{
 		return awst::makeIntegerConstant(val, loc);
-	};
-	auto makeBytes = [&](std::string const& s) {
+	}
+	auto makeBytes(std::string const& s) const
+	{
 		return awst::makeUtf8BytesConstant(s, loc);
-	};
-	auto slotVar = [&]() {
+	}
+	auto slotVar() const
+	{
 		return awst::makeVarExpression("__slot", awst::WType::biguintType(), loc);
-	};
+	}
 
 	// EVM slot arithmetic wraps mod 2^256 (see buildStorageDispatch).
-	auto makeSlotWrapStmt = [&]() {
+	auto makeSlotWrapStmt() const
+	{
 		auto wrapped = awst::makeBigUIntBinOp(
 			slotVar(),
 			awst::BigUIntBinaryOperator::Mod,
@@ -62,27 +65,29 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 				loc),
 			loc);
 		return awst::makeAssignmentStatement(slotVar(), std::move(wrapped), loc);
-	};
+	}
 
 	// __slot < 2^16 → dense region (declared vars), page boxes of 64 slots.
-	auto denseCmp = [&]() {
+	auto denseCmp() const
+	{
 		return awst::makeNumericCompare(slotVar(), awst::NumericComparison::Lt,
 			awst::makeIntegerConstant(std::to_string(kEvmDenseSlotLimit), loc,
 				awst::WType::biguintType()), loc);
-	};
+	}
+
 
 	// Bind the uint64 slot, then key = "p:" ++ itob(slot / 64), off = (slot % 64) * 32.
 	// Dense-only, single-page layouts (≤64 slots): key is the constant page-0
 	// name, offset drops the mod, and the biguint→u64 cast needs no 8-byte
 	// normalisation (slot fits 2 bytes; btoi accepts ≤8). Unit-global like
 	// denseOnly (same shared-SubroutineID hazard).
-	bool const singlePage = denseOnly
-		&& m_typeMapper.profile().singlePageStorage;
-	std::string const s64Name = "__eslot64";
-	auto s64Var = [&]() {
+
+	auto s64Var() const
+	{
 		return awst::makeVarExpression(s64Name, awst::WType::uint64Type(), loc);
-	};
-	auto bindS64 = [&](awst::Block& _blk) {
+	}
+	auto bindS64(awst::Block& _blk) const
+	{
 		// ALWAYS 8-byte-normalise before btoi: a biguint's byte length is not
 		// bounded by its VALUE — slot args arrive 32-byte-padded from the
 		// getter path (leftPadToN canonicals), and btoi rejects >8 bytes.
@@ -91,8 +96,9 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		auto extract = awst::makeExtractLastN(std::move(cat), 8, loc);
 		_blk.body.push_back(awst::makeAssignmentStatement(
 			s64Var(), awst::makeBtoi(std::move(extract), loc), loc));
-	};
-	auto pageKey = [&]() -> std::shared_ptr<awst::Expression> {
+	}
+	std::shared_ptr<awst::Expression> pageKey() const
+	{
 		if (singlePage)
 			return awst::makeConcat(makeBytes("p:"),
 				awst::makeItob(makeUint64("0"), loc), loc);
@@ -101,8 +107,9 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			makeUint64(std::to_string(kEvmSlotsPerPage)), loc);
 		return awst::makeConcat(makeBytes("p:"),
 			awst::makeItob(std::move(page), loc), loc);
-	};
-	auto pageOff = [&]() -> std::shared_ptr<awst::Expression> {
+	}
+	std::shared_ptr<awst::Expression> pageOff() const
+	{
 		if (singlePage)
 			return awst::makeUInt64BinOp(s64Var(),
 				awst::UInt64BinaryOperator::Mult, makeUint64("32"), loc);
@@ -111,22 +118,26 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			makeUint64(std::to_string(kEvmSlotsPerPage)), loc);
 		return awst::makeUInt64BinOp(std::move(idx),
 			awst::UInt64BinaryOperator::Mult, makeUint64("32"), loc);
-	};
-	auto sparseKey = [&]() {
+	}
+	auto sparseKey() const
+	{
 		auto slotBytes = awst::makeLeftPadToN(awst::makeAsBytes(slotVar(), loc), 32, loc);
 		return awst::makeConcat(makeBytes("s:"), std::move(slotBytes), loc);
-	};
-	auto boxExists = [&](std::shared_ptr<awst::Expression> _key) {
+	}
+	auto boxExists(std::shared_ptr<awst::Expression> _key) const
+	{
 		auto boxLen = StorageMapper::makeBoxLenTuple(m_typeMapper, std::move(_key), loc);
 		return awst::makeTupleItem(std::move(boxLen), 1, awst::WType::boolType(), loc);
-	};
-	auto retZero = [&](awst::Block& _blk) {
+	}
+	auto retZero(awst::Block& _blk) const
+	{
 		_blk.body.push_back(awst::makeReturnStatement(
 			awst::makeIntegerConstant("0", loc, awst::WType::biguintType()), loc));
-	};
+	}
 
 	// ── __storage_read(slot: biguint) -> biguint ──
-	auto buildStorageRead = [&]() {
+	void emitStorageRead(awst::Contract* _contractNode) const
+	{
 		awst::ContractMethod readSub;
 		readSub.sourceLocation = loc;
 		readSub.cref = cref;
@@ -186,11 +197,11 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 
 		readSub.body = body;
 		_contractNode->methods.push_back(std::move(readSub));
-	};
-	buildStorageRead();
+	}
 
 	// ── __storage_write(slot: biguint, value: biguint) -> void ──
-	auto buildStorageWrite = [&]() {
+	void emitStorageWrite(awst::Contract* _contractNode) const
+	{
 		awst::ContractMethod writeSub;
 		writeSub.sourceLocation = loc;
 		writeSub.cref = cref;
@@ -268,56 +279,63 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 
 		writeSub.body = body;
 		_contractNode->methods.push_back(std::move(writeSub));
-	};
-	buildStorageWrite();
+	}
 
 	// ── EVM bytes/string storage codec ──────────────────────────────────────
 	// Solidity storage format: short (len<32) = data left-aligned ++ 2*len in
 	// the low byte, all in the slot word; long = word 2*len+1 at the slot,
 	// data in 32-byte chunks at keccak256(slot32)+i.
-	auto readWordCall = [&](std::shared_ptr<awst::Expression> _slot) {
+	auto readWordCall(std::shared_ptr<awst::Expression> _slot) const
+	{
 		auto call = awst::makeSubroutineCall(
 			awst::SubroutineID{"__puyasol___storage_read"},
 			awst::WType::biguintType(), loc);
 		awst::pushCallArg(call->args, "__slot", std::move(_slot));
 		return std::shared_ptr<awst::Expression>(std::move(call));
-	};
-	auto writeWordStmt = [&](std::shared_ptr<awst::Expression> _slot,
-		std::shared_ptr<awst::Expression> _word) {
+	}
+	auto writeWordStmt(std::shared_ptr<awst::Expression> _slot, std::shared_ptr<awst::Expression> _word) const
+	{
 		auto call = awst::makeSubroutineCall(
 			awst::SubroutineID{"__puyasol___storage_write"},
 			awst::WType::voidType(), loc);
 		awst::pushCallArg(call->args, "__slot", std::move(_slot));
 		awst::pushCallArg(call->args, "__value", std::move(_word));
 		return awst::makeExpressionStatement(std::move(call), loc);
-	};
-	auto chunkBase = [&]() {
+	}
+	auto chunkBase() const
+	{
 		// keccak256(slot32) as biguint — the data region of the long form.
 		auto slotBytes = awst::makeLeftPadToN(
 			awst::makeAsBytes(slotVar(), loc), 32, loc);
 		return awst::makeAsBiguint(
 			awst::makeKeccak256(std::move(slotBytes), loc), loc);
-	};
-	auto u64Var = [&](std::string const& n) {
+	}
+	auto u64Var(std::string const& n) const
+	{
 		return awst::makeVarExpression(n, awst::WType::uint64Type(), loc);
-	};
-	auto bytesVar = [&](std::string const& n) {
+	}
+	auto bytesVar(std::string const& n) const
+	{
 		return awst::makeVarExpression(n, awst::WType::bytesType(), loc);
-	};
-	auto biguintVar = [&](std::string const& n) {
+	}
+	auto biguintVar(std::string const& n) const
+	{
 		return awst::makeVarExpression(n, awst::WType::biguintType(), loc);
-	};
-	auto u64c = [&](uint64_t v) { return awst::makeIntegerConstant(v, loc); };
-	auto u64ToBiguint = [&](std::shared_ptr<awst::Expression> e) {
+	}
+	auto u64c(uint64_t v) const { return awst::makeIntegerConstant(v, loc); }
+	auto u64ToBiguint(std::shared_ptr<awst::Expression> e) const
+	{
 		return awst::makeAsBiguint(awst::makeItob(std::move(e), loc), loc);
-	};
-	auto biguintToU64 = [&](std::shared_ptr<awst::Expression> e) {
+	}
+	auto biguintToU64(std::shared_ptr<awst::Expression> e) const
+	{
 		auto cat = awst::makeLeftPad(awst::makeAsBytes(std::move(e), loc), 8, loc);
 		return awst::makeBtoi(awst::makeExtractLastN(std::move(cat), 8, loc), loc);
-	};
+	}
 
 	// ── __evm_bytes_read(slot: biguint) -> bytes ──
-	auto buildBytesRead = [&]() {
+	void emitBytesRead(awst::Contract* _contractNode) const
+	{
 		awst::ContractMethod sub;
 		sub.sourceLocation = loc;
 		sub.cref = cref;
@@ -398,11 +416,11 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 
 		sub.body = body;
 		_contractNode->methods.push_back(std::move(sub));
-	};
-	buildBytesRead();
+	}
 
 	// ── __evm_bytes_write(slot: biguint, val: bytes) -> void ──
-	auto buildBytesWrite = [&]() {
+	void emitBytesWrite(awst::Contract* _contractNode) const
+	{
 		awst::ContractMethod sub;
 		sub.sourceLocation = loc;
 		sub.cref = cref;
@@ -538,14 +556,14 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 
 		sub.body = body;
 		_contractNode->methods.push_back(std::move(sub));
-	};
-	buildBytesWrite();
+	}
 
 	// ── __evm_dynarr_read(slot: biguint) -> bytes ──
 	// Materialise a dynamic array of 32-byte-encoded elements as its ARC4
 	// form [u16 count][elems]: count word at the slot, elements at
 	// keccak256(slot32)+i. Callers cap/validate element width.
-	auto buildDynamicArrayRead = [&]() {
+	void emitDynamicArrayRead(awst::Contract* _contractNode) const
+	{
 		awst::ContractMethod sub;
 		sub.sourceLocation = loc;
 		sub.cref = cref;
@@ -689,15 +707,15 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 
 		sub.body = body;
 		_contractNode->methods.push_back(std::move(sub));
-	};
-	buildDynamicArrayRead();
+	}
 
 	// ── __evm_dynarr_write(slot: biguint, val: bytes) -> void ──
 	// Inverse of __evm_dynarr_read: val is the ARC4 form [u16 count][32B
 	// elems]. Writes the length word at the slot, elements at
 	// keccak256(slot32)+i, and CLEARS the old tail when the array shrinks —
 	// EVM assignment semantics, and a later push must see zeroed slots.
-	auto buildDynamicArrayWrite = [&]() {
+	void emitDynamicArrayWrite(awst::Contract* _contractNode) const
+	{
 		awst::ContractMethod sub;
 		sub.sourceLocation = loc;
 		sub.cref = cref;
@@ -888,14 +906,14 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		}
 		sub.body = body;
 		_contractNode->methods.push_back(std::move(sub));
-	};
-	buildDynamicArrayWrite();
+	}
 
 	// ── Recursive dynamic-array read / write ──
 	// Every dynamic-array layer has the same storage and ARC4 structure. Depth
 	// one delegates to the leaf codec above; greater depths recursively compose
 	// u16 heads and inner tails. T[][][] is therefore the same path as T[][].
-	auto buildNestedDynamicArrayMethods = [&]() {
+	void emitNestedDynamicArrayMethods(awst::Contract* _contractNode) const
+	{
 		auto metricArgs = [&](std::vector<awst::CallArg>& _args) {
 			for (char const* an: {"__size", "__aw", "__per", "__mul", "__bp"})
 				awst::pushCallArg(_args, an, u64Var(an));
@@ -1135,8 +1153,46 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 			sub.body = body;
 			_contractNode->methods.push_back(std::move(sub));
 		}
-	};
-	buildNestedDynamicArrayMethods();
+	}
+
+};
+}  // namespace
+
+void ContractBuilder::buildEvmSlotStorageDispatch(
+	StorageRuntimePlan const& _storagePlan,
+	awst::Contract* _contractNode,
+	std::string const& _contractName
+)
+{
+	auto const& layout = _storagePlan.solidityLayout;
+
+	// Dense-only: every runtime slot is provably < 2^16 — no mapping / dynamic
+	// array / bytes / string anywhere in the persistent layout (their slots are
+	// keccak-derived) and no inline assembly (arbitrary computed slots). The
+	// sparse "s:" arms and the mod-2^256 slot wrap are then dead weight — a
+	// scalar-only contract pays a few hundred bytes of unreachable code
+	// (pushed external_call_signed_narrow_return's child-embed over the 8KB cap).
+	// UNIT-GLOBAL, not per-contract: the runtime subroutines share one
+	// SubroutineID across the whole unit, so variant bodies clobber each other
+	// (AWSTBuilder pre-scans and sets the flags before any contract builds).
+	bool const denseOnly = m_typeMapper.profile().denseOnlyStorage;
+
+	std::string cref = m_sourceFile + "." + _contractName;
+	awst::SourceLocation loc;
+	loc.file = m_sourceFile;
+
+	// Single-page dense layouts skip the mod and the wide btoi normalisation.
+	bool const singlePage = denseOnly
+		&& m_typeMapper.profile().singlePageStorage;
+
+	EvmSlotCodec codec{m_typeMapper, loc, cref, denseOnly, singlePage, "__eslot64"};
+	codec.emitStorageRead(_contractNode);
+	codec.emitStorageWrite(_contractNode);
+	codec.emitBytesRead(_contractNode);
+	codec.emitBytesWrite(_contractNode);
+	codec.emitDynamicArrayRead(_contractNode);
+	codec.emitDynamicArrayWrite(_contractNode);
+	codec.emitNestedDynamicArrayMethods(_contractNode);
 
 	// Library/free-function callers cannot use InstanceMethodTarget, so runtime
 	// helpers are roots rather than contract methods.
@@ -1151,5 +1207,4 @@ void ContractBuilder::buildEvmSlotStorageDispatch(
 		+ std::to_string(kEvmDenseSlotLimit) + "/sparse) for "
 		+ std::to_string(layout.totalSlots()) + " dense slots", loc);
 }
-
 } // namespace puyasol::builder

@@ -1,0 +1,346 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_slot_write_through.sol.SlotWrite.approval_program() -> uint64:
+main:
+    intcblock 1 0 2
+    bytecblock 0x "a" 0x151f7c75 "c" "d" "__ctor_pending"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 5 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x3f7ac4f6 0x876f9955 0x494eba9d 0x51221edb 0x109f614f 0xf372452b 0x83a575e0 0x5635b660 // method "__postInit()void", method "setA(string)void", method "setC(byte[])void", method "setDViaLib(string)void", method "getD()string", method "readA()string", method "getA()string", method "getC()byte[]", method "lenA()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@5 main_setA_route@6 main_setC_route@7 main_setDViaLib_route@8 main_getD_route@9 main_readA_route@10 main_getA_route@11 main_getC_route@12 main_lenA_route@13
+    err
+
+main_lenA_route@13:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    len
+    itob
+    pushint 32
+    bzero
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+main_getC_route@12:
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    bytec_3 // "c"
+    box_get
+    assert // box exists
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_getA_route@11:
+    txn GroupIndex
+    bz main_ternary_false@29
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@30:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@29:
+    intc_1 // 0
+    b main_ternary_merge@30
+
+main_readA_route@10:
+    txn GroupIndex
+    bz main_ternary_false@34
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@35:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_1 // "a"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@34:
+    intc_1 // 0
+    b main_ternary_merge@35
+
+main_getD_route@9:
+    txn GroupIndex
+    bz main_ternary_false@39
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@40:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 4 // "d"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@39:
+    intc_1 // 0
+    b main_ternary_merge@40
+
+main_setDViaLib_route@8:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txn GroupIndex
+    bz main_ternary_false@44
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@45:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 4 // "d"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    swap
+    callsub Fallback.setVia
+    bytec 4 // "d"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_ternary_false@44:
+    intc_1 // 0
+    b main_ternary_merge@45
+
+main_setC_route@7:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txn GroupIndex
+    bz main_ternary_false@49
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@50:
+    !
+    assert // not payable
+    bytec_3 // "c"
+    box_del
+    pop
+    bytec_3 // "c"
+    swap
+    box_put
+    intc_0 // 1
+    return
+
+main_ternary_false@49:
+    intc_1 // 0
+    b main_ternary_merge@50
+
+main_setA_route@6:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    txn GroupIndex
+    bz main_ternary_false@54
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@55:
+    !
+    assert // not payable
+    bytec_1 // "a"
+    swap
+    app_global_put
+    intc_0 // 1
+    return
+
+main_ternary_false@54:
+    intc_1 // 0
+    b main_ternary_merge@55
+
+main___postInit_route@5:
+    bytec 5 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec 5 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_3 // "c"
+    intc_1 // 0
+    box_create
+    pop
+    bytec_1 // "a"
+    bytec_0 // 0x
+    app_global_put
+    bytec 4 // "d"
+    bytec_0 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// __solfn_45(store: bytes, v: bytes) -> bytes:
+Fallback.setVia:
+    proto 2 1
+    frame_dig -1
+    retsub
