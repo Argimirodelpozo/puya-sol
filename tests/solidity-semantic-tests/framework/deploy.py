@@ -426,6 +426,38 @@ def _default_encode(v) -> bytes:
     raise TypeError(f"can't default-encode {type(v).__name__}")
 
 
+_MIN_BALANCE_RE = re.compile(
+    r"account (\S+) balance (\d+) below min (\d+)")
+
+
+def _topup_min_balance(algod, localnet, error: Exception) -> bool:
+    """Cover a min-balance shortfall the node reported, if that's the failure.
+
+    Box MBR is 2500 + 400*(name+size) per box, so it scales with whatever the
+    contract's storage layout actually allocates. Deploy funding is a flat
+    constant, which silently became too small the moment an array needed a
+    second 32 KB page. Reading the shortfall off the node's own message keeps
+    the harness honest about layout changes instead of re-tuning a magic
+    number per contract. Returns False when this is some other error.
+    """
+    match = _MIN_BALANCE_RE.search(str(error))
+    if not match:
+        return False
+    address, balance, required = match.group(1), int(match.group(2)), int(match.group(3))
+    shortfall = required - balance
+    if shortfall <= 0:
+        return False
+    sp = algod.suggested_params()
+    pay = PaymentTxn(
+        localnet.account.address, sp, address,
+        shortfall + 1_000_000, note=os.urandom(8),
+    )
+    wait_for_confirmation(
+        algod, algod.send_transaction(pay.sign(localnet.account.private_key)), 4
+    )
+    return True
+
+
 def _call_postinit(
     *,
     algod,
@@ -438,6 +470,7 @@ def _call_postinit(
     budget_pool: int = 0,
     fee_bump: int = 0,
     inner_txns: int = 0,
+    topped_up: bool = False,
 ) -> None:
     """Call the __postInit method, populating box refs via simulate.
 
@@ -516,6 +549,14 @@ def _call_postinit(
         atc = au.populate_app_call_resources(atc, algod)
         atc.execute(algod, wait_rounds=4)
     except Exception as e:
+        # Box MBR outgrew the flat deploy funding — top up by the reported
+        # shortfall and retry once.
+        if not topped_up and _topup_min_balance(algod, localnet, e):
+            return _call_postinit(
+                algod=algod, localnet=localnet, app_id=app_id, app_spec=app_spec,
+                postinit_spec=postinit_spec, ctor_args=ctor_args,
+                postinit_args=postinit_args, budget_pool=budget_pool,
+                fee_bump=fee_bump, inner_txns=inner_txns, topped_up=True)
         # Reference-array overflow (>8 foreign refs on the single postinit txn):
         # retry with dummy helper txns — each group txn carries 8 more refs.
         msg = str(e).lower()
@@ -524,7 +565,8 @@ def _call_postinit(
             return _call_postinit(
                 algod=algod, localnet=localnet, app_id=app_id, app_spec=app_spec,
                 postinit_spec=postinit_spec, ctor_args=ctor_args,
-                postinit_args=postinit_args, budget_pool=8, inner_txns=inner_txns)
+                postinit_args=postinit_args, budget_pool=8, inner_txns=inner_txns,
+                topped_up=topped_up)
         raise DeployError(f"__postInit failed: {str(e)[:300]}") from e
 
 

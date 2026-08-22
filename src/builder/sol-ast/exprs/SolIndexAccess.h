@@ -92,6 +92,13 @@ private:
 		std::string varName;                       // Identifier/MemberAccess name
 		solidity::frontend::Type const* rootMappingType = nullptr;
 		std::shared_ptr<awst::Expression> aliasOverridePrefix;  // alias's slot key, when applicable
+		/// The chain starts at a plain state-variable box, so the
+		/// `utf8(name)`-keyed length-box convention holds and a DYNAMIC array
+		/// length can be read from the derived prefix. False for aliases,
+		/// storage-ref params and mapping-returning calls: their inner arrays
+		/// are encoded inside a parent box, and `prefix ++ index` names a
+		/// descendant mapping box, never a box holding that array's length.
+		bool rootIsStateVarBox = false;
 	};
 
 	/// Phase-extract of `handleMappingAccess`: given the cursor

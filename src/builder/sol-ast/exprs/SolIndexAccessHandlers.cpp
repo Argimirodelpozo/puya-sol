@@ -280,7 +280,11 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 			return builder::StorageMapper::makeStateGetWithDefault(
 				std::move(box), wt, m_loc);
 		};
-		if (auto const* rootArray = dynamic_cast<ArrayType const*>(walkContainer))
+		// Only a genuine state-var box holds its array at its own key. An alias
+		// or storage-ref prefix names a DESCENDANT mapping box, so seeding the
+		// value walk from it reads a box nothing ever created.
+		if (auto const* rootArray = dynamic_cast<ArrayType const*>(walkContainer);
+			rootArray && ctx.rootIsStateVarBox)
 			currentArrayValue = boxedArrayValue(currentPrefix, rootArray);
 
 		for (size_t ki = 0; ki < indexExprs.size(); ++ki)
@@ -332,9 +336,16 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleMappingAccess()
 				else if (currentArrayValue)
 					bound = awst::makeArrayLength(
 						currentArrayValue, awst::WType::uint64Type(), m_loc);
-				else
+				else if (ctx.rootIsStateVarBox)
 					bound = SolLengthAccess::stateDynArrayLengthForKey(
 						m_ctx, currentPrefix, at, m_loc);
+				// else: no length is addressable from this prefix. Reading one
+				// anyway box_extracts a box that was never created — for
+				// `mapping(uint=>uint)[] storage b = a[i]; b[b.length-1][k] = v`
+				// it looked for a box named after the LOCAL, while that array's
+				// length lives inside box `a`, and the whole call died on "no
+				// such box 0x62". Skipping the assert only loses an EVM Panic
+				// 0x32 on a shape that never had one.
 				if (bound)
 				{
 					if (!dynamic_cast<awst::VarExpression const*>(translated.get())
@@ -460,10 +471,15 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 			if (auto const* stateVar = dynamic_cast<VariableDeclaration const*>(decl);
 				stateVar && stateVar->isStateVariable()
 				&& !stateVar->isConstant() && !stateVar->immutable())
+			{
 				out.varName = m_ctx.storageMapper.physicalBindingFor(*stateVar).name;
+				out.rootIsStateVarBox = true;
+			}
 			auto const* alias = m_scope.findStorageAlias(decl->id());
 			if (alias)
 			{
+				// An alias re-roots the chain at somebody else's box.
+				out.rootIsStateVarBox = false;
 				auto aliasExpr = alias->expr;
 				if (auto sg = std::dynamic_pointer_cast<awst::StateGet>(aliasExpr))
 					aliasExpr = sg->field;
