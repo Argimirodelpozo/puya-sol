@@ -88,7 +88,7 @@ public:
 				m_mapper, type, word(std::move(offset), out), m_loc, out,
 				// A memory read is not a trust boundary: inline assembly may
 				// legally have dirtied the high bytes, and the EVM masks them.
-				codec::NarrowIntegerPolicy::Mask);
+				codec::PaddingPolicy::Clean);
 		if (auto const* array = dynamic_cast<ArrayType const*>(type))
 		{
 			if (array->isByteArrayOrString())

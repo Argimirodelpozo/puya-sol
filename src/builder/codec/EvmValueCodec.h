@@ -26,19 +26,24 @@ solidity::frontend::Type const* underlyingType(
 /// in the ABI and memory source adapters; this is their common leaf predicate.
 bool isWordType(solidity::frontend::Type const* type);
 
-/// What a narrow integer's unused high bytes mean at this read site.
+/// What a word's bytes OUTSIDE the value's own width mean at this read site.
 ///
 /// The two callers want opposite things and solc agrees with both. Decoding
 /// ABI input is a trust boundary, and solc's via-IR decoder emits
-/// `validator_revert_t_uintN` there. Reading a value back out of MEMORY is
-/// not: solc emits `cleanup_t_uintN`, a mask, because a program may legally
-/// dirty those bytes through inline assembly. Validating a memory read made
+/// `validator_revert_t_*` there. Reading a value back out of MEMORY is not:
+/// solc emits `cleanup_t_*`, a mask, because a program may legally have
+/// dirtied those bytes through inline assembly. Validating a memory read made
 /// `uint8[1] memory m; assembly { mstore(m, 257) } m[0]` revert where the EVM
-/// yields 0x01.
-enum class NarrowIntegerPolicy
+/// yields 0x01, and made every `bytes memory` element read revert as soon as
+/// a non-zero byte followed it in the array.
+///
+/// Enums are validated under BOTH policies, matching solc: `cleanup_t_enum` is
+/// `validator_assert_t_enum`, because an out-of-range enum is a Panic even on
+/// a plain read.
+enum class PaddingPolicy
 {
-	Validate,   ///< revert unless the high bytes are canonical padding
-	Mask,       ///< discard the high bytes (zero-extend / sign-extend)
+	Validate,   ///< revert unless the surrounding bytes are canonical padding
+	Clean,      ///< discard them (mask / zero-extend / sign-extend)
 };
 
 /// Decode one 32-byte EVM word to puya-sol's native value representation.
@@ -49,7 +54,7 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 	std::shared_ptr<awst::Expression> word,
 	awst::SourceLocation const& loc,
 	std::vector<std::shared_ptr<awst::Statement>>& out,
-	NarrowIntegerPolicy narrowIntegers);
+	PaddingPolicy padding);
 
 /// Convert a native or ARC4-backed scalar value to its canonical 32-byte EVM
 /// word.  bytesN values are left-aligned; signed integers are sign-extended.

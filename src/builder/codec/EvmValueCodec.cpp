@@ -131,7 +131,7 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 	std::shared_ptr<awst::Expression> word,
 	awst::SourceLocation const& loc,
 	std::vector<std::shared_ptr<awst::Statement>>& out,
-	NarrowIntegerPolicy narrowIntegers)
+	PaddingPolicy padding)
 {
 	auto const* type = underlyingType(solType);
 	auto const* native = typeMapper.map(solType);
@@ -139,7 +139,7 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 	if (auto const* integer = dynamic_cast<IntegerType const*>(type))
 	{
 		word = awst::makeEvalOnce(std::move(word), loc);
-		if (narrowIntegers == NarrowIntegerPolicy::Validate)
+		if (padding == PaddingPolicy::Validate)
 			assertIntegerPadding(word, *integer, loc, out);
 		else
 		{
@@ -161,14 +161,19 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 	if (dynamic_cast<BoolType const*>(type))
 	{
 		auto fullWord = awst::makeEvalOnce(std::move(word), loc);
-		auto fullValue = awst::makeAsBiguint(fullWord, loc);
-		out.push_back(awst::makeExpressionStatement(
-			awst::makeAssert(
-				awst::makeNumericCompare(std::move(fullValue),
-					awst::NumericComparison::Lte,
-					awst::makeIntegerConstant("1", loc,
-						awst::WType::biguintType()), loc),
-				loc, "invalid EVM ABI bool"), loc));
+		// solc's cleanup_t_bool is iszero(iszero(v)) -- any non-zero word is
+		// true. Only the decoder insists on a canonical 0/1.
+		if (padding == PaddingPolicy::Validate)
+		{
+			auto fullValue = awst::makeAsBiguint(fullWord, loc);
+			out.push_back(awst::makeExpressionStatement(
+				awst::makeAssert(
+					awst::makeNumericCompare(std::move(fullValue),
+						awst::NumericComparison::Lte,
+						awst::makeIntegerConstant("1", loc,
+							awst::WType::biguintType()), loc),
+					loc, "invalid EVM ABI bool"), loc));
+		}
 		auto value = awst::makeWord32ToUInt64(fullWord, loc);
 		return awst::makeNumericCompare(
 			value, awst::NumericComparison::Ne, awst::makeZero(loc), loc);
@@ -177,8 +182,12 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 	{
 		int const n = static_cast<int>(fixed->numBytes());
 		word = awst::makeEvalOnce(std::move(word), loc);
-		assertZeroBytes(awst::makeExtract(word, n, 32 - n, loc),
-			32 - n, loc, out, "invalid EVM ABI fixed-bytes padding");
+		// The extract below already truncates, which IS solc's cleanup for
+		// bytesN. A `bytes memory` element read carries the following array
+		// bytes in the same word, so validating here rejects normal programs.
+		if (padding == PaddingPolicy::Validate)
+			assertZeroBytes(awst::makeExtract(word, n, 32 - n, loc),
+				32 - n, loc, out, "invalid EVM ABI fixed-bytes padding");
 		auto result = awst::makeExtract(std::move(word), 0, n, loc);
 		result->wtype = native;
 		return result;
@@ -187,20 +196,28 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 		|| dynamic_cast<ContractType const*>(type))
 	{
 		auto value = awst::makeEvalOnce(std::move(word), loc);
-		out.push_back(awst::makeExpressionStatement(
-			awst::makeAssert(
-				awst::makeBytesComparison(
-					awst::makeExtract(value, 0, 12, loc),
-					awst::EqualityComparison::Eq, awst::makeBzero(12, loc), loc),
-				loc, "invalid EVM ABI address padding"), loc));
+		if (padding == PaddingPolicy::Validate)
+			out.push_back(awst::makeExpressionStatement(
+				awst::makeAssert(
+					awst::makeBytesComparison(
+						awst::makeExtract(value, 0, 12, loc),
+						awst::EqualityComparison::Eq, awst::makeBzero(12, loc), loc),
+					loc, "invalid EVM ABI address padding"), loc));
+		else
+			// solc masks to 160 bits; keep the account 32 bytes wide by
+			// re-zeroing the top 12 rather than trusting them.
+			value = awst::makeConcat(
+				awst::makeBzero(12, loc),
+				awst::makeExtract(value, 12, 20, loc), loc);
 		return awst::makeAsAccount(std::move(value), loc);
 	}
 	if (auto const* function = dynamic_cast<FunctionType const*>(type);
 		isExternalFunctionPointer(function))
 	{
 		auto value = awst::makeEvalOnce(std::move(word), loc);
-		assertZeroBytes(awst::makeExtract(value, 24, 8, loc),
-			8, loc, out, "invalid EVM ABI external-function padding");
+		if (padding == PaddingPolicy::Validate)
+			assertZeroBytes(awst::makeExtract(value, 24, 8, loc),
+				8, loc, out, "invalid EVM ABI external-function padding");
 		auto appId = awst::makeExtract(value, 12, 8, loc);
 		auto selector = awst::makeEvalOnce(
 			awst::makeExtract(value, 20, 4, loc), loc);

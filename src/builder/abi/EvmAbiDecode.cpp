@@ -132,7 +132,7 @@ private:
 			return codec::valueFromEvmWord(
 				m_typeMapper, type, word(std::move(position), out), m_loc, out,
 				// ABI input IS a trust boundary (solc: validator_revert_t_uintN).
-				codec::NarrowIntegerPolicy::Validate);
+				codec::PaddingPolicy::Validate);
 		if (auto const* array = dynamic_cast<ArrayType const*>(type))
 			return arrayValue(array, std::move(position), nullptr, out);
 		if (auto const* structure = dynamic_cast<StructType const*>(type))
