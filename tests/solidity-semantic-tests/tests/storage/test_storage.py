@@ -1114,3 +1114,23 @@ def test_tuple_swap_value_state_vars(harness):
     harness.call(app, "rotate()")
     assert tuple(as_int(x) for x in harness.call(app, "getUint()").abi_return) == (2, 7)
     assert tuple(as_int(x) for x in harness.call(app, "getSubword()").abi_return) == (1, 9)
+
+
+def test_struct_dynfield_push_toplevel(harness):
+    """storage/contracts/struct_dynfield_push_toplevel.sol — NOT an o.g. test.
+
+    Audit claim (box-lifecycle-centralization, 2026-07-01): top-level
+    `st.arr.push(v)` failed with "value too long for key 0x7374" — the eager
+    __postInit box was fixed-size and the grown write rejected. Verified fixed
+    (the write is del+put now); pinned so it stays that way. Sibling field
+    `x` must survive the growth, and pop must shrink back.
+    """
+    app = harness.compile_and_deploy("storage/contracts/struct_dynfield_push_toplevel.sol")
+    for i in range(3):
+        harness.call(app, "push(uint64)", 10 + i)
+    assert as_int(harness.call(app, "len()").abi_return) == 3
+    assert as_int(harness.call(app, "get(uint256)", 1).abi_return) == 11
+    assert as_int(harness.call(app, "getX()").abi_return) == 7
+    harness.call(app, "pop()")
+    assert as_int(harness.call(app, "len()").abi_return) == 2
+    assert as_int(harness.call(app, "getX()").abi_return) == 7
