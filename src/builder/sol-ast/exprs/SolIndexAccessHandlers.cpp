@@ -3,6 +3,7 @@
 
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "awst/NameGen.h"
+#include "builder/ProgramAnalysis.h"
 #include "builder/sol-ast/members/SolLengthAccess.h"
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/storage/StorageMapper.h"
@@ -705,7 +706,16 @@ std::shared_ptr<awst::Expression> SolIndexAccess::handleRegularIndex()
 		auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 			ident->annotation().referencedDeclaration);
 		if (varDecl && varDecl->isStateVariable() && !varDecl->isConstant() && !varDecl->immutable()
-			&& !m_indexAccess.annotation().willBeWrittenTo)
+			&& !m_indexAccess.annotation().willBeWrittenTo
+			// `return m[i];` from a storage-ref pointer function wants the
+			// LOCATION, not the element: FunctionBuilder rewrites that return to
+			// the bare uint64 index. Materialising the element here left the
+			// rewrite nothing to match, so the function silently returned a
+			// struct while declared uint64 ("invalid return type
+			// [PrimitiveIRType.bytes], expected [PrimitiveIRType.uint64]").
+			// The call site re-indexes the state var and pages in from there.
+			&& !m_ctx.typeMapper.analysis().storageRefPointerReturnAccesses
+					.count(m_indexAccess.id()))
 		{
 			// Read context only — write context is owned by SolAssignment's
 			// tryHandleMultiBoxArrayWrite early-out (which emits box_replace

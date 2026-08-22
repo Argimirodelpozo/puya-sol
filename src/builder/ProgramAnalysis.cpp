@@ -1,5 +1,6 @@
 #include "builder/ProgramAnalysis.h"
 #include "builder/SolcFacts.h"
+#include "builder/sol-ast/StorageRefPointer.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/ASTVisitor.h>
@@ -200,6 +201,9 @@ ProgramAnalysis ProgramAnalysis::analyze(
 		ContractDefinition const* contract) {
 		if (function)
 			result.functionDeclarations[function->id()] = function;
+		if (function)
+			if (auto const* access = storageRefPointerReturn(function))
+				result.storageRefPointerReturnAccesses.insert(access->id());
 		if (!function || !contract || contract->isLibrary())
 			return;
 		for (auto const& param: function->parameters())

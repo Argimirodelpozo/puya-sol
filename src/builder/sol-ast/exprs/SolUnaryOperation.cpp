@@ -12,6 +12,7 @@
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/SlotHandleAccess.h"
+#include "builder/sol-types/Arc4Defaults.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/storage/TransientStorage.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -580,6 +581,71 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	}
 }
 
+bool SolUnaryOperation::clearMultiBoxElement(
+	VariableDeclaration const& _var,
+	awst::WType const* _arrWtype,
+	std::shared_ptr<awst::Expression> const& _index)
+{
+	using ::puyasol::builder::StorageMapper;
+
+	unsigned const elemSize = StorageMapper::arc4StaticArrayElementSize(_arrWtype);
+	unsigned const elemsPerBox = StorageMapper::elementsPerBox(_arrWtype);
+	if (elemSize == 0 || elemsPerBox == 0)
+		return false;
+	auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_arrWtype);
+	if (!sa)
+		return false;
+
+	// Pin the index: page and offset each read it.
+	std::string idxName = "__mb_didx_"
+		+ std::to_string(awst::NameGen::next("SolUnaryOperation.multiBoxDelete"));
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc),
+		builder::TypeCoercion::implicitNumericCast(
+			_index, awst::WType::uint64Type(), m_loc), m_loc));
+	auto idx = [&]() {
+		return awst::makeVarExpression(idxName, awst::WType::uint64Type(), m_loc);
+	};
+
+	m_ctx.preEffects().push_back(awst::makeExpressionStatement(
+		awst::makeAssert(
+			awst::makeNumericCompare(idx(), awst::NumericComparison::Lt,
+				awst::makeIntegerConstant(
+					static_cast<uint64_t>(sa->arraySize()), m_loc), m_loc),
+			m_loc, "array index out of bounds"), m_loc));
+
+	auto key = awst::makeConcat(
+		awst::makeUtf8BytesConstant(
+			m_ctx.storageMapper.physicalBindingFor(_var).name,
+			m_loc, awst::WType::boxKeyType()),
+		awst::makeItob(
+			awst::makeUInt64BinOp(idx(), awst::UInt64BinaryOperator::FloorDiv,
+				awst::makeIntegerConstant(elemsPerBox, m_loc), m_loc), m_loc),
+		m_loc);
+	key->wtype = awst::WType::boxKeyType();
+
+	auto offset = awst::makeUInt64BinOp(
+		awst::makeUInt64BinOp(idx(), awst::UInt64BinaryOperator::Mod,
+			awst::makeIntegerConstant(elemsPerBox, m_loc), m_loc),
+		awst::UInt64BinaryOperator::Mult,
+		awst::makeIntegerConstant(elemSize, m_loc), m_loc);
+
+	// The cleared element is its ARC-4 default, which for a fixed-width element
+	// is elemSize zero bytes — not necessarily all-zero for shapes carrying head
+	// offsets, so take the encoding rather than assuming.
+	auto encoded = builder::arc4DefaultEncoding(sa->elementType());
+	std::vector<uint8_t> zeros = encoded && encoded->size() == elemSize
+		? std::move(*encoded) : std::vector<uint8_t>(elemSize, 0);
+
+	auto replace = awst::makeIntrinsicCall("box_replace", awst::WType::voidType(), m_loc);
+	replace->stackArgs.push_back(std::move(key));
+	replace->stackArgs.push_back(std::move(offset));
+	replace->stackArgs.push_back(awst::makeBytesConstant(std::move(zeros), m_loc));
+	m_ctx.postEffects().push_back(
+		awst::makeExpressionStatement(std::move(replace), m_loc));
+	return true;
+}
+
 std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 	std::shared_ptr<awst::Expression> _operand)
 {
@@ -605,6 +671,30 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 			}
 		}
 	}
+
+	// `delete m[i]` on a MULTI-BOX array: the element lives at a page/offset, so
+	// there is no single lvalue to assign a default to and puya rejected the
+	// plain IndexExpression with "unsupported assignment target". Zero the
+	// element's slice in place instead. Reached once struct elements became
+	// eligible for multi-box paging; before that such arrays fell back to a
+	// single box, whose delete the generic path below already handles.
+	//
+	// The index comes off the ALREADY-BUILT operand, never from rebuilding the
+	// solc node: `delete m[f()]` would otherwise call f() twice.
+	if (auto const* index = dynamic_cast<IndexAccess const*>(&m_unaryOp.subExpression()))
+		if (auto const* ident = dynamic_cast<Identifier const*>(&index->baseExpression()))
+			if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
+					ident->annotation().referencedDeclaration);
+				varDecl && varDecl->isStateVariable()
+				&& !varDecl->isConstant() && !varDecl->immutable())
+			{
+				auto const* arrWtype = m_ctx.typeMapper.map(varDecl->type());
+				auto const* builtIndex =
+					dynamic_cast<awst::IndexExpression const*>(_operand.get());
+				if (builder::StorageMapper::isMultiBoxArray(arrWtype) && builtIndex
+					&& clearMultiBoxElement(*varDecl, arrWtype, builtIndex->index))
+					return _operand;
+			}
 
 	// Use already-built operand: rebuilding re-runs side effects (verified: `delete m[f()]` ran f() twice).
 	auto target = _operand;

@@ -43,6 +43,13 @@ struct ProgramAnalysis
 	/// Callables whose parsed Yul contains sload/sstore or exposes a `.slot`
 	/// handle that can be dereferenced by later Solidity expressions.
 	std::set<int64_t> callablesWithStorageAssembly;
+	/// IndexAccess AST ids that ARE a storage-ref pointer function's return
+	/// (`function g(uint i) internal returns (R storage) { return m[i]; }`).
+	/// In that position `m[i]` names a LOCATION, not a value: FunctionBuilder
+	/// rewrites the return to the bare uint64 index and the call site
+	/// reconstitutes the access. Any lowering that would materialise the
+	/// element instead — multi-box paging, for one — must stand down here.
+	std::set<int64_t> storageRefPointerReturnAccesses;
 	/// Declaration AST ids referenced through a Yul `.slot` external reference.
 	/// Centralizing this avoids rescanning individual function bodies when
 	/// planning storage-reference parameter representations.

@@ -24,6 +24,13 @@ private:
 	std::shared_ptr<awst::Expression> handleBitNot(std::shared_ptr<awst::Expression> _operand);
 	std::shared_ptr<awst::Expression> handleIncDec(std::shared_ptr<awst::Expression> _operand);
 	std::shared_ptr<awst::Expression> handleDelete(std::shared_ptr<awst::Expression> _operand);
+	/// `delete arr[i]` where `arr` is multi-box paged: zero the element's slice
+	/// via box_replace at its page/offset. False when the element's width is
+	/// unknown, leaving the caller's generic path in charge.
+	bool clearMultiBoxElement(
+		solidity::frontend::VariableDeclaration const& _var,
+		awst::WType const* _arrWtype,
+		std::shared_ptr<awst::Expression> const& _index);
 	/// --evm-storage-layout: ++/--/delete on a storage state ref via slot RMW.
 	std::shared_ptr<awst::Expression> handleEvmStorageIncDecDelete();
 };
