@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "awst/Node.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/FunctionSymbolTable.h"
@@ -363,6 +365,18 @@ private:
 
 	/// If buildApprovalProgram detects box writes in the constructor,
 	/// it populates this with an auto-generated __postInit method.
+	/// Synthesise the deferred-constructor `__postInit` method (PostInitBuilder.cpp).
+	void buildPostInitMethod(
+		solidity::frontend::ContractDefinition const& _contract,
+		std::string const& _contractName,
+		awst::ContractMethod& method,
+		std::shared_ptr<awst::Block> const& createBlock,
+		std::map<solidity::frontend::ContractDefinition const*,
+			std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const*>
+			const& explicitBaseArgs,
+		std::function<void(solidity::frontend::ContractDefinition const&,
+			std::vector<std::shared_ptr<awst::Statement>>&)> const& emitStateVarInit);
+
 	std::optional<awst::ContractMethod> m_postInitMethod;
 };
 
