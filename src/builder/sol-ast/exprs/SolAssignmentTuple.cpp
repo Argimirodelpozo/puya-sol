@@ -1,5 +1,8 @@
 /// @file SolAssignmentTuple.cpp — handleTupleAssignment + buildTupleWithUpdatedField
 #include "builder/sol-ast/exprs/SolAssignment.h"
+
+#include <libsolidity/ast/ASTVisitor.h>
+#include <set>
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "awst/NameGen.h"
@@ -180,19 +183,43 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		// back by the next lazy RHS read). Snapshot the RHS into temps to restore
 		// EVM parallel semantics. Covers array elements (ArrayType index), struct
 		// value fields (MemberAccess), and mapping elements (MappingType index),
-		// storage AND memory. Whole storage state-var/struct tuples KEEP the EVM
-		// sequential-overwrite quirk (swap_in_storage_overwrite) — their LHS
-		// components are Identifiers (not Index/MemberAccess), so the gate below
-		// naturally excludes them.
-		bool hasCompoundLvalueLhs = false;
+		// storage AND memory.
+		//
+		// A plain Identifier component needs the same snapshot when it names a
+		// VALUE type AND the RHS reads it back. Solidity COPIES a value type into
+		// the RHS tuple, so `uint256 a, b; (a, b) = (b, a)` really swaps; only an
+		// AGGREGATE storage var is a reference, and only that keeps the
+		// sequential-overwrite collapse — swap_in_storage_overwrite, the fixture
+		// this exemption cites, swaps two STRUCTS. Keying on "component is an
+		// Identifier" swept the value-type case in with it and silently collapsed
+		// every value-type swap to (b, b). Nothing in the suite covered it;
+		// test_tuple_swap_value_state_vars now does.
+		//
+		// The read-back condition is what bounds it, and both halves are load-bearing:
+		// `(y, y, y) = (set(1), set(2), set(3))` writes a value type but never reads
+		// it, and snapshotting there leaks stack values through puya's optimizer (the
+		// hazard the lhsHasStateIndex guard below already documents);
+		// `(m, v) = (m2, 21)` has a value-type `v`, but the RHS reads only `m2`, and
+		// snapshotting rebinds the mapping alias to a temp so later writes miss.
+		bool lhsNeedsRhsSnapshot = false;
+		std::set<int64_t> valueTypeTargets;
 		if (_sourceLhs)
 		{
 			for (auto const& comp : _sourceLhs->components())
 			{
 				if (!comp) continue;
+				if (auto const* lhsId =
+						dynamic_cast<solidity::frontend::Identifier const*>(comp.get()))
+				{
+					auto const* compType = comp->annotation().type;
+					if (compType && compType->isValueType())
+						if (auto const* decl = lhsId->annotation().referencedDeclaration)
+							valueTypeTargets.insert(decl->id());
+					continue;
+				}
 				if (dynamic_cast<solidity::frontend::MemberAccess const*>(comp.get()))
 				{
-					hasCompoundLvalueLhs = true;
+					lhsNeedsRhsSnapshot = true;
 					break;
 				}
 				auto const* ia = dynamic_cast<solidity::frontend::IndexAccess const*>(comp.get());
@@ -201,12 +228,30 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 				if (dynamic_cast<solidity::frontend::ArrayType const*>(baseType)
 					|| dynamic_cast<solidity::frontend::MappingType const*>(baseType))
 				{
-					hasCompoundLvalueLhs = true;
+					lhsNeedsRhsSnapshot = true;
 					break;
 				}
 			}
 		}
-		if (allLocalVars || allScalars || hasCompoundLvalueLhs || (hasSideEffectingRhs && lhsHasStateIndex))
+		if (!lhsNeedsRhsSnapshot && !valueTypeTargets.empty())
+		{
+			struct ReadsTarget: solidity::frontend::ASTConstVisitor
+			{
+				std::set<int64_t> const& targets;
+				bool found = false;
+				explicit ReadsTarget(std::set<int64_t> const& _targets): targets(_targets) {}
+				bool visit(solidity::frontend::Identifier const& _id) override
+				{
+					if (auto const* decl = _id.annotation().referencedDeclaration)
+						if (targets.count(decl->id()))
+							found = true;
+					return !found;
+				}
+			} readsTarget{valueTypeTargets};
+			m_assignment.rightHandSide().accept(readsTarget);
+			lhsNeedsRhsSnapshot = readsTarget.found;
+		}
+		if (allLocalVars || allScalars || lhsNeedsRhsSnapshot || (hasSideEffectingRhs && lhsHasStateIndex))
 		{
 			std::vector<awst::WType const*> tmpTypes;
 			auto newTuple = awst::makeTupleExpression(nullptr, _value->sourceLocation);
@@ -241,9 +286,21 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	// Build tuple writes in their own structural effect frame. Only the writes
 	// produced by this destructure are reversed; unrelated parent effects never
 	// participate in snapshot/tail arithmetic.
+	//
+	// componentGroupEnds records where each component's contribution ends, so the
+	// right-to-left reversal below can flip COMPONENTS without scrambling the
+	// statements inside one. Recorded by a scope guard because the loop body
+	// `continue`s from several places.
+	std::vector<size_t> componentGroupEnds;
 	auto writes = m_ctx.lowerOperand([&]() -> bool {
 	for (size_t i = 0; i < items.size(); ++i)
 	{
+		struct GroupMark
+		{
+			std::vector<size_t>& ends;
+			eb::ContractContext& ctx;
+			~GroupMark() { ends.push_back(ctx.postEffects().size()); }
+		} groupMark{componentGroupEnds, m_ctx};
 		auto item = items[i];
 
 		// Skip null placeholders (empty-name VarExpression for gaps like `(,,a)`)
@@ -604,8 +661,33 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	if (!writes.value)
 		return nullptr;
 
-	// Reverse to right-to-left (Solidity viaYul: last element stored first).
-	std::reverse(writes.effects.post.begin(), writes.effects.post.end());
+	// Reverse to right-to-left (Solidity viaYul: last element stored first) —
+	// by COMPONENT, not by statement. One component can lower to several
+	// statements whose internal order matters: a slot-mode packed address pins
+	// its slot and its value, then writes the aux slot and the word. A flat
+	// reverse put those writes BEFORE the pins that feed them, and the call died
+	// on an unassigned slot ("b% arg 0 wanted bigint but got uint64"). Where
+	// every component contributes one statement this is exactly the old flat
+	// reverse.
+	{
+		std::vector<std::pair<size_t, size_t>> groups;
+		size_t groupStart = 0;
+		for (size_t groupEnd: componentGroupEnds)
+		{
+			if (groupEnd > groupStart)
+				groups.emplace_back(groupStart, groupEnd);
+			groupStart = groupEnd;
+		}
+		if (groupStart < writes.effects.post.size())
+			groups.emplace_back(groupStart, writes.effects.post.size());
+
+		std::vector<std::shared_ptr<awst::Statement>> ordered;
+		ordered.reserve(writes.effects.post.size());
+		for (auto group = groups.rbegin(); group != groups.rend(); ++group)
+			for (size_t k = group->first; k < group->second; ++k)
+				ordered.push_back(std::move(writes.effects.post[k]));
+		writes.effects.post = std::move(ordered);
+	}
 	m_ctx.restoreOperandDeltas(std::move(writes.effects));
 
 	return _value;

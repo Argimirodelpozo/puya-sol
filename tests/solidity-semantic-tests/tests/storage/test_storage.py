@@ -1070,3 +1070,47 @@ def test_mapping_key_side_effect_once(harness):
                     ("deleteOnce()", (0, 1)), ("pushOnce()", (42, 1))]:
         r = harness.call(app, fn).abi_return
         assert tuple(as_int(x) for x in r) == exp, f"{fn} -> {r}"
+
+
+def test_tuple_swap_value_state_vars(harness):
+    """storage/contracts/tuple_swap_value_state_vars.sol — NOT an o.g. semantic test.
+
+    `(a, b) = (b, a)` on VALUE-TYPE state vars must really swap. Solidity copies
+    value types into the RHS tuple; only an AGGREGATE storage var is a reference
+    and keeps the sequential-overwrite collapse of various/swap_in_storage_overwrite.
+
+    The RHS-snapshot gate keyed on the LHS component's expression SHAPE, so plain
+    identifiers fell through and every value-type swap collapsed to (b, b) in both
+    default and slot mode. Found by behavioural audit, never by the suite.
+    """
+    app = harness.compile_and_deploy("storage/contracts/tuple_swap_value_state_vars.sol")
+    harness.call(app, "init()")
+    assert tuple(as_int(x) for x in harness.call(app, "getUint()").abi_return) == (1, 2)
+
+    harness.call(app, "swapUint()")
+    assert tuple(as_int(x) for x in harness.call(app, "getUint()").abi_return) == (2, 1)
+
+    # Compare against the pre-swap pair rather than an address literal: this
+    # proves the swap without depending on the account representation.
+    before = list(harness.call(app, "getAddress()").abi_return)
+    harness.call(app, "swapAddress()")
+    assert list(harness.call(app, "getAddress()").abi_return) == before[::-1]
+
+    harness.call(app, "swapBool()")
+    assert tuple(bool(as_int(x)) for x in harness.call(app, "getBool()").abi_return) \
+        == (False, True)
+
+    # Sub-word: packed representations take a different write path.
+    harness.call(app, "swapSubword()")
+    assert tuple(as_int(x) for x in harness.call(app, "getSubword()").abi_return) == (9, 7)
+
+    # Aggregates KEEP the quirk — `sy = sx; sx = sy`, so both hold sx's old value.
+    harness.call(app, "swapStruct()")
+    assert tuple(as_int(x) for x in harness.call(app, "getStructs()").abi_return) \
+        == (1, 2, 1, 2)
+
+    # Three-way rotation: every target reads its PRE-assignment value.
+    harness.call(app, "init()")
+    harness.call(app, "rotate()")
+    assert tuple(as_int(x) for x in harness.call(app, "getUint()").abi_return) == (2, 7)
+    assert tuple(as_int(x) for x in harness.call(app, "getSubword()").abi_return) == (1, 9)
