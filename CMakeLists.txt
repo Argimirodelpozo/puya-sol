@@ -83,6 +83,7 @@ set(SOURCES
 	src/builder/assembly/CalldataMapOps.cpp
 	src/builder/assembly/ControlFlowOps.cpp
 	src/builder/assembly/SignedOps.cpp
+	src/builder/assembly/StorageOps.cpp
 	src/builder/assembly/DataOps.cpp
 	src/builder/assembly/MemoryHelpers.cpp
 	src/builder/assembly/PrecompileDispatch.cpp

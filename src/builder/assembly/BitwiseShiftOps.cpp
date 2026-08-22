@@ -388,55 +388,6 @@ bool AssemblyBuilder::tryRouteConstSlotStore(
 	return false;
 }
 
-std::shared_ptr<awst::Expression> AssemblyBuilder::handleSload(
-	std::vector<std::shared_ptr<awst::Expression>> const& _args,
-	awst::SourceLocation const& _loc
-)
-{
-	if (!checkArity(_args, 1, "sload", _loc))
-		return nullptr;
-
-	// EIP-1967 proxy slots (proxy.md §1): admin → synthesized global,
-	// implementation → this app's own identity, beacon → runtime trap.
-	switch (proxies::Erc1967Lowering::classify(_args[0].get()))
-	{
-	case proxies::Erc1967Slot::Admin:
-		m_typeMapper.artifacts().noteErc1967AdminUse();
-		return proxies::Erc1967Lowering::adminLoad(_loc);
-	case proxies::Erc1967Slot::Implementation:
-		return proxies::Erc1967Lowering::implementationLoad(_loc);
-	case proxies::Erc1967Slot::Beacon:
-		Logger::instance().warning(
-			"ERC-1967 beacon slot read lowers to a runtime failure — this call "
-			"site REVERTS if ever reached (see proxy.md)", _loc);
-		m_pendingStatements.push_back(proxies::Erc1967Lowering::trapStatement(
-			proxies::Erc1967Slot::Beacon, /*_isStore=*/false, _loc));
-		return awst::makeBiguintConstant("0", _loc);
-	case proxies::Erc1967Slot::None:
-		break;
-	}
-
-	// CONSTANT slot → route directly to the named variable's storage (scalar
-	// global / array length / array element). See SlotRoute.
-	if (auto routed = tryRouteConstSlotLoad(_args[0], _loc))
-		return routed;
-
-	// Box-keyed ARC4 struct slot sentinel (`sload(s.slot)` where `s` is a struct
-	// storage-ref param/alias): read the EVM slot-0 packed word from the box.
-	if (auto box = std::dynamic_pointer_cast<awst::BoxValueExpression>(_args[0]))
-		if (dynamic_cast<awst::ARC4Struct const*>(box->wtype))
-			return handleBoxKeyedStructSlotLoad(box, _loc);
-
-	// Full-width slot: __storage_read takes the 256-bit slot (no truncation).
-	auto slotArg = ensureBiguintSlotArg(_args[0], _loc);
-
-	auto call = awst::makeSubroutineCall(awst::SubroutineID{"__puyasol___storage_read"}, awst::WType::biguintType(), _loc);
-
-	awst::pushCallArg(call->args, "__slot", std::move(slotArg));
-
-	return call;
-}
-
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleGas(
 	awst::SourceLocation const& _loc
 )
