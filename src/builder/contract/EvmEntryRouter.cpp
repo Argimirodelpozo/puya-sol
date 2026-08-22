@@ -10,6 +10,8 @@
 
 #include <libsolidity/ast/AST.h>
 
+#include <functional>
+
 namespace puyasol::builder
 {
 using namespace solidity::frontend;
@@ -146,6 +148,37 @@ std::vector<EvmRoute> collectEvmRoutes(
 					"Solidity ABI entry route contains a type unsupported by the "
 					"canonical recursive codec: " + function->externalSignature(), loc);
 			continue;
+		}
+		// canEncodeEvmAbi answers the TYPE question, but emitting an external
+		// function pointer additionally needs --evm-selectors (the default
+		// profile's compact pointer stores the ARC-4 route, not the Solidity
+		// selector, so the codec hard-errors). In quiet/alias mode such a method
+		// simply keeps only its ARC-4 route.
+		if (quiet)
+		{
+			std::function<bool(Type const*)> needsEvmSelectors =
+				[&](Type const* type) -> bool {
+					if (!type) return false;
+					if (auto const* fn = dynamic_cast<FunctionType const*>(type))
+						return fn->kind() == FunctionType::Kind::External;
+					if (auto const* arr = dynamic_cast<ArrayType const*>(type))
+						return needsEvmSelectors(arr->baseType());
+					if (auto const* st = dynamic_cast<StructType const*>(type))
+					{
+						for (auto const& member: st->structDefinition().members())
+							if (needsEvmSelectors(member->type()))
+								return true;
+						return false;
+					}
+					return false;
+				};
+			bool blocked = false;
+			for (auto const* type: function->parameterTypes())
+				blocked = blocked || needsEvmSelectors(type);
+			for (auto const* type: function->returnParameterTypes())
+				blocked = blocked || needsEvmSelectors(type);
+			if (blocked)
+				continue;
 		}
 		routes.push_back({function, method,
 			SolcFacts::externalSelector(*function)});

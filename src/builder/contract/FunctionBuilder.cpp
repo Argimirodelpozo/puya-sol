@@ -334,8 +334,18 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			method.returnType = m_typeMapper.createType<awst::WTuple>(std::move(types));
 	}
 
-	// Pure/view
-	method.pure = _func.stateMutability() == solidity::frontend::StateMutability::Pure;
+	// Solidity `pure` must NOT map to puya `pure`. They are different contracts:
+	// Solidity's means "reads/writes no state" — the function can still REVERT
+	// (slice bounds, asserts, division by zero). puya's licenses call
+	// ELIMINATION when the result is unused (ir/optimize/dead_code_elimination
+	// removes such calls), i.e. it means "total, safe to delete". Marking a
+	// Solidity-pure function puya-pure silently deleted its calls once it had
+	// two callsites (one callsite gets inlined instead, which kept the body):
+	// `f(x, s, e) external pure { x[s:e]; }` stopped bounds-checking entirely.
+	// Mapping to false costs only minor backend optimizations
+	// (repeated_loads_elimination, eliminate_box_asserts consult the flag);
+	// recovering those needs a revert-freedom analysis, not a mutability bit.
+	method.pure = false;
 
 	// ARC4 method config for public/external functions. Suppressed for
 	// internal copies (super/Base.f() impls): every ABI-entry behavior below
