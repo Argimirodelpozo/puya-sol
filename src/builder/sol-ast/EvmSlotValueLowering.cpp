@@ -1284,7 +1284,20 @@ bool EvmSlotLowering::writeArrayValue(
 	auto valVar = [&]() {
 		return awst::makeVarExpression(vs, arrW, m_loc);
 	};
-	auto elemAt = [&](unsigned j) {
+	// A SHORTER source zero-fills the tail, as Solidity does: `uint256[10]
+	// storage x; x = [11, 12, 13]` leaves 11,12,13,0,0,0,0,0,0,0. The unroll
+	// runs over the TARGET length, so without this every element past the
+	// source's end indexed off its end -- `extract 3 1` on a 3-byte value --
+	// and the whole assignment reverted with "index access is out of bounds",
+	// silently leaving the array at its previous contents.
+	unsigned srcLen = 0;
+	if (auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(arrW))
+		srcLen = static_cast<unsigned>(sa->arraySize());
+	auto const* defaultW = elemW ? elemW : m_ctx.typeMapper.map(elemType);
+	auto beyondSource = [&](unsigned j) { return srcLen != 0 && j >= srcLen; };
+	auto elemAt = [&](unsigned j) -> std::shared_ptr<awst::Expression> {
+		if (beyondSource(j))
+			return builder::TypeCoercion::makeDefaultValue(defaultW, m_loc);
 		return awst::makeIndexExpression(valVar(),
 			awst::makeIntegerConstant(static_cast<uint64_t>(j), m_loc),
 			elemW, m_loc);
@@ -1367,7 +1380,11 @@ bool EvmSlotLowering::writeArrayValue(
 			ea.solType = elemType;
 			ea.wtype = elemW ? elemW : m_ctx.typeMapper.map(elemType);
 			std::shared_ptr<awst::Expression> ev;
-			if (dynInner)
+			if (beyondSource(j))
+				// Same zero-fill, but the head table would be read off its end
+				// too, so it cannot go through elemAt.
+				ev = builder::TypeCoercion::makeDefaultValue(ea.wtype, m_loc);
+			else if (dynInner)
 			{
 				auto start = headAt(j);
 				auto end = (j + 1 < len)

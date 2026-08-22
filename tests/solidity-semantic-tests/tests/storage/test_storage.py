@@ -581,7 +581,7 @@ def test_static_array_copy_cleanup(harness):
     # TODO: verify structural decoding matches expected: 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
     assert not r.reverted
 
-def test_storage_boundary_array_and_partial_assignment_with_layout(harness):  # currently fails
+def test_storage_boundary_array_and_partial_assignment_with_layout(harness):
     """storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol"""
     app = harness.compile_and_deploy('storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol')
     r = harness.call(app, 'x()')
