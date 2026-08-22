@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/abi_encode_empty_string.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
+    intcblock 1 32 0 2
     bytecblock 0x151f7c75
     pushint 4096
     bzero
@@ -40,15 +40,16 @@ main_after_if_else@2:
 
 main_h2_route@10:
     txna ApplicationArgs 1
-    dupn 2
-    intc_1 // 0
+    dup
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
     txn GroupIndex
     bz main_ternary_false@16
     txn GroupIndex
@@ -59,7 +60,35 @@ main_h2_route@10:
 main_ternary_merge@17:
     !
     assert // not payable
-    pushbytes 0x00000001
+    intc_1 // 32
+    bzero
+    dig 1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    pushbytes 0x000000010000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
     dup
@@ -76,7 +105,7 @@ main_ternary_merge@17:
     return
 
 main_ternary_false@16:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@17
 
 main_h1_route@9:
@@ -90,21 +119,21 @@ main_h1_route@9:
 main_ternary_merge@22:
     !
     assert // not payable
-    pushbytes 0x151f7c750006000000010000
+    pushbytes 0x151f7c7500440000000100000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
 main_ternary_false@21:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@22
 
 main_g2_route@8:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_2 // 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -135,7 +164,7 @@ main_ternary_merge@27:
     return
 
 main_ternary_false@26:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@27
 
 main_g1_route@7:
@@ -155,22 +184,21 @@ main_ternary_merge@32:
     return
 
 main_ternary_false@31:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@32
 
 main_f2_route@6:
     txna ApplicationArgs 1
-    dupn 2
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_2 // 2
-    +
-    swap
-    len
     dup
-    uncover 2
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
     txn GroupIndex
     bz main_ternary_false@36
     txn GroupIndex
@@ -181,6 +209,39 @@ main_f2_route@6:
 main_ternary_merge@37:
     !
     assert // not payable
+    intc_1 // 32
+    bzero
+    dig 1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    dup
+    len
     itob
     extract 6 2
     swap
@@ -193,7 +254,7 @@ main_ternary_merge@37:
     return
 
 main_ternary_false@36:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@37
 
 main_f1_route@5:
@@ -207,11 +268,11 @@ main_f1_route@5:
 main_ternary_merge@42:
     !
     assert // not payable
-    pushbytes 0x151f7c7500020000
+    pushbytes 0x151f7c75004000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
     log
     intc_0 // 1
     return
 
 main_ternary_false@41:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@42

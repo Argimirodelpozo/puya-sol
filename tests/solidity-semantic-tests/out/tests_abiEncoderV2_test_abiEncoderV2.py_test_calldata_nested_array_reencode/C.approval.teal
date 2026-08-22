@@ -3,10 +3,11 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/calldata_nested_array_reencode.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 0 1 4
-    bytecblock 0x151f7c75
-    pushbytes ""
-    dupn 3
+    intcblock 32 2 0 1
+    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000020 0x151f7c75
+    intc_2 // 0
+    bytec_0 // ""
+    dup
     pushint 4096
     bzero
     dup
@@ -26,7 +27,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
@@ -42,34 +43,34 @@ main_after_if_else@2:
 
 main_j_route@9:
     txna ApplicationArgs 1
-    dupn 2
-    intc_1 // 0
+    dup
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_0 // 2
+    intc_1 // 2
     *
     swap
     dup
     len
-    swap
+    cover 3
     extract 2 0
-    intc_1 // 0
+    intc_2 // 0
 
 main_for_header@14:
     dup
-    dig 5
+    dig 4
     <
     bz main_after_for@16
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
     dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    uncover 6
+    uncover 5
     dup
     cover 4
     ==
@@ -77,103 +78,265 @@ main_for_header@14:
     dig 1
     len
     substring3
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 4
+    pushint 4
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     +
-    cover 3
-    intc_2 // 1
+    cover 2
+    intc_3 // 1
     +
     b main_for_header@14
 
 main_after_for@16:
-    popn 2
-    uncover 2
     pop
     swap
-    intc_0 // 2
+    intc_1 // 2
     +
-    dig 1
+    uncover 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.static_array<arc4.uint16, 2>>>
     txn GroupIndex
     bz main_ternary_false@18
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
 main_ternary_merge@19:
     !
     assert // not payable
+    bytec_0 // 0x
+    cover 2
+    bytec_0 // 0x
+    cover 3
+    intc_2 // 0
+    swap
+    dig 2
+    intc_0 // 32
+    *
+
+main_while_top@20:
+    dig 2
+    dig 4
+    <
+    dup
+    bz main_after_while@28
+    bytec_0 // 0x
+    cover 5
+    assert // index out of bounds
+    dig 2
+    intc_1 // 2
+    *
+    dig 2
+    dup
+    uncover 2
+    extract_uint16
+    dup2
+    extract_uint16
+    pushint 4
+    *
+    intc_1 // 2
+    +
+    extract3
+    dup
+    bury 11
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    cover 2
+    intc_2 // 0
+    swap
+
+main_while_top@22:
+    dig 1
+    dig 4
+    <
+    bz main_after_while@27
+    bytec_0 // 0x
+    cover 6
+    intc_2 // 0
+    swap
+
+main_while_top@24:
+    dig 1
+    intc_1 // 2
+    <
+    bz main_after_while@26
+    intc_0 // 32
+    bzero
+    dig 14
+    extract 2 0
+    dig 4
+    pushint 4
+    *
+    pushint 4
+    extract3 // on error: index access is out of bounds
+    uncover 3
+    dup
+    cover 3
+    intc_1 // 2
+    *
+    extract_uint16
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 8
+    swap
+    concat
+    cover 7
+    intc_3 // 1
+    +
+    swap
+    b main_while_top@24
+
+main_after_while@26:
+    bury 1
+    uncover 7
+    uncover 7
+    concat
+    cover 6
+    swap
+    intc_3 // 1
+    +
+    swap
+    b main_while_top@22
+
+main_after_while@27:
+    bury 1
+    intc_0 // 32
+    bzero
+    dig 1
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 8
+    swap
+    concat
+    cover 6
+    uncover 3
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 6
+    concat
+    uncover 6
+    dig 1
+    concat
+    cover 6
+    len
+    +
+    uncover 2
+    intc_3 // 1
+    +
+    cover 2
+    b main_while_top@20
+
+main_after_while@28:
+    popn 4
+    intc_0 // 32
+    bzero
+    swap
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    concat
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    dup
+    len
     itob
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_ternary_false@18:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@19
 
 main_i_route@8:
+    intc_1 // 2
     txna ApplicationArgs 1
-    intc_0 // 2
-    intc_1 // 0
+    intc_2 // 0
 
-main_for_header@22:
+main_for_header@31:
     dup
-    intc_2 // 1
+    intc_3 // 1
     <
-    bz main_after_for@27
+    bz main_after_for@36
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
-    dig 3
+    dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    dig 4
+    dig 5
     ==
     assert // invalid tail pointer for (len+(len+uint16[])[])[1]
     dig 1
     len
     substring3
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 6
-    intc_0 // 2
+    bury 7
+    intc_1 // 2
     *
-    cover 2
+    cover 3
     extract 2 0
-    swap
-    intc_1 // 0
+    cover 2
+    intc_2 // 0
 
-main_for_header@24:
+main_for_header@33:
     dup
-    dig 7
+    dig 8
     <
-    bz main_after_for@26
+    bz main_after_for@35
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
-    dig 3
+    dig 4
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    uncover 6
+    uncover 7
     dup
     cover 4
     ==
@@ -181,89 +344,320 @@ main_for_header@24:
     dig 1
     len
     substring3
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 2
+    intc_1 // 2
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     +
-    cover 3
-    intc_2 // 1
+    cover 4
+    intc_3 // 1
     +
-    b main_for_header@24
+    b main_for_header@33
 
-main_after_for@26:
+main_after_for@35:
     pop
-    bury 1
-    swap
-    intc_0 // 2
-    +
     uncover 2
-    +
-    swap
-    intc_2 // 1
-    +
-    b main_for_header@22
-
-main_after_for@27:
     pop
-    dig 1
-    len
+    uncover 2
+    intc_1 // 2
+    +
+    uncover 3
+    +
+    cover 2
+    intc_3 // 1
+    +
+    b main_for_header@31
+
+main_after_for@36:
+    pop
     dup
+    len
     uncover 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.dynamic_array<arc4.dynamic_array<arc4.uint16>>, 1>
     txn GroupIndex
-    bz main_ternary_false@29
+    bz main_ternary_false@38
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+main_ternary_merge@39:
     !
     assert // not payable
+    bytec_0 // 0x
+    swap
+    bytec_0 // 0x
+    cover 2
+    intc_2 // 0
+    swap
+    intc_0 // 32
+
+main_while_top@40:
+    dig 2
+    intc_3 // 1
+    <
+    bz main_after_while@48
+    bytec_0 // 0x
+    cover 5
+    bytec_0 // 0x
+    cover 6
+    dig 1
+    dig 3
+    intc_3 // 1
+    callsub static_array_read_dynamic_element
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    cover 4
+    intc_2 // 0
+    cover 4
+    intc_0 // 32
+    *
+    swap
+
+main_while_top@42:
+    dig 4
+    dig 6
+    <
+    bz main_after_while@47
+    bytec_0 // 0x
+    cover 9
+    dig 2
+    dig 4
+    intc_3 // 1
+    callsub static_array_read_dynamic_element
+    dup
+    intc_2 // 0
+    extract_uint16
+    dig 6
+    dup
+    uncover 2
+    <
+    assert // index out of bounds
+    swap
+    extract 2 0
+    swap
+    intc_1 // 2
+    *
+    dup
+    cover 10
+    dig 1
+    swap
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_1 // 2
+    *
+    intc_1 // 2
+    +
+    extract3
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    cover 3
+    intc_2 // 0
+    cover 2
+
+main_while_top@44:
+    dig 2
+    dig 5
+    <
+    bz main_after_while@46
+    intc_0 // 32
+    bzero
+    dig 4
+    dig 7
+    intc_3 // 1
+    callsub static_array_read_dynamic_element
+    dup
+    intc_2 // 0
+    extract_uint16
+    dig 9
+    >
+    assert // index out of bounds
+    extract 2 0
+    dup
+    dig 13
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_1 // 2
+    *
+    intc_1 // 2
+    +
+    extract3
+    extract 2 0
+    uncover 4
+    dup
+    cover 2
+    intc_1 // 2
+    *
+    extract_uint16
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 13
+    swap
+    concat
+    cover 12
+    intc_3 // 1
+    +
+    cover 2
+    b main_while_top@44
+
+main_after_while@46:
+    uncover 2
+    pop
+    uncover 9
+    pop
+    intc_0 // 32
+    bzero
+    uncover 2
+    dup
+    cover 2
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 11
+    swap
+    concat
+    cover 10
+    uncover 4
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 10
+    concat
+    uncover 10
+    dig 1
+    concat
+    cover 10
+    len
+    +
+    swap
+    uncover 4
+    intc_3 // 1
+    +
+    cover 4
+    b main_while_top@42
+
+main_after_while@47:
+    bury 1
+    uncover 3
+    pop
+    intc_0 // 32
+    bzero
+    dig 1
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 6
+    swap
+    concat
+    cover 4
+    uncover 5
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 6
+    uncover 7
+    concat
+    concat
+    uncover 5
+    dig 1
+    concat
+    cover 5
+    len
+    +
+    uncover 2
+    intc_3 // 1
+    +
+    cover 2
+    b main_while_top@40
+
+main_after_while@48:
+    popn 3
+    swap
+    concat
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    dup
+    len
     itob
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
-main_ternary_false@29:
-    intc_1 // 0
-    b main_ternary_merge@30
+main_ternary_false@38:
+    intc_2 // 0
+    b main_ternary_merge@39
 
 main_h_route@7:
     txna ApplicationArgs 1
     dupn 2
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 5
-    intc_0 // 2
+    cover 3
+    intc_1 // 2
     *
-    swap
+    cover 2
     dup
     len
-    swap
+    cover 4
     extract 2 0
-    intc_1 // 0
+    swap
+    intc_2 // 0
 
-main_for_header@33:
+main_for_header@51:
     dup
-    dig 7
+    dig 5
     <
-    bz main_after_for@38
+    bz main_after_for@56
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
-    dig 2
+    dig 3
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
@@ -274,25 +668,25 @@ main_for_header@33:
     dig 1
     len
     substring3
-    cover 4
-    intc_3 // 4
-    cover 2
-    intc_1 // 0
+    cover 5
+    pushint 4
+    cover 3
+    intc_2 // 0
 
-main_for_header@35:
+main_for_header@53:
     dup
-    intc_0 // 2
+    intc_1 // 2
     <
-    bz main_after_for@37
+    bz main_after_for@55
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
-    dig 7
+    dig 8
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    uncover 6
+    uncover 7
     dup
     cover 4
     ==
@@ -300,88 +694,299 @@ main_for_header@35:
     dig 1
     len
     substring3
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 2
+    intc_1 // 2
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     +
-    cover 3
-    intc_2 // 1
+    cover 4
+    intc_3 // 1
     +
-    b main_for_header@35
+    b main_for_header@53
 
-main_after_for@37:
+main_after_for@55:
     pop
-    uncover 5
+    uncover 6
     pop
     uncover 4
-    uncover 3
+    uncover 4
     +
     cover 3
-    intc_2 // 1
+    intc_3 // 1
     +
-    b main_for_header@33
+    b main_for_header@51
 
-main_after_for@38:
-    popn 2
+main_after_for@56:
+    pop
+    bury 1
     swap
-    intc_0 // 2
+    intc_1 // 2
     +
-    dig 1
+    uncover 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint16>, 2>>
     txn GroupIndex
-    bz main_ternary_false@40
+    bz main_ternary_false@58
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
-main_ternary_merge@41:
+main_ternary_merge@59:
     !
     assert // not payable
+    bytec_0 // 0x
+    cover 2
+    bytec_0 // 0x
+    cover 3
+    intc_2 // 0
+    swap
+    dig 2
+    intc_0 // 32
+    *
+
+main_while_top@60:
+    dig 2
+    dig 4
+    <
+    bz main_after_while@68
+    bytec_0 // 0x
+    cover 5
+    bytec_0 // 0x
+    cover 7
+    intc_2 // 0
+    cover 4
+    pushint 64
+    swap
+
+main_while_top@62:
+    dig 5
+    intc_1 // 2
+    <
+    dup
+    bz main_after_while@67
+    bytec_0 // 0x
+    cover 11
+    dig 3
+    dig 5
+    callsub dynamic_array_read_dynamic_element
+    swap
+    assert // index access is out of bounds
+    dig 6
+    intc_1 // 2
+    *
+    dup
+    cover 9
+    dig 1
+    swap
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_1 // 2
+    *
+    intc_1 // 2
+    +
+    extract3
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    cover 4
+    intc_2 // 0
+    cover 2
+
+main_while_top@64:
+    dig 2
+    dig 6
+    <
+    bz main_after_while@66
+    intc_0 // 32
+    bzero
+    dig 4
+    dig 6
+    callsub dynamic_array_read_dynamic_element
+    dup
+    dig 12
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_1 // 2
+    *
+    intc_1 // 2
+    +
+    extract3
+    extract 2 0
+    uncover 4
+    dup
+    cover 2
+    intc_1 // 2
+    *
+    extract_uint16
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 14
+    swap
+    concat
+    cover 13
+    intc_3 // 1
+    +
+    cover 2
+    b main_while_top@64
+
+main_after_while@66:
+    uncover 2
+    pop
+    uncover 8
+    pop
+    intc_0 // 32
+    bzero
+    uncover 2
+    dup
+    cover 2
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 10
+    swap
+    concat
+    cover 9
+    uncover 5
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 11
+    concat
+    uncover 10
+    dig 1
+    concat
+    cover 10
+    len
+    +
+    swap
+    uncover 5
+    intc_3 // 1
+    +
+    cover 5
+    b main_while_top@62
+
+main_after_while@67:
+    pop
+    bury 1
+    uncover 4
+    pop
+    intc_0 // 32
+    bzero
+    dig 1
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 5
+    swap
+    concat
+    cover 4
+    uncover 5
+    uncover 7
+    concat
+    uncover 6
+    dig 1
+    concat
+    cover 6
+    len
+    +
+    uncover 2
+    intc_3 // 1
+    +
+    cover 2
+    b main_while_top@60
+
+main_after_while@68:
+    popn 3
+    intc_0 // 32
+    bzero
+    swap
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    concat
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    dup
+    len
     itob
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
-main_ternary_false@40:
-    intc_1 // 0
-    b main_ternary_merge@41
+main_ternary_false@58:
+    intc_2 // 0
+    b main_ternary_merge@59
 
 main_g_route@6:
     txna ApplicationArgs 1
     dupn 2
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 7
-    intc_0 // 2
+    cover 3
+    intc_1 // 2
     *
-    swap
+    cover 2
     dup
     len
-    swap
+    cover 4
     extract 2 0
-    intc_1 // 0
+    swap
+    intc_2 // 0
 
-main_for_header@44:
+main_for_header@71:
     dup
-    dig 9
+    dig 5
     <
-    bz main_after_for@49
+    bz main_after_for@76
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
-    dig 2
+    dig 3
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
@@ -393,31 +998,31 @@ main_for_header@44:
     len
     substring3
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 10
-    intc_0 // 2
+    bury 9
+    intc_1 // 2
     *
-    cover 3
+    cover 4
     extract 2 0
     swap
-    intc_1 // 0
+    intc_2 // 0
 
-main_for_header@46:
+main_for_header@73:
     dup
-    dig 11
+    dig 10
     <
-    bz main_after_for@48
+    bz main_after_for@75
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
     dig 3
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    uncover 7
+    uncover 8
     dup
     cover 4
     ==
@@ -425,92 +1030,308 @@ main_for_header@46:
     dig 1
     len
     substring3
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 2
+    intc_1 // 2
     +
     +
-    cover 4
-    intc_2 // 1
+    cover 5
+    intc_3 // 1
     +
-    b main_for_header@46
+    b main_for_header@73
 
-main_after_for@48:
+main_after_for@75:
     pop
     bury 1
-    uncover 2
-    intc_0 // 2
+    uncover 3
+    intc_1 // 2
     +
     uncover 4
     +
     cover 3
-    intc_2 // 1
+    intc_3 // 1
     +
-    b main_for_header@44
+    b main_for_header@71
 
-main_after_for@49:
-    popn 2
+main_after_for@76:
+    pop
+    bury 1
     swap
-    intc_0 // 2
+    intc_1 // 2
     +
-    dig 1
+    uncover 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.dynamic_array<arc4.uint8>>>
     txn GroupIndex
-    bz main_ternary_false@51
+    bz main_ternary_false@78
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
-main_ternary_merge@52:
+main_ternary_merge@79:
     !
     assert // not payable
+    bytec_0 // 0x
+    cover 2
+    bytec_0 // 0x
+    cover 3
+    intc_2 // 0
+    cover 2
+    dig 1
+    intc_0 // 32
+    *
+
+main_while_top@80:
+    dig 3
+    dig 3
+    <
+    bz main_after_while@88
+    bytec_0 // 0x
+    cover 6
+    bytec_0 // 0x
+    cover 7
+    dig 1
+    dig 4
+    callsub dynamic_array_read_dynamic_element
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    cover 5
+    intc_2 // 0
+    cover 5
+    intc_0 // 32
+    *
+    swap
+
+main_while_top@82:
+    dig 5
+    dig 7
+    <
+    bz main_after_while@87
+    bytec_0 // 0x
+    cover 8
+    dig 2
+    dig 5
+    callsub dynamic_array_read_dynamic_element
+    dup
+    intc_2 // 0
+    extract_uint16
+    dig 7
+    dup
+    uncover 2
+    <
+    assert // index out of bounds
+    callsub dynamic_array_read_byte_length_element
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    cover 3
+    intc_2 // 0
+    cover 2
+
+main_while_top@84:
+    dig 2
+    dig 5
+    <
+    bz main_after_while@86
+    intc_0 // 32
+    bzero
+    dig 4
+    dig 8
+    callsub dynamic_array_read_dynamic_element
+    dup
+    intc_2 // 0
+    extract_uint16
+    dig 10
+    dup
+    uncover 2
+    <
+    assert // index out of bounds
+    callsub dynamic_array_read_byte_length_element
+    extract 2 0
+    uncover 4
+    dup
+    cover 2
+    getbyte
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 11
+    swap
+    concat
+    cover 10
+    intc_3 // 1
+    +
+    cover 2
+    b main_while_top@84
+
+main_after_while@86:
+    uncover 2
+    pop
+    intc_0 // 32
+    bzero
+    uncover 2
+    dup
+    cover 2
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 13
+    swap
+    concat
+    cover 12
+    uncover 4
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 9
+    concat
+    uncover 11
+    dig 1
+    concat
+    cover 11
+    len
+    +
+    swap
+    uncover 5
+    intc_3 // 1
+    +
+    cover 5
+    b main_while_top@82
+
+main_after_while@87:
+    bury 1
+    uncover 4
+    pop
+    intc_0 // 32
+    bzero
+    dig 1
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 7
+    swap
+    concat
+    cover 5
+    uncover 6
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 7
+    uncover 8
+    concat
+    concat
+    uncover 6
+    dig 1
+    concat
+    cover 6
+    len
+    +
+    uncover 3
+    intc_3 // 1
+    +
+    cover 3
+    b main_while_top@80
+
+main_after_while@88:
+    popn 2
+    bury 1
+    intc_0 // 32
+    bzero
+    swap
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    concat
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    dup
+    len
     itob
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
-main_ternary_false@51:
-    intc_1 // 0
-    b main_ternary_merge@52
+main_ternary_false@78:
+    intc_2 // 0
+    b main_ternary_merge@79
 
 main_f_route@5:
     txna ApplicationArgs 1
-    dupn 2
-    intc_1 // 0
+    dup
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_0 // 2
+    intc_1 // 2
     *
     swap
     dup
     len
-    swap
+    cover 3
     extract 2 0
-    intc_1 // 0
+    intc_2 // 0
 
-main_for_header@55:
+main_for_header@91:
     dup
-    dig 5
+    dig 4
     <
-    bz main_after_for@57
+    bz main_after_for@93
     dup
-    intc_0 // 2
+    intc_1 // 2
     *
     dig 2
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
     dup
-    uncover 6
+    uncover 5
     dup
     cover 4
     ==
@@ -518,49 +1339,263 @@ main_for_header@55:
     dig 1
     len
     substring3
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 32
+    intc_0 // 32
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     +
-    cover 3
-    intc_2 // 1
+    cover 2
+    intc_3 // 1
     +
-    b main_for_header@55
+    b main_for_header@91
 
-main_after_for@57:
-    popn 2
-    uncover 2
+main_after_for@93:
     pop
     swap
-    intc_0 // 2
+    intc_1 // 2
     +
-    dig 1
+    uncover 3
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
     txn GroupIndex
-    bz main_ternary_false@59
+    bz main_ternary_false@95
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
-main_ternary_merge@60:
+main_ternary_merge@96:
     !
     assert // not payable
+    bytec_0 // 0x
+    cover 2
+    bytec_0 // 0x
+    cover 3
+    intc_2 // 0
+    swap
+    dig 2
+    intc_0 // 32
+    *
+
+main_while_top@97:
+    dig 2
+    dig 4
+    <
+    dup
+    bz main_after_while@102
+    bytec_0 // 0x
+    cover 6
+    assert // index out of bounds
+    dig 2
+    intc_1 // 2
+    *
+    dig 2
+    dup
+    uncover 2
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_0 // 32
+    *
+    intc_1 // 2
+    +
+    extract3
+    dup
+    cover 2
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    cover 3
+    intc_2 // 0
+
+main_while_top@99:
+    dup
+    dig 5
+    <
+    bz main_after_while@101
+    intc_0 // 32
+    bzero
+    dig 3
+    extract 2 0
+    dig 2
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 9
+    swap
+    concat
+    cover 8
+    intc_3 // 1
+    +
+    b main_while_top@99
+
+main_after_while@101:
+    pop
+    bury 1
+    intc_0 // 32
+    bzero
+    dig 1
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 7
+    swap
+    concat
+    cover 6
+    uncover 3
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 6
+    concat
+    uncover 6
+    dig 1
+    concat
+    cover 6
+    len
+    +
+    uncover 2
+    intc_3 // 1
+    +
+    cover 2
+    b main_while_top@97
+
+main_after_while@102:
+    popn 4
+    intc_0 // 32
+    bzero
+    swap
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    concat
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    dup
+    len
     itob
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
-main_ternary_false@59:
-    intc_1 // 0
-    b main_ternary_merge@60
+main_ternary_false@95:
+    intc_2 // 0
+    b main_ternary_merge@96
+
+
+// _puya_lib.arc4.dynamic_array_read_dynamic_element(array: bytes, index: uint64) -> bytes:
+dynamic_array_read_dynamic_element:
+    proto 2 1
+    frame_dig -2
+    extract 2 0
+    frame_dig -2
+    intc_2 // 0
+    extract_uint16
+    frame_dig -1
+    intc_1 // 2
+    *
+    dig 2
+    swap
+    extract_uint16
+    dig 2
+    len
+    frame_dig -1
+    intc_3 // 1
+    +
+    dup
+    intc_1 // 2
+    *
+    dig 5
+    swap
+    extract_uint16
+    uncover 4
+    uncover 2
+    -
+    select
+    substring3
+    retsub
+
+
+// _puya_lib.arc4.static_array_read_dynamic_element(array_head_and_tail: bytes, index: uint64, array_length: uint64) -> bytes:
+static_array_read_dynamic_element:
+    proto 3 1
+    frame_dig -2
+    intc_1 // 2
+    *
+    frame_dig -3
+    swap
+    extract_uint16
+    frame_dig -3
+    len
+    frame_dig -2
+    intc_3 // 1
+    +
+    dup
+    intc_1 // 2
+    *
+    frame_dig -3
+    swap
+    extract_uint16
+    frame_dig -1
+    uncover 2
+    -
+    select
+    frame_dig -3
+    cover 2
+    substring3
+    retsub
+
+
+// _puya_lib.arc4.dynamic_array_read_byte_length_element(array: bytes, index: uint64) -> bytes:
+dynamic_array_read_byte_length_element:
+    proto 2 1
+    frame_dig -2
+    extract 2 0
+    frame_dig -1
+    intc_1 // 2
+    *
+    dig 1
+    swap
+    extract_uint16
+    dup2
+    extract_uint16
+    intc_1 // 2
+    +
+    extract3
+    retsub

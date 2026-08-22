@@ -3,6 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/abi_decode_v2.sol.C.approval_program() -> uint64:
 main:
+    intcblock 32 1 0 24
+    bytecblock 0x
+    bytec_0 // ""
     pushint 4096
     bzero
     dup
@@ -22,7 +25,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
@@ -40,18 +43,212 @@ main_f_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    pushint 1
+    intc_1 // 1
     -
     gtxns Amount
 
 main_ternary_merge@9:
     !
     assert // not payable
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000008002200030000000000000000000000000000000000000000000000000000000000000009000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000b
+    intc_0 // 32
+    bzero
+    bytec_0 // 0x
+    intc_2 // 0
+    bury 3
+
+main_while_top@10:
+    dig 2
+    pushint 3
+    <
+    bz main_after_while@12
+    dig 2
+    dup
+    intc_0 // 32
+    *
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000b
+    swap
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    intc_1 // 1
+    +
+    bury 3
+    b main_while_top@10
+
+main_after_while@12:
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000003
+    swap
+    concat
+    dup
+    cover 2
+    dup
+    len
+    dup
+    cover 4
+    intc_0 // 32
+    dig 1
+    <=
+    assert // EVM ABI decode out of bounds
+    dig 1
+    extract 0 32
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    cover 4
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    dup
+    dig 3
+    <=
+    assert // EVM ABI decode out of bounds
+    dup
+    intc_0 // 32
+    +
+    dig 3
+    <=
+    assert // EVM ABI decode out of bounds
+    dig 3
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    +
+    dup
+    intc_0 // 32
+    +
+    dup
+    cover 4
+    uncover 2
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI array length exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    pushint 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    pushbytes 0x0000
+    cover 3
+    intc_2 // 0
+    bury 8
+
+main_while_top@13:
+    dig 7
+    dig 1
+    <
+    bz main_after_while@15
+    dig 7
+    dup
+    intc_0 // 32
+    *
+    dig 3
+    +
+    dup
+    intc_0 // 32
+    +
+    dig 9
+    <=
+    assert // EVM ABI decode out of bounds
+    dig 7
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 4
+    b|
+    pushbytes 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 6
+    dup
+    cover 2
+    intc_2 // 0
+    extract_uint16
+    +
+    itob
+    extract 6 0
+    replace2 0
+    swap
+    concat
+    cover 4
+    intc_1 // 1
+    +
+    bury 8
+    b main_while_top@13
+
+main_after_while@15:
+    popn 2
+    uncover 3
+    uncover 3
+    intc_0 // 32
+    extract3
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    pushbytes 0x0022
+    concat
+    swap
+    concat
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_1 // 1
     return
 
 main_ternary_false@8:
-    pushint 0
+    intc_2 // 0
     b main_ternary_merge@9

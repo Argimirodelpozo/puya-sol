@@ -183,6 +183,18 @@ int main(int _argc, char* _argv[])
 	}
 
 	// Build AWST
+	// --evm-memory-layout (and the memory half of the --evm-layout umbrella)
+	// currently changes NOTHING: TargetProfile::evmMemoryLayout is written here
+	// and read nowhere in the compiler. Whether memory is modelled as the flat
+	// pointer blob is decided per call site, not by this flag. Say so rather
+	// than accepting a switch that silently does nothing -- --evm-layout still
+	// applies its storage half, which does work.
+	if (opts.evmMemoryLayout)
+		logger.warning(
+			"--evm-memory-layout is not implemented: the flag is accepted but "
+			"no lowering consults it. Memory modelling is currently decided per "
+			"call site. (--evm-layout still applies its storage half.)");
+
 	logger.info("Building AWST...");
 	puyasol::builder::AWSTBuilder builder;
 	puyasol::builder::TargetProfile targetProfile{

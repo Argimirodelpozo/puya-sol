@@ -66,45 +66,30 @@ main_ternary_merge@9:
     bytec_1 // 0x00000000
     cover 2
     select
-    dup
-    extract 1 2
-    swap
-    extract 3 1
     pushbytes 0x02
-    uncover 2
-    concat
-    swap
-    concat
-    dup
-    extract 0 1
-    swap
-    extract 3 1
-    swap
+    replace2 0
     pushbytes 0xabcd
-    concat
-    swap
-    concat
-    dup
-    extract 0 1
-    swap
-    extract 1 2
-    concat
+    replace2 1
     pushbytes 0xfa
-    concat
+    replace2 3
     bytec_0 // "data"
     swap
     box_put
     intc_0 // 0
     bytec_2 // "x"
     app_global_get_ex
-    assert // check x exists
+    intc_0 // 0
+    cover 2
+    select
     intc_1 // 1
     !=
     bnz main_if_body@14
     intc_0 // 0
     bytec_3 // "y"
     app_global_get_ex
-    assert // check y exists
+    intc_0 // 0
+    cover 2
+    select
     intc_2 // 2
     !=
     bnz main_if_body@14
@@ -151,11 +136,6 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     return
 
 main_after_if_else@15:
-    intc_0 // 0
-    bytec_3 // "y"
-    app_global_get_ex
-    bury 1
-    assert // check y exists
     bytec_3 // "y"
     intc_0 // 0
     app_global_put
@@ -179,14 +159,18 @@ main_after_if_else@15:
     intc_0 // 0
     bytec_2 // "x"
     app_global_get_ex
-    assert // check x exists
+    intc_0 // 0
+    cover 2
+    select
     intc_1 // 1
     !=
     bnz main_if_body@20
     intc_0 // 0
     bytec_3 // "y"
     app_global_get_ex
-    assert // check y exists
+    intc_0 // 0
+    cover 2
+    select
     bnz main_if_body@20
     bytec_0 // "data"
     box_get
@@ -222,11 +206,6 @@ main_if_body@20:
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/packed_storage_structs_delete.sol.C.test@22
 
 main_after_if_else@21:
-    intc_0 // 0
-    bytec_2 // "x"
-    app_global_get_ex
-    bury 1
-    assert // check x exists
     bytec_2 // "x"
     intc_0 // 0
     app_global_put

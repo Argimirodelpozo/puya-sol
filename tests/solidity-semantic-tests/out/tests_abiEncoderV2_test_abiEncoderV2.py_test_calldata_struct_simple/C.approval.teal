@@ -110,8 +110,18 @@ f:
 f_ternary_merge@3:
     !
     assert // not payable
+    intc_1 // 32
+    bzero
     frame_dig -1
+    extract 0 32
+    concat
     dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    frame_dig -1
     retsub
 
 f_ternary_false@2:

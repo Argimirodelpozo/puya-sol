@@ -1,7 +1,7 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_8bthokv5/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_ugc139z9/B.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 6 32
     bytecblock "y" "x" 0x290efb48 TMPL_APPROVAL_A TMPL_CLEAR_A
@@ -113,7 +113,9 @@ main_ternary_merge@9:
     intc_0 // 0
     bytec_0 // "y"
     app_global_get_ex
-    assert // check y exists
+    pushbytes 0x
+    cover 2
+    select
     itxn_begin
     intc_2 // 6
     itxn_field TypeEnum
