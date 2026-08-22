@@ -115,11 +115,15 @@ def test_erc7201_param_abi_encode(harness):
     # builtinMatchesSolidityImplementation() -> true
     r = harness.call(app, "builtinMatchesSolidityImplementation()")
     assert bool(as_int(r.abi_return)) is True
-    # EVM_DIVERGENCE: ERC-7201 slot = keccak256(abi.encode(...)) & ~0xff. abi.encode
-    # is now ARC4, so the hashed bytes (and thus the slot) differ from Ethereum's.
-    # builtinMatchesSolidityImplementation() still passes (builtin == in-contract impl).
+    # No longer an EVM divergence: the slot is keccak256(abi.encode(...)) & ~0xff,
+    # and abi.encode now emits canonical EVM bytes, so this is Ethereum's real
+    # ERC-7201 slot. Value is the upstream reference `builtinOutput() ->
+    # -1465155418619336808...` from the contract's own expectation block, read as
+    # uint256. It used to be an ARC-4-encoded identifier hashed to a different slot.
     r = harness.call(app, "builtinOutput()")
-    assert as_int(r.abi_return) == 881639522005840632344347799736577674232967879903515221347264931551892978432
+    assert as_int(r.abi_return) == (
+        -14651554186193368082021334953908208762193027200365752719897746810709432803072
+        % (1 << 256))
 
 def test_erc7201_param_array_string_literal(harness):
     """builtinFunctions/contracts/erc7201_param_array_string_literal.sol"""
@@ -293,15 +297,21 @@ def test_keccak256_packed(harness):
 def test_keccak256_packed_complex_types(harness):
     """builtinFunctions/contracts/keccak256_packed_complex_types.sol
 
-    hash1/hash2 (uint120[3] storage / uint120[] memory) are EVM-exact: packed
-    array elements pad to the full 32-byte word. hash3 EVM_DIVERGENCE (pinned
-    by conversions/encodepacked_widths): encodePacked(address) packs the FULL
-    32-byte AVM account, not EVM's 20 bytes — a 20-byte slice would truncate
-    real accounts. hash3 = keccak256(32-byte 0x…1234) instead of solc's
-    keccak256(20-byte 0x…1234) = 0xe7490f…"""
+    All three now match solc's own expectation block byte-for-byte.
+
+    hash1/hash2 (uint120[3] storage / uint120[] memory) were always EVM-exact:
+    packed array elements pad to the full 32-byte word. hash3 used to diverge —
+    encodePacked(address) packed the FULL 32-byte AVM account rather than EVM's
+    20 bytes, giving 0xe321d9… instead of solc's 0xe7490f…. It now packs the low
+    20 bytes like the EVM.
+
+    Residual hazard, deliberate: for an EVM-shaped address (12 zero bytes of
+    padding) the slice is lossless, but a native 32-byte AVM account loses its
+    top 12 bytes, so two distinct AVM accounts can share one encodePacked
+    preimage. Solidity parity won; see conversions/encodepacked_widths."""
     app = harness.compile_and_deploy('builtinFunctions/contracts/keccak256_packed_complex_types.sol')
     r = harness.call(app, 'f()')
-    assert tuple(as_int(x) for x in r.abi_return) == (0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xe321d900f3fd366734e2d071e30949ded20c27fd638f1a059390091c643b62c5,)
+    assert tuple(as_int(x) for x in r.abi_return) == (0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xba4f20407251e4607cd66b90bfea19ec6971699c03e4a4f3ea737d5818ac27ae, 0xe7490fade3a8e31113ecb6c0d2635e28a6f5ca8359a57afe914827f41ddf0848,)
 
 def test_keccak256_with_bytes(harness):
     """builtinFunctions/contracts/keccak256_with_bytes.sol"""

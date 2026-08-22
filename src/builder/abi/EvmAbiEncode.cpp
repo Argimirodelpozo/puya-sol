@@ -163,6 +163,16 @@ private:
 		ArrayType const* array, std::shared_ptr<awst::Expression> value,
 		Statements& out, bool includeLength)
 	{
+		// A calldata slice of a non-byte array arrives reinterpreted to plain
+		// `bytes`, but those bytes ARE the ARC-4 array encoding the slice
+		// builder just concatenated ([uint16 count][elements]). Relabel it so
+		// ArrayLength and IndexExpression have an array to work on — they
+		// reject a bare `bytes` operand ("expected ReferenceArray or ARC4Array").
+		if (value->wtype == awst::WType::bytesType())
+			if (auto const* arrayW = m_typeMapper.map(array);
+				arrayW && arrayW != awst::WType::bytesType())
+				value = awst::makeReinterpretCast(std::move(value), arrayW, m_loc);
+
 		auto arrayValue = awst::makeEvalOnce(std::move(value), m_loc);
 		auto const* elemType = codec::underlyingType(array->baseType());
 		auto const* elemW = arrayElementType(arrayValue->wtype);

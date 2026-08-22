@@ -593,6 +593,22 @@ void TypeCoercion::assertImplicitlyConvertible(
 	if (dynamic_cast<FunctionType const*>(_srcSolType)
 		|| dynamic_cast<FunctionType const*>(_tgtSolType))
 		return;
+	// A user-defined value type IS its underlying type at runtime, so compare
+	// through the wrapper. solc demands an explicit wrap/unwrap in source, but
+	// the compiler legitimately crosses the boundary where bytes are handed
+	// over by REPRESENTATION rather than by conversion — e.g. the
+	// `address(this).call(abi.encodeWithSelector(this.f.selector, int(-5)))`
+	// self-call rewrite, where the untyped encoder's `int256` becomes the
+	// callee's declared `MyInt`. No sign/width/kind mixup can hide here: the
+	// two spellings share one representation.
+	auto unwrapUserDefined = [](Type const* type)
+	{
+		while (auto const* udvt = dynamic_cast<UserDefinedValueType const*>(type))
+			type = &udvt->underlyingType();
+		return type;
+	};
+	_srcSolType = unwrapUserDefined(_srcSolType);
+	_tgtSolType = unwrapUserDefined(_tgtSolType);
 	// Accept when EITHER the raw pair OR the memory-normalized pair converts.
 	// Raw-only: storage→storage array copies convert element types, their
 	// memory forms don't. Normalized-only: internal calls to public fns with

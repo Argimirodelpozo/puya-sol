@@ -1,12 +1,10 @@
 #include "builder/abi/AbiSelectorCalldataBuilder.h"
 #include "Logger.h"
 #include "builder/abi/AbiEncoderBuilder.h"
-#include "builder/SelectorSemantics.h"
 #include "builder/SolcFacts.h"
 #include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
-#include "builder/itxn/InnerCallHandlers.h"
 
 namespace puyasol::builder::eb
 {
@@ -38,15 +36,14 @@ std::unique_ptr<InstanceBuilder> handleEncodeCall(
 			? fnType : targetFuncDef->functionType(false);
 		if (!externalType)
 			return nullptr;
-		// PROFILE-AWARE, not unconditionally EVM. The selector redesign is
-		// opt-in: without --evm-selectors abi.encodeCall keeps its ARC-4
-		// identity (sha512_256 over name(params)returns), which is what
-		// puya-sol callees actually route on. Hard-coding the keccak selector
-		// here made every default-profile encodeCall emit an EVM selector
-		// (test_evm_selectors_default_compatibility).
-		selector = builder::SelectorSemantics::functionSelector(
-			_ctx, *externalType,
-			InnerCallHandlers::buildMethodSelector(_ctx, targetFuncDef), _loc);
+		// Solidity fixes this selector to keccak256(signature)[:4]. Entry
+		// transport selection must never change the meaning of an `abi.*`
+		// expression: --evm-selectors governs this contract's own identity
+		// surface (msg.sig, fn-pointer values, EIP-165), not the calldata the
+		// abi builtins construct, which is canonical EVM in both profiles.
+		selector = awst::makeBytesConstant(
+			builder::SolcFacts::externalSelector(*externalType), _loc,
+			awst::BytesEncoding::Base16, awst::WType::bytesType());
 	}
 	else if (fnType && fnType->kind() == FunctionType::Kind::External)
 	{
@@ -199,17 +196,16 @@ std::unique_ptr<InstanceBuilder> handleEncodeWithSignature(
 
 	std::vector<std::shared_ptr<awst::Expression>> parts;
 
-	// PROFILE-AWARE. Solidity fixes this to keccak256(signature)[:4] and the
-	// EVM profile honours that, but the default profile keeps the ARC-4
-	// identity a puya-sol callee actually routes on. Making it unconditionally
-	// keccak silently changed every existing abi.encodeWithSignature call in
-	// the default profile (test_evm_selectors_default_compatibility, which
-	// states the redesign is opt-in and byte-for-byte compatible without
-	// --evm-selectors).
+	// Solidity fixes this selector to keccak256(signature)[:4]. Entry transport
+	// selection must never change the meaning of an `abi.*` expression, so this
+	// stays keccak in both profiles — matching the runtime-signature arm below,
+	// which would otherwise hash the same call differently just because the
+	// signature was not a literal.
 	if (auto const* sigLit = dynamic_cast<solidity::frontend::Literal const*>(args[0].get()))
 	{
-		parts.push_back(builder::SelectorSemantics::signatureSelector(
-			_ctx, sigLit->value(), _loc));
+		parts.push_back(awst::makeBytesConstant(
+			builder::SolcFacts::externalSelector(sigLit->value()), _loc,
+			awst::BytesEncoding::Base16, awst::WType::bytesType()));
 	}
 	else
 	{

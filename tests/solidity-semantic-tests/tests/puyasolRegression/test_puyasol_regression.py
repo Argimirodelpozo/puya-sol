@@ -4694,9 +4694,24 @@ def test_unreachable_library_function_is_not_translated(harness):
 
 
 def test_evm_selectors_default_compatibility(harness):
-    """The selector redesign is opt-in: existing ARC-4-visible values remain
-    byte-for-byte unchanged when --evm-selectors is absent."""
+    """The selector redesign is opt-in: this contract's own ARC-4 identity
+    surface stays byte-for-byte unchanged when --evm-selectors is absent.
+
+    That surface is what names THIS contract — `.selector` members, function
+    pointer values and msg.sig — and it is what a puya-sol caller routes on.
+    The `abi.encode*` builtins are not part of it: they construct calldata for
+    somebody else, and Solidity fixes that to keccak256(signature)[:4]. Entry
+    transport selection must not change the meaning of an `abi.*` expression,
+    so those two stay EVM in both profiles.
+    """
+    from Crypto.Hash import keccak
+
     from framework import arc4_selector
+
+    def evm_selector(signature: str) -> bytes:
+        digest = keccak.new(digest_bits=256)
+        digest.update(signature.encode())
+        return digest.digest()[:4]
 
     app = harness.compile_and_deploy(
         "puyasolRegression/contracts/evm_selector_semantics.sol",
@@ -4705,9 +4720,11 @@ def test_evm_selectors_default_compatibility(harness):
     alpha_route = arc4_selector("alpha(uint256)bool")
     assert bytes(harness.call(app, "functionSelector()").abi_return) == alpha_route
     assert bytes(harness.call(app, "pointerSelector()").abi_return) == alpha_route
-    assert bytes(harness.call(app, "encodedCallSelector()").abi_return) == alpha_route
+    # Calldata built FOR a callee, not this contract's own identity.
+    assert bytes(harness.call(app, "encodedCallSelector()").abi_return) \
+        == evm_selector("alpha(uint256)")
     assert bytes(harness.call(app, "encodedSignatureSelector()").abi_return) \
-        == arc4_selector("alpha(uint256)")
+        == evm_selector("alpha(uint256)")
     assert bytes(harness.call(app, "directMsgSig()").abi_return) \
         == arc4_selector("directMsgSig()byte[4]")
     assert bytes(harness.call(app, "outerMsgSig()").abi_return) \
