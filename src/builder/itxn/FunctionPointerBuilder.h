@@ -12,8 +12,8 @@
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/FunctionSymbolTable.h"
 
-#include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/Types.h>
+#include <libsolidity/ast/ASTForward.h>
+#include "builder/sol-types/SolcFwd.h"
 
 #include <map>
 #include <set>

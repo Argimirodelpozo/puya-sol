@@ -3,7 +3,8 @@
 #include "awst/Node.h"
 #include "builder/sol-types/TypeMapper.h"
 
-#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTForward.h>
+#include "builder/sol-types/SolcFwd.h"
 
 #include <map>
 #include <string>

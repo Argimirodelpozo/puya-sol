@@ -20,7 +20,7 @@
 #include "awst/Node.h"
 #include "builder/sol-eb/NodeBuilder.h"
 
-#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTForward.h>
 
 #include <memory>
 

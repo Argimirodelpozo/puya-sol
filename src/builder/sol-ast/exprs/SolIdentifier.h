@@ -2,7 +2,7 @@
 
 #include "builder/sol-ast/SolExpression.h"
 
-#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTForward.h>
 
 namespace puyasol::builder::sol_ast
 {

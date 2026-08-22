@@ -14,8 +14,8 @@
 #include "awst/Node.h"
 #include "builder/sol-eb/ContractContext.h"
 
-#include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/Types.h>
+#include <libsolidity/ast/ASTForward.h>
+#include "builder/sol-types/SolcFwd.h"
 
 #include <optional>
 

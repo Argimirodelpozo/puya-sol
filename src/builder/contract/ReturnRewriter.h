@@ -12,7 +12,7 @@
 #include "awst/Node.h"
 #include "builder/ReturnWirePlan.h"
 
-#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTForward.h>
 
 #include <cstddef>
 #include <functional>

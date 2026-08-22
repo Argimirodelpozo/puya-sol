@@ -6,7 +6,8 @@
 /// such functions return only the uint64 index; call sites reconstitute
 /// `IndexExpression(<stateVar>, <call>)` as the lvalue.
 
-#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTForward.h>
+#include "builder/sol-types/SolcFwd.h"
 #include <libsolidity/ast/ASTVisitor.h>
 
 #include "builder/ProgramAnalysis.h"

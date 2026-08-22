@@ -2,7 +2,7 @@
 
 #include "builder/storage/StorageLayout.h"
 
-#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTForward.h>
 
 namespace puyasol::builder
 {

@@ -3,6 +3,7 @@
 #include "builder/sol-ast/SolExpression.h"
 
 #include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/Types.h>
 
 namespace puyasol::builder::sol_ast
 {

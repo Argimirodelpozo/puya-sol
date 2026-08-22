@@ -2,7 +2,7 @@
 
 #include "awst/Node.h"
 
-#include <libsolidity/ast/Types.h>
+#include "builder/sol-types/SolcFwd.h"
 
 #include <memory>
 #include <string>

@@ -2,7 +2,7 @@
 
 #include "builder/sol-eb/NodeBuilder.h"
 
-#include <libsolidity/ast/Types.h>
+#include "builder/sol-types/SolcFwd.h"
 
 namespace puyasol::builder::eb
 {

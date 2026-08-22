@@ -5,7 +5,7 @@
 /// Triggers: (1) box writes (need MBR), (2) new C() deploy,
 /// (3) msg.{value,sender,data}, (4) AVM stdlib (inner-txn MBR+ASA).
 
-#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTForward.h>
 
 namespace puyasol::builder
 {

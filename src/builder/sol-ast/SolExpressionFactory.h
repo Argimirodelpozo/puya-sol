@@ -4,7 +4,7 @@
 #include "builder/sol-ast/SolFunctionCall.h"
 #include "builder/sol-ast/SolMemberAccess.h"
 
-#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTForward.h>
 
 #include <memory>
 

@@ -11,7 +11,8 @@
 
 #include "awst/Node.h"
 
-#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTForward.h>
+#include "builder/sol-types/SolcFwd.h"
 
 #include <memory>
 #include <string>

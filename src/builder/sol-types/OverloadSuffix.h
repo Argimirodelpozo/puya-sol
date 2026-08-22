@@ -1,5 +1,7 @@
 #pragma once
 
+// Inline bodies here dynamic_cast to the concrete Type subclasses and read
+// FunctionDefinition members, so this header needs the definitions.
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
 

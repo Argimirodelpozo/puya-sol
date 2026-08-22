@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/ASTForward.h>
 #include <libsolidity/ast/ASTVisitor.h>
 #include <libyul/AST.h>
 

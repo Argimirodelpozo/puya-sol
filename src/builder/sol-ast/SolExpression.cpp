@@ -2,6 +2,10 @@
 #include "builder/sol-types/TypeMapper.h"
 
 #include <cassert>
+// Uses solc AST/Type definitions directly; the hub headers only
+// forward-declare them now.
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/Types.h>
 
 namespace puyasol::builder::sol_ast
 {

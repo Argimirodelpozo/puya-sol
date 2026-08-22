@@ -6,7 +6,7 @@
 #include "awst/Node.h"
 #include "builder/sol-eb/ContractContext.h"
 
-#include <libsolidity/ast/Types.h>
+#include "builder/sol-types/SolcFwd.h"
 
 #include <memory>
 
