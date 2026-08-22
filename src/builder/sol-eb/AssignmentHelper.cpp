@@ -95,9 +95,7 @@ ArcStructCowResult AssignmentHelper::rebuildArc4StructChainCOW(
 				outerWriteBase, outerWriteBase->wtype, _loc);
 
 		std::string outerFieldName = outerField->name;
-		awst::WType const* outerFieldWtype = nullptr;
-		for (auto const& [fn, ft]: outerStructType->fields())
-			if (fn == outerFieldName) { outerFieldWtype = ft; break; }
+		awst::WType const* outerFieldWtype = awst::structFieldType(outerStructType, outerFieldName);
 		result.fieldChain.push_back({outerFieldName, outerFieldWtype});
 
 		auto outerNewStruct = awst::makeNewStruct(outerStructType, _loc);

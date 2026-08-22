@@ -1,4 +1,5 @@
 #include "builder/contract/SelectorRouter.h"
+#include "builder/contract/RouterConditions.h"
 // Uses solc AST/Type definitions directly; the hub headers only
 // forward-declare them now.
 #include <libsolidity/ast/AST.h>
@@ -88,11 +89,7 @@ void emitSelectorDispatch(
 		return r;
 	};
 
-	auto makeIsNoOp = [&]() -> std::shared_ptr<awst::Expression> {
-		auto onCompletion = awst::makeTxn(std::string("OnCompletion"), awst::WType::uint64Type(), _loc);
-		return awst::makeNumericCompare(
-			std::move(onCompletion), awst::NumericComparison::Eq, awst::makeZero(_loc), _loc);
-	};
+	auto makeIsNoOp = [&]() { return isNoOpCall(_loc); };
 
 	// Step 1: bare NoOp call (NumAppArgs==0).
 	{

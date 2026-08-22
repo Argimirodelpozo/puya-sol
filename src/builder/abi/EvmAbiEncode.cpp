@@ -63,15 +63,6 @@ std::shared_ptr<awst::Expression> concat(
 
 
 
-awst::WType const* structFieldType(
-	awst::WType const* structure, std::string const& name)
-{
-	if (auto const* arc4 = dynamic_cast<awst::ARC4Struct const*>(structure))
-		for (auto const& [fieldName, fieldType]: arc4->fields())
-			if (fieldName == name)
-				return fieldType;
-	return nullptr;
-}
 
 class Encoder
 {
@@ -248,7 +239,7 @@ private:
 		for (auto const& member: structure->structDefinition().members())
 		{
 			types.push_back(member->type());
-			auto const* fieldW = structFieldType(base->wtype, member->name());
+			auto const* fieldW = awst::structFieldType(base->wtype, member->name());
 			if (!fieldW)
 				fieldW = m_typeMapper.map(member->type());
 			values.push_back(awst::makeFieldExpression(

@@ -259,9 +259,7 @@ private:
 		uint64_t cursor = 0;
 		for (auto const& member: structure->structDefinition().members())
 		{
-			awst::WType const* fieldW = nullptr;
-			for (auto const& [name, type]: structW->fields())
-				if (name == member->name()) { fieldW = type; break; }
+			awst::WType const* fieldW = awst::structFieldType(structW, member->name());
 			auto field = head(member->type(), base,
 				add(base, u64(cursor, m_loc), m_loc), out);
 			result->values[member->name()] = codec::valueToArc4(

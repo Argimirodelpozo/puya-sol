@@ -52,10 +52,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleStructFieldArrayMethod(
 	// ARC4DynamicArray<projection>, while a fresh map(S[]) re-derives the full
 	// recursive S → element-type mismatch at the push. For non-recursive fields the
 	// two are identical (no change).
-	awst::WType const* rawFieldType = nullptr;
-	if (auto const* st = dynamic_cast<awst::ARC4Struct const*>(structWType))
-		for (auto const& [fn, ft]: st->fields())
-			if (fn == fieldName) { rawFieldType = ft; break; }
+	awst::WType const* rawFieldType = awst::structFieldType(structWType, fieldName);
 	if (!rawFieldType)
 		rawFieldType = m_ctx.typeMapper.map(fieldArrayType);
 	awst::WType const* elemType = nullptr;

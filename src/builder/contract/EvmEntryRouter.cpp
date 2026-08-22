@@ -1,5 +1,7 @@
 #include "builder/contract/ContractBuilder.h"
 
+#include "builder/contract/RouterConditions.h"
+
 #include "Logger.h"
 #include "builder/SolcFacts.h"
 #include "builder/abi/EvmAbiDecode.h"
@@ -49,21 +51,6 @@ awst::ContractMethod* findMethod(awst::Contract& contract, std::string const& na
 		if (method.memberName == name)
 			return &method;
 	return nullptr;
-}
-
-std::shared_ptr<awst::Expression> appArgCountIs(
-	uint64_t count, awst::SourceLocation const& loc)
-{
-	return awst::makeNumericCompare(
-		awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
-		awst::NumericComparison::Eq, u64(count, loc), loc);
-}
-
-std::shared_ptr<awst::Expression> isNoOp(awst::SourceLocation const& loc)
-{
-	return awst::makeNumericCompare(
-		awst::makeTxn("OnCompletion", awst::WType::uint64Type(), loc),
-		awst::NumericComparison::Eq, u64(0, loc), loc);
 }
 
 void emitReturnLog(
@@ -207,7 +194,7 @@ void emitEvmRouteArm(
 		appArgCountIs(2, loc), awst::BinaryBooleanOperator::And,
 		std::move(selectorMatches), loc);
 	auto condition = awst::makeBoolBinOp(
-		isNoOp(loc), awst::BinaryBooleanOperator::And,
+		isNoOpCall(loc), awst::BinaryBooleanOperator::And,
 		std::move(shapeMatches), loc);
 	auto body = awst::makeBlock(loc);
 	if (!route.function->isPayable())
@@ -346,7 +333,7 @@ void ContractBuilder::emitEvmEntryDispatch(
 		auto const* emptyDefinition = receiveMethod
 			? receiveDefinition : fallbackDefinition;
 		auto condition = awst::makeBoolBinOp(
-			isNoOp(loc), awst::BinaryBooleanOperator::And,
+			isNoOpCall(loc), awst::BinaryBooleanOperator::And,
 			appArgCountIs(0, loc), loc);
 		auto body = awst::makeBlock(loc);
 		if (emptyDefinition && !emptyDefinition->isPayable())
@@ -397,7 +384,7 @@ void ContractBuilder::emitEvmEntryDispatch(
 				awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
 				awst::NumericComparison::Lte, u64(2, loc), loc), loc);
 		auto condition = awst::makeBoolBinOp(
-			isNoOp(loc), awst::BinaryBooleanOperator::And,
+			isNoOpCall(loc), awst::BinaryBooleanOperator::And,
 			std::move(carrierShape), loc);
 		auto fallbackBody = awst::makeBlock(loc);
 		if (fallbackDefinition && !fallbackDefinition->isPayable())

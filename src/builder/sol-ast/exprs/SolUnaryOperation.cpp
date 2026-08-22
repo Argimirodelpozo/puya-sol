@@ -516,9 +516,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		std::shared_ptr<awst::Expression> nativeFieldValue) -> std::shared_ptr<awst::Statement>
 	{
 		auto const* fieldExpr = dynamic_cast<awst::FieldExpression const*>(writeTarget.get());
-		awst::WType const* arc4FieldType = nullptr;
-		for (auto const& [fn, ft]: structType->fields())
-			if (fn == fieldExpr->name) { arc4FieldType = ft; break; }
+		awst::WType const* arc4FieldType = awst::structFieldType(structType, fieldExpr->name);
 		std::shared_ptr<awst::Expression> encoded = std::move(nativeFieldValue);
 		if (arc4FieldType && encoded->wtype != arc4FieldType)
 			encoded = awst::makeARC4Encode(std::move(encoded), arc4FieldType, m_loc);
@@ -739,9 +737,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 			if (dynamic_cast<awst::BoxValueExpression const*>(base.get()))
 				readBase = builder::StorageMapper::makeStateGetWithDefault(base, base->wtype, m_loc);
 
-			awst::WType const* arc4FieldType = nullptr;
-			for (auto const& [fname, ftype]: arc4StructType->fields())
-				if (fname == fieldName) { arc4FieldType = ftype; break; }
+			awst::WType const* arc4FieldType = awst::structFieldType(arc4StructType, fieldName);
 
 			auto zeroVal = builder::StorageMapper::makeDefaultValue(
 				arc4FieldType ? arc4FieldType : fieldExpr->wtype, m_loc);

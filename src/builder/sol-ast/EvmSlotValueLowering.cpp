@@ -173,9 +173,7 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _
 			auto v = readArrayValue(fa, mat);
 			if (!v)
 				return nullptr;
-			awst::WType const* fieldW3 = nullptr;
-			for (auto const& [fname, ftype]: structW->fields())
-				if (fname == m->name()) { fieldW3 = ftype; break; }
+			awst::WType const* fieldW3 = awst::structFieldType(structW, m->name());
 			if (fieldW3 && v->wtype != fieldW3)
 				v = awst::makeARC4Encode(std::move(v), fieldW3, m_loc);
 			ns->values[m->name()] = std::move(v);
@@ -186,9 +184,7 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _
 			// string/bytes member: EVM short/long format at the member slot
 			fa.wtype = m_ctx.typeMapper.map(m->type());
 			auto v = readBytesValue(fa);
-			awst::WType const* fieldW2 = nullptr;
-			for (auto const& [fname, ftype]: structW->fields())
-				if (fname == m->name()) { fieldW2 = ftype; break; }
+			awst::WType const* fieldW2 = awst::structFieldType(structW, m->name());
 			if (v && fieldW2 && v->wtype != fieldW2)
 				v = awst::makeARC4Encode(std::move(v), fieldW2, m_loc);
 			if (!v)
@@ -204,9 +200,7 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _
 		if (fa.wtype == awst::WType::accountType() && !fa.byteOffset)
 			fa.size = fa.size;   // keep declared width inside structs
 		// ARC4 struct fields carry ARC4 wtypes — convert the native read.
-		awst::WType const* fieldW = nullptr;
-		for (auto const& [fname, ftype]: structW->fields())
-			if (fname == m->name()) { fieldW = ftype; break; }
+		awst::WType const* fieldW = awst::structFieldType(structW, m->name());
 		auto v = readValue(fa);
 		if (v && fieldW && v->wtype != fieldW)
 		{
@@ -264,9 +258,7 @@ bool EvmSlotLowering::writeStructValue(
 				baseVar(), awst::BigUIntBinaryOperator::Add,
 				biguintConst(off.first.str()), m_loc));
 		fa.solType = m->type();
-		awst::WType const* fieldW = nullptr;
-		for (auto const& [fname, ftype]: structW->fields())
-			if (fname == m->name()) { fieldW = ftype; break; }
+		awst::WType const* fieldW = awst::structFieldType(structW, m->name());
 		auto field = awst::makeFieldExpression(valVar(), m->name(),
 			fieldW ? fieldW : m_ctx.typeMapper.map(m->type()), m_loc);
 		if (auto const* nst = dynamic_cast<StructType const*>(m->type()))

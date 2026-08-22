@@ -420,4 +420,17 @@ inline WType const* arrayElementType(WType const* _array)
 	return nullptr;
 }
 
+/// The wtype of an ARC4Struct field by name; nullptr when `_structure` is not
+/// an ARC4Struct or has no such field. The find-loop existed byte-identically
+/// at ~17 call sites.
+inline WType const* structFieldType(
+	WType const* _structure, std::string const& _name)
+{
+	if (auto const* arc4 = dynamic_cast<ARC4Struct const*>(_structure))
+		for (auto const& [fieldName, fieldType]: arc4->fields())
+			if (fieldName == _name)
+				return fieldType;
+	return nullptr;
+}
+
 } // namespace puyasol::awst

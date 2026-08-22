@@ -160,6 +160,93 @@ void augmentMethodForMutatedMemoryParams(
 }
 } // namespace
 
+namespace
+{
+struct ParamDecode
+{
+	size_t argIndex;
+	std::string name;
+	awst::WType const* nativeType;
+	awst::WType const* arc4Type;
+	awst::SourceLocation loc;
+	unsigned maskBits = 0; // >0 for sub-64-bit unsigned types needing input masking
+	unsigned signedBits = 0; // >0 for signed 64<N<256 int params: sign-extend to 256-bit after decode
+};
+
+/// The ARC-4 parameter remap for an ABI-routed method: rewrite each remappable
+/// arg's wtype to its ARC-4 form (except asm bodies) and record the decodes the
+/// prologue must emit. Pure extraction from buildFunction — the returned list
+/// feeds the decode-rename loop and the entry checks exactly as before.
+std::vector<ParamDecode> collectArc4ParamRemaps(
+	TypeMapper& _typeMapper,
+	solidity::frontend::FunctionDefinition const& _func,
+	awst::ContractMethod& method,
+	bool funcHasInlineAssembly)
+{
+std::vector<ParamDecode> paramDecodes;
+// Detect inline assembly (at ANY depth — `unchecked { assembly {..} }` counts):
+// skip ARC4 param wrapping (would break asm var refs).
+// Self-recursive callsubs are rewritten post-translation to wrap biguint args
+// in ARC4Encode (see wrap pass below) — self-recursion no longer gates the remap.
+if (method.arc4MethodConfig.has_value())
+{
+	auto const& solParams = _func.parameters();
+	for (size_t pi = 0; pi < method.args.size(); ++pi)
+	{
+		auto& arg = method.args[pi];
+
+		// Remap biguint → ARC4UIntN(N): without this puya uses uint512 (AVM max),
+		// breaking ABI selectors. Skipped for asm bodies (would break Yul refs).
+		if (arg.wtype == awst::WType::biguintType() && pi < solParams.size())
+		{
+			auto intInfo = builder::SolIntType::fromSol(solParams[pi]->annotation().type);
+			unsigned bits = intInfo ? intInfo->bits : 256;
+			auto const* arc4Type = _typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
+			// Signed sub-256 (64<N<256) decodes to N-bit two's complement; sign-extend
+			// to 256-bit so downstream ops (compare, negate) see the correct sign.
+			// int256 is already canonical; ≤64-bit is uint64-backed (buildABIEntryChecks).
+			unsigned signedBits =
+				(intInfo && intInfo->isSigned && bits > 64 && bits < 256) ? bits : 0;
+			paramDecodes.push_back({pi, arg.name, arg.wtype, arc4Type,
+				arg.sourceLocation, 0, signedBits});
+			// Asm bodies are built (buildBlock) AFTER this loop; defer the ABI wtype change so the Yul
+			// body builds against the native biguint type (set in the decode rename loop below).
+			if (!funcHasInlineAssembly)
+				arg.wtype = arc4Type;
+			continue;
+		}
+
+		// Remap aggregate types and profile-sized external fn-ptrs to ARC4.
+		// General bytes/bytes[N] params are NOT remapped.
+		bool isAggregate = arg.wtype
+			&& (arg.wtype->kind() == awst::WTypeKind::ReferenceArray
+				|| arg.wtype->kind() == awst::WTypeKind::ARC4StaticArray
+				|| arg.wtype->kind() == awst::WTypeKind::ARC4DynamicArray
+				|| arg.wtype->kind() == awst::WTypeKind::WTuple);
+		if (!isAggregate && pi < solParams.size()) // external fn-ptr bytes[N]
+		{
+			if (dynamic_cast<solidity::frontend::FunctionType const*>(solParams[pi]->type())
+				&& arg.wtype && arg.wtype->kind() == awst::WTypeKind::Bytes)
+				isAggregate = true;
+		}
+		// Skip remap for asm bodies: decode is also suppressed there, so remapping
+		// without a decode would leave the body reading ARC4 where it expects native.
+		if (!isAggregate || funcHasInlineAssembly)
+			continue;
+
+		awst::WType const* arc4Type = _typeMapper.mapToARC4Type(arg.wtype);
+		if (arc4Type != arg.wtype)
+		{
+			paramDecodes.push_back(
+				{pi, arg.name, arg.wtype, arc4Type, arg.sourceLocation});
+			arg.wtype = arc4Type;
+		}
+	}
+}
+	return paramDecodes;
+}
+} // namespace
+
 awst::ContractMethod ContractBuilder::buildFunction(
 	solidity::frontend::FunctionDefinition const& _func,
 	std::string const& _contractName,
@@ -361,77 +448,10 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			if (!abiCfg->chunk.empty())
 				method.inlineOpt = false;
 
-	// ARC4 methods: remap param types to ARC4; stash decode ops for deferred insertion.
-	struct ParamDecode
-	{
-		size_t argIndex;
-		std::string name;
-		awst::WType const* nativeType;
-		awst::WType const* arc4Type;
-		awst::SourceLocation loc;
-		unsigned maskBits = 0; // >0 for sub-64-bit unsigned types needing input masking
-		unsigned signedBits = 0; // >0 for signed 64<N<256 int params: sign-extend to 256-bit after decode
-	};
-	std::vector<ParamDecode> paramDecodes;
-	// Detect inline assembly (at ANY depth — `unchecked { assembly {..} }` counts):
-	// skip ARC4 param wrapping (would break asm var refs).
-	// Self-recursive callsubs are rewritten post-translation to wrap biguint args
-	// in ARC4Encode (see wrap pass below) — self-recursion no longer gates the remap.
-	if (method.arc4MethodConfig.has_value())
-	{
-		auto const& solParams = _func.parameters();
-		for (size_t pi = 0; pi < method.args.size(); ++pi)
-		{
-			auto& arg = method.args[pi];
-
-			// Remap biguint → ARC4UIntN(N): without this puya uses uint512 (AVM max),
-			// breaking ABI selectors. Skipped for asm bodies (would break Yul refs).
-			if (arg.wtype == awst::WType::biguintType() && pi < solParams.size())
-			{
-				auto intInfo = builder::SolIntType::fromSol(solParams[pi]->annotation().type);
-				unsigned bits = intInfo ? intInfo->bits : 256;
-				auto const* arc4Type = m_typeMapper.createType<awst::ARC4UIntN>(static_cast<int>(bits));
-				// Signed sub-256 (64<N<256) decodes to N-bit two's complement; sign-extend
-				// to 256-bit so downstream ops (compare, negate) see the correct sign.
-				// int256 is already canonical; ≤64-bit is uint64-backed (buildABIEntryChecks).
-				unsigned signedBits =
-					(intInfo && intInfo->isSigned && bits > 64 && bits < 256) ? bits : 0;
-				paramDecodes.push_back({pi, arg.name, arg.wtype, arc4Type,
-					arg.sourceLocation, 0, signedBits});
-				// Asm bodies are built (buildBlock) AFTER this loop; defer the ABI wtype change so the Yul
-				// body builds against the native biguint type (set in the decode rename loop below).
-				if (!funcHasInlineAssembly)
-					arg.wtype = arc4Type;
-				continue;
-			}
-
-			// Remap aggregate types and profile-sized external fn-ptrs to ARC4.
-			// General bytes/bytes[N] params are NOT remapped.
-			bool isAggregate = arg.wtype
-				&& (arg.wtype->kind() == awst::WTypeKind::ReferenceArray
-					|| arg.wtype->kind() == awst::WTypeKind::ARC4StaticArray
-					|| arg.wtype->kind() == awst::WTypeKind::ARC4DynamicArray
-					|| arg.wtype->kind() == awst::WTypeKind::WTuple);
-			if (!isAggregate && pi < solParams.size()) // external fn-ptr bytes[N]
-			{
-				if (dynamic_cast<solidity::frontend::FunctionType const*>(solParams[pi]->type())
-					&& arg.wtype && arg.wtype->kind() == awst::WTypeKind::Bytes)
-					isAggregate = true;
-			}
-			// Skip remap for asm bodies: decode is also suppressed there, so remapping
-			// without a decode would leave the body reading ARC4 where it expects native.
-			if (!isAggregate || funcHasInlineAssembly)
-				continue;
-
-			awst::WType const* arc4Type = m_typeMapper.mapToARC4Type(arg.wtype);
-			if (arc4Type != arg.wtype)
-			{
-				paramDecodes.push_back(
-					{pi, arg.name, arg.wtype, arc4Type, arg.sourceLocation});
-				arg.wtype = arc4Type;
-			}
-		}
-	}
+	// ARC4 methods: remap param types to ARC4; stash decode ops for deferred
+	// insertion (collectArc4ParamRemaps above).
+	auto paramDecodes = collectArc4ParamRemaps(
+		m_typeMapper, _func, method, funcHasInlineAssembly);
 
 	if (_func.isImplemented())
 	{

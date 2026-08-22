@@ -26,9 +26,7 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 	base = awst::unwrapStateGet(std::move(base)); // StateGet is not an lvalue
 
 	// Encode bytes → ARC4 byte[] (prepends length prefix in puya)
-	awst::WType const* arc4FieldType = nullptr;
-	for (auto const& [fname, ftype]: _structType->fields())
-		if (fname == fieldName) { arc4FieldType = ftype; break; }
+	awst::WType const* arc4FieldType = awst::structFieldType(_structType, fieldName);
 
 	std::shared_ptr<awst::Expression> encodedValue = std::move(_newBytes);
 	if (arc4FieldType && encodedValue->wtype != arc4FieldType)
@@ -90,9 +88,7 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 	}
 
 	// ARC4Encode the value
-	awst::WType const* arc4FieldType = nullptr;
-	for (auto const& [fname, ftype]: arc4StructType->fields())
-		if (fname == fieldName) { arc4FieldType = ftype; break; }
+	awst::WType const* arc4FieldType = awst::structFieldType(arc4StructType, fieldName);
 	if (arc4FieldType && _value->wtype != arc4FieldType)
 	{
 		// Coerce to native type first (e.g. uint64 "2" → BytesConstant for bytes1 fields)

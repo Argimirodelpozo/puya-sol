@@ -239,9 +239,7 @@ private:
 		auto result = awst::makeNewStruct(structW, m_loc);
 		for (auto const& member: structure->structDefinition().members())
 		{
-			awst::WType const* fieldW = nullptr;
-			for (auto const& [name, type]: structW->fields())
-				if (name == member->name()) { fieldW = type; break; }
+			awst::WType const* fieldW = awst::structFieldType(structW, member->name());
 			auto value = child(member->type(), add(base,
 				u64(structure->memoryOffsetOfMember(member->name()).str(), m_loc),
 				m_loc), out);
@@ -481,9 +479,7 @@ private:
 		auto structValue = pin(std::move(value), out, "struct");
 		for (auto const& member: structure->structDefinition().members())
 		{
-			awst::WType const* fieldW = nullptr;
-			for (auto const& [name, type]: structW->fields())
-				if (name == member->name()) { fieldW = type; break; }
+			awst::WType const* fieldW = awst::structFieldType(structW, member->name());
 			auto field = awst::makeFieldExpression(
 				structValue, member->name(), fieldW, m_loc);
 			writeChild(member->type(), std::move(field), add(base,

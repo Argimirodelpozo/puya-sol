@@ -99,13 +99,7 @@ std::shared_ptr<awst::Expression> SolFieldAccess::toAwst()
 	if (base->wtype && base->wtype->kind() == awst::WTypeKind::ARC4Struct)
 	{
 		auto const* structType = static_cast<awst::ARC4Struct const*>(base->wtype);
-		awst::WType const* arc4FieldType = nullptr;
-		for (auto const& [fname, ftype]: structType->fields())
-			if (fname == member)
-			{
-				arc4FieldType = ftype;
-				break;
-			}
+		awst::WType const* arc4FieldType = awst::structFieldType(structType, member);
 
 		auto field = awst::makeFieldExpression(std::move(base), member, arc4FieldType ? arc4FieldType
 			: m_ctx.typeMapper.map(m_memberAccess.annotation().type), m_loc);
