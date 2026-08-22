@@ -130,7 +130,8 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 	Type const* solType,
 	std::shared_ptr<awst::Expression> word,
 	awst::SourceLocation const& loc,
-	std::vector<std::shared_ptr<awst::Statement>>& out)
+	std::vector<std::shared_ptr<awst::Statement>>& out,
+	NarrowIntegerPolicy narrowIntegers)
 {
 	auto const* type = underlyingType(solType);
 	auto const* native = typeMapper.map(solType);
@@ -138,7 +139,21 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 	if (auto const* integer = dynamic_cast<IntegerType const*>(type))
 	{
 		word = awst::makeEvalOnce(std::move(word), loc);
-		assertIntegerPadding(word, *integer, loc, out);
+		if (narrowIntegers == NarrowIntegerPolicy::Validate)
+			assertIntegerPadding(word, *integer, loc, out);
+		else
+		{
+			// solc's cleanup_t_uintN / signextend: keep the declared width and
+			// rebuild the word from it, discarding whatever sat above.
+			int const width = static_cast<int>(integer->numBits() / 8);
+			if (width < 32)
+			{
+				auto low = awst::makeExtract(std::move(word), 32 - width, width, loc);
+				word = integer->isSigned()
+					? signExtendToWord(std::move(low), loc)
+					: awst::makeLeftPadToN(std::move(low), 32, loc);
+			}
+		}
 		if (integer->numBits() <= 64)
 			return awst::makeWord32ToUInt64(std::move(word), loc);
 		return awst::makeAsBiguint(std::move(word), loc);

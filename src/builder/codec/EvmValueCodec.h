@@ -26,6 +26,21 @@ solidity::frontend::Type const* underlyingType(
 /// in the ABI and memory source adapters; this is their common leaf predicate.
 bool isWordType(solidity::frontend::Type const* type);
 
+/// What a narrow integer's unused high bytes mean at this read site.
+///
+/// The two callers want opposite things and solc agrees with both. Decoding
+/// ABI input is a trust boundary, and solc's via-IR decoder emits
+/// `validator_revert_t_uintN` there. Reading a value back out of MEMORY is
+/// not: solc emits `cleanup_t_uintN`, a mask, because a program may legally
+/// dirty those bytes through inline assembly. Validating a memory read made
+/// `uint8[1] memory m; assembly { mstore(m, 257) } m[0]` revert where the EVM
+/// yields 0x01.
+enum class NarrowIntegerPolicy
+{
+	Validate,   ///< revert unless the high bytes are canonical padding
+	Mask,       ///< discard the high bytes (zero-extend / sign-extend)
+};
+
 /// Decode one 32-byte EVM word to puya-sol's native value representation.
 /// Canonical bool and enum checks are appended to `out`.
 std::shared_ptr<awst::Expression> valueFromEvmWord(
@@ -33,7 +48,8 @@ std::shared_ptr<awst::Expression> valueFromEvmWord(
 	solidity::frontend::Type const* solType,
 	std::shared_ptr<awst::Expression> word,
 	awst::SourceLocation const& loc,
-	std::vector<std::shared_ptr<awst::Statement>>& out);
+	std::vector<std::shared_ptr<awst::Statement>>& out,
+	NarrowIntegerPolicy narrowIntegers);
 
 /// Convert a native or ARC4-backed scalar value to its canonical 32-byte EVM
 /// word.  bytesN values are left-aligned; signed integers are sign-extended.
