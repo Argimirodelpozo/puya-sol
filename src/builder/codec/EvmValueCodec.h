@@ -1,5 +1,7 @@
 #pragma once
 
+#include <set>
+
 #include "awst/Node.h"
 
 #include "builder/sol-types/SolcFwd.h"
@@ -63,5 +65,14 @@ std::shared_ptr<awst::Expression> valueFromArc4(
 std::shared_ptr<awst::Expression> signExtendToWord(
 	std::shared_ptr<awst::Expression> bytes,
 	awst::SourceLocation const& loc);
+
+/// True when `type` can round-trip through canonical EVM ABI encoding.
+///
+/// One predicate, not two: EvmAbiEncode::canEncode and EvmAbiDecode::canDecode
+/// were byte-identical apart from the name of the recursive call, and there is
+/// no encode/decode asymmetry in the question being asked.
+bool canRoundTripEvmAbi(
+	solidity::frontend::Type const* type,
+	std::set<int64_t>& visiting);
 
 } // namespace puyasol::builder::codec

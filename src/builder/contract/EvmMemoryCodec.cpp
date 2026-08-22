@@ -43,16 +43,6 @@ std::shared_ptr<awst::Expression> add(
 		awst::UInt64BinaryOperator::Add, std::move(right), loc);
 }
 
-awst::WType const* arrayElementType(awst::WType const* array)
-{
-	if (auto const* dynamic = dynamic_cast<awst::ARC4DynamicArray const*>(array))
-		return dynamic->elementType();
-	if (auto const* fixed = dynamic_cast<awst::ARC4StaticArray const*>(array))
-		return fixed->elementType();
-	if (auto const* reference = dynamic_cast<awst::ReferenceArray const*>(array))
-		return reference->elementType();
-	return nullptr;
-}
 
 bool isReference(Type const* type)
 {

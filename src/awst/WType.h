@@ -403,4 +403,21 @@ private:
 	std::optional<int> m_transactionType;
 };
 
+/// Element type of any array WType, or nullptr if `_array` is not one.
+///
+/// Was three byte-identical file-local copies (EvmAbiEncode, EvmAbiDecode,
+/// EvmMemoryCodec) plus ~30 hand-rolled dynamic_cast ladders. Lives here rather
+/// than in Node.h: Node.h is the widest-reaching header in the build and this
+/// only needs the array WTypes declared just above.
+inline WType const* arrayElementType(WType const* _array)
+{
+	if (auto const* dynamic = dynamic_cast<ARC4DynamicArray const*>(_array))
+		return dynamic->elementType();
+	if (auto const* fixed = dynamic_cast<ARC4StaticArray const*>(_array))
+		return fixed->elementType();
+	if (auto const* reference = dynamic_cast<ReferenceArray const*>(_array))
+		return reference->elementType();
+	return nullptr;
+}
+
 } // namespace puyasol::awst

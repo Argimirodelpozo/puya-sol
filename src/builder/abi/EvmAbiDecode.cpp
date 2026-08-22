@@ -33,50 +33,7 @@ std::shared_ptr<awst::Expression> add(
 		awst::UInt64BinaryOperator::Add, std::move(right), loc);
 }
 
-bool canDecode(Type const* type, std::set<int64_t>& visiting)
-{
-	type = codec::underlyingType(type);
-	if (!type)
-		return false;
-	if (codec::isWordType(type))
-		return true;
-	if (auto const* array = dynamic_cast<ArrayType const*>(type))
-		return array->isByteArrayOrString()
-			|| canDecode(array->baseType(), visiting);
-	if (auto const* structure = dynamic_cast<StructType const*>(type))
-	{
-		auto id = structure->structDefinition().id();
-		if (!visiting.insert(id).second || structure->containsNestedMapping())
-			return false;
-		for (auto const& member: structure->structDefinition().members())
-			if (!member || !canDecode(member->type(), visiting))
-			{
-				visiting.erase(id);
-				return false;
-			}
-		visiting.erase(id);
-		return true;
-	}
-	if (auto const* tuple = dynamic_cast<TupleType const*>(type))
-	{
-		for (auto const* component: tuple->components())
-			if (!canDecode(component, visiting))
-				return false;
-		return true;
-	}
-	return false;
-}
 
-awst::WType const* arrayElementType(awst::WType const* array)
-{
-	if (auto const* dynamic = dynamic_cast<awst::ARC4DynamicArray const*>(array))
-		return dynamic->elementType();
-	if (auto const* fixed = dynamic_cast<awst::ARC4StaticArray const*>(array))
-		return fixed->elementType();
-	if (auto const* reference = dynamic_cast<awst::ReferenceArray const*>(array))
-		return reference->elementType();
-	return nullptr;
-}
 
 class Decoder
 {
@@ -341,7 +298,7 @@ bool canDecodeEvmAbi(std::vector<Type const*> const& components)
 {
 	std::set<int64_t> visiting;
 	for (auto const* component: components)
-		if (!canDecode(component, visiting))
+		if (!codec::canRoundTripEvmAbi(component, visiting))
 			return false;
 	return true;
 }

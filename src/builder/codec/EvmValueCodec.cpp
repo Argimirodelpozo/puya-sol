@@ -5,6 +5,10 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 
+// canRoundTripEvmAbi walks StructDefinition members and TupleType components.
+#include <libsolidity/ast/AST.h>
+#include <libsolidity/ast/Types.h>
+
 namespace puyasol::builder::codec
 {
 using namespace solidity::frontend;
@@ -320,6 +324,41 @@ std::shared_ptr<awst::Expression> valueToEvmWord(
 		integer && integer->isSigned())
 		return signExtendToWord(std::move(bytes), loc);
 	return awst::makeLeftPadToN(std::move(bytes), 32, loc);
+}
+
+bool canRoundTripEvmAbi(solidity::frontend::Type const* type, std::set<int64_t>& visiting)
+{
+	using namespace solidity::frontend;
+	type = underlyingType(type);
+	if (!type)
+		return false;
+	if (isWordType(type))
+		return true;
+	if (auto const* array = dynamic_cast<ArrayType const*>(type))
+		return array->isByteArrayOrString()
+			|| canRoundTripEvmAbi(array->baseType(), visiting);
+	if (auto const* structure = dynamic_cast<StructType const*>(type))
+	{
+		auto id = structure->structDefinition().id();
+		if (!visiting.insert(id).second || structure->containsNestedMapping())
+			return false;
+		for (auto const& member: structure->structDefinition().members())
+			if (!member || !canRoundTripEvmAbi(member->type(), visiting))
+			{
+				visiting.erase(id);
+				return false;
+			}
+		visiting.erase(id);
+		return true;
+	}
+	if (auto const* tuple = dynamic_cast<TupleType const*>(type))
+	{
+		for (auto const* component: tuple->components())
+			if (!canRoundTripEvmAbi(component, visiting))
+				return false;
+		return true;
+	}
+	return false;
 }
 
 } // namespace puyasol::builder::codec
