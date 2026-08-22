@@ -1102,6 +1102,44 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 	if (_expr->wtype == _targetType)
 		return _expr;
 
+	// Scalar ARC4 integer widening (arc4.uintN → arc4.uintM, arc4.intN →
+	// arc4.intM, N < M, same signedness — the only integer element conversions
+	// solc admits implicitly). Both are byte-level: unsigned prepends zeros,
+	// signed prepends a runtime 0x00/0xFF run keyed on the top bit. A general
+	// rule here means every aggregate copy that recurses per element inherits
+	// it — mirroring solc, where array copies delegate to the one scalar
+	// conversion function instead of enumerating element kinds.
+	{
+		auto const* srcInt = dynamic_cast<awst::ARC4UIntN const*>(_expr->wtype);
+		auto const* tgtInt = dynamic_cast<awst::ARC4UIntN const*>(_targetType);
+		if (srcInt && tgtInt && srcInt->n() < tgtInt->n()
+			&& srcInt->n() % 8 == 0 && tgtInt->n() % 8 == 0
+			&& srcInt->isSigned() == tgtInt->isSigned())
+		{
+			int const pad = static_cast<int>((tgtInt->n() - srcInt->n()) / 8);
+			if (!srcInt->isSigned())
+				return awst::makeReinterpretCast(
+					awst::makeLeftPad(
+						awst::makeAsBytes(std::move(_expr), _loc), pad, _loc),
+					_targetType, _loc);
+			auto once = awst::makeEvalOnce(
+				awst::makeAsBytes(std::move(_expr), _loc), _loc);
+			auto signByte = awst::makeBtoi(
+				awst::makeExtract(once, 0, 1, _loc), _loc);
+			auto isNeg = awst::makeNumericCompare(
+				std::move(signByte), awst::NumericComparison::Gte,
+				awst::makeIntegerConstant(128, _loc), _loc);
+			auto prefix = awst::makeConditional(
+				std::move(isNeg),
+				awst::makeBytesConstant(
+					std::vector<uint8_t>(static_cast<size_t>(pad), 0xFFu), _loc),
+				awst::makeBzero(pad, _loc),
+				awst::WType::bytesType(), _loc);
+			return awst::makeReinterpretCast(
+				awst::makeConcat(std::move(prefix), once, _loc), _targetType, _loc);
+		}
+	}
+
 	// ARC4StaticArray<T, N> → ARC4DynamicArray<T>: prepend 2-byte length header.
 	// Solidity allows implicit static→dynamic array conversions on assignment
 	// (e.g. `uint8[] storage x = new uint8[5]`). Puya's ARC4 pipeline keeps
@@ -1239,6 +1277,65 @@ std::shared_ptr<awst::Expression> TypeCoercion::coerceForAssignment(
 					auto srcBytes = awst::makeAsBytes(std::move(_expr), _loc);
 					auto cat = awst::makeRightPad(std::move(srcBytes), diffBytes, _loc);
 					return awst::makeReinterpretCast(std::move(cat), _targetType, _loc);
+				}
+			}
+
+			// Element-CONVERTING fixed→fixed copy from an arbitrary source value
+			// (`_y = _x` where `bytes8[9] _x; bytes17[10] _y;` — the upstream
+			// storage_packed_array_copy fixture). Mirrors solc's architecture:
+			// copyArrayToStorageFunction does not know about element kinds — it
+			// loops and delegates each element to the GENERAL conversion
+			// (updateStorageValueFunction(fromBase, toBase)). Same here: slice each
+			// encoded element, relabel it as the source element wtype, and recurse
+			// into coerceForAssignment; whatever the scalar layer can convert, an
+			// array of it now converts too. Missing tail elements zero-fill —
+			// solc only admits value-type element conversions, whose default
+			// encoding is all-zero. Without this the bare ARC4Encode reached puya
+			// as "cannot encode uint8[8][9] to uint8[17][10]".
+			{
+				int const srcElemSize = computeEncodedElementSize(srcStat->elementType());
+				int const tgtElemSize = computeEncodedElementSize(targetStat->elementType());
+				int64_t const srcCount = srcStat->arraySize();
+				int64_t const tgtCount = targetStat->arraySize();
+				if (!awst::structurallyEquivalent(
+						srcStat->elementType(), targetStat->elementType())
+					&& srcElemSize > 0 && tgtElemSize > 0
+					&& srcCount <= tgtCount && srcCount <= 256)
+				{
+					// Pin the source: every element extract reads it.
+					auto src = awst::makeEvalOnce(_expr, _loc);
+					std::shared_ptr<awst::Expression> body;
+					bool allConverted = true;
+					for (int64_t i = 0; i < srcCount && allConverted; ++i)
+					{
+						auto elem = awst::makeReinterpretCast(
+							awst::makeExtract(
+								awst::makeAsBytes(src, _loc),
+								static_cast<int>(i) * srcElemSize, srcElemSize, _loc),
+							srcStat->elementType(), _loc);
+						auto converted = coerceForAssignment(
+							std::move(elem), targetStat->elementType(), _loc);
+						// The scalar layer signals "no rule" by returning the value
+						// unchanged; abandon and fall through to the encoder's error.
+						if (!converted || converted->wtype != targetStat->elementType())
+						{
+							allConverted = false;
+							break;
+						}
+						std::shared_ptr<awst::Expression> widened =
+							awst::makeAsBytes(std::move(converted), _loc);
+						if (body)
+							body = awst::makeConcat(std::move(body), std::move(widened), _loc);
+						else
+							body = std::move(widened);
+					}
+					if (allConverted && body)
+					{
+						if (tgtCount > srcCount)
+							body = awst::makeRightPad(
+								std::move(body), (tgtCount - srcCount) * tgtElemSize, _loc);
+						return awst::makeReinterpretCast(std::move(body), _targetType, _loc);
+					}
 				}
 			}
 
