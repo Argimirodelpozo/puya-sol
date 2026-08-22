@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_copy_via_local.sol.c.approval_program() -> uint64:
 main:
     intcblock 0 1
-    bytecblock "data1" "__ctor_pending" "data2" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "data1" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" "data2"
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -55,7 +55,7 @@ main_ternary_merge@13:
     intc_0 // 0
     bytec_0 // "data1"
     app_global_get_ex
-    assert // check data1 exists
+    assert // state exists
     extract 32 32
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
     swap
@@ -66,26 +66,32 @@ main_ternary_merge@13:
     bytec_0 // "data1"
     dig 1
     app_global_put
-    bytec_2 // "data2"
+    bytec_3 // "data2"
     dig 1
     app_global_put
     extract 0 32
     intc_0 // 0
     bytec_0 // "data1"
     app_global_get_ex
-    assert // check data1 exists
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     extract 0 32
     b==
     bz main_bool_false@16
     intc_0 // 0
-    bytec_2 // "data2"
+    bytec_3 // "data2"
     app_global_get_ex
-    assert // check data2 exists
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     extract 32 32
     intc_0 // 0
     bytec_0 // "data1"
     app_global_get_ex
-    assert // check data1 exists
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     extract 32 32
     b==
     bz main_bool_false@16
@@ -112,14 +118,14 @@ main_ternary_false@12:
     b main_ternary_merge@13
 
 main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     pushbytes "r"
@@ -127,10 +133,10 @@ main___postInit_route@5:
     box_create
     pop
     bytec_0 // "data1"
-    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    bytec_2 // "data2"
-    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // "data2"
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_1 // 1
     return

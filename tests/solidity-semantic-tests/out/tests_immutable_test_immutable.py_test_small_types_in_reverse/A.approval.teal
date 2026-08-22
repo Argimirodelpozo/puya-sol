@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/small_types_in_reverse.sol.A.approval_program() -> uint64:
 main:
     intcblock 0 1 8
-    bytecblock "b" "c" 0x151f7c75 "a" "x"
+    bytecblock "b" "c" 0x151f7c75 "a" "x" 0x000000000000
     pushint 4096
     bzero
     dup
@@ -34,7 +34,7 @@ main:
     intc_0 // 0
     app_global_put
     bytec 4 // "x"
-    pushbytes 0x000000000000
+    bytec 5 // 0x000000000000
     app_global_put
     bytec_1 // "c"
     pushint 65535
@@ -48,13 +48,17 @@ main:
     intc_0 // 0
     bytec_0 // "b"
     app_global_get_ex
-    assert // check b exists
+    intc_0 // 0
+    cover 2
+    select
     itob
     extract 6 2
     intc_0 // 0
     bytec_1 // "c"
     app_global_get_ex
-    assert // check c exists
+    intc_0 // 0
+    cover 2
+    select
     itob
     extract 6 2
     pushbytes 0x1234
@@ -99,7 +103,9 @@ main_ternary_merge@15:
     intc_0 // 0
     bytec 4 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec 5 // 0x000000000000
+    cover 2
+    select
     intc_2 // 8
     bzero
     uncover 2
@@ -138,7 +144,9 @@ main_ternary_merge@20:
     intc_0 // 0
     bytec_1 // "c"
     app_global_get_ex
-    assert // check c exists
+    intc_0 // 0
+    cover 2
+    select
     itob
     bytec_2 // 0x151f7c75
     swap
@@ -165,7 +173,9 @@ main_ternary_merge@25:
     intc_0 // 0
     bytec_0 // "b"
     app_global_get_ex
-    assert // check b exists
+    intc_0 // 0
+    cover 2
+    select
     itob
     bytec_2 // 0x151f7c75
     swap
@@ -192,7 +202,9 @@ main_ternary_merge@30:
     intc_0 // 0
     bytec_3 // "a"
     app_global_get_ex
-    assert // check a exists
+    intc_0 // 0
+    cover 2
+    select
     itob
     bytec_2 // 0x151f7c75
     swap

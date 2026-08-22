@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/constructor_with_params_diamond_inheritance.sol.D.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "i" 0x "k" "j" 0x151f7c75
+    bytecblock 0x "i" "k" "j" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -26,14 +26,14 @@ main:
     bnz main_after_if_else@2
     txna ApplicationArgs 0
     txna ApplicationArgs 1
-    bytec_0 // "i"
-    bytec_1 // 0x
+    bytec_1 // "i"
+    bytec_0 // 0x
     app_global_put
     bytec_2 // "k"
-    bytec_1 // 0x
+    bytec_0 // 0x
     app_global_put
     bytec_3 // "j"
-    bytec_1 // 0x
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     itob
@@ -42,7 +42,7 @@ main:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_0 // "i"
+    bytec_1 // "i"
     dig 2
     app_global_put
     bytec_2 // "k"
@@ -79,7 +79,9 @@ main_ternary_merge@14:
     intc_1 // 0
     bytec_2 // "k"
     app_global_get_ex
-    assert // check k exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -111,9 +113,11 @@ main_ternary_merge@19:
     !
     assert // not payable
     intc_1 // 0
-    bytec_0 // "i"
+    bytec_1 // "i"
     app_global_get_ex
-    assert // check i exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -147,7 +151,9 @@ main_ternary_merge@24:
     intc_1 // 0
     bytec_3 // "j"
     app_global_get_ex
-    assert // check j exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32

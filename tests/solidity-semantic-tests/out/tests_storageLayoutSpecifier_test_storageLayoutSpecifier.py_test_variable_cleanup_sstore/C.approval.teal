@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/variable_cleanup_sstore.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 128 18446744073709551360
-    bytecblock "x" "y" "b" 0x0000000000000000000000000000000000000000000000000000000061627f10
+    bytecblock "x" "y" "b" 0x0000 0x0000000000000000000000000000000000000000000000000000000061627f10
     pushint 4096
     bzero
     dup
@@ -31,7 +31,7 @@ main:
     intc_0 // 0
     app_global_put
     bytec_2 // "b"
-    pushbytes 0x0000
+    bytec_3 // 0x0000
     app_global_put
     intc_1 // 1
     return
@@ -60,13 +60,13 @@ main_ternary_merge@9:
     assert // not payable
     load 0
     store 0
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000061627f10
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000061627f10
     pushint 31
     getbyte
     bytec_0 // "x"
     swap
     app_global_put
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000061627f10
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000061627f10
     pushint 30
     getbyte
     dup
@@ -88,13 +88,17 @@ main_ternary_merge@20:
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
-    assert // check x exists
+    intc_0 // 0
+    cover 2
+    select
     pushint 65535
     &
     intc_0 // 0
     bytec_1 // "y"
     app_global_get_ex
-    assert // check y exists
+    intc_0 // 0
+    cover 2
+    select
     pushint 256
     %
     dup
@@ -127,7 +131,9 @@ main_ternary_merge@15:
     intc_0 // 0
     bytec_2 // "b"
     app_global_get_ex
-    assert // check b exists
+    bytec_3 // 0x0000
+    cover 2
+    select
     pushint 14
     bzero
     concat

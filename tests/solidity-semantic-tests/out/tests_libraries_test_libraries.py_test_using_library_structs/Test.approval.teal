@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_structs.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 2
+    intcblock 1 32 0 610
     bytecblock 0x000000000000000000000000000000000000000000000000000000000000000000220000 "__ctor_pending" 0xc7ca04a75786cb8aebcd6026bfa4c3ede98041f999e5a2d059f6d50c7049a393
     pushint 4096
     bzero
@@ -69,7 +69,7 @@ main_ternary_merge@13:
     uncover 3
     cover 2
     substring3
-    pushint 610
+    intc_3 // 610
     intc_1 // 32
     extract3
     concat
@@ -96,7 +96,7 @@ main___postInit_route@5:
     intc_2 // 0
     app_global_put
     pushbytes "data"
-    intc_3 // 2
+    pushint 2
     box_create
     pop
     intc_0 // 1
@@ -111,15 +111,8 @@ Lib.set:
     bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
     cover 2
     select
-    dup
-    intc_1 // 32
-    extract_uint16
-    dig 1
-    len
-    substring3
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000070022
-    swap
-    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    replace2 0
     frame_dig -1
     box_del
     pop
@@ -156,8 +149,7 @@ Lib.set_while_top@1:
 
 Lib.set_after_if_else@4:
     frame_dig -1
-    pushint 34
-    intc_3 // 2
+    pushints 34 2
     box_extract
     btoi
     frame_dig -1
@@ -190,16 +182,32 @@ Lib.set_after_if_else@4:
 
 Lib.set_after_while@5:
     frame_dig -1
-    box_len
-    bury 1
-    bnz Lib.set_after_if_else@7
-    frame_dig -1
+    box_get
     bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
-    box_put
-
-Lib.set_after_if_else@7:
-    frame_dig -1
-    pushint 644
+    cover 2
+    select
+    dup
+    intc_1 // 32
+    extract_uint16
+    dig 1
+    len
+    dig 2
+    dig 2
+    uncover 2
+    substring3
+    intc_3 // 610
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
-    box_replace // on error: index out of bounds
+    replace3 // on error: index access is out of bounds
+    uncover 2
+    intc_2 // 0
+    uncover 3
+    extract3
+    swap
+    concat
+    frame_dig -1
+    box_del
+    pop
+    frame_dig -1
+    swap
+    box_put
     retsub

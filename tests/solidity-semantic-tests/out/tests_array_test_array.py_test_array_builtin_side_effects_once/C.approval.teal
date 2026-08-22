@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_builtin_side_effects.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 2
-    bytecblock "cnt" "arr" 0x151f7c75 "__ctor_pending" 0x0000
+    intcblock 32 0 1 2
+    bytecblock "cnt" "arr" 0x 0x151f7c75 "__ctor_pending" 0x0000
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_2 // 1
     app_global_put
     intc_2 // 1
@@ -52,19 +52,21 @@ main_cnt_route@10:
 main_ternary_merge@17:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -72,7 +74,7 @@ main_ternary_merge@17:
     return
 
 main_ternary_false@16:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@17
 
 main_idxReadOnce_route@9:
@@ -86,7 +88,7 @@ main_idxReadOnce_route@9:
 main_ternary_merge@22:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     itob
     bytec_0 // "cnt"
     dig 1
@@ -95,15 +97,15 @@ main_ternary_merge@22:
     box_del
     pop
     bytec_1 // "arr"
-    bytec 4 // 0x0000
+    bytec 5 // 0x0000
     box_put
-    intc_1 // 32
+    intc_0 // 32
     bzero
     bytec_1 // "arr"
-    intc_0 // 0
+    intc_1 // 0
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000002a
     intc_2 // 1
-    intc_1 // 32
+    intc_0 // 32
     callsub box_dynamic_array_concat_fixed
     swap
     callsub __solfn_19
@@ -120,27 +122,29 @@ main_ternary_merge@22:
     pushint 8
     -
     extract_uint64
-    intc_1 // 32
+    intc_0 // 32
     *
     intc_3 // 2
     +
     bytec_1 // "arr"
     swap
-    intc_1 // 32
+    intc_0 // 32
     box_extract // on error: index out of bounds
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
     uncover 2
     b|
     concat
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -148,7 +152,7 @@ main_ternary_merge@22:
     return
 
 main_ternary_false@21:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@22
 
 main_packOnce_route@8:
@@ -162,7 +166,7 @@ main_packOnce_route@8:
 main_ternary_merge@27:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     itob
     bytec_0 // "cnt"
     swap
@@ -171,19 +175,21 @@ main_ternary_merge@27:
     itob
     callsub __solfn_19
     pop
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -191,7 +197,7 @@ main_ternary_merge@27:
     return
 
 main_ternary_false@26:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@27
 
 main_encodeOnce_route@7:
@@ -205,71 +211,76 @@ main_encodeOnce_route@7:
 main_ternary_merge@32:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     itob
     bytec_0 // "cnt"
     swap
     app_global_put
+    intc_0 // 32
+    bzero
     intc_2 // 1
     itob
     callsub __solfn_19
-    intc_3 // 2
-    itob
-    callsub __solfn_19
     dig 1
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    dup
-    cover 3
-    uncover 2
-    dig 1
-    b|
-    dig 2
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    cover 2
-    b|
+    swap
     concat
     dup
     len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_3 // 2
+    itob
+    callsub __solfn_19
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dup
+    len
+    intc_0 // 32
+    dig 1
+    <=
+    assert // EVM ABI decode out of bounds
     pushint 64
-    ==
-    pop
+    >=
+    assert // EVM ABI decode out of bounds
     dup
     extract 0 32
     swap
     extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
     swap
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    uncover 2
-    dup
-    cover 2
-    b|
-    uncover 2
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
     dig 2
     b|
-    intc_0 // 0
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    intc_1 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
     uncover 3
@@ -278,7 +289,7 @@ main_ternary_merge@32:
     concat
     swap
     concat
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -286,21 +297,21 @@ main_ternary_merge@32:
     return
 
 main_ternary_false@31:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@32
 
 main_pushOnce_route@6:
     txn GroupIndex
-    bz main_ternary_false@39
+    bz main_ternary_false@36
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@40:
+main_ternary_merge@37:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     itob
     bytec_0 // "cnt"
     swap
@@ -309,17 +320,17 @@ main_ternary_merge@40:
     box_del
     pop
     bytec_1 // "arr"
-    bytec 4 // 0x0000
+    bytec 5 // 0x0000
     box_put
     pushint 7
     itob
     callsub __solfn_19
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     swap
     dig 1
@@ -330,58 +341,60 @@ main_ternary_merge@40:
     dup
     extract 2 0
     swap
-    intc_0 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     bytec_1 // "arr"
-    intc_0 // 0
+    intc_1 // 0
     uncover 3
     uncover 3
-    intc_1 // 32
+    intc_0 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_1 // "arr"
     intc_3 // 2
-    intc_1 // 32
+    intc_0 // 32
     box_extract // on error: index out of bounds
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
     uncover 2
     b|
     concat
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-main_ternary_false@39:
-    intc_0 // 0
-    b main_ternary_merge@40
+main_ternary_false@36:
+    intc_1 // 0
+    b main_ternary_merge@37
 
 main___postInit_route@5:
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_3 // "__ctor_pending"
-    intc_0 // 0
+    bytec 4 // "__ctor_pending"
+    intc_1 // 0
     app_global_put
     bytec_1 // "arr"
     intc_3 // 2
     box_create
     pop
     bytec_0 // "cnt"
-    pushbytes 0x
+    bytec_2 // 0x
     app_global_put
     intc_2 // 1
     return
@@ -423,7 +436,7 @@ box_dynamic_array_concat_fixed:
     +
     frame_dig -5
     swap
-    intc_0 // 0
+    intc_1 // 0
     frame_dig -3
     box_splice
     retsub
@@ -432,10 +445,12 @@ box_dynamic_array_concat_fixed:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_builtin_side_effects.sol.C.__solfn_19(x: bytes) -> bytes:
 __solfn_19:
     proto 1 1
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_2 // 0x
+    cover 2
+    select
     pushbytes 0x01
     b+
     dup

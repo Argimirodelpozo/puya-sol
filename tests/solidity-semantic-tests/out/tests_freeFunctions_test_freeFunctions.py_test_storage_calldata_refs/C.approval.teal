@@ -112,10 +112,8 @@ main_ternary_merge@13:
     uncover 3
     box_splice
     bytec_0 // "data"
-    box_get
-    pop
     callsub fun
-    popn 2
+    pop
     dup
     intc_0 // 0
     extract_uint16
@@ -164,12 +162,15 @@ main___postInit_route@5:
     return
 
 
-// __solfn_60(_x: bytes, _y: bytes) -> bytes, bytes, bytes, bytes:
+// __solfn_60(_x: bytes, _y: bytes) -> bytes, bytes, bytes:
 fun:
-    proto 2 4
+    proto 2 3
     frame_dig -1
+    box_get
+    pushbytes 0x0000
+    cover 2
+    select
     extract 2 32
     frame_dig -2
     dup
-    frame_dig -1
     retsub

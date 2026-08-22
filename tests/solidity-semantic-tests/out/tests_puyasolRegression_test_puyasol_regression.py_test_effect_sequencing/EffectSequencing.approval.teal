@@ -128,12 +128,18 @@ main_ternary_merge@33:
     bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000005
     replace2 0
     bytec_0 // "s"
-    dig 1
+    swap
     box_put
-    dup
-    extract 0 32
     bytec_0 // "s"
     callsub __solfn_27
+    bytec_0 // "s"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    uncover 2
     b+
     dup
     bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -184,15 +190,21 @@ main_ternary_merge@38:
     bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000005
     replace2 0
     bytec_0 // "s"
-    dig 1
+    swap
     box_put
     bytec_0 // "s"
     callsub __solfn_27
-    dup
+    bytec_0 // "s"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dig 1
     len
     intc_1 // 32
     <=
     assert // overflow
+    swap
     uncover 2
     b|
     replace2 0

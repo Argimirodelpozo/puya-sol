@@ -61,13 +61,16 @@ main_ternary_merge@9:
     intc_2 // 0
     bytec_0 // "a"
     app_global_get_ex
-    assert // check a exists
+    intc_2 // 0
+    cover 2
+    select
     intc_2 // 0
     bytec_1 // "b"
     app_global_get_ex
-    swap
+    pushbytes 0x0000
     cover 2
-    assert // check b exists
+    select
+    swap
     load 0
     store 0
     itob

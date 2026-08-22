@@ -137,7 +137,9 @@ main_after_if_else@20:
     intc_0 // 0
     bytec_2 // "externalCalled"
     app_global_get_ex
-    assert // check externalCalled exists
+    pushbytes 0x
+    cover 2
+    select
     intc_2 // 2
     itob
     b==
@@ -269,7 +271,9 @@ ext_ternary_merge@3:
     intc_0 // 0
     bytec_2 // "externalCalled"
     app_global_get_ex
-    assert // check externalCalled exists
+    pushbytes 0x
+    cover 2
+    select
     dup
     pushbytes 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b!=

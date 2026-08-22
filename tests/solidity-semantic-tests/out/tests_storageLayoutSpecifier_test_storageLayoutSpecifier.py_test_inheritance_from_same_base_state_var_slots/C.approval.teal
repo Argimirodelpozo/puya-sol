@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "x" 0x "z" 0x151f7c75
+    bytecblock 0x "x" "z" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -24,11 +24,11 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    bytec_1 // 0x
+    bytec_1 // "x"
+    bytec_0 // 0x
     app_global_put
     bytec_2 // "z"
-    bytec_1 // 0x
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -80,9 +80,11 @@ main_ternary_merge@20:
     !
     assert // not payable
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -116,7 +118,9 @@ main_ternary_merge@25:
     intc_1 // 0
     bytec_2 // "z"
     app_global_get_ex
-    assert // check z exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32

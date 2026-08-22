@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/mappings_array2d_pop_delete.sol.C.approval_program() -> uint64:
 main:
     intcblock 2 0 1 32
-    bytecblock "a" 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "b" "__ctor_pending" 0x0000 0x010000000000000000 0x00020000
+    bytecblock "a" 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "__ctor_pending" 0x0000 0x010000000000000000 0x00020000
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_2 // 1
     app_global_put
     intc_2 // 1
@@ -56,7 +56,7 @@ main_ternary_merge@17:
     box_del
     pop
     bytec_0 // "a"
-    bytec 5 // 0x0000
+    bytec 4 // 0x0000
     box_put
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
     log
@@ -187,7 +187,7 @@ main_ternary_merge@33:
     b<=
     assert // overflow
     dup
-    bytec 6 // 0x010000000000000000
+    bytec 5 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
@@ -240,9 +240,21 @@ main_ternary_merge@36:
     cover 3
     b>=
     assert // underflow
+    intc_3 // 32
+    bzero
+    dup
+    uncover 4
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    uncover 2
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    swap
+    uncover 3
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -250,28 +262,8 @@ main_ternary_merge@36:
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_3 // "b"
-    intc_1 // 0
-    intc_0 // 2
-    box_extract
-    btoi
-    itob
-    dig 1
-    b>
-    assert // array index out of bounds
-    intc_3 // 32
-    bzero
-    dup
     uncover 3
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    uncover 3
-    uncover 3
+    swap
     concat
     dup
     len
@@ -279,7 +271,7 @@ main_ternary_merge@36:
     -
     pushint 8
     extract3
-    bytec_3 // "b"
+    pushbytes "b"
     concat
     sha256
     concat
@@ -331,7 +323,7 @@ main_ternary_merge@41:
     intc_2 // 1
     itob
     swap
-    bytec 7 // 0x00020000
+    bytec 6 // 0x00020000
     intc_2 // 1
     callsub dynamic_array_concat_dynamic_element
     bytec_0 // "a"
@@ -367,7 +359,7 @@ main_ternary_merge@44:
     b<=
     assert // overflow
     dup
-    bytec 6 // 0x010000000000000000
+    bytec 5 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
@@ -401,7 +393,7 @@ main_ternary_merge@47:
     dup
     dig 2
     callsub dynamic_array_read_dynamic_element
-    bytec 5 // 0x0000
+    bytec 4 // 0x0000
     intc_2 // 1
     callsub dynamic_array_concat_byte_length_head
     uncover 2
@@ -458,7 +450,7 @@ main_ternary_merge@52:
     intc_2 // 1
     itob
     swap
-    bytec 7 // 0x00020000
+    bytec 6 // 0x00020000
     intc_2 // 1
     callsub dynamic_array_concat_dynamic_element
     bytec_0 // "a"
@@ -496,7 +488,7 @@ main_ternary_merge@55:
     b<=
     assert // overflow
     dup
-    bytec 6 // 0x010000000000000000
+    bytec 5 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
@@ -532,7 +524,7 @@ main_ternary_merge@58:
     dup
     dig 2
     callsub dynamic_array_read_dynamic_element
-    bytec 5 // 0x0000
+    bytec 4 // 0x0000
     intc_2 // 1
     callsub dynamic_array_concat_byte_length_head
     dig 2
@@ -564,9 +556,20 @@ main_ternary_merge@58:
     dig 2
     b>=
     assert // underflow
+    intc_3 // 32
+    bzero
+    uncover 3
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    swap
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    swap
+    uncover 2
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -574,26 +577,8 @@ main_ternary_merge@58:
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_3 // "b"
-    intc_1 // 0
-    intc_0 // 2
-    box_extract
-    btoi
-    itob
-    dig 1
-    b>
-    assert // array index out of bounds
-    intc_3 // 32
-    bzero
     uncover 2
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    cover 2
+    swap
     concat
     dup
     len
@@ -601,7 +586,7 @@ main_ternary_merge@58:
     -
     pushint 8
     extract3
-    bytec_3 // "b"
+    pushbytes "b"
     concat
     sha256
     concat
@@ -628,14 +613,14 @@ main_ternary_false@51:
     b main_ternary_merge@52
 
 main___postInit_route@5:
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     bytec_0 // "a"

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "testArray" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 "__ctor_pending" 0x4fa0465e "s:" 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "testArray" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "__ctor_pending" 0x4fa0465e "s:" 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_2 // 0
     pushint 4096
     bzero
@@ -65,7 +65,7 @@ main_ternary_merge@18:
     intc_0 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -133,7 +133,7 @@ main_while_top@29:
     cover 4
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     concat
@@ -156,7 +156,7 @@ main_while_top@29:
     pushbytes 0x01
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bury 1
@@ -271,7 +271,7 @@ main_ternary_merge@36:
     concat
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -298,7 +298,7 @@ main_ternary_merge@41:
     itob
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dup
@@ -309,7 +309,7 @@ main_ternary_merge@41:
     intc_0 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -322,7 +322,7 @@ main_ternary_false@40:
 
 main_getArrayDataAreaSlot_route@6:
     callsub getArrayDataAreaSlot
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -353,8 +353,8 @@ main___postInit_route@5:
     bz main_else_body@44
     pop
     bytec_1 // "testArray"
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    app_global_put
+    pushint 18446744073709551615
+    box_resize
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.__storage_write@45
 
 main_else_body@44:
@@ -376,7 +376,7 @@ main_else_body@44:
     box_create
     pop
     intc_2 // 0
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     box_replace
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.__storage_write@45
 
@@ -392,17 +392,10 @@ __storage_read:
     pushbytes 0x
     b==
     bz __storage_read_else_body@2
-    intc_0 // 32
-    bzero
     bytec_1 // "testArray"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    box_len
+    assert // box exists
+    itob
     retsub
 
 __storage_read_else_body@2:

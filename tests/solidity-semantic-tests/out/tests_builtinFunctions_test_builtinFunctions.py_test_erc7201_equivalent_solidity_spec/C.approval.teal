@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/erc7201_equivalent_solidity_spec.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "namespace" "example.main" 0x00 "expectedSlot" 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock "namespace" 0x "example.main" 0x00 "expectedSlot" 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -24,11 +24,11 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "expectedSlot"
-    bytec 4 // 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
+    bytec 4 // "expectedSlot"
+    bytec 5 // 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
     app_global_put
     bytec_0 // "namespace"
-    bytec_1 // "example.main"
+    bytec_2 // "example.main"
     app_global_put
     intc_1 // 1
     return
@@ -60,7 +60,9 @@ main_ternary_merge@13:
     intc_0 // 0
     bytec_0 // "namespace"
     app_global_get_ex
-    assert // check namespace exists
+    bytec_1 // 0x
+    cover 2
+    select
     keccak256
     pushbytes 0x01
     b-
@@ -68,7 +70,7 @@ main_ternary_merge@13:
     b|
     keccak256
     extract 0 31
-    bytec_2 // 0x00
+    bytec_3 // 0x00
     concat
     dup
     len
@@ -76,7 +78,7 @@ main_ternary_merge@13:
     <=
     assert // overflow
     b|
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -99,13 +101,17 @@ main_ternary_merge@18:
     !
     assert // not payable
     intc_0 // 0
-    bytec_3 // "expectedSlot"
+    bytec 4 // "expectedSlot"
     app_global_get_ex
-    assert // check expectedSlot exists
+    bytec_1 // 0x
+    cover 2
+    select
     intc_0 // 0
     bytec_0 // "namespace"
     app_global_get_ex
-    assert // check namespace exists
+    bytec_1 // 0x
+    cover 2
+    select
     callsub erc7201Mock
     b==
     dup
@@ -120,32 +126,34 @@ main_after_if_else@20:
     intc_0 // 0
     bytec_0 // "namespace"
     app_global_get_ex
-    assert // check namespace exists
+    bytec_1 // 0x
+    cover 2
+    select
     keccak256
     pushbytes 0x01
     b-
     b|
     keccak256
     extract 0 31
-    bytec_2 // 0x00
+    bytec_3 // 0x00
     concat
-    bytec_1 // "example.main"
+    bytec_2 // "example.main"
     callsub erc7201Mock
     b==
     bz main_bool_false@23
-    bytec_1 // "example.main"
+    bytec_2 // "example.main"
     callsub erc7201Mock
-    bytec 4 // 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
+    bytec 5 // 0x183a6125c38840424c4a85fa12bab2ab606c4b6d0e7cc73c0c06ba5300eab500
     b==
     bz main_bool_false@23
     intc_1 // 1
 
 main_bool_merge@24:
-    bytec_2 // 0x00
+    bytec_3 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -174,11 +182,11 @@ erc7201Mock:
     b>=
     assert // underflow
     swap
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     swap
     b-
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff

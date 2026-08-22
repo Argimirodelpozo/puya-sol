@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/immutable_tag_too_large_bug.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 16777216 8388608 18446744073692774400 16777215 9223372036854775808
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 "x" 0x "y" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x01 0x0000000000000000000000000000000100000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x64 0x02 0x800000 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x "x" "y" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x01 0x0000000000000000000000000000000100000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x64 0x02 0x800000 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000000
     intc_0 // 0
     dupn 4
-    bytec_3 // ""
+    bytec_2 // ""
     dupn 14
     pushint 4096
     bzero
@@ -30,7 +30,7 @@ main:
     bnz main_after_if_else@2
     intc_1 // 1
     itob
-    bytec_2 // "x"
+    bytec_3 // "x"
     swap
     app_global_put
     pushint 3
@@ -39,9 +39,11 @@ main:
     swap
     app_global_put
     intc_0 // 0
-    bytec_2 // "x"
+    bytec_3 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b!=
@@ -58,13 +60,15 @@ main:
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_2 // "x"
+    bytec_3 // "x"
     swap
     app_global_put
     intc_0 // 0
     bytec 4 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     bytec 12 // 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b!=
@@ -108,19 +112,20 @@ main_f_route@4:
     &&
     assert
     intc_0 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
+    intc_0 // 0
     bytec 4 // "y"
     app_global_get_ex
-    swap
-    dup
-    uncover 2
-    assert // check y exists
-    intc_0 // 0
-    bytec_2 // "x"
-    app_global_get_ex
-    swap
+    bytec_2 // 0x
     cover 2
-    assert // check x exists
-    bytec_3 // 0x
+    select
+    dup
+    cover 2
+    bytec_2 // 0x
     b==
     bnz main_bool_true@39
     dup
@@ -168,7 +173,7 @@ main_bool_merge@41:
     b%
     dup
     bury 20
-    bytec_3 // 0x
+    bytec_2 // 0x
     b==
     dup
     bury 10
@@ -247,11 +252,11 @@ main_ternary_merge@66:
     intc_0 // 0
     bytec 4 // "y"
     app_global_get_ex
-    swap
+    bytec_2 // 0x
+    cover 2
+    select
     dup
-    uncover 2
-    assert // check y exists
-    bytec_3 // 0x
+    bytec_2 // 0x
     b==
     bnz main_bool_true@79
     dup
@@ -343,9 +348,11 @@ main_ternary_merge@88:
 
 main_ternary_merge@91:
     intc_0 // 0
-    bytec_2 // "x"
+    bytec_3 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     bytec 7 // 0x0000000000000000000000000000000100000000000000000000000000000000
     b/
@@ -379,12 +386,12 @@ main_ternary_merge@94:
 
 main_ternary_merge@97:
     intc_0 // 0
-    bytec_2 // "x"
+    bytec_3 // "x"
     app_global_get_ex
-    swap
+    bytec_2 // 0x
+    cover 2
+    select
     dup
-    uncover 2
-    assert // check x exists
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     dup
@@ -428,19 +435,20 @@ main_ternary_merge@114:
     <
     bz main_after_if_else@314
     intc_0 // 0
-    bytec_2 // "x"
+    bytec_3 // "x"
     app_global_get_ex
-    swap
+    bytec_2 // 0x
+    cover 2
+    select
     dup
-    uncover 2
-    assert // check x exists
     intc_0 // 0
     bytec 4 // "y"
     app_global_get_ex
-    swap
-    cover 3
-    assert // check y exists
-    bytec_3 // 0x
+    bytec_2 // 0x
+    cover 2
+    select
+    cover 2
+    bytec_2 // 0x
     b==
     bnz main_bool_true@132
     dup
@@ -476,7 +484,7 @@ main_bool_merge@134:
     b%
     swap
     dig 2
-    bytec_3 // 0x
+    bytec_2 // 0x
     b==
     bnz main_bool_true@151
     dig 1
@@ -576,7 +584,7 @@ main_ternary_merge@164:
 
 main_ternary_merge@167:
     b/
-    bytec_3 // 0x
+    bytec_2 // 0x
     b==
     bnz main_ternary_false@175
     bz main_ternary_false@170
@@ -602,7 +610,9 @@ main_ternary_merge@182:
     intc_0 // 0
     bytec 4 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_2 // 0x
+    cover 2
+    select
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
@@ -612,9 +622,11 @@ main_ternary_merge@182:
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     intc_0 // 0
-    bytec_2 // "x"
+    bytec_3 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_2 // 0x
+    cover 2
+    select
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     b<=
@@ -632,18 +644,22 @@ main_after_if_else@193:
     b>=
     bz main_after_if_else@254
     intc_0 // 0
-    bytec_2 // "x"
+    bytec_3 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_2 // 0x
+    cover 2
+    select
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     pushbytes 0x8000000000000000000000ffffffffffffffffffffffffffffffffffffffffff
     b<=
     bz main_bool_false@197
     intc_0 // 0
-    bytec_2 // "x"
+    bytec_3 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_2 // 0x
+    cover 2
+    select
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
@@ -736,7 +752,7 @@ main_ternary_merge@230:
 
 main_ternary_merge@233:
     b/
-    bytec_3 // 0x
+    bytec_2 // 0x
     b==
     bnz main_ternary_false@241
     dig 1
@@ -860,7 +876,7 @@ main_ternary_merge@270:
 
 main_ternary_merge@273:
     b%
-    bytec_3 // 0x
+    bytec_2 // 0x
     b==
     bnz main_ternary_false@281
     dig 2
@@ -908,7 +924,7 @@ main_ternary_merge@292:
 
 main_ternary_merge@295:
     b%
-    bytec_3 // 0x
+    bytec_2 // 0x
     b==
     bnz main_ternary_false@303
     uncover 2
@@ -959,12 +975,12 @@ main_ternary_merge@313:
 
 main_after_if_else@314:
     intc_0 // 0
-    bytec_2 // "x"
+    bytec_3 // "x"
     app_global_get_ex
-    swap
+    bytec_2 // 0x
+    cover 2
+    select
     dup
-    uncover 2
-    assert // check x exists
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
@@ -973,11 +989,11 @@ main_after_if_else@314:
     intc_0 // 0
     bytec 4 // "y"
     app_global_get_ex
-    swap
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     cover 2
-    cover 3
-    assert // check y exists
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
@@ -1003,13 +1019,13 @@ main_bool_merge@318:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     intc_0 // 0
-    bytec_2 // "x"
+    bytec_3 // "x"
     app_global_get_ex
-    swap
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     cover 2
-    cover 3
-    assert // check x exists
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
@@ -1018,11 +1034,11 @@ main_bool_merge@318:
     intc_0 // 0
     bytec 4 // "y"
     app_global_get_ex
-    swap
-    dup
+    bytec_2 // 0x
     cover 2
-    cover 4
-    assert // check y exists
+    select
+    dup
+    cover 3
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
@@ -1048,11 +1064,12 @@ main_bool_true@320:
 main_bool_merge@322:
     assert // signed arithmetic overflow
     intc_0 // 0
-    bytec_2 // "x"
+    bytec_3 // "x"
     app_global_get_ex
-    swap
+    bytec_2 // 0x
     cover 2
-    assert // check x exists
+    select
+    swap
     uncover 3
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -1062,7 +1079,7 @@ main_bool_merge@322:
     b%
     dup
     cover 3
-    bytec_3 // 0x
+    bytec_2 // 0x
     b==
     bnz main_bool_true@339
     dig 1
@@ -1106,9 +1123,11 @@ main_bool_true@339:
 main_bool_merge@341:
     assert // signed arithmetic overflow
     intc_0 // 0
-    bytec_2 // "x"
+    bytec_3 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
     pushint 32
@@ -1176,7 +1195,7 @@ main_ternary_merge@352:
 
 main_ternary_merge@355:
     b/
-    bytec_3 // 0x
+    bytec_2 // 0x
     b==
     bnz main_ternary_false@363
     bz main_ternary_false@358
@@ -1483,19 +1502,21 @@ main_else_body@185:
     intc_0 // 0
     bytec 4 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_2 // 0x
+    cover 2
+    select
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b^
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     bz main_else_body@191
     intc_0 // 0
-    bytec_2 // "x"
+    bytec_3 // "x"
     app_global_get_ex
-    swap
+    bytec_2 // 0x
+    cover 2
+    select
     dup
-    uncover 2
-    assert // check x exists
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
@@ -1504,11 +1525,11 @@ main_else_body@185:
     intc_0 // 0
     bytec 4 // "y"
     app_global_get_ex
-    swap
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     cover 2
-    cover 3
-    assert // check y exists
     bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !

@@ -55,7 +55,9 @@ main_ternary_merge@9:
     intc_1 // 0
     bytec_0 // "sStorage"
     app_global_get_ex
-    assert // check sStorage exists
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushbytes 0x00010000000000000000000000000000000000000000000000000000000000000000
     swap
     replace2 2 // on error: index access is out of bounds

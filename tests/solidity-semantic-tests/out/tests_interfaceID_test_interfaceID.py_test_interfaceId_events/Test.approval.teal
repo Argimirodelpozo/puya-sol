@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/interfaceId_events.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "hello_world" 0x9335d03f "hello_world_with_event" 0x151f7c75
+    bytecblock "hello_world" 0x9335d03f "hello_world_with_event" 0x00000000 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -58,8 +58,10 @@ main_ternary_merge@13:
     intc_1 // 0
     bytec_2 // "hello_world_with_event"
     app_global_get_ex
-    assert // check hello_world_with_event exists
-    bytec_3 // 0x151f7c75
+    bytec_3 // 0x00000000
+    cover 2
+    select
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -84,8 +86,10 @@ main_ternary_merge@18:
     intc_1 // 0
     bytec_0 // "hello_world"
     app_global_get_ex
-    assert // check hello_world exists
-    bytec_3 // 0x151f7c75
+    bytec_3 // 0x00000000
+    cover 2
+    select
+    bytec 4 // 0x151f7c75
     swap
     concat
     log

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_index_zeroed_test.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 2 0 1
+    intcblock 2 32 0 1
     bytecblock "storageArray" 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x01 "__ctor_pending" 0x010000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000
     intc_2 // 0
     pushint 4096
@@ -46,7 +46,7 @@ main_test_zeroed_indices_route@6:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
@@ -64,7 +64,7 @@ main_while_top@14:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
     bz main_ternary_false@16
     bytec_0 // "storageArray"
@@ -72,9 +72,9 @@ main_while_top@14:
     pop
 
 main_ternary_merge@17:
-    intc_1 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     dig 1
@@ -84,7 +84,7 @@ main_ternary_merge@17:
     intc_2 // 0
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_3 // 1
-    intc_0 // 32
+    intc_1 // 32
     callsub box_dynamic_array_concat_fixed
     b main_while_top@14
 
@@ -92,7 +92,7 @@ main_while_top@19:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
     bz main_ternary_false@21
     bytec_0 // "storageArray"
@@ -100,9 +100,9 @@ main_while_top@19:
     pop
 
 main_ternary_merge@22:
-    intc_1 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     dig 1
@@ -110,7 +110,7 @@ main_ternary_merge@22:
     bz main_after_while@24
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_0 // 32
+    intc_1 // 32
     callsub box_dynamic_array_pop_fixed_size
     b main_while_top@19
 
@@ -144,17 +144,17 @@ main_while_top@25:
     bury 1
     bnz main_after_if_else@28
     bytec_0 // "storageArray"
-    intc_1 // 2
+    intc_0 // 2
     box_create
     pop
 
 main_after_if_else@28:
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     pushint 8
@@ -168,9 +168,9 @@ main_after_if_else@28:
     pushint 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -198,7 +198,7 @@ main_while_top@30:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
     bz main_ternary_false@32
     bytec_0 // "storageArray"
@@ -206,9 +206,9 @@ main_while_top@30:
     pop
 
 main_ternary_merge@33:
-    intc_1 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     dig 2
@@ -216,7 +216,7 @@ main_ternary_merge@33:
     bz main_while_top@35
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_0 // 32
+    intc_1 // 32
     callsub box_dynamic_array_pop_fixed_size
     b main_while_top@30
 
@@ -224,7 +224,7 @@ main_while_top@35:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
     bz main_ternary_false@37
     bytec_0 // "storageArray"
@@ -232,9 +232,9 @@ main_while_top@35:
     pop
 
 main_ternary_merge@38:
-    intc_1 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     dig 3
@@ -244,7 +244,7 @@ main_ternary_merge@38:
     intc_2 // 0
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_3 // 1
-    intc_0 // 32
+    intc_1 // 32
     callsub box_dynamic_array_concat_fixed
     b main_while_top@35
 
@@ -271,17 +271,12 @@ main_while_top@41:
     b==
     bz main_else_body@59
     pop
-    intc_0 // 32
-    bzero
     bytec_0 // "storageArray"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    intc_2 // 0
+    intc_0 // 2
+    box_extract
+    btoi
+    itob
 
 main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_index_zeroed_test.sol.C.__storage_read@60:
     bytec_1 // 0x
@@ -302,25 +297,25 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     b main_while_top@41
 
 main_else_body@59:
-    intc_0 // 32
+    intc_1 // 32
     bzero
     swap
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     pushbytes "s:"
     swap
     concat
     dup
-    intc_0 // 32
+    intc_1 // 32
     box_create
     pop
     intc_2 // 0
-    intc_0 // 32
+    intc_1 // 32
     box_extract
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_index_zeroed_test.sol.C.__storage_read@60
 
@@ -328,7 +323,7 @@ main_while_top@43:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
     bz main_ternary_false@45
     bytec_0 // "storageArray"
@@ -336,9 +331,9 @@ main_while_top@43:
     pop
 
 main_ternary_merge@46:
-    intc_1 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     dig 2
@@ -346,7 +341,7 @@ main_ternary_merge@46:
     bz main_while_top@48
     bytec_0 // "storageArray"
     intc_2 // 0
-    intc_0 // 32
+    intc_1 // 32
     callsub box_dynamic_array_pop_fixed_size
     b main_while_top@43
 
@@ -354,7 +349,7 @@ main_while_top@48:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
     bz main_ternary_false@50
     bytec_0 // "storageArray"
@@ -362,9 +357,9 @@ main_while_top@48:
     pop
 
 main_ternary_merge@51:
-    intc_1 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     dig 1
@@ -374,7 +369,7 @@ main_ternary_merge@51:
     intc_2 // 0
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_3 // 1
-    intc_0 // 32
+    intc_1 // 32
     callsub box_dynamic_array_concat_fixed
     b main_while_top@48
 
@@ -399,13 +394,13 @@ main_while_top@54:
     pushint 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_0 // 32
+    intc_1 // 32
     box_extract // on error: index out of bounds
     dup
     dig 4
@@ -438,27 +433,27 @@ main_after_while@56:
     return
 
 main_ternary_false@50:
-    intc_1 // 2
+    intc_0 // 2
     b main_ternary_merge@51
 
 main_ternary_false@45:
-    intc_1 // 2
+    intc_0 // 2
     b main_ternary_merge@46
 
 main_ternary_false@37:
-    intc_1 // 2
+    intc_0 // 2
     b main_ternary_merge@38
 
 main_ternary_false@32:
-    intc_1 // 2
+    intc_0 // 2
     b main_ternary_merge@33
 
 main_ternary_false@21:
-    intc_1 // 2
+    intc_0 // 2
     b main_ternary_merge@22
 
 main_ternary_false@16:
-    intc_1 // 2
+    intc_0 // 2
     b main_ternary_merge@17
 
 main_ternary_false@12:
@@ -477,7 +472,7 @@ main___postInit_route@5:
     intc_2 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_1 // 2
+    intc_0 // 2
     box_create
     pop
     intc_3 // 1
@@ -489,7 +484,7 @@ box_dynamic_array_pop_fixed_size:
     proto 3 0
     frame_dig -3
     frame_dig -2
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     intc_3 // 1
@@ -502,7 +497,7 @@ box_dynamic_array_pop_fixed_size:
     uncover 2
     box_replace
     frame_dig -2
-    intc_1 // 2
+    intc_0 // 2
     +
     swap
     frame_dig -1
@@ -529,7 +524,7 @@ box_dynamic_array_concat_fixed:
     proto 5 0
     frame_dig -5
     frame_dig -4
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     frame_dig -5
@@ -552,7 +547,7 @@ box_dynamic_array_concat_fixed:
     uncover 2
     box_replace
     frame_dig -4
-    intc_1 // 2
+    intc_0 // 2
     +
     swap
     frame_dig -1

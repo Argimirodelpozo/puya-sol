@@ -54,22 +54,8 @@ main_ternary_merge@13:
     bytec_0 // 0x0000000000060000
     cover 2
     select
-    dup
-    intc_2 // 4
-    extract_uint16
-    dig 1
-    len
-    substring3
-    extract 2 0
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    pushbytes 0x000000020006
-    swap
-    concat
+    pushbytes 0x00000002
+    replace2 0
     bytec_1 // "data"
     box_del
     pop
@@ -180,7 +166,7 @@ main_ternary_merge@18:
     extract_uint32
     pushint 2
     ==
-    bz main_bool_false@23
+    bz main_else_body@20
     pushbytes 0xfb5fbe2d0865de7cc3cb7c72e4bc113908062c2b8eeb03f25a1820b5ee6e9bca
     box_get
     bytec_0 // 0x0000000000060000
@@ -190,7 +176,9 @@ main_ternary_merge@18:
     extract_uint32
     pushint 3
     ==
-    bz main_bool_false@23
+
+main_after_if_else@21:
+    bz main_else_body@23
     pushbytes 0x4fa01c11e1883ce4e36c10dd220d660cdacba1a960fa14475352319b8a2f54c7
     box_get
     bytec_0 // 0x0000000000060000
@@ -198,7 +186,10 @@ main_ternary_merge@18:
     select
     intc_0 // 0
     extract_uint32
-    bnz main_bool_false@23
+    !
+
+main_after_if_else@24:
+    bz main_else_body@26
     pushbytes 0x11a554ce756766dd1f2c71098b48504dd49de59e6354227614f1d683e3f83430
     box_get
     bytec_0 // 0x0000000000060000
@@ -208,10 +199,8 @@ main_ternary_merge@18:
     extract_uint32
     intc_1 // 1
     ==
-    bz main_bool_false@23
-    intc_1 // 1
 
-main_bool_merge@24:
+main_after_if_else@27:
     pushbytes 0x00
     intc_0 // 0
     uncover 2
@@ -223,9 +212,17 @@ main_bool_merge@24:
     intc_1 // 1
     return
 
-main_bool_false@23:
+main_else_body@26:
     intc_0 // 0
-    b main_bool_merge@24
+    b main_after_if_else@27
+
+main_else_body@23:
+    intc_0 // 0
+    b main_after_if_else@24
+
+main_else_body@20:
+    intc_0 // 0
+    b main_after_if_else@21
 
 main_ternary_false@17:
     intc_0 // 0

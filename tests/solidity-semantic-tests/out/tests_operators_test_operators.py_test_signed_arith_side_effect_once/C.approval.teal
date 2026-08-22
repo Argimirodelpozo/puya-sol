@@ -4,8 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/contracts/signed_arith_side_effect.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 8
-    bytecblock 0x0100 0x80 "cnt" 0x151f7c75 0xff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    pushbytes ""
+    bytecblock 0x0100 0x80 "cnt" 0x 0x151f7c75 0xff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // ""
     pushint 4096
     bzero
     dup
@@ -26,7 +26,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "cnt"
-    pushbytes 0x
+    bytec_3 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -56,7 +56,9 @@ main_ternary_merge@15:
     intc_0 // 0
     bytec_2 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_3 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -65,7 +67,7 @@ main_ternary_merge@15:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -100,7 +102,7 @@ main_ternary_merge@20:
     b%
     dup
     cover 2
-    pushbytes 0x
+    bytec_3 // 0x
     b==
     bnz main_bool_true@37
     dup
@@ -163,13 +165,13 @@ main_bool_merge@39:
     -
     intc_3 // 8
     extract3
-    bytec 4 // 0xff
+    bytec 5 // 0xff
     b&
     dup
     bytec_1 // 0x80
     b>=
     bz main_ternary_false@41
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@42:
@@ -186,7 +188,9 @@ main_ternary_merge@42:
     intc_0 // 0
     bytec_2 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_3 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -195,7 +199,7 @@ main_ternary_merge@42:
     uncover 2
     b|
     concat
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -324,13 +328,13 @@ main_bool_merge@51:
     -
     intc_3 // 8
     extract3
-    bytec 4 // 0xff
+    bytec 5 // 0xff
     b&
     dup
     bytec_1 // 0x80
     b>=
     bz main_ternary_false@53
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@54:
@@ -347,7 +351,9 @@ main_ternary_merge@54:
     intc_0 // 0
     bytec_2 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_3 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -356,7 +362,7 @@ main_ternary_merge@54:
     uncover 2
     b|
     concat
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -444,13 +450,13 @@ main_bool_merge@63:
     -
     intc_3 // 8
     extract3
-    bytec 4 // 0xff
+    bytec 5 // 0xff
     b&
     dup
     bytec_1 // 0x80
     b>=
     bz main_ternary_false@65
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
 main_ternary_merge@66:
@@ -467,7 +473,9 @@ main_ternary_merge@66:
     intc_0 // 0
     bytec_2 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_3 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -476,7 +484,7 @@ main_ternary_merge@66:
     uncover 2
     b|
     concat
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -500,11 +508,13 @@ __solfn_14:
     intc_0 // 0
     bytec_2 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_3 // 0x
+    cover 2
+    select
     pushbytes 0x01
     b+
     dup
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_2 // "cnt"
@@ -519,11 +529,13 @@ __solfn_25:
     intc_0 // 0
     bytec_2 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_3 // 0x
+    cover 2
+    select
     pushbytes 0x01
     b+
     dup
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_2 // "cnt"

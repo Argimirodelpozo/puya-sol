@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/evm_exceptions_in_constructor_call_fail.sol.B.approval_program() -> uint64:
 main:
     intcblock 0 1 32 6
-    bytecblock "test" TMPL_APPROVAL_A TMPL_CLEAR_A
+    bytecblock "test" 0x TMPL_APPROVAL_A TMPL_CLEAR_A
     pushint 4096
     bzero
     dup
@@ -57,7 +57,9 @@ main_ternary_merge@13:
     intc_0 // 0
     bytec_0 // "test"
     app_global_get_ex
-    assert // check test exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -89,8 +91,8 @@ main_ternary_merge@18:
     !
     assert // not payable
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_A
-    bytec_2 // TMPL_CLEAR_A
+    bytec_2 // TMPL_APPROVAL_A
+    bytec_3 // TMPL_CLEAR_A
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -142,7 +144,9 @@ main_ternary_merge@18:
     intc_0 // 0
     bytec_0 // "test"
     app_global_get_ex
-    assert // check test exists
+    bytec_1 // 0x
+    cover 2
+    select
     pushbytes 0x01
     b+
     dup

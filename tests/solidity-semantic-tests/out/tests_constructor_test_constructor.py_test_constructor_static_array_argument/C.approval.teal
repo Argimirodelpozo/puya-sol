@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/constructor_static_array_argument.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0 8
-    bytecblock "a" "b" 0x151f7c75
+    bytecblock "a" "b" 0x 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -27,10 +27,10 @@ main:
     txna ApplicationArgs 0
     txna ApplicationArgs 1
     bytec_0 // "a"
-    pushbytes 0x
+    bytec_2 // 0x
     app_global_put
     bytec_1 // "b"
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     bytec_0 // "a"
     uncover 2
@@ -72,7 +72,9 @@ main_ternary_merge@13:
     intc_2 // 0
     bytec_1 // "b"
     app_global_get_ex
-    assert // check b exists
+    bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_3 // 8
     bzero
     uncover 2
@@ -86,7 +88,7 @@ main_ternary_merge@13:
     *
     intc_1 // 32
     extract3 // on error: index access is out of bounds
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -111,7 +113,9 @@ main_ternary_merge@18:
     intc_2 // 0
     bytec_0 // "a"
     app_global_get_ex
-    assert // check a exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -120,7 +124,7 @@ main_ternary_merge@18:
     intc_1 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log

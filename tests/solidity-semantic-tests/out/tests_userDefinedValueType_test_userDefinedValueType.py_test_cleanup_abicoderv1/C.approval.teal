@@ -154,7 +154,7 @@ main_ternary_merge@20:
     cover 2
     intc_0 // 32
     bzero
-    cover 4
+    cover 3
     intc 6 // 4064
     <=
     bz main_else_body@22
@@ -176,7 +176,7 @@ main_while_top@24:
     dupn 2
     intc_0 // 32
     *
-    dig 5
+    dig 6
     +
     dup
     intc_0 // 32
@@ -196,7 +196,7 @@ main_while_top@24:
     uncover 2
     getbyte
     itob
-    dig 8
+    dig 7
     swap
     concat
     dup
@@ -267,11 +267,11 @@ main_after_while@29:
     intc_0 // 32
     >=
     dup
-    cover 2
+    cover 3
     bz main_ternary_false@31
     dup
     loads
-    dig 3
+    dig 2
     intc_0 // 32
     extract3
 
@@ -287,7 +287,7 @@ main_ternary_merge@32:
     intc 7 // 511
     itob
     callsub wrap
-    dig 4
+    dig 5
     dup
     intc_0 // 32
     +
@@ -302,9 +302,9 @@ main_ternary_merge@32:
     %
     dup
     cover 2
-    cover 6
+    cover 5
     itob
-    dig 8
+    dig 7
     swap
     concat
     dup
@@ -320,17 +320,17 @@ main_ternary_merge@32:
     dig 2
     dup
     loads
-    dig 7
+    dig 6
     uncover 3
     replace3
     stores
 
 main_after_if_else@35:
-    dig 2
+    dig 4
     bz main_ternary_false@37
     dup
     loads
-    dig 4
+    dig 3
     intc_0 // 32
     extract3
 
@@ -367,7 +367,7 @@ main_ternary_merge@38:
     cover 2
     cover 8
     itob
-    uncover 10
+    dig 9
     swap
     concat
     dup
@@ -389,11 +389,11 @@ main_ternary_merge@38:
     stores
 
 main_after_if_else@41:
-    dig 3
+    dig 5
     bz main_ternary_false@43
     dup
     loads
-    dig 5
+    dig 4
     intc_0 // 32
     extract3
 
@@ -408,7 +408,7 @@ main_ternary_merge@44:
     intc_2 // 1
     >
     assert // memory array index out of range
-    uncover 9
+    uncover 10
     intc_0 // 32
     +
     intc 4 // 20480
@@ -418,7 +418,7 @@ main_ternary_merge@44:
     dig 7
     -
     dup
-    cover 9
+    cover 10
     intc_0 // 32
     >=
     dup
@@ -431,23 +431,25 @@ main_ternary_merge@44:
     extract3
 
 main_ternary_merge@47:
+    extract 31 1
+    dig 9
+    swap
+    concat
     dup
-    extract 0 31
-    pushint 31
-    bzero
-    dup
-    cover 9
-    ==
-    assert // invalid EVM ABI unsigned integer padding
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     pushint 24
     extract_uint64
     callsub unwrap
-    cover 6
-    dig 4
+    cover 5
+    dig 7
     bz main_ternary_false@49
     dup
     loads
-    dig 6
+    dig 5
     intc_0 // 32
     extract3
 
@@ -461,7 +463,7 @@ main_ternary_merge@50:
     extract_uint64
     assert // memory array index out of range
     intc_3 // 4096
-    dig 9
+    dig 7
     -
     dup
     cover 12
@@ -472,20 +474,25 @@ main_ternary_merge@50:
     bz main_ternary_false@52
     dig 2
     loads
-    dig 10
+    dig 8
     intc_0 // 32
     extract3
 
 main_ternary_merge@53:
+    extract 31 1
+    dig 11
+    swap
+    concat
     dup
-    extract 0 31
-    dig 10
-    ==
-    assert // invalid EVM ABI unsigned integer padding
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     pushint 24
     extract_uint64
     callsub unwrap
-    uncover 8
+    uncover 7
     ==
     assert
     load 0
@@ -531,11 +538,11 @@ main_ternary_merge@53:
 main_after_if_else@56:
     load 0
     store 0
-    dig 5
+    dig 7
     bz main_ternary_false@58
     dup
     loads
-    dig 7
+    dig 6
     intc_0 // 32
     extract3
 
@@ -556,25 +563,30 @@ main_ternary_merge@59:
     pop
     swap
     loads
-    uncover 8
+    uncover 7
     intc_0 // 32
     extract3
 
 main_ternary_merge@62:
-    dup
-    extract 0 31
+    extract 31 1
     dig 7
-    ==
-    assert // invalid EVM ABI unsigned integer padding
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     pushint 24
     extract_uint64
     callsub unwrap
-    cover 5
-    dig 3
+    cover 4
+    dig 6
     bz main_ternary_false@64
     dup
     loads
-    dig 5
+    dig 4
     intc_0 // 32
     extract3
 
@@ -593,23 +605,28 @@ main_ternary_merge@65:
     pop
     swap
     loads
-    uncover 6
+    uncover 4
     intc_0 // 32
     extract3
 
 main_ternary_merge@68:
+    extract 31 1
+    dig 5
+    swap
+    concat
     dup
-    extract 0 31
-    dig 6
-    ==
-    assert // invalid EVM ABI unsigned integer padding
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     pushint 24
     extract_uint64
     callsub unwrap
-    uncover 4
+    uncover 3
     ==
     assert
-    swap
+    uncover 2
     bz main_ternary_false@70
     uncover 4
     pop
@@ -673,11 +690,16 @@ main_while_top@72:
     extract3
 
 main_ternary_merge@76:
+    extract 31 1
+    dig 3
+    swap
+    concat
     dup
-    extract 0 31
-    dig 4
-    ==
-    assert // invalid EVM ABI unsigned integer padding
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     extract 24 8
     dup
     bitlen
@@ -765,7 +787,7 @@ main_ternary_false@67:
     swap
     dup
     loads
-    uncover 7
+    uncover 5
     uncover 9
     dup
     cover 4
@@ -786,7 +808,7 @@ main_ternary_false@67:
 main_ternary_false@64:
     dupn 2
     loads
-    dig 6
+    dig 5
     dig 13
     dup
     cover 4
@@ -808,7 +830,7 @@ main_ternary_false@61:
     swap
     dup
     loads
-    uncover 9
+    uncover 8
     uncover 12
     dup
     cover 4
@@ -829,7 +851,7 @@ main_ternary_false@61:
 main_ternary_false@58:
     dupn 2
     loads
-    dig 8
+    dig 7
     dig 16
     dup
     cover 4
@@ -886,7 +908,7 @@ main_ternary_false@52:
     dig 2
     dup
     loads
-    dig 11
+    dig 9
     dig 15
     dup
     cover 4
@@ -907,7 +929,7 @@ main_ternary_false@52:
 main_ternary_false@49:
     dupn 2
     loads
-    dig 7
+    dig 6
     dig 15
     dup
     cover 4
@@ -930,7 +952,7 @@ main_ternary_false@46:
     dup
     loads
     dig 9
-    dig 12
+    dig 13
     dup
     cover 4
     extract3
@@ -950,8 +972,8 @@ main_ternary_false@46:
 main_ternary_false@43:
     dupn 2
     loads
-    dig 6
-    dig 11
+    dig 5
+    dig 12
     dup
     cover 4
     extract3
@@ -1006,7 +1028,7 @@ main_else_body@40:
 main_ternary_false@37:
     dupn 2
     loads
-    dig 5
+    dig 4
     dig 10
     dup
     cover 4
@@ -1029,7 +1051,7 @@ main_else_body@34:
     dup
     loads
     intc_3 // 4096
-    dig 8
+    dig 7
     dup
     cover 2
     -
@@ -1062,7 +1084,7 @@ main_else_body@34:
 main_ternary_false@31:
     dupn 2
     loads
-    dig 4
+    dig 3
     dig 8
     dup
     cover 4

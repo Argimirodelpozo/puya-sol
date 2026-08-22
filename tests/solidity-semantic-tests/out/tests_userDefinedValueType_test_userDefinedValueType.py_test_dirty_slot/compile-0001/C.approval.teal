@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/dirty_slot.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 8
-    bytecblock "b" 0x151f7c75 "a" "x"
+    bytecblock "b" 0x0000 0x151f7c75 "a" "x"
     pushint 4096
     bzero
     dup
@@ -24,14 +24,14 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "a"
+    bytec_3 // "a"
     pushint 13
     app_global_put
     bytec_0 // "b"
     pushbytes 0x0401
     app_global_put
-    bytec_3 // "x"
-    pushbytes 0x0000
+    bytec 4 // "x"
+    bytec_1 // 0x0000
     app_global_put
     intc_0 // 1
     return
@@ -59,10 +59,12 @@ main_ternary_merge@17:
     !
     assert // not payable
     intc_1 // 0
-    bytec_3 // "x"
+    bytec 4 // "x"
     app_global_get_ex
-    assert // check x exists
-    bytec_1 // 0x151f7c75
+    bytec_1 // 0x0000
+    cover 2
+    select
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -87,8 +89,10 @@ main_ternary_merge@22:
     intc_1 // 0
     bytec_0 // "b"
     app_global_get_ex
-    assert // check b exists
-    bytec_1 // 0x151f7c75
+    bytec_1 // 0x0000
+    cover 2
+    select
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -111,11 +115,13 @@ main_ternary_merge@27:
     !
     assert // not payable
     intc_1 // 0
-    bytec_2 // "a"
+    bytec_3 // "a"
     app_global_get_ex
-    assert // check a exists
+    intc_1 // 0
+    cover 2
+    select
     itob
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -150,7 +156,9 @@ main_ternary_merge@32:
     intc_1 // 0
     bytec_0 // "b"
     app_global_get_ex
-    assert // check b exists
+    bytec_1 // 0x0000
+    cover 2
+    select
     intc_3 // 8
     bzero
     uncover 2
@@ -162,7 +170,7 @@ main_ternary_merge@32:
     extract_uint64
     intc_0 // 1
     extract3
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -235,7 +243,7 @@ __storage_write:
     dup
     pushint 30
     extract_uint16
-    bytec_2 // "a"
+    bytec_3 // "a"
     swap
     app_global_put
     dup
@@ -244,7 +252,7 @@ __storage_write:
     swap
     app_global_put
     extract 26 2
-    bytec_3 // "x"
+    bytec 4 // "x"
     swap
     app_global_put
     retsub

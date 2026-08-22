@@ -5,8 +5,6 @@
 main:
     intcblock 32 1 0 4096
     bytecblock 0x00000000000000000000000000000000000000000000000000deadbeef15dead
-    pushbytes ""
-    dupn 3
     intc_3 // 4096
     bzero
     dup
@@ -77,18 +75,17 @@ main_ternary_merge@9:
     dup
     intc_3 // 4096
     /
-    bury 5
+    swap
     intc_3 // 4096
     %
     dup
-    bury 4
+    cover 2
     pushint 4064
     <=
     bz main_else_body@11
-    dig 3
-    dup
+    dupn 2
     loads
-    dig 4
+    dig 3
     bytec_0 // 0x00000000000000000000000000000000000000000000000000deadbeef15dead
     replace3
     stores
@@ -98,23 +95,25 @@ main_after_if_else@12:
     store 0
     pushint 8
     bzero
+    cover 2
     intc_3 // 4096
-    dig 4
+    dig 2
     -
     dup
-    bury 4
+    cover 4
     intc_0 // 32
     >=
     dup
-    bury 3
     bz main_ternary_false@14
-    dig 4
+    dig 1
     loads
-    dig 4
+    dig 3
     intc_0 // 32
     extract3
 
 main_ternary_merge@15:
+    uncover 4
+    swap
     concat
     dup
     len
@@ -131,12 +130,12 @@ main_ternary_merge@15:
     pushint 4011187885
     itob
     b==
-    bz main_bool_false@21
-    dup
+    bz main_else_body@20
     bz main_ternary_false@18
-    dig 3
+    uncover 2
+    pop
     loads
-    dig 3
+    swap
     intc_0 // 32
     extract3
 
@@ -144,10 +143,8 @@ main_ternary_merge@19:
     pushint 62678480396345005
     itob
     b==
-    bz main_bool_false@21
-    intc_1 // 1
 
-main_bool_merge@22:
+main_after_if_else@21:
     pushbytes 0x00
     intc_2 // 0
     uncover 2
@@ -159,18 +156,11 @@ main_bool_merge@22:
     intc_1 // 1
     return
 
-main_bool_false@21:
-    intc_2 // 0
-    b main_bool_merge@22
-
 main_ternary_false@18:
-    dig 3
     dup
     loads
-    dig 4
-    dig 4
-    dup
-    cover 4
+    uncover 2
+    dig 3
     extract3
     swap
     intc_1 // 1
@@ -185,12 +175,17 @@ main_ternary_false@18:
     concat
     b main_ternary_merge@19
 
+main_else_body@20:
+    popn 4
+    intc_2 // 0
+    b main_after_if_else@21
+
 main_ternary_false@14:
-    dig 4
+    dig 1
     dup
     loads
-    dig 5
-    dig 5
+    dig 4
+    dig 7
     dup
     cover 4
     extract3
@@ -208,11 +203,10 @@ main_ternary_false@14:
     b main_ternary_merge@15
 
 main_else_body@11:
-    dig 3
-    dup
+    dupn 2
     loads
     intc_3 // 4096
-    dig 5
+    dig 4
     dup
     cover 2
     -

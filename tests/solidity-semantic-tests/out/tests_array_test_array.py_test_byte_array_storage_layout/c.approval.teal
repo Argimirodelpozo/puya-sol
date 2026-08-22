@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/byte_array_storage_layout.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 255
+    intcblock 32 1 0 8 255
     bytecblock "data" 0x 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x151f7c75 "s:"
     pushint 4096
     bzero
@@ -82,7 +82,7 @@ main_while_top@16:
     intc_1 // 1
     +
     dup
-    intc_3 // 255
+    intc 4 // 255
     <=
     assert // overflow
     b main_while_top@16
@@ -186,7 +186,7 @@ main_while_top@24:
     intc_1 // 1
     +
     dup
-    intc_3 // 255
+    intc 4 // 255
     <=
     assert // overflow
     b main_while_top@24
@@ -260,7 +260,7 @@ main_while_top@32:
     intc_1 // 1
     +
     dup
-    intc_3 // 255
+    intc 4 // 255
     <=
     assert // overflow
     b main_while_top@32
@@ -323,17 +323,10 @@ __storage_read:
     bytec_1 // 0x
     b==
     bz __storage_read_else_body@2
-    intc_0 // 32
-    bzero
     bytec_0 // "data"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    box_len
+    assert // box exists
+    itob
     retsub
 
 __storage_read_else_body@2:
@@ -371,19 +364,24 @@ __storage_write:
     bytec_1 // 0x
     b==
     bz __storage_write_else_body@2
-    intc_0 // 32
+    intc_3 // 8
     bzero
     frame_dig -1
     concat
     dup
     len
-    intc_0 // 32
+    intc_3 // 8
     -
-    intc_0 // 32
+    intc_3 // 8
     extract3
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
     bytec_0 // "data"
     swap
-    app_global_put
+    box_resize
     retsub
 
 __storage_write_else_body@2:

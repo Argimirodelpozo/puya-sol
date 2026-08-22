@@ -663,112 +663,6 @@
               },
               "body": [
                 {
-                  "_type": "ExpressionStatement",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/recursive_structs.sol",
-                    "line": 1,
-                    "end_line": 16,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "expr": {
-                    "_type": "IntrinsicCall",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/recursive_structs.sol",
-                      "line": 1,
-                      "end_line": 16,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "void",
-                      "immutable": true
-                    },
-                    "op_code": "app_global_put",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "BytesConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/recursive_structs.sol",
-                          "line": 1,
-                          "end_line": 16,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "value": "b8~cWa$#p>",
-                        "encoding": "utf8"
-                      },
-                      {
-                        "_type": "BytesConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/recursive_structs.sol",
-                          "line": 1,
-                          "end_line": 16,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "ARC4Struct",
-                          "name": "S",
-                          "immutable": false,
-                          "fields": [
-                            {
-                              "name": "x",
-                              "wtype": {
-                                "_type": "ARC4DynamicArray",
-                                "name": "arc4.dynamic_array<S__rec>",
-                                "immutable": false,
-                                "element_type": {
-                                  "_type": "ARC4Struct",
-                                  "name": "S__rec",
-                                  "immutable": false,
-                                  "fields": [
-                                    {
-                                      "name": "x",
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "description": null
-                                    }
-                                  ],
-                                  "frozen": false,
-                                  "arc4_alias": null,
-                                  "source_location": null,
-                                  "desc": null
-                                },
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "description": null
-                            }
-                          ],
-                          "frozen": false,
-                          "arc4_alias": null,
-                          "source_location": null,
-                          "desc": null
-                        },
-                        "value": "00IC2",
-                        "encoding": "base16"
-                      }
-                    ]
-                  }
-                },
-                {
                   "_type": "ReturnStatement",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/recursive_structs.sol",
@@ -2227,7 +2121,7 @@
                 "end_column": null
               },
               "expr": {
-                "_type": "AppStateExpression",
+                "_type": "StateGet",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/recursive_structs.sol",
                   "line": 13,
@@ -2236,50 +2130,80 @@
                   "column": null,
                   "end_column": null
                 },
-                "wtype": {
-                  "_type": "ARC4Struct",
-                  "name": "S",
-                  "immutable": false,
-                  "fields": [
-                    {
-                      "name": "x",
-                      "wtype": {
-                        "_type": "ARC4DynamicArray",
-                        "name": "arc4.dynamic_array<S__rec>",
-                        "immutable": false,
-                        "element_type": {
-                          "_type": "ARC4Struct",
-                          "name": "S__rec",
+                "field": {
+                  "_type": "BoxValueExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/recursive_structs.sol",
+                    "line": 13,
+                    "end_line": 13,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "ARC4Struct",
+                    "name": "S",
+                    "immutable": false,
+                    "fields": [
+                      {
+                        "name": "x",
+                        "wtype": {
+                          "_type": "ARC4DynamicArray",
+                          "name": "arc4.dynamic_array<S__rec>",
                           "immutable": false,
-                          "fields": [
-                            {
-                              "name": "x",
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "description": null
-                            }
-                          ],
-                          "frozen": false,
+                          "element_type": {
+                            "_type": "ARC4Struct",
+                            "name": "S__rec",
+                            "immutable": false,
+                            "fields": [
+                              {
+                                "name": "x",
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "description": null
+                              }
+                            ],
+                            "frozen": false,
+                            "arc4_alias": null,
+                            "source_location": null,
+                            "desc": null
+                          },
                           "arc4_alias": null,
-                          "source_location": null,
-                          "desc": null
+                          "source_location": null
                         },
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "description": null
-                    }
-                  ],
-                  "frozen": false,
-                  "arc4_alias": null,
-                  "source_location": null,
-                  "desc": null
+                        "description": null
+                      }
+                    ],
+                    "frozen": false,
+                    "arc4_alias": null,
+                    "source_location": null,
+                    "desc": null
+                  },
+                  "key": {
+                    "_type": "BytesConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/recursive_structs.sol",
+                      "line": 13,
+                      "end_line": 13,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "box_key",
+                      "immutable": true
+                    },
+                    "value": "b8~cWa$#p>",
+                    "encoding": "utf8"
+                  },
+                  "exists_assertion_message": null
                 },
-                "key": {
+                "default": {
                   "_type": "BytesConstant",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/recursive_structs.sol",
@@ -2290,14 +2214,51 @@
                     "end_column": null
                   },
                   "wtype": {
-                    "_type": "WType",
-                    "name": "state_key",
-                    "immutable": true
+                    "_type": "ARC4Struct",
+                    "name": "S",
+                    "immutable": false,
+                    "fields": [
+                      {
+                        "name": "x",
+                        "wtype": {
+                          "_type": "ARC4DynamicArray",
+                          "name": "arc4.dynamic_array<S__rec>",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4Struct",
+                            "name": "S__rec",
+                            "immutable": false,
+                            "fields": [
+                              {
+                                "name": "x",
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "description": null
+                              }
+                            ],
+                            "frozen": false,
+                            "arc4_alias": null,
+                            "source_location": null,
+                            "desc": null
+                          },
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "description": null
+                      }
+                    ],
+                    "frozen": false,
+                    "arc4_alias": null,
+                    "source_location": null,
+                    "desc": null
                   },
-                  "value": "b8~cWa$#p>",
-                  "encoding": "utf8"
-                },
-                "exists_assertion_message": "check sstorage exists"
+                  "value": "00IC2",
+                  "encoding": "base16"
+                }
               }
             },
             {
@@ -2311,7 +2272,7 @@
                 "end_column": null
               },
               "target": {
-                "_type": "AppStateExpression",
+                "_type": "BoxValueExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/recursive_structs.sol",
                   "line": 13,
@@ -2375,13 +2336,13 @@
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "state_key",
+                    "name": "box_key",
                     "immutable": true
                   },
                   "value": "b8~cWa$#p>",
                   "encoding": "utf8"
                 },
-                "exists_assertion_message": "check sstorage exists"
+                "exists_assertion_message": null
               },
               "value": {
                 "_type": "BytesConstant",
@@ -2629,7 +2590,7 @@
           },
           "wtype": {
             "_type": "WType",
-            "name": "state_key",
+            "name": "box_key",
             "immutable": true
           },
           "value": "b8~cWa$#p>",
@@ -2637,7 +2598,7 @@
         },
         "key_wtype": null,
         "description": null,
-        "kind": 1
+        "kind": 3
       }
     ],
     "state_totals": null,

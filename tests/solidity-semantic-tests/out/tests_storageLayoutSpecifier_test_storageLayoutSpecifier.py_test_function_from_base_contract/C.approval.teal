@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/function_from_base_contract.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 2
-    bytecblock "x" "y" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "z" 0x4b2c0376 0xcd78b354
+    bytecblock 0x "x" "y" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "z" 0x4b2c0376 0xcd78b354
     pushint 4096
     bzero
     dup
@@ -24,14 +24,14 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    pushbytes 0x
+    bytec_1 // "x"
+    bytec_0 // 0x
     app_global_put
-    bytec_1 // "y"
-    pushbytes 0x
+    bytec_2 // "y"
+    bytec_0 // 0x
     app_global_put
-    bytec 4 // "z"
-    pushbytes 0x
+    bytec 5 // "z"
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -43,8 +43,8 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytess 0xc95a9d21 0x5848be20 0x5c5e3bbc 0x7c1072af // method "test()uint256", method "z()uint256", method "y()uint256", method "x()uint256"
-    bytec 5 // method "g()uint256"
-    bytec 6 // method "f()uint256"
+    bytec 6 // method "g()uint256"
+    bytec 7 // method "f()uint256"
     txna ApplicationArgs 0
     match main_test_route@5 main_z_route@6 main_y_route@7 main_x_route@8 main_g_route@9 main_f_route@10
     err
@@ -53,7 +53,7 @@ main_f_route@10:
     txn NumAppArgs
     bz main_after_if_else@20
     txna ApplicationArgs 0
-    bytec 6 // method "f()uint256"
+    bytec 7 // method "f()uint256"
     ==
     bz main_after_if_else@20
     txn GroupIndex
@@ -69,17 +69,19 @@ main_ternary_merge@19:
 
 main_after_if_else@20:
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     intc_0 // 1
     itob
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_0 // "x"
+    bytec_1 // "x"
     dig 1
     app_global_put
     dup
@@ -90,7 +92,7 @@ main_after_if_else@20:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -105,7 +107,7 @@ main_g_route@9:
     txn NumAppArgs
     bz main_after_if_else@28
     txna ApplicationArgs 0
-    bytec 5 // method "g()uint256"
+    bytec 6 // method "g()uint256"
     ==
     bz main_after_if_else@28
     txn GroupIndex
@@ -121,17 +123,19 @@ main_ternary_merge@27:
 
 main_after_if_else@28:
     intc_1 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     intc_3 // 2
     itob
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_1 // "y"
+    bytec_2 // "y"
     dig 1
     app_global_put
     dup
@@ -142,7 +146,7 @@ main_after_if_else@28:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -165,9 +169,11 @@ main_ternary_merge@33:
     !
     assert // not payable
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -176,7 +182,7 @@ main_ternary_merge@33:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -199,9 +205,11 @@ main_ternary_merge@38:
     !
     assert // not payable
     intc_1 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -210,7 +218,7 @@ main_ternary_merge@38:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -233,9 +241,11 @@ main_ternary_merge@43:
     !
     assert // not payable
     intc_1 // 0
-    bytec 4 // "z"
+    bytec 5 // "z"
     app_global_get_ex
-    assert // check z exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -244,7 +254,7 @@ main_ternary_merge@43:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -267,39 +277,43 @@ main_ternary_merge@48:
     !
     assert // not payable
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     intc_0 // 1
     itob
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_0 // "x"
+    bytec_1 // "x"
     dig 1
     app_global_put
     intc_1 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     intc_3 // 2
     itob
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_1 // "y"
+    bytec_2 // "y"
     dig 1
     app_global_put
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec 4 // "z"
+    bytec 5 // "z"
     dig 1
     app_global_put
     dup
@@ -310,7 +324,7 @@ main_ternary_merge@48:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log

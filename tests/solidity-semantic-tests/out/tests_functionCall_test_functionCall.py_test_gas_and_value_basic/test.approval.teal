@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/gas_and_value_basic.sol.test.approval_program() -> uint64:
 main:
     intcblock 0 1 24 6
-    bytecblock "h" "__ctor_pending" 0x151f7c75 TMPL_APPROVAL_helper TMPL_CLEAR_helper
+    bytecblock "h" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 TMPL_APPROVAL_helper TMPL_CLEAR_helper
     pushint 4096
     bzero
     dup
@@ -56,7 +56,9 @@ main_ternary_merge@15:
     intc_0 // 0
     bytec_0 // "h"
     app_global_get_ex
-    assert // check h exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_2 // 24
     extract_uint64
     intc_3 // 6
@@ -88,7 +90,7 @@ main_ternary_merge@15:
     setbit
     swap
     concat
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -114,7 +116,9 @@ main_ternary_merge@20:
     intc_0 // 0
     bytec_0 // "h"
     app_global_get_ex
-    assert // check h exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_2 // 24
     extract_uint64
     intc_3 // 6
@@ -146,7 +150,9 @@ main_sendAmount_route@6:
     intc_0 // 0
     bytec_0 // "h"
     app_global_get_ex
-    assert // check h exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_2 // 24
     extract_uint64
     intc_3 // 6
@@ -169,7 +175,7 @@ main_sendAmount_route@6:
     pushint 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -188,8 +194,8 @@ main___postInit_route@5:
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec_3 // TMPL_APPROVAL_helper
-    bytec 4 // TMPL_CLEAR_helper
+    bytec 4 // TMPL_APPROVAL_helper
+    bytec 5 // TMPL_CLEAR_helper
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/new_array_size_side_effect.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 8
-    bytecblock "cnt" 0x151f7c75
+    bytecblock "cnt" 0x 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -25,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "cnt"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -55,7 +55,9 @@ main_ternary_merge@14:
     intc_0 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -64,7 +66,7 @@ main_ternary_merge@14:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -121,7 +123,9 @@ main_ternary_merge@19:
     intc_0 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -130,7 +134,7 @@ main_ternary_merge@19:
     uncover 2
     b|
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -203,7 +207,9 @@ main_after_while@27:
     intc_0 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -212,7 +218,7 @@ main_after_while@27:
     uncover 2
     b|
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -229,7 +235,9 @@ __solfn_14:
     intc_0 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_1 // 0x
+    cover 2
+    select
     pushbytes 0x01
     b+
     dup

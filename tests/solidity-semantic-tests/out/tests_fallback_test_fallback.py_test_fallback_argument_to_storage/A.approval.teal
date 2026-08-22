@@ -4,8 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument_to_storage.sol.A.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "x" 0x "__ctor_pending" 0x151f7c75
-    bytec_1 // ""
+    bytecblock 0x151f7c75 "x" 0x "__ctor_pending"
+    bytec_2 // ""
     pushint 4096
     bzero
     dup
@@ -25,7 +25,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -36,9 +36,12 @@ main_after_if_else@2:
     bnz main_after_if_else@5
     txn OnCompletion
     bnz main_after_if_else@5
-    bytec_1 // 0x
+    bytec_2 // 0x
     callsub __fallback
-    pop
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     intc_0 // 1
     return
 
@@ -63,7 +66,10 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     bnz main_after_if_else@8
     txna ApplicationArgs 0
     callsub __fallback
-    pop
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     intc_0 // 1
     bury 1
 
@@ -81,7 +87,7 @@ main_x_route@14:
 main_ternary_merge@22:
     !
     assert // not payable
-    bytec_0 // "x"
+    bytec_1 // "x"
     box_get
     assert // box exists
     dup
@@ -90,7 +96,7 @@ main_ternary_merge@22:
     extract 6 2
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -152,7 +158,7 @@ main___fallback_route@12:
     extract 6 2
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -161,17 +167,17 @@ main___fallback_route@12:
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument_to_storage.sol.A.__puya_arc4_router__@18
 
 main___postInit_route@11:
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_0 // "x"
+    bytec_1 // "x"
     intc_1 // 0
     box_create
     pop
@@ -193,13 +199,13 @@ __fallback:
 __fallback_ternary_merge@3:
     !
     assert // not payable
-    bytec_0 // "x"
+    bytec_1 // "x"
     box_del
     pop
-    bytec_0 // "x"
+    bytec_1 // "x"
     frame_dig -1
     box_put
-    bytec_1 // ""
+    bytec_2 // ""
     retsub
 
 __fallback_ternary_false@2:

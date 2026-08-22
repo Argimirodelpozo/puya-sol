@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/single_copy_with_multiple_inheritance.sol.Derived.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock "data" 0x6fe076ab 0xc9bcbbdf 0x151f7c75
+    bytecblock "data" 0x 0x6fe076ab 0xc9bcbbdf 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -25,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -37,15 +37,15 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytess 0x30c26d19 0x0640f355 // method "setViaA(uint256)void", method "getViaB()uint256"
-    bytec_1 // method "setData(uint256)void"
-    bytec_2 // method "getViaBase()uint256"
+    bytec_2 // method "setData(uint256)void"
+    bytec_3 // method "getViaBase()uint256"
     txna ApplicationArgs 0
     match main_setViaA_route@5 main_getViaB_route@6 main_setData_route@7 main_getViaBase_route@8
     err
 
 main_getViaBase_route@8:
     callsub getViaBase
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -83,7 +83,7 @@ main_ternary_merge@19:
     intc_1 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -126,7 +126,7 @@ setData:
     txn NumAppArgs
     bz setData_after_if_else@6
     txna ApplicationArgs 0
-    bytec_1 // method "setData(uint256)void"
+    bytec_2 // method "setData(uint256)void"
     ==
     bz setData_after_if_else@6
     txn GroupIndex
@@ -156,7 +156,7 @@ getViaBase:
     txn NumAppArgs
     bz getViaBase_after_if_else@6
     txna ApplicationArgs 0
-    bytec_2 // method "getViaBase()uint256"
+    bytec_3 // method "getViaBase()uint256"
     ==
     bz getViaBase_after_if_else@6
     txn GroupIndex
@@ -174,7 +174,9 @@ getViaBase_after_if_else@6:
     intc_2 // 0
     bytec_0 // "data"
     app_global_get_ex
-    assert // check data exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32

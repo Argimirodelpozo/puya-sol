@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 128 90
-    bytecblock "y" "x" "__ctor_pending"
+    bytecblock "y" "x" 0x "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -64,7 +64,9 @@ main_while_top@14:
     intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_2 // 0x
+    cover 2
+    select
     pushbytes 0x00
     concat
     bytec_1 // "x"
@@ -87,15 +89,15 @@ main_while_top@17:
     intc_3 // 90
     <
     bz main_after_while@19
-    intc_0 // 0
-    bytec_1 // "x"
-    app_global_get_ex
-    assert // check x exists
-    swap
     dup
     itob
     extract 7 1
-    uncover 2
+    intc_0 // 0
+    bytec_1 // "x"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
     dig 2
     uncover 2
     replace3
@@ -171,7 +173,9 @@ main_after_if_else@27:
     intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
     itob
@@ -200,14 +204,14 @@ main_ternary_false@12:
     b main_ternary_merge@13
 
 main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     bytec_0 // "y"
@@ -215,7 +219,7 @@ main___postInit_route@5:
     box_create
     pop
     bytec_1 // "x"
-    pushbytes 0x
+    bytec_2 // 0x
     app_global_put
     intc_1 // 1
     return

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/mapping_array_internal_argument.sol.test.approval_program() -> uint64:
 main:
     intcblock 255 0 1 8
-    bytecblock "a" 0x0004000600000000 "b" 0x151f7c75
+    bytecblock "__ctor_pending" 0x151f7c75 "a" "b" 0x0004000600000000
     pushint 4096
     bzero
     dup
@@ -24,11 +24,8 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "a"
-    bytec_1 // 0x0004000600000000
-    app_global_put
-    bytec_2 // "b"
-    bytec_1 // 0x0004000600000000
+    bytec_0 // "__ctor_pending"
+    intc_2 // 1
     app_global_put
     intc_2 // 1
     return
@@ -39,12 +36,12 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    pushbytess 0x5c902989 0x4816d1a6 // method "set(uint64,uint64,uint64,uint64,uint64)(uint64,uint64,uint64,uint64)", method "get(uint64)(uint64,uint64,uint64,uint64)"
+    pushbytess 0xbacc49e3 0x5c902989 0x4816d1a6 // method "__postInit()void", method "set(uint64,uint64,uint64,uint64,uint64)(uint64,uint64,uint64,uint64)", method "get(uint64)(uint64,uint64,uint64,uint64)"
     txna ApplicationArgs 0
-    match main_set_route@5 main_get_route@6
+    match main___postInit_route@5 main_set_route@6 main_get_route@7
     err
 
-main_get_route@6:
+main_get_route@7:
     txna ApplicationArgs 1
     dup
     len
@@ -53,13 +50,13 @@ main_get_route@6:
     assert // invalid number of bytes for arc4.uint64
     btoi
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@13
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@14:
     !
     assert // not payable
     dup
@@ -132,18 +129,18 @@ main_ternary_merge@13:
     swap
     itob
     concat
-    bytec_3 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-main_ternary_false@12:
+main_ternary_false@13:
     intc_1 // 0
-    b main_ternary_merge@13
+    b main_ternary_merge@14
 
-main_set_route@5:
+main_set_route@6:
     txna ApplicationArgs 1
     dup
     len
@@ -184,13 +181,13 @@ main_set_route@5:
     btoi
     swap
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@18
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@19:
     !
     assert // not payable
     dup
@@ -227,12 +224,12 @@ main_ternary_merge@18:
     assert // ABI validation
     intc_0 // 255
     &
-    bytec_0 // "a"
+    bytec_2 // "a"
     dig 5
     uncover 5
     uncover 5
     callsub __solfn_68
-    bytec_2 // "b"
+    bytec_3 // "b"
     uncover 5
     uncover 5
     uncover 5
@@ -260,16 +257,36 @@ main_ternary_merge@18:
     swap
     itob
     concat
-    bytec_3 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-main_ternary_false@17:
+main_ternary_false@18:
     intc_1 // 0
-    b main_ternary_merge@18
+    b main_ternary_merge@19
+
+main___postInit_route@5:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_2 // "a"
+    bytec 4 // 0x0004000600000000
+    box_put
+    bytec_3 // "b"
+    bytec 4 // 0x0004000600000000
+    box_put
+    intc_2 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/mapping_array_internal_argument.sol.test.__solfn_68(m: bytes, key: uint64, value1: uint64, value2: uint64) -> uint64, uint64:

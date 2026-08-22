@@ -174,13 +174,13 @@ main_f_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
-    pushint 84
-    itob
     bytec_2 // "a"
     bytec_3 // "b"
     callsub Lib.f
+    pushint 84
+    itob
     bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
-    swap
+    uncover 2
     concat
     sha256
     dup

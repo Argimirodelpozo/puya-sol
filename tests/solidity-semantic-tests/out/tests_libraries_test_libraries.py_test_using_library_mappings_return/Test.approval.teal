@@ -52,29 +52,29 @@ main_f_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    intc_1 // 1
-    itob
     intc_2 // 0
     itob
     bytec_1 // "m"
     dig 1
     callsub Lib.choose
+    intc_1 // 1
+    itob
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    swap
+    uncover 2
     concat
     sha256
     dup
     box_del
     pop
-    dig 2
+    dig 1
     box_put
+    bytec_1 // "m"
+    uncover 2
+    callsub Lib.choose
     pushint 42
     itob
-    bytec_1 // "m"
-    uncover 2
-    callsub Lib.choose
     bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
-    swap
+    uncover 2
     concat
     sha256
     dup
@@ -82,13 +82,13 @@ main_ternary_merge@13:
     pop
     swap
     box_put
+    bytec_1 // "m"
+    dig 1
+    callsub Lib.choose
     pushint 23
     itob
-    bytec_1 // "m"
-    dig 2
-    callsub Lib.choose
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    swap
+    uncover 2
     concat
     sha256
     dup
@@ -96,13 +96,13 @@ main_ternary_merge@13:
     pop
     swap
     box_put
+    bytec_1 // "m"
+    swap
+    callsub Lib.choose
     pushint 99
     itob
-    bytec_1 // "m"
-    uncover 2
-    callsub Lib.choose
     bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000002
-    swap
+    uncover 2
     concat
     sha256
     dup

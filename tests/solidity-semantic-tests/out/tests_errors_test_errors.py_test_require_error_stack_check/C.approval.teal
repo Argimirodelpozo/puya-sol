@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_stack_check.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "x" 0xc7619fcb 0x151f7c75
+    bytecblock "x" 0x 0xc7619fcb 0x151f7c75
     intc_2 // 0
     pushint 4096
     bzero
@@ -26,7 +26,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -37,7 +37,7 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_1 // method "e(uint256)uint256"
+    bytec_2 // method "e(uint256)uint256"
     pushbytess 0xde29cd95 0x7c1072af // method "f(bool,uint256,uint256,uint256)void", method "x()uint256"
     txna ApplicationArgs 0
     match main_e_route@5 main_f_route@6 main_x_route@7
@@ -57,7 +57,9 @@ main_ternary_merge@14:
     intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_0 // 32
@@ -66,7 +68,7 @@ main_ternary_merge@14:
     intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -129,7 +131,7 @@ main_ternary_merge@19:
     assert // ABI bool validation
     global CurrentApplicationID
     itob
-    bytec_1 // method "e(uint256)uint256"
+    bytec_2 // method "e(uint256)uint256"
     concat
     uncover 6
     intc_0 // 32
@@ -195,7 +197,7 @@ main_e_route@5:
 main_ternary_merge@26:
     !
     assert // not payable
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log

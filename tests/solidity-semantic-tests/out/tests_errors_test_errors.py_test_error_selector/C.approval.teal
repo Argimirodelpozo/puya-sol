@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/error_selector.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x34127e13 "s1" "s2" "s3" "s4"
+    bytecblock 0x00000000 0x34127e13 "s1" "s2" "s3" "s4"
     pushint 4096
     bzero
     dup
@@ -24,17 +24,17 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "s1"
-    bytec_0 // method "E()"
+    bytec_2 // "s1"
+    bytec_1 // method "E()"
     app_global_put
-    bytec_2 // "s2"
+    bytec_3 // "s2"
     pushbytes 0xd5c1f7fc // method "E(uint256)"
     app_global_put
-    bytec_3 // "s3"
-    bytec_0 // method "E()"
+    bytec 4 // "s3"
+    bytec_1 // method "E()"
     app_global_put
-    bytec 4 // "s4"
-    bytec_0 // method "E()"
+    bytec 5 // "s4"
+    bytec_1 // method "E()"
     app_global_put
     intc_0 // 1
     return
@@ -82,21 +82,29 @@ main_ternary_merge@19:
     !
     assert // not payable
     intc_1 // 0
-    bytec_1 // "s1"
+    bytec_2 // "s1"
     app_global_get_ex
-    assert // check s1 exists
+    bytec_0 // 0x00000000
+    cover 2
+    select
     intc_1 // 0
-    bytec_2 // "s2"
+    bytec_3 // "s2"
     app_global_get_ex
-    assert // check s2 exists
+    bytec_0 // 0x00000000
+    cover 2
+    select
     intc_1 // 0
-    bytec_3 // "s3"
+    bytec 4 // "s3"
     app_global_get_ex
-    assert // check s3 exists
+    bytec_0 // 0x00000000
+    cover 2
+    select
     intc_1 // 0
-    bytec 4 // "s4"
+    bytec 5 // "s4"
     app_global_get_ex
-    assert // check s4 exists
+    bytec_0 // 0x00000000
+    cover 2
+    select
     uncover 3
     uncover 3
     concat

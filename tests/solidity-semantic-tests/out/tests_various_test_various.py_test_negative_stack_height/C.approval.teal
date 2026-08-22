@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/negative_stack_height.sol.C.approval_program() -> uint64:
 main:
     intcblock 88 0 1 32 16000 48000 32000
-    bytecblock 0x00 0x151f7c75 "__ctor_pending" "invoices"
+    bytecblock 0x00 0x151f7c75 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" "invoices"
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_2 // 1
     app_global_put
     intc_2 // 1
@@ -68,7 +68,7 @@ main_ternary_merge@16:
     -
     intc_3 // 32
     extract3
-    bytec_3 // "invoices"
+    bytec 4 // "invoices"
     concat
     sha256
     box_get
@@ -207,6 +207,18 @@ main_ternary_merge@21:
     dup
     intc_0 // 88
     extract_uint64
+    pushint 63
+    +
+    itob
+    dig 2
+    swap
+    concat
+    replace2 64
+    store 0
+    load 0
+    dup
+    intc_0 // 88
+    extract_uint64
     intc 5 // 48000
     +
     itob
@@ -234,6 +246,18 @@ main_ternary_merge@21:
     intc 4 // 16000
     +
     itob
+    dig 2
+    swap
+    concat
+    replace2 64
+    store 0
+    load 0
+    dup
+    intc_0 // 88
+    extract_uint64
+    pushint 63
+    +
+    itob
     uncover 2
     swap
     concat
@@ -243,11 +267,15 @@ main_ternary_merge@21:
     concat
     swap
     concat
-    swap
+    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     concat
     swap
     concat
     swap
+    concat
+    swap
+    concat
+    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     concat
     bytec_1 // 0x151f7c75
     swap
@@ -308,6 +336,18 @@ main_ternary_merge@26:
     dup
     intc_0 // 88
     extract_uint64
+    pushint 63
+    +
+    itob
+    dig 2
+    swap
+    concat
+    replace2 64
+    store 0
+    load 0
+    dup
+    intc_0 // 88
+    extract_uint64
     intc 4 // 16000
     +
     itob
@@ -359,12 +399,36 @@ main_ternary_merge@26:
     intc 4 // 16000
     +
     itob
+    dig 2
+    swap
+    concat
+    replace2 64
+    store 0
+    load 0
+    dup
+    intc_0 // 88
+    extract_uint64
+    pushint 63
+    +
+    itob
+    dig 2
+    swap
+    concat
+    replace2 64
+    store 0
+    load 0
+    dup
+    intc_0 // 88
+    extract_uint64
+    pushint 63
+    +
+    itob
     uncover 2
     swap
     concat
     replace2 64
     store 0
-    swap
+    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     concat
     swap
     concat
@@ -373,6 +437,10 @@ main_ternary_merge@26:
     swap
     concat
     swap
+    concat
+    swap
+    concat
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     concat
     bytec_1 // 0x151f7c75
     swap
@@ -447,6 +515,18 @@ main_ternary_merge@31:
     dup
     intc_0 // 88
     extract_uint64
+    pushint 63
+    +
+    itob
+    dig 2
+    swap
+    concat
+    replace2 64
+    store 0
+    load 0
+    dup
+    intc_0 // 88
+    extract_uint64
     intc 4 // 16000
     +
     itob
@@ -458,6 +538,8 @@ main_ternary_merge@31:
     swap
     concat
     swap
+    concat
+    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     concat
     swap
     concat
@@ -473,17 +555,17 @@ main_ternary_false@30:
     b main_ternary_merge@31
 
 main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec_3 // "invoices"
+    bytec 4 // "invoices"
     pushint 2
     box_create
     pop

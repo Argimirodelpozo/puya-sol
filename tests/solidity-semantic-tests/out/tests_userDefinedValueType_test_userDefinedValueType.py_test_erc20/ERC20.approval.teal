@@ -379,7 +379,9 @@ main_ternary_merge@55:
     intc_2 // 0
     bytec 5 // "_totalSupply"
     app_global_get_ex
-    assert // check _totalSupply exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_0 // 32
@@ -438,7 +440,9 @@ main_after_if_else@58:
     intc_2 // 0
     bytec 5 // "_totalSupply"
     app_global_get_ex
-    assert // check _totalSupply exists
+    bytec_0 // 0x
+    cover 2
+    select
     dig 1
     callsub FixedMath.add
     bytec 5 // "_totalSupply"

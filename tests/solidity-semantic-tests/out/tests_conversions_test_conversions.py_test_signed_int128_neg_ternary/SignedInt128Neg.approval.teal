@@ -56,7 +56,9 @@ main_ternary_merge@19:
     intc_2 // 0
     bytec 6 // "stored"
     app_global_get_ex
-    assert // check stored exists
+    pushbytes 0x
+    cover 2
+    select
     bytec_1 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -75,7 +77,9 @@ main_ternary_merge@22:
     intc_2 // 0
     bytec 6 // "stored"
     app_global_get_ex
-    assert // check stored exists
+    pushbytes 0x
+    cover 2
+    select
     dup
     bytec 9 // 0xffffffffffffffffffffffffffffffff80000000000000000000000000000000
     b!=
@@ -140,7 +144,9 @@ main_else_body@27:
     intc_2 // 0
     bytec 6 // "stored"
     app_global_get_ex
-    assert // check stored exists
+    pushbytes 0x
+    cover 2
+    select
     bytec_3 // 0x0100000000000000000000000000000000
     b%
     b main_after_if_else@28
@@ -166,7 +172,9 @@ main_ternary_merge@33:
     intc_2 // 0
     bytec 6 // "stored"
     app_global_get_ex
-    assert // check stored exists
+    pushbytes 0x
+    cover 2
+    select
     bytec_1 // 0xffffffffffffffffffffffffffffffff
     b&
     dup

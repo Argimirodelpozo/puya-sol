@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/stub.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "x" "y" 0x
+    bytecblock 0x "x" "y"
     pushint 4096
     bzero
     dup
@@ -24,20 +24,20 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    bytec_2 // 0x
+    bytec_1 // "x"
+    bytec_0 // 0x
     app_global_put
-    bytec_1 // "y"
-    bytec_2 // 0x
+    bytec_2 // "y"
+    bytec_0 // 0x
     app_global_put
     pushint 42
     itob
-    bytec_0 // "x"
+    bytec_1 // "x"
     swap
     app_global_put
     pushint 23
     itob
-    bytec_1 // "y"
+    bytec_2 // "y"
     swap
     app_global_put
     intc_0 // 1
@@ -66,9 +66,11 @@ main_ternary_merge@9:
     !
     assert // not payable
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     b+
     dup
@@ -86,9 +88,11 @@ main_ternary_merge@9:
     dig 1
     b|
     intc_1 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32

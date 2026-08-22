@@ -159,11 +159,20 @@ main_ternary_merge@13:
     concat
     pushint 24
     extract_uint64
-    app_params_get AppApprovalProgram
-    bz main_ternary_false@15
+    dup
+    bz main_ternary_false@18
+    dup
+    app_params_get AppExtraProgramPages
+    bury 1
+    bz main_ternary_false@16
+    app_params_get AppExtraProgramPages
+    pop
+    intc_1 // 1
+    +
+    pushint 2048
+    *
 
-main_ternary_merge@16:
-    len
+main_ternary_merge@19:
     itob
     pushint 32
     bzero
@@ -175,10 +184,15 @@ main_ternary_merge@16:
     intc_1 // 1
     return
 
-main_ternary_false@15:
+main_ternary_false@16:
     pop
-    pushbytes 0x
-    b main_ternary_merge@16
+    intc_0 // 0
+    b main_ternary_merge@19
+
+main_ternary_false@18:
+    pop
+    intc_0 // 0
+    b main_ternary_merge@19
 
 main_ternary_false@12:
     intc_0 // 0
@@ -186,13 +200,13 @@ main_ternary_false@12:
 
 main_f_route@5:
     txn GroupIndex
-    bz main_ternary_false@20
+    bz main_ternary_false@23
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+main_ternary_merge@24:
     !
     assert // not payable
     itxn_begin
@@ -306,9 +320,9 @@ main_ternary_merge@21:
     pushint 24
     extract_uint64
     app_params_get AppApprovalProgram
-    bz main_ternary_false@23
+    bz main_ternary_false@26
 
-main_ternary_merge@24:
+main_ternary_merge@27:
     dup
     len
     itob
@@ -322,11 +336,11 @@ main_ternary_merge@24:
     intc_1 // 1
     return
 
-main_ternary_false@23:
+main_ternary_false@26:
     pop
     pushbytes 0x
-    b main_ternary_merge@24
+    b main_ternary_merge@27
 
-main_ternary_false@20:
+main_ternary_false@23:
     intc_0 // 0
-    b main_ternary_merge@21
+    b main_ternary_merge@24

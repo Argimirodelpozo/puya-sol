@@ -1,0 +1,126 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/keccak256_optimizer_bug_different_memory_location.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0x4b4fb052 // method "f()bool"
+    txna ApplicationArgs 0
+    match main_f_route@4
+    err
+
+main_f_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txn GroupIndex
+    bz main_ternary_false@8
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@9:
+    !
+    assert // not payable
+    load 0
+    store 0
+    txn NumAppArgs
+    bz main_ternary_false@11
+    txna ApplicationArgs 0
+
+main_ternary_merge@12:
+    intc_0 // 32
+    bzero
+    dup
+    uncover 2
+    dup
+    uncover 2
+    concat
+    swap
+    intc_2 // 0
+    swap
+    len
+    dup
+    bz main_ternary_false@14
+    pop
+
+main_ternary_merge@15:
+    intc_0 // 32
+    extract3
+    load 0
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    dig 1
+    replace2 0
+    store 0
+    load 0
+    swap
+    replace2 32
+    store 0
+    load 0
+    extract 0 32
+    extract 0 4
+    keccak256
+    load 0
+    extract 32 32
+    extract 0 8
+    keccak256
+    b==
+    load 0
+    store 0
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    pushbytes 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    bury 1
+    b main_ternary_merge@15
+
+main_ternary_false@11:
+    pushint 4
+    bzero
+    b main_ternary_merge@12
+
+main_ternary_false@8:
+    intc_2 // 0
+    b main_ternary_merge@9

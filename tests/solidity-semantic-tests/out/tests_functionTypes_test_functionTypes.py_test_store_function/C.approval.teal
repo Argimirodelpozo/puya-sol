@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/store_function.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 6 16
-    bytecblock "ev" "x" 0xf503abcb 0x151f7c75 TMPL_APPROVAL_Other TMPL_CLEAR_Other
+    bytecblock "ev" "x" 0x000000000000000000000000 0xf503abcb 0x151f7c75 TMPL_APPROVAL_Other TMPL_CLEAR_Other
     pushint 4096
     bzero
     dup
@@ -28,7 +28,7 @@ main:
     intc_0 // 0
     app_global_put
     bytec_1 // "x"
-    pushbytes 0x000000000000000000000000
+    bytec_2 // 0x000000000000000000000000
     app_global_put
     intc_1 // 1
     return
@@ -40,7 +40,7 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytes 0x68f8fb19 // method "store(byte[12])void"
-    bytec_2 // method "eval(byte[12])uint256"
+    bytec_3 // method "eval(byte[12])uint256"
     pushbytes 0x3e9a707a // method "t()uint256"
     txna ApplicationArgs 0
     match main_store_route@5 main_eval_route@6 main_t_route@7
@@ -61,8 +61,8 @@ main_ternary_merge@14:
     intc_1 // 1
     app_global_put
     itxn_begin
-    bytec 4 // TMPL_APPROVAL_Other
-    bytec 5 // TMPL_CLEAR_Other
+    bytec 5 // TMPL_APPROVAL_Other
+    bytec 6 // TMPL_CLEAR_Other
     intc_2 // 6
     itxn_field TypeEnum
     intc_3 // 16
@@ -97,18 +97,22 @@ main_ternary_merge@14:
     intc_0 // 0
     bytec_0 // "ev"
     app_global_get_ex
-    assert // check ev exists
+    intc_0 // 0
+    cover 2
+    select
     intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_2 // 0x000000000000000000000000
+    cover 2
+    select
     swap
     intc_1 // 1
     ==
     assert // invalid function pointer
     callsub eval
     pop
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -128,7 +132,7 @@ main_eval_route@6:
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 12>
     callsub eval
     pop
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -178,7 +182,7 @@ eval:
     txn NumAppArgs
     bz eval_after_if_else@6
     txna ApplicationArgs 0
-    bytec_2 // method "eval(byte[12])uint256"
+    bytec_3 // method "eval(byte[12])uint256"
     ==
     bz eval_after_if_else@6
     txn GroupIndex

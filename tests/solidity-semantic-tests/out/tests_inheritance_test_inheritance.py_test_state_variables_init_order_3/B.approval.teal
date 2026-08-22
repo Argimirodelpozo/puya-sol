@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/state_variables_init_order_3.sol.B.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock 0x151f7c75 "a" "b" 0x "c" "b_a" "b_b" "b_c"
+    bytecblock 0x 0x151f7c75 "a" "b" "c" "b_a" "b_b" "b_c"
     pushint 4096
     bzero
     dup
@@ -28,23 +28,25 @@ main:
     itob
     pushint 42
     itob
-    bytec_1 // "a"
+    bytec_2 // "a"
     swap
     app_global_put
-    bytec_2 // "b"
-    bytec_3 // 0x
+    bytec_3 // "b"
+    bytec_0 // 0x
     app_global_put
     bytec 4 // "c"
-    bytec_3 // 0x
+    bytec_0 // 0x
     app_global_put
     intc_0 // 0
-    bytec_1 // "a"
+    bytec_2 // "a"
     app_global_get_ex
-    assert // check a exists
-    bytec_2 // "b"
+    bytec_0 // 0x
+    cover 2
+    select
+    bytec_3 // "b"
     swap
     app_global_put
-    bytec_1 // "a"
+    bytec_2 // "a"
     dig 1
     app_global_put
     callsub f
@@ -52,39 +54,47 @@ main:
     swap
     app_global_put
     intc_0 // 0
-    bytec_2 // "b"
+    bytec_3 // "b"
     app_global_get_ex
-    assert // check b exists
+    bytec_0 // 0x
+    cover 2
+    select
     pushbytes "e"
     swap
     app_global_put
     bytec 5 // "b_a"
-    bytec_3 // 0x
+    bytec_0 // 0x
     app_global_put
     bytec 6 // "b_b"
-    bytec_3 // 0x
+    bytec_0 // 0x
     app_global_put
     bytec 7 // "b_c"
-    bytec_3 // 0x
+    bytec_0 // 0x
     app_global_put
     intc_0 // 0
-    bytec_1 // "a"
+    bytec_2 // "a"
     app_global_get_ex
-    assert // check a exists
+    bytec_0 // 0x
+    cover 2
+    select
     bytec 5 // "b_a"
     swap
     app_global_put
     intc_0 // 0
-    bytec_2 // "b"
+    bytec_3 // "b"
     app_global_get_ex
-    assert // check b exists
+    bytec_0 // 0x
+    cover 2
+    select
     bytec 6 // "b_b"
     swap
     app_global_put
     intc_0 // 0
     bytec 4 // "c"
     app_global_get_ex
-    assert // check c exists
+    bytec_0 // 0x
+    cover 2
+    select
     bytec 7 // "b_c"
     swap
     app_global_put
@@ -110,7 +120,7 @@ main_f_route@13:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub f
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -131,7 +141,9 @@ main_ternary_merge@22:
     intc_0 // 0
     bytec 4 // "c"
     app_global_get_ex
-    assert // check c exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -140,7 +152,7 @@ main_ternary_merge@22:
     intc_2 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -163,9 +175,11 @@ main_ternary_merge@27:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "b"
+    bytec_3 // "b"
     app_global_get_ex
-    assert // check b exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -174,7 +188,7 @@ main_ternary_merge@27:
     intc_2 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -197,9 +211,11 @@ main_ternary_merge@32:
     !
     assert // not payable
     intc_0 // 0
-    bytec_1 // "a"
+    bytec_2 // "a"
     app_global_get_ex
-    assert // check a exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -208,7 +224,7 @@ main_ternary_merge@32:
     intc_2 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -233,7 +249,9 @@ main_ternary_merge@37:
     intc_0 // 0
     bytec 7 // "b_c"
     app_global_get_ex
-    assert // check b_c exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -242,7 +260,7 @@ main_ternary_merge@37:
     intc_2 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -267,7 +285,9 @@ main_ternary_merge@42:
     intc_0 // 0
     bytec 6 // "b_b"
     app_global_get_ex
-    assert // check b_b exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -276,7 +296,7 @@ main_ternary_merge@42:
     intc_2 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -301,7 +321,9 @@ main_ternary_merge@47:
     intc_0 // 0
     bytec 5 // "b_a"
     app_global_get_ex
-    assert // check b_a exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -310,7 +332,7 @@ main_ternary_merge@47:
     intc_2 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -335,7 +357,9 @@ main_ternary_merge@52:
     intc_0 // 0
     pushbytes "e"
     app_global_get_ex
-    assert // check e exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -344,7 +368,7 @@ main_ternary_merge@52:
     intc_2 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -369,7 +393,9 @@ main_ternary_merge@57:
     intc_0 // 0
     pushbytes "d"
     app_global_get_ex
-    assert // check d exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -378,7 +404,7 @@ main_ternary_merge@57:
     intc_2 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log

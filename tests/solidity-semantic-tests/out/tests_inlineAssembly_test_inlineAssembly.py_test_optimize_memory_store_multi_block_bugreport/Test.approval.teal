@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/optimize_memory_store_multi_block_bugreport.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock "x" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock "x" 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -25,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -71,13 +71,13 @@ main_ternary_merge@9:
     store 0
     b+
     dup
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     callsub __solfn_39
     b+
     dup
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -115,5 +115,7 @@ __solfn_39:
     intc_2 // 0
     bytec_0 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_1 // 0x
+    cover 2
+    select
     retsub

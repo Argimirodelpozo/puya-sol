@@ -240,11 +240,14 @@
                       "immutable": true,
                       "length": null
                     },
-                    "op_code": "extract3",
-                    "immediates": [],
+                    "op_code": "extract",
+                    "immediates": [
+                      0,
+                      32
+                    ],
                     "stack_args": [
                       {
-                        "_type": "SingleEvaluation",
+                        "_type": "IntrinsicCall",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                           "line": 1,
@@ -259,66 +262,66 @@
                           "immutable": true,
                           "length": null
                         },
-                        "source": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                            "line": 1,
-                            "end_line": 1,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "op_code": "concat",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                "line": 1,
-                                "end_line": 1,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "bzero",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                    "line": 1,
-                                    "end_line": 1,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 32,
-                                  "teal_alias": null
-                                }
-                              ]
+                        "op_code": "b|",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                              "line": 1,
+                              "end_line": 1,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
                             },
-                            {
-                              "_type": "IntrinsicCall",
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "bzero",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                  "line": 1,
+                                  "end_line": 1,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 32,
+                                "teal_alias": null
+                              }
+                            ]
+                          },
+                          {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                              "line": 1,
+                              "end_line": 1,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "expr": {
+                              "_type": "StateGet",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                 "line": 1,
@@ -327,16 +330,22 @@
                                 "column": null,
                                 "end_column": null
                               },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "app_global_get",
-                              "immediates": [],
-                              "stack_args": [
-                                {
+                              "field": {
+                                "_type": "AppStateExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                  "line": 1,
+                                  "end_line": 1,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "key": {
                                   "_type": "BytesConstant",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
@@ -347,71 +356,17 @@
                                     "end_column": null
                                   },
                                   "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
+                                    "_type": "WType",
+                                    "name": "state_key",
+                                    "immutable": true
                                   },
                                   "value": "b7gR0a$$6Daxw",
                                   "encoding": "utf8"
-                                }
-                              ]
-                            }
-                          ]
-                        },
-                        "_id": 1048580
-                      },
-                      {
-                        "_type": "UInt64BinaryOperation",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                          "line": 1,
-                          "end_line": 1,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "left": {
-                          "_type": "IntrinsicCall",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                            "line": 1,
-                            "end_line": 1,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "op_code": "len",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "SingleEvaluation",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                "line": 1,
-                                "end_line": 1,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                                },
+                                "exists_assertion_message": null
                               },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "source": {
-                                "_type": "IntrinsicCall",
+                              "default": {
+                                "_type": "IntegerConstant",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                   "line": 1,
@@ -421,136 +376,16 @@
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
                                 },
-                                "op_code": "concat",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                      "line": 1,
-                                      "end_line": 1,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "bzero",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "IntegerConstant",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                          "line": 1,
-                                          "end_line": 1,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "uint64",
-                                          "immutable": true
-                                        },
-                                        "value": 32,
-                                        "teal_alias": null
-                                      }
-                                    ]
-                                  },
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                      "line": 1,
-                                      "end_line": 1,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "app_global_get",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "BytesConstant",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                          "line": 1,
-                                          "end_line": 1,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
-                                        },
-                                        "value": "b7gR0a$$6Daxw",
-                                        "encoding": "utf8"
-                                      }
-                                    ]
-                                  }
-                                ]
-                              },
-                              "_id": 1048580
+                                "value": 0,
+                                "teal_alias": null
+                              }
                             }
-                          ]
-                        },
-                        "op": "-",
-                        "right": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                            "line": 1,
-                            "end_line": 1,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 32,
-                          "teal_alias": null
-                        }
-                      },
-                      {
-                        "_type": "IntegerConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                          "line": 1,
-                          "end_line": 1,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
-                        },
-                        "value": 32,
-                        "teal_alias": null
+                          }
+                        ]
                       }
                     ]
                   }
@@ -784,7 +619,7 @@
                                       "source_location": null
                                     },
                                     "base": {
-                                      "_type": "AppStateExpression",
+                                      "_type": "StateGet",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                         "line": 1,
@@ -793,30 +628,60 @@
                                         "column": null,
                                         "end_column": null
                                       },
-                                      "wtype": {
-                                        "_type": "ARC4Struct",
-                                        "name": "Data",
-                                        "immutable": false,
-                                        "fields": [
-                                          {
-                                            "name": "contents",
-                                            "wtype": {
-                                              "_type": "ARC4UIntN",
-                                              "name": "arc4.uint256",
-                                              "immutable": true,
-                                              "n": 256,
-                                              "arc4_alias": null,
-                                              "source_location": null
-                                            },
-                                            "description": null
-                                          }
-                                        ],
-                                        "frozen": false,
-                                        "arc4_alias": null,
-                                        "source_location": null,
-                                        "desc": null
+                                      "field": {
+                                        "_type": "AppStateExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                          "line": 1,
+                                          "end_line": 1,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "ARC4Struct",
+                                          "name": "Data",
+                                          "immutable": false,
+                                          "fields": [
+                                            {
+                                              "name": "contents",
+                                              "wtype": {
+                                                "_type": "ARC4UIntN",
+                                                "name": "arc4.uint256",
+                                                "immutable": true,
+                                                "n": 256,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "description": null
+                                            }
+                                          ],
+                                          "frozen": false,
+                                          "arc4_alias": null,
+                                          "source_location": null,
+                                          "desc": null
+                                        },
+                                        "key": {
+                                          "_type": "BytesConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                            "line": 1,
+                                            "end_line": 1,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "state_key",
+                                            "immutable": true
+                                          },
+                                          "value": "VE",
+                                          "encoding": "utf8"
+                                        },
+                                        "exists_assertion_message": null
                                       },
-                                      "key": {
+                                      "default": {
                                         "_type": "BytesConstant",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
@@ -827,14 +692,31 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "WType",
-                                          "name": "state_key",
-                                          "immutable": true
+                                          "_type": "ARC4Struct",
+                                          "name": "Data",
+                                          "immutable": false,
+                                          "fields": [
+                                            {
+                                              "name": "contents",
+                                              "wtype": {
+                                                "_type": "ARC4UIntN",
+                                                "name": "arc4.uint256",
+                                                "immutable": true,
+                                                "n": 256,
+                                                "arc4_alias": null,
+                                                "source_location": null
+                                              },
+                                              "description": null
+                                            }
+                                          ],
+                                          "frozen": false,
+                                          "arc4_alias": null,
+                                          "source_location": null,
+                                          "desc": null
                                         },
-                                        "value": "VE",
-                                        "encoding": "utf8"
-                                      },
-                                      "exists_assertion_message": "check a exists"
+                                        "value": "0000000000000000000000000000000000000000",
+                                        "encoding": "base16"
+                                      }
                                     },
                                     "name": "contents"
                                   }
@@ -974,11 +856,14 @@
                                   "immutable": true,
                                   "length": null
                                 },
-                                "op_code": "extract3",
-                                "immediates": [],
+                                "op_code": "extract",
+                                "immediates": [
+                                  0,
+                                  32
+                                ],
                                 "stack_args": [
                                   {
-                                    "_type": "SingleEvaluation",
+                                    "_type": "IntrinsicCall",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                       "line": 1,
@@ -993,66 +878,66 @@
                                       "immutable": true,
                                       "length": null
                                     },
-                                    "source": {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                        "line": 1,
-                                        "end_line": 1,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "op_code": "concat",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntrinsicCall",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                            "line": 1,
-                                            "end_line": 1,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
-                                          },
-                                          "op_code": "bzero",
-                                          "immediates": [],
-                                          "stack_args": [
-                                            {
-                                              "_type": "IntegerConstant",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                                "line": 1,
-                                                "end_line": 1,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "uint64",
-                                                "immutable": true
-                                              },
-                                              "value": 32,
-                                              "teal_alias": null
-                                            }
-                                          ]
+                                    "op_code": "b|",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                          "line": 1,
+                                          "end_line": 1,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
                                         },
-                                        {
-                                          "_type": "IntrinsicCall",
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "bzero",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                              "line": 1,
+                                              "end_line": 1,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 32,
+                                            "teal_alias": null
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                          "line": 1,
+                                          "end_line": 1,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
+                                          "_type": "StateGet",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                             "line": 1,
@@ -1061,16 +946,22 @@
                                             "column": null,
                                             "end_column": null
                                           },
-                                          "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
-                                          },
-                                          "op_code": "app_global_get",
-                                          "immediates": [],
-                                          "stack_args": [
-                                            {
+                                          "field": {
+                                            "_type": "AppStateExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                              "line": 1,
+                                              "end_line": 1,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "biguint",
+                                              "immutable": true
+                                            },
+                                            "key": {
                                               "_type": "BytesConstant",
                                               "source_location": {
                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
@@ -1081,71 +972,17 @@
                                                 "end_column": null
                                               },
                                               "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
+                                                "_type": "WType",
+                                                "name": "state_key",
+                                                "immutable": true
                                               },
                                               "value": "b7gR0a$$6Das",
                                               "encoding": "utf8"
-                                            }
-                                          ]
-                                        }
-                                      ]
-                                    },
-                                    "_id": 1048579
-                                  },
-                                  {
-                                    "_type": "UInt64BinaryOperation",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                      "line": 1,
-                                      "end_line": 1,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "left": {
-                                      "_type": "IntrinsicCall",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                        "line": 1,
-                                        "end_line": 1,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "op_code": "len",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "SingleEvaluation",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                            "line": 1,
-                                            "end_line": 1,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
+                                            },
+                                            "exists_assertion_message": null
                                           },
-                                          "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
-                                          },
-                                          "source": {
-                                            "_type": "IntrinsicCall",
+                                          "default": {
+                                            "_type": "IntegerConstant",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                               "line": 1,
@@ -1155,136 +992,16 @@
                                               "end_column": null
                                             },
                                             "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
+                                              "_type": "WType",
+                                              "name": "biguint",
+                                              "immutable": true
                                             },
-                                            "op_code": "concat",
-                                            "immediates": [],
-                                            "stack_args": [
-                                              {
-                                                "_type": "IntrinsicCall",
-                                                "source_location": {
-                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                                  "line": 1,
-                                                  "end_line": 1,
-                                                  "comment_lines": 0,
-                                                  "column": null,
-                                                  "end_column": null
-                                                },
-                                                "wtype": {
-                                                  "_type": "BytesWType",
-                                                  "name": "bytes",
-                                                  "immutable": true,
-                                                  "length": null
-                                                },
-                                                "op_code": "bzero",
-                                                "immediates": [],
-                                                "stack_args": [
-                                                  {
-                                                    "_type": "IntegerConstant",
-                                                    "source_location": {
-                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                                      "line": 1,
-                                                      "end_line": 1,
-                                                      "comment_lines": 0,
-                                                      "column": null,
-                                                      "end_column": null
-                                                    },
-                                                    "wtype": {
-                                                      "_type": "WType",
-                                                      "name": "uint64",
-                                                      "immutable": true
-                                                    },
-                                                    "value": 32,
-                                                    "teal_alias": null
-                                                  }
-                                                ]
-                                              },
-                                              {
-                                                "_type": "IntrinsicCall",
-                                                "source_location": {
-                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                                  "line": 1,
-                                                  "end_line": 1,
-                                                  "comment_lines": 0,
-                                                  "column": null,
-                                                  "end_column": null
-                                                },
-                                                "wtype": {
-                                                  "_type": "BytesWType",
-                                                  "name": "bytes",
-                                                  "immutable": true,
-                                                  "length": null
-                                                },
-                                                "op_code": "app_global_get",
-                                                "immediates": [],
-                                                "stack_args": [
-                                                  {
-                                                    "_type": "BytesConstant",
-                                                    "source_location": {
-                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                                      "line": 1,
-                                                      "end_line": 1,
-                                                      "comment_lines": 0,
-                                                      "column": null,
-                                                      "end_column": null
-                                                    },
-                                                    "wtype": {
-                                                      "_type": "BytesWType",
-                                                      "name": "bytes",
-                                                      "immutable": true,
-                                                      "length": null
-                                                    },
-                                                    "value": "b7gR0a$$6Das",
-                                                    "encoding": "utf8"
-                                                  }
-                                                ]
-                                              }
-                                            ]
-                                          },
-                                          "_id": 1048579
+                                            "value": 0,
+                                            "teal_alias": null
+                                          }
                                         }
-                                      ]
-                                    },
-                                    "op": "-",
-                                    "right": {
-                                      "_type": "IntegerConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                        "line": 1,
-                                        "end_line": 1,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "uint64",
-                                        "immutable": true
-                                      },
-                                      "value": 32,
-                                      "teal_alias": null
-                                    }
-                                  },
-                                  {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                      "line": 1,
-                                      "end_line": 1,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 32,
-                                    "teal_alias": null
+                                      }
+                                    ]
                                   }
                                 ]
                               }
@@ -2409,7 +2126,7 @@
                   "end_column": null
                 },
                 "expr": {
-                  "_type": "IntrinsicCall",
+                  "_type": "AssignmentExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                     "line": 1,
@@ -2420,13 +2137,25 @@
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "void",
+                    "name": "biguint",
                     "immutable": true
                   },
-                  "op_code": "app_global_put",
-                  "immediates": [],
-                  "stack_args": [
-                    {
+                  "target": {
+                    "_type": "AppStateExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "key": {
                       "_type": "BytesConstant",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
@@ -2437,15 +2166,31 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "BytesWType",
-                        "name": "bytes",
-                        "immutable": true,
-                        "length": null
+                        "_type": "WType",
+                        "name": "state_key",
+                        "immutable": true
                       },
                       "value": "b7gR0a$$6Daxw",
                       "encoding": "utf8"
                     },
-                    {
+                    "exists_assertion_message": null
+                  },
+                  "value": {
+                    "_type": "ReinterpretCast",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                      "line": 1,
+                      "end_line": 1,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "expr": {
                       "_type": "IntrinsicCall",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
@@ -2465,7 +2210,7 @@
                       "immediates": [],
                       "stack_args": [
                         {
-                          "_type": "IntrinsicCall",
+                          "_type": "SingleEvaluation",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                             "line": 1,
@@ -2480,29 +2225,286 @@
                             "immutable": true,
                             "length": null
                           },
-                          "op_code": "concat",
-                          "immediates": [],
-                          "stack_args": [
-                            {
-                              "_type": "IntrinsicCall",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                "line": 1,
-                                "end_line": 1,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
+                          "source": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                              "line": 1,
+                              "end_line": 1,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "extract3",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "SingleEvaluation",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                  "line": 1,
+                                  "end_line": 1,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "source": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                    "line": 1,
+                                    "end_line": 1,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "concat",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                        "line": 1,
+                                        "end_line": 1,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "bzero",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntegerConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                            "line": 1,
+                                            "end_line": 1,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "value": 32,
+                                          "teal_alias": null
+                                        }
+                                      ]
+                                    },
+                                    {
+                                      "_type": "ReinterpretCast",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                        "line": 1,
+                                        "end_line": 1,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "expr": {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                          "line": 1,
+                                          "end_line": 1,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "biguint",
+                                          "immutable": true
+                                        },
+                                        "name": "__value"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "_id": 1048584
                               },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "op_code": "bzero",
-                              "immediates": [],
-                              "stack_args": [
-                                {
+                              {
+                                "_type": "UInt64BinaryOperation",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                  "line": 1,
+                                  "end_line": 1,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "left": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                    "line": 1,
+                                    "end_line": 1,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "op_code": "len",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "SingleEvaluation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                        "line": 1,
+                                        "end_line": 1,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "source": {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                          "line": 1,
+                                          "end_line": 1,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "concat",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                              "line": 1,
+                                              "end_line": 1,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "bzero",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                  "line": 1,
+                                                  "end_line": 1,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 32,
+                                                "teal_alias": null
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "_type": "ReinterpretCast",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                              "line": 1,
+                                              "end_line": 1,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "expr": {
+                                              "_type": "VarExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                "line": 1,
+                                                "end_line": 1,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "biguint",
+                                                "immutable": true
+                                              },
+                                              "name": "__value"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      "_id": 1048584
+                                    }
+                                  ]
+                                },
+                                "op": "-",
+                                "right": {
                                   "_type": "IntegerConstant",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
@@ -2520,26 +2522,9 @@
                                   "value": 32,
                                   "teal_alias": null
                                 }
-                              ]
-                            },
-                            {
-                              "_type": "ReinterpretCast",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                "line": 1,
-                                "end_line": 1,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
                               },
-                              "wtype": {
-                                "_type": "BytesWType",
-                                "name": "bytes",
-                                "immutable": true,
-                                "length": null
-                              },
-                              "expr": {
-                                "_type": "VarExpression",
+                              {
+                                "_type": "IntegerConstant",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                   "line": 1,
@@ -2550,13 +2535,15 @@
                                 },
                                 "wtype": {
                                   "_type": "WType",
-                                  "name": "biguint",
+                                  "name": "uint64",
                                   "immutable": true
                                 },
-                                "name": "__value"
+                                "value": 32,
+                                "teal_alias": null
                               }
-                            }
-                          ]
+                            ]
+                          },
+                          "_id": 1048585
                         },
                         {
                           "_type": "UInt64BinaryOperation",
@@ -2592,7 +2579,7 @@
                             "immediates": [],
                             "stack_args": [
                               {
-                                "_type": "IntrinsicCall",
+                                "_type": "SingleEvaluation",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                   "line": 1,
@@ -2607,29 +2594,286 @@
                                   "immutable": true,
                                   "length": null
                                 },
-                                "op_code": "concat",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                      "line": 1,
-                                      "end_line": 1,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
+                                "source": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                    "line": 1,
+                                    "end_line": 1,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "extract3",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "SingleEvaluation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                        "line": 1,
+                                        "end_line": 1,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "source": {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                          "line": 1,
+                                          "end_line": 1,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "concat",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                              "line": 1,
+                                              "end_line": 1,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "bzero",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                  "line": 1,
+                                                  "end_line": 1,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 32,
+                                                "teal_alias": null
+                                              }
+                                            ]
+                                          },
+                                          {
+                                            "_type": "ReinterpretCast",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                              "line": 1,
+                                              "end_line": 1,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "expr": {
+                                              "_type": "VarExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                "line": 1,
+                                                "end_line": 1,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "biguint",
+                                                "immutable": true
+                                              },
+                                              "name": "__value"
+                                            }
+                                          }
+                                        ]
+                                      },
+                                      "_id": 1048584
                                     },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "bzero",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
+                                    {
+                                      "_type": "UInt64BinaryOperation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                        "line": 1,
+                                        "end_line": 1,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "left": {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                          "line": 1,
+                                          "end_line": 1,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "op_code": "len",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "SingleEvaluation",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                              "line": 1,
+                                              "end_line": 1,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "source": {
+                                              "_type": "IntrinsicCall",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                "line": 1,
+                                                "end_line": 1,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "op_code": "concat",
+                                              "immediates": [],
+                                              "stack_args": [
+                                                {
+                                                  "_type": "IntrinsicCall",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                    "line": 1,
+                                                    "end_line": 1,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "BytesWType",
+                                                    "name": "bytes",
+                                                    "immutable": true,
+                                                    "length": null
+                                                  },
+                                                  "op_code": "bzero",
+                                                  "immediates": [],
+                                                  "stack_args": [
+                                                    {
+                                                      "_type": "IntegerConstant",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                        "line": 1,
+                                                        "end_line": 1,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "WType",
+                                                        "name": "uint64",
+                                                        "immutable": true
+                                                      },
+                                                      "value": 32,
+                                                      "teal_alias": null
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "_type": "ReinterpretCast",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                    "line": 1,
+                                                    "end_line": 1,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "BytesWType",
+                                                    "name": "bytes",
+                                                    "immutable": true,
+                                                    "length": null
+                                                  },
+                                                  "expr": {
+                                                    "_type": "VarExpression",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                      "line": 1,
+                                                      "end_line": 1,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "biguint",
+                                                      "immutable": true
+                                                    },
+                                                    "name": "__value"
+                                                  }
+                                                }
+                                              ]
+                                            },
+                                            "_id": 1048584
+                                          }
+                                        ]
+                                      },
+                                      "op": "-",
+                                      "right": {
                                         "_type": "IntegerConstant",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
@@ -2647,26 +2891,9 @@
                                         "value": 32,
                                         "teal_alias": null
                                       }
-                                    ]
-                                  },
-                                  {
-                                    "_type": "ReinterpretCast",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                      "line": 1,
-                                      "end_line": 1,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
                                     },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "expr": {
-                                      "_type": "VarExpression",
+                                    {
+                                      "_type": "IntegerConstant",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                         "line": 1,
@@ -2677,13 +2904,15 @@
                                       },
                                       "wtype": {
                                         "_type": "WType",
-                                        "name": "biguint",
+                                        "name": "uint64",
                                         "immutable": true
                                       },
-                                      "name": "__value"
+                                      "value": 32,
+                                      "teal_alias": null
                                     }
-                                  }
-                                ]
+                                  ]
+                                },
+                                "_id": 1048585
                               }
                             ]
                           },
@@ -2727,7 +2956,7 @@
                         }
                       ]
                     }
-                  ]
+                  }
                 }
               },
               {
@@ -3483,7 +3712,7 @@
                               "end_column": null
                             },
                             "expr": {
-                              "_type": "IntrinsicCall",
+                              "_type": "AssignmentExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                 "line": 1,
@@ -3494,13 +3723,25 @@
                               },
                               "wtype": {
                                 "_type": "WType",
-                                "name": "void",
+                                "name": "biguint",
                                 "immutable": true
                               },
-                              "op_code": "app_global_put",
-                              "immediates": [],
-                              "stack_args": [
-                                {
+                              "target": {
+                                "_type": "AppStateExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                  "line": 1,
+                                  "end_line": 1,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "key": {
                                   "_type": "BytesConstant",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
@@ -3511,15 +3752,31 @@
                                     "end_column": null
                                   },
                                   "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
+                                    "_type": "WType",
+                                    "name": "state_key",
+                                    "immutable": true
                                   },
                                   "value": "b7gR0a$$6Das",
                                   "encoding": "utf8"
                                 },
-                                {
+                                "exists_assertion_message": null
+                              },
+                              "value": {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                  "line": 1,
+                                  "end_line": 1,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "biguint",
+                                  "immutable": true
+                                },
+                                "expr": {
                                   "_type": "IntrinsicCall",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
@@ -3539,7 +3796,7 @@
                                   "immediates": [],
                                   "stack_args": [
                                     {
-                                      "_type": "IntrinsicCall",
+                                      "_type": "SingleEvaluation",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                         "line": 1,
@@ -3554,29 +3811,286 @@
                                         "immutable": true,
                                         "length": null
                                       },
-                                      "op_code": "concat",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntrinsicCall",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                            "line": 1,
-                                            "end_line": 1,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
+                                      "source": {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                          "line": 1,
+                                          "end_line": 1,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "extract3",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "SingleEvaluation",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                              "line": 1,
+                                              "end_line": 1,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "source": {
+                                              "_type": "IntrinsicCall",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                "line": 1,
+                                                "end_line": 1,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "op_code": "concat",
+                                              "immediates": [],
+                                              "stack_args": [
+                                                {
+                                                  "_type": "IntrinsicCall",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                    "line": 1,
+                                                    "end_line": 1,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "BytesWType",
+                                                    "name": "bytes",
+                                                    "immutable": true,
+                                                    "length": null
+                                                  },
+                                                  "op_code": "bzero",
+                                                  "immediates": [],
+                                                  "stack_args": [
+                                                    {
+                                                      "_type": "IntegerConstant",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                        "line": 1,
+                                                        "end_line": 1,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "WType",
+                                                        "name": "uint64",
+                                                        "immutable": true
+                                                      },
+                                                      "value": 32,
+                                                      "teal_alias": null
+                                                    }
+                                                  ]
+                                                },
+                                                {
+                                                  "_type": "ReinterpretCast",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                    "line": 1,
+                                                    "end_line": 1,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "BytesWType",
+                                                    "name": "bytes",
+                                                    "immutable": true,
+                                                    "length": null
+                                                  },
+                                                  "expr": {
+                                                    "_type": "VarExpression",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                      "line": 1,
+                                                      "end_line": 1,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "biguint",
+                                                      "immutable": true
+                                                    },
+                                                    "name": "__value"
+                                                  }
+                                                }
+                                              ]
+                                            },
+                                            "_id": 1048581
                                           },
-                                          "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
-                                          },
-                                          "op_code": "bzero",
-                                          "immediates": [],
-                                          "stack_args": [
-                                            {
+                                          {
+                                            "_type": "UInt64BinaryOperation",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                              "line": 1,
+                                              "end_line": 1,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "left": {
+                                              "_type": "IntrinsicCall",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                "line": 1,
+                                                "end_line": 1,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "uint64",
+                                                "immutable": true
+                                              },
+                                              "op_code": "len",
+                                              "immediates": [],
+                                              "stack_args": [
+                                                {
+                                                  "_type": "SingleEvaluation",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                    "line": 1,
+                                                    "end_line": 1,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "BytesWType",
+                                                    "name": "bytes",
+                                                    "immutable": true,
+                                                    "length": null
+                                                  },
+                                                  "source": {
+                                                    "_type": "IntrinsicCall",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                      "line": 1,
+                                                      "end_line": 1,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "op_code": "concat",
+                                                    "immediates": [],
+                                                    "stack_args": [
+                                                      {
+                                                        "_type": "IntrinsicCall",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                          "line": 1,
+                                                          "end_line": 1,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "BytesWType",
+                                                          "name": "bytes",
+                                                          "immutable": true,
+                                                          "length": null
+                                                        },
+                                                        "op_code": "bzero",
+                                                        "immediates": [],
+                                                        "stack_args": [
+                                                          {
+                                                            "_type": "IntegerConstant",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                              "line": 1,
+                                                              "end_line": 1,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "WType",
+                                                              "name": "uint64",
+                                                              "immutable": true
+                                                            },
+                                                            "value": 32,
+                                                            "teal_alias": null
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "_type": "ReinterpretCast",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                          "line": 1,
+                                                          "end_line": 1,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "BytesWType",
+                                                          "name": "bytes",
+                                                          "immutable": true,
+                                                          "length": null
+                                                        },
+                                                        "expr": {
+                                                          "_type": "VarExpression",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                            "line": 1,
+                                                            "end_line": 1,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "WType",
+                                                            "name": "biguint",
+                                                            "immutable": true
+                                                          },
+                                                          "name": "__value"
+                                                        }
+                                                      }
+                                                    ]
+                                                  },
+                                                  "_id": 1048581
+                                                }
+                                              ]
+                                            },
+                                            "op": "-",
+                                            "right": {
                                               "_type": "IntegerConstant",
                                               "source_location": {
                                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
@@ -3594,26 +4108,9 @@
                                               "value": 32,
                                               "teal_alias": null
                                             }
-                                          ]
-                                        },
-                                        {
-                                          "_type": "ReinterpretCast",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                            "line": 1,
-                                            "end_line": 1,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
                                           },
-                                          "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
-                                          },
-                                          "expr": {
-                                            "_type": "VarExpression",
+                                          {
+                                            "_type": "IntegerConstant",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                               "line": 1,
@@ -3624,13 +4121,15 @@
                                             },
                                             "wtype": {
                                               "_type": "WType",
-                                              "name": "biguint",
+                                              "name": "uint64",
                                               "immutable": true
                                             },
-                                            "name": "__value"
+                                            "value": 32,
+                                            "teal_alias": null
                                           }
-                                        }
-                                      ]
+                                        ]
+                                      },
+                                      "_id": 1048582
                                     },
                                     {
                                       "_type": "UInt64BinaryOperation",
@@ -3666,7 +4165,7 @@
                                         "immediates": [],
                                         "stack_args": [
                                           {
-                                            "_type": "IntrinsicCall",
+                                            "_type": "SingleEvaluation",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                               "line": 1,
@@ -3681,29 +4180,286 @@
                                               "immutable": true,
                                               "length": null
                                             },
-                                            "op_code": "concat",
-                                            "immediates": [],
-                                            "stack_args": [
-                                              {
-                                                "_type": "IntrinsicCall",
-                                                "source_location": {
-                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                                  "line": 1,
-                                                  "end_line": 1,
-                                                  "comment_lines": 0,
-                                                  "column": null,
-                                                  "end_column": null
+                                            "source": {
+                                              "_type": "IntrinsicCall",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                "line": 1,
+                                                "end_line": 1,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "op_code": "extract3",
+                                              "immediates": [],
+                                              "stack_args": [
+                                                {
+                                                  "_type": "SingleEvaluation",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                    "line": 1,
+                                                    "end_line": 1,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "BytesWType",
+                                                    "name": "bytes",
+                                                    "immutable": true,
+                                                    "length": null
+                                                  },
+                                                  "source": {
+                                                    "_type": "IntrinsicCall",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                      "line": 1,
+                                                      "end_line": 1,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "op_code": "concat",
+                                                    "immediates": [],
+                                                    "stack_args": [
+                                                      {
+                                                        "_type": "IntrinsicCall",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                          "line": 1,
+                                                          "end_line": 1,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "BytesWType",
+                                                          "name": "bytes",
+                                                          "immutable": true,
+                                                          "length": null
+                                                        },
+                                                        "op_code": "bzero",
+                                                        "immediates": [],
+                                                        "stack_args": [
+                                                          {
+                                                            "_type": "IntegerConstant",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                              "line": 1,
+                                                              "end_line": 1,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "WType",
+                                                              "name": "uint64",
+                                                              "immutable": true
+                                                            },
+                                                            "value": 32,
+                                                            "teal_alias": null
+                                                          }
+                                                        ]
+                                                      },
+                                                      {
+                                                        "_type": "ReinterpretCast",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                          "line": 1,
+                                                          "end_line": 1,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "BytesWType",
+                                                          "name": "bytes",
+                                                          "immutable": true,
+                                                          "length": null
+                                                        },
+                                                        "expr": {
+                                                          "_type": "VarExpression",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                            "line": 1,
+                                                            "end_line": 1,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "WType",
+                                                            "name": "biguint",
+                                                            "immutable": true
+                                                          },
+                                                          "name": "__value"
+                                                        }
+                                                      }
+                                                    ]
+                                                  },
+                                                  "_id": 1048581
                                                 },
-                                                "wtype": {
-                                                  "_type": "BytesWType",
-                                                  "name": "bytes",
-                                                  "immutable": true,
-                                                  "length": null
-                                                },
-                                                "op_code": "bzero",
-                                                "immediates": [],
-                                                "stack_args": [
-                                                  {
+                                                {
+                                                  "_type": "UInt64BinaryOperation",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                    "line": 1,
+                                                    "end_line": 1,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "left": {
+                                                    "_type": "IntrinsicCall",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                      "line": 1,
+                                                      "end_line": 1,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "WType",
+                                                      "name": "uint64",
+                                                      "immutable": true
+                                                    },
+                                                    "op_code": "len",
+                                                    "immediates": [],
+                                                    "stack_args": [
+                                                      {
+                                                        "_type": "SingleEvaluation",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                          "line": 1,
+                                                          "end_line": 1,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "BytesWType",
+                                                          "name": "bytes",
+                                                          "immutable": true,
+                                                          "length": null
+                                                        },
+                                                        "source": {
+                                                          "_type": "IntrinsicCall",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                            "line": 1,
+                                                            "end_line": 1,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "BytesWType",
+                                                            "name": "bytes",
+                                                            "immutable": true,
+                                                            "length": null
+                                                          },
+                                                          "op_code": "concat",
+                                                          "immediates": [],
+                                                          "stack_args": [
+                                                            {
+                                                              "_type": "IntrinsicCall",
+                                                              "source_location": {
+                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                                "line": 1,
+                                                                "end_line": 1,
+                                                                "comment_lines": 0,
+                                                                "column": null,
+                                                                "end_column": null
+                                                              },
+                                                              "wtype": {
+                                                                "_type": "BytesWType",
+                                                                "name": "bytes",
+                                                                "immutable": true,
+                                                                "length": null
+                                                              },
+                                                              "op_code": "bzero",
+                                                              "immediates": [],
+                                                              "stack_args": [
+                                                                {
+                                                                  "_type": "IntegerConstant",
+                                                                  "source_location": {
+                                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                                    "line": 1,
+                                                                    "end_line": 1,
+                                                                    "comment_lines": 0,
+                                                                    "column": null,
+                                                                    "end_column": null
+                                                                  },
+                                                                  "wtype": {
+                                                                    "_type": "WType",
+                                                                    "name": "uint64",
+                                                                    "immutable": true
+                                                                  },
+                                                                  "value": 32,
+                                                                  "teal_alias": null
+                                                                }
+                                                              ]
+                                                            },
+                                                            {
+                                                              "_type": "ReinterpretCast",
+                                                              "source_location": {
+                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                                "line": 1,
+                                                                "end_line": 1,
+                                                                "comment_lines": 0,
+                                                                "column": null,
+                                                                "end_column": null
+                                                              },
+                                                              "wtype": {
+                                                                "_type": "BytesWType",
+                                                                "name": "bytes",
+                                                                "immutable": true,
+                                                                "length": null
+                                                              },
+                                                              "expr": {
+                                                                "_type": "VarExpression",
+                                                                "source_location": {
+                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                                                                  "line": 1,
+                                                                  "end_line": 1,
+                                                                  "comment_lines": 0,
+                                                                  "column": null,
+                                                                  "end_column": null
+                                                                },
+                                                                "wtype": {
+                                                                  "_type": "WType",
+                                                                  "name": "biguint",
+                                                                  "immutable": true
+                                                                },
+                                                                "name": "__value"
+                                                              }
+                                                            }
+                                                          ]
+                                                        },
+                                                        "_id": 1048581
+                                                      }
+                                                    ]
+                                                  },
+                                                  "op": "-",
+                                                  "right": {
                                                     "_type": "IntegerConstant",
                                                     "source_location": {
                                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
@@ -3721,26 +4477,9 @@
                                                     "value": 32,
                                                     "teal_alias": null
                                                   }
-                                                ]
-                                              },
-                                              {
-                                                "_type": "ReinterpretCast",
-                                                "source_location": {
-                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
-                                                  "line": 1,
-                                                  "end_line": 1,
-                                                  "comment_lines": 0,
-                                                  "column": null,
-                                                  "end_column": null
                                                 },
-                                                "wtype": {
-                                                  "_type": "BytesWType",
-                                                  "name": "bytes",
-                                                  "immutable": true,
-                                                  "length": null
-                                                },
-                                                "expr": {
-                                                  "_type": "VarExpression",
+                                                {
+                                                  "_type": "IntegerConstant",
                                                   "source_location": {
                                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                                                     "line": 1,
@@ -3751,13 +4490,15 @@
                                                   },
                                                   "wtype": {
                                                     "_type": "WType",
-                                                    "name": "biguint",
+                                                    "name": "uint64",
                                                     "immutable": true
                                                   },
-                                                  "name": "__value"
+                                                  "value": 32,
+                                                  "teal_alias": null
                                                 }
-                                              }
-                                            ]
+                                              ]
+                                            },
+                                            "_id": 1048582
                                           }
                                         ]
                                       },
@@ -3801,7 +4542,7 @@
                                     }
                                   ]
                                 }
-                              ]
+                              }
                             }
                           },
                           {
@@ -4026,7 +4767,7 @@
                                               }
                                             ]
                                           },
-                                          "_id": 1048581
+                                          "_id": 1048579
                                         },
                                         {
                                           "_type": "UInt64BinaryOperation",
@@ -4171,7 +4912,7 @@
                                                     }
                                                   ]
                                                 },
-                                                "_id": 1048581
+                                                "_id": 1048579
                                               }
                                             ]
                                           },
@@ -4433,7 +5174,7 @@
                                               }
                                             ]
                                           },
-                                          "_id": 1048581
+                                          "_id": 1048579
                                         },
                                         {
                                           "_type": "UInt64BinaryOperation",
@@ -4578,7 +5319,7 @@
                                                     }
                                                   ]
                                                 },
-                                                "_id": 1048581
+                                                "_id": 1048579
                                               }
                                             ]
                                           },
@@ -4771,7 +5512,7 @@
                                           }
                                         ]
                                       },
-                                      "_id": 1048582
+                                      "_id": 1048580
                                     },
                                     {
                                       "_type": "UInt64BinaryOperation",
@@ -4916,7 +5657,7 @@
                                                 }
                                               ]
                                             },
-                                            "_id": 1048582
+                                            "_id": 1048580
                                           }
                                         ]
                                       },
@@ -7261,7 +8002,7 @@
                   "source_location": null
                 },
                 "value": {
-                  "_type": "AppStateExpression",
+                  "_type": "StateGet",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                     "line": 5,
@@ -7270,13 +8011,8 @@
                     "column": null,
                     "end_column": null
                   },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "key": {
-                    "_type": "BytesConstant",
+                  "field": {
+                    "_type": "AppStateExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                       "line": 5,
@@ -7287,13 +8023,47 @@
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "state_key",
+                      "name": "biguint",
                       "immutable": true
                     },
-                    "value": "b7gR0a$$6Das",
-                    "encoding": "utf8"
+                    "key": {
+                      "_type": "BytesConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                        "line": 5,
+                        "end_line": 5,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "state_key",
+                        "immutable": true
+                      },
+                      "value": "b7gR0a$$6Das",
+                      "encoding": "utf8"
+                    },
+                    "exists_assertion_message": null
                   },
-                  "exists_assertion_message": "check separator exists"
+                  "default": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                      "line": 5,
+                      "end_line": 5,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "value": 0,
+                    "teal_alias": null
+                  }
                 },
                 "error_message": null
               }
@@ -7658,7 +8428,7 @@
                       "source_location": null
                     },
                     "base": {
-                      "_type": "AppStateExpression",
+                      "_type": "StateGet",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                         "line": 6,
@@ -7667,30 +8437,60 @@
                         "column": null,
                         "end_column": null
                       },
-                      "wtype": {
-                        "_type": "ARC4Struct",
-                        "name": "Data",
-                        "immutable": false,
-                        "fields": [
-                          {
-                            "name": "contents",
-                            "wtype": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint256",
-                              "immutable": true,
-                              "n": 256,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "description": null
-                          }
-                        ],
-                        "frozen": false,
-                        "arc4_alias": null,
-                        "source_location": null,
-                        "desc": null
+                      "field": {
+                        "_type": "AppStateExpression",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                          "line": 6,
+                          "end_line": 6,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "ARC4Struct",
+                          "name": "Data",
+                          "immutable": false,
+                          "fields": [
+                            {
+                              "name": "contents",
+                              "wtype": {
+                                "_type": "ARC4UIntN",
+                                "name": "arc4.uint256",
+                                "immutable": true,
+                                "n": 256,
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "description": null
+                            }
+                          ],
+                          "frozen": false,
+                          "arc4_alias": null,
+                          "source_location": null,
+                          "desc": null
+                        },
+                        "key": {
+                          "_type": "BytesConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                            "line": 6,
+                            "end_line": 6,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "state_key",
+                            "immutable": true
+                          },
+                          "value": "VE",
+                          "encoding": "utf8"
+                        },
+                        "exists_assertion_message": null
                       },
-                      "key": {
+                      "default": {
                         "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
@@ -7701,14 +8501,31 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "WType",
-                          "name": "state_key",
-                          "immutable": true
+                          "_type": "ARC4Struct",
+                          "name": "Data",
+                          "immutable": false,
+                          "fields": [
+                            {
+                              "name": "contents",
+                              "wtype": {
+                                "_type": "ARC4UIntN",
+                                "name": "arc4.uint256",
+                                "immutable": true,
+                                "n": 256,
+                                "arc4_alias": null,
+                                "source_location": null
+                              },
+                              "description": null
+                            }
+                          ],
+                          "frozen": false,
+                          "arc4_alias": null,
+                          "source_location": null,
+                          "desc": null
                         },
-                        "value": "VE",
-                        "encoding": "utf8"
-                      },
-                      "exists_assertion_message": "check a exists"
+                        "value": "0000000000000000000000000000000000000000",
+                        "encoding": "base16"
+                      }
                     },
                     "name": "contents"
                   },
@@ -8044,7 +8861,7 @@
                   "source_location": null
                 },
                 "value": {
-                  "_type": "AppStateExpression",
+                  "_type": "StateGet",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                     "line": 7,
@@ -8053,13 +8870,8 @@
                     "column": null,
                     "end_column": null
                   },
-                  "wtype": {
-                    "_type": "WType",
-                    "name": "biguint",
-                    "immutable": true
-                  },
-                  "key": {
-                    "_type": "BytesConstant",
+                  "field": {
+                    "_type": "AppStateExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
                       "line": 7,
@@ -8070,13 +8882,47 @@
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "state_key",
+                      "name": "biguint",
                       "immutable": true
                     },
-                    "value": "b7gR0a$$6Daxw",
-                    "encoding": "utf8"
+                    "key": {
+                      "_type": "BytesConstant",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                        "line": 7,
+                        "end_line": 7,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "state_key",
+                        "immutable": true
+                      },
+                      "value": "b7gR0a$$6Daxw",
+                      "encoding": "utf8"
+                    },
+                    "exists_assertion_message": null
                   },
-                  "exists_assertion_message": "check separator2 exists"
+                  "default": {
+                    "_type": "IntegerConstant",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_storage_access_via_pointer.sol",
+                      "line": 7,
+                      "end_line": 7,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "biguint",
+                      "immutable": true
+                    },
+                    "value": 0,
+                    "teal_alias": null
+                  }
                 },
                 "error_message": null
               }

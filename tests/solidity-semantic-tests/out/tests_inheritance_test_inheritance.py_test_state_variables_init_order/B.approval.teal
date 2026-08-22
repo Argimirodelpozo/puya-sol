@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/state_variables_init_order.sol.B.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "x" 0x151f7c75
+    bytecblock "x" 0x151f7c75 0x
     pushint 4096
     bzero
     dup
@@ -70,7 +70,9 @@ main_ternary_merge@15:
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -106,7 +108,9 @@ f_ternary_merge@3:
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_2 // 0x
+    cover 2
+    select
     pushbytes 0x01
     b+
     dup

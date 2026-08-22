@@ -4,8 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_or_receive.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "x" "y" 0x 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    bytec_2 // ""
+    bytecblock 0x "x" "y" 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_0 // ""
     pushint 4096
     bzero
     dup
@@ -25,11 +25,11 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    bytec_2 // 0x
+    bytec_1 // "x"
+    bytec_0 // 0x
     app_global_put
-    bytec_1 // "y"
-    bytec_2 // 0x
+    bytec_2 // "y"
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -81,9 +81,11 @@ main_ternary_merge@21:
     !
     assert // not payable
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -95,9 +97,11 @@ main_ternary_merge@21:
     dig 1
     b|
     intc_1 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -134,16 +138,18 @@ main___fallback_route@11:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_or_receive.sol.C.__fallback() -> void:
 __fallback:
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     bytec_3 // 0x01
     b+
     dup
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_0 // "x"
+    bytec_1 // "x"
     swap
     app_global_put
     retsub
@@ -152,16 +158,18 @@ __fallback:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_or_receive.sol.C.__receive() -> void:
 __receive:
     intc_1 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     bytec_3 // 0x01
     b+
     dup
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_1 // "y"
+    bytec_2 // "y"
     swap
     app_global_put
     retsub

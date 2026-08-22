@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_selector.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1
-    bytecblock 0x34127e13c27cb05bc9ecbc460180b5963065dd31c927f04f6829d0d7f8998d69 "s1" "s2" "s3" "s4" "s5"
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x34127e13c27cb05bc9ecbc460180b5963065dd31c927f04f6829d0d7f8998d69 "s1" "s2" "s3" "s4" "s5"
     pushint 4096
     bzero
     dup
@@ -24,20 +24,20 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "s1"
-    bytec_0 // 0x34127e13c27cb05bc9ecbc460180b5963065dd31c927f04f6829d0d7f8998d69
+    bytec_2 // "s1"
+    bytec_1 // 0x34127e13c27cb05bc9ecbc460180b5963065dd31c927f04f6829d0d7f8998d69
     app_global_put
-    bytec_2 // "s2"
+    bytec_3 // "s2"
     pushbytes 0xd5c1f7fc7e8d7b01fede055a7b34e6f01cd4d4ff02833400d6741f0c32c55a9e
     app_global_put
-    bytec_3 // "s3"
-    bytec_0 // 0x34127e13c27cb05bc9ecbc460180b5963065dd31c927f04f6829d0d7f8998d69
+    bytec 4 // "s3"
+    bytec_1 // 0x34127e13c27cb05bc9ecbc460180b5963065dd31c927f04f6829d0d7f8998d69
     app_global_put
-    bytec 4 // "s4"
-    bytec_0 // 0x34127e13c27cb05bc9ecbc460180b5963065dd31c927f04f6829d0d7f8998d69
+    bytec 5 // "s4"
+    bytec_1 // 0x34127e13c27cb05bc9ecbc460180b5963065dd31c927f04f6829d0d7f8998d69
     app_global_put
-    bytec 5 // "s5"
-    bytec_0 // 0x34127e13c27cb05bc9ecbc460180b5963065dd31c927f04f6829d0d7f8998d69
+    bytec 6 // "s5"
+    bytec_1 // 0x34127e13c27cb05bc9ecbc460180b5963065dd31c927f04f6829d0d7f8998d69
     app_global_put
     intc_1 // 1
     return
@@ -85,25 +85,35 @@ main_ternary_merge@19:
     !
     assert // not payable
     intc_0 // 0
-    bytec_1 // "s1"
+    bytec_2 // "s1"
     app_global_get_ex
-    assert // check s1 exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_0 // 0
-    bytec_2 // "s2"
+    bytec_3 // "s2"
     app_global_get_ex
-    assert // check s2 exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_0 // 0
-    bytec_3 // "s3"
+    bytec 4 // "s3"
     app_global_get_ex
-    assert // check s3 exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_0 // 0
-    bytec 4 // "s4"
+    bytec 5 // "s4"
     app_global_get_ex
-    assert // check s4 exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_0 // 0
-    bytec 5 // "s5"
+    bytec 6 // "s5"
     app_global_get_ex
-    assert // check s5 exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     uncover 4
     uncover 4
     concat

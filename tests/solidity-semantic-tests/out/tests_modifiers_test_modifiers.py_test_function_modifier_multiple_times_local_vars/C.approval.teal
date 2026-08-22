@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_multiple_times_local_vars.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 "a" 0x151f7c75
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 "a" 0x 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -25,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "a"
-    pushbytes 0x
+    bytec_3 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -55,7 +55,9 @@ main_ternary_merge@13:
     intc_2 // 0
     bytec_2 // "a"
     app_global_get_ex
-    assert // check a exists
+    bytec_3 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -64,7 +66,7 @@ main_ternary_merge@13:
     intc_1 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -97,7 +99,9 @@ main_ternary_merge@18:
     intc_2 // 0
     bytec_2 // "a"
     app_global_get_ex
-    assert // check a exists
+    bytec_3 // 0x
+    cover 2
+    select
     dig 1
     b+
     dup
@@ -175,7 +179,7 @@ main_ternary_merge@18:
     intc_1 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log

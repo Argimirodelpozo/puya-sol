@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol.Test.approval_program() -> uint64:
 main:
     intcblock 0 1 6 24 1000000
-    bytecblock "b" "a" 0x75d12918 "__ctor_pending" 0x151f7c75 TMPL_APPROVAL_A TMPL_CLEAR_A TMPL_APPROVAL_B TMPL_CLEAR_B
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 "b" "a" 0x75d12918 "__ctor_pending" 0x151f7c75 TMPL_APPROVAL_A TMPL_CLEAR_A TMPL_APPROVAL_B TMPL_CLEAR_B
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -54,13 +54,17 @@ main_ternary_merge@15:
     assert // not payable
     itxn_begin
     intc_0 // 0
-    bytec_0 // "b"
+    bytec_1 // "b"
     app_global_get_ex
-    assert // check b exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_0 // 0
-    bytec_1 // "a"
+    bytec_2 // "a"
     app_global_get_ex
-    assert // check a exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_3 // 24
     extract_uint64
     intc_2 // 6
@@ -73,7 +77,7 @@ main_ternary_merge@15:
     pushbytes 0xc9a303a5 // method "staticSetValue(address,uint256)bool"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -86,7 +90,7 @@ main_ternary_merge@15:
     intc_0 // 0
     uncover 2
     setbit
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
@@ -110,15 +114,19 @@ main_ternary_merge@20:
     assert // not payable
     itxn_begin
     intc_0 // 0
-    bytec_0 // "b"
+    bytec_1 // "b"
     app_global_get_ex
-    assert // check b exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushint 32
     bzero
     intc_0 // 0
-    bytec_1 // "a"
+    bytec_2 // "a"
     app_global_get_ex
-    assert // check a exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_3 // 24
     extract_uint64
     intc_2 // 6
@@ -144,7 +152,7 @@ main_ternary_merge@20:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "value()uint256"
+    bytec_3 // method "value()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -159,7 +167,7 @@ main_ternary_merge@20:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "value()uint256"
+    bytec_3 // method "value()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -182,7 +190,7 @@ main_ternary_merge@20:
     uncover 2
     b|
     concat
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
@@ -206,15 +214,19 @@ main_ternary_merge@25:
     assert // not payable
     itxn_begin
     intc_0 // 0
-    bytec_0 // "b"
+    bytec_1 // "b"
     app_global_get_ex
-    assert // check b exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushint 32
     bzero
     intc_0 // 0
-    bytec_1 // "a"
+    bytec_2 // "a"
     app_global_get_ex
-    assert // check a exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_3 // 24
     extract_uint64
     intc_2 // 6
@@ -240,7 +252,7 @@ main_ternary_merge@25:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "value()uint256"
+    bytec_3 // method "value()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -255,7 +267,7 @@ main_ternary_merge@25:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "value()uint256"
+    bytec_3 // method "value()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -278,7 +290,7 @@ main_ternary_merge@25:
     uncover 2
     b|
     concat
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
@@ -290,19 +302,19 @@ main_ternary_false@24:
     b main_ternary_merge@25
 
 main___postInit_route@5:
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_3 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec 5 // TMPL_APPROVAL_A
-    bytec 6 // TMPL_CLEAR_A
+    bytec 6 // TMPL_APPROVAL_A
+    bytec 7 // TMPL_CLEAR_A
     intc_2 // 6
     itxn_field TypeEnum
     pushint 16
@@ -336,12 +348,12 @@ main___postInit_route@5:
     dig 1
     swap
     concat
-    bytec_1 // "a"
+    bytec_2 // "a"
     swap
     app_global_put
     itxn_begin
-    bytec 7 // TMPL_APPROVAL_B
-    bytec 8 // TMPL_CLEAR_B
+    bytec 8 // TMPL_APPROVAL_B
+    bytec 9 // TMPL_CLEAR_B
     intc_2 // 6
     itxn_field TypeEnum
     pushint 16
@@ -370,7 +382,7 @@ main___postInit_route@5:
     itxn_submit
     itob
     concat
-    bytec_0 // "b"
+    bytec_1 // "b"
     swap
     app_global_put
     intc_1 // 1

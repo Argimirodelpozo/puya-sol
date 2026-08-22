@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/interfaces.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "ghello_world_interfaceId" "ERC165_interfaceId" 0x151f7c75
+    bytecblock "ghello_world_interfaceId" "ERC165_interfaceId" 0x00000000 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -58,8 +58,10 @@ main_ternary_merge@19:
     intc_1 // 0
     bytec_1 // "ERC165_interfaceId"
     app_global_get_ex
-    assert // check ERC165_interfaceId exists
-    bytec_2 // 0x151f7c75
+    bytec_2 // 0x00000000
+    cover 2
+    select
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -84,8 +86,10 @@ main_ternary_merge@24:
     intc_1 // 0
     bytec_0 // "ghello_world_interfaceId"
     app_global_get_ex
-    assert // check ghello_world_interfaceId exists
-    bytec_2 // 0x151f7c75
+    bytec_2 // 0x00000000
+    cover 2
+    select
+    bytec_3 // 0x151f7c75
     swap
     concat
     log

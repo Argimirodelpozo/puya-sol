@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/address_code.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock "initCode" "__ctor_pending" 0x151f7c75 0x
+    bytecblock "initCode" "__ctor_pending" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -117,11 +117,20 @@ main_ternary_merge@31:
     !
     assert // not payable
     global CurrentApplicationID
-    app_params_get AppApprovalProgram
-    bz main_ternary_false@33
+    dup
+    bz main_ternary_false@36
+    dup
+    app_params_get AppExtraProgramPages
+    bury 1
+    bz main_ternary_false@34
+    app_params_get AppExtraProgramPages
+    pop
+    intc_0 // 1
+    +
+    pushint 2048
+    *
 
-main_ternary_merge@34:
-    len
+main_ternary_merge@37:
     itob
     pushint 100
     itob
@@ -137,10 +146,15 @@ main_ternary_merge@34:
     intc_0 // 1
     return
 
-main_ternary_false@33:
+main_ternary_false@34:
     pop
-    bytec_3 // 0x
-    b main_ternary_merge@34
+    intc_1 // 0
+    b main_ternary_merge@37
+
+main_ternary_false@36:
+    pop
+    intc_1 // 0
+    b main_ternary_merge@37
 
 main_ternary_false@30:
     intc_1 // 0
@@ -165,7 +179,7 @@ main___postInit_route@5:
     box_del
     pop
     bytec_0 // "initCode"
-    bytec_3 // 0x
+    pushbytes 0x
     box_put
     intc_0 // 1
     return

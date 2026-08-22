@@ -1,10 +1,10 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_q6kraocl/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_kand5us5/B.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock "data"
+    bytecblock "data" 0x0000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -25,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data"
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_0 // 1
     return
@@ -61,7 +61,9 @@ main_ternary_merge@9:
     intc_2 // 0
     bytec_0 // "data"
     app_global_get_ex
-    assert // check data exists
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dig 1
     callsub set
     pop

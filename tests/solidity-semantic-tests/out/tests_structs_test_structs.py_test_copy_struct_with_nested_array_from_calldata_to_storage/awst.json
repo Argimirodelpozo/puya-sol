@@ -663,119 +663,6 @@
               },
               "body": [
                 {
-                  "_type": "ExpressionStatement",
-                  "source_location": {
-                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
-                    "line": 3,
-                    "end_line": 19,
-                    "comment_lines": 0,
-                    "column": null,
-                    "end_column": null
-                  },
-                  "expr": {
-                    "_type": "IntrinsicCall",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
-                      "line": 3,
-                      "end_line": 19,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
-                    },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "void",
-                      "immutable": true
-                    },
-                    "op_code": "app_global_put",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "BytesConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
-                          "line": 3,
-                          "end_line": 19,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
-                        },
-                        "value": "a{",
-                        "encoding": "utf8"
-                      },
-                      {
-                        "_type": "BytesConstant",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
-                          "line": 3,
-                          "end_line": 19,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "ARC4Struct",
-                          "name": "S",
-                          "immutable": false,
-                          "fields": [
-                            {
-                              "name": "x",
-                              "wtype": {
-                                "_type": "ARC4StaticArray",
-                                "name": "arc4.static_array<arc4.uint8, 1>",
-                                "immutable": false,
-                                "element_type": {
-                                  "_type": "ARC4UIntN",
-                                  "name": "arc4.uint8",
-                                  "immutable": true,
-                                  "n": 8,
-                                  "arc4_alias": null,
-                                  "source_location": null
-                                },
-                                "array_size": 1,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "description": null
-                            },
-                            {
-                              "name": "y",
-                              "wtype": {
-                                "_type": "ARC4DynamicArray",
-                                "name": "arc4.dynamic_array<arc4.uint8>",
-                                "immutable": false,
-                                "element_type": {
-                                  "_type": "ARC4UIntN",
-                                  "name": "arc4.uint8",
-                                  "immutable": true,
-                                  "n": 8,
-                                  "arc4_alias": null,
-                                  "source_location": null
-                                },
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "description": null
-                            }
-                          ],
-                          "frozen": false,
-                          "arc4_alias": null,
-                          "source_location": null,
-                          "desc": null
-                        },
-                        "value": "0009300",
-                        "encoding": "base16"
-                      }
-                    ]
-                  }
-                },
-                {
                   "_type": "ReturnStatement",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
@@ -1316,7 +1203,7 @@
                   "desc": null
                 },
                 "target": {
-                  "_type": "AppStateExpression",
+                  "_type": "BoxValueExpression",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
                     "line": 12,
@@ -1387,13 +1274,13 @@
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "state_key",
+                      "name": "box_key",
                       "immutable": true
                     },
                     "value": "a{",
                     "encoding": "utf8"
                   },
-                  "exists_assertion_message": "check s exists"
+                  "exists_assertion_message": null
                 },
                 "value": {
                   "_type": "VarExpression",
@@ -1559,7 +1446,7 @@
                           "source_location": null
                         },
                         "base": {
-                          "_type": "AppStateExpression",
+                          "_type": "StateGet",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
                             "line": 14,
@@ -1568,57 +1455,87 @@
                             "column": null,
                             "end_column": null
                           },
-                          "wtype": {
-                            "_type": "ARC4Struct",
-                            "name": "S",
-                            "immutable": false,
-                            "fields": [
-                              {
-                                "name": "x",
-                                "wtype": {
-                                  "_type": "ARC4StaticArray",
-                                  "name": "arc4.static_array<arc4.uint8, 1>",
-                                  "immutable": false,
-                                  "element_type": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint8",
-                                    "immutable": true,
-                                    "n": 8,
+                          "field": {
+                            "_type": "BoxValueExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
+                              "line": 14,
+                              "end_line": 14,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ARC4Struct",
+                              "name": "S",
+                              "immutable": false,
+                              "fields": [
+                                {
+                                  "name": "x",
+                                  "wtype": {
+                                    "_type": "ARC4StaticArray",
+                                    "name": "arc4.static_array<arc4.uint8, 1>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "array_size": 1,
                                     "arc4_alias": null,
                                     "source_location": null
                                   },
-                                  "array_size": 1,
-                                  "arc4_alias": null,
-                                  "source_location": null
+                                  "description": null
                                 },
-                                "description": null
+                                {
+                                  "name": "y",
+                                  "wtype": {
+                                    "_type": "ARC4DynamicArray",
+                                    "name": "arc4.dynamic_array<arc4.uint8>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "description": null
+                                }
+                              ],
+                              "frozen": false,
+                              "arc4_alias": null,
+                              "source_location": null,
+                              "desc": null
+                            },
+                            "key": {
+                              "_type": "BytesConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
+                                "line": 14,
+                                "end_line": 14,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
                               },
-                              {
-                                "name": "y",
-                                "wtype": {
-                                  "_type": "ARC4DynamicArray",
-                                  "name": "arc4.dynamic_array<arc4.uint8>",
-                                  "immutable": false,
-                                  "element_type": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint8",
-                                    "immutable": true,
-                                    "n": 8,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "arc4_alias": null,
-                                  "source_location": null
-                                },
-                                "description": null
-                              }
-                            ],
-                            "frozen": false,
-                            "arc4_alias": null,
-                            "source_location": null,
-                            "desc": null
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "box_key",
+                                "immutable": true
+                              },
+                              "value": "a{",
+                              "encoding": "utf8"
+                            },
+                            "exists_assertion_message": null
                           },
-                          "key": {
+                          "default": {
                             "_type": "BytesConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
@@ -1629,14 +1546,58 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WType",
-                              "name": "state_key",
-                              "immutable": true
+                              "_type": "ARC4Struct",
+                              "name": "S",
+                              "immutable": false,
+                              "fields": [
+                                {
+                                  "name": "x",
+                                  "wtype": {
+                                    "_type": "ARC4StaticArray",
+                                    "name": "arc4.static_array<arc4.uint8, 1>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "array_size": 1,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "description": null
+                                },
+                                {
+                                  "name": "y",
+                                  "wtype": {
+                                    "_type": "ARC4DynamicArray",
+                                    "name": "arc4.dynamic_array<arc4.uint8>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "description": null
+                                }
+                              ],
+                              "frozen": false,
+                              "arc4_alias": null,
+                              "source_location": null,
+                              "desc": null
                             },
-                            "value": "a{",
-                            "encoding": "utf8"
-                          },
-                          "exists_assertion_message": "check s exists"
+                            "value": "0009300",
+                            "encoding": "base16"
+                          }
                         },
                         "name": "x"
                       },
@@ -1801,7 +1762,7 @@
                               "source_location": null
                             },
                             "base": {
-                              "_type": "AppStateExpression",
+                              "_type": "StateGet",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
                                 "line": 15,
@@ -1810,57 +1771,87 @@
                                 "column": null,
                                 "end_column": null
                               },
-                              "wtype": {
-                                "_type": "ARC4Struct",
-                                "name": "S",
-                                "immutable": false,
-                                "fields": [
-                                  {
-                                    "name": "x",
-                                    "wtype": {
-                                      "_type": "ARC4StaticArray",
-                                      "name": "arc4.static_array<arc4.uint8, 1>",
-                                      "immutable": false,
-                                      "element_type": {
-                                        "_type": "ARC4UIntN",
-                                        "name": "arc4.uint8",
-                                        "immutable": true,
-                                        "n": 8,
+                              "field": {
+                                "_type": "BoxValueExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
+                                  "line": 15,
+                                  "end_line": 15,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4Struct",
+                                  "name": "S",
+                                  "immutable": false,
+                                  "fields": [
+                                    {
+                                      "name": "x",
+                                      "wtype": {
+                                        "_type": "ARC4StaticArray",
+                                        "name": "arc4.static_array<arc4.uint8, 1>",
+                                        "immutable": false,
+                                        "element_type": {
+                                          "_type": "ARC4UIntN",
+                                          "name": "arc4.uint8",
+                                          "immutable": true,
+                                          "n": 8,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        },
+                                        "array_size": 1,
                                         "arc4_alias": null,
                                         "source_location": null
                                       },
-                                      "array_size": 1,
-                                      "arc4_alias": null,
-                                      "source_location": null
+                                      "description": null
                                     },
-                                    "description": null
+                                    {
+                                      "name": "y",
+                                      "wtype": {
+                                        "_type": "ARC4DynamicArray",
+                                        "name": "arc4.dynamic_array<arc4.uint8>",
+                                        "immutable": false,
+                                        "element_type": {
+                                          "_type": "ARC4UIntN",
+                                          "name": "arc4.uint8",
+                                          "immutable": true,
+                                          "n": 8,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        },
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "description": null
+                                    }
+                                  ],
+                                  "frozen": false,
+                                  "arc4_alias": null,
+                                  "source_location": null,
+                                  "desc": null
+                                },
+                                "key": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
+                                    "line": 15,
+                                    "end_line": 15,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
                                   },
-                                  {
-                                    "name": "y",
-                                    "wtype": {
-                                      "_type": "ARC4DynamicArray",
-                                      "name": "arc4.dynamic_array<arc4.uint8>",
-                                      "immutable": false,
-                                      "element_type": {
-                                        "_type": "ARC4UIntN",
-                                        "name": "arc4.uint8",
-                                        "immutable": true,
-                                        "n": 8,
-                                        "arc4_alias": null,
-                                        "source_location": null
-                                      },
-                                      "arc4_alias": null,
-                                      "source_location": null
-                                    },
-                                    "description": null
-                                  }
-                                ],
-                                "frozen": false,
-                                "arc4_alias": null,
-                                "source_location": null,
-                                "desc": null
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "box_key",
+                                    "immutable": true
+                                  },
+                                  "value": "a{",
+                                  "encoding": "utf8"
+                                },
+                                "exists_assertion_message": null
                               },
-                              "key": {
+                              "default": {
                                 "_type": "BytesConstant",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
@@ -1871,14 +1862,58 @@
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "WType",
-                                  "name": "state_key",
-                                  "immutable": true
+                                  "_type": "ARC4Struct",
+                                  "name": "S",
+                                  "immutable": false,
+                                  "fields": [
+                                    {
+                                      "name": "x",
+                                      "wtype": {
+                                        "_type": "ARC4StaticArray",
+                                        "name": "arc4.static_array<arc4.uint8, 1>",
+                                        "immutable": false,
+                                        "element_type": {
+                                          "_type": "ARC4UIntN",
+                                          "name": "arc4.uint8",
+                                          "immutable": true,
+                                          "n": 8,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        },
+                                        "array_size": 1,
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "description": null
+                                    },
+                                    {
+                                      "name": "y",
+                                      "wtype": {
+                                        "_type": "ARC4DynamicArray",
+                                        "name": "arc4.dynamic_array<arc4.uint8>",
+                                        "immutable": false,
+                                        "element_type": {
+                                          "_type": "ARC4UIntN",
+                                          "name": "arc4.uint8",
+                                          "immutable": true,
+                                          "n": 8,
+                                          "arc4_alias": null,
+                                          "source_location": null
+                                        },
+                                        "arc4_alias": null,
+                                        "source_location": null
+                                      },
+                                      "description": null
+                                    }
+                                  ],
+                                  "frozen": false,
+                                  "arc4_alias": null,
+                                  "source_location": null,
+                                  "desc": null
                                 },
-                                "value": "a{",
-                                "encoding": "utf8"
-                              },
-                              "exists_assertion_message": "check s exists"
+                                "value": "0009300",
+                                "encoding": "base16"
+                              }
                             },
                             "name": "y"
                           }
@@ -2047,7 +2082,7 @@
                           "source_location": null
                         },
                         "base": {
-                          "_type": "AppStateExpression",
+                          "_type": "StateGet",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
                             "line": 16,
@@ -2056,57 +2091,87 @@
                             "column": null,
                             "end_column": null
                           },
-                          "wtype": {
-                            "_type": "ARC4Struct",
-                            "name": "S",
-                            "immutable": false,
-                            "fields": [
-                              {
-                                "name": "x",
-                                "wtype": {
-                                  "_type": "ARC4StaticArray",
-                                  "name": "arc4.static_array<arc4.uint8, 1>",
-                                  "immutable": false,
-                                  "element_type": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint8",
-                                    "immutable": true,
-                                    "n": 8,
+                          "field": {
+                            "_type": "BoxValueExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
+                              "line": 16,
+                              "end_line": 16,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ARC4Struct",
+                              "name": "S",
+                              "immutable": false,
+                              "fields": [
+                                {
+                                  "name": "x",
+                                  "wtype": {
+                                    "_type": "ARC4StaticArray",
+                                    "name": "arc4.static_array<arc4.uint8, 1>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "array_size": 1,
                                     "arc4_alias": null,
                                     "source_location": null
                                   },
-                                  "array_size": 1,
-                                  "arc4_alias": null,
-                                  "source_location": null
+                                  "description": null
                                 },
-                                "description": null
+                                {
+                                  "name": "y",
+                                  "wtype": {
+                                    "_type": "ARC4DynamicArray",
+                                    "name": "arc4.dynamic_array<arc4.uint8>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "description": null
+                                }
+                              ],
+                              "frozen": false,
+                              "arc4_alias": null,
+                              "source_location": null,
+                              "desc": null
+                            },
+                            "key": {
+                              "_type": "BytesConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
+                                "line": 16,
+                                "end_line": 16,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
                               },
-                              {
-                                "name": "y",
-                                "wtype": {
-                                  "_type": "ARC4DynamicArray",
-                                  "name": "arc4.dynamic_array<arc4.uint8>",
-                                  "immutable": false,
-                                  "element_type": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint8",
-                                    "immutable": true,
-                                    "n": 8,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "arc4_alias": null,
-                                  "source_location": null
-                                },
-                                "description": null
-                              }
-                            ],
-                            "frozen": false,
-                            "arc4_alias": null,
-                            "source_location": null,
-                            "desc": null
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "box_key",
+                                "immutable": true
+                              },
+                              "value": "a{",
+                              "encoding": "utf8"
+                            },
+                            "exists_assertion_message": null
                           },
-                          "key": {
+                          "default": {
                             "_type": "BytesConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
@@ -2117,14 +2182,58 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WType",
-                              "name": "state_key",
-                              "immutable": true
+                              "_type": "ARC4Struct",
+                              "name": "S",
+                              "immutable": false,
+                              "fields": [
+                                {
+                                  "name": "x",
+                                  "wtype": {
+                                    "_type": "ARC4StaticArray",
+                                    "name": "arc4.static_array<arc4.uint8, 1>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "array_size": 1,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "description": null
+                                },
+                                {
+                                  "name": "y",
+                                  "wtype": {
+                                    "_type": "ARC4DynamicArray",
+                                    "name": "arc4.dynamic_array<arc4.uint8>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "description": null
+                                }
+                              ],
+                              "frozen": false,
+                              "arc4_alias": null,
+                              "source_location": null,
+                              "desc": null
                             },
-                            "value": "a{",
-                            "encoding": "utf8"
-                          },
-                          "exists_assertion_message": "check s exists"
+                            "value": "0009300",
+                            "encoding": "base16"
+                          }
                         },
                         "name": "y"
                       },
@@ -2273,7 +2382,7 @@
                           "source_location": null
                         },
                         "base": {
-                          "_type": "AppStateExpression",
+                          "_type": "StateGet",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
                             "line": 17,
@@ -2282,57 +2391,87 @@
                             "column": null,
                             "end_column": null
                           },
-                          "wtype": {
-                            "_type": "ARC4Struct",
-                            "name": "S",
-                            "immutable": false,
-                            "fields": [
-                              {
-                                "name": "x",
-                                "wtype": {
-                                  "_type": "ARC4StaticArray",
-                                  "name": "arc4.static_array<arc4.uint8, 1>",
-                                  "immutable": false,
-                                  "element_type": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint8",
-                                    "immutable": true,
-                                    "n": 8,
+                          "field": {
+                            "_type": "BoxValueExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
+                              "line": 17,
+                              "end_line": 17,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "ARC4Struct",
+                              "name": "S",
+                              "immutable": false,
+                              "fields": [
+                                {
+                                  "name": "x",
+                                  "wtype": {
+                                    "_type": "ARC4StaticArray",
+                                    "name": "arc4.static_array<arc4.uint8, 1>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "array_size": 1,
                                     "arc4_alias": null,
                                     "source_location": null
                                   },
-                                  "array_size": 1,
-                                  "arc4_alias": null,
-                                  "source_location": null
+                                  "description": null
                                 },
-                                "description": null
+                                {
+                                  "name": "y",
+                                  "wtype": {
+                                    "_type": "ARC4DynamicArray",
+                                    "name": "arc4.dynamic_array<arc4.uint8>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "description": null
+                                }
+                              ],
+                              "frozen": false,
+                              "arc4_alias": null,
+                              "source_location": null,
+                              "desc": null
+                            },
+                            "key": {
+                              "_type": "BytesConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
+                                "line": 17,
+                                "end_line": 17,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
                               },
-                              {
-                                "name": "y",
-                                "wtype": {
-                                  "_type": "ARC4DynamicArray",
-                                  "name": "arc4.dynamic_array<arc4.uint8>",
-                                  "immutable": false,
-                                  "element_type": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint8",
-                                    "immutable": true,
-                                    "n": 8,
-                                    "arc4_alias": null,
-                                    "source_location": null
-                                  },
-                                  "arc4_alias": null,
-                                  "source_location": null
-                                },
-                                "description": null
-                              }
-                            ],
-                            "frozen": false,
-                            "arc4_alias": null,
-                            "source_location": null,
-                            "desc": null
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "box_key",
+                                "immutable": true
+                              },
+                              "value": "a{",
+                              "encoding": "utf8"
+                            },
+                            "exists_assertion_message": null
                           },
-                          "key": {
+                          "default": {
                             "_type": "BytesConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_with_nested_array_from_calldata_to_storage.sol",
@@ -2343,14 +2482,58 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "WType",
-                              "name": "state_key",
-                              "immutable": true
+                              "_type": "ARC4Struct",
+                              "name": "S",
+                              "immutable": false,
+                              "fields": [
+                                {
+                                  "name": "x",
+                                  "wtype": {
+                                    "_type": "ARC4StaticArray",
+                                    "name": "arc4.static_array<arc4.uint8, 1>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "array_size": 1,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "description": null
+                                },
+                                {
+                                  "name": "y",
+                                  "wtype": {
+                                    "_type": "ARC4DynamicArray",
+                                    "name": "arc4.dynamic_array<arc4.uint8>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "description": null
+                                }
+                              ],
+                              "frozen": false,
+                              "arc4_alias": null,
+                              "source_location": null,
+                              "desc": null
                             },
-                            "value": "a{",
-                            "encoding": "utf8"
-                          },
-                          "exists_assertion_message": "check s exists"
+                            "value": "0009300",
+                            "encoding": "base16"
+                          }
                         },
                         "name": "y"
                       },
@@ -2510,7 +2693,7 @@
           },
           "wtype": {
             "_type": "WType",
-            "name": "state_key",
+            "name": "box_key",
             "immutable": true
           },
           "value": "a{",
@@ -2518,7 +2701,7 @@
         },
         "key_wtype": null,
         "description": null,
-        "kind": 1
+        "kind": 3
       }
     ],
     "state_totals": null,

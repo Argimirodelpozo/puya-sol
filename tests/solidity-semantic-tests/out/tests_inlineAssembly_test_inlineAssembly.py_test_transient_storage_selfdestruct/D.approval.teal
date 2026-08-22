@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_selfdestruct.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 6 16 1000000
-    bytecblock "c" "__ctor_pending" TMPL_APPROVAL_C TMPL_CLEAR_C 0x7cb116cd 0x000000000000000000000000000000000000000000000000000000000000002a 0xb30e2ea6 0xf08d7860 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytecblock "c" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_C TMPL_CLEAR_C 0x7cb116cd 0x000000000000000000000000000000000000000000000000000000000000002a 0xb30e2ea6 0xf08d7860 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
     dup
@@ -55,7 +55,9 @@ main_ternary_merge@15:
     intc_0 // 0
     bytec_0 // "c"
     app_global_get_ex
-    assert // check c exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushbytes 0x151f7c75
     swap
     concat
@@ -79,8 +81,8 @@ main_ternary_merge@20:
     !
     assert // not payable
     itxn_begin
-    bytec_2 // TMPL_APPROVAL_C
-    bytec_3 // TMPL_CLEAR_C
+    bytec_3 // TMPL_APPROVAL_C
+    bytec 4 // TMPL_CLEAR_C
     intc_2 // 6
     itxn_field TypeEnum
     intc_3 // 16
@@ -129,9 +131,9 @@ main_ternary_merge@20:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 4 // method "set(uint256)void"
+    bytec 5 // method "set(uint256)void"
     itxn_field ApplicationArgs
-    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000002a
+    bytec 6 // 0x000000000000000000000000000000000000000000000000000000000000002a
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
@@ -144,7 +146,7 @@ main_ternary_merge@20:
     itxn_field Fee
     dig 1
     itxn_field ApplicationID
-    bytec 6 // method "terminate(address)void"
+    bytec 7 // method "terminate(address)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -156,7 +158,7 @@ main_ternary_merge@20:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 7 // method "get()uint256"
+    bytec 8 // method "get()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -164,7 +166,7 @@ main_ternary_merge@20:
     b==
     dup
     bnz main_after_if_else@29
-    bytec 8 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec 9 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 main_after_if_else@29:
@@ -191,7 +193,9 @@ main_ternary_merge@27:
     intc_0 // 0
     bytec_0 // "c"
     app_global_get_ex
-    assert // check c exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushint 24
     extract_uint64
     intc_2 // 6
@@ -202,9 +206,9 @@ main_ternary_merge@27:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 4 // method "set(uint256)void"
+    bytec 5 // method "set(uint256)void"
     itxn_field ApplicationArgs
-    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000002a
+    bytec 6 // 0x000000000000000000000000000000000000000000000000000000000000002a
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
@@ -217,7 +221,7 @@ main_ternary_merge@27:
     itxn_field Fee
     dig 1
     itxn_field ApplicationID
-    bytec 6 // method "terminate(address)void"
+    bytec 7 // method "terminate(address)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -229,7 +233,7 @@ main_ternary_merge@27:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 7 // method "get()uint256"
+    bytec 8 // method "get()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -237,7 +241,7 @@ main_ternary_merge@27:
     b==
     dup
     bnz main_after_if_else@29
-    bytec 8 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec 9 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
     return
 
@@ -257,8 +261,8 @@ main___postInit_route@5:
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec_2 // TMPL_APPROVAL_C
-    bytec_3 // TMPL_CLEAR_C
+    bytec_3 // TMPL_APPROVAL_C
+    bytec 4 // TMPL_CLEAR_C
     intc_2 // 6
     itxn_field TypeEnum
     intc_3 // 16

@@ -1257,7 +1257,7 @@
                   "name": "void",
                   "immutable": true
                 },
-                "op_code": "app_global_put",
+                "op_code": "box_put",
                 "immediates": [],
                 "stack_args": [
                   {
@@ -1290,27 +1290,10 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "ARC4StaticArray",
-                      "name": "arc4.static_array<byte[], 3>",
-                      "immutable": false,
-                      "element_type": {
-                        "_type": "ARC4DynamicArray",
-                        "name": "byte[]",
-                        "immutable": false,
-                        "element_type": {
-                          "_type": "ARC4UIntN",
-                          "name": "arc4.uint8",
-                          "immutable": true,
-                          "n": 8,
-                          "arc4_alias": null,
-                          "source_location": null
-                        },
-                        "arc4_alias": "byte[]",
-                        "source_location": null
-                      },
-                      "array_size": 3,
-                      "arc4_alias": null,
-                      "source_location": null
+                      "_type": "BytesWType",
+                      "name": "bytes",
+                      "immutable": true,
+                      "length": null
                     },
                     "value": "00saE015yA00000",
                     "encoding": "base16"
@@ -2274,7 +2257,7 @@
                   },
                   "operator": "<",
                   "rhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "ArrayLength",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                       "line": 11,
@@ -2288,8 +2271,8 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "TupleItemExpression",
+                    "array": {
+                      "_type": "BoxValueExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                         "line": 11,
@@ -2299,12 +2282,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
+                        "_type": "ARC4DynamicArray",
+                        "name": "arc4.dynamic_array<byte[]>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4DynamicArray",
+                          "name": "byte[]",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint8",
+                            "immutable": true,
+                            "n": 8,
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "arc4_alias": "byte[]",
+                          "source_location": null
+                        },
+                        "arc4_alias": null,
+                        "source_location": null
                       },
-                      "base": {
-                        "_type": "IntrinsicCall",
+                      "key": {
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                           "line": 11,
@@ -2314,178 +2314,14 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "WTuple",
-                          "name": "tuple",
-                          "immutable": true,
-                          "types": [
-                            {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            {
-                              "_type": "WType",
-                              "name": "bool",
-                              "immutable": true
-                            }
-                          ],
-                          "names": null,
-                          "source_location": null
+                          "_type": "WType",
+                          "name": "box_key",
+                          "immutable": true
                         },
-                        "op_code": "box_get",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                              "line": 11,
-                              "end_line": 11,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "value": "Z2",
-                            "encoding": "utf8"
-                          }
-                        ]
+                        "value": "Z2",
+                        "encoding": "utf8"
                       },
-                      "index": 1
-                    },
-                    "true_expr": {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                        "line": 11,
-                        "end_line": 11,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "op_code": "extract_uint16",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "TupleItemExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                            "line": 11,
-                            "end_line": 11,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "base": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                              "line": 11,
-                              "end_line": 11,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WTuple",
-                              "name": "tuple",
-                              "immutable": true,
-                              "types": [
-                                {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                {
-                                  "_type": "WType",
-                                  "name": "bool",
-                                  "immutable": true
-                                }
-                              ],
-                              "names": null,
-                              "source_location": null
-                            },
-                            "op_code": "box_get",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "BytesConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                                  "line": 11,
-                                  "end_line": 11,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "value": "Z2",
-                                "encoding": "utf8"
-                              }
-                            ]
-                          },
-                          "index": 0
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                            "line": 11,
-                            "end_line": 11,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        }
-                      ]
-                    },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                        "line": 11,
-                        "end_line": 11,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
+                      "exists_assertion_message": null
                     }
                   }
                 },
@@ -4010,7 +3846,7 @@
                   },
                   "operator": "<",
                   "rhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "ArrayLength",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                       "line": 12,
@@ -4024,8 +3860,8 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "TupleItemExpression",
+                    "array": {
+                      "_type": "BoxValueExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                         "line": 12,
@@ -4035,12 +3871,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
+                        "_type": "ARC4DynamicArray",
+                        "name": "arc4.dynamic_array<byte[]>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4DynamicArray",
+                          "name": "byte[]",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint8",
+                            "immutable": true,
+                            "n": 8,
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "arc4_alias": "byte[]",
+                          "source_location": null
+                        },
+                        "arc4_alias": null,
+                        "source_location": null
                       },
-                      "base": {
-                        "_type": "IntrinsicCall",
+                      "key": {
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                           "line": 12,
@@ -4050,178 +3903,14 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "WTuple",
-                          "name": "tuple",
-                          "immutable": true,
-                          "types": [
-                            {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            {
-                              "_type": "WType",
-                              "name": "bool",
-                              "immutable": true
-                            }
-                          ],
-                          "names": null,
-                          "source_location": null
+                          "_type": "WType",
+                          "name": "box_key",
+                          "immutable": true
                         },
-                        "op_code": "box_get",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                              "line": 12,
-                              "end_line": 12,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "value": "Z2",
-                            "encoding": "utf8"
-                          }
-                        ]
+                        "value": "Z2",
+                        "encoding": "utf8"
                       },
-                      "index": 1
-                    },
-                    "true_expr": {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                        "line": 12,
-                        "end_line": 12,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "op_code": "extract_uint16",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "TupleItemExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                            "line": 12,
-                            "end_line": 12,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "base": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                              "line": 12,
-                              "end_line": 12,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WTuple",
-                              "name": "tuple",
-                              "immutable": true,
-                              "types": [
-                                {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                {
-                                  "_type": "WType",
-                                  "name": "bool",
-                                  "immutable": true
-                                }
-                              ],
-                              "names": null,
-                              "source_location": null
-                            },
-                            "op_code": "box_get",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "BytesConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                                  "line": 12,
-                                  "end_line": 12,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "value": "Z2",
-                                "encoding": "utf8"
-                              }
-                            ]
-                          },
-                          "index": 0
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                            "line": 12,
-                            "end_line": 12,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        }
-                      ]
-                    },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                        "line": 12,
-                        "end_line": 12,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
+                      "exists_assertion_message": null
                     }
                   }
                 },
@@ -5746,7 +5435,7 @@
                   },
                   "operator": "<",
                   "rhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "ArrayLength",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                       "line": 13,
@@ -5760,8 +5449,8 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "TupleItemExpression",
+                    "array": {
+                      "_type": "BoxValueExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                         "line": 13,
@@ -5771,12 +5460,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
+                        "_type": "ARC4DynamicArray",
+                        "name": "arc4.dynamic_array<byte[]>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4DynamicArray",
+                          "name": "byte[]",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint8",
+                            "immutable": true,
+                            "n": 8,
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "arc4_alias": "byte[]",
+                          "source_location": null
+                        },
+                        "arc4_alias": null,
+                        "source_location": null
                       },
-                      "base": {
-                        "_type": "IntrinsicCall",
+                      "key": {
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                           "line": 13,
@@ -5786,178 +5492,14 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "WTuple",
-                          "name": "tuple",
-                          "immutable": true,
-                          "types": [
-                            {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            {
-                              "_type": "WType",
-                              "name": "bool",
-                              "immutable": true
-                            }
-                          ],
-                          "names": null,
-                          "source_location": null
+                          "_type": "WType",
+                          "name": "box_key",
+                          "immutable": true
                         },
-                        "op_code": "box_get",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                              "line": 13,
-                              "end_line": 13,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "value": "Z2",
-                            "encoding": "utf8"
-                          }
-                        ]
+                        "value": "Z2",
+                        "encoding": "utf8"
                       },
-                      "index": 1
-                    },
-                    "true_expr": {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                        "line": 13,
-                        "end_line": 13,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "op_code": "extract_uint16",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "TupleItemExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                            "line": 13,
-                            "end_line": 13,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "base": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                              "line": 13,
-                              "end_line": 13,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WTuple",
-                              "name": "tuple",
-                              "immutable": true,
-                              "types": [
-                                {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                {
-                                  "_type": "WType",
-                                  "name": "bool",
-                                  "immutable": true
-                                }
-                              ],
-                              "names": null,
-                              "source_location": null
-                            },
-                            "op_code": "box_get",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "BytesConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                                  "line": 13,
-                                  "end_line": 13,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "value": "Z2",
-                                "encoding": "utf8"
-                              }
-                            ]
-                          },
-                          "index": 0
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                            "line": 13,
-                            "end_line": 13,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        }
-                      ]
-                    },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                        "line": 13,
-                        "end_line": 13,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
+                      "exists_assertion_message": null
                     }
                   }
                 },
@@ -7482,7 +7024,7 @@
                   },
                   "operator": "<",
                   "rhs": {
-                    "_type": "ConditionalExpression",
+                    "_type": "ArrayLength",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                       "line": 14,
@@ -7496,8 +7038,8 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "condition": {
-                      "_type": "TupleItemExpression",
+                    "array": {
+                      "_type": "BoxValueExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                         "line": 14,
@@ -7507,12 +7049,29 @@
                         "end_column": null
                       },
                       "wtype": {
-                        "_type": "WType",
-                        "name": "bool",
-                        "immutable": true
+                        "_type": "ARC4DynamicArray",
+                        "name": "arc4.dynamic_array<byte[]>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4DynamicArray",
+                          "name": "byte[]",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint8",
+                            "immutable": true,
+                            "n": 8,
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "arc4_alias": "byte[]",
+                          "source_location": null
+                        },
+                        "arc4_alias": null,
+                        "source_location": null
                       },
-                      "base": {
-                        "_type": "IntrinsicCall",
+                      "key": {
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                           "line": 14,
@@ -7522,178 +7081,14 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "WTuple",
-                          "name": "tuple",
-                          "immutable": true,
-                          "types": [
-                            {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            {
-                              "_type": "WType",
-                              "name": "bool",
-                              "immutable": true
-                            }
-                          ],
-                          "names": null,
-                          "source_location": null
+                          "_type": "WType",
+                          "name": "box_key",
+                          "immutable": true
                         },
-                        "op_code": "box_get",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "BytesConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                              "line": 14,
-                              "end_line": 14,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "value": "Z2",
-                            "encoding": "utf8"
-                          }
-                        ]
+                        "value": "Z2",
+                        "encoding": "utf8"
                       },
-                      "index": 1
-                    },
-                    "true_expr": {
-                      "_type": "IntrinsicCall",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                        "line": 14,
-                        "end_line": 14,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "op_code": "extract_uint16",
-                      "immediates": [],
-                      "stack_args": [
-                        {
-                          "_type": "TupleItemExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                            "line": 14,
-                            "end_line": 14,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "base": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                              "line": 14,
-                              "end_line": 14,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WTuple",
-                              "name": "tuple",
-                              "immutable": true,
-                              "types": [
-                                {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                {
-                                  "_type": "WType",
-                                  "name": "bool",
-                                  "immutable": true
-                                }
-                              ],
-                              "names": null,
-                              "source_location": null
-                            },
-                            "op_code": "box_get",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "BytesConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                                  "line": 14,
-                                  "end_line": 14,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "value": "Z2",
-                                "encoding": "utf8"
-                              }
-                            ]
-                          },
-                          "index": 0
-                        },
-                        {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                            "line": 14,
-                            "end_line": 14,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "uint64",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
-                        }
-                      ]
-                    },
-                    "false_expr": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                        "line": 14,
-                        "end_line": 14,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "uint64",
-                        "immutable": true
-                      },
-                      "value": 0,
-                      "teal_alias": null
+                      "exists_assertion_message": null
                     }
                   }
                 },
@@ -15798,52 +15193,6 @@
               }
             },
             {
-              "_type": "AssignmentStatement",
-              "source_location": {
-                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                "line": 6,
-                "end_line": 6,
-                "comment_lines": 0,
-                "column": null,
-                "end_column": null
-              },
-              "target": {
-                "_type": "VarExpression",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                  "line": 6,
-                  "end_line": 6,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "WType",
-                  "name": "box_key",
-                  "immutable": true
-                },
-                "name": "__bounds_prefix_0"
-              },
-              "value": {
-                "_type": "BytesConstant",
-                "source_location": {
-                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                  "line": 6,
-                  "end_line": 6,
-                  "comment_lines": 0,
-                  "column": null,
-                  "end_column": null
-                },
-                "wtype": {
-                  "_type": "WType",
-                  "name": "box_key",
-                  "immutable": true
-                },
-                "value": "Z2",
-                "encoding": "utf8"
-              }
-            },
-            {
               "_type": "ExpressionStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
@@ -16223,7 +15572,7 @@
                   },
                   "operator": "<",
                   "rhs": {
-                    "_type": "IntrinsicCall",
+                    "_type": "ArrayLength",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                       "line": 6,
@@ -16237,76 +15586,40 @@
                       "name": "uint64",
                       "immutable": true
                     },
-                    "op_code": "extract_uint16",
-                    "immediates": [],
-                    "stack_args": [
-                      {
-                        "_type": "StateGet",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                          "line": 6,
-                          "end_line": 6,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "field": {
-                          "_type": "BoxValueExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                            "line": 6,
-                            "end_line": 6,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "key": {
-                            "_type": "VarExpression",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                              "line": 6,
-                              "end_line": 6,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "box_key",
-                              "immutable": true
-                            },
-                            "name": "__bounds_prefix_0"
-                          },
-                          "exists_assertion_message": null
-                        },
-                        "default": {
-                          "_type": "BytesConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
-                            "line": 6,
-                            "end_line": 6,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "BytesWType",
-                            "name": "bytes",
-                            "immutable": true,
-                            "length": null
-                          },
-                          "value": "000",
-                          "encoding": "base16"
-                        }
+                    "array": {
+                      "_type": "BoxValueExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
+                        "line": 6,
+                        "end_line": 6,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
                       },
-                      {
-                        "_type": "IntegerConstant",
+                      "wtype": {
+                        "_type": "ARC4DynamicArray",
+                        "name": "arc4.dynamic_array<byte[]>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4DynamicArray",
+                          "name": "byte[]",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint8",
+                            "immutable": true,
+                            "n": 8,
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "arc4_alias": "byte[]",
+                          "source_location": null
+                        },
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "key": {
+                        "_type": "BytesConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                           "line": 6,
@@ -16317,13 +15630,14 @@
                         },
                         "wtype": {
                           "_type": "WType",
-                          "name": "uint64",
+                          "name": "box_key",
                           "immutable": true
                         },
-                        "value": 0,
-                        "teal_alias": null
-                      }
-                    ]
+                        "value": "Z2",
+                        "encoding": "utf8"
+                      },
+                      "exists_assertion_message": null
+                    }
                   }
                 },
                 "error_message": "array out-of-bounds",
@@ -17214,7 +16528,7 @@
                                             ]
                                           },
                                           {
-                                            "_type": "VarExpression",
+                                            "_type": "BytesConstant",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                                               "line": 6,
@@ -17228,7 +16542,8 @@
                                               "name": "box_key",
                                               "immutable": true
                                             },
-                                            "name": "__bounds_prefix_0"
+                                            "value": "Z2",
+                                            "encoding": "utf8"
                                           }
                                         ]
                                       }
@@ -18133,7 +17448,7 @@
                                             ]
                                           },
                                           {
-                                            "_type": "VarExpression",
+                                            "_type": "BytesConstant",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/array_mapping_struct.sol",
                                               "line": 6,
@@ -18147,7 +17462,8 @@
                                               "name": "box_key",
                                               "immutable": true
                                             },
-                                            "name": "__bounds_prefix_0"
+                                            "value": "Z2",
+                                            "encoding": "utf8"
                                           }
                                         ]
                                       }
@@ -21125,7 +20441,7 @@
           },
           "wtype": {
             "_type": "WType",
-            "name": "state_key",
+            "name": "box_key",
             "immutable": true
           },
           "value": "ZU",
@@ -21133,7 +20449,7 @@
         },
         "key_wtype": null,
         "description": null,
-        "kind": 1
+        "kind": 3
       },
       {
         "_type": "AppStorageDefinition",

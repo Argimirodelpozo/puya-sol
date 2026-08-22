@@ -762,17 +762,20 @@ Pun.asAddrs_while_top@22:
     dig 4
     +
     dup
-    cover 2
+    cover 3
     dup
     intc_0 // 32
     +
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    pushint 12
+    bzero
+    cover 4
     intc_2 // 4096
     %
     dup
-    cover 4
+    cover 3
     intc_2 // 4096
     swap
     -
@@ -781,7 +784,7 @@ Pun.asAddrs_while_top@22:
     >=
     bz Pun.asAddrs_ternary_false@25
     pop
-    swap
+    uncover 3
     intc_2 // 4096
     /
     loads
@@ -790,12 +793,10 @@ Pun.asAddrs_while_top@22:
     extract3
 
 Pun.asAddrs_ternary_merge@26:
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
+    extract 12 20
+    uncover 3
+    swap
+    concat
     bytec 7 // 0x0001
     swap
     concat
@@ -821,7 +822,7 @@ Pun.asAddrs_ternary_merge@26:
     b Pun.asAddrs_while_top@22
 
 Pun.asAddrs_ternary_false@25:
-    uncover 2
+    uncover 4
     intc_2 // 4096
     /
     dup

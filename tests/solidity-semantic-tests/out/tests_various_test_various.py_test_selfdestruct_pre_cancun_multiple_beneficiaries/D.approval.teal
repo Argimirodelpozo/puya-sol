@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 24 6
-    bytecblock "c" 0xb30e2ea6 "account1" "account2" 0x151f7c75 TMPL_APPROVAL_C TMPL_CLEAR_C
+    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 "c" 0xb30e2ea6 "account1" "account2" 0x151f7c75 TMPL_APPROVAL_C TMPL_CLEAR_C
     pushint 4096
     bzero
     dup
@@ -24,14 +24,14 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "account1"
+    bytec_3 // "account1"
     pushbytes 0x0000000000000000000000001111111111111111111111111111111111111111
     app_global_put
-    bytec_3 // "account2"
+    bytec 4 // "account2"
     pushbytes 0x0000000000000000000000002222222222222222222222222222222222222222
     app_global_put
-    bytec_0 // "c"
-    pushbytes base32(AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_1 // "c"
+    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
     intc_1 // 1
     return
@@ -43,7 +43,7 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytes 0x739b0889 // method "deploy()void"
-    bytec_1 // method "terminate(address)void"
+    bytec_2 // method "terminate(address)void"
     pushbytess 0xcf19aed1 0x082c5ced 0xd7fc866d // method "test_deploy_and_terminate_twice()void", method "exists()bool", method "c()address"
     txna ApplicationArgs 0
     match main_deploy_route@5 main_terminate_route@6 main_test_deploy_and_terminate_twice_route@7 main_exists_route@8 main_c_route@9
@@ -61,10 +61,12 @@ main_ternary_merge@16:
     !
     assert // not payable
     intc_0 // 0
-    bytec_0 // "c"
+    bytec_1 // "c"
     app_global_get_ex
-    assert // check c exists
-    bytec 4 // 0x151f7c75
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
@@ -87,16 +89,27 @@ main_ternary_merge@21:
     !
     assert // not payable
     intc_0 // 0
-    bytec_0 // "c"
+    bytec_1 // "c"
     app_global_get_ex
-    assert // check c exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_2 // 24
     extract_uint64
-    app_params_get AppApprovalProgram
-    bz main_ternary_false@23
+    dup
+    bz main_ternary_false@26
+    dup
+    app_params_get AppExtraProgramPages
+    bury 1
+    bz main_ternary_false@24
+    app_params_get AppExtraProgramPages
+    pop
+    intc_1 // 1
+    +
+    pushint 2048
+    *
 
-main_ternary_merge@24:
-    len
+main_ternary_merge@27:
     itob
     intc_0 // 0
     itob
@@ -105,17 +118,22 @@ main_ternary_merge@24:
     intc_0 // 0
     uncover 2
     setbit
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@23:
+main_ternary_false@24:
     pop
-    pushbytes 0x
-    b main_ternary_merge@24
+    intc_0 // 0
+    b main_ternary_merge@27
+
+main_ternary_false@26:
+    pop
+    intc_0 // 0
+    b main_ternary_merge@27
 
 main_ternary_false@20:
     intc_0 // 0
@@ -123,32 +141,36 @@ main_ternary_false@20:
 
 main_test_deploy_and_terminate_twice_route@7:
     txn GroupIndex
-    bz main_ternary_false@28
+    bz main_ternary_false@31
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@29:
+main_ternary_merge@32:
     !
     assert // not payable
     callsub deploy
     intc_0 // 0
-    bytec_2 // "account1"
+    bytec_3 // "account1"
     app_global_get_ex
-    assert // check account1 exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     callsub terminate
     intc_0 // 0
-    bytec_3 // "account2"
+    bytec 4 // "account2"
     app_global_get_ex
-    assert // check account2 exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     callsub terminate
     intc_1 // 1
     return
 
-main_ternary_false@28:
+main_ternary_false@31:
     intc_0 // 0
-    b main_ternary_merge@29
+    b main_ternary_merge@32
 
 main_terminate_route@6:
     txna ApplicationArgs 1
@@ -170,8 +192,8 @@ main_deploy_route@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy() -> void:
 deploy:
     itxn_begin
-    bytec 5 // TMPL_APPROVAL_C
-    bytec 6 // TMPL_CLEAR_C
+    bytec 6 // TMPL_APPROVAL_C
+    bytec 7 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -203,7 +225,7 @@ deploy:
     swap
     itob
     concat
-    bytec_0 // "c"
+    bytec_1 // "c"
     swap
     app_global_put
     retsub
@@ -215,7 +237,7 @@ terminate:
     txn NumAppArgs
     bz terminate_after_if_else@6
     txna ApplicationArgs 0
-    bytec_1 // method "terminate(address)void"
+    bytec_2 // method "terminate(address)void"
     ==
     bz terminate_after_if_else@6
     txn GroupIndex
@@ -232,9 +254,11 @@ terminate_ternary_merge@5:
 terminate_after_if_else@6:
     itxn_begin
     intc_0 // 0
-    bytec_0 // "c"
+    bytec_1 // "c"
     app_global_get_ex
-    assert // check c exists
+    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_2 // 24
     extract_uint64
     intc_3 // 6
@@ -244,7 +268,7 @@ terminate_after_if_else@6:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_1 // method "terminate(address)void"
+    bytec_2 // method "terminate(address)void"
     itxn_field ApplicationArgs
     frame_dig -1
     itxn_field ApplicationArgs

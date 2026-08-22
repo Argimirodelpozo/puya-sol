@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/value_types.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 16 32
-    bytecblock 0x151f7c75 "a" "b" "c" "d" "e" "f" "g" "h" "i" 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x151f7c75 0x 0x0000000000000000000000000000000000000000000000000000000000000000 "a" "b" "c" "d" "e" 0x00 "f" "g" "h" "i" 0x0000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -24,62 +24,62 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "a"
+    bytec_3 // "a"
     intc_0 // 0
     app_global_put
-    bytec_2 // "b"
+    bytec 4 // "b"
     intc_0 // 0
     app_global_put
-    bytec_3 // "c"
-    pushbytes 0x
+    bytec 5 // "c"
+    bytec_1 // 0x
     app_global_put
-    bytec 4 // "d"
-    pushbytes 0x
+    bytec 6 // "d"
+    bytec_1 // 0x
     app_global_put
-    bytec 5 // "e"
-    pushbytes 0x00
+    bytec 7 // "e"
+    bytec 8 // 0x00
     app_global_put
-    bytec 6 // "f"
-    pushbytes 0x0000000000000000000000000000000000000000
+    bytec 9 // "f"
+    bytec 13 // 0x0000000000000000000000000000000000000000
     app_global_put
-    bytec 7 // "g"
-    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 10 // "g"
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    bytec 8 // "h"
+    bytec 11 // "h"
     intc_0 // 0
     app_global_put
-    bytec 9 // "i"
-    bytec 10 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec 12 // "i"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
-    bytec_1 // "a"
+    bytec_3 // "a"
     pushint 3
     app_global_put
-    bytec_2 // "b"
+    bytec 4 // "b"
     pushint 4
     app_global_put
     pushint 5
     itob
-    bytec_3 // "c"
+    bytec 5 // "c"
     swap
     app_global_put
     pushint 6
     itob
-    bytec 4 // "d"
+    bytec 6 // "d"
     swap
     app_global_put
-    bytec 5 // "e"
+    bytec 7 // "e"
     pushbytes 0x7f
     app_global_put
-    bytec 6 // "f"
+    bytec 9 // "f"
     pushbytes 0x6465616462656566313564656164000000000010
     app_global_put
-    bytec 7 // "g"
+    bytec 10 // "g"
     pushbytes 0x6465616462656566313564656164000000000000000000000000000000000010
     app_global_put
-    bytec 8 // "h"
+    bytec 11 // "h"
     intc_1 // 1
     app_global_put
-    bytec 9 // "i"
+    bytec 12 // "i"
     pushbytes 0x0000000000000000000000005555555555555555555555555555555555555555
     app_global_put
     intc_1 // 1
@@ -108,9 +108,11 @@ main_ternary_merge@20:
     !
     assert // not payable
     intc_0 // 0
-    bytec 9 // "i"
+    bytec 12 // "i"
     app_global_get_ex
-    assert // check i exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -134,10 +136,12 @@ main_ternary_merge@25:
     !
     assert // not payable
     intc_0 // 0
-    bytec 8 // "h"
+    bytec 11 // "h"
     app_global_get_ex
-    assert // check h exists
-    pushbytes 0x00
+    intc_0 // 0
+    cover 2
+    select
+    bytec 8 // 0x00
     intc_0 // 0
     uncover 2
     setbit
@@ -164,9 +168,11 @@ main_ternary_merge@30:
     !
     assert // not payable
     intc_0 // 0
-    bytec 7 // "g"
+    bytec 10 // "g"
     app_global_get_ex
-    assert // check g exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -190,9 +196,11 @@ main_ternary_merge@35:
     !
     assert // not payable
     intc_0 // 0
-    bytec 6 // "f"
+    bytec 9 // "f"
     app_global_get_ex
-    assert // check f exists
+    bytec 13 // 0x0000000000000000000000000000000000000000
+    cover 2
+    select
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -216,9 +224,11 @@ main_ternary_merge@40:
     !
     assert // not payable
     intc_0 // 0
-    bytec 5 // "e"
+    bytec 7 // "e"
     app_global_get_ex
-    assert // check e exists
+    bytec 8 // 0x00
+    cover 2
+    select
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -242,9 +252,11 @@ main_ternary_merge@45:
     !
     assert // not payable
     intc_0 // 0
-    bytec 4 // "d"
+    bytec 6 // "d"
     app_global_get_ex
-    assert // check d exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_3 // 32
@@ -278,9 +290,11 @@ main_ternary_merge@50:
     intc_2 // 16
     bzero
     intc_0 // 0
-    bytec_3 // "c"
+    bytec 5 // "c"
     app_global_get_ex
-    assert // check c exists
+    bytec_1 // 0x
+    cover 2
+    select
     dig 1
     swap
     concat
@@ -319,9 +333,11 @@ main_ternary_merge@55:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "b"
+    bytec 4 // "b"
     app_global_get_ex
-    assert // check b exists
+    intc_0 // 0
+    cover 2
+    select
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -346,9 +362,11 @@ main_ternary_merge@60:
     !
     assert // not payable
     intc_0 // 0
-    bytec_1 // "a"
+    bytec_3 // "a"
     app_global_get_ex
-    assert // check a exists
+    intc_0 // 0
+    cover 2
+    select
     itob
     bytec_0 // 0x151f7c75
     swap

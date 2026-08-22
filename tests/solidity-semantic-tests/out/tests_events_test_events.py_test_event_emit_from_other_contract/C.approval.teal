@@ -53,7 +53,9 @@ main_deposit_route@6:
     intc_0 // 0
     bytec_2 // "d"
     app_global_get_ex
-    assert // check d exists
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_2 // 24
     extract_uint64
     intc_3 // 6

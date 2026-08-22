@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/fixed_arrays_in_storage.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1 32 8 0 1024 32768
-    bytecblock "data" 0x010000000000000000 "__ctor_pending" 0x151f7c75 "ids" 0x6964730000000000000000
+    intcblock 1 32 8 0 1024 512 32768
+    bytecblock 0x010000000000000000 "__ctor_pending" "data" 0x151f7c75 "ids" 0x6964730000000000000000
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -79,7 +79,7 @@ main_ternary_merge@23:
     !
     assert // not payable
     dup
-    bytec_1 // 0x010000000000000000
+    bytec_0 // 0x010000000000000000
     b<
     assert // array index out of bounds
     intc_2 // 8
@@ -91,12 +91,20 @@ main_ternary_merge@23:
     intc_2 // 8
     -
     extract_uint64
+    dup
+    intc 5 // 512
+    /
+    itob
+    bytec_2 // "data"
+    swap
+    concat
+    swap
+    intc 5 // 512
+    %
     pushint 64
     *
-    bytec_0 // "data"
-    swap
     pushint 64
-    box_extract // on error: index out of bounds
+    box_extract
     dup
     extract 0 32
     swap
@@ -131,7 +139,7 @@ main_ternary_merge@28:
     !
     assert // not payable
     dup
-    bytec_1 // 0x010000000000000000
+    bytec_0 // 0x010000000000000000
     b<
     assert // array index out of bounds
     intc_2 // 8
@@ -200,7 +208,7 @@ main_ternary_merge@33:
     !
     assert // not payable
     dup
-    bytec_1 // 0x010000000000000000
+    bytec_0 // 0x010000000000000000
     b<
     assert // array index out of bounds
     intc_2 // 8
@@ -212,30 +220,37 @@ main_ternary_merge@33:
     intc_2 // 8
     -
     extract_uint64
-    pushint 64
-    *
-    bytec_0 // "data"
-    dig 1
-    pushint 64
-    box_extract // on error: index out of bounds
-    extract 32 32
-    uncover 3
+    dup
+    intc 4 // 1024
+    <
+    assert // array index out of bounds
+    dup
+    intc 5 // 512
+    /
+    itob
+    bytec_2 // "data"
     swap
     concat
-    bytec_0 // "data"
+    swap
+    intc 5 // 512
+    %
+    pushint 64
+    *
+    dup2
+    pushint 64
+    box_extract
+    uncover 4
+    replace2 0
+    dig 2
     dig 2
     uncover 2
-    box_replace // on error: index out of bounds
-    bytec_0 // "data"
-    dig 1
+    box_replace
+    dup2
     pushint 64
-    box_extract // on error: index out of bounds
-    extract 0 32
-    uncover 2
-    concat
-    bytec_0 // "data"
-    cover 2
-    box_replace // on error: index out of bounds
+    box_extract
+    uncover 3
+    replace2 32
+    box_replace
     intc_0 // 1
     return
 
@@ -268,7 +283,7 @@ main_ternary_merge@38:
     assert // not payable
     swap
     dup
-    bytec_1 // 0x010000000000000000
+    bytec_0 // 0x010000000000000000
     b<
     assert // array index out of bounds
     intc_2 // 8
@@ -280,6 +295,10 @@ main_ternary_merge@38:
     intc_2 // 8
     -
     extract_uint64
+    dup
+    pushint 1027
+    <
+    assert // array index out of bounds
     dup
     intc 4 // 1024
     /
@@ -330,22 +349,26 @@ main_ternary_false@42:
     b main_ternary_merge@43
 
 main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_3 // 0
     app_global_put
-    bytec_0 // "data"
-    intc 5 // 32768
+    pushbytes 0x646174610000000000000000
+    intc 6 // 32768
+    box_create
+    pop
+    pushbytes 0x646174610000000000000001
+    intc 6 // 32768
     box_create
     pop
     bytec 5 // 0x6964730000000000000000
-    intc 5 // 32768
+    intc 6 // 32768
     box_create
     pop
     pushbytes 0x6964730000000000000001

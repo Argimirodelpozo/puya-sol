@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/switch_returndatasize.sol.SwitchRds.approval_program() -> uint64:
 main:
     intcblock 0 32 1 4096 20480
-    bytecblock 0x151f7c75 "__ctor_pending" "c" TMPL_APPROVAL_Callee TMPL_CLEAR_Callee
+    bytecblock 0x151f7c75 "__ctor_pending" "c" 0x0000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_Callee TMPL_CLEAR_Callee
     pushbytes ""
     intc_3 // 4096
     bzero
@@ -56,7 +56,9 @@ main_ternary_merge@14:
     intc_0 // 0
     bytec_2 // "c"
     app_global_get_ex
-    assert // check c exists
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -82,7 +84,9 @@ main_ternary_merge@19:
     intc_0 // 0
     bytec_2 // "c"
     app_global_get_ex
-    assert // check c exists
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     load 0
     store 0
     load 0
@@ -304,7 +308,8 @@ main_ternary_merge@51:
     -
     intc_1 // 32
     extract3
-    pushbytess 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000020
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000020
     uncover 2
     match main_switch_case_0@52 main_switch_case_1@53
     pushbytes 0x03
@@ -401,8 +406,8 @@ main___postInit_route@5:
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec_3 // TMPL_APPROVAL_Callee
-    bytec 4 // TMPL_CLEAR_Callee
+    bytec 4 // TMPL_APPROVAL_Callee
+    bytec 5 // TMPL_CLEAR_Callee
     pushint 6
     itxn_field TypeEnum
     pushint 16

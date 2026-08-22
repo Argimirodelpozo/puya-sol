@@ -84,10 +84,10 @@ main_ternary_merge@13:
     intc_0 // 0
     bytec_1 // "y"
     app_global_get_ex
-    swap
+    bytec_0 // 0x
+    cover 2
+    select
     dup
-    uncover 2
-    assert // check y exists
     bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     dup
@@ -131,7 +131,9 @@ main_bool_merge@17:
     intc_0 // 0
     bytec_1 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -142,7 +144,9 @@ main_bool_merge@17:
     intc_0 // 0
     bytec_2 // "w"
     app_global_get_ex
-    assert // check w exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -212,7 +216,9 @@ g_after_if_else@6:
     intc_0 // 0
     bytec_2 // "w"
     app_global_get_ex
-    assert // check w exists
+    bytec_0 // 0x
+    cover 2
+    select
     bytec 6 // 0x02
     b+
     dup

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_function_join_control_flow.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 32 1 42
-    bytecblock "y" "x"
+    bytecblock "y" 0x "x"
     intc_0 // 0
     pushint 4096
     bzero
@@ -27,7 +27,7 @@ main:
     bnz main_after_if_else@2
     intc_0 // 0
     itob
-    bytec_1 // "x"
+    bytec_2 // "x"
     swap
     app_global_put
     intc_3 // 42
@@ -73,13 +73,17 @@ main_ternary_merge@9:
     <=
     assert // ABI bool validation
     intc_0 // 0
-    bytec_1 // "x"
+    bytec_2 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_1 // 0x
+    cover 2
+    select
     intc_0 // 0
     bytec_0 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_1 // 0x
+    cover 2
+    select
     intc_3 // 42
     itob
     b==
@@ -87,7 +91,7 @@ main_ternary_merge@9:
     bury 1
     pushint 21
     itob
-    bytec_1 // "x"
+    bytec_2 // "x"
     swap
     app_global_put
 
@@ -95,16 +99,20 @@ main_after_if_else@14:
     intc_0 // 0
     bytec_0 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_1 // 0x
+    cover 2
+    select
     pushbytes 0x02
     b/
     bytec_0 // "y"
     dig 1
     app_global_put
     intc_0 // 0
-    bytec_1 // "x"
+    bytec_2 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -146,7 +154,9 @@ main_else_body@11:
     intc_0 // 0
     bytec_0 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32

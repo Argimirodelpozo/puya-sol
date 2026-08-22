@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/store_function_in_constructor.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 2
-    bytecblock "result_in_constructor" 0x151f7c75 "x" 0x82fadf35 0x622cfe87
+    intcblock 1 0 32 2
+    bytecblock "result_in_constructor" 0x151f7c75 0x "x" 0x82fadf35 0x622cfe87
     pushint 4096
     bzero
     dup
@@ -25,9 +25,9 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "result_in_constructor"
-    pushbytes 0x
+    bytec_2 // 0x
     app_global_put
-    bytec_2 // "x"
+    bytec_3 // "x"
     intc_0 // 1
     app_global_put
     intc_3 // 2
@@ -45,8 +45,8 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_3 // method "double(uint256)uint256"
-    bytec 4 // method "use(uint256)uint256"
+    bytec 4 // method "double(uint256)uint256"
+    bytec 5 // method "use(uint256)uint256"
     pushbytes 0x25dcf787 // method "result_in_constructor()uint256"
     txna ApplicationArgs 0
     match main_double_route@5 main_use_route@6 main_result_in_constructor_route@7
@@ -63,16 +63,18 @@ main_result_in_constructor_route@7:
 main_ternary_merge@14:
     !
     assert // not payable
-    intc_2 // 0
+    intc_1 // 0
     bytec_0 // "result_in_constructor"
     app_global_get_ex
-    assert // check result_in_constructor exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -83,14 +85,14 @@ main_ternary_merge@14:
     return
 
 main_ternary_false@13:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@14
 
 main_use_route@6:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub use
@@ -105,7 +107,7 @@ main_double_route@5:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub double
@@ -123,7 +125,7 @@ double:
     txn NumAppArgs
     bz double_after_if_else@6
     txna ApplicationArgs 0
-    bytec_3 // method "double(uint256)uint256"
+    bytec 4 // method "double(uint256)uint256"
     ==
     bz double_after_if_else@6
     txn GroupIndex
@@ -148,16 +150,16 @@ double_after_if_else@6:
     assert // overflow
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     retsub
 
 double_ternary_false@4:
-    intc_2 // 0
+    intc_1 // 0
     b double_ternary_merge@5
 
 
@@ -167,7 +169,7 @@ use:
     txn NumAppArgs
     bz use_after_if_else@6
     txna ApplicationArgs 0
-    bytec 4 // method "use(uint256)uint256"
+    bytec 5 // method "use(uint256)uint256"
     ==
     bz use_after_if_else@6
     txn GroupIndex
@@ -182,10 +184,12 @@ use_ternary_merge@5:
     assert // not payable
 
 use_after_if_else@6:
-    intc_2 // 0
-    bytec_2 // "x"
+    intc_1 // 0
+    bytec_3 // "x"
     app_global_get_ex
-    assert // check x exists
+    intc_1 // 0
+    cover 2
+    select
     intc_0 // 1
     ==
     assert // invalid function pointer
@@ -194,5 +198,5 @@ use_after_if_else@6:
     retsub
 
 use_ternary_false@4:
-    intc_2 // 0
+    intc_1 // 0
     b use_ternary_merge@5

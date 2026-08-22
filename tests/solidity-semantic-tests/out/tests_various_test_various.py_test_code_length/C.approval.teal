@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/code_length.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1
-    bytecblock 0x "__ctor_pending" 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 "len1" "len2"
+    intcblock 1 0
+    bytecblock "__ctor_pending" 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 "len1" 0x "len2"
     pushint 4096
     bzero
     dup
@@ -24,10 +24,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -45,7 +45,7 @@ main_f_route@6:
     txn GroupIndex
     bz main_ternary_false@12
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -59,11 +59,20 @@ main_ternary_merge@13:
     load 0
     store 0
     global CurrentApplicationID
-    app_params_get AppApprovalProgram
-    bz main_ternary_false@15
+    dup
+    bz main_ternary_false@18
+    dup
+    app_params_get AppExtraProgramPages
+    bury 1
+    bz main_ternary_false@16
+    app_params_get AppExtraProgramPages
+    pop
+    intc_0 // 1
+    +
+    pushint 2048
+    *
 
-main_ternary_merge@16:
-    len
+main_ternary_merge@19:
     itob
     pushint 50
     itob
@@ -77,70 +86,60 @@ main_ternary_merge@16:
     uncover 2
     b==
     dup
-    bnz main_after_if_else@18
-    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bnz main_after_if_else@21
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@18:
+main_after_if_else@21:
     assert
-    intc_0 // 0
-    itob
-    intc_0 // 0
-    app_params_get AppApprovalProgram
-    bz main_ternary_false@20
-
-main_ternary_merge@21:
-    len
-    itob
-    b==
     load 0
     store 0
     load 0
     store 0
     pushbytes 0x00
-    intc_0 // 0
-    uncover 3
-    setbit
-    intc_1 // 1
+    intc_1 // 0
     uncover 2
+    setbit
+    intc_0 // 1
+    dup
     setbit
     pushbytes 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
-main_ternary_false@20:
+main_ternary_false@16:
     pop
-    bytec_0 // 0x
-    b main_ternary_merge@21
+    intc_1 // 0
+    b main_ternary_merge@19
 
-main_ternary_false@15:
+main_ternary_false@18:
     pop
-    bytec_0 // 0x
-    b main_ternary_merge@16
+    intc_1 // 0
+    b main_ternary_merge@19
 
 main_ternary_false@12:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@13
 
 main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+    bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
-    intc_0 // 0
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
     app_global_put
-    bytec_3 // "len1"
-    bytec_0 // 0x
+    bytec_2 // "len1"
+    bytec_3 // 0x
     app_global_put
     bytec 4 // "len2"
-    bytec_0 // 0x
+    bytec_3 // 0x
     app_global_put
     load 0
     store 0
@@ -149,11 +148,11 @@ main___postInit_route@5:
     dup
     load 0
     store 0
-    intc_0 // 0
+    intc_1 // 0
     itob
     dup
     cover 2
-    bytec_3 // "len1"
+    bytec_2 // "len1"
     swap
     app_global_put
     load 0
@@ -164,11 +163,11 @@ main___postInit_route@5:
     store 0
     b==
     dup
-    bnz main_after_if_else@25
-    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bnz main_after_if_else@26
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@25:
+main_after_if_else@26:
     assert
     bytec 4 // "len2"
     swap
@@ -181,9 +180,9 @@ main_after_if_else@25:
     store 0
     b==
     dup
-    bnz main_after_if_else@27
-    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bnz main_after_if_else@28
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@27:
+main_after_if_else@28:
     return

@@ -74,11 +74,11 @@ main_ternary_merge@13:
     intc_0 // 0
     bury 4
 
-main_for_header@63:
+main_for_header@54:
     dig 3
     dig 2
     <
-    bz main_after_for@65
+    bz main_after_for@56
     dup
     dig 4
     dup
@@ -95,20 +95,20 @@ main_for_header@63:
     intc_1 // 2
     +
     bury 4
-    b main_for_header@63
+    b main_for_header@54
 
-main_after_for@65:
+main_after_for@56:
     dup
     len
     cover 2
     intc_0 // 0
     bury 5
 
-main_for_header@66:
+main_for_header@57:
     dig 4
     intc_1 // 2
     <
-    bz main_after_for@68
+    bz main_after_for@59
     pushbytes 0x00020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000660000
     dig 5
     dup
@@ -125,9 +125,9 @@ main_for_header@66:
     intc_1 // 2
     +
     bury 5
-    b main_for_header@66
+    b main_for_header@57
 
-main_after_for@68:
+main_after_for@59:
     swap
     uncover 2
     substring3
@@ -253,18 +253,6 @@ main_after_if_else@28:
 main_ternary_merge@31:
     assert // array index out of bounds
     bytec_0 // "s"
-    box_len
-    bury 1
-    bz main_ternary_false@33
-    bytec_0 // "s"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@34:
-    assert // array index out of bounds
-    bytec_0 // "s"
     intc_1 // 2
     dup
     box_extract
@@ -279,35 +267,23 @@ main_ternary_merge@34:
     dig 1
     b==
     dup
-    bnz main_after_if_else@36
+    bnz main_after_if_else@33
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@36:
+main_after_if_else@33:
     assert
     bytec_0 // "s"
     box_len
     bury 1
-    bz main_ternary_false@38
+    bz main_ternary_false@35
     bytec_0 // "s"
     box_get
     pop
     intc_0 // 0
     extract_uint16
 
-main_ternary_merge@39:
-    assert // array index out of bounds
-    bytec_0 // "s"
-    box_len
-    bury 1
-    bz main_ternary_false@41
-    bytec_0 // "s"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@42:
+main_ternary_merge@36:
     assert // array index out of bounds
     bytec_0 // "s"
     intc_1 // 2
@@ -324,35 +300,23 @@ main_ternary_merge@42:
     dig 1
     b==
     dup
-    bnz main_after_if_else@44
+    bnz main_after_if_else@38
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@44:
+main_after_if_else@38:
     assert
     bytec_0 // "s"
     box_len
     bury 1
-    bz main_ternary_false@46
+    bz main_ternary_false@40
     bytec_0 // "s"
     box_get
     pop
     intc_0 // 0
     extract_uint16
 
-main_ternary_merge@47:
-    assert // array index out of bounds
-    bytec_0 // "s"
-    box_len
-    bury 1
-    bz main_ternary_false@49
-    bytec_0 // "s"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@50:
+main_ternary_merge@41:
     assert // array index out of bounds
     bytec_0 // "s"
     intc_1 // 2
@@ -369,23 +333,23 @@ main_ternary_merge@50:
     dig 1
     b==
     dup
-    bnz main_after_if_else@52
+    bnz main_after_if_else@43
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@52:
+main_after_if_else@43:
     assert
     bytec_0 // "s"
     box_len
     bury 1
-    bz main_ternary_false@54
+    bz main_ternary_false@45
     bytec_0 // "s"
     box_get
     pop
     intc_0 // 0
     extract_uint16
 
-main_ternary_merge@55:
+main_ternary_merge@46:
     assert // array index out of bounds
     bytec_0 // "s"
     intc_1 // 2
@@ -402,62 +366,54 @@ main_ternary_merge@55:
     itob
     b==
     dup
-    bnz main_after_if_else@57
+    bnz main_after_if_else@48
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@57:
+main_after_if_else@48:
     assert
     intc_0 // 0
     bytec_3 // "b"
     app_global_get_ex
-    assert // check b exists
+    intc_0 // 0
+    cover 2
+    select
     pushint 23
     ==
     dup
-    bnz main_after_if_else@59
+    bnz main_after_if_else@50
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@59:
+main_after_if_else@50:
     assert
     intc_0 // 0
     pushbytes "a"
     app_global_get_ex
-    assert // check a exists
+    intc_0 // 0
+    cover 2
+    select
     pushint 17
     ==
     dup
-    bnz main_after_if_else@61
+    bnz main_after_if_else@52
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@61:
+main_after_if_else@52:
     return
 
-main_ternary_false@54:
+main_ternary_false@45:
     intc_0 // 0
-    b main_ternary_merge@55
+    b main_ternary_merge@46
 
-main_ternary_false@49:
+main_ternary_false@40:
     intc_0 // 0
-    b main_ternary_merge@50
+    b main_ternary_merge@41
 
-main_ternary_false@46:
+main_ternary_false@35:
     intc_0 // 0
-    b main_ternary_merge@47
-
-main_ternary_false@41:
-    intc_0 // 0
-    b main_ternary_merge@42
-
-main_ternary_false@38:
-    intc_0 // 0
-    b main_ternary_merge@39
-
-main_ternary_false@33:
-    intc_0 // 0
-    b main_ternary_merge@34
+    b main_ternary_merge@36
 
 main_ternary_false@30:
     intc_0 // 0

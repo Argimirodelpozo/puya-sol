@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/multiple_inheritance.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "x" "y" 0x "w" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x88035e71 0x8a37d29b
+    bytecblock 0x "x" "y" "w" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x88035e71 0x8a37d29b
     pushint 4096
     bzero
     dup
@@ -24,14 +24,14 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    bytec_2 // 0x
+    bytec_1 // "x"
+    bytec_0 // 0x
     app_global_put
-    bytec_1 // "y"
-    bytec_2 // 0x
+    bytec_2 // "y"
+    bytec_0 // 0x
     app_global_put
     bytec_3 // "w"
-    bytec_2 // 0x
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -83,9 +83,11 @@ main_ternary_merge@21:
     !
     assert // not payable
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -117,9 +119,11 @@ main_ternary_merge@26:
     !
     assert // not payable
     intc_1 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -153,7 +157,9 @@ main_ternary_merge@31:
     intc_1 // 0
     bytec_3 // "w"
     app_global_get_ex
-    assert // check w exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -192,13 +198,17 @@ main_ternary_merge@36:
     assert // not payable
     callsub g
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     intc_1 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     b+
     dup
     bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -237,9 +247,11 @@ g_ternary_merge@5:
 
 g_after_if_else@6:
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     frame_dig -1
     b+
     dup
@@ -248,9 +260,11 @@ g_after_if_else@6:
     assert // overflow
     callsub f
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     intc_0 // 1
     itob
     b+
@@ -258,7 +272,7 @@ g_after_if_else@6:
     bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_1 // "y"
+    bytec_2 // "y"
     swap
     app_global_put
     retsub
@@ -289,7 +303,7 @@ f_ternary_merge@5:
     assert // not payable
 
 f_after_if_else@6:
-    bytec_0 // "x"
+    bytec_1 // "x"
     frame_dig -1
     app_global_put
     retsub

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/state_variables_init_order_2.sol.B.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "x" "z" 0x151f7c75
+    bytecblock "x" 0x "z" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -33,14 +33,16 @@ main:
     pushbytes "y"
     swap
     app_global_put
-    bytec_1 // "z"
-    pushbytes 0x
+    bytec_2 // "z"
+    bytec_1 // 0x
     app_global_put
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
-    assert // check x exists
-    bytec_1 // "z"
+    bytec_1 // 0x
+    cover 2
+    select
+    bytec_2 // "z"
     swap
     app_global_put
     intc_1 // 1
@@ -59,7 +61,7 @@ main_after_if_else@2:
 
 main_f_route@7:
     callsub f
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -80,7 +82,9 @@ main_ternary_merge@16:
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -89,7 +93,7 @@ main_ternary_merge@16:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -112,9 +116,11 @@ main_ternary_merge@21:
     !
     assert // not payable
     intc_0 // 0
-    bytec_1 // "z"
+    bytec_2 // "z"
     app_global_get_ex
-    assert // check z exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -123,7 +129,7 @@ main_ternary_merge@21:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -150,7 +156,9 @@ f_ternary_merge@3:
     intc_0 // 0
     bytec_0 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_1 // 0x
+    cover 2
+    select
     pushbytes 0x01
     b+
     dup

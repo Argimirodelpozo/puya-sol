@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/swap_in_storage_overwrite.sol.c.approval_program() -> uint64:
 main:
-    intcblock 0 1 64
-    bytecblock "x" "y" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    intcblock 1 0 64
+    bytecblock "x" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "y" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -25,12 +25,12 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "x"
-    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    bytec_1 // "y"
-    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // "y"
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -48,17 +48,19 @@ main_y_route@8:
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@15:
     !
     assert // not payable
-    intc_0 // 0
-    bytec_1 // "y"
+    intc_1 // 0
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dup
     extract 0 32
     swap
@@ -85,28 +87,30 @@ main_ternary_merge@15:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@14:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@15
 
 main_x_route@7:
     txn GroupIndex
     bz main_ternary_false@19
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@20:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dup
     extract 0 32
     swap
@@ -133,66 +137,58 @@ main_ternary_merge@20:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@19:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@20
 
 main_swap_route@6:
     txn GroupIndex
     bz main_ternary_false@24
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@25:
     !
     assert // not payable
-    intc_0 // 0
-    bytec_1 // "y"
-    app_global_get_ex
-    bury 1
-    assert // check y exists
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
-    assert // check x exists
-    bytec_1 // "y"
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    bytec_2 // "y"
     dig 1
     app_global_put
-    intc_0 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    bury 1
-    assert // check x exists
     bytec_0 // "x"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@24:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@25
 
 main_set_route@5:
     txn GroupIndex
     bz main_ternary_false@29
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 main_ternary_merge@30:
     !
     assert // not payable
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
-    assert // check x exists
+    assert // state exists
     extract 32 32
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
     swap
@@ -203,10 +199,10 @@ main_ternary_merge@30:
     bytec_0 // "x"
     swap
     app_global_put
-    intc_0 // 0
-    bytec_1 // "y"
+    intc_1 // 0
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    assert // state exists
     extract 32 32
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     swap
@@ -214,12 +210,12 @@ main_ternary_merge@30:
     extract 0 32
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
     concat
-    bytec_1 // "y"
+    bytec_2 // "y"
     swap
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_ternary_false@29:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@30

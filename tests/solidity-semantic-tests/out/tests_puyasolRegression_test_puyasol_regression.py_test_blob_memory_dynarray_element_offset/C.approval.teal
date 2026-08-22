@@ -564,10 +564,13 @@ main_while_top@45:
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    pushint 12
+    bzero
+    cover 4
     intc_3 // 4096
     %
     dup
-    cover 4
+    cover 3
     intc_3 // 4096
     swap
     -
@@ -576,7 +579,7 @@ main_while_top@45:
     >=
     bz main_ternary_false@48
     pop
-    uncover 2
+    uncover 3
     intc_3 // 4096
     /
     loads
@@ -585,12 +588,10 @@ main_while_top@45:
     extract3
 
 main_ternary_merge@49:
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
+    extract 12 20
+    uncover 3
+    swap
+    concat
     pushbytes 0x0001
     swap
     concat
@@ -617,7 +618,7 @@ main_ternary_merge@49:
     b main_while_top@45
 
 main_ternary_false@48:
-    uncover 3
+    uncover 4
     intc_3 // 4096
     /
     dup

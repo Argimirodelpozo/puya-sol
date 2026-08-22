@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/contracts/shortcircuit_side_effect.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "cnt" 0x151f7c75
+    bytecblock "cnt" 0x 0x151f7c75
     intc_0 // 0
     pushint 4096
     bzero
@@ -26,7 +26,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "cnt"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -56,7 +56,9 @@ main_ternary_merge@15:
     intc_0 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -65,7 +67,7 @@ main_ternary_merge@15:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -114,7 +116,7 @@ main_bool_merge@24:
     intc_0 // 0
     uncover 2
     setbit
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log

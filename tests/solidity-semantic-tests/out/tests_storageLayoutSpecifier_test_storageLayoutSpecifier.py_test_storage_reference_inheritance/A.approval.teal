@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/storage_reference_inheritance.sol.A.approval_program() -> uint64:
 main:
     intcblock 0 1 64
-    bytecblock "s" 0x00
+    bytecblock "s" 0x000000000000000000000000000000000000000000000000000000000000000000 0x00
     pushint 4096
     bzero
     dup
@@ -25,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "s"
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_1 // 1
     return
@@ -55,13 +55,15 @@ main_ternary_merge@9:
     intc_0 // 0
     bytec_0 // "s"
     app_global_get_ex
-    assert // check s exists
+    bytec_1 // 0x000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     dup
     extract 0 32
     swap
     pushint 256
     getbit
-    bytec_1 // 0x00
+    bytec_2 // 0x00
     intc_0 // 0
     uncover 2
     setbit
@@ -76,7 +78,7 @@ main_ternary_merge@9:
     bzero
     uncover 2
     b|
-    bytec_1 // 0x00
+    bytec_2 // 0x00
     intc_0 // 0
     uncover 3
     setbit

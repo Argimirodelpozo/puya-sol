@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x151f7c75 0x 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x22b2fda0 0x10da340f 0xa0a2a599 0x88ce8eb6 0x795d221f 0x2e346852 0x7f9c7280
+    bytecblock 0x151f7c75 0x 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x10da340f 0xa0a2a599 0x88ce8eb6 0x795d221f 0x2e346852 0x7f9c7280 0x1af93581 0x0a326c0c00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000 0x432672b2000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
     pushint 4096
     bzero
     dup
@@ -36,14 +36,13 @@ main_after_if_else@2:
     assert
     txn ApplicationID
     assert
-    bytec_3 // method "fNoArgs()void"
-    pushbytess 0xb6e08150 0x2e5fdc8c // method "fArray(uint256[])void", method "fUint(uint256,uint256)(uint256,uint256)"
-    bytec 4 // method "fSignatureFromLiteralNoArgs()byte[]"
-    bytec 5 // method "fPointerNoArgs()byte[]"
-    bytec 6 // method "fSignatureFromLiteralArray()byte[]"
-    bytec 7 // method "fPointerArray()byte[]"
-    bytec 8 // method "fSignatureFromLiteralUint()byte[]"
-    bytec 9 // method "fPointerUint()byte[]"
+    pushbytess 0x22b2fda0 0xb6e08150 0x2e5fdc8c // method "fNoArgs()void", method "fArray(uint256[])void", method "fUint(uint256,uint256)(uint256,uint256)"
+    bytec_3 // method "fSignatureFromLiteralNoArgs()byte[]"
+    bytec 4 // method "fPointerNoArgs()byte[]"
+    bytec 5 // method "fSignatureFromLiteralArray()byte[]"
+    bytec 6 // method "fPointerArray()byte[]"
+    bytec 7 // method "fSignatureFromLiteralUint()byte[]"
+    bytec 8 // method "fPointerUint()byte[]"
     pushbytes 0xb2fd8e38 // method "assertConsistentSelectors()void"
     txna ApplicationArgs 0
     match main_fNoArgs_route@5 main_fArray_route@6 main_fUint_route@7 main_fSignatureFromLiteralNoArgs_route@8 main_fPointerNoArgs_route@9 main_fSignatureFromLiteralArray_route@10 main_fPointerArray_route@11 main_fSignatureFromLiteralUint_route@12 main_fPointerUint_route@13 main_assertConsistentSelectors_route@14
@@ -270,7 +269,7 @@ fSignatureFromLiteralNoArgs:
     txn NumAppArgs
     bz fSignatureFromLiteralNoArgs_after_if_else@6
     txna ApplicationArgs 0
-    bytec 4 // method "fSignatureFromLiteralNoArgs()byte[]"
+    bytec_3 // method "fSignatureFromLiteralNoArgs()byte[]"
     ==
     bz fSignatureFromLiteralNoArgs_after_if_else@6
     txn GroupIndex
@@ -285,7 +284,7 @@ fSignatureFromLiteralNoArgs_ternary_merge@5:
     assert // not payable
 
 fSignatureFromLiteralNoArgs_after_if_else@6:
-    pushbytes 0x5fd2f459 // method "fNoArgs()"
+    bytec 9 // 0x1af93581
     retsub
 
 fSignatureFromLiteralNoArgs_ternary_false@4:
@@ -298,7 +297,7 @@ fPointerNoArgs:
     txn NumAppArgs
     bz fPointerNoArgs_after_if_else@6
     txna ApplicationArgs 0
-    bytec 5 // method "fPointerNoArgs()byte[]"
+    bytec 4 // method "fPointerNoArgs()byte[]"
     ==
     bz fPointerNoArgs_after_if_else@6
     txn GroupIndex
@@ -313,7 +312,7 @@ fPointerNoArgs_ternary_merge@5:
     assert // not payable
 
 fPointerNoArgs_after_if_else@6:
-    bytec_3 // 0x22b2fda0
+    bytec 9 // 0x1af93581
     retsub
 
 fPointerNoArgs_ternary_false@4:
@@ -326,7 +325,7 @@ fSignatureFromLiteralArray:
     txn NumAppArgs
     bz fSignatureFromLiteralArray_after_if_else@6
     txna ApplicationArgs 0
-    bytec 6 // method "fSignatureFromLiteralArray()byte[]"
+    bytec 5 // method "fSignatureFromLiteralArray()byte[]"
     ==
     bz fSignatureFromLiteralArray_after_if_else@6
     txn GroupIndex
@@ -375,7 +374,7 @@ fSignatureFromLiteralArray_while_top@7:
 
 fSignatureFromLiteralArray_after_while@9:
     pop
-    pushbytes 0xcb5a776400000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    bytec 10 // 0x0a326c0c00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
     swap
     concat
     retsub
@@ -390,7 +389,7 @@ fPointerArray:
     txn NumAppArgs
     bz fPointerArray_after_if_else@6
     txna ApplicationArgs 0
-    bytec 7 // method "fPointerArray()byte[]"
+    bytec 6 // method "fPointerArray()byte[]"
     ==
     bz fPointerArray_after_if_else@6
     txn GroupIndex
@@ -439,7 +438,7 @@ fPointerArray_while_top@7:
 
 fPointerArray_after_while@9:
     pop
-    pushbytes 0xb6e0815000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    bytec 10 // 0x0a326c0c00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
     swap
     concat
     retsub
@@ -454,7 +453,7 @@ fSignatureFromLiteralUint:
     txn NumAppArgs
     bz fSignatureFromLiteralUint_after_if_else@6
     txna ApplicationArgs 0
-    bytec 8 // method "fSignatureFromLiteralUint()byte[]"
+    bytec 7 // method "fSignatureFromLiteralUint()byte[]"
     ==
     bz fSignatureFromLiteralUint_after_if_else@6
     txn GroupIndex
@@ -469,7 +468,7 @@ fSignatureFromLiteralUint_ternary_merge@5:
     assert // not payable
 
 fSignatureFromLiteralUint_after_if_else@6:
-    pushbytes 0x6052c2fd000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
+    bytec 11 // 0x432672b2000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
     retsub
 
 fSignatureFromLiteralUint_ternary_false@4:
@@ -482,7 +481,7 @@ fPointerUint:
     txn NumAppArgs
     bz fPointerUint_after_if_else@6
     txna ApplicationArgs 0
-    bytec 9 // method "fPointerUint()byte[]"
+    bytec 8 // method "fPointerUint()byte[]"
     ==
     bz fPointerUint_after_if_else@6
     txn GroupIndex
@@ -497,7 +496,7 @@ fPointerUint_ternary_merge@5:
     assert // not payable
 
 fPointerUint_after_if_else@6:
-    pushbytes 0x2e5fdc8c000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
+    bytec 11 // 0x432672b2000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
     retsub
 
 fPointerUint_ternary_false@4:

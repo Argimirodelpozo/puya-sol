@@ -4,8 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/constructor.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 8 32
-    bytecblock "x" "y" "z" 0x0100 0x80 0x151f7c75
-    pushbytes ""
+    bytecblock 0x "x" "y" "z" 0x0100 0x80 0x151f7c75
+    bytec_0 // ""
     pushint 4096
     bzero
     dup
@@ -38,13 +38,13 @@ main:
     -
     extract_uint64
     cover 3
-    bytec_0 // "x"
-    pushbytes 0x
+    bytec_1 // "x"
+    bytec_0 // 0x
     app_global_put
-    bytec_1 // "y"
+    bytec_2 // "y"
     intc_0 // 0
     app_global_put
-    bytec_2 // "z"
+    bytec_3 // "z"
     intc_0 // 0
     app_global_put
     intc_1 // 1
@@ -55,15 +55,15 @@ main:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_0 // "x"
+    bytec_1 // "x"
     swap
     app_global_put
     intc_2 // 8
     extract3
-    bytec_3 // 0x0100
+    bytec 4 // 0x0100
     b%
     dup
-    bytec 4 // 0x80
+    bytec 5 // 0x80
     b<
     dup
     !
@@ -72,9 +72,9 @@ main:
     dup
     pushbytes 0x02
     b+
-    bytec_3 // 0x0100
+    bytec 4 // 0x0100
     b%
-    bytec 4 // 0x80
+    bytec 5 // 0x80
     b<
     !
     dig 3
@@ -91,7 +91,7 @@ main_bool_merge@5:
     swap
     pushbytes 0x02
     b+
-    bytec_3 // 0x0100
+    bytec 4 // 0x0100
     b%
     concat
     dup
@@ -99,7 +99,7 @@ main_bool_merge@5:
     intc_2 // 8
     -
     extract_uint64
-    bytec_1 // "y"
+    bytec_2 // "y"
     swap
     app_global_put
     pushint 3
@@ -108,7 +108,7 @@ main_bool_merge@5:
     pushint 4294967295
     <=
     assert // overflow
-    bytec_2 // "z"
+    bytec_3 // "z"
     swap
     app_global_put
     intc_1 // 1
@@ -141,9 +141,11 @@ main_ternary_merge@18:
     !
     assert // not payable
     intc_0 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_3 // 32
@@ -152,7 +154,7 @@ main_ternary_merge@18:
     intc_3 // 32
     bzero
     b|
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -175,14 +177,16 @@ main_ternary_merge@23:
     !
     assert // not payable
     intc_0 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    intc_0 // 0
+    cover 2
+    select
     itob
     pushbytes 0xff
     b&
     dup
-    bytec 4 // 0x80
+    bytec 5 // 0x80
     b>=
     bz main_ternary_false@25
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
@@ -197,7 +201,7 @@ main_ternary_merge@26:
     intc_3 // 32
     bzero
     b|
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -223,11 +227,13 @@ main_ternary_merge@31:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "z"
+    bytec_3 // "z"
     app_global_get_ex
-    assert // check z exists
+    intc_0 // 0
+    cover 2
+    select
     itob
-    bytec 5 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log

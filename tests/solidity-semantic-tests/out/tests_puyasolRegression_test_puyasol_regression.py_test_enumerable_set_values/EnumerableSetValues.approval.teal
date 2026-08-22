@@ -608,17 +608,20 @@ ESet.values_while_top@13:
     dig 4
     +
     dup
-    cover 2
+    cover 3
     dup
     intc_0 // 32
     +
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    pushint 12
+    bzero
+    cover 4
     intc_3 // 4096
     %
     dup
-    cover 4
+    cover 3
     intc_3 // 4096
     swap
     -
@@ -627,7 +630,7 @@ ESet.values_while_top@13:
     >=
     bz ESet.values_ternary_false@16
     pop
-    swap
+    uncover 3
     intc_3 // 4096
     /
     loads
@@ -636,12 +639,10 @@ ESet.values_while_top@13:
     extract3
 
 ESet.values_ternary_merge@17:
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
+    extract 12 20
+    uncover 3
+    swap
+    concat
     bytec 4 // 0x0001
     swap
     concat
@@ -667,7 +668,7 @@ ESet.values_ternary_merge@17:
     b ESet.values_while_top@13
 
 ESet.values_ternary_false@16:
-    uncover 2
+    uncover 4
     intc_3 // 4096
     /
     dup

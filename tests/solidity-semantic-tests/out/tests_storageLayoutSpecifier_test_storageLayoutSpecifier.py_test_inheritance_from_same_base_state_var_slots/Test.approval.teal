@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol.Test.approval_program() -> uint64:
 main:
     intcblock 0 1 32 6 1000000
-    bytecblock "__ctor_pending" 0x151f7c75 "c" "b" TMPL_APPROVAL_A TMPL_CLEAR_A TMPL_APPROVAL_B TMPL_CLEAR_B TMPL_APPROVAL_C TMPL_CLEAR_C
+    bytecblock "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 "c" TMPL_APPROVAL_A TMPL_CLEAR_A TMPL_APPROVAL_B TMPL_CLEAR_B TMPL_APPROVAL_C TMPL_CLEAR_C
     pushint 4096
     bzero
     dup
@@ -54,9 +54,11 @@ main_ternary_merge@15:
     assert // not payable
     itxn_begin
     intc_0 // 0
-    bytec_2 // "c"
+    bytec_3 // "c"
     app_global_get_ex
-    assert // check c exists
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushint 24
     extract_uint64
     intc_3 // 6
@@ -92,7 +94,7 @@ main_ternary_merge@15:
     cover 2
     b|
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -116,9 +118,11 @@ main_ternary_merge@20:
     assert // not payable
     itxn_begin
     intc_0 // 0
-    bytec_3 // "b"
+    pushbytes "b"
     app_global_get_ex
-    assert // check b exists
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushint 24
     extract_uint64
     intc_3 // 6
@@ -154,7 +158,7 @@ main_ternary_merge@20:
     cover 2
     b|
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -180,7 +184,9 @@ main_ternary_merge@25:
     intc_0 // 0
     pushbytes "a"
     app_global_get_ex
-    assert // check a exists
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushint 24
     extract_uint64
     intc_3 // 6
@@ -203,7 +209,7 @@ main_ternary_merge@25:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -297,7 +303,7 @@ main___postInit_route@5:
     dig 1
     swap
     concat
-    bytec_3 // "b"
+    pushbytes "b"
     swap
     app_global_put
     itxn_begin
@@ -331,7 +337,7 @@ main___postInit_route@5:
     itxn_submit
     itob
     concat
-    bytec_2 // "c"
+    bytec_3 // "c"
     swap
     app_global_put
     intc_1 // 1

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/use_scratch.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "__ctor_pending" "m" 0x "x" "y" 0x151f7c75
+    bytecblock 0x "__ctor_pending" "m" "x" "y" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -69,11 +69,11 @@ main_ternary_merge@14:
     -
     intc_0 // 32
     extract3
-    bytec_1 // "m"
+    bytec_2 // "m"
     concat
     sha256
     box_get
-    bytec_2 // 0x
+    bytec_0 // 0x
     cover 2
     select
     dup
@@ -107,7 +107,9 @@ main_ternary_merge@19:
     intc_2 // 0
     bytec_3 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     b+
     dup
@@ -127,7 +129,9 @@ main_ternary_merge@19:
     intc_2 // 0
     bytec 4 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_0 // 32
@@ -154,25 +158,25 @@ main___postInit_route@5:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_0 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_1 // "m"
+    bytec_2 // "m"
     pushint 2
     box_create
     pop
     bytec_3 // "x"
-    bytec_2 // 0x
+    bytec_0 // 0x
     app_global_put
     bytec 4 // "y"
-    bytec_2 // 0x
+    bytec_0 // 0x
     app_global_put
     pushint 42
     itob
@@ -196,7 +200,7 @@ main___postInit_route@5:
     -
     intc_0 // 32
     extract3
-    bytec_1 // "m"
+    bytec_2 // "m"
     concat
     sha256
     dup

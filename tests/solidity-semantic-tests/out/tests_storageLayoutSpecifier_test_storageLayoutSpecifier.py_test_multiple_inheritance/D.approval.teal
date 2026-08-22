@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/multiple_inheritance.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 32
-    bytecblock "x" "y" "w" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "z" 0x2a49be10 0x88035e71 0x8a37d29b
+    bytecblock 0x "x" "y" "w" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "z" 0x2a49be10 0x88035e71 0x8a37d29b
     pushint 4096
     bzero
     dup
@@ -24,17 +24,17 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    pushbytes 0x
+    bytec_1 // "x"
+    bytec_0 // 0x
     app_global_put
-    bytec_1 // "y"
-    pushbytes 0x
+    bytec_2 // "y"
+    bytec_0 // 0x
     app_global_put
-    bytec_2 // "w"
-    pushbytes 0x
+    bytec_3 // "w"
+    bytec_0 // 0x
     app_global_put
-    bytec 5 // "z"
-    pushbytes 0x
+    bytec 6 // "z"
+    bytec_0 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -46,9 +46,9 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytess 0x8ef91fdb 0x5848be20 0xc2059c64 0x5c5e3bbc 0x7c1072af // method "test()(uint256,uint256,uint256,uint256)", method "z()uint256", method "w()uint256", method "y()uint256", method "x()uint256"
-    bytec 6 // method "h(uint256)void"
-    bytec 7 // method "g(uint256)void"
-    bytec 8 // method "f(uint256)void"
+    bytec 7 // method "h(uint256)void"
+    bytec 8 // method "g(uint256)void"
+    bytec 9 // method "f(uint256)void"
     txna ApplicationArgs 0
     match main_test_route@5 main_z_route@6 main_w_route@7 main_y_route@8 main_x_route@9 main_h_route@10 main_g_route@11 main_f_route@12
     err
@@ -98,9 +98,11 @@ main_ternary_merge@25:
     !
     assert // not payable
     intc_0 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -109,7 +111,7 @@ main_ternary_merge@25:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -132,9 +134,11 @@ main_ternary_merge@30:
     !
     assert // not payable
     intc_0 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -143,7 +147,7 @@ main_ternary_merge@30:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -166,9 +170,11 @@ main_ternary_merge@35:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "w"
+    bytec_3 // "w"
     app_global_get_ex
-    assert // check w exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -177,7 +183,7 @@ main_ternary_merge@35:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -200,9 +206,11 @@ main_ternary_merge@40:
     !
     assert // not payable
     intc_0 // 0
-    bytec 5 // "z"
+    bytec 6 // "z"
     app_global_get_ex
-    assert // check z exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -211,7 +219,7 @@ main_ternary_merge@40:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -237,23 +245,27 @@ main_ternary_merge@45:
     itob
     callsub h
     intc_0 // 0
-    bytec_2 // "w"
+    bytec_3 // "w"
     app_global_get_ex
-    assert // check w exists
+    bytec_0 // 0x
+    cover 2
+    select
     pushint 2
     itob
     b+
     dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec 5 // "z"
+    bytec 6 // "z"
     dig 1
     app_global_put
     intc_0 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -265,9 +277,11 @@ main_ternary_merge@45:
     dig 1
     b|
     intc_0 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -276,9 +290,11 @@ main_ternary_merge@45:
     dig 2
     b|
     intc_0 // 0
-    bytec_2 // "w"
+    bytec_3 // "w"
     app_global_get_ex
-    assert // check w exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -301,7 +317,7 @@ main_ternary_merge@45:
     concat
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -319,7 +335,7 @@ h:
     txn NumAppArgs
     bz h_after_if_else@6
     txna ApplicationArgs 0
-    bytec 6 // method "h(uint256)void"
+    bytec 7 // method "h(uint256)void"
     ==
     bz h_after_if_else@6
     txn GroupIndex
@@ -337,19 +353,23 @@ h_after_if_else@6:
     frame_dig -1
     callsub g
     intc_0 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     intc_0 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     b+
     dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_2 // "w"
+    bytec_3 // "w"
     swap
     app_global_put
     retsub
@@ -365,7 +385,7 @@ g:
     txn NumAppArgs
     bz g_after_if_else@6
     txna ApplicationArgs 0
-    bytec 7 // method "g(uint256)void"
+    bytec 8 // method "g(uint256)void"
     ==
     bz g_after_if_else@6
     txn GroupIndex
@@ -381,28 +401,32 @@ g_ternary_merge@5:
 
 g_after_if_else@6:
     intc_0 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     frame_dig -1
     b+
     dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     callsub f
     intc_0 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     intc_1 // 1
     itob
     b+
     dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_1 // "y"
+    bytec_2 // "y"
     swap
     app_global_put
     retsub
@@ -418,7 +442,7 @@ f:
     txn NumAppArgs
     bz f_after_if_else@6
     txna ApplicationArgs 0
-    bytec 8 // method "f(uint256)void"
+    bytec 9 // method "f(uint256)void"
     ==
     bz f_after_if_else@6
     txn GroupIndex
@@ -433,7 +457,7 @@ f_ternary_merge@5:
     assert // not payable
 
 f_after_if_else@6:
-    bytec_0 // "x"
+    bytec_1 // "x"
     frame_dig -1
     app_global_put
     retsub

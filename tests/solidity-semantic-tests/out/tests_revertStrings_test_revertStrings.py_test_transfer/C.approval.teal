@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/contracts/transfer.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 16
-    bytecblock "__ctor_pending" "a" TMPL_APPROVAL_A TMPL_CLEAR_A
+    bytecblock "__ctor_pending" "a" 0x0000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_A TMPL_CLEAR_A
     pushint 4096
     bzero
     dup
@@ -97,7 +97,9 @@ main_ternary_merge@25:
     intc_1 // 0
     bytec_1 // "a"
     app_global_get_ex
-    assert // check a exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_0 // 1
     itxn_field TypeEnum
     itxn_field Receiver
@@ -128,7 +130,9 @@ main_ternary_merge@30:
     intc_1 // 0
     bytec_1 // "a"
     app_global_get_ex
-    assert // check a exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_0 // 1
     itxn_field TypeEnum
     itxn_field Receiver
@@ -160,8 +164,8 @@ main___postInit_route@8:
     intc_1 // 0
     app_global_put
     itxn_begin
-    bytec_2 // TMPL_APPROVAL_A
-    bytec_3 // TMPL_CLEAR_A
+    bytec_3 // TMPL_APPROVAL_A
+    bytec 4 // TMPL_CLEAR_A
     pushint 6
     itxn_field TypeEnum
     intc_2 // 16

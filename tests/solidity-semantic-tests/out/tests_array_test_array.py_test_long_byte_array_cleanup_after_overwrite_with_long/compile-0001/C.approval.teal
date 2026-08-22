@@ -497,8 +497,8 @@ main___postInit_route@5:
     bz main_else_body@60
     pop
     bytec_0 // "testArray"
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    app_global_put
+    pushint 18446744073709551615
+    box_resize
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_overwrite_with_long.sol.C.__storage_write@61
 
 main_else_body@60:
@@ -536,17 +536,10 @@ __storage_read:
     pushbytes 0x
     b==
     bz __storage_read_else_body@2
-    intc_0 // 32
-    bzero
     bytec_0 // "testArray"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    box_len
+    assert // box exists
+    itob
     retsub
 
 __storage_read_else_body@2:

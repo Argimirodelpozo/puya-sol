@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_for2.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1
-    bytecblock "st" 0x010000000000000000000000000000000000000000000000000000000000000000 0x
+    bytecblock "st" 0x 0x010000000000000000000000000000000000000000000000000000000000000000
     intc_1 // 0
     pushint 4096
     bzero
@@ -26,7 +26,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "st"
-    bytec_2 // 0x
+    bytec_1 // 0x
     app_global_put
     intc_2 // 1
     return
@@ -59,9 +59,9 @@ main_f_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    bytec_2 // 0x
+    bytec_1 // 0x
     bury 2
-    bytec_2 // 0x
+    bytec_1 // 0x
     intc_1 // 0
     itob
     bytec_0 // "st"
@@ -86,7 +86,7 @@ main_while_top@10:
     extract3
     pushbytes 0x02
     b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec_0 // "st"
     swap
@@ -101,9 +101,11 @@ main_while_top@10:
     intc_1 // 0
     bytec_0 // "st"
     app_global_get_ex
-    assert // check st exists
+    bytec_1 // 0x
+    cover 2
+    select
     dig 3
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -115,7 +117,7 @@ main_while_top@10:
     cover 2
     b|
     uncover 2
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -125,7 +127,7 @@ main_while_top@10:
     dig 2
     b|
     uncover 3
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -147,11 +149,11 @@ main_while_top@10:
 
 main_after_if_else@12:
     pop
-    bytec_2 // 0x
+    bytec_1 // 0x
     uncover 2
     pushbytes 0x03
     b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     cover 2
     swap

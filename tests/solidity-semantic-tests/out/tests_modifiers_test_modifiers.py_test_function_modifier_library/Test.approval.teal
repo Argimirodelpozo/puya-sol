@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_library.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 32 0
-    bytecblock "s" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock "s" 0x0000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -25,7 +25,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "s"
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_0 // 1
     return
@@ -55,7 +55,9 @@ main_ternary_merge@9:
     intc_2 // 0
     bytec_0 // "s"
     app_global_get_ex
-    assert // check s exists
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     callsub L.libFun
     pop
     bytec_0 // "s"
@@ -87,7 +89,7 @@ L.libFun:
     pushbytes 0x01
     b+
     dup
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dup
@@ -106,7 +108,7 @@ L.libFun:
     pushbytes 0x0100
     b+
     dup
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dup

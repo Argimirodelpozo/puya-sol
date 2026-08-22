@@ -23,8 +23,6 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "s" 0x0000030000
-    app_global_put
     intc_0 // 1
     return
 
@@ -75,10 +73,13 @@ main_ternary_merge@9:
     !
     assert // not payable
     pushbytes "s"
+    box_del
+    pop
+    pushbytes "s"
     uncover 2
     dup
     cover 2
-    app_global_put
+    box_put
     extract 0 1
     intc_2 // 0
     getbyte

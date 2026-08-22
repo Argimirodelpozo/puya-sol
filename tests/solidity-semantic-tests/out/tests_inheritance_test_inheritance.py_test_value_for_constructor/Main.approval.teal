@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/value_for_constructor.sol.Main.approval_program() -> uint64:
 main:
     intcblock 0 1 24 6
-    bytecblock "h" "__ctor_pending" 0x151f7c75 0x2fe85e04 0x0a5c26e3 TMPL_APPROVAL_Helper TMPL_CLEAR_Helper
+    bytecblock "h" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x2fe85e04 0x0a5c26e3 TMPL_APPROVAL_Helper TMPL_CLEAR_Helper
     pushint 4096
     bzero
     dup
@@ -37,8 +37,8 @@ main_after_if_else@2:
     txn ApplicationID
     assert
     pushbytes 0xbacc49e3 // method "__postInit()void"
-    bytec_3 // method "getFlag()bool"
-    bytec 4 // method "getName()byte[3]"
+    bytec 4 // method "getFlag()bool"
+    bytec 5 // method "getName()byte[3]"
     pushbytes 0x482b5f7f // method "getBalances()(uint256,uint256)"
     txna ApplicationArgs 0
     match main___postInit_route@5 main_getFlag_route@6 main_getName_route@7 main_getBalances_route@8
@@ -62,7 +62,9 @@ main_ternary_merge@15:
     intc_0 // 0
     bytec_0 // "h"
     app_global_get_ex
-    assert // check h exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_2 // 24
     extract_uint64
     app_params_get AppAddress
@@ -78,7 +80,7 @@ main_ternary_merge@15:
     cover 2
     b|
     concat
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -104,7 +106,9 @@ main_ternary_merge@20:
     intc_0 // 0
     bytec_0 // "h"
     app_global_get_ex
-    assert // check h exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_2 // 24
     extract_uint64
     intc_3 // 6
@@ -114,12 +118,12 @@ main_ternary_merge@20:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 4 // method "getName()byte[3]"
+    bytec 5 // method "getName()byte[3]"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
     extract 4 0
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -145,7 +149,9 @@ main_ternary_merge@25:
     intc_0 // 0
     bytec_0 // "h"
     app_global_get_ex
-    assert // check h exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_2 // 24
     extract_uint64
     intc_3 // 6
@@ -155,7 +161,7 @@ main_ternary_merge@25:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_3 // method "getFlag()bool"
+    bytec 4 // method "getFlag()bool"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -168,7 +174,7 @@ main_ternary_merge@25:
     intc_0 // 0
     uncover 2
     setbit
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -193,8 +199,8 @@ main___postInit_route@5:
     itxn_begin
     intc_1 // 1
     itob
-    bytec 5 // TMPL_APPROVAL_Helper
-    bytec 6 // TMPL_CLEAR_Helper
+    bytec 6 // TMPL_APPROVAL_Helper
+    bytec 7 // TMPL_CLEAR_Helper
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16

@@ -213,11 +213,11 @@ main_after_if_else@31:
     itob
     b==
     dup
-    bnz main_after_if_else@134
+    bnz main_after_if_else@122
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@134:
+main_after_if_else@122:
     assert
     pushbytes 0x151f7c7580
     log
@@ -436,10 +436,10 @@ main_after_if_else@56:
     itob
     b==
     dup
-    bnz main_after_if_else@134
+    bnz main_after_if_else@122
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
-    b main_after_if_else@134
+    b main_after_if_else@122
 
 main_ternary_false@43:
     intc_1 // 0
@@ -646,10 +646,10 @@ main_after_if_else@75:
     itob
     b==
     dup
-    bnz main_after_if_else@134
+    bnz main_after_if_else@122
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
-    b main_after_if_else@134
+    b main_after_if_else@122
 
 main_ternary_false@62:
     intc_1 // 0
@@ -829,20 +829,6 @@ main_ternary_merge@105:
     >
     assert // array index out of bounds
     bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@107
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_1 // 0
-    extract_uint16
-
-main_ternary_merge@108:
-    intc_2 // 1
-    >
-    assert // array index out of bounds
-    bytec_0 // "a"
     pushint 4
     intc_0 // 2
     box_extract
@@ -864,37 +850,23 @@ main_ternary_merge@108:
     extract 0 32
     b==
     dup
-    bnz main_after_if_else@110
+    bnz main_after_if_else@107
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@110:
+main_after_if_else@107:
     assert
     bytec_0 // "a"
     box_len
     bury 1
-    bz main_ternary_false@112
+    bz main_ternary_false@109
     bytec_0 // "a"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-main_ternary_merge@113:
-    intc_2 // 1
-    >
-    assert // array index out of bounds
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@115
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_1 // 0
-    extract_uint16
-
-main_ternary_merge@116:
+main_ternary_merge@110:
     intc_2 // 1
     >
     assert // array index out of bounds
@@ -924,37 +896,23 @@ main_ternary_merge@116:
     itob
     b==
     dup
-    bnz main_after_if_else@118
+    bnz main_after_if_else@112
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@118:
+main_after_if_else@112:
     assert
     bytec_0 // "a"
     box_len
     bury 1
-    bz main_ternary_false@120
+    bz main_ternary_false@114
     bytec_0 // "a"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-main_ternary_merge@121:
-    intc_2 // 1
-    >
-    assert // array index out of bounds
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@123
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_1 // 0
-    extract_uint16
-
-main_ternary_merge@124:
+main_ternary_merge@115:
     intc_2 // 1
     >
     assert // array index out of bounds
@@ -984,37 +942,23 @@ main_ternary_merge@124:
     itob
     b==
     dup
-    bnz main_after_if_else@126
+    bnz main_after_if_else@117
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@126:
+main_after_if_else@117:
     assert
     bytec_0 // "a"
     box_len
     bury 1
-    bz main_ternary_false@128
+    bz main_ternary_false@119
     bytec_0 // "a"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-main_ternary_merge@129:
-    intc_2 // 1
-    >
-    assert // array index out of bounds
-    bytec_0 // "a"
-    box_len
-    bury 1
-    bz main_ternary_false@131
-    bytec_0 // "a"
-    box_get
-    pop
-    intc_1 // 0
-    extract_uint16
-
-main_ternary_merge@132:
+main_ternary_merge@120:
     intc_2 // 1
     >
     assert // array index out of bounds
@@ -1044,38 +988,22 @@ main_ternary_merge@132:
     itob
     b==
     dup
-    bnz main_after_if_else@134
+    bnz main_after_if_else@122
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
-    b main_after_if_else@134
+    b main_after_if_else@122
 
-main_ternary_false@131:
+main_ternary_false@119:
     intc_1 // 0
-    b main_ternary_merge@132
+    b main_ternary_merge@120
 
-main_ternary_false@128:
+main_ternary_false@114:
     intc_1 // 0
-    b main_ternary_merge@129
+    b main_ternary_merge@115
 
-main_ternary_false@123:
+main_ternary_false@109:
     intc_1 // 0
-    b main_ternary_merge@124
-
-main_ternary_false@120:
-    intc_1 // 0
-    b main_ternary_merge@121
-
-main_ternary_false@115:
-    intc_1 // 0
-    b main_ternary_merge@116
-
-main_ternary_false@112:
-    intc_1 // 0
-    b main_ternary_merge@113
-
-main_ternary_false@107:
-    intc_1 // 0
-    b main_ternary_merge@108
+    b main_ternary_merge@110
 
 main_ternary_false@104:
     intc_1 // 0
@@ -1135,25 +1063,25 @@ main___postInit_route@5:
     bytec_0 // "a"
     box_len
     bury 1
-    bz main_ternary_false@138
+    bz main_ternary_false@126
     bytec_0 // "a"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-main_ternary_merge@139:
+main_ternary_merge@127:
     assert // array index out of bounds
     bytec_0 // "a"
     box_len
     bury 1
-    bnz main_after_if_else@141
+    bnz main_after_if_else@129
     bytec_0 // "a"
     intc_0 // 2
     box_create
     pop
 
-main_after_if_else@141:
+main_after_if_else@129:
     bytec_0 // "a"
     box_get
     assert // box exists
@@ -1197,25 +1125,25 @@ main_after_if_else@141:
     bytec_0 // "a"
     box_len
     bury 1
-    bz main_ternary_false@143
+    bz main_ternary_false@131
     bytec_0 // "a"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-main_ternary_merge@144:
+main_ternary_merge@132:
     assert // array index out of bounds
     bytec_0 // "a"
     box_len
     bury 1
-    bnz main_after_if_else@146
+    bnz main_after_if_else@134
     bytec_0 // "a"
     intc_0 // 2
     box_create
     pop
 
-main_after_if_else@146:
+main_after_if_else@134:
     bytec_0 // "a"
     box_get
     assert // box exists
@@ -1259,25 +1187,25 @@ main_after_if_else@146:
     bytec_0 // "a"
     box_len
     bury 1
-    bz main_ternary_false@148
+    bz main_ternary_false@136
     bytec_0 // "a"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-main_ternary_merge@149:
+main_ternary_merge@137:
     assert // array index out of bounds
     bytec_0 // "a"
     box_len
     bury 1
-    bnz main_after_if_else@151
+    bnz main_after_if_else@139
     bytec_0 // "a"
     intc_0 // 2
     box_create
     pop
 
-main_after_if_else@151:
+main_after_if_else@139:
     bytec_0 // "a"
     box_get
     assert // box exists
@@ -1345,17 +1273,17 @@ main_after_if_else@151:
     intc_2 // 1
     return
 
-main_ternary_false@148:
+main_ternary_false@136:
     intc_1 // 0
-    b main_ternary_merge@149
+    b main_ternary_merge@137
 
-main_ternary_false@143:
+main_ternary_false@131:
     intc_1 // 0
-    b main_ternary_merge@144
+    b main_ternary_merge@132
 
-main_ternary_false@138:
+main_ternary_false@126:
     intc_1 // 0
-    b main_ternary_merge@139
+    b main_ternary_merge@127
 
 
 // _puya_lib.box_arc4.box_dynamic_array_concat_fixed(box_key: bytes, array_offset: uint64, new_items_bytes: bytes, new_items_count: uint64, fixed_element_size: uint64) -> void:

@@ -1905,7 +1905,7 @@
                                   "immediates": [],
                                   "stack_args": [
                                     {
-                                      "_type": "AppStateExpression",
+                                      "_type": "StateGet",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
                                         "line": 7,
@@ -1914,13 +1914,43 @@
                                         "column": null,
                                         "end_column": null
                                       },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
+                                      "field": {
+                                        "_type": "AppStateExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                          "line": 7,
+                                          "end_line": 7,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "key": {
+                                          "_type": "BytesConstant",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                            "line": 7,
+                                            "end_line": 7,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "state_key",
+                                            "immutable": true
+                                          },
+                                          "value": "cm",
+                                          "encoding": "utf8"
+                                        },
+                                        "exists_assertion_message": null
                                       },
-                                      "key": {
+                                      "default": {
                                         "_type": "BytesConstant",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
@@ -1931,14 +1961,14 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "WType",
-                                          "name": "state_key",
-                                          "immutable": true
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
                                         },
-                                        "value": "cm",
-                                        "encoding": "utf8"
-                                      },
-                                      "exists_assertion_message": "check x exists"
+                                        "value": "",
+                                        "encoding": "base16"
+                                      }
                                     },
                                     {
                                       "_type": "IntrinsicCall",
@@ -2492,7 +2522,7 @@
                     },
                     "body": [
                       {
-                        "_type": "ExpressionStatement",
+                        "_type": "Block",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
                           "line": 9,
@@ -2501,23 +2531,9 @@
                           "column": null,
                           "end_column": null
                         },
-                        "expr": {
-                          "_type": "AssignmentExpression",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
-                            "line": 9,
-                            "end_line": 9,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "string",
-                            "immutable": true
-                          },
-                          "target": {
-                            "_type": "AppStateExpression",
+                        "body": [
+                          {
+                            "_type": "AssignmentStatement",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
                               "line": 9,
@@ -2526,48 +2542,8 @@
                               "column": null,
                               "end_column": null
                             },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "string",
-                              "immutable": true
-                            },
-                            "key": {
-                              "_type": "BytesConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
-                                "line": 9,
-                                "end_line": 9,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "state_key",
-                                "immutable": true
-                              },
-                              "value": "cm",
-                              "encoding": "utf8"
-                            },
-                            "exists_assertion_message": "check x exists"
-                          },
-                          "value": {
-                            "_type": "ReinterpretCast",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
-                              "line": 9,
-                              "end_line": 9,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "string",
-                              "immutable": true
-                            },
-                            "expr": {
-                              "_type": "IntrinsicCall",
+                            "target": {
+                              "_type": "VarExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
                                 "line": 9,
@@ -2578,14 +2554,45 @@
                               },
                               "wtype": {
                                 "_type": "BytesWType",
-                                "name": "bytes",
+                                "name": "bytes[1]",
                                 "immutable": true,
-                                "length": null
+                                "length": 1
                               },
-                              "op_code": "replace3",
-                              "immediates": [],
-                              "stack_args": [
-                                {
+                              "name": "__byte_assign_0"
+                            },
+                            "value": {
+                              "_type": "ReinterpretCast",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                "line": 9,
+                                "end_line": 9,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes[1]",
+                                "immutable": true,
+                                "length": 1
+                              },
+                              "expr": {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                  "line": 9,
+                                  "end_line": 9,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "expr": {
                                   "_type": "ReinterpretCast",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
@@ -2597,81 +2604,12 @@
                                   },
                                   "wtype": {
                                     "_type": "BytesWType",
-                                    "name": "bytes",
+                                    "name": "bytes[1]",
                                     "immutable": true,
-                                    "length": null
+                                    "length": 1
                                   },
                                   "expr": {
-                                    "_type": "AppStateExpression",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
-                                      "line": 9,
-                                      "end_line": 9,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "string",
-                                      "immutable": true
-                                    },
-                                    "key": {
-                                      "_type": "BytesConstant",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
-                                        "line": 9,
-                                        "end_line": 9,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "WType",
-                                        "name": "state_key",
-                                        "immutable": true
-                                      },
-                                      "value": "cm",
-                                      "encoding": "utf8"
-                                    },
-                                    "exists_assertion_message": "check x exists"
-                                  }
-                                },
-                                {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
-                                    "line": 9,
-                                    "end_line": 9,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "name": "i__37"
-                                },
-                                {
-                                  "_type": "ReinterpretCast",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
-                                    "line": 9,
-                                    "end_line": 9,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "expr": {
-                                    "_type": "ReinterpretCast",
+                                    "_type": "IntrinsicCall",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
                                       "line": 9,
@@ -2682,12 +2620,189 @@
                                     },
                                     "wtype": {
                                       "_type": "BytesWType",
-                                      "name": "bytes[1]",
+                                      "name": "bytes",
                                       "immutable": true,
-                                      "length": 1
+                                      "length": null
                                     },
-                                    "expr": {
-                                      "_type": "IntrinsicCall",
+                                    "op_code": "extract3",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                          "line": 9,
+                                          "end_line": 9,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "itob",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "VarExpression",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                              "line": 9,
+                                              "end_line": 9,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "name": "i__37"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                          "line": 9,
+                                          "end_line": 9,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 7,
+                                        "teal_alias": null
+                                      },
+                                      {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                          "line": 9,
+                                          "end_line": 9,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 1,
+                                        "teal_alias": null
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "_type": "ExpressionStatement",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                              "line": 9,
+                              "end_line": 9,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "expr": {
+                              "_type": "AssignmentExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                "line": 9,
+                                "end_line": 9,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "string",
+                                "immutable": true
+                              },
+                              "target": {
+                                "_type": "AppStateExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                  "line": 9,
+                                  "end_line": 9,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "string",
+                                  "immutable": true
+                                },
+                                "key": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                    "line": 9,
+                                    "end_line": 9,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "state_key",
+                                    "immutable": true
+                                  },
+                                  "value": "cm",
+                                  "encoding": "utf8"
+                                },
+                                "exists_assertion_message": null
+                              },
+                              "value": {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                  "line": 9,
+                                  "end_line": 9,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "string",
+                                  "immutable": true
+                                },
+                                "expr": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                    "line": 9,
+                                    "end_line": 9,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "replace3",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "ReinterpretCast",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
                                         "line": 9,
@@ -2702,49 +2817,18 @@
                                         "immutable": true,
                                         "length": null
                                       },
-                                      "op_code": "extract3",
-                                      "immediates": [],
-                                      "stack_args": [
-                                        {
-                                          "_type": "IntrinsicCall",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
-                                            "line": 9,
-                                            "end_line": 9,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "BytesWType",
-                                            "name": "bytes",
-                                            "immutable": true,
-                                            "length": null
-                                          },
-                                          "op_code": "itob",
-                                          "immediates": [],
-                                          "stack_args": [
-                                            {
-                                              "_type": "VarExpression",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
-                                                "line": 9,
-                                                "end_line": 9,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "uint64",
-                                                "immutable": true
-                                              },
-                                              "name": "i__37"
-                                            }
-                                          ]
+                                      "expr": {
+                                        "_type": "StateGet",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                          "line": 9,
+                                          "end_line": 9,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
                                         },
-                                        {
-                                          "_type": "IntegerConstant",
+                                        "field": {
+                                          "_type": "AppStateExpression",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
                                             "line": 9,
@@ -2755,14 +2839,31 @@
                                           },
                                           "wtype": {
                                             "_type": "WType",
-                                            "name": "uint64",
+                                            "name": "string",
                                             "immutable": true
                                           },
-                                          "value": 7,
-                                          "teal_alias": null
+                                          "key": {
+                                            "_type": "BytesConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                              "line": 9,
+                                              "end_line": 9,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "state_key",
+                                              "immutable": true
+                                            },
+                                            "value": "cm",
+                                            "encoding": "utf8"
+                                          },
+                                          "exists_assertion_message": null
                                         },
-                                        {
-                                          "_type": "IntegerConstant",
+                                        "default": {
+                                          "_type": "BytesConstant",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
                                             "line": 9,
@@ -2773,20 +2874,86 @@
                                           },
                                           "wtype": {
                                             "_type": "WType",
-                                            "name": "uint64",
+                                            "name": "string",
                                             "immutable": true
                                           },
-                                          "value": 1,
-                                          "teal_alias": null
+                                          "value": "",
+                                          "encoding": "base16"
                                         }
-                                      ]
+                                      }
+                                    },
+                                    {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                        "line": 9,
+                                        "end_line": 9,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "name": "i__37"
+                                    },
+                                    {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                        "line": 9,
+                                        "end_line": 9,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes[1]",
+                                        "immutable": true,
+                                        "length": 1
+                                      },
+                                      "name": "__byte_assign_0"
                                     }
-                                  }
+                                  ]
                                 }
-                              ]
+                              }
+                            }
+                          },
+                          {
+                            "_type": "ExpressionStatement",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                              "line": 9,
+                              "end_line": 9,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                                "line": 9,
+                                "end_line": 9,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes[1]",
+                                "immutable": true,
+                                "length": 1
+                              },
+                              "name": "__byte_assign_0"
                             }
                           }
-                        }
+                        ],
+                        "label": null,
+                        "comment": null
                       },
                       {
                         "_type": "Block",
@@ -4685,7 +4852,7 @@
                         "source_location": null
                       },
                       "value": {
-                        "_type": "AppStateExpression",
+                        "_type": "StateGet",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
                           "line": 14,
@@ -4694,12 +4861,42 @@
                           "column": null,
                           "end_column": null
                         },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "string",
-                          "immutable": true
+                        "field": {
+                          "_type": "AppStateExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                            "line": 14,
+                            "end_line": 14,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "string",
+                            "immutable": true
+                          },
+                          "key": {
+                            "_type": "BytesConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
+                              "line": 14,
+                              "end_line": 14,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "state_key",
+                              "immutable": true
+                            },
+                            "value": "cm",
+                            "encoding": "utf8"
+                          },
+                          "exists_assertion_message": null
                         },
-                        "key": {
+                        "default": {
                           "_type": "BytesConstant",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol",
@@ -4711,13 +4908,12 @@
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "state_key",
+                            "name": "string",
                             "immutable": true
                           },
-                          "value": "cm",
-                          "encoding": "utf8"
-                        },
-                        "exists_assertion_message": "check x exists"
+                          "value": "",
+                          "encoding": "base16"
+                        }
                       },
                       "error_message": null
                     },

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/arg_eval_semantics.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 32 1
-    bytecblock "cnt" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "seq"
+    bytecblock "cnt" 0x 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "seq"
     pushint 4096
     bzero
     dup
@@ -25,10 +25,10 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "cnt"
-    pushbytes 0x
+    bytec_1 // 0x
     app_global_put
-    bytec_3 // "seq"
-    pushbytes 0x
+    bytec 4 // "seq"
+    bytec_1 // 0x
     app_global_put
     intc_2 // 1
     return
@@ -56,9 +56,11 @@ main_ternary_merge@18:
     !
     assert // not payable
     intc_0 // 0
-    bytec_3 // "seq"
+    bytec 4 // "seq"
     app_global_get_ex
-    assert // check seq exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -67,7 +69,7 @@ main_ternary_merge@18:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -92,7 +94,9 @@ main_ternary_merge@23:
     intc_0 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -101,7 +105,7 @@ main_ternary_merge@23:
     intc_1 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -144,7 +148,9 @@ main_ternary_merge@28:
     intc_0 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -153,7 +159,7 @@ main_ternary_merge@28:
     uncover 2
     b|
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -178,7 +184,7 @@ main_ext_route@8:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub ext
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -215,7 +221,9 @@ main_ternary_merge@35:
     intc_0 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -224,7 +232,7 @@ main_ternary_merge@35:
     uncover 2
     b|
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -246,7 +254,7 @@ main_order_route@6:
 main_ternary_merge@40:
     !
     assert // not payable
-    bytec_3 // "seq"
+    bytec 4 // "seq"
     pushbytes 0x0c
     app_global_put
     pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000c
@@ -278,7 +286,7 @@ main_ternary_merge@45:
     callsub __solfn_25
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dup
@@ -294,7 +302,9 @@ main_ternary_merge@45:
     intc_0 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_1 // 0x
+    cover 2
+    select
     dup
     len
     intc_1 // 32
@@ -303,7 +313,7 @@ main_ternary_merge@45:
     uncover 2
     b|
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -320,11 +330,13 @@ __solfn_14:
     intc_0 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_1 // 0x
+    cover 2
+    select
     pushbytes 0x01
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // "cnt"
@@ -340,11 +352,13 @@ __solfn_25:
     intc_0 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    assert // check cnt exists
+    bytec_1 // 0x
+    cover 2
+    select
     pushbytes 0x01
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     bytec_0 // "cnt"
@@ -372,7 +386,7 @@ ext_ternary_merge@3:
     frame_dig -1
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dup

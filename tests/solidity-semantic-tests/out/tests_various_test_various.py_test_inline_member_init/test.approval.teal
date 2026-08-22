@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/inline_member_init.sol.test.approval_program() -> uint64:
 main:
     intcblock 0 32 1
-    bytecblock "m_b" "m_c" "m_a"
+    bytecblock 0x "m_b" "m_c" "m_a"
     pushint 4096
     bzero
     dup
@@ -26,25 +26,25 @@ main:
     bnz main_after_if_else@2
     pushint 5
     itob
-    bytec_2 // "m_a"
+    bytec_3 // "m_a"
     swap
     app_global_put
-    bytec_0 // "m_b"
-    pushbytes 0x
+    bytec_1 // "m_b"
+    bytec_0 // 0x
     app_global_put
     pushint 7
     itob
-    bytec_1 // "m_c"
+    bytec_2 // "m_c"
     swap
     app_global_put
     pushint 6
     itob
-    bytec_0 // "m_b"
+    bytec_1 // "m_b"
     swap
     app_global_put
     pushint 8
     itob
-    bytec_1 // "m_c"
+    bytec_2 // "m_c"
     swap
     app_global_put
     intc_2 // 1
@@ -73,17 +73,23 @@ main_ternary_merge@9:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "m_a"
+    bytec_3 // "m_a"
     app_global_get_ex
-    assert // check m_a exists
+    bytec_0 // 0x
+    cover 2
+    select
     intc_0 // 0
-    bytec_0 // "m_b"
+    bytec_1 // "m_b"
     app_global_get_ex
-    assert // check m_b exists
+    bytec_0 // 0x
+    cover 2
+    select
     intc_0 // 0
-    bytec_1 // "m_c"
+    bytec_2 // "m_c"
     app_global_get_ex
-    assert // check m_c exists
+    bytec_0 // 0x
+    cover 2
+    select
     dig 2
     len
     intc_1 // 32

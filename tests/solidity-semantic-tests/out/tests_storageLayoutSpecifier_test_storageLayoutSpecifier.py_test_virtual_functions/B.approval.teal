@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/virtual_functions.sol.B.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "x" "y" 0x151f7c75 0x
+    bytecblock 0x "x" "y" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -24,11 +24,11 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "x"
-    bytec_3 // 0x
+    bytec_1 // "x"
+    bytec_0 // 0x
     app_global_put
-    bytec_1 // "y"
-    bytec_3 // 0x
+    bytec_2 // "y"
+    bytec_0 // 0x
     app_global_put
     intc_0 // 1
     return
@@ -56,9 +56,11 @@ main_ternary_merge@15:
     !
     assert // not payable
     intc_1 // 0
-    bytec_0 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -67,7 +69,7 @@ main_ternary_merge@15:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -90,9 +92,11 @@ main_ternary_merge@20:
     !
     assert // not payable
     intc_1 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -101,7 +105,7 @@ main_ternary_merge@20:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -124,9 +128,11 @@ main_ternary_merge@25:
     !
     assert // not payable
     intc_1 // 0
-    bytec_1 // "y"
+    bytec_2 // "y"
     app_global_get_ex
-    assert // check y exists
+    bytec_0 // 0x
+    cover 2
+    select
     dup
     len
     intc_2 // 32
@@ -135,7 +141,7 @@ main_ternary_merge@25:
     intc_2 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
@@ -159,7 +165,7 @@ main_ternary_merge@30:
     assert // not payable
     intc_0 // 1
     itob
-    bytec_0 // "x"
+    bytec_1 // "x"
     swap
     app_global_put
     pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001

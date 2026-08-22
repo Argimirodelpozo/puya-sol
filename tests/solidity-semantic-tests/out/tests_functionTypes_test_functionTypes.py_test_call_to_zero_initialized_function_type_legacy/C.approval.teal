@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/call_to_zero_initialized_function_type_legacy.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 6 16
-    bytecblock "x" "ev" TMPL_APPROVAL_Other TMPL_CLEAR_Other
+    bytecblock "x" TMPL_APPROVAL_Other TMPL_CLEAR_Other
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "ev"
+    pushbytes "ev"
     intc_0 // 0
     app_global_put
     bytec_0 // "x"
@@ -56,8 +56,8 @@ main_ternary_merge@14:
     !
     assert // not payable
     itxn_begin
-    bytec_2 // TMPL_APPROVAL_Other
-    bytec_3 // TMPL_CLEAR_Other
+    bytec_1 // TMPL_APPROVAL_Other
+    bytec_2 // TMPL_CLEAR_Other
     intc_2 // 6
     itxn_field TypeEnum
     intc_3 // 16
@@ -89,16 +89,6 @@ main_ternary_merge@14:
     concat
     callsub store
     pop
-    intc_0 // 0
-    bytec_1 // "ev"
-    app_global_get_ex
-    bury 1
-    assert // check ev exists
-    intc_0 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    bury 1
-    assert // check x exists
     err // invalid function pointer
 
 main_ternary_false@13:

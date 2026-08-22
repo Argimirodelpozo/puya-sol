@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/contracts/conditional_expression_storage_memory_1.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 0 88 4
-    bytecblock "data1"
+    bytecblock "data1" 0x00000000
     intc_1 // 0
     pushint 4096
     bzero
@@ -26,7 +26,7 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "data1"
-    pushbytes 0x00000000
+    bytec_1 // 0x00000000
     app_global_put
     intc_0 // 1
     return
@@ -114,7 +114,9 @@ main_after_if_else@11:
     intc_1 // 0
     bytec_0 // "data1"
     app_global_get_ex
-    assert // check data1 exists
+    bytec_1 // 0x00000000
+    cover 2
+    select
     extract 0 2 // on error: index access is out of bounds
     pushbytes "bb"
     ==

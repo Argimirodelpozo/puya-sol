@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/library_references_preserve.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 6 32 1000000
-    bytecblock "__ctor_pending" "b" 0x1b56b14c 0x151f7c75 TMPL_APPROVAL_A TMPL_CLEAR_A TMPL_APPROVAL_B TMPL_CLEAR_B
+    bytecblock "__ctor_pending" "b" 0x0000000000000000000000000000000000000000000000000000000000000000 0x1b56b14c 0x151f7c75 TMPL_APPROVAL_A TMPL_CLEAR_A TMPL_APPROVAL_B TMPL_CLEAR_B
     pushint 4096
     bzero
     dup
@@ -56,7 +56,9 @@ main_ternary_merge@14:
     intc_0 // 0
     bytec_1 // "b"
     app_global_get_ex
-    assert // check b exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushint 24
     extract_uint64
     intc_2 // 6
@@ -66,7 +68,7 @@ main_ternary_merge@14:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "getSum()uint256"
+    bytec_3 // method "getSum()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -79,7 +81,7 @@ main_ternary_merge@14:
     intc_3 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -105,7 +107,9 @@ main_ternary_merge@19:
     intc_0 // 0
     pushbytes "a"
     app_global_get_ex
-    assert // check a exists
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     pushint 24
     extract_uint64
     intc_2 // 6
@@ -115,7 +119,7 @@ main_ternary_merge@19:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "getSum()uint256"
+    bytec_3 // method "getSum()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -128,7 +132,7 @@ main_ternary_merge@19:
     intc_3 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -151,8 +155,8 @@ main___postInit_route@5:
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec 4 // TMPL_APPROVAL_A
-    bytec 5 // TMPL_CLEAR_A
+    bytec 5 // TMPL_APPROVAL_A
+    bytec 6 // TMPL_CLEAR_A
     intc_2 // 6
     itxn_field TypeEnum
     pushint 16
@@ -190,8 +194,8 @@ main___postInit_route@5:
     swap
     app_global_put
     itxn_begin
-    bytec 6 // TMPL_APPROVAL_B
-    bytec 7 // TMPL_CLEAR_B
+    bytec 7 // TMPL_APPROVAL_B
+    bytec 8 // TMPL_CLEAR_B
     intc_2 // 6
     itxn_field TypeEnum
     pushint 16

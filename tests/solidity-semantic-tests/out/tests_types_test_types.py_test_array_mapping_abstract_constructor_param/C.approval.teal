@@ -56,6 +56,7 @@ main_m_route@6:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
+    cover 2
     len
     intc_1 // 32
     ==
@@ -70,23 +71,9 @@ main_m_route@6:
 main_ternary_merge@13:
     !
     assert // not payable
-    intc_1 // 32
-    bzero
-    dup
-    uncover 4
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_2 // "m"
-    concat
-    sha256
     pushint 8
     bzero
-    uncover 4
+    swap
     concat
     dup
     len
@@ -97,16 +84,31 @@ main_ternary_merge@13:
     extract3
     cover 2
     extract_uint64
-    dig 2
+    intc_1 // 32
+    bzero
+    dup
+    uncover 5
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_2 // "m"
+    concat
+    sha256
+    dup
     box_get
     bytec_3 // 0x0000
     cover 2
     select
     intc_3 // 0
-    extract_uint16
-    <
+    extract_uint16 // on error: invalid array length header
+    uncover 3
+    >
     assert // array out-of-bounds
-    dig 2
+    dig 1
     uncover 4
     concat
     dup
@@ -115,7 +117,7 @@ main_ternary_merge@13:
     -
     intc_1 // 32
     extract3
-    swap
+    uncover 3
     uncover 2
     concat
     sha256

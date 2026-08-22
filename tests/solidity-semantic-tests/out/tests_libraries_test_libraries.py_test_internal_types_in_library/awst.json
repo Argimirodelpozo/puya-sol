@@ -24,19 +24,10 @@
           "end_column": null
         },
         "wtype": {
-          "_type": "ARC4DynamicArray",
-          "name": "arc4.dynamic_array<arc4.uint16>",
-          "immutable": false,
-          "element_type": {
-            "_type": "ARC4UIntN",
-            "name": "arc4.uint16",
-            "immutable": true,
-            "n": 16,
-            "arc4_alias": null,
-            "source_location": null
-          },
-          "arc4_alias": null,
-          "source_location": null
+          "_type": "BytesWType",
+          "name": "bytes",
+          "immutable": true,
+          "length": null
         }
       },
       {
@@ -245,7 +236,7 @@
                     "immediates": [],
                     "stack_args": [
                       {
-                        "_type": "ArrayLength",
+                        "_type": "UInt64BinaryOperation",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
                           "line": 4,
@@ -259,8 +250,8 @@
                           "name": "uint64",
                           "immutable": true
                         },
-                        "array": {
-                          "_type": "VarExpression",
+                        "left": {
+                          "_type": "UInt64BinaryOperation",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
                             "line": 4,
@@ -270,21 +261,287 @@
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "ARC4DynamicArray",
-                            "name": "arc4.dynamic_array<arc4.uint16>",
-                            "immutable": false,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint16",
-                              "immutable": true,
-                              "n": 16,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "arc4_alias": null,
-                            "source_location": null
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
                           },
-                          "name": "_haystack"
+                          "left": {
+                            "_type": "ConditionalExpression",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                              "line": 4,
+                              "end_line": 4,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "condition": {
+                              "_type": "NumericComparisonExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                "line": 4,
+                                "end_line": 4,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "bool",
+                                "immutable": true
+                              },
+                              "lhs": {
+                                "_type": "TupleItemExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                  "line": 4,
+                                  "end_line": 4,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "base": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                    "line": 4,
+                                    "end_line": 4,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WTuple",
+                                    "name": "tuple",
+                                    "immutable": true,
+                                    "types": [
+                                      {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      {
+                                        "_type": "WType",
+                                        "name": "bool",
+                                        "immutable": true
+                                      }
+                                    ],
+                                    "names": null,
+                                    "source_location": null
+                                  },
+                                  "op_code": "box_len",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "ReinterpretCast",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                        "line": 4,
+                                        "end_line": 4,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "box_key",
+                                        "immutable": true
+                                      },
+                                      "expr": {
+                                        "_type": "VarExpression",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                          "line": 4,
+                                          "end_line": 4,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "name": "_haystack"
+                                      }
+                                    }
+                                  ]
+                                },
+                                "index": 0
+                              },
+                              "operator": ">=",
+                              "rhs": {
+                                "_type": "IntegerConstant",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                  "line": 4,
+                                  "end_line": 4,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WType",
+                                  "name": "uint64",
+                                  "immutable": true
+                                },
+                                "value": 2,
+                                "teal_alias": null
+                              }
+                            },
+                            "true_expr": {
+                              "_type": "TupleItemExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                "line": 4,
+                                "end_line": 4,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "base": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                  "line": 4,
+                                  "end_line": 4,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "WTuple",
+                                  "name": "tuple",
+                                  "immutable": true,
+                                  "types": [
+                                    {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    {
+                                      "_type": "WType",
+                                      "name": "bool",
+                                      "immutable": true
+                                    }
+                                  ],
+                                  "names": null,
+                                  "source_location": null
+                                },
+                                "op_code": "box_len",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "ReinterpretCast",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                      "line": 4,
+                                      "end_line": 4,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "box_key",
+                                      "immutable": true
+                                    },
+                                    "expr": {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                        "line": 4,
+                                        "end_line": 4,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "name": "_haystack"
+                                    }
+                                  }
+                                ]
+                              },
+                              "index": 0
+                            },
+                            "false_expr": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                "line": 4,
+                                "end_line": 4,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 2,
+                              "teal_alias": null
+                            }
+                          },
+                          "op": "-",
+                          "right": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                              "line": 4,
+                              "end_line": 4,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 2,
+                            "teal_alias": null
+                          }
+                        },
+                        "op": "//",
+                        "right": {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                            "line": 4,
+                            "end_line": 4,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 2,
+                          "teal_alias": null
                         }
                       }
                     ]
@@ -544,7 +801,7 @@
                                 "source_location": null
                               },
                               "base": {
-                                "_type": "VarExpression",
+                                "_type": "StateGet",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
                                   "line": 5,
@@ -553,25 +810,98 @@
                                   "column": null,
                                   "end_column": null
                                 },
-                                "wtype": {
-                                  "_type": "ARC4DynamicArray",
-                                  "name": "arc4.dynamic_array<arc4.uint16>",
-                                  "immutable": false,
-                                  "element_type": {
-                                    "_type": "ARC4UIntN",
-                                    "name": "arc4.uint16",
-                                    "immutable": true,
-                                    "n": 16,
+                                "field": {
+                                  "_type": "BoxValueExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                    "line": 5,
+                                    "end_line": 5,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "ARC4DynamicArray",
+                                    "name": "arc4.dynamic_array<arc4.uint16>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint16",
+                                      "immutable": true,
+                                      "n": 16,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
                                     "arc4_alias": null,
                                     "source_location": null
                                   },
-                                  "arc4_alias": null,
-                                  "source_location": null
+                                  "key": {
+                                    "_type": "ReinterpretCast",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                      "line": 5,
+                                      "end_line": 5,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "box_key",
+                                      "immutable": true
+                                    },
+                                    "expr": {
+                                      "_type": "VarExpression",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                        "line": 5,
+                                        "end_line": 5,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "name": "_haystack"
+                                    }
+                                  },
+                                  "exists_assertion_message": null
                                 },
-                                "name": "_haystack"
+                                "default": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                    "line": 5,
+                                    "end_line": 5,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "ARC4DynamicArray",
+                                    "name": "arc4.dynamic_array<arc4.uint16>",
+                                    "immutable": false,
+                                    "element_type": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint16",
+                                      "immutable": true,
+                                      "n": 16,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "value": "000",
+                                  "encoding": "base16"
+                                }
                               },
                               "index": {
-                                "_type": "IntrinsicCall",
+                                "_type": "SingleEvaluation",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
                                   "line": 5,
@@ -585,46 +915,45 @@
                                   "name": "uint64",
                                   "immutable": true
                                 },
-                                "op_code": "btoi",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                      "line": 5,
-                                      "end_line": 5,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "extract3",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "SingleEvaluation",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                          "line": 5,
-                                          "end_line": 5,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
-                                        },
-                                        "source": {
-                                          "_type": "IntrinsicCall",
+                                "source": {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                    "line": 5,
+                                    "end_line": 5,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "uint64",
+                                    "immutable": true
+                                  },
+                                  "op_code": "btoi",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                        "line": 5,
+                                        "end_line": 5,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "extract3",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "SingleEvaluation",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
                                             "line": 5,
@@ -639,136 +968,26 @@
                                             "immutable": true,
                                             "length": null
                                           },
-                                          "op_code": "concat",
-                                          "immediates": [],
-                                          "stack_args": [
-                                            {
-                                              "_type": "IntrinsicCall",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                                "line": 5,
-                                                "end_line": 5,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "op_code": "bzero",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
-                                                  "_type": "IntegerConstant",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                                    "line": 5,
-                                                    "end_line": 5,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "WType",
-                                                    "name": "uint64",
-                                                    "immutable": true
-                                                  },
-                                                  "value": 8,
-                                                  "teal_alias": null
-                                                }
-                                              ]
+                                          "source": {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                              "line": 5,
+                                              "end_line": 5,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
                                             },
-                                            {
-                                              "_type": "ReinterpretCast",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                                "line": 5,
-                                                "end_line": 5,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "expr": {
-                                                "_type": "VarExpression",
-                                                "source_location": {
-                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                                  "line": 5,
-                                                  "end_line": 5,
-                                                  "comment_lines": 0,
-                                                  "column": null,
-                                                  "end_column": null
-                                                },
-                                                "wtype": {
-                                                  "_type": "WType",
-                                                  "name": "biguint",
-                                                  "immutable": true
-                                                },
-                                                "name": "__ckidx_0"
-                                              }
-                                            }
-                                          ]
-                                        },
-                                        "_id": 1048577
-                                      },
-                                      {
-                                        "_type": "UInt64BinaryOperation",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                          "line": 5,
-                                          "end_line": 5,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "uint64",
-                                          "immutable": true
-                                        },
-                                        "left": {
-                                          "_type": "IntrinsicCall",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                            "line": 5,
-                                            "end_line": 5,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "uint64",
-                                            "immutable": true
-                                          },
-                                          "op_code": "len",
-                                          "immediates": [],
-                                          "stack_args": [
-                                            {
-                                              "_type": "SingleEvaluation",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                                "line": 5,
-                                                "end_line": 5,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "source": {
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "concat",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
                                                 "_type": "IntrinsicCall",
                                                 "source_location": {
                                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
@@ -784,11 +1003,11 @@
                                                   "immutable": true,
                                                   "length": null
                                                 },
-                                                "op_code": "concat",
+                                                "op_code": "bzero",
                                                 "immediates": [],
                                                 "stack_args": [
                                                   {
-                                                    "_type": "IntrinsicCall",
+                                                    "_type": "IntegerConstant",
                                                     "source_location": {
                                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
                                                       "line": 5,
@@ -798,16 +1017,178 @@
                                                       "end_column": null
                                                     },
                                                     "wtype": {
-                                                      "_type": "BytesWType",
-                                                      "name": "bytes",
-                                                      "immutable": true,
-                                                      "length": null
+                                                      "_type": "WType",
+                                                      "name": "uint64",
+                                                      "immutable": true
                                                     },
-                                                    "op_code": "bzero",
-                                                    "immediates": [],
-                                                    "stack_args": [
-                                                      {
-                                                        "_type": "IntegerConstant",
+                                                    "value": 8,
+                                                    "teal_alias": null
+                                                  }
+                                                ]
+                                              },
+                                              {
+                                                "_type": "ReinterpretCast",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                                  "line": 5,
+                                                  "end_line": 5,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "expr": {
+                                                  "_type": "VarExpression",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                                    "line": 5,
+                                                    "end_line": 5,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "biguint",
+                                                    "immutable": true
+                                                  },
+                                                  "name": "__ckidx_0"
+                                                }
+                                              }
+                                            ]
+                                          },
+                                          "_id": 1048577
+                                        },
+                                        {
+                                          "_type": "UInt64BinaryOperation",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                            "line": 5,
+                                            "end_line": 5,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "uint64",
+                                            "immutable": true
+                                          },
+                                          "left": {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                              "line": 5,
+                                              "end_line": 5,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "op_code": "len",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "SingleEvaluation",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                                  "line": 5,
+                                                  "end_line": 5,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "source": {
+                                                  "_type": "IntrinsicCall",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                                    "line": 5,
+                                                    "end_line": 5,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "BytesWType",
+                                                    "name": "bytes",
+                                                    "immutable": true,
+                                                    "length": null
+                                                  },
+                                                  "op_code": "concat",
+                                                  "immediates": [],
+                                                  "stack_args": [
+                                                    {
+                                                      "_type": "IntrinsicCall",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                                        "line": 5,
+                                                        "end_line": 5,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "BytesWType",
+                                                        "name": "bytes",
+                                                        "immutable": true,
+                                                        "length": null
+                                                      },
+                                                      "op_code": "bzero",
+                                                      "immediates": [],
+                                                      "stack_args": [
+                                                        {
+                                                          "_type": "IntegerConstant",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                                            "line": 5,
+                                                            "end_line": 5,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "WType",
+                                                            "name": "uint64",
+                                                            "immutable": true
+                                                          },
+                                                          "value": 8,
+                                                          "teal_alias": null
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "_type": "ReinterpretCast",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                                        "line": 5,
+                                                        "end_line": 5,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "BytesWType",
+                                                        "name": "bytes",
+                                                        "immutable": true,
+                                                        "length": null
+                                                      },
+                                                      "expr": {
+                                                        "_type": "VarExpression",
                                                         "source_location": {
                                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
                                                           "line": 5,
@@ -818,56 +1199,39 @@
                                                         },
                                                         "wtype": {
                                                           "_type": "WType",
-                                                          "name": "uint64",
+                                                          "name": "biguint",
                                                           "immutable": true
                                                         },
-                                                        "value": 8,
-                                                        "teal_alias": null
+                                                        "name": "__ckidx_0"
                                                       }
-                                                    ]
-                                                  },
-                                                  {
-                                                    "_type": "ReinterpretCast",
-                                                    "source_location": {
-                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                                      "line": 5,
-                                                      "end_line": 5,
-                                                      "comment_lines": 0,
-                                                      "column": null,
-                                                      "end_column": null
-                                                    },
-                                                    "wtype": {
-                                                      "_type": "BytesWType",
-                                                      "name": "bytes",
-                                                      "immutable": true,
-                                                      "length": null
-                                                    },
-                                                    "expr": {
-                                                      "_type": "VarExpression",
-                                                      "source_location": {
-                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                                        "line": 5,
-                                                        "end_line": 5,
-                                                        "comment_lines": 0,
-                                                        "column": null,
-                                                        "end_column": null
-                                                      },
-                                                      "wtype": {
-                                                        "_type": "WType",
-                                                        "name": "biguint",
-                                                        "immutable": true
-                                                      },
-                                                      "name": "__ckidx_0"
                                                     }
-                                                  }
-                                                ]
-                                              },
-                                              "_id": 1048577
-                                            }
-                                          ]
+                                                  ]
+                                                },
+                                                "_id": 1048577
+                                              }
+                                            ]
+                                          },
+                                          "op": "-",
+                                          "right": {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                              "line": 5,
+                                              "end_line": 5,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 8,
+                                            "teal_alias": null
+                                          }
                                         },
-                                        "op": "-",
-                                        "right": {
+                                        {
                                           "_type": "IntegerConstant",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
@@ -885,28 +1249,11 @@
                                           "value": 8,
                                           "teal_alias": null
                                         }
-                                      },
-                                      {
-                                        "_type": "IntegerConstant",
-                                        "source_location": {
-                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                          "line": 5,
-                                          "end_line": 5,
-                                          "comment_lines": 0,
-                                          "column": null,
-                                          "end_column": null
-                                        },
-                                        "wtype": {
-                                          "_type": "WType",
-                                          "name": "uint64",
-                                          "immutable": true
-                                        },
-                                        "value": 8,
-                                        "teal_alias": null
-                                      }
-                                    ]
-                                  }
-                                ]
+                                      ]
+                                    }
+                                  ]
+                                },
+                                "_id": 1048578
                               }
                             },
                             "error_message": null
@@ -5654,7 +6001,7 @@
                     {
                       "name": null,
                       "value": {
-                        "_type": "StateGet",
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
                           "line": 18,
@@ -5663,8 +6010,14 @@
                           "column": null,
                           "end_column": null
                         },
-                        "field": {
-                          "_type": "BoxValueExpression",
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "expr": {
+                          "_type": "IntrinsicCall",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
                             "line": 18,
@@ -5674,78 +6027,69 @@
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "ARC4DynamicArray",
-                            "name": "arc4.dynamic_array<arc4.uint16>",
-                            "immutable": false,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint16",
-                              "immutable": true,
-                              "n": 16,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "arc4_alias": null,
-                            "source_location": null
+                            "_type": "WType",
+                            "name": "box_key",
+                            "immutable": true
                           },
-                          "key": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                              "line": 18,
-                              "end_line": 18,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "box_key",
-                              "immutable": true
-                            },
-                            "op_code": "sha256",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                  "line": 18,
-                                  "end_line": 18,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "concat",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                      "line": 18,
-                                      "end_line": 18,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "sha256",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "ReinterpretCast",
+                          "op_code": "sha256",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                "line": 18,
+                                "end_line": 18,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                    "line": 18,
+                                    "end_line": 18,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "sha256",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "ReinterpretCast",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                        "line": 18,
+                                        "end_line": 18,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "expr": {
+                                        "_type": "StringConstant",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
                                           "line": 18,
@@ -5755,82 +6099,36 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
+                                          "_type": "WType",
+                                          "name": "string",
+                                          "immutable": true
                                         },
-                                        "expr": {
-                                          "_type": "StringConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                            "line": 18,
-                                            "end_line": 18,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "string",
-                                            "immutable": true
-                                          },
-                                          "value": "abc"
-                                        }
+                                        "value": "abc"
                                       }
-                                    ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                    "line": 18,
+                                    "end_line": 18,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
                                   },
-                                  {
-                                    "_type": "BytesConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                      "line": 18,
-                                      "end_line": 18,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "box_key",
-                                      "immutable": true
-                                    },
-                                    "value": "WMOn+",
-                                    "encoding": "utf8"
-                                  }
-                                ]
-                              }
-                            ]
-                          },
-                          "exists_assertion_message": null
-                        },
-                        "default": {
-                          "_type": "BytesConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                            "line": 18,
-                            "end_line": 18,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "ARC4DynamicArray",
-                            "name": "arc4.dynamic_array<arc4.uint16>",
-                            "immutable": false,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint16",
-                              "immutable": true,
-                              "n": 16,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "arc4_alias": null,
-                            "source_location": null
-                          },
-                          "value": "000",
-                          "encoding": "base16"
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "box_key",
+                                    "immutable": true
+                                  },
+                                  "value": "WMOn+",
+                                  "encoding": "utf8"
+                                }
+                              ]
+                            }
+                          ]
                         }
                       }
                     },
@@ -5924,7 +6222,7 @@
                     {
                       "name": null,
                       "value": {
-                        "_type": "StateGet",
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
                           "line": 19,
@@ -5933,8 +6231,14 @@
                           "column": null,
                           "end_column": null
                         },
-                        "field": {
-                          "_type": "BoxValueExpression",
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "expr": {
+                          "_type": "IntrinsicCall",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
                             "line": 19,
@@ -5944,78 +6248,69 @@
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "ARC4DynamicArray",
-                            "name": "arc4.dynamic_array<arc4.uint16>",
-                            "immutable": false,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint16",
-                              "immutable": true,
-                              "n": 16,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "arc4_alias": null,
-                            "source_location": null
+                            "_type": "WType",
+                            "name": "box_key",
+                            "immutable": true
                           },
-                          "key": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                              "line": 19,
-                              "end_line": 19,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "box_key",
-                              "immutable": true
-                            },
-                            "op_code": "sha256",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "IntrinsicCall",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                  "line": 19,
-                                  "end_line": 19,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "op_code": "concat",
-                                "immediates": [],
-                                "stack_args": [
-                                  {
-                                    "_type": "IntrinsicCall",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                      "line": 19,
-                                      "end_line": 19,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "BytesWType",
-                                      "name": "bytes",
-                                      "immutable": true,
-                                      "length": null
-                                    },
-                                    "op_code": "sha256",
-                                    "immediates": [],
-                                    "stack_args": [
-                                      {
-                                        "_type": "ReinterpretCast",
+                          "op_code": "sha256",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                "line": 19,
+                                "end_line": 19,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                    "line": 19,
+                                    "end_line": 19,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "sha256",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "ReinterpretCast",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                        "line": 19,
+                                        "end_line": 19,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "expr": {
+                                        "_type": "StringConstant",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
                                           "line": 19,
@@ -6025,82 +6320,36 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
+                                          "_type": "WType",
+                                          "name": "string",
+                                          "immutable": true
                                         },
-                                        "expr": {
-                                          "_type": "StringConstant",
-                                          "source_location": {
-                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                            "line": 19,
-                                            "end_line": 19,
-                                            "comment_lines": 0,
-                                            "column": null,
-                                            "end_column": null
-                                          },
-                                          "wtype": {
-                                            "_type": "WType",
-                                            "name": "string",
-                                            "immutable": true
-                                          },
-                                          "value": "abc"
-                                        }
+                                        "value": "abc"
                                       }
-                                    ]
+                                    }
+                                  ]
+                                },
+                                {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
+                                    "line": 19,
+                                    "end_line": 19,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
                                   },
-                                  {
-                                    "_type": "BytesConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                                      "line": 19,
-                                      "end_line": 19,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
-                                    },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "box_key",
-                                      "immutable": true
-                                    },
-                                    "value": "WMOn+",
-                                    "encoding": "utf8"
-                                  }
-                                ]
-                              }
-                            ]
-                          },
-                          "exists_assertion_message": null
-                        },
-                        "default": {
-                          "_type": "BytesConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_types_in_library.sol",
-                            "line": 19,
-                            "end_line": 19,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "ARC4DynamicArray",
-                            "name": "arc4.dynamic_array<arc4.uint16>",
-                            "immutable": false,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint16",
-                              "immutable": true,
-                              "n": 16,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "arc4_alias": null,
-                            "source_location": null
-                          },
-                          "value": "000",
-                          "encoding": "base16"
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "box_key",
+                                    "immutable": true
+                                  },
+                                  "value": "WMOn+",
+                                  "encoding": "utf8"
+                                }
+                              ]
+                            }
+                          ]
                         }
                       }
                     },
