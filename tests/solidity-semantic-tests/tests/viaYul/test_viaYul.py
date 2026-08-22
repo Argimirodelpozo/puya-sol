@@ -2126,3 +2126,31 @@ def test_modifier_param_decode(harness):
     assert call1("body1(uint256)", 3) == 1125          # mPre(11) + body(22 + 3%7=3) = 1125
     assert call1("body2(uint256)", 3) == 152525        # mTwice(15) + body twice (each 22+3)
     assert call1("arg1(uint256)", 8) == 7322           # mArg(8%5=3 -> 70+3) + body(22)
+
+
+@pytest.mark.xfail(reason="puyabug.md §13: O2 dead-store elimination drops the "
+                          "overwritten stores but leaves their values on the AVM "
+                          "stack, and the return consumes a leftover instead of "
+                          "reading y. Correct at --optimization-level 0. The AWST "
+                          "is already right (temps in source order, stores "
+                          "right-to-left); confirmed not a frontend shape issue.",
+                   strict=False)
+def test_tuple_duplicate_target_puya_o2(harness):
+    """viaYul/contracts/tuple_duplicate_target.sol — NOT an o.g. semantic test.
+
+    Pins the one tuple-assignment shape still diverging from solc: the same
+    value-type target named more than once with a side-effecting RHS. Solidity
+    evaluates the RHS fully left-to-right, then stores right-to-left, so
+    component 0's value survives.
+
+    This is also why SolAssignmentTuple's RHS-snapshot gate is a set of narrow
+    conditions instead of solc's actual rule (always materialise the RHS, then
+    store in reverse — no dependency analysis anywhere). Materialising
+    unconditionally is precisely what produces the repeated same-key stores this
+    bug mangles.
+    """
+    app = harness.compile_and_deploy("viaYul/contracts/tuple_duplicate_target.sol")
+    assert tuple(as_int(v) for v in
+                 harness.call(app, "readBack()", extra_fee=10000).abi_return) == (2, 1)
+    assert tuple(as_int(v) for v in
+                 harness.call(app, "allCalls()", extra_fee=10000).abi_return) == (3, 1)

@@ -195,12 +195,33 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		// every value-type swap to (b, b). Nothing in the suite covered it;
 		// test_tuple_swap_value_state_vars now does.
 		//
-		// The read-back condition is what bounds it, and both halves are load-bearing:
+		// ── Why this is a gate at all ──
+		// Solidity's rule has no conditions in it. solc materialises the WHOLE RHS
+		// and then stores components right-to-left:
+		// IRGeneratorForStatements::visit(Assignment) accepts the right-hand side
+		// before it even looks at the LHS, and writeToLValue(IRLValue::Tuple) walks
+		// components in reverse. No dependency analysis, no exemption list — the
+		// storage-aggregate collapse is EMERGENT, because a reference type's temp
+		// names a slot, so the second copy reads storage the first already
+		// overwrote.
+		//
+		// We cannot copy that yet. Materialising unconditionally produces repeated
+		// stores to one key, and puya's O2 dead-store elimination removes the
+		// overwritten stores while LEAVING THEIR VALUES on the stack, where a later
+		// expression consumes one as an operand (puyabug.md §13 — correct at -O0,
+		// wrong at -O2; it reproduces in plain sequential Solidity with no tuple
+		// anywhere). So the conditions below exist to avoid emitting that shape, not
+		// because the language asks for them.
+		//
+		// Hence the read-back bound, and both halves are load-bearing:
 		// `(y, y, y) = (set(1), set(2), set(3))` writes a value type but never reads
-		// it, and snapshotting there leaks stack values through puya's optimizer (the
-		// hazard the lhsHasStateIndex guard below already documents);
+		// one, and snapshotting there walks straight into §13;
 		// `(m, v) = (m2, 21)` has a value-type `v`, but the RHS reads only `m2`, and
 		// snapshotting rebinds the mapping alias to a temp so later writes miss.
+		//
+		// It is a bound, not a cure: a repeated target WITH a read-back still hits
+		// §13 (test_tuple_duplicate_target_puya_o2, xfail). When §13 is fixed
+		// upstream, delete this whole gate and materialise unconditionally.
 		bool lhsNeedsRhsSnapshot = false;
 		std::set<int64_t> valueTypeTargets;
 		if (_sourceLhs)
