@@ -11,6 +11,7 @@
 // actually instantiate them pay the ~223k lines.
 #include <libyul/AST.h>
 #include <libyul/Dialect.h>
+#include "builder/SecpRangeCheck.h"
 
 namespace puyasol::builder
 {
@@ -32,6 +33,14 @@ void AssemblyBuilder::handleEcRecover(
 	auto vBiguint = readMemSlot(_inputOffset + 0x20, _loc);
 	auto r = padTo32Bytes(readMemSlot(_inputOffset + 0x40, _loc), _loc);
 	auto s = padTo32Bytes(readMemSlot(_inputOffset + 0x60, _loc), _loc);
+	// r/s are read by the range gate AND the recover call — re-reading memory
+	// is side-effect free, so fresh reads serve as the gate's operands.
+	auto readRGate = [&]() -> std::shared_ptr<awst::Expression> {
+		return padTo32Bytes(readMemSlot(_inputOffset + 0x40, _loc), _loc);
+	};
+	auto readSGate = [&]() -> std::shared_ptr<awst::Expression> {
+		return padTo32Bytes(readMemSlot(_inputOffset + 0x60, _loc), _loc);
+	};
 
 	// Bind v once and gate the AVM intrinsic to exactly 27/28. Invalid v makes
 	// EVM ecrecover produce no output, so the destination memory stays intact.
@@ -50,6 +59,11 @@ void AssemblyBuilder::handleEcRecover(
 		awst::BinaryBooleanOperator::Or,
 		awst::makeNumericCompare(vRead(), awst::NumericComparison::Eq,
 			awst::makeBiguintConstant("28", _loc), _loc), _loc);
+	// r/s ∈ [1, N-1]: EVM leaves the output slot untouched, ecdsa_pk_recover
+	// would panic. Same gate as every other ecrecover lowering.
+	validV = awst::makeBoolBinOp(
+		std::move(validV), awst::BinaryBooleanOperator::And,
+		secp256k1RangeCondition(readRGate, readSGate, _loc), _loc);
 	auto vMinus27 = makeBigUIntBinOp(
 		vRead(), awst::BigUIntBinaryOperator::Sub,
 		awst::makeBiguintConstant("27", _loc), _loc);

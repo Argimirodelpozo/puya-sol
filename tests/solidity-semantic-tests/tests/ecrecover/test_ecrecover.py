@@ -46,3 +46,23 @@ def test_failing_ecrecover_invalid_input_proper(harness):
     # f() -> 0
     r = harness.call(app, "f()")
     assert as_int(r.abi_return) == 0
+
+
+def test_ecrecover_range_gates(harness):
+    """ecrecover/contracts/ecrecover_range_gates.sol — NOT an o.g. semantic test.
+
+    Review item C18. EVM's precompile returns empty/zero output for v words with
+    dirty high bytes and for r/s outside [1, N-1]; AVM's ecdsa_pk_recover panics
+    on the latter and the old staticcall shape checked only byte 63 of v — a
+    false-accept where EVM rejects. All lowerings now share one range gate
+    (SecpRangeCheck.h) and validate the full v word.
+    """
+    app = harness.compile_and_deploy("ecrecover/contracts/ecrecover_range_gates.sol")
+    good = 0xA94F5374FCE5EDBC8E2A8697C15331677E6EBF0B
+    fee = {"extra_fee": 20000}
+    assert as_int(harness.call(app, "builtinBadR()", **fee).abi_return) == 0
+    assert as_int(harness.call(app, "builtinBadS()", **fee).abi_return) == 0
+    assert as_int(harness.call(app, "builtinGood()", **fee).abi_return) == good
+    assert as_int(harness.call(app, "staticcallDirtyV()", **fee).abi_return) == 0
+    assert as_int(harness.call(app, "staticcallBadR()", **fee).abi_return) == 0
+    assert as_int(harness.call(app, "staticcallGood()", **fee).abi_return) == good

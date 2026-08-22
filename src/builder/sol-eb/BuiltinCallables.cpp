@@ -3,6 +3,7 @@
 
 #include "builder/sol-eb/BuiltinCallables.h"
 #include "builder/EvmFeaturePolicy.h"
+#include "builder/SecpRangeCheck.h"
 #include "awst/NameGen.h"
 #include "builder/sol-eb/BigUIntMathHelpers.h"
 #include "builder/sol-eb/SolIntegerBuilder.h"
@@ -302,32 +303,17 @@ std::unique_ptr<InstanceBuilder> BuiltinCallableRegistry::handleEcrecover(
 	// gate the opcode itself behind the checkable conditions and yield zero without
 	// running it. (Residue: an in-range r whose x-coordinate isn't on the curve
 	// still panics where EVM returns 0 — not checkable without the recover itself.)
-	static char const* kSecp256k1N =
-		"115792089237316195423570985008687907852837564279074904382605163141518161494337";
 	auto isValid = [&]() -> std::shared_ptr<awst::Expression> {
-		auto asBig = [&](std::shared_ptr<awst::Expression> e) {
-			return awst::makeAsBiguint(std::move(e), _loc);
-		};
-		auto bigN = [&]() {
-			return awst::makeIntegerConstant(kSecp256k1N, _loc, awst::WType::biguintType());
-		};
-		auto bigZero = [&]() {
-			return awst::makeIntegerConstant("0", _loc, awst::WType::biguintType());
-		};
 		auto andOp = [&](std::shared_ptr<awst::Expression> a, std::shared_ptr<awst::Expression> b) {
 			return awst::makeBoolBinOp(std::move(a), awst::BinaryBooleanOperator::And, std::move(b), _loc);
 		};
+		// v is uint8-typed at the language level, so the uint64 window check is
+		// exact here; the raw-calldata lowerings must validate the full word.
 		auto cond = andOp(
 			awst::makeNumericCompare(readV(), awst::NumericComparison::Gte, mkU64("27"), _loc),
 			awst::makeNumericCompare(readV(), awst::NumericComparison::Lte, mkU64("28"), _loc));
 		cond = andOp(std::move(cond),
-			awst::makeNumericCompare(asBig(readR()), awst::NumericComparison::Ne, bigZero(), _loc));
-		cond = andOp(std::move(cond),
-			awst::makeNumericCompare(asBig(readR()), awst::NumericComparison::Lt, bigN(), _loc));
-		cond = andOp(std::move(cond),
-			awst::makeNumericCompare(asBig(readS()), awst::NumericComparison::Ne, bigZero(), _loc));
-		cond = andOp(std::move(cond),
-			awst::makeNumericCompare(asBig(readS()), awst::NumericComparison::Lt, bigN(), _loc));
+			builder::secp256k1RangeCondition(readR, readS, _loc));
 		return cond;
 	};
 

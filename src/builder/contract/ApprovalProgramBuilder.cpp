@@ -851,17 +851,11 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 	// Transient vars: preamble bzero satisfies EIP-1153 per-tx reset; no
 	// per-call app_global reset needed.
 
-	// solc's fallbackFunction()/receiveFunction() walk linearized MRO.
-	auto const* fallbackFunc = _contract.fallbackFunction();
-	auto const* receiveFunc = _contract.receiveFunction();
-	if (fallbackFunc && !fallbackFunc->isImplemented())
-		fallbackFunc = nullptr;
-	if (receiveFunc && !receiveFunc->isImplemented())
-		receiveFunc = nullptr;
-
-	if (m_typeMapper.profile().contractAbi == ContractAbi::Arc4)
-		emitSelectorDispatch(*body, fallbackFunc, receiveFunc, method.sourceLocation);
-
+	// The selector dispatch (ARC-4 router + EVM compat arms) is appended by
+	// ContractBuilder::build AFTER every method body exists: the EVM route
+	// arms name generated methods, which are not built yet at this point.
+	// Nothing else touches the approval body in between, so the emitted
+	// statement order is unchanged.
 	method.body = body;
 
 	return method;

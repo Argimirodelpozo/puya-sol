@@ -339,6 +339,13 @@ private:
 		solidity::frontend::ContractDefinition const& _contract,
 		awst::Contract& _contractNode);
 
+	/// ARC-4 profile: mount the EVM route arms as a compatibility alias ahead
+	/// of the native ARC-4 router, so canonical EVM calldata (abi.encode* over
+	/// a low-level .call) dispatches. Does not touch arc4MethodConfigs.
+	void emitEvmCompatRoutes(
+		solidity::frontend::ContractDefinition const& _contract,
+		awst::Contract& _awstContract);
+
 	// ── Super-call resolution (SuperCallResolution.cpp) ──
 	// super.f() / Base.f() resolved via solc's requiredLookup annotation +
 	// FunctionDefinition::resolveVirtual (fable-review item 11). One emitted

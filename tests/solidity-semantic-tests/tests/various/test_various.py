@@ -210,8 +210,17 @@ def test_destructuring_assignment(harness):
     r = harness.call(app, "f(bytes)", b"abcde")
     assert as_int(r.abi_return) == 0
 
-def test_different_call_type_transient(harness):  # currently fails
-    """various/contracts/different_call_type_transient.sol"""
+def test_different_call_type_transient(harness):  # fails BY POLICY — see docstring
+    """various/contracts/different_call_type_transient.sol
+
+    Permanently red, and precisely why: testDelegate() needs real delegatecall
+    semantics (fail-loud by design — see feedback-delegatecall-hard-error), and
+    testStatic() expects `false` from a staticcall to a state-writing function,
+    which the AVM adaptation cannot produce (no read-only enforcement; the
+    inner call succeeds). Neither is a routing problem: the keccak-selector
+    transport that used to err inside the callee's ARC-4 router is fixed and
+    covered by test_lowlevel_call_evm_calldata.
+    """
     app = harness.compile_and_deploy('various/contracts/different_call_type_transient.sol')
     r = harness.call(app, 'testDelegate()')
     assert tuple(as_int(x) for x in r.abi_return) == (7, 0,)
@@ -674,3 +683,42 @@ def test_selfdestruct_drain_onchain(harness):
     assert not r.reverted
     assert algod.account_info(app.app_addr)["amount"] == 0
     assert algod.account_info(ben)["amount"] == app_before
+
+
+def test_lowlevel_call_evm_calldata(harness):
+    """various/contracts/lowlevel_call_evm_calldata.sol — NOT an o.g. semantic test.
+
+    `target.call(abi.encodeWithSignature(...))` between two DEFAULT-profile
+    contracts. abi.* builtins emit canonical EVM calldata in every profile, so
+    the payload carries a keccak selector — which the ARC-4 router used to err
+    on (`match ...; err`), surfacing as a bogus "unavailable App" once
+    populate's simulate failed. The approval program now mounts the EVM route
+    arms as an alias ahead of the untouched ARC-4 router.
+
+    Covers a static arg (uint256), a dynamic arg with a used EVM-encoded
+    return (string -> uint256), and the abi.encodeCall spelling.
+    """
+    from algosdk import encoding as algo_encoding
+
+    callee = harness.compile_and_deploy(
+        "various/contracts/lowlevel_call_evm_calldata.sol", contract_name="Callee")
+    caller = harness.compile_and_deploy(
+        "various/contracts/lowlevel_call_evm_calldata.sol", contract_name="Caller")
+    callee_addr = algo_encoding.encode_address(
+        bytes(24) + callee.app_id.to_bytes(8, "big"))
+
+    harness.call(caller, "callSet(address,uint256)", callee_addr, 7,
+                 extra_fee=10000, extra_apps=[callee.app_id])
+    assert as_int(harness.call(callee, "value()").abi_return) == 7
+
+    r = harness.call(caller, "callTag(address,string)", callee_addr, "abcde",
+                     extra_fee=10000, extra_apps=[callee.app_id])
+    assert as_int(r.abi_return) == 5
+
+    harness.call(caller, "callSetTyped(address,uint256)", callee_addr, 35,
+                 extra_fee=10000, extra_apps=[callee.app_id])
+    assert as_int(harness.call(callee, "value()").abi_return) == 42
+
+    # Native ARC-4 transport unaffected by the alias arms.
+    harness.call(callee, "setValue(uint256)", 1)
+    assert as_int(harness.call(callee, "value()").abi_return) == 43

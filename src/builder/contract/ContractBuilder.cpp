@@ -2,6 +2,7 @@
 #include "builder/ProgramAnalysis.h"
 #include <variant>
 #include "builder/contract/ContractBuilder.h"
+#include "builder/contract/SelectorRouter.h"
 #include "builder/contract/EvmMemoryCodec.h"
 #include "awst/NameGen.h"
 #include "awst/Visit.h"
@@ -715,6 +716,25 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 
 	if (m_typeMapper.profile().contractAbi == ContractAbi::Evm)
 		emitEvmEntryDispatch(_contract, *contract);
+	else
+	{
+		// EVM compat arms FIRST (each self-guards on the [selector, body]
+		// carrier shape), then the untouched ARC-4 dispatch — including its
+		// exit-early `return ARC4Router()` form for fallback-less contracts,
+		// which errs internally on unknown selectors and therefore must come
+		// last.
+		emitEvmCompatRoutes(_contract, *contract);
+		auto const* fallbackFunc = _contract.fallbackFunction();
+		auto const* receiveFunc = _contract.receiveFunction();
+		if (fallbackFunc && !fallbackFunc->isImplemented())
+			fallbackFunc = nullptr;
+		if (receiveFunc && !receiveFunc->isImplemented())
+			receiveFunc = nullptr;
+		if (contract->approvalProgram.body)
+			emitSelectorDispatch(
+				*contract->approvalProgram.body, fallbackFunc, receiveFunc,
+				contract->approvalProgram.sourceLocation);
+	}
 
 	// Emit MRO / fallback / explicit-base super subroutines now that all
 	// regular method bodies are translated.

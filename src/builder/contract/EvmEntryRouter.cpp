@@ -6,6 +6,7 @@
 #include "builder/abi/EvmAbiEncode.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/sol-types/OverloadSuffix.h"
+#include "builder/sol-types/TypeMapper.h"
 
 #include <libsolidity/ast/AST.h>
 
@@ -100,6 +101,151 @@ void emitNonPayableCheck(
 				awst::NumericComparison::Eq, u64(0, loc), loc),
 			loc, "not payable"), loc));
 }
+
+struct EvmRoute
+{
+	FunctionType const* function = nullptr;
+	awst::ContractMethod* method = nullptr;
+	std::vector<uint8_t> selector;
+};
+
+/// Collect one EVM route per external Solidity function. In `quiet` mode a
+/// method that cannot carry an EVM route is SKIPPED rather than an error: the
+/// ARC-4 profile mounts these routes as a compatibility alias next to its
+/// native router, so a non-EVM-able method merely has no alias — its ARC-4
+/// route still serves it. The EVM profile has no other transport, so there the
+/// same conditions stay hard errors.
+std::vector<EvmRoute> collectEvmRoutes(
+	ContractDefinition const& contractDefinition,
+	awst::Contract& contract,
+	OverloadedNamesSet const& overloadedNames,
+	awst::SourceLocation const& loc,
+	bool quiet)
+{
+	std::vector<EvmRoute> routes;
+	for (auto const& [_, function]: contractDefinition.interfaceFunctionList(true))
+	{
+		if (!function)
+			continue;
+		auto name = methodNameFor(*function, overloadedNames);
+		auto* method = findMethod(contract, name);
+		if (!method)
+		{
+			if (!quiet)
+				Logger::instance().error(
+					"cannot build EVM entry route for Solidity function '"
+						+ function->externalSignature() + "': generated method '"
+						+ name + "' was not found", loc);
+			continue;
+		}
+		if (!abi::canDecodeEvmAbi(function->parameterTypes())
+			|| !abi::canEncodeEvmAbi(function->returnParameterTypes()))
+		{
+			if (!quiet)
+				Logger::instance().error(
+					"Solidity ABI entry route contains a type unsupported by the "
+					"canonical recursive codec: " + function->externalSignature(), loc);
+			continue;
+		}
+		routes.push_back({function, method,
+			SolcFacts::externalSelector(*function)});
+	}
+	return routes;
+}
+
+/// Emit one guarded dispatch arm for an EVM route into `sink`:
+///   OnCompletion==NoOp && NumAppArgs==2 && Args[0]==keccak4(signature)
+///   -> non-payable check, EVM-decode Args[1], call, EVM-encode + return log.
+/// Shared verbatim by the EVM entry profile and the ARC-4 profile's
+/// compatibility alias mount.
+void emitEvmRouteArm(
+	TypeMapper& typeMapper,
+	EvmRoute const& route,
+	std::vector<std::shared_ptr<awst::Statement>>& sink,
+	awst::SourceLocation const& loc)
+{
+	auto const& paramTypes = route.function->parameterTypes();
+	auto const& returnTypes = route.function->returnParameterTypes();
+	auto selectorMatches = awst::makeBytesComparison(
+		awst::makeAppArg(0, loc), awst::EqualityComparison::Eq,
+		awst::makeBytesConstant(route.selector, loc,
+			awst::BytesEncoding::Base16, awst::WType::bytesType()), loc);
+	auto shapeMatches = awst::makeBoolBinOp(
+		appArgCountIs(2, loc), awst::BinaryBooleanOperator::And,
+		std::move(selectorMatches), loc);
+	auto condition = awst::makeBoolBinOp(
+		isNoOp(loc), awst::BinaryBooleanOperator::And,
+		std::move(shapeMatches), loc);
+	auto body = awst::makeBlock(loc);
+	if (!route.function->isPayable())
+		emitNonPayableCheck(loc, body->body);
+
+	std::vector<std::shared_ptr<awst::Expression>> values;
+	if (!paramTypes.empty())
+	{
+		awst::WType const* decodedType = nullptr;
+		if (paramTypes.size() == 1)
+			decodedType = typeMapper.map(paramTypes[0]);
+		else
+		{
+			std::vector<awst::WType const*> tupleTypes;
+			for (auto const* type: paramTypes)
+				tupleTypes.push_back(typeMapper.map(type));
+			decodedType = typeMapper.createType<awst::WTuple>(
+				std::move(tupleTypes));
+		}
+		auto decoded = abi::decodeEvmAbi(
+			typeMapper, awst::makeAppArg(1, loc), paramTypes,
+			decodedType, loc, body->body);
+		if (paramTypes.size() == 1)
+			values.push_back(std::move(decoded));
+		else
+		{
+			auto once = awst::makeEvalOnce(std::move(decoded), loc);
+			auto const* tuple = dynamic_cast<awst::WTuple const*>(decodedType);
+			for (size_t i = 0; i < paramTypes.size(); ++i)
+				values.push_back(awst::makeTupleItem(
+					once, static_cast<int>(i), tuple->types()[i], loc));
+		}
+	}
+
+	auto call = awst::makeSubroutineCall(
+		awst::InstanceMethodTarget{route.method->memberName},
+		route.method->returnType, loc);
+	for (size_t i = 0; i < values.size(); ++i)
+	{
+		auto value = std::move(values[i]);
+		auto const* expected = i < route.method->args.size()
+			? route.method->args[i].wtype : value->wtype;
+		if (value->wtype != expected)
+			value = codec::valueToArc4(
+				typeMapper, paramTypes[i], std::move(value), expected, loc);
+		awst::pushCallArg(call->args, std::move(value));
+	}
+
+	std::vector<std::shared_ptr<awst::Expression>> returnValues;
+	if (returnTypes.empty())
+	{
+		body->body.push_back(awst::makeExpressionStatement(call, loc));
+	}
+	else if (returnTypes.size() == 1)
+		returnValues.push_back(call);
+	else
+	{
+		auto once = awst::makeEvalOnce(call, loc);
+		auto const* tuple = dynamic_cast<awst::WTuple const*>(
+			route.method->returnType);
+		for (size_t i = 0; i < returnTypes.size(); ++i)
+			returnValues.push_back(awst::makeTupleItem(
+				once, static_cast<int>(i), tuple->types()[i], loc));
+	}
+	auto encoded = abi::encodeEvmAbi(
+		typeMapper, returnTypes, std::move(returnValues), loc, body->body);
+	emitReturnLog(std::move(encoded), loc, body->body);
+	body->body.push_back(awst::makeReturnStatement(awst::makeTrue(loc), loc));
+	sink.push_back(awst::makeIfElse(
+		std::move(condition), std::move(body), nullptr, loc));
+}
 }
 
 void ContractBuilder::emitEvmEntryDispatch(
@@ -111,41 +257,12 @@ void ContractBuilder::emitEvmEntryDispatch(
 		return;
 	auto const& loc = approval.sourceLocation;
 
-	struct Route
-	{
-		FunctionType const* function = nullptr;
-		awst::ContractMethod* method = nullptr;
-		std::vector<uint8_t> selector;
-	};
-	std::vector<Route> routes;
-	for (auto const& [_, function]: contractDefinition.interfaceFunctionList(true))
-	{
-		if (!function)
-			continue;
-		auto name = methodNameFor(*function, m_overloadedNames);
-		auto* method = findMethod(contract, name);
-		if (!method)
-		{
-			Logger::instance().error(
-				"cannot build EVM entry route for Solidity function '"
-					+ function->externalSignature() + "': generated method '"
-					+ name + "' was not found", loc);
-			continue;
-		}
-		if (!abi::canDecodeEvmAbi(function->parameterTypes())
-			|| !abi::canEncodeEvmAbi(function->returnParameterTypes()))
-		{
-			Logger::instance().error(
-				"Solidity ABI entry route contains a type unsupported by the "
-				"canonical recursive codec: " + function->externalSignature(), loc);
-			continue;
-		}
-		routes.push_back({function, method,
-			SolcFacts::externalSelector(*function)});
-		// The method remains an ordinary callable subroutine, but is no longer
-		// advertised to or dispatched by puya's ARC4 router.
-		method->arc4MethodConfig.reset();
-	}
+	auto routes = collectEvmRoutes(
+		contractDefinition, contract, m_overloadedNames, loc, /*quiet=*/false);
+	// The methods remain ordinary callable subroutines, but are no longer
+	// advertised to or dispatched by puya's ARC4 router.
+	for (auto const& route: routes)
+		route.method->arc4MethodConfig.reset();
 
 	// Solidity fallback/receive are owned by this adapter as well. Their full
 	// forwarding behavior is added below; suppress accidental ARC4 exposure.
@@ -219,89 +336,7 @@ void ContractBuilder::emitEvmEntryDispatch(
 	}
 
 	for (auto const& route: routes)
-	{
-		auto const& paramTypes = route.function->parameterTypes();
-		auto const& returnTypes = route.function->returnParameterTypes();
-		auto selectorMatches = awst::makeBytesComparison(
-			awst::makeAppArg(0, loc), awst::EqualityComparison::Eq,
-			awst::makeBytesConstant(route.selector, loc,
-				awst::BytesEncoding::Base16, awst::WType::bytesType()), loc);
-		auto shapeMatches = awst::makeBoolBinOp(
-			appArgCountIs(2, loc), awst::BinaryBooleanOperator::And,
-			std::move(selectorMatches), loc);
-		auto condition = awst::makeBoolBinOp(
-			isNoOp(loc), awst::BinaryBooleanOperator::And,
-			std::move(shapeMatches), loc);
-		auto body = awst::makeBlock(loc);
-		if (!route.function->isPayable())
-			emitNonPayableCheck(loc, body->body);
-
-		std::vector<std::shared_ptr<awst::Expression>> values;
-		if (!paramTypes.empty())
-		{
-			awst::WType const* decodedType = nullptr;
-			if (paramTypes.size() == 1)
-				decodedType = m_typeMapper.map(paramTypes[0]);
-			else
-			{
-				std::vector<awst::WType const*> tupleTypes;
-				for (auto const* type: paramTypes)
-					tupleTypes.push_back(m_typeMapper.map(type));
-				decodedType = m_typeMapper.createType<awst::WTuple>(
-					std::move(tupleTypes));
-			}
-			auto decoded = abi::decodeEvmAbi(
-				m_typeMapper, awst::makeAppArg(1, loc), paramTypes,
-				decodedType, loc, body->body);
-			if (paramTypes.size() == 1)
-				values.push_back(std::move(decoded));
-			else
-			{
-				auto once = awst::makeEvalOnce(std::move(decoded), loc);
-				auto const* tuple = dynamic_cast<awst::WTuple const*>(decodedType);
-				for (size_t i = 0; i < paramTypes.size(); ++i)
-					values.push_back(awst::makeTupleItem(
-						once, static_cast<int>(i), tuple->types()[i], loc));
-			}
-		}
-
-		auto call = awst::makeSubroutineCall(
-			awst::InstanceMethodTarget{route.method->memberName},
-			route.method->returnType, loc);
-		for (size_t i = 0; i < values.size(); ++i)
-		{
-			auto value = std::move(values[i]);
-			auto const* expected = i < route.method->args.size()
-				? route.method->args[i].wtype : value->wtype;
-			if (value->wtype != expected)
-				value = codec::valueToArc4(
-					m_typeMapper, paramTypes[i], std::move(value), expected, loc);
-			awst::pushCallArg(call->args, std::move(value));
-		}
-
-		std::vector<std::shared_ptr<awst::Expression>> returnValues;
-		if (returnTypes.empty())
-		{
-			body->body.push_back(awst::makeExpressionStatement(call, loc));
-		}
-		else if (returnTypes.size() == 1)
-			returnValues.push_back(call);
-		else
-		{
-			auto once = awst::makeEvalOnce(call, loc);
-			auto const* tuple = dynamic_cast<awst::WTuple const*>(
-				route.method->returnType);
-			for (size_t i = 0; i < returnTypes.size(); ++i)
-				returnValues.push_back(awst::makeTupleItem(
-					once, static_cast<int>(i), tuple->types()[i], loc));
-		}
-		auto encoded = abi::encodeEvmAbi(
-			m_typeMapper, returnTypes, std::move(returnValues), loc, body->body);
-		emitReturnLog(std::move(encoded), loc, body->body);
-		body->body.push_back(awst::makeReturnStatement(awst::makeTrue(loc), loc));
-		approval.body->body.push_back(awst::makeIfElse(
-			std::move(condition), std::move(body), nullptr, loc));
-	}
+		emitEvmRouteArm(m_typeMapper, route, approval.body->body, loc);
 
 	// Unmatched non-empty calldata selects fallback(). Reconstruct exactly the
 	// Solidity byte stream from the AVM carrier split: selector ++ ABI body.
@@ -357,6 +392,32 @@ void ContractBuilder::emitEvmEntryDispatch(
 	// No matching Solidity selector and no compiler-private ARC4 route.
 	approval.body->body.push_back(
 		awst::makeReturnStatement(awst::makeFalse(loc), loc));
+}
+
+
+void ContractBuilder::emitEvmCompatRoutes(
+	solidity::frontend::ContractDefinition const& contractDefinition,
+	awst::Contract& contract)
+{
+	auto& approval = contract.approvalProgram;
+	if (!approval.body)
+		return;
+	auto const& loc = approval.sourceLocation;
+
+	// ARC-4 profile: the abi.* builtins emit canonical EVM calldata in every
+	// profile, so `target.call(abi.encodeWithSignature(...))` reaches an
+	// ARC-4-routed callee carrying a keccak selector — which the native router
+	// errs on. Mount the same EVM route arms the --contract-abi evm profile
+	// uses AS AN ALIAS, ahead of the untouched ARC-4 router: every arm is
+	// guarded on NumAppArgs==2 (the [selector, body] carrier the low-level
+	// call lowering emits), so native ARC-4 traffic is dispatched exactly as
+	// before. arc4MethodConfigs are NOT reset — ARC-4 stays the primary
+	// transport; methods whose types cannot round-trip the EVM codec simply
+	// have no alias (quiet mode) and keep their ARC-4 route.
+	auto routes = collectEvmRoutes(
+		contractDefinition, contract, m_overloadedNames, loc, /*quiet=*/true);
+	for (auto const& route: routes)
+		emitEvmRouteArm(m_typeMapper, route, approval.body->body, loc);
 }
 
 } // namespace puyasol::builder

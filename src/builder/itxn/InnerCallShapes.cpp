@@ -14,6 +14,7 @@
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "Logger.h"
+#include "builder/SecpRangeCheck.h"
 
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/TypeProvider.h>
@@ -284,7 +285,16 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
 	auto const& args = _encodeExpr.arguments();
 	if (args.empty())
 		return nullptr;
-	if (_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
+	// abi.encodeWithSignature fixes its payload to keccak256(sig)[:4] ++
+	// EVM-encoded args in EVERY profile (entry transport must not change the
+	// meaning of an abi.* expression), so the recognized fast path forwards
+	// exactly that shape — identical bytes to the unrecognized payload going
+	// through handleCallWithRawData's [first4, rest] split. An ARC-4-profile
+	// callee dispatches it through its EVM compat arms. The old profile fork
+	// re-derived sha512_256(signature-as-given) here, which matches NOTHING:
+	// not the ARC-4 route (that hashes name(args)return) and not keccak — every
+	// `.call(abi.encodeWithSignature(...))` erred inside the callee's router.
+	if (_isSignature || _ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
 	{
 		std::shared_ptr<awst::Expression> evmSelector;
 		if (_isSignature)
@@ -315,22 +325,6 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
 	}
 
 	std::shared_ptr<awst::Expression> selector;
-	if (_isSignature)
-	{
-		if (auto const* lit = dynamic_cast<Literal const*>(args[0].get()))
-			selector = awst::makeMethodConstant(
-				lit->value(), awst::WType::bytesType(), _loc);
-		else
-		{
-			// Runtime sig: sha512_256(sig)[0:4] (same rule as MethodConstant at compile time).
-			auto sigExpr = awst::makeAsBytes(_ctx.buildExpr(*args[0]), _loc);
-			auto hash = awst::makeIntrinsicCall(
-				"sha512_256", awst::WType::bytesType(), _loc);
-			hash->stackArgs.push_back(std::move(sigExpr));
-			selector = awst::makeExtract(std::move(hash), 0, 4, _loc);
-		}
-	}
-	else
 	{
 		// Explicit Solidity→ARC-4 transport boundary. In --evm-selectors mode
 		// `C.f.selector` is keccak-derived and must not be forwarded directly to
@@ -525,17 +519,34 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleStaticCallPrecompile(
 		_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(vName, u64v, _loc), std::move(vInt), _loc));
 		auto vRead = [&]() { return awst::makeVarExpression(vName, u64v, _loc); };
+		// EVM validates the WHOLE 32-byte v word: 0x01…001b is invalid (returns
+		// empty output) even though its low byte is 27. Checking only byte 63
+		// ACCEPTED such words — recovering an address where EVM yields zero, a
+		// false-accept on the signature-check path. Compare the full word.
+		auto vWord = [&]() {
+			return awst::makeAsBiguint(makeExtract(_inputData, 32, 32, _loc), _loc);
+		};
 		auto validV = awst::makeBoolBinOp(
-			awst::makeNumericCompare(vRead(), awst::NumericComparison::Eq,
-				awst::makeIntegerConstant("27", _loc), _loc),
+			awst::makeNumericCompare(vWord(), awst::NumericComparison::Eq,
+				awst::makeIntegerConstant("27", _loc, awst::WType::biguintType()), _loc),
 			awst::BinaryBooleanOperator::Or,
-			awst::makeNumericCompare(vRead(), awst::NumericComparison::Eq,
-				awst::makeIntegerConstant("28", _loc), _loc), _loc);
+			awst::makeNumericCompare(vWord(), awst::NumericComparison::Eq,
+				awst::makeIntegerConstant("28", _loc, awst::WType::biguintType()), _loc), _loc);
 		auto vMinus27 = awst::makeUInt64BinOp(
 			vRead(), awst::UInt64BinaryOperator::Sub, awst::makeIntegerConstant("27", _loc), _loc);
 		std::shared_ptr<awst::Expression> recoveryId = std::move(vMinus27);
 		auto r = makeExtract(_inputData, 64, 32, _loc);
 		auto s = makeExtract(_inputData, 96, 32, _loc);
+		// r/s ∈ [1, N-1], or EVM returns empty where ecdsa_pk_recover panics.
+		auto readRGate = [&]() -> std::shared_ptr<awst::Expression> {
+			return makeExtract(_inputData, 64, 32, _loc);
+		};
+		auto readSGate = [&]() -> std::shared_ptr<awst::Expression> {
+			return makeExtract(_inputData, 96, 32, _loc);
+		};
+		validV = awst::makeBoolBinOp(
+			std::move(validV), awst::BinaryBooleanOperator::And,
+			secp256k1RangeCondition(readRGate, readSGate, _loc), _loc);
 
 		awst::WType const* tupleTypePtr = _ctx.typeMapper.createType<awst::WTuple>(
 			std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::bytesType()});
