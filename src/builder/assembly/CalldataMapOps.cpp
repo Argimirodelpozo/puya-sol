@@ -5,6 +5,11 @@
 /// accessFlatElement: AWST expression for the i-th 32-byte EVM calldata slot.
 
 #include "builder/assembly/AssemblyBuilder.h"
+// yul nodes BY VALUE (the AST aliases are std::variant, which needs
+// complete types). Kept out of AssemblyBuilder.h so only the TUs that
+// actually instantiate them pay the ~223k lines.
+#include <libyul/AST.h>
+#include <libyul/Dialect.h>
 
 namespace puyasol::builder
 {

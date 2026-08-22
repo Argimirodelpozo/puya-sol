@@ -6,6 +6,9 @@
 
 #include <set>
 #include <string>
+// solc AST nodes used completely (dynamic_cast / member access); the hub
+// headers only forward-declare them now.
+#include <libsolidity/ast/AST.h>
 
 namespace puyasol::builder::abi
 {

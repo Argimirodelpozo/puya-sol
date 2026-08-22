@@ -16,7 +16,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/ReturnWirePlan.h"
 
-#include <libsolidity/ast/AST.h>
+#include "builder/sol-types/SolcFwd.h"
 
 #include <map>
 #include <set>

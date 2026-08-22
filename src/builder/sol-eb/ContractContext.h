@@ -3,7 +3,7 @@
 #include "awst/Node.h"
 #include "builder/FunctionSymbolTable.h"
 
-#include <libsolidity/ast/Types.h>
+#include "builder/sol-types/SolcFwd.h"
 #include <liblangutil/Token.h>
 
 #include <cstdint>
@@ -101,7 +101,10 @@ public:
 
 	/// Fallback binary operation when the type-specific builder does not handle it.
 	std::shared_ptr<awst::Expression> buildBinaryOp(
-		solidity::frontend::Token _op,
+		// langutil::Token IS frontend::Token -- the latter was only visible
+		// through a using-directive inside Types.h. Naming it directly keeps
+		// the cheap <liblangutil/Token.h> above sufficient.
+		solidity::langutil::Token _op,
 		std::shared_ptr<awst::Expression> _left,
 		std::shared_ptr<awst::Expression> _right,
 		awst::WType const* _resultType,

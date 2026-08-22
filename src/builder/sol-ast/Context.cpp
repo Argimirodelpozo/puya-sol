@@ -4,6 +4,9 @@
 /// that need to find the right typed ancestor remain here.
 
 #include "builder/sol-ast/Context.h"
+// solc AST nodes used completely (dynamic_cast / member access); the hub
+// headers only forward-declare them now.
+#include <libsolidity/ast/AST.h>
 
 namespace puyasol::builder::sol_ast
 {

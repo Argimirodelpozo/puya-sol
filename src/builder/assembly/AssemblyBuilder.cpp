@@ -15,6 +15,11 @@
 #include <array>
 #include <optional>
 #include <sstream>
+// yul nodes BY VALUE (the AST aliases are std::variant, which needs
+// complete types). Kept out of AssemblyBuilder.h so only the TUs that
+// actually instantiate them pay the ~223k lines.
+#include <libyul/AST.h>
+#include <libyul/Dialect.h>
 
 namespace puyasol::builder
 {
@@ -31,7 +36,8 @@ std::string AssemblyBuilder::getFunctionName(
 		// to the wrong builtin or throws.
 		using solidity::langutil::EVMVersion;
 		EVMVersion const ver =
-			m_typeMapper.profile().evmVersion.value_or(EVMVersion::cancun());
+			EVMVersion::fromString(m_typeMapper.profile().evmVersionName)
+				.value_or(EVMVersion::cancun());
 		try
 		{
 			auto const& dialect = solidity::yul::EVMDialect::strictAssemblyForEVMObjects(ver, std::nullopt);

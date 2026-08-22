@@ -5,6 +5,11 @@
 #include "awst/NameGen.h"
 
 #include <sstream>
+// yul nodes BY VALUE (the AST aliases are std::variant, which needs
+// complete types). Kept out of AssemblyBuilder.h so only the TUs that
+// actually instantiate them pay the ~223k lines.
+#include <libyul/AST.h>
+#include <libyul/Dialect.h>
 
 namespace puyasol::builder
 {

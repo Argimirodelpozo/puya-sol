@@ -6,10 +6,25 @@
 #include "builder/sol-types/TypeMapper.h"
 
 #include <liblangutil/EVMVersion.h>
-#include <libyul/AST.h>
+// ASTForward.h declares every yul node this header names (all by pointer or
+// reference), so libyul/AST.h would add ~223k preprocessed lines for nothing.
+// DebugData is the one thing AST.h was also supplying: makeLoc takes a
+// DebugData::ConstPtr, and a NESTED typedef needs the definition. Its own
+// header is 61k lines against AST.h + Dialect.h at 354k, so the swap is a net
+// ~293k-line saving for each of the 28 TUs that include this file.
+#include <liblangutil/DebugData.h>
 #include <libyul/ASTForward.h>
-#include <libyul/Dialect.h>
+// ASTAnnotations.h has to stay: InlineAssemblyAnnotation::ExternalIdentifierInfo
+// is a NESTED type held BY VALUE in m_externalRefs, and nested types cannot be
+// forward-declared.
 #include <libsolidity/ast/ASTAnnotations.h>
+
+namespace solidity::yul
+{
+/// Only ever named as `Dialect const&` here; the definition belongs to the .cpp
+/// files that actually call into it.
+class Dialect;
+}
 
 #include <functional>
 

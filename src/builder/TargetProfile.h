@@ -2,8 +2,6 @@
 
 #include "builder/ScratchLayout.h"
 
-#include <liblangutil/EVMVersion.h>
-
 #include <optional>
 #include <string>
 
@@ -37,7 +35,13 @@ struct TargetProfile
 	std::optional<std::string> evmChainId;
 	std::optional<std::string> evmBlockGasLimit;
 	std::optional<std::string> evmCoinbase;
-	std::optional<solidity::langutil::EVMVersion> evmVersion;
+	/// Canonical EVMVersion::name(); empty means the compiler default.
+	/// Stored as the NAME, not the value: a by-value EVMVersion made this
+	/// 44-line POD drag liblangutil/EVMVersion.h -> boost.exception into
+	/// 122 of 139 builder TUs, while exactly one of them reads the field.
+	/// EVMVersion::fromString compares against name(), so this round-trips
+	/// exactly.
+	std::string evmVersionName;
 	ScratchLayout scratchLayout;
 };
 

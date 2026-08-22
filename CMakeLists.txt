@@ -207,6 +207,34 @@ set(SOURCES
 
 add_executable(puya-sol ${SOURCES})
 
+# Reuse object files across rebuilds and across branches. Opt-in: this only
+# engages if ccache is on PATH, so the build works unchanged without it.
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+	set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}" CACHE STRING "" FORCE)
+	set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}" CACHE STRING "" FORCE)
+	message(STATUS "ccache enabled: ${CCACHE_PROGRAM}")
+else()
+	message(STATUS "ccache not found — `sudo apt install ccache` to enable it")
+endif()
+
+# Precompile only what nearly EVERY translation unit already needs.
+#
+# Deliberately NOT libsolidity/ast/AST.h or Types.h: a PCH is force-included
+# into every source, so listing those would push them back into the ~60 TUs
+# that were just decoupled from them via builder/sol-types/SolcFwd.h. awst/Node.h
+# is different — it is already in 134 of 139 builder TUs and pulls no
+# third-party headers, so precompiling it is pure win with no re-coupling.
+target_precompile_headers(puya-sol PRIVATE
+	"${CMAKE_SOURCE_DIR}/src/awst/Node.h"
+	<map>
+	<memory>
+	<optional>
+	<string>
+	<variant>
+	<vector>
+)
+
 # A dangling-reference bug in the solc AST wrapper survived because normal
 # builds suppress warnings. Keep this high-signal lifetime diagnostic fatal.
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")

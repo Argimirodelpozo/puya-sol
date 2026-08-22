@@ -20,11 +20,15 @@
 #include "builder/proxies/Erc1967Lowering.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
-#include <libyul/AST.h>
 
 #include <boost/multiprecision/cpp_int.hpp>
 #include <map>
 #include <set>
+// yul nodes BY VALUE (the AST aliases are std::variant, which needs
+// complete types). Kept out of AssemblyBuilder.h so only the TUs that
+// actually instantiate them pay the ~223k lines.
+#include <libyul/AST.h>
+#include <libyul/Dialect.h>
 
 namespace puyasol::builder
 {

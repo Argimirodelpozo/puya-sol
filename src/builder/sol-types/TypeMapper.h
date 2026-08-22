@@ -3,8 +3,7 @@
 #include "awst/WType.h"
 #include "builder/TargetProfile.h"
 
-#include <libsolidity/ast/AST.h>
-#include <libsolidity/ast/Types.h>
+#include "builder/sol-types/SolcFwd.h"
 
 #include <map>
 #include <memory>
