@@ -19,6 +19,38 @@
 namespace puyasol::builder
 {
 
+/// True when `_t`, or any type reachable through its arrays and struct
+/// members, satisfies `_pred`. Shared traversal behind the storage-only-family
+/// predicates below.
+///
+/// A RECURSIVE struct (`struct Node { Node[] kids; }`) would otherwise recurse
+/// forever. Callers that only ever see storage-ref types never hit one, so this
+/// was latent until the predicates started running over every struct state var
+/// (StorageMapper::shouldUseBoxStorage).
+template <typename Predicate>
+inline bool typeContains(
+	solidity::frontend::Type const* _t,
+	Predicate const& _pred,
+	std::set<int64_t>* _visiting = nullptr)
+{
+	if (!_t) return false;
+	if (_pred(_t)) return true;
+	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
+		return typeContains(arr->baseType(), _pred, _visiting);
+	if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(_t))
+	{
+		std::set<int64_t> owned;
+		if (!_visiting) _visiting = &owned;
+		if (!_visiting->insert(st->structDefinition().id()).second)
+			return false;                       // already on the current path
+		for (auto const& member: st->members(nullptr))
+			if (typeContains(member.type, _pred, _visiting))
+				return true;
+		return false;
+	}
+	return false;
+}
+
 /// True if `_t` is a MappingType, or any array/struct that (recursively)
 /// contains one. Determines whether a `storage` ref travels as a bytes
 /// box-key vs an AWST-mapped value. Must be consistent across AWSTBuilder,
@@ -29,26 +61,31 @@ inline bool containsMappingType(
 	solidity::frontend::Type const* _t,
 	std::set<int64_t>* _visiting = nullptr)
 {
-	if (!_t) return false;
-	if (dynamic_cast<solidity::frontend::MappingType const*>(_t)) return true;
-	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
-		return containsMappingType(arr->baseType(), _visiting);
-	if (auto const* st = dynamic_cast<solidity::frontend::StructType const*>(_t))
-	{
-		// A RECURSIVE struct (`struct Node { Node[] kids; }`) would otherwise
-		// recurse forever. Callers that only ever see storage-ref types never hit
-		// one, so this was latent until the predicate started running over every
-		// struct state var (StorageMapper::shouldUseBoxStorage).
-		std::set<int64_t> owned;
-		if (!_visiting) _visiting = &owned;
-		if (!_visiting->insert(st->structDefinition().id()).second)
-			return false;                       // already on the current path
-		for (auto const& member: st->members(nullptr))
-			if (containsMappingType(member.type, _visiting))
-				return true;
-		return false;
-	}
-	return false;
+	return typeContains(_t, [](solidity::frontend::Type const* t) {
+		return dynamic_cast<solidity::frontend::MappingType const*>(t) != nullptr;
+	}, _visiting);
+}
+
+/// True if `_t` is an INTERNAL function pointer, or any array/struct that
+/// (recursively) holds one. The other storage-only family: like mappings these
+/// have no ABI interface type, so solc's `isDynamicallyEncoded()` asserts
+/// rather than answering (`solAssert(interfaceType(false).get(), "")`,
+/// Types.cpp StructType::isDynamicallyEncoded).
+/// `struct S { function() returns (uint) x; }` held as a state var aborted the
+/// compiler outright until this was peeled.
+///
+/// Kind::External is deliberately EXCLUDED: those are the one function kind
+/// solc gives an interface type (FunctionType::interfaceType), they encode as a
+/// static 24-byte value, and the ABI predicate answers them fine. Matching them
+/// here would silently reclassify structs that merely hold a callback.
+inline bool containsInternalFunctionType(
+	solidity::frontend::Type const* _t,
+	std::set<int64_t>* _visiting = nullptr)
+{
+	return typeContains(_t, [](solidity::frontend::Type const* t) {
+		auto const* fn = dynamic_cast<solidity::frontend::FunctionType const*>(t);
+		return fn && fn->kind() != solidity::frontend::FunctionType::Kind::External;
+	}, _visiting);
 }
 
 /// True when the `T storage` ref must travel as a bytes box-key prefix (the handle):
@@ -89,8 +126,12 @@ inline bool isBoxKeyedStorageRef(
 	// by StorageMapper, so its storage-ref representation is the box key too.
 	// This uses solc's recursive ABI-shape fact and therefore covers scalar,
 	// struct, and mixed fixed/dynamic ranks without enumerating leaf shapes.
+	// Internal-fn-pointer check first: an element with no ABI interface type
+	// aborts isDynamicallyEncoded() instead of answering it, and such an array
+	// is fixed-size anyway, so it is not box-backed on this rule.
 	if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(_t))
-		return !arr->isByteArrayOrString() && arr->isDynamicallyEncoded();
+		return !arr->isByteArrayOrString() && !containsInternalFunctionType(arr)
+			&& arr->isDynamicallyEncoded();
 	return false;
 }
 
