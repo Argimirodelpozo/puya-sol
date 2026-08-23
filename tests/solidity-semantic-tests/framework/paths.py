@@ -8,7 +8,13 @@ FRAMEWORK_DIR = Path(__file__).resolve().parent
 SEMANTIC_TESTS_DIR = FRAMEWORK_DIR.parent
 PUYA_SOL_ROOT = SEMANTIC_TESTS_DIR.parent.parent
 
-COMPILER = PUYA_SOL_ROOT / "build" / "puya-sol"
+# PUYA_SOL_COMPILER points the framework (and everything built on it — the
+# semantic suite, chainwide replays, fuzz campaigns) at an alternate puya-sol
+# binary, e.g. a bisect worktree's build. Same pattern as PUYA_SOL_PUYA below;
+# the compile cache keys on the binary, so alternate compilers never share
+# cached artifacts.
+COMPILER = Path(os.environ.get("PUYA_SOL_COMPILER")
+                or PUYA_SOL_ROOT / "build" / "puya-sol")
 # PUYA_SOL_PUYA points the whole suite at an alternate puya backend (e.g. a
 # vanilla-upstream worktree to measure a version bump before syncing the
 # fork). The backend cache signature hashes PUYA_SOL_PUYA_SRC, so alternate

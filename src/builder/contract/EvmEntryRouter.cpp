@@ -3,6 +3,7 @@
 #include "builder/contract/RouterConditions.h"
 
 #include "Logger.h"
+#include "builder/ProgramAnalysis.h"
 #include "builder/SolcFacts.h"
 #include "builder/abi/EvmAbiDecode.h"
 #include "builder/abi/EvmAbiEncode.h"
@@ -109,7 +110,8 @@ std::vector<EvmRoute> collectEvmRoutes(
 	awst::Contract& contract,
 	OverloadedNamesSet const& overloadedNames,
 	awst::SourceLocation const& loc,
-	bool quiet)
+	bool quiet,
+	ProgramAnalysis const* analysis = nullptr)
 {
 	std::vector<EvmRoute> routes;
 	for (auto const& [_, function]: contractDefinition.interfaceFunctionList(true))
@@ -141,6 +143,19 @@ std::vector<EvmRoute> collectEvmRoutes(
 		// profile's compact pointer stores the ARC-4 route, not the Solidity
 		// selector, so the codec hard-errors). In quiet/alias mode such a method
 		// simply keeps only its ARC-4 route.
+		// Alias arms only cover methods whose LOWERING round-trips the EVM
+		// transport. A body containing inline assembly does not yet: its
+		// `assembly { return(...) }` / blob-pointer conventions are validated
+		// for the inline ARC-4 path only, and dispatching one through an arm
+		// reverted on the blob memory bound (the chainwide Aave stubs, whose
+		// every method leads with the scripted-answer asm return). Skipping
+		// keeps such methods ARC-4-only; an EVM-selector caller lands in the
+		// fallback — exactly where it landed before the arms existed. Same
+		// gate and same rationale as the ARC-4 param remap's asm exclusion.
+		if (quiet && analysis && function->hasDeclaration()
+			&& analysis->callablesWithInlineAssembly.count(
+				function->declaration().id()))
+			continue;
 		if (quiet)
 		{
 			std::function<bool(Type const*)> needsEvmSelectors =
@@ -435,7 +450,8 @@ void ContractBuilder::emitEvmCompatRoutes(
 	// transport; methods whose types cannot round-trip the EVM codec simply
 	// have no alias (quiet mode) and keep their ARC-4 route.
 	auto routes = collectEvmRoutes(
-		contractDefinition, contract, m_overloadedNames, loc, /*quiet=*/true);
+		contractDefinition, contract, m_overloadedNames, loc, /*quiet=*/true,
+		&m_typeMapper.analysis());
 	for (auto const& route: routes)
 		emitEvmRouteArm(m_typeMapper, route, approval.body->body, loc);
 }
