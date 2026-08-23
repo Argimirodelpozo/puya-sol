@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_multiple_arguments.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 0
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -27,12 +28,92 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x0b94e4f7
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    txna ApplicationArgs 1
+    extract 64 32
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 3
+    dig 1
+    b|
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    dig 2
+    b|
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    uncover 3
+    b|
+    callsub foo
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
     pushbytes 0x06c73ac0 // method "foo(uint256,uint256,uint256)byte[32]"
     txna ApplicationArgs 0
-    match main_foo_route@4
+    match main_foo_route@11
     err
 
-main_foo_route@4:
+main_foo_route@11:
     txn OnCompletion
     !
     txn ApplicationID
@@ -56,20 +137,32 @@ main_foo_route@4:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub foo
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_multiple_arguments.sol.c.foo(__arc4_a: bytes, __arc4_b: bytes, __arc4_c: bytes) -> bytes:
+foo:
+    proto 3 1
     txn GroupIndex
-    bz main_ternary_false@8
+    bz foo_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+foo_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 32
     bzero
     dup
-    uncover 4
+    frame_dig -3
     concat
     dup
     len
@@ -78,7 +171,7 @@ main_ternary_merge@9:
     intc_0 // 32
     extract3
     dig 1
-    uncover 4
+    frame_dig -2
     concat
     dup
     len
@@ -88,7 +181,7 @@ main_ternary_merge@9:
     extract3
     concat
     swap
-    uncover 2
+    frame_dig -1
     concat
     dup
     len
@@ -98,13 +191,8 @@ main_ternary_merge@9:
     extract3
     concat
     keccak256
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@8:
-    pushint 0
-    b main_ternary_merge@9
+foo_ternary_false@2:
+    intc_2 // 0
+    b foo_ternary_merge@3

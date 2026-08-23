@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/shadowing_local_function_opcode.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
-    bytecblock 0xac976e02 0x151f7c75
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 0xac976e02
     pushint 4096
     bzero
     dup
@@ -24,35 +24,107 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x771602f7
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub add
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    bytec_0 // method "add(uint256,uint256)uint256"
+    bytec_1 // method "add(uint256,uint256)uint256"
     pushbytes 0x595e23e2 // method "g()(uint256,uint256)"
     txna ApplicationArgs 0
-    match main_add_route@5 main_g_route@6
+    match main_add_route@12 main_g_route@13
     err
 
-main_g_route@6:
+main_g_route@13:
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@19
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@20:
     !
     assert // not payable
-    intc_0 // 1
+    intc_1 // 1
     itob
-    pushint 2
+    intc_3 // 2
     itob
     callsub add
     load 0
@@ -63,44 +135,44 @@ main_ternary_merge@13:
     b%
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@12:
+main_ternary_false@19:
     intc_2 // 0
-    b main_ternary_merge@13
+    b main_ternary_merge@20
 
-main_add_route@5:
+main_add_route@12:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub add
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -110,13 +182,13 @@ add:
     txn NumAppArgs
     bz add_after_if_else@6
     txna ApplicationArgs 0
-    bytec_0 // method "add(uint256,uint256)uint256"
+    bytec_1 // method "add(uint256,uint256)uint256"
     ==
     bz add_after_if_else@6
     txn GroupIndex
     bz add_ternary_false@4
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 

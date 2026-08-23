@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/tmv_body_slice_len.sol.TmvBodySliceLen.approval_program() -> uint64:
 main:
-    intcblock 32 4096 0 1 20480 4064 148
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x94 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffff 0x0000000000000000000000000000000000000001000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000001000000
-    intc_1 // 4096
+    intcblock 32 0 4096 1 20480 4064 65535 148
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75 0x94 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffff 0x0000000000000000000000000000000000000001000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000001000000
+    intc_2 // 4096
     bzero
     dup
     store 5
@@ -29,19 +29,489 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x957604ee
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    dig 1
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    uncover 2
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc 6 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    dup2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 3
+    uncover 3
+    extract3
+    callsub rawLen
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xd32588d8
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    dig 1
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    uncover 2
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc 6 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    dup2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 3
+    uncover 3
+    extract3
+    callsub bodyLen
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0xcf8702d4
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    dig 1
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    uncover 2
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc 6 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    dup2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 3
+    uncover 3
+    extract3
+    callsub clonedBodyLen
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x662a5d89
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    dig 1
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    uncover 2
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc 6 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    dup2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 3
+    uncover 3
+    extract3
+    callsub hop
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@28:
+    intc_1 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0x9683e3a1
+    ==
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    dig 1
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    uncover 2
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc 6 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    dup2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 3
+    uncover 3
+    extract3
+    callsub receiveBody
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@35:
+    intc_1 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xd0c090d2 0x3b221081 0xe1895644 0x5d18cb20 0xff2216fe // method "rawLen(byte[])uint256", method "bodyLen(byte[])uint256", method "clonedBodyLen(byte[])uint256", method "hop(byte[])uint256", method "receiveBody(byte[])uint256"
     txna ApplicationArgs 0
-    match main_rawLen_route@5 main_bodyLen_route@6 main_clonedBodyLen_route@7 main_hop_route@8 main_receiveBody_route@9
+    match main_rawLen_route@40 main_bodyLen_route@41 main_clonedBodyLen_route@42 main_hop_route@43 main_receiveBody_route@44
     err
 
-main_receiveBody_route@9:
+main_receiveBody_route@44:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -58,10 +528,10 @@ main_receiveBody_route@9:
     intc_3 // 1
     return
 
-main_hop_route@8:
+main_hop_route@43:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -70,49 +540,7 @@ main_hop_route@8:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    txn GroupIndex
-    bz main_ternary_false@17
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@18:
-    !
-    assert // not payable
-    intc_2 // 0
-    callsub TypedMemView.ref
-    dup
-    callsub TypedMemView.len
-    dup
-    bytec_1 // 0x94
-    b>=
-    assert // underflow
-    intc 6 // 148
-    itob
-    swap
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_1 // 0x94
-    b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    intc_2 // 0
-    callsub TypedMemView.slice
-    callsub TypedMemView.clone
-    callsub receiveBody
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
+    callsub hop
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -120,14 +548,10 @@ main_ternary_merge@18:
     intc_3 // 1
     return
 
-main_ternary_false@17:
-    intc_2 // 0
-    b main_ternary_merge@18
-
-main_clonedBodyLen_route@7:
+main_clonedBodyLen_route@42:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -136,45 +560,7 @@ main_clonedBodyLen_route@7:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    txn GroupIndex
-    bz main_ternary_false@22
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@23:
-    !
-    assert // not payable
-    intc_2 // 0
-    callsub TypedMemView.ref
-    dup
-    callsub TypedMemView.len
-    dup
-    bytec_1 // 0x94
-    b>=
-    assert // underflow
-    intc 6 // 148
-    itob
-    swap
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_1 // 0x94
-    b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    intc_2 // 0
-    callsub TypedMemView.slice
-    callsub TypedMemView.clone
-    len
-    itob
-    intc_0 // 32
-    bzero
-    b|
+    callsub clonedBodyLen
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -182,14 +568,10 @@ main_ternary_merge@23:
     intc_3 // 1
     return
 
-main_ternary_false@22:
-    intc_2 // 0
-    b main_ternary_merge@23
-
-main_bodyLen_route@6:
+main_bodyLen_route@41:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -198,48 +580,7 @@ main_bodyLen_route@6:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    txn GroupIndex
-    bz main_ternary_false@27
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@28:
-    !
-    assert // not payable
-    intc_2 // 0
-    callsub TypedMemView.ref
-    dup
-    callsub TypedMemView.len
-    dup
-    bytec_1 // 0x94
-    b>=
-    assert // underflow
-    intc 6 // 148
-    itob
-    swap
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    bytec_1 // 0x94
-    b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    intc_2 // 0
-    callsub TypedMemView.slice
-    callsub TypedMemView.len
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
+    callsub bodyLen
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -247,14 +588,10 @@ main_ternary_merge@28:
     intc_3 // 1
     return
 
-main_ternary_false@27:
-    intc_2 // 0
-    b main_ternary_merge@28
-
-main_rawLen_route@5:
+main_rawLen_route@40:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -263,37 +600,13 @@ main_rawLen_route@5:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    txn GroupIndex
-    bz main_ternary_false@32
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@33:
-    !
-    assert // not payable
-    intc_2 // 0
-    callsub TypedMemView.ref
-    callsub TypedMemView.len
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
+    callsub rawLen
     bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_3 // 1
     return
-
-main_ternary_false@32:
-    intc_2 // 0
-    b main_ternary_merge@33
 
 
 // __solfn_100(_a: bytes, _b: bytes) -> bytes:
@@ -303,7 +616,7 @@ SafeMath.add:
     frame_dig -1
     b+
     dupn 2
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     frame_dig -2
@@ -322,7 +635,7 @@ SafeMath.add_after_if_else@2:
 TypedMemView.isNull:
     proto 1 1
     frame_dig -1
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     ==
     retsub
 
@@ -344,7 +657,7 @@ TypedMemView.isValid:
     pushint 1099511627775
     ==
     bz TypedMemView.isValid_after_if_else@2
-    intc_2 // 0
+    intc_1 // 0
     retsub
 
 TypedMemView.isValid_after_if_else@2:
@@ -370,12 +683,12 @@ TypedMemView.unsafeBuildUnchecked:
     bzero
     pushint 3
     bzero
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     frame_dig -3
     b|
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 7 // 0x0000000000000000000000000000000000000001000000000000000000000000
+    bytec 8 // 0x0000000000000000000000000000000000000001000000000000000000000000
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -395,7 +708,7 @@ TypedMemView.unsafeBuildUnchecked:
     b|
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 7 // 0x0000000000000000000000000000000000000001000000000000000000000000
+    bytec 8 // 0x0000000000000000000000000000000000000001000000000000000000000000
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -415,7 +728,7 @@ TypedMemView.unsafeBuildUnchecked:
     b|
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000001000000
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000001000000
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -445,18 +758,18 @@ TypedMemView.build:
     extract 64 32
     b>
     bz TypedMemView.build_after_if_else@2
-    pushbytes 0x
+    bytec_1 // 0x
     frame_bury 0
 
 TypedMemView.build_after_if_else@2:
     load 0
     store 0
-    intc_2 // 0
+    intc_1 // 0
     itob
     frame_dig 0
     b==
     bz TypedMemView.build_after_if_else@4
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     swap
     retsub
 
@@ -489,10 +802,10 @@ TypedMemView.ref:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_1 // 4096
+    intc_2 // 4096
     /
     cover 2
-    intc_1 // 4096
+    intc_2 // 4096
     %
     dup
     cover 3
@@ -543,7 +856,7 @@ TypedMemView.ref_after_if_else@3:
     intc_0 // 32
     -
     swap
-    intc_2 // 0
+    intc_1 // 0
 
 TypedMemView.ref_while_top@4:
     dup
@@ -562,10 +875,10 @@ TypedMemView.ref_while_top@4:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_1 // 4096
+    intc_2 // 4096
     /
     cover 4
-    intc_1 // 4096
+    intc_2 // 4096
     %
     dup
     cover 5
@@ -594,13 +907,13 @@ TypedMemView.ref_else_body@7:
     uncover 3
     dup
     loads
-    intc_1 // 4096
+    intc_2 // 4096
     uncover 6
     dup
     cover 2
     -
     dig 4
-    intc_2 // 0
+    intc_1 // 0
     dig 2
     extract3
     swap
@@ -630,7 +943,7 @@ TypedMemView.ref_after_while@9:
     bury 1
     uncover 3
     pop
-    intc_1 // 4096
+    intc_2 // 4096
     dig 2
     -
     dup
@@ -646,7 +959,7 @@ TypedMemView.ref_after_while@9:
 TypedMemView.ref_ternary_merge@12:
     dup
     extract 0 24
-    pushbytes 0x
+    bytec_1 // 0x
     b==
     assert // EVM memory word exceeds uint64
     pushint 24
@@ -654,15 +967,15 @@ TypedMemView.ref_ternary_merge@12:
     dup
     cover 2
     dup
-    intc_1 // 4096
+    intc_2 // 4096
     <=
     assert // EVM memory byte value exceeds AVM stack limit
     dig 1
-    intc_1 // 4096
+    intc_2 // 4096
     %
     dup
     cover 2
-    intc_1 // 4096
+    intc_2 // 4096
     swap
     -
     dup
@@ -671,7 +984,7 @@ TypedMemView.ref_ternary_merge@12:
     bz TypedMemView.ref_ternary_false@14
     pop
     swap
-    intc_1 // 4096
+    intc_2 // 4096
     /
     loads
     swap
@@ -701,7 +1014,7 @@ TypedMemView.ref_ternary_merge@15:
 
 TypedMemView.ref_ternary_false@14:
     uncover 2
-    intc_1 // 4096
+    intc_2 // 4096
     /
     dup
     loads
@@ -715,7 +1028,7 @@ TypedMemView.ref_ternary_false@14:
     uncover 3
     uncover 3
     -
-    intc_2 // 0
+    intc_1 // 0
     swap
     extract3
     concat
@@ -735,7 +1048,7 @@ TypedMemView.ref_ternary_false@11:
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_1 // 0
     swap
     extract3
     concat
@@ -745,13 +1058,13 @@ TypedMemView.ref_else_body@2:
     dig 1
     dup
     loads
-    intc_1 // 4096
+    intc_2 // 4096
     dig 5
     dup
     cover 2
     -
     dig 4
-    intc_2 // 0
+    intc_1 // 0
     dig 2
     extract3
     swap
@@ -820,7 +1133,7 @@ TypedMemView.loc:
     b%
     pushbytes 0x0000000000000000000000000000000001000000000000000000000000000000
     b/
-    bytec 6 // 0xffffffffffffffffffffffff
+    bytec 7 // 0xffffffffffffffffffffffff
     b&
     load 0
     store 0
@@ -839,9 +1152,9 @@ TypedMemView.len:
     concat
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000001000000
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000001000000
     b/
-    bytec 6 // 0xffffffffffffffffffffffff
+    bytec 7 // 0xffffffffffffffffffffffff
     b&
     load 0
     store 0
@@ -857,7 +1170,7 @@ TypedMemView.end:
     callsub TypedMemView.len
     b+
     dup
-    bytec 6 // 0xffffffffffffffffffffffff
+    bytec 7 // 0xffffffffffffffffffffffff
     b<=
     assert // overflow
     retsub
@@ -877,7 +1190,7 @@ TypedMemView.slice:
     callsub TypedMemView.end
     b>
     bz TypedMemView.slice_after_if_else@2
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     swap
     retsub
 
@@ -895,8 +1208,8 @@ TypedMemView.slice_after_if_else@2:
 // __solfn_1354(memView: bytes, _newLoc: bytes) -> bytes:
 TypedMemView.unsafeCopyTo:
     proto 2 1
-    intc_2 // 0
-    pushbytes ""
+    intc_1 // 0
+    bytec_1 // ""
     dupn 2
     frame_dig -2
     callsub TypedMemView.notNull
@@ -955,8 +1268,8 @@ TypedMemView.unsafeCopyTo_after_if_else@9:
     pushint 8
     -
     extract_uint64
-    intc_2 // 0
-    pushbytes 0x
+    intc_1 // 0
+    bytec_1 // 0x
 
 TypedMemView.unsafeCopyTo_while_top@10:
     dig 1
@@ -968,11 +1281,11 @@ TypedMemView.unsafeCopyTo_while_top@10:
     +
     dup
     frame_bury 3
-    intc_1 // 4096
+    intc_2 // 4096
     %
     dup
     cover 3
-    intc_1 // 4096
+    intc_2 // 4096
     swap
     -
     dup
@@ -981,7 +1294,7 @@ TypedMemView.unsafeCopyTo_while_top@10:
     bz TypedMemView.unsafeCopyTo_ternary_false@13
     pop
     frame_dig 3
-    intc_1 // 4096
+    intc_2 // 4096
     /
     loads
     uncover 3
@@ -998,7 +1311,7 @@ TypedMemView.unsafeCopyTo_ternary_merge@14:
 
 TypedMemView.unsafeCopyTo_ternary_false@13:
     frame_dig 3
-    intc_1 // 4096
+    intc_2 // 4096
     /
     dup
     loads
@@ -1012,7 +1325,7 @@ TypedMemView.unsafeCopyTo_ternary_false@13:
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_1 // 0
     swap
     extract3
     concat
@@ -1020,7 +1333,7 @@ TypedMemView.unsafeCopyTo_ternary_false@13:
 
 TypedMemView.unsafeCopyTo_after_while@15:
     bury 1
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     extract3
     dup
@@ -1045,11 +1358,11 @@ TypedMemView.unsafeCopyTo_after_while@15:
     -
     +
     dup
-    intc_1 // 4096
+    intc_2 // 4096
     %
     dup
     cover 2
-    intc_1 // 4096
+    intc_2 // 4096
     swap
     -
     dup
@@ -1058,7 +1371,7 @@ TypedMemView.unsafeCopyTo_after_while@15:
     bz TypedMemView.unsafeCopyTo_ternary_false@17
     pop
     dup
-    intc_1 // 4096
+    intc_2 // 4096
     /
     loads
     uncover 2
@@ -1076,7 +1389,7 @@ TypedMemView.unsafeCopyTo_ternary_merge@18:
     swap
     concat
     swap
-    intc_2 // 0
+    intc_1 // 0
 
 TypedMemView.unsafeCopyTo_while_top@19:
     dig 2
@@ -1096,10 +1409,10 @@ TypedMemView.unsafeCopyTo_while_top@19:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_1 // 4096
+    intc_2 // 4096
     /
     cover 3
-    intc_1 // 4096
+    intc_2 // 4096
     %
     dup
     cover 5
@@ -1128,13 +1441,13 @@ TypedMemView.unsafeCopyTo_else_body@22:
     uncover 2
     dup
     loads
-    intc_1 // 4096
+    intc_2 // 4096
     uncover 6
     dup
     cover 2
     -
     dig 4
-    intc_2 // 0
+    intc_1 // 0
     dig 2
     extract3
     swap
@@ -1186,7 +1499,7 @@ TypedMemView.unsafeCopyTo_after_while@24:
 
 TypedMemView.unsafeCopyTo_ternary_false@17:
     dig 1
-    intc_1 // 4096
+    intc_2 // 4096
     /
     dup
     loads
@@ -1200,7 +1513,7 @@ TypedMemView.unsafeCopyTo_ternary_false@17:
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_1 // 0
     swap
     extract3
     concat
@@ -1222,10 +1535,10 @@ TypedMemView.clone:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_1 // 4096
+    intc_2 // 4096
     /
     swap
-    intc_1 // 4096
+    intc_2 // 4096
     %
     dup
     cover 2
@@ -1239,7 +1552,7 @@ TypedMemView.clone:
     dup
     loads
     uncover 3
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace3
     stores
 
@@ -1254,11 +1567,11 @@ TypedMemView.clone_after_if_else@3:
     store 0
     intc_0 // 32
     bzero
-    intc_2 // 0
+    intc_1 // 0
 
 TypedMemView.clone_while_top@4:
     dup
-    intc_2 // 0
+    intc_1 // 0
     <
     bz TypedMemView.clone_after_while@9
     dig 2
@@ -1273,10 +1586,10 @@ TypedMemView.clone_while_top@4:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_1 // 4096
+    intc_2 // 4096
     /
     cover 3
-    intc_1 // 4096
+    intc_2 // 4096
     %
     dup
     cover 4
@@ -1305,13 +1618,13 @@ TypedMemView.clone_else_body@7:
     uncover 2
     dup
     loads
-    intc_1 // 4096
+    intc_2 // 4096
     uncover 5
     dup
     cover 2
     -
     dig 4
-    intc_2 // 0
+    intc_1 // 0
     dig 2
     extract3
     swap
@@ -1361,7 +1674,7 @@ TypedMemView.clone_after_while@9:
     dig 2
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     frame_dig -1
@@ -1402,11 +1715,11 @@ TypedMemView.clone_after_while@9:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dig 1
-    intc_1 // 4096
+    intc_2 // 4096
     /
     cover 3
     swap
-    intc_1 // 4096
+    intc_2 // 4096
     %
     dup
     cover 4
@@ -1434,7 +1747,7 @@ TypedMemView.clone_after_while@9:
 TypedMemView.clone_after_if_else@12:
     load 0
     store 0
-    intc_1 // 4096
+    intc_2 // 4096
     dig 2
     -
     dup
@@ -1450,7 +1763,7 @@ TypedMemView.clone_after_if_else@12:
 TypedMemView.clone_ternary_merge@15:
     dup
     extract 0 24
-    pushbytes 0x
+    bytec_1 // 0x
     b==
     assert // EVM memory word exceeds uint64
     pushint 24
@@ -1458,15 +1771,15 @@ TypedMemView.clone_ternary_merge@15:
     dup
     cover 2
     dup
-    intc_1 // 4096
+    intc_2 // 4096
     <=
     assert // EVM memory byte value exceeds AVM stack limit
     dig 1
-    intc_1 // 4096
+    intc_2 // 4096
     %
     dup
     cover 2
-    intc_1 // 4096
+    intc_2 // 4096
     swap
     -
     dup
@@ -1475,7 +1788,7 @@ TypedMemView.clone_ternary_merge@15:
     bz TypedMemView.clone_ternary_false@17
     pop
     swap
-    intc_1 // 4096
+    intc_2 // 4096
     /
     loads
     swap
@@ -1485,7 +1798,7 @@ TypedMemView.clone_ternary_merge@15:
 
 TypedMemView.clone_ternary_false@17:
     uncover 2
-    intc_1 // 4096
+    intc_2 // 4096
     /
     dup
     loads
@@ -1499,7 +1812,7 @@ TypedMemView.clone_ternary_false@17:
     uncover 3
     uncover 3
     -
-    intc_2 // 0
+    intc_1 // 0
     swap
     extract3
     concat
@@ -1519,7 +1832,7 @@ TypedMemView.clone_ternary_false@14:
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_1 // 0
     swap
     extract3
     concat
@@ -1529,13 +1842,13 @@ TypedMemView.clone_else_body@11:
     dig 1
     dup
     loads
-    intc_1 // 4096
+    intc_2 // 4096
     dig 5
     dup
     cover 2
     -
     dig 4
-    intc_2 // 0
+    intc_1 // 0
     dig 2
     extract3
     swap
@@ -1564,13 +1877,13 @@ TypedMemView.clone_else_body@2:
     swap
     dup
     loads
-    intc_1 // 4096
+    intc_2 // 4096
     uncover 4
     dup
     cover 2
     -
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    intc_2 // 0
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    intc_1 // 0
     dig 2
     extract3
     swap
@@ -1587,13 +1900,202 @@ TypedMemView.clone_else_body@2:
     intc_0 // 32
     dig 3
     -
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     uncover 4
     uncover 2
     extract3
     replace2 0
     stores
     b TypedMemView.clone_after_if_else@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/tmv_body_slice_len.sol.TmvBodySliceLen.rawLen(m: bytes) -> bytes:
+rawLen:
+    proto 1 1
+    txn GroupIndex
+    bz rawLen_ternary_false@2
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+rawLen_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    intc_1 // 0
+    callsub TypedMemView.ref
+    callsub TypedMemView.len
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+rawLen_ternary_false@2:
+    intc_1 // 0
+    b rawLen_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/tmv_body_slice_len.sol.TmvBodySliceLen.bodyLen(m: bytes) -> bytes:
+bodyLen:
+    proto 1 1
+    txn GroupIndex
+    bz bodyLen_ternary_false@2
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+bodyLen_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    intc_1 // 0
+    callsub TypedMemView.ref
+    dup
+    callsub TypedMemView.len
+    dup
+    bytec_3 // 0x94
+    b>=
+    assert // underflow
+    intc 7 // 148
+    itob
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_3 // 0x94
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    intc_1 // 0
+    callsub TypedMemView.slice
+    callsub TypedMemView.len
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+bodyLen_ternary_false@2:
+    intc_1 // 0
+    b bodyLen_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/tmv_body_slice_len.sol.TmvBodySliceLen.clonedBodyLen(m: bytes) -> bytes:
+clonedBodyLen:
+    proto 1 1
+    txn GroupIndex
+    bz clonedBodyLen_ternary_false@2
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+clonedBodyLen_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    intc_1 // 0
+    callsub TypedMemView.ref
+    dup
+    callsub TypedMemView.len
+    dup
+    bytec_3 // 0x94
+    b>=
+    assert // underflow
+    intc 7 // 148
+    itob
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_3 // 0x94
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    intc_1 // 0
+    callsub TypedMemView.slice
+    callsub TypedMemView.clone
+    len
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+clonedBodyLen_ternary_false@2:
+    intc_1 // 0
+    b clonedBodyLen_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/tmv_body_slice_len.sol.TmvBodySliceLen.hop(m: bytes) -> bytes:
+hop:
+    proto 1 1
+    txn GroupIndex
+    bz hop_ternary_false@2
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+hop_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    intc_1 // 0
+    callsub TypedMemView.ref
+    dup
+    callsub TypedMemView.len
+    dup
+    bytec_3 // 0x94
+    b>=
+    assert // underflow
+    intc 7 // 148
+    itob
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_3 // 0x94
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    intc_1 // 0
+    callsub TypedMemView.slice
+    callsub TypedMemView.clone
+    callsub receiveBody
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+hop_ternary_false@2:
+    intc_1 // 0
+    b hop_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/tmv_body_slice_len.sol.TmvBodySliceLen.receiveBody(body: bytes) -> bytes:
@@ -1610,7 +2112,7 @@ receiveBody_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
-    intc_2 // 0
+    intc_1 // 0
     callsub TypedMemView.ref
     callsub TypedMemView.len
     dup
@@ -1624,5 +2126,5 @@ receiveBody_ternary_merge@3:
     retsub
 
 receiveBody_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b receiveBody_ternary_merge@3

@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/creation_function_call_with_args.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 32 0
+    bytecblock "i" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -23,55 +24,103 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytes "i"
+    bytec_0 // "i"
     txna ApplicationArgs 0
     app_global_put
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    pushbytes 0x3f72e9ed // method "i()uint256"
-    txna ApplicationArgs 0
-    match main_i_route@4
-    err
-
-main_i_route@4:
     txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xe5aa3d58
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@8:
     !
     assert // not payable
-    intc_1 // 0
-    pushbytes "i"
-    app_global_get_ex
-    pushbytes 0x
-    cover 2
-    select
+    intc_1 // 32
+    bzero
+    callsub i
+    concat
     dup
     len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    pushbytes 0x151f7c75
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@8:
-    intc_1 // 0
-    b main_ternary_merge@9
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    pushbytes 0x3f72e9ed // method "i()uint256"
+    txna ApplicationArgs 0
+    match main_i_route@11
+    err
+
+main_i_route@11:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub i
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/creation_function_call_with_args.sol.C.i() -> bytes:
+i:
+    txn GroupIndex
+    bz i_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_0 // "i"
+    app_global_get_ex
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+i_ternary_false@2:
+    intc_2 // 0
+    b i_ternary_merge@3

@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/contracts/unicode_escapes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -23,10 +24,254 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x293f7bbd
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub oneByteUTF8
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x49593350
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub twoBytesUTF8
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x4cfc7f9e
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub threeBytesUTF8
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0xc51157e0
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub combined
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
     txn OnCompletion
     !
     assert
@@ -34,85 +279,145 @@ main_after_if_else@2:
     assert
     pushbytess 0xdb3fae8e 0x8163d802 0x769866b7 0x9c377eb8 // method "oneByteUTF8()string", method "twoBytesUTF8()string", method "threeBytesUTF8()string", method "combined()string"
     txna ApplicationArgs 0
-    match main_oneByteUTF8_route@5 main_twoBytesUTF8_route@6 main_threeBytesUTF8_route@7 main_combined_route@8
+    match main_oneByteUTF8_route@33 main_twoBytesUTF8_route@34 main_threeBytesUTF8_route@35 main_combined_route@36
     err
 
-main_combined_route@8:
+main_combined_route@36:
+    callsub combined
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_threeBytesUTF8_route@35:
+    callsub threeBytesUTF8
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_twoBytesUTF8_route@34:
+    callsub twoBytesUTF8
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_oneByteUTF8_route@33:
+    callsub oneByteUTF8
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/contracts/unicode_escapes.sol.C.oneByteUTF8() -> bytes:
+oneByteUTF8:
     txn GroupIndex
-    bz main_ternary_false@14
+    bz oneByteUTF8_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@15:
+oneByteUTF8_ternary_merge@3:
     !
     assert // not payable
-    pushbytes 0x151f7c75000624c2a2e282ac
-    log
-    intc_0 // 1
-    return
+    pushbytes "aaa$aaa"
+    retsub
 
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
+oneByteUTF8_ternary_false@2:
+    intc_2 // 0
+    b oneByteUTF8_ternary_merge@3
 
-main_threeBytesUTF8_route@7:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/contracts/unicode_escapes.sol.C.twoBytesUTF8() -> bytes:
+twoBytesUTF8:
     txn GroupIndex
-    bz main_ternary_false@19
+    bz twoBytesUTF8_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+twoBytesUTF8_ternary_merge@3:
     !
     assert // not payable
-    pushbytes 0x151f7c750009616161e282ac616161
-    log
-    intc_0 // 1
-    return
+    pushbytes "aaa\xc2\xa2aaa"
+    retsub
 
-main_ternary_false@19:
-    intc_1 // 0
-    b main_ternary_merge@20
+twoBytesUTF8_ternary_false@2:
+    intc_2 // 0
+    b twoBytesUTF8_ternary_merge@3
 
-main_twoBytesUTF8_route@6:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/contracts/unicode_escapes.sol.C.threeBytesUTF8() -> bytes:
+threeBytesUTF8:
     txn GroupIndex
-    bz main_ternary_false@24
+    bz threeBytesUTF8_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+threeBytesUTF8_ternary_merge@3:
     !
     assert // not payable
-    pushbytes 0x151f7c750008616161c2a2616161
-    log
-    intc_0 // 1
-    return
+    pushbytes "aaa\xe2\x82\xacaaa"
+    retsub
 
-main_ternary_false@24:
-    intc_1 // 0
-    b main_ternary_merge@25
+threeBytesUTF8_ternary_false@2:
+    intc_2 // 0
+    b threeBytesUTF8_ternary_merge@3
 
-main_oneByteUTF8_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/strings/contracts/unicode_escapes.sol.C.combined() -> bytes:
+combined:
     txn GroupIndex
-    bz main_ternary_false@29
+    bz combined_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+combined_ternary_merge@3:
     !
     assert // not payable
-    pushbytes 0x151f7c75000761616124616161
-    log
-    intc_0 // 1
-    return
+    pushbytes "$\xc2\xa2\xe2\x82\xac"
+    retsub
 
-main_ternary_false@29:
-    intc_1 // 0
-    b main_ternary_merge@30
+combined_ternary_false@2:
+    intc_2 // 0
+    b combined_ternary_merge@3

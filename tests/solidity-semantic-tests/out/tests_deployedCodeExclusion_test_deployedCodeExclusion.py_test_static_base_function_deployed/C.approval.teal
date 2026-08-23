@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/contracts/static_base_function_deployed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "data" "__ctor_pending" "f"
+    intcblock 1 0 32
+    bytecblock "data" "__ctor_pending" 0x151f7c75 "f"
     pushint 4096
     bzero
     dup
@@ -32,57 +32,72 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0xf59e3cc4 // method "__postInit()void", method "test()bool"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_test_route@6
-    err
-
-main_test_route@6:
+    pushbytes 0xf8a8fd6d
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@8:
     !
     assert // not payable
-    bytec_0 // "data"
-    box_get
-    assert // box exists
-    keccak256
-    intc_1 // 0
-    bytec_2 // "f"
-    app_global_get_ex
-    intc_1 // 0
-    cover 2
-    select
-    intc_0 // 1
-    ==
-    assert // invalid function pointer
-    pushbytes 0x275dd439f58c96100e440031372b796380c9fa136a68277453d053dbb98ecd6e
-    ==
-    pushbytes 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    pushbytes 0x151f7c75
+    intc_2 // 32
+    bzero
+    callsub test
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@12:
+main_ternary_false@7:
     intc_1 // 0
-    b main_ternary_merge@13
+    b main_ternary_merge@8
 
-main___postInit_route@5:
+main_after_if_else@9:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xf59e3cc4 // method "__postInit()void", method "test()bool"
+    txna ApplicationArgs 0
+    match main___postInit_route@12 main_test_route@13
+    err
+
+main_test_route@13:
+    callsub test
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main___postInit_route@12:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -103,8 +118,42 @@ main___postInit_route@5:
     bytec_0 // "data"
     pushbytes "xasopca.pngaibngidak.jbtnudak.cAP.BRRSMCPJAGPD KIAJDOMHUKR,SCPIDxasopca.pngaibngidak.jbtnudak.cAP.BRRSMCPJAGPD KIAJDOMHUKR,SCPIDM,SEYBDXCNTKIMNJGO;DUIAQBQUEHAKMPGIDSAJCOUKANJBCUEBKNA.GIAKMV.TIAJMO<KXBANJCPGUD ABKCJIDHA NKIMAJU,EKAMHSO;PYCAKUM,L.UCA MR;KITAM,SEYBDXCNTKIMNJGO;DUIAQBQUEHAKMPGIDSAJCOUKANJBCUEBKNA.GIAKMV.TIAJMO<KXBANJCPGUD ABKCJIDHA NKIMAJU,EKAMHSO;PYCAKUM,L.UCA MR;KITA .RPOKIDAS,.CKUMT.,ORKAD ,NOKIDHA .CGKIAD OVHAMS CUAOGT DAKN OITxasopca.pngaibngidak.jbtnudak.cAP.BRRSMCPJAGPD KIAJDOMHUKR,SCPIDM,SEYBDXCNTKIMNJGO;DUIAQBQUEHAKMPGIDSAJCOUKANJBCUEBKNA.GIAKMV.TIAJMO<KXBANJCPGUD ABKCJIDHA NKIMAJU,EKAMHSO;PYCAKUM,L.UCA MR;KITAapibakrpidbacnidkacjadtnpdkylca.,jda,r.kuadc,jdlkjd',c'dj, ncg danosumantkudkc,djntudkantuadnc,ui,c.ud,.nujdncud,j.rsch'pkl.'pih"
     box_put
-    bytec_2 // "f"
+    bytec_3 // "f"
     intc_0 // 1
     app_global_put
     intc_0 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/deployedCodeExclusion/contracts/static_base_function_deployed.sol.C.test() -> uint64:
+test:
+    txn GroupIndex
+    bz test_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "data"
+    box_get
+    assert // box exists
+    keccak256
+    intc_1 // 0
+    bytec_3 // "f"
+    app_global_get_ex
+    intc_1 // 0
+    cover 2
+    select
+    intc_0 // 1
+    ==
+    assert // invalid function pointer
+    pushbytes 0x275dd439f58c96100e440031372b796380c9fa136a68277453d053dbb98ecd6e
+    ==
+    retsub
+
+test_ternary_false@2:
+    intc_1 // 0
+    b test_ternary_merge@3

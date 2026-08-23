@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/homer.sol.Homer.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock 0x4e22a3ba
-    intc_1 // 0
+    intcblock 1 32 0 2
+    bytecblock 0x151f7c75 0x4e22a3ba 0x00
     pushint 4096
     bzero
     dup
@@ -30,102 +29,296 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    bytec_0 // method "supportsInterface(byte[4])bool"
-    pushbytess 0x027c6bc8 0xf76e680b // method "is2D()bool", method "skinColor()string"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_supportsInterface_route@5 main_is2D_route@6 main_skinColor_route@7
-    err
-
-main_skinColor_route@7:
+    pushbytes 0x01ffc9a7
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75000679656c6c6f77
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@13:
-    intc_1 // 0
-    b main_ternary_merge@14
-
-main_is2D_route@6:
-    txn GroupIndex
-    bz main_ternary_false@18
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+main_ternary_merge@8:
     !
     assert // not payable
-    pushbytes 0x151f7c7580
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@18:
-    intc_1 // 0
-    b main_ternary_merge@19
-
-main_supportsInterface_route@5:
     txna ApplicationArgs 1
-    dup
-    bury 2
     len
-    pushint 4
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 4 28
+    pushint 28
+    bzero
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
-    txn GroupIndex
-    bz main_ternary_false@23
-    txn GroupIndex
-    intc_0 // 1
+    assert // invalid EVM ABI fixed-bytes padding
+    intc_1 // 32
+    bzero
+    swap
+    extract 0 4
+    callsub supportsInterface
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
     -
-    gtxns Amount
-
-main_ternary_merge@24:
-    !
-    assert // not payable
-    dup
-    bytec_0 // method "supportsInterface(byte[4])bool"
-    ==
-    bnz main_bool_true@26
-    dup
-    pushbytes 0xf51203c3
-    ==
-    bz main_bool_false@27
-
-main_bool_true@26:
-    intc_0 // 1
-
-main_bool_merge@28:
-    pushbytes 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    pushbytes 0x151f7c75
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_bool_false@27:
-    intc_1 // 0
-    b main_bool_merge@28
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
 
-main_ternary_false@23:
-    intc_1 // 0
-    b main_ternary_merge@24
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x60c33c60
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub is2D
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x137588f2
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub skinColor
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    bytec_1 // method "supportsInterface(byte[4])bool"
+    pushbytess 0x027c6bc8 0xf76e680b // method "is2D()bool", method "skinColor()string"
+    txna ApplicationArgs 0
+    match main_supportsInterface_route@26 main_is2D_route@27 main_skinColor_route@28
+    err
+
+main_skinColor_route@28:
+    callsub skinColor
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_is2D_route@27:
+    callsub is2D
+    bytec_2 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_supportsInterface_route@26:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 4
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    callsub supportsInterface
+    bytec_2 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/homer.sol.Homer.supportsInterface(interfaceID: bytes) -> uint64:
+supportsInterface:
+    proto 1 1
+    txn GroupIndex
+    bz supportsInterface_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+supportsInterface_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    bytec_1 // method "supportsInterface(byte[4])bool"
+    ==
+    bnz supportsInterface_bool_true@5
+    frame_dig -1
+    pushbytes 0xf51203c3
+    ==
+    bz supportsInterface_bool_false@6
+
+supportsInterface_bool_true@5:
+    intc_0 // 1
+    retsub
+
+supportsInterface_bool_false@6:
+    intc_2 // 0
+    retsub
+
+supportsInterface_ternary_false@2:
+    intc_2 // 0
+    b supportsInterface_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/homer.sol.Homer.is2D() -> uint64:
+is2D:
+    txn GroupIndex
+    bz is2D_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+is2D_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 1
+    retsub
+
+is2D_ternary_false@2:
+    intc_2 // 0
+    b is2D_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/homer.sol.Homer.skinColor() -> bytes:
+skinColor:
+    txn GroupIndex
+    bz skinColor_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+skinColor_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes "yellow"
+    retsub
+
+skinColor_ternary_false@2:
+    intc_2 // 0
+    b skinColor_ternary_merge@3

@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/string_literals.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 32 0 2
+    bytecblock 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x616263 "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
     pushint 4096
     bzero
     dup
@@ -28,36 +29,137 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xb9a09f4a 0x18edbda1 0x976864ce 0x4e95a3c9 0xe6b8aa13 0x5c029922 // method "short_dyn()string", method "long_dyn()string", method "short_bytes_dyn()byte[]", method "long_bytes_dyn()byte[]", method "bytesNN()byte[3]", method "bytesNN_padded()byte[4]"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_short_dyn_route@5 main_long_dyn_route@6 main_short_bytes_dyn_route@7 main_long_bytes_dyn_route@8 main_bytesNN_route@9 main_bytesNN_padded_route@10
-    err
-
-main_bytesNN_padded_route@10:
+    pushbytes 0x697b9573
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@16
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@17:
+main_ternary_merge@8:
     !
     assert // not payable
-    pushbytes 0x151f7c7561626300
+    intc_1 // 32
+    bzero
+    callsub short_dyn
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@16:
-    intc_1 // 0
-    b main_ternary_merge@17
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
 
-main_bytesNN_route@9:
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xe7e466eb
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub long_dyn
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x7a601bb9
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
     bz main_ternary_false@21
     txn GroupIndex
@@ -68,77 +170,384 @@ main_bytesNN_route@9:
 main_ternary_merge@22:
     !
     assert // not payable
-    pushbytes 0x151f7c75616263
+    intc_1 // 32
+    bzero
+    callsub short_bytes_dyn
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
     log
     intc_0 // 1
     return
 
 main_ternary_false@21:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@22
 
-main_long_bytes_dyn_route@8:
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0xef406b68
+    ==
+    bz main_after_if_else@30
     txn GroupIndex
-    bz main_ternary_false@26
+    bz main_ternary_false@28
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@37:
+main_ternary_merge@29:
     !
     assert // not payable
-    pushbytes 0x151f7c7500503132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930313233343536373839303132333435363738393031323334353637383930
+    intc_1 // 32
+    bzero
+    callsub long_bytes_dyn
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@26:
-    intc_1 // 0
-    b main_ternary_merge@37
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
 
-main_short_bytes_dyn_route@7:
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0x64d8631c
+    ==
+    bz main_after_if_else@37
     txn GroupIndex
-    bz main_ternary_false@31
+    bz main_ternary_false@35
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@42:
+main_ternary_merge@36:
     !
     assert // not payable
-    pushbytes 0x151f7c750003616263
+    callsub bytesNN
+    pushint 29
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@31:
-    intc_1 // 0
-    b main_ternary_merge@42
+main_ternary_false@35:
+    intc_2 // 0
+    b main_ternary_merge@36
 
-main_long_dyn_route@6:
+main_after_if_else@37:
+    txn OnCompletion
+    bnz main_after_if_else@44
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@44
+    txna ApplicationArgs 0
+    pushbytes 0xe81ab519
+    ==
+    bz main_after_if_else@44
     txn GroupIndex
-    bz main_ternary_false@36
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@37
-
-main_ternary_false@36:
-    intc_1 // 0
-    b main_ternary_merge@37
-
-main_short_dyn_route@5:
-    txn GroupIndex
-    bz main_ternary_false@41
+    bz main_ternary_false@42
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@42
 
-main_ternary_false@41:
-    intc_1 // 0
-    b main_ternary_merge@42
+main_ternary_merge@43:
+    !
+    assert // not payable
+    callsub bytesNN_padded
+    pushint 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@42:
+    intc_2 // 0
+    b main_ternary_merge@43
+
+main_after_if_else@44:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb9a09f4a 0x18edbda1 0x976864ce 0x4e95a3c9 0xe6b8aa13 0x5c029922 // method "short_dyn()string", method "long_dyn()string", method "short_bytes_dyn()byte[]", method "long_bytes_dyn()byte[]", method "bytesNN()byte[3]", method "bytesNN_padded()byte[4]"
+    txna ApplicationArgs 0
+    match main_short_dyn_route@47 main_long_dyn_route@48 main_short_bytes_dyn_route@49 main_long_bytes_dyn_route@50 main_bytesNN_route@51 main_bytesNN_padded_route@52
+    err
+
+main_bytesNN_padded_route@52:
+    callsub bytesNN_padded
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_bytesNN_route@51:
+    callsub bytesNN
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_long_bytes_dyn_route@50:
+    callsub long_bytes_dyn
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_short_bytes_dyn_route@49:
+    callsub short_bytes_dyn
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_long_dyn_route@48:
+    callsub long_dyn
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_short_dyn_route@47:
+    callsub short_dyn
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/string_literals.sol.C.short_dyn() -> bytes:
+short_dyn:
+    txn GroupIndex
+    bz short_dyn_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+short_dyn_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_2 // "abc"
+    retsub
+
+short_dyn_ternary_false@2:
+    intc_2 // 0
+    b short_dyn_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/string_literals.sol.C.long_dyn() -> bytes:
+long_dyn:
+    txn GroupIndex
+    bz long_dyn_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+long_dyn_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_3 // "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    retsub
+
+long_dyn_ternary_false@2:
+    intc_2 // 0
+    b long_dyn_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/string_literals.sol.C.short_bytes_dyn() -> bytes:
+short_bytes_dyn:
+    txn GroupIndex
+    bz short_bytes_dyn_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+short_bytes_dyn_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_2 // "abc"
+    retsub
+
+short_bytes_dyn_ternary_false@2:
+    intc_2 // 0
+    b short_bytes_dyn_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/string_literals.sol.C.long_bytes_dyn() -> bytes:
+long_bytes_dyn:
+    txn GroupIndex
+    bz long_bytes_dyn_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+long_bytes_dyn_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_3 // "12345678901234567890123456789012345678901234567890123456789012345678901234567890"
+    retsub
+
+long_bytes_dyn_ternary_false@2:
+    intc_2 // 0
+    b long_bytes_dyn_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/string_literals.sol.C.bytesNN() -> bytes:
+bytesNN:
+    txn GroupIndex
+    bz bytesNN_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+bytesNN_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_2 // 0x616263
+    retsub
+
+bytesNN_ternary_false@2:
+    intc_2 // 0
+    b bytesNN_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/string_literals.sol.C.bytesNN_padded() -> bytes:
+bytesNN_padded:
+    txn GroupIndex
+    bz bytesNN_padded_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+bytesNN_padded_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x61626300
+    retsub
+
+bytesNN_padded_ternary_false@2:
+    intc_2 // 0
+    b bytesNN_padded_ternary_merge@3

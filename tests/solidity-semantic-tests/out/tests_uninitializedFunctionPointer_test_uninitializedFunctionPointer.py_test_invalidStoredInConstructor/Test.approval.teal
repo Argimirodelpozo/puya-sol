@@ -28,25 +28,63 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0x2d4970c7 // method "f()void"
-    txna ApplicationArgs 0
-    match main_f_route@4
-    err
-
-main_f_route@4:
     txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub f
+    pushbytes 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    pushbytes 0x2d4970c7 // method "f()void"
+    txna ApplicationArgs 0
+    match main_f_route@11
+    err
+
+main_f_route@11:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub f
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/contracts/invalidStoredInConstructor.sol.Test.f() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
@@ -77,9 +115,8 @@ main_ternary_merge@9:
     pushint 1000000
     itxn_field Amount
     itxn_submit
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@8:
+f_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@9
+    b f_ternary_merge@3

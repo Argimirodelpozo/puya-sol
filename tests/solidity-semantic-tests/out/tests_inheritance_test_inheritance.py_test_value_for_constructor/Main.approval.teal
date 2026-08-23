@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/value_for_constructor.sol.Main.approval_program() -> uint64:
 main:
-    intcblock 0 1 24 6
-    bytecblock "h" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x2fe85e04 0x0a5c26e3 TMPL_APPROVAL_Helper TMPL_CLEAR_Helper
+    intcblock 0 1 32 24
+    bytecblock 0x151f7c75 "h" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x2fe85e04 0x0a5c26e3 TMPL_APPROVAL_Helper TMPL_CLEAR_Helper
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -32,19 +32,58 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytes 0xbacc49e3 // method "__postInit()void"
-    bytec 4 // method "getFlag()bool"
-    bytec 5 // method "getName()byte[3]"
-    pushbytes 0x482b5f7f // method "getBalances()(uint256,uint256)"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_getFlag_route@6 main_getName_route@7 main_getBalances_route@8
-    err
+    pushbytes 0xf9633930
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-main_getBalances_route@8:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    callsub getFlag
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_0 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x17d7de7c
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -55,32 +94,11 @@ main_getBalances_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    global CurrentApplicationAddress
-    acct_params_get AcctBalance
-    pop
-    itob
-    intc_0 // 0
-    bytec_0 // "h"
-    app_global_get_ex
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    intc_2 // 24
-    extract_uint64
-    app_params_get AppAddress
-    pop
-    acct_params_get AcctBalance
-    pop
-    itob
-    pushint 32
+    callsub getName
+    pushint 29
     bzero
-    uncover 2
-    dig 1
-    b|
-    cover 2
-    b|
     concat
-    bytec_3 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -91,109 +109,114 @@ main_ternary_false@14:
     intc_0 // 0
     b main_ternary_merge@15
 
-main_getName_route@7:
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x00113e08
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@21
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@22:
     !
     assert // not payable
-    itxn_begin
-    intc_0 // 0
-    bytec_0 // "h"
-    app_global_get_ex
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    intc_2 // 32
+    bzero
+    callsub getBalances
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
     cover 2
-    select
-    intc_2 // 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec 5 // method "getName()byte[3]"
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    bytec_3 // 0x151f7c75
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@19:
+main_ternary_false@21:
     intc_0 // 0
-    b main_ternary_merge@20
+    b main_ternary_merge@22
 
-main_getFlag_route@6:
-    txn GroupIndex
-    bz main_ternary_false@24
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@25:
+main_after_if_else@23:
+    txn OnCompletion
     !
-    assert // not payable
-    itxn_begin
-    intc_0 // 0
-    bytec_0 // "h"
-    app_global_get_ex
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    intc_2 // 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
+    assert
+    txn ApplicationID
+    assert
+    pushbytes 0xbacc49e3 // method "__postInit()void"
     bytec 4 // method "getFlag()bool"
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    intc_0 // 0
-    getbit
-    intc_0 // 0
-    !=
+    bytec 5 // method "getName()byte[3]"
+    pushbytes 0x482b5f7f // method "getBalances()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@26 main_getFlag_route@27 main_getName_route@28 main_getBalances_route@29
+    err
+
+main_getBalances_route@29:
+    callsub getBalances
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_getName_route@28:
+    callsub getName
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_getFlag_route@27:
+    callsub getFlag
     pushbytes 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec_3 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@24:
-    intc_0 // 0
-    b main_ternary_merge@25
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+main___postInit_route@26:
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     itxn_begin
@@ -201,7 +224,7 @@ main___postInit_route@5:
     itob
     bytec 6 // TMPL_APPROVAL_Helper
     bytec 7 // TMPL_CLEAR_Helper
-    intc_3 // 6
+    pushint 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
@@ -230,13 +253,140 @@ main___postInit_route@5:
     pushint 1000010
     itxn_field Amount
     itxn_submit
-    intc_2 // 24
+    intc_3 // 24
     bzero
     swap
     itob
     concat
-    bytec_0 // "h"
+    bytec_1 // "h"
     swap
     app_global_put
     intc_1 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/value_for_constructor.sol.Main.getFlag() -> uint64:
+getFlag:
+    txn GroupIndex
+    bz getFlag_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getFlag_ternary_merge@3:
+    !
+    assert // not payable
+    itxn_begin
+    intc_0 // 0
+    bytec_1 // "h"
+    app_global_get_ex
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 4 // method "getFlag()bool"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    intc_0 // 0
+    getbit
+    intc_0 // 0
+    !=
+    retsub
+
+getFlag_ternary_false@2:
+    intc_0 // 0
+    b getFlag_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/value_for_constructor.sol.Main.getName() -> bytes:
+getName:
+    txn GroupIndex
+    bz getName_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getName_ternary_merge@3:
+    !
+    assert // not payable
+    itxn_begin
+    intc_0 // 0
+    bytec_1 // "h"
+    app_global_get_ex
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 5 // method "getName()byte[3]"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    retsub
+
+getName_ternary_false@2:
+    intc_0 // 0
+    b getName_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/value_for_constructor.sol.Main.getBalances() -> bytes, bytes:
+getBalances:
+    txn GroupIndex
+    bz getBalances_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getBalances_ternary_merge@3:
+    !
+    assert // not payable
+    global CurrentApplicationAddress
+    acct_params_get AcctBalance
+    pop
+    itob
+    intc_0 // 0
+    bytec_1 // "h"
+    app_global_get_ex
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_3 // 24
+    extract_uint64
+    app_params_get AppAddress
+    pop
+    acct_params_get AcctBalance
+    pop
+    itob
+    intc_2 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    cover 2
+    b|
+    retsub
+
+getBalances_ternary_false@2:
+    intc_0 // 0
+    b getBalances_ternary_merge@3

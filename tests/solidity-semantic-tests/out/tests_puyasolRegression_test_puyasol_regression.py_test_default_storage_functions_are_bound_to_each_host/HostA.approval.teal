@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/default_storage_host_bound_functions.sol.HostA.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock "value" 0x 0x151f7c75
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 "value" 0x
     pushint 4096
     bzero
     dup
@@ -24,13 +24,143 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "value"
-    bytec_1 // 0x
+    bytec_1 // "value"
+    bytec_2 // 0x
     app_global_put
     intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x60fe47b1
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub set
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x0df652ea
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub readLibrary
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x6cc95e19
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub readFree
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
     txn OnCompletion
     !
     assert
@@ -38,109 +168,37 @@ main_after_if_else@2:
     assert
     pushbytess 0x7cb116cd 0xf788dcb8 0x710192e0 // method "set(uint256)void", method "readLibrary()uint256", method "readFree()uint256"
     txna ApplicationArgs 0
-    match main_set_route@5 main_readLibrary_route@6 main_readFree_route@7
+    match main_set_route@26 main_readLibrary_route@27 main_readFree_route@28
     err
 
-main_readFree_route@7:
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    intc_2 // 0
-    itob
-    load 0
-    store 0
-    callsub __storage_read
-    load 0
-    store 0
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
+main_readFree_route@28:
+    callsub readFree
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@13:
-    intc_2 // 0
-    b main_ternary_merge@14
-
-main_readLibrary_route@6:
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
-    intc_2 // 0
-    itob
-    load 0
-    store 0
-    callsub __storage_read
-    load 0
-    store 0
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
+main_readLibrary_route@27:
+    callsub readLibrary
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@18:
-    intc_2 // 0
-    b main_ternary_merge@19
-
-main_set_route@5:
+main_set_route@26:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@23
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@24:
-    !
-    assert // not payable
-    bytec_0 // "value"
-    swap
-    app_global_put
+    callsub set
     intc_1 // 1
     return
-
-main_ternary_false@23:
-    intc_2 // 0
-    b main_ternary_merge@24
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/default_storage_host_bound_functions.sol.HostA.__storage_read(__slot: bytes) -> bytes:
@@ -151,15 +209,15 @@ __storage_read:
     b%
     dup
     frame_bury -1
-    bytec_1 // 0x
+    bytec_2 // 0x
     b==
     bz __storage_read_else_body@2
     intc_0 // 32
     bzero
     intc_2 // 0
-    bytec_0 // "value"
+    bytec_1 // "value"
     app_global_get_ex
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     b|
@@ -188,3 +246,94 @@ __storage_read_else_body@2:
     intc_0 // 32
     box_extract
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/default_storage_host_bound_functions.sol.HostA.set(__arc4_next: bytes) -> void:
+set:
+    proto 1 0
+    txn GroupIndex
+    bz set_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "value"
+    frame_dig -1
+    app_global_put
+    retsub
+
+set_ternary_false@2:
+    intc_2 // 0
+    b set_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/default_storage_host_bound_functions.sol.HostA.readLibrary() -> bytes:
+readLibrary:
+    txn GroupIndex
+    bz readLibrary_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+readLibrary_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+    load 0
+    store 0
+    callsub __storage_read
+    load 0
+    store 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+readLibrary_ternary_false@2:
+    intc_2 // 0
+    b readLibrary_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/default_storage_host_bound_functions.sol.HostA.readFree() -> bytes:
+readFree:
+    txn GroupIndex
+    bz readFree_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+readFree_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+    load 0
+    store 0
+    callsub __storage_read
+    load 0
+    store 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+readFree_ternary_false@2:
+    intc_2 // 0
+    b readFree_ternary_merge@3

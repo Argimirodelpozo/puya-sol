@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_multiple_calls_different_transactions.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 8
-    bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x80
-    intc_2 // 0
-    dupn 2
+    intcblock 1 0 32 8
+    bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x151f7c75 0x80
     pushint 4096
     bzero
     dup
@@ -31,148 +29,77 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xf8a8fd6d
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub test
+    bytec_1 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x96f3d936 0x76a2115c 0xa78000de // method "get(uint256)uint256", method "set(uint256,uint256)void", method "test()void"
     txna ApplicationArgs 0
-    match main_get_route@5 main_set_route@6 main_test_route@7
+    match main_get_route@12 main_set_route@13 main_test_route@14
     err
 
-main_test_route@7:
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
+main_test_route@14:
+    callsub test
     intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    intc_2 // 0
-    itob
-    dupn 2
-    callsub get
-    b==
-    bz main_bool_false@17
-    pushint 42
-    itob
-    callsub get
-    dig 1
-    b==
-    bz main_bool_false@17
-    intc_0 // 1
-
-main_bool_merge@18:
-    dup
-    bnz main_after_if_else@20
-    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@20:
-    assert
-    pushint 21
-    itob
-    dup
-    bury 5
-    dig 1
-    dup
-    cover 2
-    dig 1
-    callsub set
-    swap
-    callsub get
-    b==
-    bz main_bool_false@23
-    pushint 42
-    itob
-    callsub get
-    dig 1
-    b==
-    bz main_bool_false@23
-    intc_0 // 1
-
-main_bool_merge@24:
-    dup
-    bnz main_after_if_else@26
-    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@26:
-    assert
-    pushint 42
-    itob
-    dup
-    bury 4
-    pushint 131
-    itob
-    dup
-    bury 4
-    callsub set
-    callsub get
-    dig 3
-    b==
-    bz main_bool_false@29
-    dig 1
-    callsub get
-    dig 1
-    b==
-    bz main_bool_false@29
-    intc_0 // 1
-
-main_bool_merge@30:
-    dup
-    bnz main_after_if_else@32
-    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@32:
     return
 
-main_bool_false@29:
-    intc_2 // 0
-    b main_bool_merge@30
-
-main_bool_false@23:
-    intc_2 // 0
-    b main_bool_merge@24
-
-main_bool_false@17:
-    intc_2 // 0
-    b main_bool_merge@18
-
-main_ternary_false@13:
-    intc_2 // 0
-    b main_ternary_merge@14
-
-main_set_route@6:
+main_set_route@13:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub set
     intc_0 // 1
     return
 
-main_get_route@5:
+main_get_route@12:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub get
-    pushbytes 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -196,7 +123,7 @@ get_ternary_merge@3:
     load 0
     store 0
     frame_dig -1
-    bytec_1 // 0x80
+    bytec_2 // 0x80
     b<
     assert // transient storage slot out of range (only slots 0..127 are supported on AVM; transient mappings are not)
     load 5
@@ -209,9 +136,9 @@ get_ternary_merge@3:
     intc_3 // 8
     -
     extract_uint64
-    intc_1 // 32
+    intc_2 // 32
     *
-    intc_1 // 32
+    intc_2 // 32
     extract3
     load 0
     store 0
@@ -219,16 +146,16 @@ get_ternary_merge@3:
     b%
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     retsub
 
 get_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b get_ternary_merge@3
 
 
@@ -248,7 +175,7 @@ set_ternary_merge@3:
     load 0
     store 0
     frame_dig -2
-    bytec_1 // 0x80
+    bytec_2 // 0x80
     b<
     assert // transient storage slot out of range (only slots 0..127 are supported on AVM; transient mappings are not)
     load 5
@@ -261,9 +188,9 @@ set_ternary_merge@3:
     intc_3 // 8
     -
     extract_uint64
-    intc_1 // 32
+    intc_2 // 32
     *
-    intc_1 // 32
+    intc_2 // 32
     bzero
     frame_dig -1
     b|
@@ -274,5 +201,118 @@ set_ternary_merge@3:
     retsub
 
 set_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b set_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_multiple_calls_different_transactions.sol.C.test() -> void:
+test:
+    proto 0 0
+    intc_1 // 0
+    dupn 2
+    txn GroupIndex
+    bz test_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 0
+    itob
+    dupn 2
+    callsub get
+    b==
+    bz test_bool_false@6
+    pushint 42
+    itob
+    callsub get
+    dig 1
+    b==
+    bz test_bool_false@6
+    intc_0 // 1
+
+test_bool_merge@7:
+    dup
+    bnz test_after_if_else@9
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+test_after_if_else@9:
+    assert
+    pushint 21
+    itob
+    dup
+    frame_bury 0
+    dig 1
+    dup
+    cover 2
+    dig 1
+    callsub set
+    swap
+    callsub get
+    b==
+    bz test_bool_false@12
+    pushint 42
+    itob
+    callsub get
+    dig 1
+    b==
+    bz test_bool_false@12
+    intc_0 // 1
+
+test_bool_merge@13:
+    dup
+    bnz test_after_if_else@15
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+test_after_if_else@15:
+    assert
+    pushint 42
+    itob
+    dup
+    frame_bury 1
+    pushint 131
+    itob
+    dup
+    frame_bury 2
+    callsub set
+    callsub get
+    frame_dig 0
+    b==
+    bz test_bool_false@18
+    frame_dig 1
+    callsub get
+    frame_dig 2
+    b==
+    bz test_bool_false@18
+    intc_0 // 1
+
+test_bool_merge@19:
+    dup
+    bnz test_after_if_else@21
+    bytec_0 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+test_after_if_else@21:
+    assert
+    retsub
+
+test_bool_false@18:
+    intc_1 // 0
+    b test_bool_merge@19
+
+test_bool_false@12:
+    intc_1 // 0
+    b test_bool_merge@13
+
+test_bool_false@6:
+    intc_1 // 0
+    b test_bool_merge@7
+
+test_ternary_false@2:
+    intc_1 // 0
+    b test_ternary_merge@3

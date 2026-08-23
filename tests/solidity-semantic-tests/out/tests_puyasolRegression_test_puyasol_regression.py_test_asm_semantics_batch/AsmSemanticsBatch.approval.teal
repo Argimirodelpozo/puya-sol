@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_semantics_batch.sol.AsmSemanticsBatch.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 4294967296 2147483648 18446744069414584320 9223372036854775808
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0x151f7c75 0xffffffff
+    intcblock 32 1 0 8 4294967296 2147483648 18446744069414584320 9223372036854775808
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x01 0xffffffff
     pushint 4096
     bzero
     dup
@@ -32,24 +32,101 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@12
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@12
+    txna ApplicationArgs 0
+    pushbytes 0xdcbec4cd
+    ==
+    bz main_after_if_else@12
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_3 // 8
+    bzero
+    callsub transientSigned
+    cover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    intc_3 // 8
+    extract3
+    dup
+    intc_2 // 0
+    getbyte
+    pushint 128
+    >=
+    bz main_ternary_false@10
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@11:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    intc_0 // 32
+    bzero
+    uncover 2
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@10:
+    intc_0 // 32
+    bzero
+    b main_ternary_merge@11
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@12:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x3536f425 0x061e9929 0x1e7b3323 0xbe2a3a55 // method "transientSigned()(uint256,bool)", method "kec48(uint256,uint256)byte[32]", method "inlineLocals(uint256)uint256", method "argOrder()(uint256,uint256)"
     txna ApplicationArgs 0
-    match main_transientSigned_route@5 main_kec48_route@6 main_inlineLocals_route@7 main_argOrder_route@8
+    match main_transientSigned_route@15 main_kec48_route@16 main_inlineLocals_route@17 main_argOrder_route@18
     err
 
-main_argOrder_route@8:
+main_argOrder_route@18:
     txn GroupIndex
-    bz main_ternary_false@14
+    bz main_ternary_false@24
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@15:
+main_ternary_merge@25:
     !
     assert // not payable
     load 0
@@ -60,7 +137,7 @@ main_ternary_merge@15:
     intc_0 // 32
     bzero
     dig 2
-    bytec_1 // 0x01
+    bytec_2 // 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -86,7 +163,7 @@ main_ternary_merge@15:
     extract 128 32
     load 0
     dig 1
-    bytec_1 // 0x01
+    bytec_2 // 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -101,7 +178,7 @@ main_ternary_merge@15:
     extract3
     replace2 128
     store 0
-    bytec_1 // 0x01
+    bytec_2 // 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -141,18 +218,18 @@ main_ternary_merge@15:
     uncover 2
     b|
     concat
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@14:
+main_ternary_false@24:
     intc_2 // 0
-    b main_ternary_merge@15
+    b main_ternary_merge@25
 
-main_inlineLocals_route@7:
+main_inlineLocals_route@17:
     txna ApplicationArgs 1
     dup
     len
@@ -160,13 +237,13 @@ main_inlineLocals_route@7:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@29
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@30:
     !
     assert // not payable
     load 0
@@ -175,7 +252,7 @@ main_ternary_merge@20:
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_1 // 0x01
+    bytec_2 // 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -193,18 +270,18 @@ main_ternary_merge@20:
     intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@19:
+main_ternary_false@29:
     intc_2 // 0
-    b main_ternary_merge@20
+    b main_ternary_merge@30
 
-main_kec48_route@6:
+main_kec48_route@16:
     txna ApplicationArgs 1
     dup
     len
@@ -218,13 +295,13 @@ main_kec48_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@34
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@35:
     !
     assert // not payable
     load 0
@@ -274,26 +351,42 @@ main_ternary_merge@25:
     extract 0 32
     load 0
     store 0
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@24:
+main_ternary_false@34:
     intc_2 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@35
 
-main_transientSigned_route@5:
+main_transientSigned_route@15:
+    callsub transientSigned
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_semantics_batch.sol.AsmSemanticsBatch.transientSigned() -> bytes, uint64:
+transientSigned:
     txn GroupIndex
-    bz main_ternary_false@31
+    bz transientSigned_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@32:
+transientSigned_ternary_merge@3:
     !
     assert // not payable
     load 5
@@ -303,42 +396,42 @@ main_ternary_merge@32:
     load 5
     pushint 28
     extract_uint32
-    intc_3 // 4294967296
+    intc 4 // 4294967296
     %
     dup
-    intc 4 // 2147483648
+    intc 5 // 2147483648
     >=
-    bz main_ternary_false@34
-    intc 5 // 18446744069414584320
+    bz transientSigned_ternary_false@5
+    intc 6 // 18446744069414584320
     +
 
-main_ternary_merge@35:
+transientSigned_ternary_merge@6:
     load 5
     pushint 28
     extract_uint32
-    intc_3 // 4294967296
+    intc 4 // 4294967296
     %
     dup
-    intc 4 // 2147483648
+    intc 5 // 2147483648
     >=
-    bz main_ternary_false@37
-    intc 5 // 18446744069414584320
+    bz transientSigned_ternary_false@8
+    intc 6 // 18446744069414584320
     +
 
-main_ternary_merge@38:
-    intc_3 // 4294967296
+transientSigned_ternary_merge@9:
+    intc 4 // 4294967296
     %
     dup
-    intc 4 // 2147483648
+    intc 5 // 2147483648
     >=
-    bz main_ternary_false@40
-    intc 5 // 18446744069414584320
+    bz transientSigned_ternary_false@11
+    intc 6 // 18446744069414584320
     +
 
-main_ternary_merge@41:
-    intc 6 // 9223372036854775808
+transientSigned_ternary_merge@12:
+    intc 7 // 9223372036854775808
     ^
-    intc 6 // 9223372036854775808
+    intc 7 // 9223372036854775808
     <
     swap
     itob
@@ -347,11 +440,11 @@ main_ternary_merge@41:
     dup
     pushbytes 0x80000000
     b>=
-    bz main_ternary_false@43
+    bz transientSigned_ternary_false@14
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
     b+
 
-main_ternary_merge@44:
+transientSigned_ternary_merge@15:
     dup
     len
     intc_0 // 32
@@ -360,30 +453,21 @@ main_ternary_merge@44:
     intc_0 // 32
     bzero
     b|
-    pushbytes 0x00
-    intc_2 // 0
-    uncover 3
-    setbit
-    concat
-    bytec_2 // 0x151f7c75
     swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@43:
-    b main_ternary_merge@44
+transientSigned_ternary_false@14:
+    b transientSigned_ternary_merge@15
 
-main_ternary_false@40:
-    b main_ternary_merge@41
+transientSigned_ternary_false@11:
+    b transientSigned_ternary_merge@12
 
-main_ternary_false@37:
-    b main_ternary_merge@38
+transientSigned_ternary_false@8:
+    b transientSigned_ternary_merge@9
 
-main_ternary_false@34:
-    b main_ternary_merge@35
+transientSigned_ternary_false@5:
+    b transientSigned_ternary_merge@6
 
-main_ternary_false@31:
+transientSigned_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@32
+    b transientSigned_ternary_merge@3

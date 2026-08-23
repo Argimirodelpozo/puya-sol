@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/comparison_operators_for_external_functions.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock 0x2d4970c7 0xf2b65f27 0x0a449f0b 0xd70fdf03 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x151f7c7580
-    intc_1 // 0
-    dup
+    intcblock 1 0 2 32
+    bytecblock 0x2d4970c7 0xf2b65f27 0x0a449f0b 0xd70fdf03 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
     dup
@@ -31,6 +29,216 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub f
+    bytec 4 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xe2179b8e
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    callsub g
+    bytec 4 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0xb8c9d365
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    callsub h
+    bytec 4 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0xe5aa3d58
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    callsub i
+    bytec 4 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@28:
+    intc_1 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0xd354211a
+    ==
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    intc_3 // 32
+    bzero
+    callsub comparison_operators_for_external_functions
+    itob
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@35:
+    intc_1 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
+    bnz main_after_if_else@44
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@44
+    txna ApplicationArgs 0
+    pushbytes 0x58f8445b
+    ==
+    bz main_after_if_else@44
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    intc_3 // 32
+    bzero
+    callsub comparison_operators_for_local_external_function_pointers
+    itob
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@42:
+    intc_1 // 0
+    b main_ternary_merge@43
+
+main_after_if_else@44:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
@@ -41,18 +249,279 @@ main_after_if_else@2:
     bytec_3 // method "i()void"
     pushbytess 0xecb2b2fc 0xd7a757fd // method "comparison_operators_for_external_functions()bool", method "comparison_operators_for_local_external_function_pointers()bool"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6 main_h_route@7 main_i_route@8 main_comparison_operators_for_external_functions_route@9 main_comparison_operators_for_local_external_function_pointers_route@10
+    match main_f_route@47 main_g_route@48 main_h_route@49 main_i_route@50 main_comparison_operators_for_external_functions_route@51 main_comparison_operators_for_local_external_function_pointers_route@52
     err
 
-main_comparison_operators_for_local_external_function_pointers_route@10:
+main_comparison_operators_for_local_external_function_pointers_route@52:
+    callsub comparison_operators_for_local_external_function_pointers
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_comparison_operators_for_external_functions_route@51:
+    callsub comparison_operators_for_external_functions
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_i_route@50:
+    callsub i
+    intc_0 // 1
+    return
+
+main_h_route@49:
+    callsub h
+    intc_0 // 1
+    return
+
+main_g_route@48:
+    callsub g
+    intc_0 // 1
+    return
+
+main_f_route@47:
+    callsub f
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/comparison_operators_for_external_functions.sol.C.f() -> void:
+f:
     txn GroupIndex
-    bz main_ternary_false@16
+    bz f_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@17:
+f_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+f_ternary_false@2:
+    intc_1 // 0
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/comparison_operators_for_external_functions.sol.C.g() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+g_ternary_false@2:
+    intc_1 // 0
+    b g_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/comparison_operators_for_external_functions.sol.C.h() -> void:
+h:
+    txn GroupIndex
+    bz h_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+h_ternary_false@2:
+    intc_1 // 0
+    b h_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/comparison_operators_for_external_functions.sol.C.i() -> void:
+i:
+    txn GroupIndex
+    bz i_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+i_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+i_ternary_false@2:
+    intc_1 // 0
+    b i_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/comparison_operators_for_external_functions.sol.C.comparison_operators_for_external_functions() -> uint64:
+comparison_operators_for_external_functions:
+    txn GroupIndex
+    bz comparison_operators_for_external_functions_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+comparison_operators_for_external_functions_ternary_merge@3:
+    !
+    assert // not payable
+    global CurrentApplicationID
+    itob
+    bytec_0 // method "f()void"
+    concat
+    global CurrentApplicationID
+    itob
+    bytec_1 // method "g()void"
+    concat
+    !=
+    bz comparison_operators_for_external_functions_bool_false@14
+    global CurrentApplicationID
+    itob
+    bytec_0 // method "f()void"
+    concat
+    global CurrentApplicationID
+    itob
+    bytec_2 // method "h()void"
+    concat
+    !=
+    bz comparison_operators_for_external_functions_bool_false@14
+    global CurrentApplicationID
+    itob
+    bytec_0 // method "f()void"
+    concat
+    global CurrentApplicationID
+    itob
+    bytec_3 // method "i()void"
+    concat
+    !=
+    bz comparison_operators_for_external_functions_bool_false@14
+    global CurrentApplicationID
+    itob
+    bytec_1 // method "g()void"
+    concat
+    global CurrentApplicationID
+    itob
+    bytec_2 // method "h()void"
+    concat
+    !=
+    bz comparison_operators_for_external_functions_bool_false@14
+    global CurrentApplicationID
+    itob
+    bytec_1 // method "g()void"
+    concat
+    global CurrentApplicationID
+    itob
+    bytec_3 // method "i()void"
+    concat
+    !=
+    bz comparison_operators_for_external_functions_bool_false@14
+    global CurrentApplicationID
+    itob
+    bytec_2 // method "h()void"
+    concat
+    global CurrentApplicationID
+    itob
+    bytec_3 // method "i()void"
+    concat
+    !=
+    bz comparison_operators_for_external_functions_bool_false@14
+    global CurrentApplicationID
+    itob
+    bytec_0 // method "f()void"
+    concat
+    global CurrentApplicationID
+    itob
+    bytec_0 // method "f()void"
+    concat
+    ==
+    bz comparison_operators_for_external_functions_bool_false@14
+    global CurrentApplicationID
+    itob
+    bytec_1 // method "g()void"
+    concat
+    global CurrentApplicationID
+    itob
+    bytec_1 // method "g()void"
+    concat
+    ==
+    bz comparison_operators_for_external_functions_bool_false@14
+    global CurrentApplicationID
+    itob
+    bytec_2 // method "h()void"
+    concat
+    global CurrentApplicationID
+    itob
+    bytec_2 // method "h()void"
+    concat
+    ==
+    bz comparison_operators_for_external_functions_bool_false@14
+    global CurrentApplicationID
+    itob
+    bytec_3 // method "i()void"
+    concat
+    global CurrentApplicationID
+    itob
+    bytec_3 // method "i()void"
+    concat
+    ==
+    bz comparison_operators_for_external_functions_bool_false@14
+    intc_0 // 1
+
+comparison_operators_for_external_functions_bool_merge@15:
+    dup
+    bnz comparison_operators_for_external_functions_after_if_else@17
+    bytec 5 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+comparison_operators_for_external_functions_after_if_else@17:
+    assert
+    intc_0 // 1
+    retsub
+
+comparison_operators_for_external_functions_bool_false@14:
+    intc_1 // 0
+    b comparison_operators_for_external_functions_bool_merge@15
+
+comparison_operators_for_external_functions_ternary_false@2:
+    intc_1 // 0
+    b comparison_operators_for_external_functions_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/comparison_operators_for_external_functions.sol.C.comparison_operators_for_local_external_function_pointers() -> uint64:
+comparison_operators_for_local_external_function_pointers:
+    proto 0 1
+    intc_1 // 0
+    dup
+    txn GroupIndex
+    bz comparison_operators_for_local_external_function_pointers_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+comparison_operators_for_local_external_function_pointers_ternary_merge@3:
     !
     assert // not payable
     global CurrentApplicationID
@@ -60,12 +529,12 @@ main_ternary_merge@17:
     bytec_0 // method "f()void"
     concat
     dup
-    bury 3
+    frame_bury 0
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
     concat
-    bury 2
+    frame_bury 1
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
@@ -81,386 +550,194 @@ main_ternary_merge@17:
     bytec_0 // method "f()void"
     concat
     ==
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
     concat
-    dig 3
+    frame_dig 1
     ==
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
     dig 2
     ==
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
     dig 1
     ==
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
     concat
-    dig 4
+    frame_dig 0
     !=
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
-    dig 4
+    frame_dig 0
     !=
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
-    dig 4
+    frame_dig 0
     !=
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
     concat
-    dig 3
+    frame_dig 1
     !=
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
-    dig 3
+    frame_dig 1
     !=
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
-    dig 3
+    frame_dig 1
     !=
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
     concat
     dig 2
     !=
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
     concat
     dig 2
     !=
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_3 // method "i()void"
     concat
     dig 2
     !=
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_0 // method "f()void"
     concat
     dig 1
     !=
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_1 // method "g()void"
     concat
     dig 1
     !=
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     global CurrentApplicationID
     itob
     bytec_2 // method "h()void"
     concat
     dig 1
     !=
-    bz main_bool_false@34
+    bz comparison_operators_for_local_external_function_pointers_bool_false@20
     intc_0 // 1
 
-main_bool_merge@35:
+comparison_operators_for_local_external_function_pointers_bool_merge@21:
     dup
-    bnz main_after_if_else@37
-    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bnz comparison_operators_for_local_external_function_pointers_after_if_else@23
+    bytec 5 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@37:
+comparison_operators_for_local_external_function_pointers_after_if_else@23:
     assert
-    dig 3
-    dig 3
+    frame_dig 0
+    frame_dig 1
     !=
-    bz main_bool_false@41
-    dig 3
+    bz comparison_operators_for_local_external_function_pointers_bool_false@28
+    frame_dig 0
     dig 2
     !=
-    bz main_bool_false@41
-    dig 3
+    bz comparison_operators_for_local_external_function_pointers_bool_false@28
+    frame_dig 0
     dig 1
     !=
-    bz main_bool_false@41
+    bz comparison_operators_for_local_external_function_pointers_bool_false@28
     intc_0 // 1
 
-main_bool_merge@42:
+comparison_operators_for_local_external_function_pointers_bool_merge@29:
     dup
-    bnz main_after_if_else@44
-    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bnz comparison_operators_for_local_external_function_pointers_after_if_else@31
+    bytec 5 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@44:
+comparison_operators_for_local_external_function_pointers_after_if_else@31:
     assert
-    dig 2
+    frame_dig 1
     dig 2
     !=
-    bz main_bool_false@47
-    dig 2
+    bz comparison_operators_for_local_external_function_pointers_bool_false@35
+    frame_dig 1
     dig 1
     !=
-    bz main_bool_false@47
+    bz comparison_operators_for_local_external_function_pointers_bool_false@35
     intc_0 // 1
 
-main_bool_merge@48:
+comparison_operators_for_local_external_function_pointers_bool_merge@36:
     dup
-    bnz main_after_if_else@50
-    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bnz comparison_operators_for_local_external_function_pointers_after_if_else@38
+    bytec 5 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@50:
+comparison_operators_for_local_external_function_pointers_after_if_else@38:
     assert
     !=
-    bz main_bool_false@52
+    bz comparison_operators_for_local_external_function_pointers_bool_false@42
     intc_0 // 1
 
-main_bool_merge@53:
+comparison_operators_for_local_external_function_pointers_bool_merge@43:
     dup
-    bnz main_after_if_else@55
-    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bnz comparison_operators_for_local_external_function_pointers_after_if_else@45
+    bytec 5 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@55:
+comparison_operators_for_local_external_function_pointers_after_if_else@45:
     assert
-    bytec 5 // 0x151f7c7580
-    log
     intc_0 // 1
-    return
+    frame_bury 0
+    retsub
 
-main_bool_false@52:
+comparison_operators_for_local_external_function_pointers_bool_false@42:
     intc_1 // 0
-    b main_bool_merge@53
+    b comparison_operators_for_local_external_function_pointers_bool_merge@43
 
-main_bool_false@47:
+comparison_operators_for_local_external_function_pointers_bool_false@35:
     intc_1 // 0
-    b main_bool_merge@48
+    b comparison_operators_for_local_external_function_pointers_bool_merge@36
 
-main_bool_false@41:
+comparison_operators_for_local_external_function_pointers_bool_false@28:
     intc_1 // 0
-    b main_bool_merge@42
+    b comparison_operators_for_local_external_function_pointers_bool_merge@29
 
-main_bool_false@34:
+comparison_operators_for_local_external_function_pointers_bool_false@20:
     intc_1 // 0
-    b main_bool_merge@35
+    b comparison_operators_for_local_external_function_pointers_bool_merge@21
 
-main_ternary_false@16:
+comparison_operators_for_local_external_function_pointers_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@17
-
-main_comparison_operators_for_external_functions_route@9:
-    txn GroupIndex
-    bz main_ternary_false@59
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@60:
-    !
-    assert // not payable
-    global CurrentApplicationID
-    itob
-    bytec_0 // method "f()void"
-    concat
-    global CurrentApplicationID
-    itob
-    bytec_1 // method "g()void"
-    concat
-    !=
-    bz main_bool_false@71
-    global CurrentApplicationID
-    itob
-    bytec_0 // method "f()void"
-    concat
-    global CurrentApplicationID
-    itob
-    bytec_2 // method "h()void"
-    concat
-    !=
-    bz main_bool_false@71
-    global CurrentApplicationID
-    itob
-    bytec_0 // method "f()void"
-    concat
-    global CurrentApplicationID
-    itob
-    bytec_3 // method "i()void"
-    concat
-    !=
-    bz main_bool_false@71
-    global CurrentApplicationID
-    itob
-    bytec_1 // method "g()void"
-    concat
-    global CurrentApplicationID
-    itob
-    bytec_2 // method "h()void"
-    concat
-    !=
-    bz main_bool_false@71
-    global CurrentApplicationID
-    itob
-    bytec_1 // method "g()void"
-    concat
-    global CurrentApplicationID
-    itob
-    bytec_3 // method "i()void"
-    concat
-    !=
-    bz main_bool_false@71
-    global CurrentApplicationID
-    itob
-    bytec_2 // method "h()void"
-    concat
-    global CurrentApplicationID
-    itob
-    bytec_3 // method "i()void"
-    concat
-    !=
-    bz main_bool_false@71
-    global CurrentApplicationID
-    itob
-    bytec_0 // method "f()void"
-    concat
-    global CurrentApplicationID
-    itob
-    bytec_0 // method "f()void"
-    concat
-    ==
-    bz main_bool_false@71
-    global CurrentApplicationID
-    itob
-    bytec_1 // method "g()void"
-    concat
-    global CurrentApplicationID
-    itob
-    bytec_1 // method "g()void"
-    concat
-    ==
-    bz main_bool_false@71
-    global CurrentApplicationID
-    itob
-    bytec_2 // method "h()void"
-    concat
-    global CurrentApplicationID
-    itob
-    bytec_2 // method "h()void"
-    concat
-    ==
-    bz main_bool_false@71
-    global CurrentApplicationID
-    itob
-    bytec_3 // method "i()void"
-    concat
-    global CurrentApplicationID
-    itob
-    bytec_3 // method "i()void"
-    concat
-    ==
-    bz main_bool_false@71
-    intc_0 // 1
-
-main_bool_merge@72:
-    dup
-    bnz main_after_if_else@74
-    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@74:
-    assert
-    bytec 5 // 0x151f7c7580
-    log
-    intc_0 // 1
-    return
-
-main_bool_false@71:
-    intc_1 // 0
-    b main_bool_merge@72
-
-main_ternary_false@59:
-    intc_1 // 0
-    b main_ternary_merge@60
-
-main_i_route@8:
-    txn GroupIndex
-    bz main_ternary_false@78
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@94:
-    !
-    assert // not payable
-    intc_0 // 1
-    return
-
-main_ternary_false@78:
-    intc_1 // 0
-    b main_ternary_merge@94
-
-main_h_route@7:
-    txn GroupIndex
-    bz main_ternary_false@83
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@94
-
-main_ternary_false@83:
-    intc_1 // 0
-    b main_ternary_merge@94
-
-main_g_route@6:
-    txn GroupIndex
-    bz main_ternary_false@88
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@94
-
-main_ternary_false@88:
-    intc_1 // 0
-    b main_ternary_merge@94
-
-main_f_route@5:
-    txn GroupIndex
-    bz main_ternary_false@93
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@94
-
-main_ternary_false@93:
-    intc_1 // 0
-    b main_ternary_merge@94
+    b comparison_operators_for_local_external_function_pointers_ternary_merge@3

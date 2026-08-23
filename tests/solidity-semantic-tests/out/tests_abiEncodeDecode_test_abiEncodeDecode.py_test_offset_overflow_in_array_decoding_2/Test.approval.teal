@@ -4,9 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/offset_overflow_in_array_decoding_2.sol.Test.approval_program() -> uint64:
 main:
     intcblock 32 0 2 1
-    bytecblock 0x 0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002 0x0000
-    bytec_0 // ""
-    dup
+    bytecblock 0x 0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002 0x151f7c75 0x0000
     pushint 4096
     bzero
     dup
@@ -30,25 +28,81 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0x9d49e880 // method "withinArray()uint256"
-    txna ApplicationArgs 0
-    match main_withinArray_route@4
-    err
-
-main_withinArray_route@4:
     txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xac457954
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@7
     txn GroupIndex
     intc_3 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub withinArray
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    pushbytes 0x9d49e880 // method "withinArray()uint256"
+    txna ApplicationArgs 0
+    match main_withinArray_route@11
+    err
+
+main_withinArray_route@11:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub withinArray
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/offset_overflow_in_array_decoding_2.sol.Test.withinArray() -> bytes:
+withinArray:
+    proto 0 1
+    bytec_0 // ""
+    dup
+    txn GroupIndex
+    bz withinArray_ternary_false@2
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+withinArray_ternary_merge@3:
     !
     assert // not payable
     load 0
@@ -64,13 +118,13 @@ main_ternary_merge@9:
     replace2 64
     store 0
     intc_1 // 0
-    bytec_2 // 0x0000
+    bytec_3 // 0x0000
 
-main_while_top@10:
+withinArray_while_top@4:
     dig 1
     intc_2 // 2
     <
-    bz main_after_while@15
+    bz withinArray_after_while@9
     dig 1
     intc_0 // 32
     *
@@ -120,19 +174,19 @@ main_while_top@10:
     pushint 24
     extract_uint64
     dup
-    bury 6
+    frame_bury 0
     pushint 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec_2 // 0x0000
+    bytec_3 // 0x0000
     swap
     intc_1 // 0
 
-main_while_top@12:
+withinArray_while_top@6:
     dup
-    dig 7
+    frame_dig 0
     <
-    bz main_after_while@14
+    bz withinArray_after_while@8
     dup
     intc_0 // 32
     *
@@ -178,9 +232,9 @@ main_while_top@12:
     cover 2
     intc_3 // 1
     +
-    b main_while_top@12
+    b withinArray_while_top@6
 
-main_after_while@14:
+withinArray_after_while@8:
     pop
     uncover 3
     pop
@@ -211,15 +265,15 @@ main_after_while@14:
     *
     cover 3
     intc_1 // 0
-    bury 7
+    frame_bury 1
 
-main_for_header@17:
-    dig 6
+withinArray_for_header@11:
+    frame_dig 1
     dig 3
     <
-    bz main_after_for@19
+    bz withinArray_after_for@13
     dup
-    dig 7
+    frame_dig 1
     dup
     cover 2
     extract_uint16
@@ -233,23 +287,23 @@ main_for_header@17:
     cover 5
     intc_2 // 2
     +
-    bury 7
-    b main_for_header@17
+    frame_bury 1
+    b withinArray_for_header@11
 
-main_after_for@19:
+withinArray_after_for@13:
     dup
     len
     cover 3
     intc_1 // 0
-    bury 8
+    frame_bury 1
 
-main_for_header@20:
-    dig 7
+withinArray_for_header@14:
+    frame_dig 1
     dig 5
     <
-    bz main_after_for@22
+    bz withinArray_after_for@16
     dig 6
-    dig 8
+    frame_dig 1
     dup
     cover 2
     extract_uint16
@@ -263,10 +317,10 @@ main_for_header@20:
     cover 6
     intc_2 // 2
     +
-    bury 8
-    b main_for_header@20
+    frame_bury 1
+    b withinArray_for_header@14
 
-main_after_for@22:
+withinArray_after_for@16:
     uncover 2
     uncover 3
     substring3
@@ -284,9 +338,9 @@ main_after_for@22:
     intc_3 // 1
     +
     swap
-    b main_while_top@10
+    b withinArray_while_top@4
 
-main_after_while@15:
+withinArray_after_while@9:
     dup
     intc_1 // 0
     extract_uint16
@@ -338,13 +392,9 @@ main_after_while@15:
     intc_0 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_3 // 1
-    return
+    frame_bury 0
+    retsub
 
-main_ternary_false@8:
+withinArray_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@9
+    b withinArray_ternary_merge@3

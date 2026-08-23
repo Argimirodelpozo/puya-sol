@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/flash_accounting.sol.FlashAccounting.approval_program() -> uint64:
 main:
-    intcblock 0 1 32
-    bytecblock "unlocked" "netDelta" 0x 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000064c4f434b45440000000000000000000000000000000000000000000000000000 0x151f7c75
-    bytec_2 // ""
+    intcblock 0 1 32 2
+    bytecblock "unlocked" "netDelta" 0x 0x151f7c75 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000064c4f434b45440000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -36,32 +35,63 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x702d613f 0xac8eb81f 0x21509e16 0x23d8b7ce 0xfccc0df0 0x89834248 // method "unlock()void", method "op(uint256)void", method "settle(uint256)void", method "finalize()void", method "isUnlocked()bool", method "getNetDelta()uint256"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_unlock_route@5 main_op_route@6 main_settle_route@7 main_finalize_route@8 main_isUnlocked_route@9 main_getNetDelta_route@10
-    err
-
-main_getNetDelta_route@10:
+    pushbytes 0xa69df4b5
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@16
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@17:
+main_ternary_merge@8:
     !
     assert // not payable
+    callsub unlock
+    bytec_3 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
     intc_0 // 0
-    bytec_1 // "netDelta"
-    app_global_get_ex
-    bytec_2 // 0x
-    cover 2
-    select
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xbb291f22
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
     intc_2 // 32
@@ -70,18 +100,27 @@ main_ternary_merge@17:
     intc_2 // 32
     bzero
     b|
-    bytec 6 // 0x151f7c75
-    swap
-    concat
+    callsub op
+    bytec_3 // 0x151f7c75
     log
     intc_1 // 1
     return
 
-main_ternary_false@16:
+main_ternary_false@14:
     intc_0 // 0
-    b main_ternary_merge@17
+    b main_ternary_merge@15
 
-main_isUnlocked_route@9:
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x5d0f3959
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
     bz main_ternary_false@21
     txn GroupIndex
@@ -92,19 +131,23 @@ main_isUnlocked_route@9:
 main_ternary_merge@22:
     !
     assert // not payable
-    intc_0 // 0
-    bytec_0 // "unlocked"
-    app_global_get_ex
-    intc_0 // 0
-    cover 2
-    select
-    pushbytes 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    bytec 6 // 0x151f7c75
-    swap
-    concat
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    callsub settle
+    bytec_3 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -113,218 +156,211 @@ main_ternary_false@21:
     intc_0 // 0
     b main_ternary_merge@22
 
-main_finalize_route@8:
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x4bb278f3
+    ==
+    bz main_after_if_else@30
     txn GroupIndex
-    bz main_ternary_false@26
+    bz main_ternary_false@28
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@27:
+main_ternary_merge@29:
     !
     assert // not payable
-    intc_0 // 0
-    bytec_0 // "unlocked"
-    app_global_get_ex
-    intc_0 // 0
-    cover 2
-    select
-    dup
-    bnz main_after_if_else@51
-    bytec 5 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000064c4f434b45440000000000000000000000000000000000000000000000000000
+    callsub finalize
+    bytec_3 // 0x151f7c75
     log
-
-main_after_if_else@51:
-    assert // LOCKED
-    callsub __solfn_171
     intc_1 // 1
     return
 
-main_ternary_false@26:
+main_ternary_false@28:
     intc_0 // 0
-    b main_ternary_merge@27
+    b main_ternary_merge@29
 
-main_settle_route@7:
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0x8380edb7
+    ==
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    callsub isUnlocked
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_0 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
+    bnz main_after_if_else@47
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@47
+    txna ApplicationArgs 0
+    pushbytes 0x80a4f7ae
+    ==
+    bz main_after_if_else@47
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    callsub getNetDelta
+    dup
+    intc_0 // 0
+    getbyte
+    pushint 128
+    >=
+    bz main_ternary_false@45
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@46:
+    swap
+    dup
+    len
+    intc_2 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@45:
+    intc_2 // 32
+    bzero
+    b main_ternary_merge@46
+
+main_ternary_false@42:
+    intc_0 // 0
+    b main_ternary_merge@43
+
+main_after_if_else@47:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x702d613f 0xac8eb81f 0x21509e16 0x23d8b7ce 0xfccc0df0 0x89834248 // method "unlock()void", method "op(uint256)void", method "settle(uint256)void", method "finalize()void", method "isUnlocked()bool", method "getNetDelta()uint256"
+    txna ApplicationArgs 0
+    match main_unlock_route@50 main_op_route@51 main_settle_route@52 main_finalize_route@53 main_isUnlocked_route@54 main_getNetDelta_route@55
+    err
+
+main_getNetDelta_route@55:
+    callsub getNetDelta
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_isUnlocked_route@54:
+    callsub isUnlocked
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_finalize_route@53:
+    callsub finalize
+    intc_1 // 1
+    return
+
+main_settle_route@52:
     txna ApplicationArgs 1
     dup
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@31
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@32:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_0 // "unlocked"
-    app_global_get_ex
-    intc_0 // 0
-    cover 2
-    select
-    dup
-    bnz main_after_if_else@55
-    bytec 5 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000064c4f434b45440000000000000000000000000000000000000000000000000000
-    log
-
-main_after_if_else@55:
-    assert // LOCKED
-    intc_0 // 0
-    bytec_1 // "netDelta"
-    app_global_get_ex
-    bytec_2 // 0x
-    cover 2
-    select
-    dup
-    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b<
-    !
-    dup
-    bury 4
-    dig 2
-    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b<
-    !
-    ==
-    bnz main_bool_true@57
-    dup
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    dig 2
-    b-
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b<
-    !
-    dig 3
-    ==
-    bz main_bool_false@58
-
-main_bool_true@57:
-    intc_1 // 1
-
-main_bool_merge@59:
-    assert // signed arithmetic overflow
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    swap
-    b-
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_1 // "netDelta"
-    swap
-    app_global_put
-    callsub __solfn_171
+    callsub settle
     intc_1 // 1
     return
 
-main_bool_false@58:
-    intc_0 // 0
-    b main_bool_merge@59
-
-main_ternary_false@31:
-    intc_0 // 0
-    b main_ternary_merge@32
-
-main_op_route@6:
+main_op_route@51:
     txna ApplicationArgs 1
     dup
     len
     intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@36
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@37:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_0 // "unlocked"
-    app_global_get_ex
-    intc_0 // 0
-    cover 2
-    select
-    dup
-    bnz main_after_if_else@63
-    bytec 5 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000064c4f434b45440000000000000000000000000000000000000000000000000000
-    log
-
-main_after_if_else@63:
-    assert // LOCKED
-    intc_0 // 0
-    bytec_1 // "netDelta"
-    app_global_get_ex
-    bytec_2 // 0x
-    cover 2
-    select
-    dup
-    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b<
-    !
-    dup
-    bury 4
-    dig 2
-    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b<
-    !
-    !=
-    bnz main_bool_true@65
-    dup
-    dig 2
-    b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b<
-    !
-    dig 3
-    ==
-    bz main_bool_false@66
-
-main_bool_true@65:
-    intc_1 // 1
-
-main_bool_merge@67:
-    assert // signed arithmetic overflow
-    b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_1 // "netDelta"
-    swap
-    app_global_put
-    callsub __solfn_171
+    callsub op
     intc_1 // 1
     return
 
-main_bool_false@66:
-    intc_0 // 0
-    b main_bool_merge@67
+main_unlock_route@50:
+    callsub unlock
+    intc_1 // 1
+    return
 
-main_ternary_false@36:
-    intc_0 // 0
-    b main_ternary_merge@37
 
-main_unlock_route@5:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/flash_accounting.sol.FlashAccounting.unlock() -> void:
+unlock:
     txn GroupIndex
-    bz main_ternary_false@41
+    bz unlock_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@42:
+unlock_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
@@ -336,11 +372,11 @@ main_ternary_merge@42:
     dup
     !
     swap
-    bz main_after_if_else@44
+    bz unlock_after_if_else@5
     pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000010414c52454144595f554e4c4f434b454400000000000000000000000000000000
     log
 
-main_after_if_else@44:
+unlock_after_if_else@5:
     assert // ALREADY_UNLOCKED
     intc_0 // 0
     bytec_1 // "netDelta"
@@ -352,11 +388,11 @@ main_after_if_else@44:
     itob
     b==
     dup
-    bnz main_after_if_else@46
+    bnz unlock_after_if_else@7
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000b44495254595f5354415254000000000000000000000000000000000000000000
     log
 
-main_after_if_else@46:
+unlock_after_if_else@7:
     assert // DIRTY_START
     global GroupSize
     intc_1 // 1
@@ -365,22 +401,220 @@ main_after_if_else@46:
     txn ApplicationID
     ==
     dup
-    bnz main_after_if_else@48
+    bnz unlock_after_if_else@9
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000d4c4153545f4e4f545f53454c4600000000000000000000000000000000000000
     log
 
-main_after_if_else@48:
+unlock_after_if_else@9:
     assert // LAST_NOT_SELF
     bytec_0 // "unlocked"
     intc_1 // 1
     app_global_put
     callsub __solfn_171
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@41:
+unlock_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@42
+    b unlock_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/flash_accounting.sol.FlashAccounting.op(__arc4_delta: bytes) -> void:
+op:
+    proto 1 0
+    bytec_2 // ""
+    txn GroupIndex
+    bz op_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+op_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "unlocked"
+    app_global_get_ex
+    intc_0 // 0
+    cover 2
+    select
+    dup
+    bnz op_after_if_else@6
+    bytec 6 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000064c4f434b45440000000000000000000000000000000000000000000000000000
+    log
+
+op_after_if_else@6:
+    assert // LOCKED
+    intc_0 // 0
+    bytec_1 // "netDelta"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    dup
+    frame_bury 0
+    frame_dig -1
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    !=
+    bnz op_bool_true@9
+    dup
+    frame_dig -1
+    b+
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    frame_dig 0
+    ==
+    bz op_bool_false@10
+
+op_bool_true@9:
+    intc_1 // 1
+
+op_bool_merge@11:
+    assert // signed arithmetic overflow
+    frame_dig -1
+    b+
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // "netDelta"
+    swap
+    app_global_put
+    callsub __solfn_171
+    retsub
+
+op_bool_false@10:
+    intc_0 // 0
+    b op_bool_merge@11
+
+op_ternary_false@2:
+    intc_0 // 0
+    b op_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/flash_accounting.sol.FlashAccounting.settle(__arc4_amount: bytes) -> void:
+settle:
+    proto 1 0
+    bytec_2 // ""
+    txn GroupIndex
+    bz settle_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+settle_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "unlocked"
+    app_global_get_ex
+    intc_0 // 0
+    cover 2
+    select
+    dup
+    bnz settle_after_if_else@6
+    bytec 6 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000064c4f434b45440000000000000000000000000000000000000000000000000000
+    log
+
+settle_after_if_else@6:
+    assert // LOCKED
+    intc_0 // 0
+    bytec_1 // "netDelta"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    dup
+    frame_bury 0
+    frame_dig -1
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    ==
+    bnz settle_bool_true@9
+    dup
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b-
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    !
+    frame_dig 0
+    ==
+    bz settle_bool_false@10
+
+settle_bool_true@9:
+    intc_1 // 1
+
+settle_bool_merge@11:
+    assert // signed arithmetic overflow
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    frame_dig -1
+    b-
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // "netDelta"
+    swap
+    app_global_put
+    callsub __solfn_171
+    retsub
+
+settle_bool_false@10:
+    intc_0 // 0
+    b settle_bool_merge@11
+
+settle_ternary_false@2:
+    intc_0 // 0
+    b settle_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/flash_accounting.sol.FlashAccounting.finalize() -> void:
+finalize:
+    txn GroupIndex
+    bz finalize_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+finalize_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "unlocked"
+    app_global_get_ex
+    intc_0 // 0
+    cover 2
+    select
+    dup
+    bnz finalize_after_if_else@6
+    bytec 6 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000064c4f434b45440000000000000000000000000000000000000000000000000000
+    log
+
+finalize_after_if_else@6:
+    assert // LOCKED
+    callsub __solfn_171
+    retsub
+
+finalize_ternary_false@2:
+    intc_0 // 0
+    b finalize_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/flash_accounting.sol.FlashAccounting.__solfn_171() -> void:
@@ -413,3 +647,61 @@ __solfn_171_after_if_else@3:
 
 __solfn_171_after_if_else@4:
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/flash_accounting.sol.FlashAccounting.isUnlocked() -> uint64:
+isUnlocked:
+    txn GroupIndex
+    bz isUnlocked_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+isUnlocked_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_0 // "unlocked"
+    app_global_get_ex
+    intc_0 // 0
+    cover 2
+    select
+    retsub
+
+isUnlocked_ternary_false@2:
+    intc_0 // 0
+    b isUnlocked_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/flash_accounting.sol.FlashAccounting.getNetDelta() -> bytes:
+getNetDelta:
+    txn GroupIndex
+    bz getNetDelta_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getNetDelta_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "netDelta"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    retsub
+
+getNetDelta_ternary_false@2:
+    intc_0 // 0
+    b getNetDelta_ternary_merge@3

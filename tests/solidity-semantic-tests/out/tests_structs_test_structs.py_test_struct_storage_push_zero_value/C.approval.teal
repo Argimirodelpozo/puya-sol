@@ -5,7 +5,6 @@
 main:
     intcblock 0 2 1 54
     bytecblock "s" 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 "__ctor_pending" "b"
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -33,409 +32,52 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_1 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub f
+    pushbytes 0x151f7c75
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_0 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x2d4970c7 // method "__postInit()void", method "f()void"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_f_route@6
+    match main___postInit_route@12 main_f_route@13
     err
 
-main_f_route@6:
-    txn GroupIndex
-    bz main_ternary_false@12
-    txn GroupIndex
+main_f_route@13:
+    callsub f
     intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@13:
-    !
-    assert // not payable
-    bytec_0 // "s"
-    box_get
-    assert // box exists
-    dup
-    intc_0 // 0
-    extract_uint16
-    dup
-    intc_2 // 1
-    +
-    itob
-    extract 6 0
-    cover 2
-    swap
-    extract 2 0
-    swap
-    intc_1 // 2
-    *
-    swap
-    intc_0 // 0
-    bury 4
-
-main_for_header@54:
-    dig 3
-    dig 2
-    <
-    bz main_after_for@56
-    dup
-    dig 4
-    dup
-    cover 2
-    extract_uint16
-    intc_1 // 2
-    +
-    itob
-    extract 6 0
-    uncover 4
-    swap
-    concat
-    cover 3
-    intc_1 // 2
-    +
-    bury 4
-    b main_for_header@54
-
-main_after_for@56:
-    dup
-    len
-    cover 2
-    intc_0 // 0
-    bury 5
-
-main_for_header@57:
-    dig 4
-    intc_1 // 2
-    <
-    bz main_after_for@59
-    pushbytes 0x00020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000660000
-    dig 5
-    dup
-    cover 2
-    extract_uint16
-    dig 4
-    +
-    itob
-    extract 6 0
-    uncover 5
-    swap
-    concat
-    cover 4
-    intc_1 // 2
-    +
-    bury 5
-    b main_for_header@57
-
-main_after_for@59:
-    swap
-    uncover 2
-    substring3
-    concat
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000660000
-    concat
-    bytec_0 // "s"
-    box_del
-    pop
-    bytec_0 // "s"
-    swap
-    box_put
-    bytec_0 // "s"
-    box_len
-    bury 1
-    bz main_ternary_false@15
-    bytec_0 // "s"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@16:
-    assert // array index out of bounds
-    bytec_0 // "s"
-    intc_1 // 2
-    dup
-    box_extract
-    btoi
-    intc_1 // 2
-    +
-    bytec_0 // "s"
-    swap
-    pushint 32
-    box_extract // on error: index out of bounds
-    intc_0 // 0
-    itob
-    dup
-    cover 2
-    b==
-    dup
-    bnz main_after_if_else@18
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@18:
-    assert
-    bytec_0 // "s"
-    box_len
-    bury 1
-    bz main_ternary_false@20
-    bytec_0 // "s"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@21:
-    assert // array index out of bounds
-    bytec_0 // "s"
-    intc_1 // 2
-    dup
-    box_extract
-    btoi
-    pushint 34
-    +
-    bytec_0 // "s"
-    swap
-    pushint 16
-    box_extract // on error: index out of bounds
-    dig 1
-    b==
-    dup
-    bnz main_after_if_else@23
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@23:
-    assert
-    bytec_0 // "s"
-    box_len
-    bury 1
-    bz main_ternary_false@25
-    bytec_0 // "s"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@26:
-    assert // array index out of bounds
-    bytec_0 // "s"
-    intc_1 // 2
-    dup
-    box_extract
-    btoi
-    pushint 50
-    +
-    bytec_0 // "s"
-    swap
-    pushint 4
-    box_extract // on error: index out of bounds
-    btoi
-    dup
-    !
-    swap
-    bz main_after_if_else@28
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@28:
-    assert
-    bytec_0 // "s"
-    box_len
-    bury 1
-    bz main_ternary_false@30
-    bytec_0 // "s"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@31:
-    assert // array index out of bounds
-    bytec_0 // "s"
-    intc_1 // 2
-    dup
-    box_extract
-    btoi
-    intc_3 // 54
-    +
-    bytec_0 // "s"
-    swap
-    pushint 48
-    box_extract // on error: index out of bounds
-    extract 0 16 // on error: index access is out of bounds
-    dig 1
-    b==
-    dup
-    bnz main_after_if_else@33
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@33:
-    assert
-    bytec_0 // "s"
-    box_len
-    bury 1
-    bz main_ternary_false@35
-    bytec_0 // "s"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@36:
-    assert // array index out of bounds
-    bytec_0 // "s"
-    intc_1 // 2
-    dup
-    box_extract
-    btoi
-    intc_3 // 54
-    +
-    bytec_0 // "s"
-    swap
-    pushint 48
-    box_extract // on error: index out of bounds
-    extract 16 16 // on error: index access is out of bounds
-    dig 1
-    b==
-    dup
-    bnz main_after_if_else@38
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@38:
-    assert
-    bytec_0 // "s"
-    box_len
-    bury 1
-    bz main_ternary_false@40
-    bytec_0 // "s"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@41:
-    assert // array index out of bounds
-    bytec_0 // "s"
-    intc_1 // 2
-    dup
-    box_extract
-    btoi
-    intc_3 // 54
-    +
-    bytec_0 // "s"
-    swap
-    pushint 48
-    box_extract // on error: index out of bounds
-    extract 32 16 // on error: index access is out of bounds
-    dig 1
-    b==
-    dup
-    bnz main_after_if_else@43
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@43:
-    assert
-    bytec_0 // "s"
-    box_len
-    bury 1
-    bz main_ternary_false@45
-    bytec_0 // "s"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@46:
-    assert // array index out of bounds
-    bytec_0 // "s"
-    intc_1 // 2
-    dup
-    box_extract
-    btoi
-    pushint 104
-    +
-    bytec_0 // "s"
-    swap
-    intc_1 // 2
-    box_extract
-    btoi
-    itob
-    b==
-    dup
-    bnz main_after_if_else@48
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@48:
-    assert
-    intc_0 // 0
-    bytec_3 // "b"
-    app_global_get_ex
-    intc_0 // 0
-    cover 2
-    select
-    pushint 23
-    ==
-    dup
-    bnz main_after_if_else@50
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@50:
-    assert
-    intc_0 // 0
-    pushbytes "a"
-    app_global_get_ex
-    intc_0 // 0
-    cover 2
-    select
-    pushint 17
-    ==
-    dup
-    bnz main_after_if_else@52
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@52:
     return
 
-main_ternary_false@45:
-    intc_0 // 0
-    b main_ternary_merge@46
-
-main_ternary_false@40:
-    intc_0 // 0
-    b main_ternary_merge@41
-
-main_ternary_false@35:
-    intc_0 // 0
-    b main_ternary_merge@36
-
-main_ternary_false@30:
-    intc_0 // 0
-    b main_ternary_merge@31
-
-main_ternary_false@25:
-    intc_0 // 0
-    b main_ternary_merge@26
-
-main_ternary_false@20:
-    intc_0 // 0
-    b main_ternary_merge@21
-
-main_ternary_false@15:
-    intc_0 // 0
-    b main_ternary_merge@16
-
-main_ternary_false@12:
-    intc_0 // 0
-    b main_ternary_merge@13
-
-main___postInit_route@5:
+main___postInit_route@12:
     bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -458,3 +100,401 @@ main___postInit_route@5:
     app_global_put
     intc_2 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_storage_push_zero_value.sol.C.f() -> void:
+f:
+    proto 0 0
+    pushbytes ""
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "s"
+    box_get
+    assert // box exists
+    dup
+    intc_0 // 0
+    extract_uint16
+    dup
+    intc_2 // 1
+    +
+    itob
+    extract 6 0
+    cover 2
+    swap
+    extract 2 0
+    swap
+    intc_1 // 2
+    *
+    swap
+    intc_0 // 0
+    frame_bury 0
+
+f_for_header@44:
+    frame_dig 0
+    dig 2
+    <
+    bz f_after_for@46
+    dup
+    frame_dig 0
+    dup
+    cover 2
+    extract_uint16
+    intc_1 // 2
+    +
+    itob
+    extract 6 0
+    uncover 4
+    swap
+    concat
+    cover 3
+    intc_1 // 2
+    +
+    frame_bury 0
+    b f_for_header@44
+
+f_after_for@46:
+    dup
+    len
+    cover 2
+    intc_0 // 0
+    frame_bury 0
+
+f_for_header@47:
+    frame_dig 0
+    intc_1 // 2
+    <
+    bz f_after_for@49
+    pushbytes 0x00020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000660000
+    frame_dig 0
+    dup
+    cover 2
+    extract_uint16
+    dig 4
+    +
+    itob
+    extract 6 0
+    uncover 5
+    swap
+    concat
+    cover 4
+    intc_1 // 2
+    +
+    frame_bury 0
+    b f_for_header@47
+
+f_after_for@49:
+    swap
+    uncover 2
+    substring3
+    concat
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000660000
+    concat
+    bytec_0 // "s"
+    box_del
+    pop
+    bytec_0 // "s"
+    swap
+    box_put
+    bytec_0 // "s"
+    box_len
+    bury 1
+    bz f_ternary_false@5
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+f_ternary_merge@6:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
+    dup
+    box_extract
+    btoi
+    intc_1 // 2
+    +
+    bytec_0 // "s"
+    swap
+    pushint 32
+    box_extract // on error: index out of bounds
+    intc_0 // 0
+    itob
+    dup
+    cover 2
+    b==
+    dup
+    bnz f_after_if_else@8
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+f_after_if_else@8:
+    assert
+    bytec_0 // "s"
+    box_len
+    bury 1
+    bz f_ternary_false@10
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+f_ternary_merge@11:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
+    dup
+    box_extract
+    btoi
+    pushint 34
+    +
+    bytec_0 // "s"
+    swap
+    pushint 16
+    box_extract // on error: index out of bounds
+    dig 1
+    b==
+    dup
+    bnz f_after_if_else@13
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+f_after_if_else@13:
+    assert
+    bytec_0 // "s"
+    box_len
+    bury 1
+    bz f_ternary_false@15
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+f_ternary_merge@16:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
+    dup
+    box_extract
+    btoi
+    pushint 50
+    +
+    bytec_0 // "s"
+    swap
+    pushint 4
+    box_extract // on error: index out of bounds
+    btoi
+    dup
+    !
+    swap
+    bz f_after_if_else@18
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+f_after_if_else@18:
+    assert
+    bytec_0 // "s"
+    box_len
+    bury 1
+    bz f_ternary_false@20
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+f_ternary_merge@21:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
+    dup
+    box_extract
+    btoi
+    intc_3 // 54
+    +
+    bytec_0 // "s"
+    swap
+    pushint 48
+    box_extract // on error: index out of bounds
+    extract 0 16 // on error: index access is out of bounds
+    dig 1
+    b==
+    dup
+    bnz f_after_if_else@23
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+f_after_if_else@23:
+    assert
+    bytec_0 // "s"
+    box_len
+    bury 1
+    bz f_ternary_false@25
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+f_ternary_merge@26:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
+    dup
+    box_extract
+    btoi
+    intc_3 // 54
+    +
+    bytec_0 // "s"
+    swap
+    pushint 48
+    box_extract // on error: index out of bounds
+    extract 16 16 // on error: index access is out of bounds
+    dig 1
+    b==
+    dup
+    bnz f_after_if_else@28
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+f_after_if_else@28:
+    assert
+    bytec_0 // "s"
+    box_len
+    bury 1
+    bz f_ternary_false@30
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+f_ternary_merge@31:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
+    dup
+    box_extract
+    btoi
+    intc_3 // 54
+    +
+    bytec_0 // "s"
+    swap
+    pushint 48
+    box_extract // on error: index out of bounds
+    extract 32 16 // on error: index access is out of bounds
+    dig 1
+    b==
+    dup
+    bnz f_after_if_else@33
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+f_after_if_else@33:
+    assert
+    bytec_0 // "s"
+    box_len
+    bury 1
+    bz f_ternary_false@35
+    bytec_0 // "s"
+    box_get
+    pop
+    intc_0 // 0
+    extract_uint16
+
+f_ternary_merge@36:
+    assert // array index out of bounds
+    bytec_0 // "s"
+    intc_1 // 2
+    dup
+    box_extract
+    btoi
+    pushint 104
+    +
+    bytec_0 // "s"
+    swap
+    intc_1 // 2
+    box_extract
+    btoi
+    itob
+    b==
+    dup
+    bnz f_after_if_else@38
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+f_after_if_else@38:
+    assert
+    intc_0 // 0
+    bytec_3 // "b"
+    app_global_get_ex
+    intc_0 // 0
+    cover 2
+    select
+    pushint 23
+    ==
+    dup
+    bnz f_after_if_else@40
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+f_after_if_else@40:
+    assert
+    intc_0 // 0
+    pushbytes "a"
+    app_global_get_ex
+    intc_0 // 0
+    cover 2
+    select
+    pushint 17
+    ==
+    dup
+    bnz f_after_if_else@42
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+f_after_if_else@42:
+    assert
+    retsub
+
+f_ternary_false@35:
+    intc_0 // 0
+    b f_ternary_merge@36
+
+f_ternary_false@30:
+    intc_0 // 0
+    b f_ternary_merge@31
+
+f_ternary_false@25:
+    intc_0 // 0
+    b f_ternary_merge@26
+
+f_ternary_false@20:
+    intc_0 // 0
+    b f_ternary_merge@21
+
+f_ternary_false@15:
+    intc_0 // 0
+    b f_ternary_merge@16
+
+f_ternary_false@10:
+    intc_0 // 0
+    b f_ternary_merge@11
+
+f_ternary_false@5:
+    intc_0 // 0
+    b f_ternary_merge@6
+
+f_ternary_false@2:
+    intc_0 // 0
+    b f_ternary_merge@3

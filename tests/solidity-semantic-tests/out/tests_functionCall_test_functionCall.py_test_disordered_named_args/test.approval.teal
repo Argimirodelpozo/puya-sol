@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/disordered_named_args.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x9b86c37c 0x151f7c75
+    intcblock 32 1 0 2
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x9b86c37c
     pushint 4096
     bzero
     dup
@@ -29,54 +29,155 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    bytec_1 // method "a(uint256,uint256,uint256)uint256"
-    pushbytes 0xddb04781 // method "b()uint256"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_a_route@5 main_b_route@6
-    err
-
-main_b_route@6:
+    pushbytes 0xbf3b9e38
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@8:
     !
     assert // not payable
-    intc_1 // 1
-    itob
-    pushint 2
-    itob
-    pushint 3
-    itob
-    callsub a
-    dup
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    txna ApplicationArgs 1
+    extract 64 32
+    dig 2
     len
     intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 32
-    bzero
+    uncover 2
+    dig 3
     b|
-    bytec_2 // 0x151f7c75
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    callsub a
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@12:
+main_ternary_false@7:
     intc_2 // 0
-    b main_ternary_merge@13
+    b main_ternary_merge@8
 
-main_a_route@5:
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x4df7e3d0
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub b
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    bytec_2 // method "a(uint256,uint256,uint256)uint256"
+    pushbytes 0xddb04781 // method "b()uint256"
+    txna ApplicationArgs 0
+    match main_a_route@19 main_b_route@20
+    err
+
+main_b_route@20:
+    callsub b
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_a_route@19:
     txna ApplicationArgs 1
     dup
     len
@@ -96,7 +197,7 @@ main_a_route@5:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub a
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -110,7 +211,7 @@ a:
     txn NumAppArgs
     bz a_after_if_else@6
     txna ApplicationArgs 0
-    bytec_1 // method "a(uint256,uint256,uint256)uint256"
+    bytec_2 // method "a(uint256,uint256,uint256)uint256"
     ==
     bz a_after_if_else@6
     txn GroupIndex
@@ -169,3 +270,37 @@ a_after_if_else@6:
 a_ternary_false@4:
     intc_2 // 0
     b a_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/disordered_named_args.sol.test.b() -> bytes:
+b:
+    txn GroupIndex
+    bz b_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+b_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 1
+    itob
+    intc_3 // 2
+    itob
+    pushint 3
+    itob
+    callsub a
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+b_ternary_false@2:
+    intc_2 // 0
+    b b_ternary_merge@3

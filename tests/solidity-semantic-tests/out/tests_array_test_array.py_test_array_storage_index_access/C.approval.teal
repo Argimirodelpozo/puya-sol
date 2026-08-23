@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_index_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 32 1 0
+    intcblock 32 2 1 0
     bytecblock "storageArray" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "__ctor_pending" 0x010000000000000000
     pushint 4096
     bzero
@@ -32,62 +32,134 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_1 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xf086f0d0
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub test_indices
+    pushbytes 0x151f7c75
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_3 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x06071aa5 // method "__postInit()void", method "test_indices(uint256)void"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_test_indices_route@6
+    match main___postInit_route@12 main_test_indices_route@13
     err
 
-main_test_indices_route@6:
+main_test_indices_route@13:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub test_indices
+    intc_2 // 1
+    return
+
+main___postInit_route@12:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_2 // "__ctor_pending"
+    intc_3 // 0
+    app_global_put
+    bytec_0 // "storageArray"
+    intc_1 // 2
+    box_create
+    pop
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_index_access.sol.C.test_indices(__arc4_len: bytes) -> void:
+test_indices:
+    proto 1 0
     txn GroupIndex
-    bz main_ternary_false@12
+    bz test_indices_ternary_false@2
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+test_indices_ternary_merge@3:
     !
     assert // not payable
 
-main_while_top@14:
+test_indices_while_top@4:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_0 // 2
+    intc_1 // 2
     >=
-    bz main_ternary_false@16
+    bz test_indices_ternary_false@6
     bytec_0 // "storageArray"
     box_len
     pop
 
-main_ternary_merge@17:
-    intc_0 // 2
+test_indices_ternary_merge@7:
+    intc_1 // 2
     -
-    intc_1 // 32
+    intc_0 // 32
     /
     itob
-    dig 1
+    frame_dig -1
     b<
-    bz main_while_top@19
+    bz test_indices_while_top@10
     bytec_0 // "storageArray"
     intc_3 // 0
-    intc_0 // 2
+    intc_1 // 2
     box_extract
     btoi
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 32
+    intc_0 // 32
     +
     bytec_0 // "storageArray"
     swap
@@ -101,40 +173,40 @@ main_ternary_merge@17:
     intc_3 // 0
     uncover 2
     box_replace
-    intc_1 // 32
+    intc_0 // 32
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
     intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
-    b main_while_top@14
+    b test_indices_while_top@4
 
-main_while_top@19:
+test_indices_while_top@10:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_0 // 2
+    intc_1 // 2
     >=
-    bz main_ternary_false@21
+    bz test_indices_ternary_false@12
     bytec_0 // "storageArray"
     box_len
     pop
 
-main_ternary_merge@22:
-    intc_0 // 2
+test_indices_ternary_merge@13:
+    intc_1 // 2
     -
-    intc_1 // 32
+    intc_0 // 32
     /
     itob
-    dig 1
+    frame_dig -1
     b>
-    bz main_after_while@24
+    bz test_indices_after_while@15
     bytec_0 // "storageArray"
     intc_3 // 0
-    intc_0 // 2
+    intc_1 // 2
     box_extract
     btoi
     intc_2 // 1
@@ -146,35 +218,35 @@ main_ternary_merge@22:
     intc_3 // 0
     uncover 2
     box_replace
-    intc_1 // 32
+    intc_0 // 32
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_1 // 32
+    intc_0 // 32
     pushbytes 0x
     box_splice
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 32
+    intc_0 // 32
     -
     bytec_0 // "storageArray"
     swap
     box_resize
-    b main_while_top@19
+    b test_indices_while_top@10
 
-main_after_while@24:
+test_indices_after_while@15:
     intc_3 // 0
     itob
     dup
 
-main_while_top@25:
+test_indices_while_top@16:
     dup
-    dig 3
+    frame_dig -1
     b<
-    bz main_after_while@29
+    bz test_indices_after_while@20
     intc_2 // 1
     itob
     dig 1
@@ -192,19 +264,19 @@ main_while_top@25:
     bytec_0 // "storageArray"
     box_len
     bury 1
-    bnz main_after_if_else@28
+    bnz test_indices_after_if_else@19
     bytec_0 // "storageArray"
-    intc_0 // 2
+    intc_1 // 2
     box_create
     pop
 
-main_after_if_else@28:
+test_indices_after_if_else@19:
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
     pushint 8
@@ -218,9 +290,9 @@ main_after_if_else@28:
     pushint 8
     -
     extract_uint64
-    intc_1 // 32
+    intc_0 // 32
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -232,16 +304,16 @@ main_after_if_else@28:
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    b main_while_top@25
+    b test_indices_while_top@16
 
-main_after_while@29:
+test_indices_after_while@20:
     pop
 
-main_while_top@30:
+test_indices_while_top@21:
     dup
-    dig 2
+    frame_dig -1
     b<
-    bz main_after_while@32
+    bz test_indices_after_while@23
     intc_2 // 1
     itob
     dig 1
@@ -263,13 +335,13 @@ main_while_top@30:
     pushint 8
     -
     extract_uint64
-    intc_1 // 32
+    intc_0 // 32
     *
-    intc_0 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_1 // 32
+    intc_0 // 32
     box_extract // on error: index out of bounds
     b==
     assert
@@ -279,38 +351,19 @@ main_while_top@30:
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    b main_while_top@30
+    b test_indices_while_top@21
 
-main_after_while@32:
-    intc_2 // 1
-    return
+test_indices_after_while@23:
+    retsub
 
-main_ternary_false@21:
-    intc_0 // 2
-    b main_ternary_merge@22
+test_indices_ternary_false@12:
+    intc_1 // 2
+    b test_indices_ternary_merge@13
 
-main_ternary_false@16:
-    intc_0 // 2
-    b main_ternary_merge@17
+test_indices_ternary_false@6:
+    intc_1 // 2
+    b test_indices_ternary_merge@7
 
-main_ternary_false@12:
+test_indices_ternary_false@2:
     intc_3 // 0
-    b main_ternary_merge@13
-
-main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
-    intc_3 // 0
-    app_global_put
-    bytec_0 // "storageArray"
-    intc_0 // 2
-    box_create
-    pop
-    intc_2 // 1
-    return
+    b test_indices_ternary_merge@3

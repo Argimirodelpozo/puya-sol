@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/payable_calls_nonpayable.sol.PayableCallsNonPayable.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock "last" 0x151f7c75 0x 0x17fa654a
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 "last" 0x 0x17fa654a
     pushint 4096
     bzero
     dup
@@ -24,13 +24,199 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "last"
+    bytec_1 // "last"
     bytec_2 // 0x
     app_global_put
     intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x26a49e37
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub price
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@13
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@13
+    txna ApplicationArgs 0
+    pushbytes 0xd96a094a
+    ==
+    bz main_after_if_else@13
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub buy
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_after_if_else@13:
+    txn OnCompletion
+    bnz main_after_if_else@20
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@20
+    txna ApplicationArgs 0
+    pushbytes 0x5c57bb89
+    ==
+    bz main_after_if_else@20
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub setLast
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
+
+main_after_if_else@20:
+    txn OnCompletion
+    bnz main_after_if_else@27
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@27
+    txna ApplicationArgs 0
+    pushbytes 0x47799da8
+    ==
+    bz main_after_if_else@27
+    txn GroupIndex
+    bz main_ternary_false@25
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@26:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub last
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@25:
+    intc_2 // 0
+    b main_ternary_merge@26
+
+main_after_if_else@27:
     txn OnCompletion
     !
     assert
@@ -39,73 +225,45 @@ main_after_if_else@2:
     bytec_3 // method "price(uint256)uint256"
     pushbytess 0xb914487e 0x7ab86e54 0x6b55864f // method "buy(uint256)uint256", method "setLast(uint256)void", method "last()uint256"
     txna ApplicationArgs 0
-    match main_price_route@5 main_buy_route@6 main_setLast_route@7 main_last_route@8
+    match main_price_route@30 main_buy_route@31 main_setLast_route@32 main_last_route@33
     err
 
-main_last_route@8:
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_2 // 0
-    bytec_0 // "last"
-    app_global_get_ex
-    bytec_2 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
+main_last_route@33:
+    callsub last
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_setLast_route@7:
+main_setLast_route@32:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@19
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@20:
-    !
-    assert // not payable
-    bytec_0 // "last"
-    swap
-    app_global_put
+    callsub setLast
     intc_1 // 1
     return
 
-main_ternary_false@19:
-    intc_2 // 0
-    b main_ternary_merge@20
+main_buy_route@31:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub buy
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
-main_buy_route@6:
+main_price_route@30:
     txna ApplicationArgs 1
     dup
     len
@@ -113,33 +271,7 @@ main_buy_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub price
-    bytec_0 // "last"
-    dig 1
-    app_global_put
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_price_route@5:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub price
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -189,3 +321,78 @@ price_after_if_else@6:
 price_ternary_false@4:
     intc_2 // 0
     b price_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/payable_calls_nonpayable.sol.PayableCallsNonPayable.buy(__arc4_n: bytes) -> bytes:
+buy:
+    proto 1 1
+    frame_dig -1
+    callsub price
+    bytec_1 // "last"
+    dig 1
+    app_global_put
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/payable_calls_nonpayable.sol.PayableCallsNonPayable.setLast(__arc4_n: bytes) -> void:
+setLast:
+    proto 1 0
+    txn GroupIndex
+    bz setLast_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+setLast_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "last"
+    frame_dig -1
+    app_global_put
+    retsub
+
+setLast_ternary_false@2:
+    intc_2 // 0
+    b setLast_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/payable_calls_nonpayable.sol.PayableCallsNonPayable.last() -> bytes:
+last:
+    txn GroupIndex
+    bz last_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+last_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_1 // "last"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+last_ternary_false@2:
+    intc_2 // 0
+    b last_ternary_merge@3

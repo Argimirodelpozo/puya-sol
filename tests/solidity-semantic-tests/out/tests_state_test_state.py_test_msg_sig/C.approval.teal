@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/msg_sig.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 2 28
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -28,46 +29,141 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub f
+    intc_3 // 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xe2179b8e
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    callsub g
+    intc_3 // 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x4bb8a92a 0x886e1470 // method "f()byte[4]", method "g()byte[4]"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6
+    match main_f_route@19 main_g_route@20
     err
 
-main_g_route@6:
-    txn GroupIndex
-    bz main_ternary_false@12
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@18:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75
-    txna ApplicationArgs 0
+main_g_route@20:
+    callsub g
+    bytec_0 // 0x151f7c75
+    swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@12:
-    intc_1 // 0
-    b main_ternary_merge@18
+main_f_route@19:
+    callsub f
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
-main_f_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/msg_sig.sol.C.f() -> bytes:
+f:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz f_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@18
 
-main_ternary_false@17:
+f_ternary_merge@3:
+    !
+    assert // not payable
+    txna ApplicationArgs 0
+    retsub
+
+f_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@18
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/msg_sig.sol.C.g() -> bytes:
+g:
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    txna ApplicationArgs 0
+    retsub
+
+g_ternary_false@2:
+    intc_1 // 0
+    b g_ternary_merge@3

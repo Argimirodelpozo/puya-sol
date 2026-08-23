@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed_complex_types.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 15
-    bytecblock "x"
+    intcblock 32 1 0 2
+    bytecblock "x" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -31,25 +31,78 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0x00819a4d // method "f()(byte[32],byte[32],byte[32])"
-    txna ApplicationArgs 0
-    match main_f_route@4
-    err
-
-main_f_route@4:
     txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub f
+    cover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    pushbytes 0x00819a4d // method "f()(byte[32],byte[32],byte[32])"
+    txna ApplicationArgs 0
+    match main_f_route@11
+    err
+
+main_f_route@11:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub f
+    cover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/builtinFunctions/contracts/keccak256_packed_complex_types.sol.C.f() -> bytes, bytes, bytes:
+f:
+    proto 0 3
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
     !
     assert // not payable
     intc_2 // 0
@@ -108,19 +161,19 @@ main_ternary_merge@9:
     pushbytes 0x
     intc_2 // 0
 
-main_while_top@10:
+f_while_top@4:
     dup
     pushint 3
     <
-    bz main_after_while@12
+    bz f_after_while@6
     dup
-    intc_3 // 15
+    pushint 15
     *
-    pushint 2
+    intc_3 // 2
     +
     pushbytes 0x0003fffffffffffffffffffffffffffffefffffffffffffffffffffffffffffdfffffffffffffffffffffffffffffc
     swap
-    intc_3 // 15
+    pushint 15
     extract3
     dig 4
     swap
@@ -137,21 +190,15 @@ main_while_top@10:
     swap
     intc_1 // 1
     +
-    b main_while_top@10
+    b f_while_top@4
 
-main_after_while@12:
+f_after_while@6:
     pop
     keccak256
-    concat
     pushbytes 0xe7490fade3a8e31113ecb6c0d2635e28a6f5ca8359a57afe914827f41ddf0848
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    uncover 3
+    retsub
 
-main_ternary_false@8:
+f_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@9
+    b f_ternary_merge@3

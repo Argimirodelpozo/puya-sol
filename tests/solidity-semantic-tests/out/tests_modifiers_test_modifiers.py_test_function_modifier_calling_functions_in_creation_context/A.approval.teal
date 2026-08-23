@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_calling_functions_in_creation_context.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "data" 0x 0xe1ff2398 0xe54503a7 0x7abeaa76
+    intcblock 1 0 32 2
+    bytecblock 0x151f7c75 "data" 0x 0xe1ff2398 0xe54503a7 0x7abeaa76
     pushint 4096
     bzero
     dup
@@ -24,8 +24,8 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@5
-    bytec_0 // "data"
-    bytec_1 // 0x
+    bytec_1 // "data"
+    bytec_2 // 0x
     app_global_put
     callsub f2
     callsub f1
@@ -34,19 +34,46 @@ main:
 
 main_after_if_else@5:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    bytec_2 // method "f1()void"
-    bytec_3 // method "f2()void"
-    bytec 4 // method "f3()void"
-    pushbytes 0xe1e64a74 // method "getData()uint256"
+    bnz main_after_if_else@12
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@12
     txna ApplicationArgs 0
-    match main_f1_route@8 main_f2_route@9 main_f3_route@10 main_getData_route@11
-    err
+    pushbytes 0xc27fc305
+    ==
+    bz main_after_if_else@12
+    txn GroupIndex
+    bz main_ternary_false@10
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-main_getData_route@11:
+main_ternary_merge@11:
+    !
+    assert // not payable
+    callsub f1
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@10:
+    intc_1 // 0
+    b main_ternary_merge@11
+
+main_after_if_else@12:
+    txn OnCompletion
+    bnz main_after_if_else@19
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@19
+    txna ApplicationArgs 0
+    pushbytes 0x9942ec6f
+    ==
+    bz main_after_if_else@19
     txn GroupIndex
     bz main_ternary_false@17
     txn GroupIndex
@@ -57,23 +84,8 @@ main_getData_route@11:
 main_ternary_merge@18:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "data"
-    app_global_get_ex
-    bytec_1 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    pushbytes 0x151f7c75
-    swap
-    concat
+    callsub f2
+    bytec_0 // 0x151f7c75
     log
     intc_0 // 1
     return
@@ -82,17 +94,113 @@ main_ternary_false@17:
     intc_1 // 0
     b main_ternary_merge@18
 
-main_f3_route@10:
+main_after_if_else@19:
+    txn OnCompletion
+    bnz main_after_if_else@26
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@26
+    txna ApplicationArgs 0
+    pushbytes 0xaaf05f3d
+    ==
+    bz main_after_if_else@26
+    txn GroupIndex
+    bz main_ternary_false@24
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@25:
+    !
+    assert // not payable
+    callsub f3
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@24:
+    intc_1 // 0
+    b main_ternary_merge@25
+
+main_after_if_else@26:
+    txn OnCompletion
+    bnz main_after_if_else@33
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@33
+    txna ApplicationArgs 0
+    pushbytes 0x3bc5de30
+    ==
+    bz main_after_if_else@33
+    txn GroupIndex
+    bz main_ternary_false@31
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@32:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    callsub getData
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@31:
+    intc_1 // 0
+    b main_ternary_merge@32
+
+main_after_if_else@33:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    bytec_3 // method "f1()void"
+    bytec 4 // method "f2()void"
+    bytec 5 // method "f3()void"
+    pushbytes 0xe1e64a74 // method "getData()uint256"
+    txna ApplicationArgs 0
+    match main_f1_route@36 main_f2_route@37 main_f3_route@38 main_getData_route@39
+    err
+
+main_getData_route@39:
+    callsub getData
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_f3_route@38:
     callsub f3
     intc_0 // 1
     return
 
-main_f2_route@9:
+main_f2_route@37:
     callsub f2
     intc_0 // 1
     return
 
-main_f1_route@8:
+main_f1_route@36:
     callsub f1
     intc_0 // 1
     return
@@ -103,7 +211,7 @@ f1:
     txn NumAppArgs
     bz f1_after_if_else@6
     txna ApplicationArgs 0
-    bytec_2 // method "f1()void"
+    bytec_3 // method "f1()void"
     ==
     bz f1_after_if_else@6
     txn GroupIndex
@@ -131,7 +239,7 @@ f2:
     txn NumAppArgs
     bz f2_after_if_else@6
     txna ApplicationArgs 0
-    bytec_3 // method "f2()void"
+    bytec 4 // method "f2()void"
     ==
     bz f2_after_if_else@6
     txn GroupIndex
@@ -147,14 +255,14 @@ f2_ternary_merge@5:
 
 f2_after_if_else@6:
     intc_1 // 0
-    bytec_0 // "data"
+    bytec_1 // "data"
     app_global_get_ex
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     pushbytes 0x20
     b|
-    bytec_0 // "data"
+    bytec_1 // "data"
     swap
     app_global_put
     retsub
@@ -169,7 +277,7 @@ f3:
     txn NumAppArgs
     bz f3_after_if_else@6
     txna ApplicationArgs 0
-    bytec 4 // method "f3()void"
+    bytec 5 // method "f3()void"
     ==
     bz f3_after_if_else@6
     txn GroupIndex
@@ -189,3 +297,36 @@ f3_after_if_else@6:
 f3_ternary_false@4:
     intc_1 // 0
     b f3_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_calling_functions_in_creation_context.sol.A.getData() -> bytes:
+getData:
+    txn GroupIndex
+    bz getData_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getData_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_1 // "data"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    retsub
+
+getData_ternary_false@2:
+    intc_1 // 0
+    b getData_ternary_merge@3

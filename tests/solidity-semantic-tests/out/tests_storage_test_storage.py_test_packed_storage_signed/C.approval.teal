@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_storage_signed.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 8 1 32
-    bytecblock "a" 0x0100 "b" "c" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    intcblock 0 32 1 8
+    bytecblock "a" 0x0100 "b" "c" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     pushint 4096
     bzero
     dup
@@ -40,28 +40,119 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0x8ef91fdb // method "test()(uint256,uint256,uint256,uint256)"
-    txna ApplicationArgs 0
-    match main_test_route@4
-    err
-
-main_test_route@4:
     txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xf8a8fd6d
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@7
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@8:
     !
     assert // not payable
-    intc_1 // 8
+    intc_1 // 32
+    bzero
+    callsub test
+    dig 4
+    uncover 4
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 4
+    uncover 4
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_0 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    pushbytes 0x8ef91fdb // method "test()(uint256,uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_test_route@11
+    err
+
+main_test_route@11:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub test
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_storage_signed.sol.C.test() -> bytes, bytes, bytes, bytes:
+test:
+    txn GroupIndex
+    bz test_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@3:
+    !
+    assert // not payable
+    intc_3 // 8
     bzero
     bytec_0 // "a"
     pushint 18446744073709551614
@@ -87,9 +178,9 @@ main_ternary_merge@9:
     concat
     dup
     len
-    intc_1 // 8
+    intc_3 // 8
     -
-    intc_1 // 8
+    intc_3 // 8
     extract3
     bytec_1 // 0x0100
     b%
@@ -100,7 +191,7 @@ main_ternary_merge@9:
     concat
     dup
     len
-    intc_1 // 8
+    intc_3 // 8
     -
     extract_uint64
     bytec_3 // "c"
@@ -118,11 +209,11 @@ main_ternary_merge@9:
     dup
     pushbytes 0x80
     b>=
-    bz main_ternary_false@13
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bz test_ternary_false@11
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
-main_ternary_merge@14:
+test_ternary_merge@12:
     intc_0 // 0
     bytec_2 // "b"
     app_global_get_ex
@@ -143,11 +234,11 @@ main_ternary_merge@14:
     dup
     pushbytes 0x80
     b>=
-    bz main_ternary_false@16
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    bz test_ternary_false@14
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
-main_ternary_merge@17:
+test_ternary_merge@15:
     intc_0 // 0
     pushbytes "d"
     app_global_get_ex
@@ -158,10 +249,10 @@ main_ternary_merge@17:
     uncover 2
     dup
     len
-    intc_3 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_3 // 32
+    intc_1 // 32
     bzero
     swap
     dig 1
@@ -172,7 +263,7 @@ main_ternary_merge@17:
     uncover 4
     dup
     len
-    intc_3 // 32
+    intc_1 // 32
     <=
     assert // overflow
     dig 3
@@ -180,26 +271,14 @@ main_ternary_merge@17:
     uncover 4
     uncover 4
     b|
-    uncover 3
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
+    retsub
 
-main_ternary_false@16:
-    b main_ternary_merge@17
+test_ternary_false@14:
+    b test_ternary_merge@15
 
-main_ternary_false@13:
-    b main_ternary_merge@14
+test_ternary_false@11:
+    b test_ternary_merge@12
 
-main_ternary_false@8:
+test_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@9
+    b test_ternary_merge@3

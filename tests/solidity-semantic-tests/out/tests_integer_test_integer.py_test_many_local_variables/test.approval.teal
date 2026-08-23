@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/contracts/many_local_variables.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1
-    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intcblock 32 1 0
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -28,12 +28,99 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x24b912e5
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    txna ApplicationArgs 1
+    extract 64 32
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    callsub run
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
     pushbytes 0xd7394324 // method "run(uint256,uint256,uint256)uint256"
     txna ApplicationArgs 0
-    match main_run_route@4
+    match main_run_route@11
     err
 
-main_run_route@4:
+main_run_route@11:
     txn OnCompletion
     !
     txn ApplicationID
@@ -57,33 +144,43 @@ main_run_route@4:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub run
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/contracts/many_local_variables.sol.test.run(__arc4_x1: bytes, __arc4_x2: bytes, __arc4_x3: bytes) -> bytes:
+run:
+    proto 3 1
     txn GroupIndex
-    bz main_ternary_false@8
+    bz run_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+run_ternary_merge@3:
     !
     assert // not payable
     pushint 273
     itob
-    uncover 3
+    frame_dig -3
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    uncover 2
-    dup
-    cover 2
+    frame_dig -2
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    uncover 2
+    frame_dig -1
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -91,7 +188,7 @@ main_ternary_merge@9:
     assert // overflow
     pushint 16
     itob
-    uncover 2
+    frame_dig -2
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -110,13 +207,8 @@ main_ternary_merge@9:
     intc_0 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@8:
-    pushint 0
-    b main_ternary_merge@9
+run_ternary_false@2:
+    intc_2 // 0
+    b run_ternary_merge@3

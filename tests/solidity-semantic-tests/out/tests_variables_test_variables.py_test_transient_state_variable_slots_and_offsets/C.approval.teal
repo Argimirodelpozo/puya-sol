@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_variable_slots_and_offsets.sol.C.approval_program() -> uint64:
 main:
-    intcblock 16 0 1 32
+    intcblock 32 0 1 16
+    bytecblock 0x 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -23,7 +24,8 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "x" 0x
+    pushbytes "x"
+    bytec_0 // 0x
     app_global_put
     pushbytes "y"
     intc_1 // 0
@@ -31,31 +33,130 @@ main:
     pushbytes "w"
     intc_1 // 0
     app_global_put
-    pushbytess "z" 0x
+    pushbytes "z"
+    bytec_0 // 0x
     app_global_put
     intc_2 // 1
     return
 
 main_after_if_else@2:
-    pushbytes 0x4a93bb88 // method "f()(uint128,uint64,uint64,uint256)"
-    txna ApplicationArgs 0
-    match main_f_route@4
-    err
-
-main_f_route@4:
     txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@7
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub f
+    dig 4
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 3
+    itob
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    uncover 2
+    itob
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    pushbytes 0x4a93bb88 // method "f()(uint128,uint64,uint64,uint256)"
+    txna ApplicationArgs 0
+    match main_f_route@11
+    err
+
+main_f_route@11:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub f
+    uncover 2
+    itob
+    uncover 3
+    swap
+    concat
+    uncover 2
+    itob
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/variables/contracts/transient_state_variable_slots_and_offsets.sol.C.f() -> bytes, uint64, uint64, bytes:
+f:
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
     !
     assert // not payable
     load 5
@@ -76,7 +177,7 @@ main_ternary_merge@9:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
     replace2 32
     store 5
-    intc_0 // 16
+    intc_3 // 16
     bzero
     load 5
     extract 16 16
@@ -85,44 +186,34 @@ main_ternary_merge@9:
     concat
     dup
     len
-    intc_0 // 16
+    intc_3 // 16
     -
-    intc_0 // 16
+    intc_3 // 16
     extract3
     dup
     len
-    intc_0 // 16
+    intc_3 // 16
     <=
     assert // overflow
     b|
     load 5
-    dupn 2
+    pushint 8
+    extract_uint64
+    load 5
+    intc_1 // 0
+    extract_uint64
+    load 5
     extract 32 32
     dup
     len
-    intc_3 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_3 // 32
+    intc_0 // 32
     bzero
     b|
-    uncover 2
-    extract 8 8
-    uncover 3
-    swap
-    concat
-    uncover 2
-    extract 0 8
-    concat
-    swap
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
+    retsub
 
-main_ternary_false@8:
+f_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@9
+    b f_ternary_merge@3

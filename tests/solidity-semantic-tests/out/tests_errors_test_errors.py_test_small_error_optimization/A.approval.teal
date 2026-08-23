@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol.A.approval_program() -> uint64:
 main:
-    intcblock 0 1 8 2
+    intcblock 0 1 2 8
     bytecblock "x" "__ctor_pending"
     pushint 4096
     bzero
@@ -32,42 +32,89 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    b f
+
+main_ternary_false@7:
+    intc_0 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x2d4970c7 // method "__postInit()void", method "f()void"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_f_route@6
+    match main___postInit_route@12 f
     err
 
-main_f_route@6:
+main___postInit_route@12:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "x"
+    intc_2 // 2
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol.A.f() -> void:
+f:
     txn GroupIndex
-    bz main_ternary_false@12
+    bz f_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+f_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
     itob
 
-main_while_top@14:
+f_while_top@4:
     pushint 100
     itob
     dig 1
     b>
-    bz main_after_while@16
-    intc_2 // 8
+    bz f_after_while@6
+    intc_3 // 8
     bzero
     dig 1
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
     extract_uint64
     pushint 255
@@ -75,7 +122,7 @@ main_while_top@14:
     itob
     dup
     bitlen
-    intc_2 // 8
+    intc_3 // 8
     <=
     assert // overflow
     extract 7 1
@@ -89,7 +136,7 @@ main_while_top@14:
     extract_uint16 // on error: invalid array length header
     bytec_0 // "x"
     intc_0 // 0
-    intc_3 // 2
+    intc_2 // 2
     box_extract
     btoi
     bytec_0 // "x"
@@ -109,7 +156,7 @@ main_while_top@14:
     intc_0 // 0
     uncover 2
     box_replace
-    intc_3 // 2
+    intc_2 // 2
     +
     bytec_0 // "x"
     swap
@@ -122,31 +169,13 @@ main_while_top@14:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    b main_while_top@14
+    b f_while_top@4
 
-main_after_while@16:
+f_after_while@6:
     pushbytes 0x34127e13 // method "E()"
     log
     err // E
 
-main_ternary_false@12:
+f_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@13
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
-    intc_0 // 0
-    app_global_put
-    bytec_0 // "x"
-    intc_3 // 2
-    box_create
-    pop
-    intc_1 // 1
-    return
+    b f_ternary_merge@3

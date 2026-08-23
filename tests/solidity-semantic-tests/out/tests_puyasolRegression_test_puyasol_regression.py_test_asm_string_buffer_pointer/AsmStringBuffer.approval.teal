@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.approval_program() -> uint64:
 main:
     intcblock 32 4096 1 0 20480
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0a 0x30 0x010000000000000000 0x151f7c75 0x01 0x30313233343536373839616263646566 0x0000000000000000000000000000000000000000000000000000000000000010
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0a 0x30 0x010000000000000000 0x151f7c75 0x01 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x30313233343536373839616263646566 0x0000000000000000000000000000000000000000000000000000000000000010
     intc_1 // 4096
     bzero
     dup
@@ -29,16 +29,166 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xc20efb90
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub dec
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec 7 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_3 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x486bbad7
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub hex32
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec 7 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@14:
+    intc_3 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x0196268f 0x50b1a0d2 0xcb155b3e // method "dec(uint256)string", method "hex32(uint256)string", method "decInline(uint256)string"
     txna ApplicationArgs 0
-    match main_dec_route@5 main_hex32_route@6 main_decInline_route@7
+    match main_dec_route@19 main_hex32_route@20 main_decInline_route@21
     err
 
-main_decInline_route@7:
+main_decInline_route@21:
     txna ApplicationArgs 1
     dup
     len
@@ -46,13 +196,13 @@ main_decInline_route@7:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@13
+    bz main_ternary_false@27
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@14:
+main_ternary_merge@28:
     !
     assert // not payable
     intc_3 // 0
@@ -60,11 +210,11 @@ main_ternary_merge@14:
     dup
     dig 2
     b==
-    bz main_after_if_else@16
+    bz main_after_if_else@30
     popn 2
     bytec_3 // "0"
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.decInline@33:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.decInline@47:
     dup
     len
     itob
@@ -78,15 +228,15 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     intc_2 // 1
     return
 
-main_after_if_else@16:
+main_after_if_else@30:
     dup
     dig 2
 
-main_while_top@17:
+main_while_top@31:
     dup
     dig 2
     b!=
-    bz main_after_while@19
+    bz main_after_while@33
     uncover 2
     bytec 6 // 0x01
     b+
@@ -95,9 +245,9 @@ main_while_top@17:
     cover 2
     bytec_2 // 0x0a
     b/
-    b main_while_top@17
+    b main_while_top@31
 
-main_after_while@19:
+main_after_while@33:
     pop
     pushint 8
     bzero
@@ -143,7 +293,7 @@ main_after_while@19:
     swap
     pushint 4064
     <=
-    bz main_else_body@21
+    bz main_else_body@35
     dig 2
     dup
     loads
@@ -152,7 +302,7 @@ main_after_while@19:
     replace3
     stores
 
-main_after_if_else@22:
+main_after_if_else@36:
     load 0
     uncover 8
     pushint 31
@@ -186,11 +336,11 @@ main_after_if_else@22:
     store 0
     uncover 5
 
-main_while_top@23:
+main_while_top@37:
     dup
     dig 2
     b!=
-    bz main_after_while@26
+    bz main_after_while@40
     uncover 3
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b+
@@ -249,9 +399,9 @@ main_while_top@23:
     store 0
     bytec_2 // 0x0a
     b/
-    b main_while_top@23
+    b main_while_top@37
 
-main_after_while@26:
+main_after_while@40:
     popn 2
     bury 1
     uncover 3
@@ -262,14 +412,14 @@ main_after_while@26:
     dup
     intc_0 // 32
     >=
-    bz main_ternary_false@28
+    bz main_ternary_false@42
     pop
     loads
     swap
     intc_0 // 32
     extract3
 
-main_ternary_merge@29:
+main_ternary_merge@43:
     dup
     extract 0 24
     pushbytes 0x
@@ -294,7 +444,7 @@ main_ternary_merge@29:
     dup
     cover 2
     <=
-    bz main_ternary_false@31
+    bz main_ternary_false@45
     pop
     swap
     intc_1 // 4096
@@ -303,9 +453,9 @@ main_ternary_merge@29:
     swap
     uncover 2
     extract3
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.decInline@33
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.decInline@47
 
-main_ternary_false@31:
+main_ternary_false@45:
     uncover 2
     intc_1 // 4096
     /
@@ -325,9 +475,9 @@ main_ternary_false@31:
     swap
     extract3
     concat
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.decInline@33
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.decInline@47
 
-main_ternary_false@28:
+main_ternary_false@42:
     swap
     dup
     loads
@@ -345,9 +495,9 @@ main_ternary_false@28:
     swap
     extract3
     concat
-    b main_ternary_merge@29
+    b main_ternary_merge@43
 
-main_else_body@21:
+main_else_body@35:
     dig 2
     dup
     loads
@@ -380,32 +530,20 @@ main_else_body@21:
     extract3
     replace2 0
     stores
-    b main_after_if_else@22
+    b main_after_if_else@36
 
-main_ternary_false@13:
+main_ternary_false@27:
     intc_3 // 0
-    b main_ternary_merge@14
+    b main_ternary_merge@28
 
-main_hex32_route@6:
+main_hex32_route@20:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@37
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@38:
-    !
-    assert // not payable
-    intc_0 // 32
-    itob
-    callsub Str.toHexString
+    callsub hex32
     dup
     len
     itob
@@ -419,28 +557,14 @@ main_ternary_merge@38:
     intc_2 // 1
     return
 
-main_ternary_false@37:
-    intc_3 // 0
-    b main_ternary_merge@38
-
-main_dec_route@5:
+main_dec_route@19:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@42
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@43:
-    !
-    assert // not payable
-    callsub Str.toString
+    callsub dec
     dup
     len
     itob
@@ -453,10 +577,6 @@ main_ternary_merge@43:
     log
     intc_2 // 1
     return
-
-main_ternary_false@42:
-    intc_3 // 0
-    b main_ternary_merge@43
 
 
 // __solfn_65(value: bytes) -> bytes:
@@ -840,7 +960,7 @@ Str.toHexString_while_top@1:
     pushint 8
     -
     extract_uint64
-    bytec 7 // 0x30313233343536373839616263646566
+    bytec 8 // 0x30313233343536373839616263646566
     swap
     intc_2 // 1
     extract3
@@ -867,7 +987,7 @@ Str.toHexString_while_top@1:
     uncover 3
     replace3
     frame_dig -2
-    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000010
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000010
     b/
     dup
     frame_bury -2
@@ -885,7 +1005,7 @@ Str.toHexString_while_top@1:
     pushint 8
     -
     extract_uint64
-    bytec 7 // 0x30313233343536373839616263646566
+    bytec 8 // 0x30313233343536373839616263646566
     swap
     intc_2 // 1
     extract3
@@ -911,7 +1031,7 @@ Str.toHexString_while_top@1:
     replace3
     cover 3
     frame_dig -2
-    bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000010
+    bytec 9 // 0x0000000000000000000000000000000000000000000000000000000000000010
     b/
     frame_bury -2
     bytec 6 // 0x01
@@ -935,3 +1055,50 @@ Str.toHexString_after_while@9:
 Str.toHexString_after_if_else@11:
     assert // hex length insufficient
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.dec(__arc4_v: bytes) -> bytes:
+dec:
+    proto 1 1
+    txn GroupIndex
+    bz dec_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+dec_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub Str.toString
+    retsub
+
+dec_ternary_false@2:
+    intc_3 // 0
+    b dec_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_string_buffer_pointer.sol.AsmStringBuffer.hex32(__arc4_v: bytes) -> bytes:
+hex32:
+    proto 1 1
+    txn GroupIndex
+    bz hex32_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+hex32_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    itob
+    frame_dig -1
+    swap
+    callsub Str.toHexString
+    retsub
+
+hex32_ternary_false@2:
+    intc_3 // 0
+    b hex32_ternary_merge@3

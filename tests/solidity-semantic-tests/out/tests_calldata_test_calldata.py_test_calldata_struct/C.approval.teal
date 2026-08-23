@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/calldata_struct.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1
+    intcblock 32 1 64 0
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -27,18 +28,136 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xf2bc566c
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    intc_2 // 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 128
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    txna ApplicationArgs 1
+    extract 64 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    concat
+    txna ApplicationArgs 1
+    extract 96 32
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 3
+    b|
+    swap
+    cover 2
+    callsub test
+    pop
+    cover 2
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_3 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
     pushbytes 0x5dfb4fa7 // method "test(uint256,(uint256,uint256),uint256)(uint256,uint256)"
     txna ApplicationArgs 0
-    match main_test_route@4
+    match main_test_route@11
     err
 
-main_test_route@4:
+main_test_route@11:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
     txna ApplicationArgs 1
+    dup
     len
     intc_0 // 32
     ==
@@ -46,26 +165,53 @@ main_test_route@4:
     txna ApplicationArgs 2
     dup
     len
-    pushint 64
+    intc_2 // 64
     ==
     assert // invalid number of bytes for S
     txna ApplicationArgs 3
+    dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub test
+    pop
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// __solfn_23(_s: bytes) -> bytes, bytes, bytes:
+L.reverse:
+    proto 1 3
+    frame_dig -1
+    extract 32 32
+    frame_dig -1
+    extract 0 32
+    frame_dig -1
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/calldata_struct.sol.C.test(__arc4__param0: bytes, _s: bytes, __arc4__param2: bytes) -> bytes, bytes, bytes:
+test:
+    proto 3 3
     txn GroupIndex
-    bz main_ternary_false@8
+    bz test_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+test_ternary_merge@3:
     !
     assert // not payable
+    frame_dig -2
     callsub L.reverse
-    pop
+    frame_bury -2
     swap
     dup
     len
@@ -84,25 +230,9 @@ main_ternary_merge@9:
     assert // overflow
     cover 2
     b|
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@8:
-    pushint 0
-    b main_ternary_merge@9
-
-
-// __solfn_23(_s: bytes) -> bytes, bytes, bytes:
-L.reverse:
-    proto 1 3
-    frame_dig -1
-    extract 32 32
-    frame_dig -1
-    extract 0 32
-    frame_dig -1
+    frame_dig -2
     retsub
+
+test_ternary_false@2:
+    intc_3 // 0
+    b test_ternary_merge@3

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/super_in_constructor_assignment.sol.D.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "data"
+    intcblock 1 32 0
+    bytecblock "data" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -31,28 +31,81 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0xcd78b354 // method "f()uint256"
-    txna ApplicationArgs 0
-    match main_f_route@4
-    err
-
-main_f_route@4:
     txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@8:
     !
     assert // not payable
-    intc_1 // 0
+    intc_1 // 32
+    bzero
+    callsub f
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    pushbytes 0xcd78b354 // method "f()uint256"
+    txna ApplicationArgs 0
+    match main_f_route@11
+    err
+
+main_f_route@11:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub f
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/super_in_constructor_assignment.sol.D.f() -> bytes:
+f:
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
     bytec_0 // "data"
     app_global_get_ex
     pushbytes 0x
@@ -60,19 +113,14 @@ main_ternary_merge@9:
     select
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@8:
-    intc_1 // 0
-    b main_ternary_merge@9
+f_ternary_false@2:
+    intc_2 // 0
+    b f_ternary_merge@3

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/struct_storage_ref_local.sol.StructStorageRefLocal.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock "_m" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000420000 0x151f7c75 "inner"
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 "_m" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000420000 "inner"
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -32,42 +32,46 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x22767432 0x8f0951d5 0xa8cf42e6 0xde821d04 // method "__postInit()void", method "bumpDirect(uint256,uint256,uint256)void", method "getDirect(uint256,uint256)(uint256,uint256,uint256)", method "bumpLocal(uint256,uint256,uint256)void", method "getLocal(uint256,uint256)(uint256,uint256,uint256)"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_bumpDirect_route@6 main_getDirect_route@7 main_bumpLocal_route@8 main_getLocal_route@9
-    err
-
-main_getLocal_route@9:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
+    pushbytes 0x117056e2
     ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@15
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@16:
+main_ternary_merge@8:
     !
     assert // not payable
-    swap
-    callsub __solfn_107
-    swap
-    callsub L.get
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    txna ApplicationArgs 1
+    extract 64 32
     dig 2
     len
     intc_0 // 32
@@ -94,22 +98,317 @@ main_ternary_merge@16:
     uncover 3
     uncover 3
     b|
+    callsub bumpDirect
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xa743ddc8
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub getDirect
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
     cover 2
     concat
-    swap
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
-    bytec_3 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@15:
+main_ternary_false@14:
     intc_2 // 0
-    b main_ternary_merge@16
+    b main_ternary_merge@15
 
-main_bumpLocal_route@8:
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x45539d88
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    txna ApplicationArgs 1
+    extract 64 32
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 3
+    dig 1
+    b|
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    dig 2
+    b|
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    uncover 3
+    b|
+    callsub bumpLocal
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0xa8ff75ad
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub getLocal
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x22767432 0x8f0951d5 0xa8cf42e6 0xde821d04 // method "__postInit()void", method "bumpDirect(uint256,uint256,uint256)void", method "getDirect(uint256,uint256)(uint256,uint256,uint256)", method "bumpLocal(uint256,uint256,uint256)void", method "getLocal(uint256,uint256)(uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@33 main_bumpDirect_route@34 main_getDirect_route@35 main_bumpLocal_route@36 main_getLocal_route@37
+    err
+
+main_getLocal_route@37:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub getLocal
+    cover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bumpLocal_route@36:
     txna ApplicationArgs 1
     dup
     len
@@ -124,36 +423,15 @@ main_bumpLocal_route@8:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    cover 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@20
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@21:
-    !
-    assert // not payable
-    swap
-    callsub __solfn_107
-    dup
-    callsub L.checkInit
-    swap
-    uncover 2
-    callsub L.bump
+    callsub bumpLocal
     intc_1 // 1
     return
 
-main_ternary_false@20:
-    intc_2 // 0
-    b main_ternary_merge@21
-
-main_getDirect_route@7:
+main_getDirect_route@35:
     txna ApplicationArgs 1
     dup
     len
@@ -166,72 +444,19 @@ main_getDirect_route@7:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@25
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@26:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dup
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // "_m"
-    concat
-    sha256
-    uncover 2
-    callsub L.get
-    dig 2
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 2
-    dig 3
-    b|
-    dig 2
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 2
-    dig 3
-    b|
-    dig 2
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 2
-    uncover 3
-    b|
+    callsub getDirect
     cover 2
     concat
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@25:
-    intc_2 // 0
-    b main_ternary_merge@26
-
-main_bumpDirect_route@6:
+main_bumpDirect_route@34:
     txna ApplicationArgs 1
     dup
     len
@@ -246,57 +471,27 @@ main_bumpDirect_route@6:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    cover 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@30
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@31:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // "_m"
-    concat
-    sha256
-    swap
-    uncover 2
-    callsub L.bump
+    callsub bumpDirect
     intc_1 // 1
     return
 
-main_ternary_false@30:
-    intc_2 // 0
-    b main_ternary_merge@31
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+main___postInit_route@33:
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_0 // "_m"
-    pushint 2
+    bytec_1 // "_m"
+    intc_3 // 2
     box_create
     pop
     intc_1 // 1
@@ -308,7 +503,7 @@ L.bump:
     proto 3 0
     frame_dig -3
     box_get
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000420000
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000420000
     cover 2
     select
     dup
@@ -385,7 +580,7 @@ L.get:
     concat
     frame_dig -2
     box_get
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000420000
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000420000
     cover 2
     select
     dup
@@ -417,7 +612,7 @@ L.checkInit:
     proto 1 0
     frame_dig -1
     box_get
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000420000
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000420000
     cover 2
     select
     extract 0 32
@@ -447,7 +642,180 @@ __solfn_107:
     -
     intc_0 // 32
     extract3
-    bytec_0 // "_m"
+    bytec_1 // "_m"
     concat
     sha256
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/struct_storage_ref_local.sol.StructStorageRefLocal.bumpDirect(__arc4_id: bytes, __arc4_k: bytes, __arc4_v: bytes) -> void:
+bumpDirect:
+    proto 3 0
+    txn GroupIndex
+    bz bumpDirect_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+bumpDirect_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    frame_dig -3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // "_m"
+    concat
+    sha256
+    frame_dig -2
+    frame_dig -1
+    callsub L.bump
+    retsub
+
+bumpDirect_ternary_false@2:
+    intc_2 // 0
+    b bumpDirect_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/struct_storage_ref_local.sol.StructStorageRefLocal.getDirect(__arc4_id: bytes, __arc4_k: bytes) -> bytes, bytes, bytes:
+getDirect:
+    proto 2 3
+    txn GroupIndex
+    bz getDirect_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getDirect_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // "_m"
+    concat
+    sha256
+    frame_dig -1
+    callsub L.get
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    uncover 3
+    b|
+    retsub
+
+getDirect_ternary_false@2:
+    intc_2 // 0
+    b getDirect_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/struct_storage_ref_local.sol.StructStorageRefLocal.bumpLocal(__arc4_id: bytes, __arc4_k: bytes, __arc4_v: bytes) -> void:
+bumpLocal:
+    proto 3 0
+    txn GroupIndex
+    bz bumpLocal_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+bumpLocal_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -3
+    callsub __solfn_107
+    dup
+    callsub L.checkInit
+    frame_dig -2
+    frame_dig -1
+    callsub L.bump
+    retsub
+
+bumpLocal_ternary_false@2:
+    intc_2 // 0
+    b bumpLocal_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/struct_storage_ref_local.sol.StructStorageRefLocal.getLocal(__arc4_id: bytes, __arc4_k: bytes) -> bytes, bytes, bytes:
+getLocal:
+    proto 2 3
+    txn GroupIndex
+    bz getLocal_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getLocal_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    callsub __solfn_107
+    frame_dig -1
+    callsub L.get
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 3
+    dig 1
+    b|
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    dig 2
+    b|
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    uncover 3
+    b|
+    retsub
+
+getLocal_ternary_false@2:
+    intc_2 // 0
+    b getLocal_ternary_merge@3

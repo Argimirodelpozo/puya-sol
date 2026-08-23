@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/new_review_constructor.sol.NewReviewCtorBase.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x "__ctor_pending" 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x010000 "p:" "s:" TMPL_APPROVAL_NewReviewSpawn TMPL_CLEAR_NewReviewSpawn
+    bytecblock 0x "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:" TMPL_APPROVAL_NewReviewSpawn TMPL_CLEAR_NewReviewSpawn
     pushint 4096
     bzero
     dup
@@ -32,30 +32,34 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0xaa44e9d1 0x216b17e3 // method "__postInit()void", method "rawLibraryValue()uint256", method "child()address"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_rawLibraryValue_route@6 main_child_route@7
-    err
-
-main_child_route@7:
+    pushbytes 0x237b5e96
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@13
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@14:
+main_ternary_merge@8:
     !
     assert // not payable
     intc_0 // 32
     bzero
-    bytec_0 // 0x
-    callsub __storage_read
+    callsub child
+    dup
+    len
+    pushint 20
+    -
+    pushint 20
+    extract3
     concat
     dup
     len
@@ -63,26 +67,46 @@ main_ternary_merge@14:
     -
     intc_0 // 32
     extract3
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@13:
+main_ternary_false@7:
     intc_2 // 0
-    b main_ternary_merge@14
+    b main_ternary_merge@8
 
-main_rawLibraryValue_route@6:
+main_after_if_else@9:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xaa44e9d1 0x216b17e3 // method "__postInit()void", method "rawLibraryValue()uint256", method "child()address"
+    txna ApplicationArgs 0
+    match main___postInit_route@12 main_rawLibraryValue_route@13 main_child_route@14
+    err
+
+main_child_route@14:
+    callsub child
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_rawLibraryValue_route@13:
     txn GroupIndex
-    bz main_ternary_false@18
+    bz main_ternary_false@22
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+main_ternary_merge@23:
     !
     assert // not payable
     load 0
@@ -91,7 +115,7 @@ main_ternary_merge@19:
     callsub __storage_read
     load 0
     store 0
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -101,18 +125,18 @@ main_ternary_merge@19:
     intc_0 // 32
     bzero
     b|
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@18:
+main_ternary_false@22:
     intc_2 // 0
-    b main_ternary_merge@19
+    b main_ternary_merge@23
 
-main___postInit_route@5:
+main___postInit_route@12:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -188,7 +212,7 @@ __storage_read:
     dup
     bytec_0 // ""
     frame_dig -1
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -1
@@ -265,7 +289,7 @@ __storage_read_else_body@4:
 __storage_write:
     proto 2 0
     frame_dig -2
-    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -2
@@ -342,3 +366,33 @@ __storage_write_else_body@2:
     swap
     box_replace
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/new_review_constructor.sol.NewReviewCtorBase.child() -> bytes:
+child:
+    txn GroupIndex
+    bz child_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+child_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    bytec_0 // 0x
+    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    retsub
+
+child_ternary_false@2:
+    intc_2 // 0
+    b child_ternary_merge@3

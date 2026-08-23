@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/this_contract_value.sol.Cee.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "target" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
+    intcblock 1 0 32 2
+    bytecblock 0x151f7c75 "target" 0x0000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -24,13 +24,164 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "target"
-    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_1 // "target"
+    bytec_2 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
     intc_0 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x4420e486
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    callsub register
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xf9fed95a
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 24
+    pushint 24
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    intc_2 // 32
+    bzero
+    swap
+    pushint 24
+    extract_uint64
+    callsub pokeStored
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0xd4b83992
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    callsub target
+    dup
+    len
+    pushint 20
+    -
+    pushint 20
+    extract3
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
     txn OnCompletion
     !
     assert
@@ -38,38 +189,19 @@ main_after_if_else@2:
     assert
     pushbytess 0x8557baaa 0xf2fc575f 0x65215659 // method "register(address)void", method "pokeStored(uint64)uint64", method "target()address"
     txna ApplicationArgs 0
-    match main_register_route@5 main_pokeStored_route@6 main_target_route@7
+    match main_register_route@26 main_pokeStored_route@27 main_target_route@28
     err
 
-main_target_route@7:
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_0 // "target"
-    app_global_get_ex
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    bytec_2 // 0x151f7c75
+main_target_route@28:
+    callsub target
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@13:
-    intc_1 // 0
-    b main_ternary_merge@14
-
-main_pokeStored_route@6:
+main_pokeStored_route@27:
     txna ApplicationArgs 1
     dup
     len
@@ -77,22 +209,70 @@ main_pokeStored_route@6:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    callsub pokeStored
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_register_route@26:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub register
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/this_contract_value.sol.Cee.register(t: bytes) -> void:
+register:
+    proto 1 0
     txn GroupIndex
-    bz main_ternary_false@18
+    bz register_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+register_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "target"
+    frame_dig -1
+    app_global_put
+    retsub
+
+register_ternary_false@2:
+    intc_1 // 0
+    b register_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/this_contract_value.sol.Cee.pokeStored(x: uint64) -> uint64:
+pokeStored:
+    proto 1 1
+    txn GroupIndex
+    bz pokeStored_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pokeStored_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
+    frame_dig -1
     itob
     intc_1 // 0
-    bytec_0 // "target"
+    bytec_1 // "target"
     app_global_get_ex
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     pushint 24
@@ -111,41 +291,33 @@ main_ternary_merge@19:
     itxn LastLog
     extract 4 0
     btoi
-    itob
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@18:
+pokeStored_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@19
+    b pokeStored_ternary_merge@3
 
-main_register_route@5:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/this_contract_value.sol.Cee.target() -> bytes:
+target:
     txn GroupIndex
-    bz main_ternary_false@23
+    bz target_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+target_ternary_merge@3:
     !
     assert // not payable
-    bytec_0 // "target"
-    swap
-    app_global_put
-    intc_0 // 1
-    return
-
-main_ternary_false@23:
     intc_1 // 0
-    b main_ternary_merge@24
+    bytec_1 // "target"
+    app_global_get_ex
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    retsub
+
+target_ternary_false@2:
+    intc_1 // 0
+    b target_ternary_merge@3

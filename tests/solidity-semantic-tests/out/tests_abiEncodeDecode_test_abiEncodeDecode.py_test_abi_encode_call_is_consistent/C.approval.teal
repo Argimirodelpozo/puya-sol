@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_is_consistent.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000 0x33d85810d50c8672 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000 "sideEffectRan" "fPointer" "xstor" 0x172b55f3 0x87b3184a 0xce316b93 0xd38dceec 0x61e7ca43 0x00f784fc 0x692353b1 0xf96c0244 0xa326be91
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000 0x33d85810d50c8672 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000 "sideEffectRan" "fPointer" "xstor" 0x172b55f3 0x87b3184a 0xce316b93 0xd38dceec 0x61e7ca43 0x00f784fc 0x692353b1 0xf96c0244 0xa326be91
     pushint 4096
     bzero
     dup
@@ -24,288 +24,833 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 5 // "sideEffectRan"
-    intc_1 // 0
+    bytec 6 // "sideEffectRan"
+    intc_2 // 0
     app_global_put
-    bytec 6 // "fPointer"
+    bytec 7 // "fPointer"
     pushbytes 0x00000000000000000000000000000000
     app_global_put
-    bytec 7 // "xstor"
+    bytec 8 // "xstor"
     pushbytes 0x
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytes 0xd50c8672 // method "fExternal(uint256,string)void"
-    bytec 8 // method "getExternalFunctionPointer()byte[16]"
-    bytec 9 // method "fSignatureFromLiteral()byte[]"
-    bytec 10 // method "fSignatureFromLiteralCall()byte[]"
-    bytec 11 // method "fSignatureFromMemory()byte[]"
-    bytec 12 // method "fSignatureFromMemoryCall()byte[]"
-    bytec 13 // method "fSignatureFromMemorys()byte[]"
-    bytec 14 // method "fPointerCall()byte[]"
-    bytec 15 // method "fLocalPointerCall()byte[]"
-    bytec 16 // method "fReturnedFunctionPointer()byte[]"
-    pushbytes 0xb2fd8e38 // method "assertConsistentSelectors()void"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_fExternal_route@5 main_getExternalFunctionPointer_route@6 main_fSignatureFromLiteral_route@7 main_fSignatureFromLiteralCall_route@8 main_fSignatureFromMemory_route@9 main_fSignatureFromMemoryCall_route@10 main_fSignatureFromMemorys_route@11 main_fPointerCall_route@12 main_fLocalPointerCall_route@13 main_fReturnedFunctionPointer_route@14 main_assertConsistentSelectors_route@15
-    err
+    pushbytes 0x33d85810
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-main_assertConsistentSelectors_route@15:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    dig 1
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    uncover 2
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    pushint 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    dup2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    uncover 3
+    uncover 3
+    extract3
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    b|
+    swap
+    callsub fExternal
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xbc010e47
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub fSignatureFromLiteral
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x5480443f
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
     bz main_ternary_false@21
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 main_ternary_merge@22:
     !
     assert // not payable
-    callsub fSignatureFromLiteral
-    keccak256
+    intc_0 // 32
+    bzero
     callsub fSignatureFromLiteralCall
-    keccak256
-    ==
     dup
-    bnz main_after_if_else@24
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@24:
-    assert
-    callsub fSignatureFromMemory
-    keccak256
-    callsub fSignatureFromMemoryCall
-    keccak256
-    ==
+    len
     dup
-    bnz main_after_if_else@26
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@26:
-    assert
-    callsub fSignatureFromMemorys
-    keccak256
-    callsub fSignatureFromMemoryCall
-    keccak256
-    ==
+    itob
+    uncover 3
+    swap
+    concat
     dup
-    bnz main_after_if_else@28
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
     log
-
-main_after_if_else@28:
-    assert
-    callsub fSignatureFromLiteral
-    keccak256
-    callsub fPointerCall
-    keccak256
-    ==
-    dup
-    bnz main_after_if_else@30
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@30:
-    assert
-    callsub fSignatureFromLiteral
-    keccak256
-    callsub fLocalPointerCall
-    keccak256
-    ==
-    dup
-    bnz main_after_if_else@32
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@32:
-    assert
-    callsub fSignatureFromLiteral
-    keccak256
-    callsub fReturnedFunctionPointer
-    keccak256
-    ==
-    dup
-    bnz main_after_if_else@34
-    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@34:
+    intc_1 // 1
     return
 
 main_ternary_false@21:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@22
 
-main_fReturnedFunctionPointer_route@14:
-    callsub fReturnedFunctionPointer
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x9928aa5c
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-main_fLocalPointerCall_route@13:
-    callsub fLocalPointerCall
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_fPointerCall_route@12:
-    callsub fPointerCall
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_fSignatureFromMemorys_route@11:
-    callsub fSignatureFromMemorys
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_fSignatureFromMemoryCall_route@10:
-    callsub fSignatureFromMemoryCall
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_fSignatureFromMemory_route@9:
+main_ternary_merge@29:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
     callsub fSignatureFromMemory
     dup
     len
+    dup
     itob
-    extract 6 2
+    uncover 3
     swap
     concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_fSignatureFromLiteralCall_route@8:
-    callsub fSignatureFromLiteralCall
     dup
     len
-    itob
-    extract 6 2
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
     swap
     concat
-    bytec_0 // 0x151f7c75
-    swap
     concat
-    log
-    intc_0 // 1
-    return
-
-main_fSignatureFromLiteral_route@7:
-    callsub fSignatureFromLiteral
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_getExternalFunctionPointer_route@6:
-    callsub getExternalFunctionPointer
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_fExternal_route@5:
-    txna ApplicationArgs 1
-    len
-    pushint 32
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    pushint 2
-    +
-    swap
-    len
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0x3576719d
     ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub fSignatureFromMemoryCall
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_2 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
+    bnz main_after_if_else@44
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@44
+    txna ApplicationArgs 0
+    pushbytes 0xe4b36a00
+    ==
+    bz main_after_if_else@44
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub fSignatureFromMemorys
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@42:
+    intc_2 // 0
+    b main_ternary_merge@43
+
+main_after_if_else@44:
+    txn OnCompletion
+    bnz main_after_if_else@51
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@51
+    txna ApplicationArgs 0
+    pushbytes 0x2c2e3816
+    ==
+    bz main_after_if_else@51
+    txn GroupIndex
+    bz main_ternary_false@49
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@50:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub fPointerCall
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@49:
+    intc_2 // 0
+    b main_ternary_merge@50
+
+main_after_if_else@51:
+    txn OnCompletion
+    bnz main_after_if_else@58
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@58
+    txna ApplicationArgs 0
+    pushbytes 0xd490318a
+    ==
+    bz main_after_if_else@58
     txn GroupIndex
     bz main_ternary_false@56
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
 main_ternary_merge@57:
     !
     assert // not payable
-    intc_0 // 1
+    intc_0 // 32
+    bzero
+    callsub fLocalPointerCall
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
     return
 
 main_ternary_false@56:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@57
+
+main_after_if_else@58:
+    txn OnCompletion
+    bnz main_after_if_else@65
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@65
+    txna ApplicationArgs 0
+    pushbytes 0xc627918f
+    ==
+    bz main_after_if_else@65
+    txn GroupIndex
+    bz main_ternary_false@63
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@64:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub fReturnedFunctionPointer
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@63:
+    intc_2 // 0
+    b main_ternary_merge@64
+
+main_after_if_else@65:
+    txn OnCompletion
+    bnz main_after_if_else@72
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@72
+    txna ApplicationArgs 0
+    pushbytes 0x3d3df1f1
+    ==
+    bz main_after_if_else@72
+    txn GroupIndex
+    bz main_ternary_false@70
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@71:
+    !
+    assert // not payable
+    callsub assertConsistentSelectors
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@70:
+    intc_2 // 0
+    b main_ternary_merge@71
+
+main_after_if_else@72:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytes 0xd50c8672 // method "fExternal(uint256,string)void"
+    bytec 9 // method "getExternalFunctionPointer()byte[16]"
+    bytec 10 // method "fSignatureFromLiteral()byte[]"
+    bytec 11 // method "fSignatureFromLiteralCall()byte[]"
+    bytec 12 // method "fSignatureFromMemory()byte[]"
+    bytec 13 // method "fSignatureFromMemoryCall()byte[]"
+    bytec 14 // method "fSignatureFromMemorys()byte[]"
+    bytec 15 // method "fPointerCall()byte[]"
+    bytec 16 // method "fLocalPointerCall()byte[]"
+    bytec 17 // method "fReturnedFunctionPointer()byte[]"
+    pushbytes 0xb2fd8e38 // method "assertConsistentSelectors()void"
+    txna ApplicationArgs 0
+    match main_fExternal_route@75 main_getExternalFunctionPointer_route@76 main_fSignatureFromLiteral_route@77 main_fSignatureFromLiteralCall_route@78 main_fSignatureFromMemory_route@79 main_fSignatureFromMemoryCall_route@80 main_fSignatureFromMemorys_route@81 main_fPointerCall_route@82 main_fLocalPointerCall_route@83 main_fReturnedFunctionPointer_route@84 main_assertConsistentSelectors_route@85
+    err
+
+main_assertConsistentSelectors_route@85:
+    callsub assertConsistentSelectors
+    intc_1 // 1
+    return
+
+main_fReturnedFunctionPointer_route@84:
+    callsub fReturnedFunctionPointer
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_fLocalPointerCall_route@83:
+    callsub fLocalPointerCall
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_fPointerCall_route@82:
+    callsub fPointerCall
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_fSignatureFromMemorys_route@81:
+    callsub fSignatureFromMemorys
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_fSignatureFromMemoryCall_route@80:
+    callsub fSignatureFromMemoryCall
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_fSignatureFromMemory_route@79:
+    callsub fSignatureFromMemory
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_fSignatureFromLiteralCall_route@78:
+    callsub fSignatureFromLiteralCall
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_fSignatureFromLiteral_route@77:
+    callsub fSignatureFromLiteral
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_getExternalFunctionPointer_route@76:
+    callsub getExternalFunctionPointer
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_fExternal_route@75:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    callsub fExternal
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_is_consistent.sol.C.fExternal(__arc4_p: bytes, t: bytes) -> void:
+fExternal:
+    proto 2 0
+    txn GroupIndex
+    bz fExternal_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+fExternal_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+fExternal_ternary_false@2:
+    intc_2 // 0
+    b fExternal_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_is_consistent.sol.C.getExternalFunctionPointer() -> bytes:
@@ -313,13 +858,13 @@ getExternalFunctionPointer:
     txn NumAppArgs
     bz getExternalFunctionPointer_after_if_else@6
     txna ApplicationArgs 0
-    bytec 8 // method "getExternalFunctionPointer()byte[16]"
+    bytec 9 // method "getExternalFunctionPointer()byte[16]"
     ==
     bz getExternalFunctionPointer_after_if_else@6
     txn GroupIndex
     bz getExternalFunctionPointer_ternary_false@4
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -328,17 +873,17 @@ getExternalFunctionPointer_ternary_merge@5:
     assert // not payable
 
 getExternalFunctionPointer_after_if_else@6:
-    bytec 5 // "sideEffectRan"
-    intc_0 // 1
+    bytec 6 // "sideEffectRan"
+    intc_1 // 1
     app_global_put
     global CurrentApplicationID
     itob
-    bytec_3 // 0x33d85810d50c8672
+    bytec 4 // 0x33d85810d50c8672
     concat
     retsub
 
 getExternalFunctionPointer_ternary_false@4:
-    intc_1 // 0
+    intc_2 // 0
     b getExternalFunctionPointer_ternary_merge@5
 
 
@@ -347,13 +892,13 @@ fSignatureFromLiteral:
     txn NumAppArgs
     bz fSignatureFromLiteral_after_if_else@6
     txna ApplicationArgs 0
-    bytec 9 // method "fSignatureFromLiteral()byte[]"
+    bytec 10 // method "fSignatureFromLiteral()byte[]"
     ==
     bz fSignatureFromLiteral_after_if_else@6
     txn GroupIndex
     bz fSignatureFromLiteral_ternary_false@4
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -362,11 +907,11 @@ fSignatureFromLiteral_ternary_merge@5:
     assert // not payable
 
 fSignatureFromLiteral_after_if_else@6:
-    bytec_2 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
     retsub
 
 fSignatureFromLiteral_ternary_false@4:
-    intc_1 // 0
+    intc_2 // 0
     b fSignatureFromLiteral_ternary_merge@5
 
 
@@ -375,13 +920,13 @@ fSignatureFromLiteralCall:
     txn NumAppArgs
     bz fSignatureFromLiteralCall_after_if_else@6
     txna ApplicationArgs 0
-    bytec 10 // method "fSignatureFromLiteralCall()byte[]"
+    bytec 11 // method "fSignatureFromLiteralCall()byte[]"
     ==
     bz fSignatureFromLiteralCall_after_if_else@6
     txn GroupIndex
     bz fSignatureFromLiteralCall_ternary_false@4
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -390,11 +935,11 @@ fSignatureFromLiteralCall_ternary_merge@5:
     assert // not payable
 
 fSignatureFromLiteralCall_after_if_else@6:
-    bytec_2 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
     retsub
 
 fSignatureFromLiteralCall_ternary_false@4:
-    intc_1 // 0
+    intc_2 // 0
     b fSignatureFromLiteralCall_ternary_merge@5
 
 
@@ -403,13 +948,13 @@ fSignatureFromMemory:
     txn NumAppArgs
     bz fSignatureFromMemory_after_if_else@6
     txna ApplicationArgs 0
-    bytec 11 // method "fSignatureFromMemory()byte[]"
+    bytec 12 // method "fSignatureFromMemory()byte[]"
     ==
     bz fSignatureFromMemory_after_if_else@6
     txn GroupIndex
     bz fSignatureFromMemory_ternary_false@4
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -418,11 +963,11 @@ fSignatureFromMemory_ternary_merge@5:
     assert // not payable
 
 fSignatureFromMemory_after_if_else@6:
-    bytec_2 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
     retsub
 
 fSignatureFromMemory_ternary_false@4:
-    intc_1 // 0
+    intc_2 // 0
     b fSignatureFromMemory_ternary_merge@5
 
 
@@ -431,13 +976,13 @@ fSignatureFromMemoryCall:
     txn NumAppArgs
     bz fSignatureFromMemoryCall_after_if_else@6
     txna ApplicationArgs 0
-    bytec 12 // method "fSignatureFromMemoryCall()byte[]"
+    bytec 13 // method "fSignatureFromMemoryCall()byte[]"
     ==
     bz fSignatureFromMemoryCall_after_if_else@6
     txn GroupIndex
     bz fSignatureFromMemoryCall_ternary_false@4
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -446,11 +991,11 @@ fSignatureFromMemoryCall_ternary_merge@5:
     assert // not payable
 
 fSignatureFromMemoryCall_after_if_else@6:
-    bytec_2 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
     retsub
 
 fSignatureFromMemoryCall_ternary_false@4:
-    intc_1 // 0
+    intc_2 // 0
     b fSignatureFromMemoryCall_ternary_merge@5
 
 
@@ -459,13 +1004,13 @@ fSignatureFromMemorys:
     txn NumAppArgs
     bz fSignatureFromMemorys_after_if_else@6
     txna ApplicationArgs 0
-    bytec 13 // method "fSignatureFromMemorys()byte[]"
+    bytec 14 // method "fSignatureFromMemorys()byte[]"
     ==
     bz fSignatureFromMemorys_after_if_else@6
     txn GroupIndex
     bz fSignatureFromMemorys_ternary_false@4
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -474,14 +1019,14 @@ fSignatureFromMemorys_ternary_merge@5:
     assert // not payable
 
 fSignatureFromMemorys_after_if_else@6:
-    bytec 7 // "xstor"
+    bytec 8 // "xstor"
     pushbytes "fExternal(uint256,string)"
     app_global_put
-    bytec_2 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
     retsub
 
 fSignatureFromMemorys_ternary_false@4:
-    intc_1 // 0
+    intc_2 // 0
     b fSignatureFromMemorys_ternary_merge@5
 
 
@@ -490,13 +1035,13 @@ fPointerCall:
     txn NumAppArgs
     bz fPointerCall_after_if_else@6
     txna ApplicationArgs 0
-    bytec 14 // method "fPointerCall()byte[]"
+    bytec 15 // method "fPointerCall()byte[]"
     ==
     bz fPointerCall_after_if_else@6
     txn GroupIndex
     bz fPointerCall_ternary_false@4
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -507,18 +1052,18 @@ fPointerCall_ternary_merge@5:
 fPointerCall_after_if_else@6:
     global CurrentApplicationID
     itob
-    bytec_3 // 0x33d85810d50c8672
+    bytec 4 // 0x33d85810d50c8672
     concat
-    bytec 6 // "fPointer"
+    bytec 7 // "fPointer"
     dig 1
     app_global_put
     extract 8 4
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
     concat
     retsub
 
 fPointerCall_ternary_false@4:
-    intc_1 // 0
+    intc_2 // 0
     b fPointerCall_ternary_merge@5
 
 
@@ -527,13 +1072,13 @@ fLocalPointerCall:
     txn NumAppArgs
     bz fLocalPointerCall_after_if_else@6
     txna ApplicationArgs 0
-    bytec 15 // method "fLocalPointerCall()byte[]"
+    bytec 16 // method "fLocalPointerCall()byte[]"
     ==
     bz fLocalPointerCall_after_if_else@6
     txn GroupIndex
     bz fLocalPointerCall_ternary_false@4
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -544,15 +1089,15 @@ fLocalPointerCall_ternary_merge@5:
 fLocalPointerCall_after_if_else@6:
     global CurrentApplicationID
     itob
-    bytec_3 // 0x33d85810d50c8672
+    bytec 4 // 0x33d85810d50c8672
     concat
     extract 8 4
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
     concat
     retsub
 
 fLocalPointerCall_ternary_false@4:
-    intc_1 // 0
+    intc_2 // 0
     b fLocalPointerCall_ternary_merge@5
 
 
@@ -561,13 +1106,13 @@ fReturnedFunctionPointer:
     txn NumAppArgs
     bz fReturnedFunctionPointer_after_if_else@6
     txna ApplicationArgs 0
-    bytec 16 // method "fReturnedFunctionPointer()byte[]"
+    bytec 17 // method "fReturnedFunctionPointer()byte[]"
     ==
     bz fReturnedFunctionPointer_after_if_else@6
     txn GroupIndex
     bz fReturnedFunctionPointer_ternary_false@4
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -578,10 +1123,101 @@ fReturnedFunctionPointer_ternary_merge@5:
 fReturnedFunctionPointer_after_if_else@6:
     callsub getExternalFunctionPointer
     extract 8 4
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
     concat
     retsub
 
 fReturnedFunctionPointer_ternary_false@4:
-    intc_1 // 0
+    intc_2 // 0
     b fReturnedFunctionPointer_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_is_consistent.sol.C.assertConsistentSelectors() -> void:
+assertConsistentSelectors:
+    txn GroupIndex
+    bz assertConsistentSelectors_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+assertConsistentSelectors_ternary_merge@3:
+    !
+    assert // not payable
+    callsub fSignatureFromLiteral
+    keccak256
+    callsub fSignatureFromLiteralCall
+    keccak256
+    ==
+    dup
+    bnz assertConsistentSelectors_after_if_else@5
+    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+assertConsistentSelectors_after_if_else@5:
+    assert
+    callsub fSignatureFromMemory
+    keccak256
+    callsub fSignatureFromMemoryCall
+    keccak256
+    ==
+    dup
+    bnz assertConsistentSelectors_after_if_else@7
+    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+assertConsistentSelectors_after_if_else@7:
+    assert
+    callsub fSignatureFromMemorys
+    keccak256
+    callsub fSignatureFromMemoryCall
+    keccak256
+    ==
+    dup
+    bnz assertConsistentSelectors_after_if_else@9
+    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+assertConsistentSelectors_after_if_else@9:
+    assert
+    callsub fSignatureFromLiteral
+    keccak256
+    callsub fPointerCall
+    keccak256
+    ==
+    dup
+    bnz assertConsistentSelectors_after_if_else@11
+    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+assertConsistentSelectors_after_if_else@11:
+    assert
+    callsub fSignatureFromLiteral
+    keccak256
+    callsub fLocalPointerCall
+    keccak256
+    ==
+    dup
+    bnz assertConsistentSelectors_after_if_else@13
+    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+assertConsistentSelectors_after_if_else@13:
+    assert
+    callsub fSignatureFromLiteral
+    keccak256
+    callsub fReturnedFunctionPointer
+    keccak256
+    ==
+    dup
+    bnz assertConsistentSelectors_after_if_else@15
+    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+assertConsistentSelectors_after_if_else@15:
+    assert
+    retsub
+
+assertConsistentSelectors_ternary_false@2:
+    intc_2 // 0
+    b assertConsistentSelectors_ternary_merge@3

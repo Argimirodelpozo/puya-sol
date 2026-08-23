@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/crosscontract_keyed_getter.sol.Store.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
-    bytecblock 0x151f7c75 "arr" "__ctor_pending" 0x "plain" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "mNarrow" 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8 0xac7e8dda9d622b1fd0caaeb828ae111e32c0dbe6c0c46094a23c4cdc18a92984
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 "arr" "__ctor_pending" 0x "mNarrow" 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "plain" 0x0a66d4c55a632c25611d03de6342530f3d662fb51f87c68658ffe15265c618b8 0xac7e8dda9d622b1fd0caaeb828ae111e32c0dbe6c0c46094a23c4cdc18a92984
     pushint 4096
     bzero
     dup
@@ -32,40 +32,80 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x100b7c32 0x8338d04b 0x854bd74d 0x051b943c 0x1fedf7a1 // method "__postInit()void", method "seed()void", method "m(uint256)uint256", method "mNarrow(uint128)uint256", method "arr(uint256)uint256", method "plain()uint256"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_seed_route@6 main_m_route@7 main_mNarrow_route@8 main_arr_route@9 main_plain_route@10
-    err
-
-main_plain_route@10:
+    pushbytes 0x7d94792a
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@16
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@17:
+main_ternary_merge@8:
     !
     assert // not payable
+    callsub seed
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
     intc_2 // 0
-    bytec 4 // "plain"
-    app_global_get_ex
-    bytec_3 // 0x
-    cover 2
-    select
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x6e9410b6
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
     intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 32
-    bzero
+    dig 1
     b|
+    callsub m
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -73,17 +113,21 @@ main_ternary_merge@17:
     intc_1 // 1
     return
 
-main_ternary_false@16:
+main_ternary_false@14:
     intc_2 // 0
-    b main_ternary_merge@17
+    b main_ternary_merge@15
 
-main_arr_route@9:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x51e41a92
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
     bz main_ternary_false@21
     txn GroupIndex
@@ -94,25 +138,47 @@ main_arr_route@9:
 main_ternary_merge@22:
     !
     assert // not payable
-    intc_2 // 0
-    bytec_1 // "arr"
-    app_global_get_ex
-    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    intc_3 // 8
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 16
+    pushint 16
     bzero
-    uncover 2
+    swap
+    dig 1
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    intc_0 // 32
+    bzero
+    dig 1
+    uncover 3
     concat
     dup
     len
-    intc_3 // 8
+    pushint 16
     -
-    extract_uint64
+    pushint 16
+    extract3
+    dup
+    len
+    pushint 16
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    callsub mNarrow
+    concat
+    dup
+    len
     intc_0 // 32
-    *
+    -
     intc_0 // 32
-    extract3 // on error: index access is out of bounds
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -124,27 +190,44 @@ main_ternary_false@21:
     intc_2 // 0
     b main_ternary_merge@22
 
-main_mNarrow_route@8:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 16
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint128
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x71e5ee5f
+    ==
+    bz main_after_if_else@30
     txn GroupIndex
-    bz main_ternary_false@26
+    bz main_ternary_false@28
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@27:
+main_ternary_merge@29:
     !
     assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
     intc_0 // 32
     bzero
+    txna ApplicationArgs 1
+    extract 0 32
     dup
-    uncover 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub arr
     concat
     dup
     len
@@ -152,19 +235,6 @@ main_ternary_merge@27:
     -
     intc_0 // 32
     extract3
-    bytec 6 // "mNarrow"
-    concat
-    sha256
-    box_get
-    bytec_3 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    b|
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -172,51 +242,80 @@ main_ternary_merge@27:
     intc_1 // 1
     return
 
-main_ternary_false@26:
+main_ternary_false@28:
     intc_2 // 0
-    b main_ternary_merge@27
+    b main_ternary_merge@29
 
-main_m_route@7:
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0x59748c98
+    ==
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub plain
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_2 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x100b7c32 0x8338d04b 0x854bd74d 0x051b943c 0x1fedf7a1 // method "__postInit()void", method "seed()void", method "m(uint256)uint256", method "mNarrow(uint128)uint256", method "arr(uint256)uint256", method "plain()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@40 main_seed_route@41 main_m_route@42 main_mNarrow_route@43 main_arr_route@44 main_plain_route@45
+    err
+
+main_plain_route@45:
+    callsub plain
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_arr_route@44:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@31
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@32:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dup
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes "m"
-    concat
-    sha256
-    box_get
-    bytec_3 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    b|
+    callsub arr
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -224,19 +323,82 @@ main_ternary_merge@32:
     intc_1 // 1
     return
 
-main_ternary_false@31:
-    intc_2 // 0
-    b main_ternary_merge@32
+main_mNarrow_route@43:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 16
+    ==
+    assert // invalid number of bytes for arc4.uint128
+    callsub mNarrow
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
-main_seed_route@6:
+main_m_route@42:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub m
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_seed_route@41:
+    callsub seed
+    intc_1 // 1
+    return
+
+main___postInit_route@40:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_2 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    pushbytes "m"
+    intc_3 // 2
+    box_create
+    pop
+    bytec 4 // "mNarrow"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_1 // "arr"
+    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    pushint 77
+    itob
+    bytec 6 // "plain"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/crosscontract_keyed_getter.sol.Store.seed() -> void:
+seed:
     txn GroupIndex
-    bz main_ternary_false@36
+    bz seed_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@37:
+seed_ternary_merge@3:
     !
     assert // not payable
     pushint 500
@@ -264,39 +426,168 @@ main_ternary_merge@37:
     bytec_1 // "arr"
     swap
     app_global_put
+    retsub
+
+seed_ternary_false@2:
+    intc_2 // 0
+    b seed_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/crosscontract_keyed_getter.sol.Store.m(__arc4_key0: bytes) -> bytes:
+m:
+    proto 1 1
+    txn GroupIndex
+    bz m_ternary_false@2
+    txn GroupIndex
     intc_1 // 1
-    return
+    -
+    gtxns Amount
 
-main_ternary_false@36:
-    intc_2 // 0
-    b main_ternary_merge@37
-
-main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
+m_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     pushbytes "m"
-    pushint 2
-    box_create
-    pop
-    bytec 6 // "mNarrow"
-    pushint 2
-    box_create
-    pop
-    bytec_1 // "arr"
-    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
-    pushint 77
-    itob
-    bytec 4 // "plain"
-    swap
-    app_global_put
+    concat
+    sha256
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    retsub
+
+m_ternary_false@2:
+    intc_2 // 0
+    b m_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/crosscontract_keyed_getter.sol.Store.mNarrow(__arc4_key0: bytes) -> bytes:
+mNarrow:
+    proto 1 1
+    txn GroupIndex
+    bz mNarrow_ternary_false@2
+    txn GroupIndex
     intc_1 // 1
-    return
+    -
+    gtxns Amount
+
+mNarrow_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "mNarrow"
+    concat
+    sha256
+    box_get
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    retsub
+
+mNarrow_ternary_false@2:
+    intc_2 // 0
+    b mNarrow_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/crosscontract_keyed_getter.sol.Store.arr(__arc4_key0: bytes) -> bytes:
+arr:
+    proto 1 1
+    txn GroupIndex
+    bz arr_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+arr_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_1 // "arr"
+    app_global_get_ex
+    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushint 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    retsub
+
+arr_ternary_false@2:
+    intc_2 // 0
+    b arr_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/crosscontract_keyed_getter.sol.Store.plain() -> bytes:
+plain:
+    txn GroupIndex
+    bz plain_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+plain_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec 6 // "plain"
+    app_global_get_ex
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+plain_ternary_false@2:
+    intc_2 // 0
+    b plain_ternary_merge@3

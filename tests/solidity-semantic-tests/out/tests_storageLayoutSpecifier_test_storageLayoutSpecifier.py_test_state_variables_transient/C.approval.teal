@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variables_transient.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1
+    intcblock 0 1 2 32
+    bytecblock "x" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -23,7 +24,8 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytess "x" 0x
+    bytec_0 // "x"
+    pushbytes 0x
     app_global_put
     pushbytes "lock"
     intc_0 // 0
@@ -32,25 +34,91 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0xc95a9d21 // method "test()uint256"
-    txna ApplicationArgs 0
-    match main_test_route@4
-    err
-
-main_test_route@4:
     txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
+    bnz main_after_if_else@12
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@12
+    txna ApplicationArgs 0
+    pushbytes 0xf8a8fd6d
+    ==
+    bz main_after_if_else@12
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub test
+    dup
+    intc_0 // 0
+    getbyte
+    pushint 128
+    >=
+    bz main_ternary_false@10
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@11:
+    swap
+    dup
+    len
+    intc_3 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@10:
+    intc_3 // 32
+    bzero
+    b main_ternary_merge@11
+
+main_ternary_false@7:
+    intc_0 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@12:
+    pushbytes 0xc95a9d21 // method "test()uint256"
+    txna ApplicationArgs 0
+    match main_test_route@14
+    err
+
+main_test_route@14:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub test
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variables_transient.sol.C.test() -> bytes:
+test:
+    txn GroupIndex
+    bz test_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@3:
     !
     assert // not payable
     load 5
@@ -68,16 +136,14 @@ main_ternary_merge@9:
     !=
     !
     assert
-    pushint 2
+    intc_2 // 2
     itob
-    pushbytes "x"
+    bytec_0 // "x"
     swap
     app_global_put
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
-    log
-    intc_1 // 1
-    return
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    retsub
 
-main_ternary_false@8:
+test_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@9
+    b test_ternary_merge@3

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_oob_index.sol.ArrayOOB.approval_program() -> uint64:
 main:
-    intcblock 32 1 8 0 6400
-    bytecblock "mbArr" 0x010000000000000000 0x151f7c75 "sArr" "__ctor_pending" "fArr" 0x0000000000000000000000000000000000000000000000000000000000000001
+    intcblock 32 1 0 8 6400
+    bytecblock 0x151f7c75 "mbArr" 0x010000000000000000 "sArr" "__ctor_pending" "fArr" 0x0000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
     dup
@@ -32,241 +32,295 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x0b60fc8a 0x57c27500 0xeb5867ab 0x9adae811 0x2b19a32a 0xc2c08b51 0x1049faf1 // method "__postInit()void", method "storageOOB(uint256)uint256", method "memOOB(uint256)uint256", method "fixedOOB(uint256)uint256", method "memWriteOOB(uint256)uint256", method "mbReadOOB(uint256)uint256", method "mbWriteOOB(uint256)uint256", method "inBounds(uint256)uint256"
-    txna ApplicationArgs 0
-    match main___postInit_route@5 main_storageOOB_route@6 main_memOOB_route@7 main_fixedOOB_route@8 main_memWriteOOB_route@9 main_mbReadOOB_route@10 main_mbWriteOOB_route@11 main_inBounds_route@12
-    err
-
-main_inBounds_route@12:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    intc_2 // 8
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    intc_0 // 32
-    *
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000000000000000000000000000000000000000000c
-    swap
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@18:
-    intc_3 // 0
-    b main_ternary_merge@19
-
-main_mbWriteOOB_route@11:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@23
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@24:
-    !
-    assert // not payable
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    bytec_0 // "mbArr"
-    box_len
-    bury 1
-    bnz main_after_if_else@26
-    bytec_0 // "mbArr"
-    intc 4 // 6400
-    box_create
-    pop
-
-main_after_if_else@26:
-    intc_2 // 8
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    intc_0 // 32
-    *
-    bytec_0 // "mbArr"
-    swap
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
-    box_replace // on error: index out of bounds
-    bytec_0 // "mbArr"
-    intc_3 // 0
-    intc_0 // 32
-    box_extract // on error: index out of bounds
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@23:
-    intc_3 // 0
-    b main_ternary_merge@24
-
-main_mbReadOOB_route@10:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@30
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@31:
-    !
-    assert // not payable
-    bytec_0 // "mbArr"
-    box_len
-    bury 1
-    bnz main_after_if_else@33
-    bytec_0 // "mbArr"
-    intc 4 // 6400
-    box_create
-    pop
-
-main_after_if_else@33:
-    bytec_0 // "mbArr"
-    intc_3 // 0
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000001
-    box_replace // on error: index out of bounds
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    intc_2 // 8
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    intc_0 // 32
-    *
-    bytec_0 // "mbArr"
-    swap
-    intc_0 // 32
-    box_extract // on error: index out of bounds
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@30:
-    intc_3 // 0
-    b main_ternary_merge@31
-
-main_memWriteOOB_route@9:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@37
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@38:
-    !
-    assert // not payable
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    intc_2 // 8
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    intc_0 // 32
-    *
+    bnz main_after_if_else@9
+    txn NumAppArgs
     pushint 2
-    +
-    pushbytes 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    swap
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
-    replace3 // on error: index access is out of bounds
-    extract 2 32
-    bytec_2 // 0x151f7c75
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x073d05e2
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub storageOOB
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@37:
-    intc_3 // 0
-    b main_ternary_merge@38
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
 
-main_fixedOOB_route@8:
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xcd713f28
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
     txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
     intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub memOOB
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    pushint 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x8080ba33
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub fixedOOB
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x63f4b56c
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub memWriteOOB
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0x967b726b
+    ==
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub mbReadOOB
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_2 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
+    bnz main_after_if_else@44
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@44
+    txna ApplicationArgs 0
+    pushbytes 0xb0d7278f
+    ==
+    bz main_after_if_else@44
     txn GroupIndex
     bz main_ternary_false@42
     txn GroupIndex
@@ -277,38 +331,31 @@ main_fixedOOB_route@8:
 main_ternary_merge@43:
     !
     assert // not payable
-    intc_3 // 0
-    bytec 5 // "fArr"
-    app_global_get_ex
-    assert // state exists
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000001
-    replace2 0 // on error: index access is out of bounds
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
-    replace2 32 // on error: index access is out of bounds
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
-    replace2 64 // on error: index access is out of bounds
-    bytec 5 // "fArr"
-    dig 1
-    app_global_put
-    swap
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    intc_2 // 8
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
     bzero
-    swap
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub mbWriteOOB
     concat
     dup
     len
-    intc_2 // 8
+    intc_0 // 32
     -
-    extract_uint64
     intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    bytec_2 // 0x151f7c75
+    extract3
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -316,124 +363,182 @@ main_ternary_merge@43:
     return
 
 main_ternary_false@42:
-    intc_3 // 0
+    intc_2 // 0
     b main_ternary_merge@43
 
-main_memOOB_route@7:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@47
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@48:
-    !
-    assert // not payable
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    intc_2 // 8
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    intc_0 // 32
-    *
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000000000000000000006
-    swap
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@47:
-    intc_3 // 0
-    b main_ternary_merge@48
-
-main_storageOOB_route@6:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@52
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@53:
-    !
-    assert // not payable
-    bytec_3 // "sArr"
-    box_del
-    pop
-    bytec_3 // "sArr"
-    pushbytes 0x0000
-    box_put
-    bytec_3 // "sArr"
-    intc_3 // 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
-    intc_1 // 1
-    intc_0 // 32
-    callsub box_dynamic_array_concat_fixed
-    bytec_3 // "sArr"
-    intc_3 // 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
-    intc_1 // 1
-    intc_0 // 32
-    callsub box_dynamic_array_concat_fixed
-    dup
-    bytec_1 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    intc_2 // 8
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    intc_0 // 32
-    *
+main_after_if_else@44:
+    txn OnCompletion
+    bnz main_after_if_else@51
+    txn NumAppArgs
     pushint 2
-    +
-    bytec_3 // "sArr"
-    swap
+    ==
+    bz main_after_if_else@51
+    txna ApplicationArgs 0
+    pushbytes 0x0a1d8326
+    ==
+    bz main_after_if_else@51
+    txn GroupIndex
+    bz main_ternary_false@49
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@50:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
     intc_0 // 32
-    box_extract // on error: index out of bounds
-    bytec_2 // 0x151f7c75
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub inBounds
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@52:
-    intc_3 // 0
-    b main_ternary_merge@53
+main_ternary_false@49:
+    intc_2 // 0
+    b main_ternary_merge@50
 
-main___postInit_route@5:
+main_after_if_else@51:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x0b60fc8a 0x57c27500 0xeb5867ab 0x9adae811 0x2b19a32a 0xc2c08b51 0x1049faf1 // method "__postInit()void", method "storageOOB(uint256)uint256", method "memOOB(uint256)uint256", method "fixedOOB(uint256)uint256", method "memWriteOOB(uint256)uint256", method "mbReadOOB(uint256)uint256", method "mbWriteOOB(uint256)uint256", method "inBounds(uint256)uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@54 main_storageOOB_route@55 main_memOOB_route@56 main_fixedOOB_route@57 main_memWriteOOB_route@58 main_mbReadOOB_route@59 main_mbWriteOOB_route@60 main_inBounds_route@61
+    err
+
+main_inBounds_route@61:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub inBounds
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_mbWriteOOB_route@60:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub mbWriteOOB
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_mbReadOOB_route@59:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub mbReadOOB
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_memWriteOOB_route@58:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub memWriteOOB
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_fixedOOB_route@57:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub fixedOOB
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_memOOB_route@56:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub memOOB
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_storageOOB_route@55:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub storageOOB
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main___postInit_route@54:
     bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -442,13 +547,13 @@ main___postInit_route@5:
     ==
     assert // __postInit callable only by the app creator
     bytec 4 // "__ctor_pending"
-    intc_3 // 0
+    intc_2 // 0
     app_global_put
     bytec_3 // "sArr"
     pushint 2
     box_create
     pop
-    bytec_0 // "mbArr"
+    bytec_1 // "mbArr"
     intc 4 // 6400
     box_create
     pop
@@ -495,7 +600,342 @@ box_dynamic_array_concat_fixed:
     +
     frame_dig -5
     swap
-    intc_3 // 0
+    intc_2 // 0
     frame_dig -3
     box_splice
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_oob_index.sol.ArrayOOB.storageOOB(__arc4_i: bytes) -> bytes:
+storageOOB:
+    proto 1 1
+    txn GroupIndex
+    bz storageOOB_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+storageOOB_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_3 // "sArr"
+    box_del
+    pop
+    bytec_3 // "sArr"
+    pushbytes 0x0000
+    box_put
+    bytec_3 // "sArr"
+    intc_2 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
+    intc_1 // 1
+    intc_0 // 32
+    callsub box_dynamic_array_concat_fixed
+    bytec_3 // "sArr"
+    intc_2 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
+    intc_1 // 1
+    intc_0 // 32
+    callsub box_dynamic_array_concat_fixed
+    frame_dig -1
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    bytec_3 // "sArr"
+    swap
+    intc_0 // 32
+    box_extract // on error: index out of bounds
+    retsub
+
+storageOOB_ternary_false@2:
+    intc_2 // 0
+    b storageOOB_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_oob_index.sol.ArrayOOB.memOOB(__arc4_i: bytes) -> bytes:
+memOOB:
+    proto 1 1
+    txn GroupIndex
+    bz memOOB_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+memOOB_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000000000000000000006
+    swap
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    retsub
+
+memOOB_ternary_false@2:
+    intc_2 // 0
+    b memOOB_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_oob_index.sol.ArrayOOB.fixedOOB(__arc4_i: bytes) -> bytes:
+fixedOOB:
+    proto 1 1
+    txn GroupIndex
+    bz fixedOOB_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+fixedOOB_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec 5 // "fArr"
+    app_global_get_ex
+    assert // state exists
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000001
+    replace2 0 // on error: index access is out of bounds
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    replace2 32 // on error: index access is out of bounds
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
+    replace2 64 // on error: index access is out of bounds
+    bytec 5 // "fArr"
+    dig 1
+    app_global_put
+    frame_dig -1
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    retsub
+
+fixedOOB_ternary_false@2:
+    intc_2 // 0
+    b fixedOOB_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_oob_index.sol.ArrayOOB.memWriteOOB(__arc4_i: bytes) -> bytes:
+memWriteOOB:
+    proto 1 1
+    txn GroupIndex
+    bz memWriteOOB_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+memWriteOOB_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    pushint 2
+    +
+    pushbytes 0x000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    replace3 // on error: index access is out of bounds
+    extract 2 32
+    retsub
+
+memWriteOOB_ternary_false@2:
+    intc_2 // 0
+    b memWriteOOB_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_oob_index.sol.ArrayOOB.mbReadOOB(__arc4_i: bytes) -> bytes:
+mbReadOOB:
+    proto 1 1
+    txn GroupIndex
+    bz mbReadOOB_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+mbReadOOB_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "mbArr"
+    box_len
+    bury 1
+    bnz mbReadOOB_after_if_else@5
+    bytec_1 // "mbArr"
+    intc 4 // 6400
+    box_create
+    pop
+
+mbReadOOB_after_if_else@5:
+    bytec_1 // "mbArr"
+    intc_2 // 0
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000001
+    box_replace // on error: index out of bounds
+    frame_dig -1
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    bytec_1 // "mbArr"
+    swap
+    intc_0 // 32
+    box_extract // on error: index out of bounds
+    retsub
+
+mbReadOOB_ternary_false@2:
+    intc_2 // 0
+    b mbReadOOB_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_oob_index.sol.ArrayOOB.mbWriteOOB(__arc4_i: bytes) -> bytes:
+mbWriteOOB:
+    proto 1 1
+    txn GroupIndex
+    bz mbWriteOOB_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+mbWriteOOB_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_1 // "mbArr"
+    box_len
+    bury 1
+    bnz mbWriteOOB_after_if_else@5
+    bytec_1 // "mbArr"
+    intc 4 // 6400
+    box_create
+    pop
+
+mbWriteOOB_after_if_else@5:
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    bytec_1 // "mbArr"
+    swap
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
+    box_replace // on error: index out of bounds
+    bytec_1 // "mbArr"
+    intc_2 // 0
+    intc_0 // 32
+    box_extract // on error: index out of bounds
+    retsub
+
+mbWriteOOB_ternary_false@2:
+    intc_2 // 0
+    b mbWriteOOB_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_oob_index.sol.ArrayOOB.inBounds(__arc4_i: bytes) -> bytes:
+inBounds:
+    proto 1 1
+    txn GroupIndex
+    bz inBounds_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+inBounds_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    bytec_2 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000000000000000000000000000000000000000000c
+    swap
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    retsub
+
+inBounds_ternary_false@2:
+    intc_2 // 0
+    b inBounds_ternary_merge@3

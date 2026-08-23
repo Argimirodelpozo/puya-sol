@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_function_pointers.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 8 32
-    bytecblock 0x010000000000000000 0x0000 0x00020000 0x000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000
+    intcblock 32 1 0 8
+    bytecblock 0x010000000000000000 0x0000 0x151f7c75 0x0000000000000000 0x00020000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -29,40 +29,77 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x084b8cf3 0x14aa8760 0x4ec4569c 0xe05a4b62 // method "f(uint256,uint256)void", method "f2(uint256,uint256,uint256,uint256)void", method "g(uint256,uint256)void", method "g2(uint256,uint256,uint256,uint256)void"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_f_route@5 main_f2_route@6 main_g_route@7 main_g2_route@8
-    err
+    pushbytes 0x13d1aa2e
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-main_g2_route@8:
+main_ternary_merge@8:
+    !
+    assert // not payable
     txna ApplicationArgs 1
-    dup
     len
-    intc_3 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
     len
-    intc_3 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 3
-    dup
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
     len
-    intc_3 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 4
-    dup
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 2
+    dig 1
+    b|
+    dig 2
     len
-    intc_3 // 32
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    callsub f
+    bytec_2 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    pushint 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x13f7c893
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -73,540 +110,342 @@ main_g2_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    intc_2 // 8
-    bzero
-    dup
-    cover 5
-    dig 4
-    concat
-    dup
+    txna ApplicationArgs 1
     len
-    intc_2 // 8
-    -
-    extract_uint64
-    cover 5
-    intc_0 // 0
-    itob
-    bytec_1 // 0x0000
-    swap
-    intc_0 // 0
-
-main_while_top@16:
-    dup
-    dig 9
-    <
-    bz main_after_while@18
-    uncover 2
-    bytec_2 // 0x00020000
-    intc_1 // 1
-    callsub dynamic_array_concat_dynamic_element
-    cover 2
-    intc_1 // 1
-    +
-    b main_while_top@16
-
-main_after_while@18:
-    pop
-    uncover 7
-    pop
-    swap
-    cover 5
-
-main_while_top@19:
-    dup
-    dig 5
-    b<
-    bz main_after_while@24
-    dig 6
-    dig 4
-    concat
-    dup
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
     len
-    intc_2 // 8
-    -
-    extract_uint64
-    cover 6
-    bytec_1 // 0x0000
-    cover 4
-    intc_0 // 0
-
-main_while_top@21:
-    dup
-    dig 9
-    <
-    bz main_after_while@23
-    uncover 5
-    dup
-    intc_0 // 0
-    extract_uint16
-    intc_1 // 1
-    +
-    itob
-    extract 6 0
-    replace2 0
-    bytec_3 // 0x000000000000000000000000
-    concat
-    cover 5
-    intc_1 // 1
-    +
-    b main_while_top@21
-
-main_after_while@23:
-    pop
-    uncover 7
-    pop
-    dup
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    dig 7
-    dig 1
-    concat
-    dup
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
     len
-    intc_2 // 8
-    -
-    extract_uint64
-    uncover 7
-    uncover 6
-    uncover 2
-    callsub dynamic_array_replace_dynamic_element
-    cover 5
-    pushbytes 0x01
-    b+
-    dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    b main_while_top@19
-
-main_after_while@24:
-    pop
-    uncover 2
-    pop
-    uncover 2
-    pop
-    swap
-    dup
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    dig 1
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    uncover 3
-    dup
-    uncover 2
-    concat
-    dup
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
     len
-    intc_2 // 8
-    -
-    extract_uint64
-    swap
-    uncover 2
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    uncover 2
-    dup
-    intc_0 // 0
-    extract_uint16
+    pushint 128
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    txna ApplicationArgs 1
+    extract 64 32
+    txna ApplicationArgs 1
+    extract 96 32
     dig 3
-    >
-    assert // index out of bounds
-    extract 2 0
-    uncover 2
-    pushint 2
-    *
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 4
     dig 1
-    swap
-    extract_uint16
-    dup2
-    extract_uint16
-    pushint 12
-    *
-    pushint 2
-    +
-    extract3
-    extract 2 0
-    swap
-    pushint 12
-    *
-    pushint 12
-    extract3 // on error: index access is out of bounds
-    dup
-    intc_0 // 0
-    extract_uint64
-    dup
-    global CurrentApplicationID
-    ==
-    !
-    assert // unknown function selector in self-call dispatch
-    itxn_begin
-    swap
-    extract 8 4
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationArgs
-    itxn_field ApplicationID
-    itxn_submit
+    b|
+    dig 4
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    dig 4
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    dig 3
+    b|
+    dig 4
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    uncover 4
+    b|
+    callsub f2
+    bytec_2 // 0x151f7c75
+    log
     intc_1 // 1
     return
 
 main_ternary_false@14:
-    intc_0 // 0
+    intc_2 // 0
     b main_ternary_merge@15
 
-main_g_route@7:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_3 // 32
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    pushint 2
     ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_3 // 32
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x1cd65ae4
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@23
     txn GroupIndex
-    bz main_ternary_false@31
+    bz main_ternary_false@21
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@32:
+main_ternary_merge@22:
     !
     assert // not payable
-    intc_2 // 8
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
     bzero
-    dup
-    cover 2
-    uncover 3
-    concat
-    dup
+    uncover 2
+    dig 1
+    b|
+    dig 2
     len
-    intc_2 // 8
-    -
-    extract_uint64
-    swap
-    bytec_1 // 0x0000
-    swap
-    intc_0 // 0
-
-main_while_top@33:
-    dup
-    dig 4
-    <
-    bz main_after_while@35
-    uncover 2
-    dup
-    intc_0 // 0
-    extract_uint16
-    intc_1 // 1
-    +
-    itob
-    extract 6 0
-    replace2 0
-    bytec_3 // 0x000000000000000000000000
-    concat
+    intc_0 // 32
+    <=
+    assert // overflow
     cover 2
-    intc_1 // 1
-    +
-    b main_while_top@33
-
-main_after_while@35:
-    pop
-    uncover 2
-    pop
-    dup
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    swap
-    extract 2 0
-    swap
-    pushint 12
-    *
-    pushint 12
-    extract3 // on error: index access is out of bounds
-    dup
-    intc_0 // 0
-    extract_uint64
-    dup
-    global CurrentApplicationID
-    ==
-    !
-    assert // unknown function selector in self-call dispatch
-    itxn_begin
-    swap
-    extract 8 4
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationArgs
-    itxn_field ApplicationID
-    itxn_submit
+    b|
+    callsub g
+    bytec_2 // 0x151f7c75
+    log
     intc_1 // 1
     return
 
-main_ternary_false@31:
-    intc_0 // 0
-    b main_ternary_merge@32
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
 
-main_f2_route@6:
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x88c93a0a
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 128
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    txna ApplicationArgs 1
+    extract 64 32
+    txna ApplicationArgs 1
+    extract 96 32
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 4
+    dig 1
+    b|
+    dig 4
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    dig 2
+    b|
+    dig 4
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    dig 3
+    b|
+    dig 4
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    uncover 4
+    b|
+    callsub g2
+    bytec_2 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x084b8cf3 0x14aa8760 0x4ec4569c 0xe05a4b62 // method "f(uint256,uint256)void", method "f2(uint256,uint256,uint256,uint256)void", method "g(uint256,uint256)void", method "g2(uint256,uint256,uint256,uint256)void"
+    txna ApplicationArgs 0
+    match main_f_route@33 main_f2_route@34 main_g_route@35 main_g2_route@36
+    err
+
+main_g2_route@36:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
     len
-    intc_3 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 4
     dup
     len
-    intc_3 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@42
-    txn GroupIndex
+    callsub g2
     intc_1 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@43:
-    !
-    assert // not payable
-    intc_2 // 8
-    bzero
-    dup
-    cover 5
-    dig 4
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    cover 5
-    intc_0 // 0
-    itob
-    bytec_1 // 0x0000
-    swap
-    intc_0 // 0
-
-main_while_top@44:
-    dup
-    dig 9
-    <
-    bz main_after_while@46
-    uncover 2
-    bytec_2 // 0x00020000
-    intc_1 // 1
-    callsub dynamic_array_concat_dynamic_element
-    cover 2
-    intc_1 // 1
-    +
-    b main_while_top@44
-
-main_after_while@46:
-    pop
-    uncover 7
-    pop
-    swap
-    cover 4
-
-main_while_top@47:
-    dup
-    dig 6
-    b<
-    bz main_after_while@52
-    dig 6
-    dig 4
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    cover 6
-    bytec_1 // 0x0000
-    cover 5
-    intc_0 // 0
-
-main_while_top@49:
-    dup
-    dig 9
-    <
-    bz main_after_while@51
-    uncover 6
-    dup
-    intc_0 // 0
-    extract_uint16
-    intc_1 // 1
-    +
-    itob
-    extract 6 0
-    replace2 0
-    bytec 5 // 0x0000000000000000
-    concat
-    cover 6
-    intc_1 // 1
-    +
-    b main_while_top@49
-
-main_after_while@51:
-    pop
-    uncover 7
-    pop
-    dup
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    dig 7
-    dig 1
-    concat
-    dup
-    len
-    intc_2 // 8
-    -
-    extract_uint64
-    uncover 5
-    uncover 6
-    uncover 2
-    callsub dynamic_array_replace_dynamic_element
-    cover 4
-    pushbytes 0x01
-    b+
-    dup
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    b main_while_top@47
-
-main_after_while@52:
-    pop
-    swap
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    err // invalid function pointer
-
-main_ternary_false@42:
-    intc_0 // 0
-    b main_ternary_merge@43
-
-main_f_route@5:
+main_g_route@35:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_3 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@56
-    txn GroupIndex
+    callsub g
     intc_1 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@57:
-    !
-    assert // not payable
-    intc_2 // 8
-    bzero
-    uncover 2
-    concat
+main_f2_route@34:
+    txna ApplicationArgs 1
     dup
     len
-    intc_2 // 8
-    -
-    extract_uint64
-    swap
-    bytec_1 // 0x0000
-    intc_0 // 0
-
-main_while_top@58:
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
     dup
-    dig 4
-    <
-    bz main_after_while@60
-    swap
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 3
     dup
-    intc_0 // 0
-    extract_uint16
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub f2
     intc_1 // 1
-    +
-    itob
-    extract 6 0
-    replace2 0
-    bytec 5 // 0x0000000000000000
-    concat
-    swap
+    return
+
+main_f_route@33:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub f
     intc_1 // 1
-    +
-    b main_while_top@58
-
-main_after_while@60:
-    popn 2
-    bytec_0 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    err // invalid function pointer
-
-main_ternary_false@56:
-    intc_0 // 0
-    b main_ternary_merge@57
+    return
 
 
 // _puya_lib.arc4.dynamic_array_concat_dynamic_element(array: bytes, new_head_and_tail: bytes, new_items_count: uint64) -> bytes:
 dynamic_array_concat_dynamic_element:
     proto 3 1
     frame_dig -3
-    intc_0 // 0
+    intc_2 // 0
     extract_uint16
     dup
     frame_dig -1
@@ -624,7 +463,7 @@ dynamic_array_concat_dynamic_element:
     pushint 2
     *
     cover 2
-    intc_0 // 0
+    intc_2 // 0
     cover 4
 
 dynamic_array_concat_dynamic_element_for_header@1:
@@ -654,7 +493,7 @@ dynamic_array_concat_dynamic_element_after_for@4:
     dup
     len
     swap
-    intc_0 // 0
+    intc_2 // 0
     frame_bury 0
 
 dynamic_array_concat_dynamic_element_for_header@5:
@@ -737,7 +576,7 @@ dynamic_array_replace_dynamic_element:
     -
     cover 7
     dig 4
-    intc_0 // 0
+    intc_2 // 0
     uncover 2
     substring3
     frame_dig -2
@@ -782,3 +621,488 @@ dynamic_array_replace_dynamic_element_after_for@5:
     concat
     frame_bury 0
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_function_pointers.sol.C.f(__arc4_n: bytes, __arc4_m: bytes) -> void:
+f:
+    proto 2 0
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    intc_3 // 8
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    bytec_1 // 0x0000
+    intc_2 // 0
+
+f_while_top@4:
+    dup
+    dig 3
+    <
+    bz f_after_while@6
+    swap
+    dup
+    intc_2 // 0
+    extract_uint16
+    intc_1 // 1
+    +
+    itob
+    extract 6 0
+    replace2 0
+    bytec_3 // 0x0000000000000000
+    concat
+    swap
+    intc_1 // 1
+    +
+    b f_while_top@4
+
+f_after_while@6:
+    frame_dig -1
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    err // invalid function pointer
+
+f_ternary_false@2:
+    intc_2 // 0
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_function_pointers.sol.C.f2(__arc4_n: bytes, __arc4_m: bytes, __arc4_a: bytes, __arc4_b: bytes) -> void:
+f2:
+    proto 4 0
+    txn GroupIndex
+    bz f2_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f2_ternary_merge@3:
+    !
+    assert // not payable
+    intc_3 // 8
+    bzero
+    dup
+    frame_dig -4
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    swap
+    intc_2 // 0
+    itob
+    bytec_1 // 0x0000
+    swap
+    intc_2 // 0
+
+f2_while_top@4:
+    dup
+    dig 5
+    <
+    bz f2_after_while@6
+    uncover 2
+    bytec 4 // 0x00020000
+    intc_1 // 1
+    callsub dynamic_array_concat_dynamic_element
+    cover 2
+    intc_1 // 1
+    +
+    b f2_while_top@4
+
+f2_after_while@6:
+    pop
+    uncover 3
+    pop
+
+f2_while_top@7:
+    dup
+    frame_dig -4
+    b<
+    bz f2_after_while@12
+    dig 2
+    frame_dig -3
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    cover 2
+    bytec_1 // 0x0000
+    cover 2
+    intc_2 // 0
+
+f2_while_top@9:
+    dup
+    dig 5
+    <
+    bz f2_after_while@11
+    uncover 3
+    dup
+    intc_2 // 0
+    extract_uint16
+    intc_1 // 1
+    +
+    itob
+    extract 6 0
+    replace2 0
+    bytec_3 // 0x0000000000000000
+    concat
+    cover 3
+    intc_1 // 1
+    +
+    b f2_while_top@9
+
+f2_after_while@11:
+    pop
+    uncover 3
+    pop
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 3
+    dig 1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    uncover 2
+    uncover 3
+    uncover 2
+    callsub dynamic_array_replace_dynamic_element
+    swap
+    pushbytes 0x01
+    b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b f2_while_top@7
+
+f2_after_while@12:
+    frame_dig -2
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    frame_dig -1
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    err // invalid function pointer
+
+f2_ternary_false@2:
+    intc_2 // 0
+    b f2_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_function_pointers.sol.C.g(__arc4_n: bytes, __arc4_m: bytes) -> void:
+g:
+    proto 2 0
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    intc_3 // 8
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    bytec_1 // 0x0000
+    intc_2 // 0
+
+g_while_top@4:
+    dup
+    dig 3
+    <
+    bz g_after_while@6
+    swap
+    dup
+    intc_2 // 0
+    extract_uint16
+    intc_1 // 1
+    +
+    itob
+    extract 6 0
+    replace2 0
+    bytec 6 // 0x000000000000000000000000
+    concat
+    swap
+    intc_1 // 1
+    +
+    b g_while_top@4
+
+g_after_while@6:
+    pop
+    bury 1
+    frame_dig -1
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    swap
+    extract 2 0
+    swap
+    pushint 12
+    *
+    pushint 12
+    extract3 // on error: index access is out of bounds
+    dup
+    intc_2 // 0
+    extract_uint64
+    dup
+    global CurrentApplicationID
+    ==
+    !
+    assert // unknown function selector in self-call dispatch
+    itxn_begin
+    swap
+    extract 8 4
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    itxn_submit
+    retsub
+
+g_ternary_false@2:
+    intc_2 // 0
+    b g_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_function_pointers.sol.C.g2(__arc4_n: bytes, __arc4_m: bytes, __arc4_a: bytes, __arc4_b: bytes) -> void:
+g2:
+    proto 4 0
+    txn GroupIndex
+    bz g2_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g2_ternary_merge@3:
+    !
+    assert // not payable
+    intc_3 // 8
+    bzero
+    dup
+    frame_dig -4
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    swap
+    intc_2 // 0
+    itob
+    bytec_1 // 0x0000
+    swap
+    intc_2 // 0
+
+g2_while_top@4:
+    dup
+    dig 5
+    <
+    bz g2_after_while@6
+    uncover 2
+    bytec 4 // 0x00020000
+    intc_1 // 1
+    callsub dynamic_array_concat_dynamic_element
+    cover 2
+    intc_1 // 1
+    +
+    b g2_while_top@4
+
+g2_after_while@6:
+    pop
+    uncover 3
+    pop
+
+g2_while_top@7:
+    dup
+    frame_dig -4
+    b<
+    bz g2_after_while@12
+    dig 2
+    frame_dig -3
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    cover 3
+    bytec_1 // 0x0000
+    cover 2
+    intc_2 // 0
+
+g2_while_top@9:
+    dup
+    dig 6
+    <
+    bz g2_after_while@11
+    uncover 3
+    dup
+    intc_2 // 0
+    extract_uint16
+    intc_1 // 1
+    +
+    itob
+    extract 6 0
+    replace2 0
+    bytec 6 // 0x000000000000000000000000
+    concat
+    cover 3
+    intc_1 // 1
+    +
+    b g2_while_top@9
+
+g2_after_while@11:
+    pop
+    uncover 4
+    pop
+    dup
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 3
+    dig 1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    uncover 2
+    uncover 3
+    uncover 2
+    callsub dynamic_array_replace_dynamic_element
+    swap
+    pushbytes 0x01
+    b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b g2_while_top@7
+
+g2_after_while@12:
+    pop
+    frame_dig -2
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    frame_dig -1
+    bytec_0 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    swap
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    uncover 2
+    dup
+    intc_2 // 0
+    extract_uint16
+    dig 3
+    >
+    assert // index out of bounds
+    extract 2 0
+    uncover 2
+    pushint 2
+    *
+    dig 1
+    swap
+    extract_uint16
+    dup2
+    extract_uint16
+    pushint 12
+    *
+    pushint 2
+    +
+    extract3
+    extract 2 0
+    swap
+    pushint 12
+    *
+    pushint 12
+    extract3 // on error: index access is out of bounds
+    dup
+    intc_2 // 0
+    extract_uint64
+    dup
+    global CurrentApplicationID
+    ==
+    !
+    assert // unknown function selector in self-call dispatch
+    itxn_begin
+    swap
+    extract 8 4
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    itxn_submit
+    retsub
+
+g2_ternary_false@2:
+    intc_2 // 0
+    b g2_ternary_merge@3

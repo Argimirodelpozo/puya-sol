@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 8
+    intcblock 32 1 0 2
     bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x7e9f4949 0x2930a603 0xd8ea6643 0x27775eea 0xc7619fcb
     pushint 4096
     bzero
@@ -29,6 +29,358 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xf0fdf834
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub a
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xcd580ff3
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub b
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x4f8dd50d
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub c
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x7f6b590c
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub d
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0xf37cdc8e
+    ==
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub e
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_2 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
+    bnz main_after_if_else@44
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@44
+    txna ApplicationArgs 0
+    pushbytes 0xeb8ac921
+    ==
+    bz main_after_if_else@44
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub test
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@42:
+    intc_2 // 0
+    b main_ternary_merge@43
+
+main_after_if_else@44:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
@@ -40,10 +392,10 @@ main_after_if_else@2:
     bytec 6 // method "e(uint256)uint256"
     pushbytes 0x5b15d901 // method "test(uint256,uint256)uint256"
     txna ApplicationArgs 0
-    match main_a_route@5 main_b_route@6 main_c_route@7 main_d_route@8 main_e_route@9 main_test_route@10
+    match main_a_route@47 main_b_route@48 main_c_route@49 main_d_route@50 main_e_route@51 main_test_route@52
     err
 
-main_test_route@10:
+main_test_route@52:
     txna ApplicationArgs 1
     dup
     len
@@ -52,56 +404,11 @@ main_test_route@10:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    cover 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@16
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@17:
-    !
-    assert // not payable
-    swap
-    dup
-    pushbytes 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    intc_3 // 8
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    intc_3 // 8
-    *
-    pushbytes 0x0000000000000001000000000000000200000000000000030000000000000004000000000000000500000000000000000000000000000000000000000000000000000000000000000000000000000000
-    swap
-    extract_uint64
-    dup
-    pushint 5
-    ==
-    bz main_else_body@20
-    pop
-    callsub e
-
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@27:
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
+    callsub test
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -109,45 +416,7 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     intc_1 // 1
     return
 
-main_else_body@20:
-    dup
-    pushint 4
-    ==
-    bz main_else_body@22
-    pop
-    callsub d
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@27
-
-main_else_body@22:
-    dup
-    pushint 3
-    ==
-    bz main_else_body@24
-    pop
-    callsub c
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@27
-
-main_else_body@24:
-    dup
-    pushint 2
-    ==
-    bz main_else_body@26
-    pop
-    callsub b
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@27
-
-main_else_body@26:
-    intc_1 // 1
-    ==
-    assert // invalid function pointer
-    callsub a
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@27
-
-main_ternary_false@16:
-    intc_2 // 0
-    b main_ternary_merge@17
-
-main_e_route@9:
+main_e_route@51:
     txna ApplicationArgs 1
     dup
     len
@@ -162,7 +431,7 @@ main_e_route@9:
     intc_1 // 1
     return
 
-main_d_route@8:
+main_d_route@50:
     txna ApplicationArgs 1
     dup
     len
@@ -177,7 +446,7 @@ main_d_route@8:
     intc_1 // 1
     return
 
-main_c_route@7:
+main_c_route@49:
     txna ApplicationArgs 1
     dup
     len
@@ -192,7 +461,7 @@ main_c_route@7:
     intc_1 // 1
     return
 
-main_b_route@6:
+main_b_route@48:
     txna ApplicationArgs 1
     dup
     len
@@ -207,7 +476,7 @@ main_b_route@6:
     intc_1 // 1
     return
 
-main_a_route@5:
+main_a_route@47:
     txna ApplicationArgs 1
     dup
     len
@@ -288,7 +557,7 @@ b_ternary_merge@5:
     assert // not payable
 
 b_after_if_else@6:
-    pushint 2
+    intc_3 // 2
     itob
     frame_dig -1
     b+
@@ -420,7 +689,7 @@ e_ternary_merge@5:
     assert // not payable
 
 e_after_if_else@6:
-    intc_3 // 8
+    pushint 8
     itob
     frame_dig -1
     b+
@@ -441,3 +710,96 @@ e_after_if_else@6:
 e_ternary_false@4:
     intc_2 // 0
     b e_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.test(__arc4_x: bytes, __arc4_i: bytes) -> bytes:
+test:
+    proto 2 1
+    txn GroupIndex
+    bz test_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    pushint 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    pushint 8
+    *
+    pushbytes 0x0000000000000001000000000000000200000000000000030000000000000004000000000000000500000000000000000000000000000000000000000000000000000000000000000000000000000000
+    swap
+    extract_uint64
+    dup
+    pushint 5
+    ==
+    bz test_else_body@6
+    pop
+    frame_dig -2
+    callsub e
+
+test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@15:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+test_else_body@6:
+    dup
+    pushint 4
+    ==
+    bz test_else_body@8
+    pop
+    frame_dig -2
+    callsub d
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@15
+
+test_else_body@8:
+    dup
+    pushint 3
+    ==
+    bz test_else_body@10
+    pop
+    frame_dig -2
+    callsub c
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@15
+
+test_else_body@10:
+    dup
+    intc_3 // 2
+    ==
+    bz test_else_body@12
+    pop
+    frame_dig -2
+    callsub b
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@15
+
+test_else_body@12:
+    intc_1 // 1
+    ==
+    assert // invalid function pointer
+    frame_dig -2
+    callsub a
+    b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@15
+
+test_ternary_false@2:
+    intc_2 // 0
+    b test_ternary_merge@3

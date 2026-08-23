@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/external_call_with_function_pointer_parameter.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock 0x82fadf35 0x151f7c75
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 0x82fadf35
     pushint 4096
     bzero
     dup
@@ -29,90 +29,144 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    bytec_0 // method "double(uint256)uint256"
-    pushbytes 0xc14ad39f // method "g(uint256)uint256"
-    txna ApplicationArgs 0
-    match main_double_route@5 main_g_route@6
-    err
-
-main_g_route@6:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xeee97206
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@8:
     !
     assert // not payable
-    global CurrentApplicationID
-    itob
-    bytec_0 // method "double(uint256)uint256"
-    concat
-    dup
-    intc_2 // 0
-    extract_uint64
-    dup
-    global CurrentApplicationID
-    ==
-    bz main_else_body@16
-    pop
-    extract 8 4
-    bytec_0 // method "double(uint256)uint256"
-    ==
-    assert // unknown function selector in self-call dispatch
-    callsub double
-
-main_after_if_else@17:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
     intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 32
-    bzero
+    dig 1
     b|
-    bytec_1 // 0x151f7c75
+    callsub double
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_else_body@16:
-    itxn_begin
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xe420264a
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub g
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
     swap
-    extract 8 4
-    pushint 6
-    itxn_field TypeEnum
-    intc_2 // 0
-    itxn_field OnCompletion
-    intc_2 // 0
-    itxn_field Fee
-    itxn_field ApplicationArgs
-    itxn_field ApplicationID
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    b main_after_if_else@17
+    concat
+    log
+    intc_1 // 1
+    return
 
-main_ternary_false@12:
+main_ternary_false@14:
     intc_2 // 0
-    b main_ternary_merge@13
+    b main_ternary_merge@15
 
-main_double_route@5:
+main_after_if_else@16:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    bytec_1 // method "double(uint256)uint256"
+    pushbytes 0xc14ad39f // method "g(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_double_route@19 main_g_route@20
+    err
+
+main_g_route@20:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub g
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_double_route@19:
     txna ApplicationArgs 1
     dup
     len
@@ -120,7 +174,7 @@ main_double_route@5:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub double
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -161,3 +215,70 @@ double_ternary_merge@3:
 double_ternary_false@2:
     intc_2 // 0
     b double_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/external_call_with_function_pointer_parameter.sol.C.g(__arc4__value: bytes) -> bytes:
+g:
+    proto 1 1
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    global CurrentApplicationID
+    itob
+    bytec_1 // method "double(uint256)uint256"
+    concat
+    dup
+    intc_2 // 0
+    extract_uint64
+    dup
+    global CurrentApplicationID
+    ==
+    bz g_else_body@6
+    pop
+    extract 8 4
+    bytec_1 // method "double(uint256)uint256"
+    ==
+    assert // unknown function selector in self-call dispatch
+    frame_dig -1
+    callsub double
+
+g_after_if_else@8:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+g_else_body@6:
+    itxn_begin
+    swap
+    extract 8 4
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    frame_dig -1
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    b g_after_if_else@8
+
+g_ternary_false@2:
+    intc_2 // 0
+    b g_ternary_merge@3

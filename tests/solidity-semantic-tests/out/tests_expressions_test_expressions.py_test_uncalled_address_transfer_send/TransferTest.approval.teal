@@ -30,56 +30,93 @@ main_if_body@1:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
     txn NumAppArgs
-    bnz main_after_if_else@5
-    txn OnCompletion
-    bz main_if_body@1
-
-main_after_if_else@5:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    bz main_after_if_else@17
-    pushbytess 0x1bf9882b 0x2d4970c7 // method "__fallback()void", method "f()void"
+    pushint 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main___fallback_route@13 main_f_route@14
-
-main_after_if_else@17:
-    intc_1 // 0
-    bury 1
-
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/contracts/uncalled_address_transfer_send.sol.TransferTest.__puya_arc4_router__@18:
-    dup
-    bnz main_after_if_else@8
-    txn OnCompletion
-    bnz main_after_if_else@8
-    intc_0 // 1
-    bury 1
-
-main_after_if_else@8:
-    return
-
-main_f_route@14:
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@21
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@22:
+main_ternary_merge@8:
     !
     assert // not payable
+    callsub f
+    pushbytes 0x151f7c75
+    log
     intc_0 // 1
-    bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/contracts/uncalled_address_transfer_send.sol.TransferTest.__puya_arc4_router__@18
+    return
 
-main_ternary_false@21:
+main_ternary_false@7:
     intc_1 // 0
-    b main_ternary_merge@22
+    b main_ternary_merge@8
 
-main___fallback_route@13:
+main_after_if_else@9:
+    txn NumAppArgs
+    bnz main_after_if_else@12
+    txn OnCompletion
+    bz main_if_body@1
+
+main_after_if_else@12:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    bz main_after_if_else@24
+    pushbytess 0x1bf9882b 0x2d4970c7 // method "__fallback()void", method "f()void"
+    txna ApplicationArgs 0
+    match main___fallback_route@20 main_f_route@21
+
+main_after_if_else@24:
+    intc_1 // 0
+    bury 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/contracts/uncalled_address_transfer_send.sol.TransferTest.__puya_arc4_router__@25:
+    dup
+    bnz main_after_if_else@15
+    txn OnCompletion
+    bnz main_after_if_else@15
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/contracts/uncalled_address_transfer_send.sol.TransferTest.__puya_arc4_router__@18
+
+main_after_if_else@15:
+    return
+
+main_f_route@21:
+    callsub f
+    intc_0 // 1
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/contracts/uncalled_address_transfer_send.sol.TransferTest.__puya_arc4_router__@25
+
+main___fallback_route@20:
+    intc_0 // 1
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/contracts/uncalled_address_transfer_send.sol.TransferTest.__puya_arc4_router__@25
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/expressions/contracts/uncalled_address_transfer_send.sol.TransferTest.f() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+f_ternary_false@2:
+    intc_1 // 0
+    b f_ternary_merge@3

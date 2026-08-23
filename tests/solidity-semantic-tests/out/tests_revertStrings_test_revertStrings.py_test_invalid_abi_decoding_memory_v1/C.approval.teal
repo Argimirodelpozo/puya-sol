@@ -3,8 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/contracts/invalid_abi_decoding_memory_v1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 4096 1 0
-    intc_1 // 4096
+    intcblock 32 1 4096 0
+    bytecblock 0x151f7c75 0x
+    intc_2 // 4096
     bzero
     dup
     store 5
@@ -23,10 +24,98 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xbf06dbf1
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    txna ApplicationArgs 1
+    extract 64 32
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    callsub f
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_3 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
     txn OnCompletion
     !
     assert
@@ -34,10 +123,10 @@ main_after_if_else@2:
     assert
     pushbytess 0x418f84c4 0xcc049d17 // method "dyn(uint256,uint256,uint256)byte[]", method "f(uint256,uint256,uint256)bool"
     txna ApplicationArgs 0
-    match main_dyn_route@5 main_f_route@6
+    match main_dyn_route@12 main_f_route@13
     err
 
-main_f_route@6:
+main_f_route@13:
     txna ApplicationArgs 1
     dup
     len
@@ -56,28 +145,19 @@ main_f_route@6:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@12
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@13:
-    !
-    assert // not payable
-    callsub dyn
-    pop
-    pushbytes 0x151f7c7580
+    callsub f
+    pushbytes 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@12:
-    intc_3 // 0
-    b main_ternary_merge@13
-
-main_dyn_route@5:
+main_dyn_route@12:
     txna ApplicationArgs 1
     dup
     len
@@ -103,11 +183,11 @@ main_dyn_route@5:
     extract 6 2
     swap
     concat
-    pushbytes 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
 
@@ -117,7 +197,7 @@ dyn:
     txn GroupIndex
     bz dyn_ternary_false@2
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -160,10 +240,10 @@ dyn_ternary_merge@3:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_1 // 4096
+    intc_2 // 4096
     /
     cover 2
-    intc_1 // 4096
+    intc_2 // 4096
     %
     dup
     cover 3
@@ -211,7 +291,7 @@ dyn_after_if_else@6:
     -
     extract_uint64
     intc_3 // 0
-    pushbytes 0x
+    bytec_1 // 0x
 
 dyn_while_top@7:
     dig 1
@@ -223,11 +303,11 @@ dyn_while_top@7:
     +
     dup
     cover 3
-    intc_1 // 4096
+    intc_2 // 4096
     %
     dup
     cover 4
-    intc_1 // 4096
+    intc_2 // 4096
     swap
     -
     dup
@@ -236,7 +316,7 @@ dyn_while_top@7:
     bz dyn_ternary_false@10
     pop
     uncover 2
-    intc_1 // 4096
+    intc_2 // 4096
     /
     loads
     uncover 3
@@ -253,7 +333,7 @@ dyn_ternary_merge@11:
 
 dyn_ternary_false@10:
     uncover 3
-    intc_1 // 4096
+    intc_2 // 4096
     /
     dup
     loads
@@ -261,7 +341,7 @@ dyn_ternary_false@10:
     dig 3
     extract3
     swap
-    intc_2 // 1
+    intc_1 // 1
     +
     loads
     intc_0 // 32
@@ -288,7 +368,7 @@ dyn_after_while@12:
     extract 0 32
     dup
     extract 0 24
-    pushbytes 0x
+    bytec_1 // 0x
     b==
     assert // EVM ABI offset exceeds uint64
     pushint 24
@@ -311,7 +391,7 @@ dyn_after_while@12:
     extract3
     dup
     extract 0 24
-    pushbytes 0x
+    bytec_1 // 0x
     b==
     assert // EVM ABI length exceeds uint64
     pushint 24
@@ -335,7 +415,7 @@ dyn_else_body@5:
     swap
     dup
     loads
-    intc_1 // 4096
+    intc_2 // 4096
     uncover 4
     dup
     cover 2
@@ -351,7 +431,7 @@ dyn_else_body@5:
     swap
     stores
     swap
-    intc_2 // 1
+    intc_1 // 1
     +
     dup
     loads
@@ -369,3 +449,29 @@ dyn_else_body@5:
 dyn_ternary_false@2:
     intc_3 // 0
     b dyn_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/contracts/invalid_abi_decoding_memory_v1.sol.C.f(__arc4_ptr: bytes, __arc4_start: bytes, __arc4_x: bytes) -> uint64:
+f:
+    proto 3 1
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    callsub dyn
+    pop
+    intc_1 // 1
+    retsub
+
+f_ternary_false@2:
+    intc_3 // 0
+    b f_ternary_merge@3

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol.A.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 24
-    bytecblock 0x60dfc120
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 0x55241077
     pushint 4096
     bzero
     dup
@@ -31,16 +31,74 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x667d8c6d 0x8359b348 0xc9a303a5 0x75d12918 // method "delegateSetValue(address,uint256)void", method "callSetValue(address,uint256)void", method "staticSetValue(address,uint256)bool", method "value()uint256"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_delegateSetValue_route@5 main_callSetValue_route@6 main_staticSetValue_route@7 main_value_route@8
-    err
+    pushbytes 0xc4307f6a
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-main_value_route@8:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub delegateSetValue
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xfdfa868f
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -49,6 +107,364 @@ main_value_route@8:
     gtxns Amount
 
 main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub callSetValue
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x39fe08bc
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    uncover 2
+    swap
+    callsub staticSetValue
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x3fa4f245
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub value
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x667d8c6d 0x8359b348 0xc9a303a5 0x75d12918 // method "delegateSetValue(address,uint256)void", method "callSetValue(address,uint256)void", method "staticSetValue(address,uint256)bool", method "value()uint256"
+    txna ApplicationArgs 0
+    match main_delegateSetValue_route@33 main_callSetValue_route@34 main_staticSetValue_route@35 main_value_route@36
+    err
+
+main_value_route@36:
+    callsub value
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_staticSetValue_route@35:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub staticSetValue
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_callSetValue_route@34:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub callSetValue
+    intc_1 // 1
+    return
+
+main_delegateSetValue_route@33:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub delegateSetValue
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol.A.delegateSetValue(otherContract: bytes, __arc4_v: bytes) -> void:
+delegateSetValue:
+    proto 2 0
+    txn GroupIndex
+    bz delegateSetValue_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+delegateSetValue_ternary_merge@3:
+    !
+    assert // not payable
+    global Round
+    !
+    assert // delegatecall is not supported on AVM
+    retsub
+
+delegateSetValue_ternary_false@2:
+    intc_2 // 0
+    b delegateSetValue_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol.A.callSetValue(otherContract: bytes, __arc4_v: bytes) -> void:
+callSetValue:
+    proto 2 0
+    txn GroupIndex
+    bz callSetValue_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+callSetValue_ternary_merge@3:
+    !
+    assert // not payable
+    itxn_begin
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -2
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_1 // 0x55241077
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    retsub
+
+callSetValue_ternary_false@2:
+    intc_2 // 0
+    b callSetValue_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol.A.staticSetValue(otherContract: bytes, __arc4_v: bytes) -> uint64:
+staticSetValue:
+    proto 2 1
+    txn GroupIndex
+    bz staticSetValue_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+staticSetValue_ternary_merge@3:
+    !
+    assert // not payable
+    itxn_begin
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -2
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec_1 // 0x55241077
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_1 // 1
+    retsub
+
+staticSetValue_ternary_false@2:
+    intc_2 // 0
+    b staticSetValue_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/different_call_type_transient.sol.A.value() -> bytes:
+value:
+    txn GroupIndex
+    bz value_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+value_ternary_merge@3:
     !
     assert // not payable
     load 5
@@ -61,156 +477,8 @@ main_ternary_merge@15:
     intc_0 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@14:
+value_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@15
-
-main_staticSetValue_route@7:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@19
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@20:
-    !
-    assert // not payable
-    itxn_begin
-    intc_0 // 32
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_3 // 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_2 // 0
-    itxn_field OnCompletion
-    intc_2 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_0 // method "setValue(uint256)"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    pushbytes 0x151f7c7580
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@19:
-    intc_2 // 0
-    b main_ternary_merge@20
-
-main_callSetValue_route@6:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@24
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@25:
-    !
-    assert // not payable
-    itxn_begin
-    intc_0 // 32
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_3 // 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_2 // 0
-    itxn_field OnCompletion
-    intc_2 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    bytec_0 // method "setValue(uint256)"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    intc_1 // 1
-    return
-
-main_ternary_false@24:
-    intc_2 // 0
-    b main_ternary_merge@25
-
-main_delegateSetValue_route@5:
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@29
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@30:
-    !
-    assert // not payable
-    global Round
-    !
-    assert // delegatecall is not supported on AVM
-    intc_1 // 1
-    return
-
-main_ternary_false@29:
-    intc_2 // 0
-    b main_ternary_merge@30
+    b value_ternary_merge@3

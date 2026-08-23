@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_after_storage_array_delete_different_base_type.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "flags" 0x00
+    intcblock 1 0 32 2
+    bytecblock "flags" 0x151f7c75 0x00 0x
     pushint 4096
     bzero
     dup
@@ -27,12 +27,116 @@ main:
     bytec_0 // "flags"
     pushbytes 0xe0
     app_global_put
-    pushbytess "temp" 0x
+    pushbytes "temp"
+    bytec_3 // 0x
     app_global_put
     intc_0 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xf58e8614
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub setAndClear
+    bytec_1 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@19
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@19
+    txna ApplicationArgs 0
+    pushbytes 0x6cc7149d
+    ==
+    bz main_after_if_else@19
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    bytec_3 // 0x
+    intc_1 // 0
+
+main_while_top@16:
+    dup
+    pushint 3
+    <
+    dup
+    bz main_after_while@18
+    intc_2 // 32
+    bzero
+    callsub getFlags
+    uncover 2
+    assert // index access is out of bounds
+    dig 2
+    getbit
+    bytec_2 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    intc_0 // 1
+    +
+    b main_while_top@16
+
+main_after_while@18:
+    popn 2
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@19:
     txn OnCompletion
     !
     assert
@@ -40,18 +144,76 @@ main_after_if_else@2:
     assert
     pushbytess 0x9939b21d 0x66a35e97 // method "setAndClear()void", method "getFlags()bool[3]"
     txna ApplicationArgs 0
-    match main_setAndClear_route@5 main_getFlags_route@6
+    match main_setAndClear_route@22 main_getFlags_route@23
     err
 
-main_getFlags_route@6:
+main_getFlags_route@23:
+    callsub getFlags
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_setAndClear_route@22:
+    callsub setAndClear
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_after_storage_array_delete_different_base_type.sol.C.setAndClear() -> void:
+setAndClear:
     txn GroupIndex
-    bz main_ternary_false@12
+    bz setAndClear_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+setAndClear_ternary_merge@3:
+    !
+    assert // not payable
+    load 5
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000ffffffff
+    replace2 0
+    store 5
+    bytec_0 // "flags"
+    bytec_2 // 0x00
+    app_global_put
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 5
+    load 5
+    extract 0 32
+    intc_1 // 0
+    itob
+    b==
+    dup
+    bnz setAndClear_after_if_else@5
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+setAndClear_after_if_else@5:
+    assert
+    retsub
+
+setAndClear_ternary_false@2:
+    intc_1 // 0
+    b setAndClear_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_after_storage_array_delete_different_base_type.sol.C.getFlags() -> bytes:
+getFlags:
+    txn GroupIndex
+    bz getFlags_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getFlags_ternary_merge@3:
     !
     assert // not payable
     load 0
@@ -69,55 +231,11 @@ main_ternary_merge@13:
     intc_1 // 0
     bytec_0 // "flags"
     app_global_get_ex
-    bytec_1 // 0x00
+    bytec_2 // 0x00
     cover 2
     select
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@12:
+getFlags_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@13
-
-main_setAndClear_route@5:
-    txn GroupIndex
-    bz main_ternary_false@17
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@18:
-    !
-    assert // not payable
-    load 5
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000ffffffff
-    replace2 0
-    store 5
-    bytec_0 // "flags"
-    bytec_1 // 0x00
-    app_global_put
-    load 5
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    replace2 0
-    store 5
-    load 5
-    extract 0 32
-    intc_1 // 0
-    itob
-    b==
-    dup
-    bnz main_after_if_else@20
-    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@20:
-    return
-
-main_ternary_false@17:
-    intc_1 // 0
-    b main_ternary_merge@18
+    b getFlags_ternary_merge@3

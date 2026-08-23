@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/inline_array_with_value_call_option.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 32
-    bytecblock 0xcd78b354 0x4b2c0376 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    intcblock 1 32 0 2
+    bytecblock 0x151f7c75 0xcd78b354 0x4b2c0376 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
     dup
@@ -29,111 +29,122 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@6
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@6
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@6
+    intc_1 // 32
+    bzero
+    callsub f
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_after_if_else@6:
+    txn OnCompletion
+    bnz main_after_if_else@10
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@10
+    txna ApplicationArgs 0
+    pushbytes 0xe2179b8e
+    ==
+    bz main_after_if_else@10
+    intc_1 // 32
+    bzero
+    callsub g
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_after_if_else@10:
+    txn OnCompletion
+    bnz main_after_if_else@14
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@14
+    txna ApplicationArgs 0
+    pushbytes 0xb8c9d365
+    ==
+    bz main_after_if_else@14
+    intc_1 // 32
+    bzero
+    callsub h
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_after_if_else@14:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    bytec_0 // method "f()uint256"
-    bytec_1 // method "g()uint256"
+    bytec_1 // method "f()uint256"
+    bytec_2 // method "g()uint256"
     pushbytes 0xafedb2e5 // method "h()uint256"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6 main_h_route@7
+    match main_f_route@17 main_g_route@18 main_h_route@19
     err
 
-main_h_route@7:
-    global CurrentApplicationID
-    itob
-    bytec_0 // method "f()uint256"
-    concat
-    global CurrentApplicationID
-    itob
-    bytec_1 // method "g()uint256"
-    concat
-    concat
-    extract 0 12 // on error: index access is out of bounds
-    dup
-    intc_1 // 0
-    extract_uint64
-    dup
-    global CurrentApplicationID
-    ==
-    bz main_else_body@13
-    pop
-    extract 8 4
-    dup
-    bytec_1 // method "g()uint256"
-    ==
-    bz main_else_body@17
-    pop
-    intc_2 // 2
-
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/inline_array_with_value_call_option.sol.C.__sel_to_id___funcptr_dispatch_ret_t_uint256@18:
-    dup
-    intc_2 // 2
-    ==
-    bz main_else_body@21
-    pop
-    callsub g
-
-main_after_if_else@14:
-    dup
-    len
-    intc_3 // 32
-    <=
-    assert // overflow
-    intc_3 // 32
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
+main_h_route@19:
+    callsub h
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_else_body@21:
-    intc_0 // 1
-    ==
-    assert // invalid function pointer
-    callsub f
-    b main_after_if_else@14
-
-main_else_body@17:
-    bytec_0 // method "f()uint256"
-    ==
-    assert // unknown function selector in self-call dispatch
-    intc_0 // 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/inline_array_with_value_call_option.sol.C.__sel_to_id___funcptr_dispatch_ret_t_uint256@18
-
-main_else_body@13:
-    itxn_begin
-    swap
-    extract 8 4
-    pushint 6
-    itxn_field TypeEnum
-    intc_1 // 0
-    itxn_field OnCompletion
-    intc_1 // 0
-    itxn_field Fee
-    itxn_field ApplicationArgs
-    itxn_field ApplicationID
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    b main_after_if_else@14
-
-main_g_route@6:
+main_g_route@18:
     callsub g
-    bytec_2 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_f_route@5:
+main_f_route@17:
     callsub f
-    bytec_2 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -152,7 +163,7 @@ f:
 
 f_ternary_merge@3:
     itob
-    intc_1 // 0
+    intc_2 // 0
     itob
     b>
     dup
@@ -166,7 +177,7 @@ f_after_if_else@5:
     retsub
 
 f_ternary_false@2:
-    intc_1 // 0
+    intc_2 // 0
     b f_ternary_merge@3
 
 
@@ -181,7 +192,7 @@ g:
 
 g_ternary_merge@3:
     itob
-    intc_1 // 0
+    intc_2 // 0
     itob
     b>
     dup
@@ -195,5 +206,84 @@ g_after_if_else@5:
     retsub
 
 g_ternary_false@2:
-    intc_1 // 0
+    intc_2 // 0
     b g_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/inline_array_with_value_call_option.sol.C.h() -> bytes:
+h:
+    global CurrentApplicationID
+    itob
+    bytec_1 // method "f()uint256"
+    concat
+    global CurrentApplicationID
+    itob
+    bytec_2 // method "g()uint256"
+    concat
+    concat
+    extract 0 12 // on error: index access is out of bounds
+    dup
+    intc_2 // 0
+    extract_uint64
+    dup
+    global CurrentApplicationID
+    ==
+    bz h_else_body@2
+    pop
+    extract 8 4
+    dup
+    bytec_2 // method "g()uint256"
+    ==
+    bz h_else_body@7
+    pop
+    intc_3 // 2
+
+h_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/inline_array_with_value_call_option.sol.C.__sel_to_id___funcptr_dispatch_ret_t_uint256@10:
+    dup
+    intc_3 // 2
+    ==
+    bz h_else_body@13
+    pop
+    callsub g
+
+h_after_if_else@4:
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+h_else_body@13:
+    intc_0 // 1
+    ==
+    assert // invalid function pointer
+    callsub f
+    b h_after_if_else@4
+
+h_else_body@7:
+    bytec_1 // method "f()uint256"
+    ==
+    assert // unknown function selector in self-call dispatch
+    intc_0 // 1
+    b h_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/inline_array_with_value_call_option.sol.C.__sel_to_id___funcptr_dispatch_ret_t_uint256@10
+
+h_else_body@2:
+    itxn_begin
+    swap
+    extract 8 4
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    b h_after_if_else@4

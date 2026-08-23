@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/dynamic_arrays.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 2 0
+    intcblock 32 0 1 2
+    bytecblock 0x 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -23,16 +24,221 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@12
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@12
+    txna ApplicationArgs 0
+    pushbytes 0x7541a8f1
+    ==
+    bz main_after_if_else@12
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    dup
+    cover 2
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI array length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    pushint 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    pushbytes 0x0000
+    intc_1 // 0
+
+main_while_top@9:
+    dup
+    dig 3
+    <
+    bz main_after_while@11
+    dup
+    intc_0 // 32
+    *
+    dig 4
+    +
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 30
+    pushint 30
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    extract 24 8
+    dup
+    bitlen
+    pushint 16
+    <=
+    assert // overflow
+    extract 6 2
+    pushbytes 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 3
+    dup
+    cover 2
+    intc_1 // 0
+    extract_uint16
+    +
+    itob
+    extract 6 0
+    replace2 0
+    swap
+    concat
+    swap
+    intc_2 // 1
+    +
+    b main_while_top@9
+
+main_after_while@11:
+    pop
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 64 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    uncover 3
+    swap
+    callsub f
+    pop
+    cover 3
+    cover 2
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@12:
     pushbytes 0xaa82a98a // method "f(uint256,uint16[],uint256)(uint256,uint256,uint256)"
     txna ApplicationArgs 0
-    match main_f_route@4
+    match main_f_route@14
     err
 
-main_f_route@4:
+main_f_route@14:
     txn OnCompletion
     !
     txn ApplicationID
@@ -41,82 +247,89 @@ main_f_route@4:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    cover 2
-    dup
-    intc_3 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    dup
-    cover 2
-    intc_2 // 2
+    intc_3 // 2
     *
-    intc_2 // 2
+    intc_3 // 2
     +
-    swap
+    dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint16>
     txna ApplicationArgs 3
     dup
-    cover 2
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub f
+    pop
+    cover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/dynamic_arrays.sol.C.f(__arc4_a: bytes, b: bytes, __arc4_c: bytes) -> bytes, bytes, bytes, bytes:
+f:
+    proto 3 4
     txn GroupIndex
-    bz main_ternary_false@8
+    bz f_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+f_ternary_merge@3:
     !
     assert // not payable
-    uncover 2
-    dup
+    frame_dig -3
     pushbytes 0x010000000000000000
     b<
     assert // array index out of bounds
-    swap
+    frame_dig -2
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
     itob
-    intc_1 // 32
+    intc_0 // 32
     bzero
     swap
     dig 1
     b|
     pushint 8
     bzero
-    uncover 3
+    frame_dig -3
     concat
     dup
     len
     pushint 8
     -
     extract_uint64
-    uncover 4
+    frame_dig -2
     extract 2 0
     swap
-    intc_2 // 2
+    intc_3 // 2
     *
     extract_uint16
     itob
     uncover 2
     b|
-    concat
-    swap
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    frame_dig -1
+    frame_dig -2
+    retsub
 
-main_ternary_false@8:
-    intc_3 // 0
-    b main_ternary_merge@9
+f_ternary_false@2:
+    intc_1 // 0
+    b f_ternary_merge@3

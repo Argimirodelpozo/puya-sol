@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/fixed_array_cleanup.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 640
-    bytecblock "data" "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x
+    intcblock 1 0 32 2
+    bytecblock "data" "__ctor_pending" 0x151f7c75 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -32,55 +32,133 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xd9c55ce1
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub fill
+    bytec_2 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x52efea6e
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    callsub clear
+    bytec_2 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x5cd3f78a 0x44977246 // method "__postInit()void", method "fill()void", method "clear()void"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_fill_route@6 main_clear_route@7
+    match main___postInit_route@19 main_fill_route@20 main_clear_route@21
     err
 
-main_clear_route@7:
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    bytec_0 // "data"
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    box_put
+main_clear_route@21:
+    callsub clear
     intc_0 // 1
     return
 
-main_ternary_false@13:
-    intc_1 // 0
-    b main_ternary_merge@14
+main_fill_route@20:
+    callsub fill
+    intc_0 // 1
+    return
 
-main_fill_route@6:
+main___postInit_route@19:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "data"
+    pushint 640
+    box_create
+    pop
+    pushbytes "spacer1"
+    bytec_3 // 0x
+    app_global_put
+    pushbytes "spacer2"
+    bytec_3 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/fixed_array_cleanup.sol.c.fill() -> void:
+fill:
+    proto 0 0
     txn GroupIndex
-    bz main_ternary_false@18
+    bz fill_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+fill_ternary_merge@3:
     !
     assert // not payable
     intc_1 // 0
     itob
 
-main_while_top@20:
+fill_while_top@4:
     dup
     pushbytes 0x14
     b<
-    bz main_after_while@24
+    bz fill_after_while@8
     intc_0 // 1
     itob
     dig 1
@@ -89,7 +167,7 @@ main_while_top@20:
     b+
     dup
     cover 2
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     pushbytes 0x010000000000000000
@@ -98,13 +176,13 @@ main_while_top@20:
     bytec_0 // "data"
     box_len
     bury 1
-    bnz main_after_if_else@23
+    bnz fill_after_if_else@7
     bytec_0 // "data"
-    intc_3 // 640
+    pushint 640
     box_create
     pop
 
-main_after_if_else@23:
+fill_after_if_else@7:
     dup
     len
     intc_2 // 32
@@ -133,39 +211,36 @@ main_after_if_else@23:
     pushbytes 0x01
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    b main_while_top@20
+    b fill_while_top@4
 
-main_after_while@24:
+fill_after_while@8:
+    retsub
+
+fill_ternary_false@2:
+    intc_1 // 0
+    b fill_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/fixed_array_cleanup.sol.c.clear() -> void:
+clear:
+    txn GroupIndex
+    bz clear_ternary_false@2
+    txn GroupIndex
     intc_0 // 1
-    return
+    -
+    gtxns Amount
 
-main_ternary_false@18:
-    intc_1 // 0
-    b main_ternary_merge@19
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
+clear_ternary_merge@3:
+    !
+    assert // not payable
     bytec_0 // "data"
-    intc_3 // 640
-    box_create
-    pop
-    pushbytes "spacer1"
-    bytec_3 // 0x
-    app_global_put
-    pushbytes "spacer2"
-    bytec_3 // 0x
-    app_global_put
-    intc_0 // 1
-    return
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    box_put
+    retsub
+
+clear_ternary_false@2:
+    intc_1 // 0
+    b clear_ternary_merge@3

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "x" 0x
+    intcblock 1 32 0
+    bytecblock "x" 0x 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -32,60 +32,75 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x1453c42d 0x7c1072af // method "xSlot()uint256", method "x()uint256"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_xSlot_route@5 main_x_route@6
-    err
-
-main_x_route@6:
+    pushbytes 0x0c55699c
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@8:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "x"
-    app_global_get_ex
-    bytec_1 // 0x
-    cover 2
-    select
+    intc_1 // 32
+    bzero
+    callsub x
+    concat
     dup
     len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    pushbytes 0x151f7c75
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@12:
-    intc_1 // 0
-    b main_ternary_merge@13
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
 
-main_xSlot_route@5:
+main_after_if_else@9:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x1453c42d 0x7c1072af // method "xSlot()uint256", method "x()uint256"
+    txna ApplicationArgs 0
+    match main_xSlot_route@12 main_x_route@13
+    err
+
+main_x_route@13:
+    callsub x
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_xSlot_route@12:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@21
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@22:
     !
     assert // not payable
     load 0
@@ -97,6 +112,39 @@ main_ternary_merge@18:
     intc_0 // 1
     return
 
-main_ternary_false@17:
-    intc_1 // 0
-    b main_ternary_merge@18
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol.A.x() -> bytes:
+x:
+    txn GroupIndex
+    bz x_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_0 // "x"
+    app_global_get_ex
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+x_ternary_false@2:
+    intc_2 // 0
+    b x_ternary_merge@3

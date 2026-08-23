@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/storage_reference_inheritance.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 256 64
-    bytecblock "s" 0x00 0x000000000000000000000000000000000000000000000000000000000000000000
+    intcblock 0 1 32 2 256
+    bytecblock 0x00 "s" 0x151f7c75 0x000000000000000000000000000000000000000000000000000000000000000000 0xd6fd9524
     pushint 4096
     bzero
     dup
@@ -24,103 +24,240 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "s"
-    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // "s"
+    bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_1 // 1
     return
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xcc6b3203 0xd6fd9524 0xcc8c5ad8 // method "InitUsingReference()void", method "validate((uint256,bool))void", method "s()(uint512,bool)"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_InitUsingReference_route@5 main_validate_route@6 main_s_route@7
-    err
-
-main_s_route@7:
+    pushbytes 0x41fef24c
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@13
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@14:
+main_ternary_merge@8:
     !
     assert // not payable
+    callsub InitUsingReference
+    bytec_2 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
     intc_0 // 0
-    bytec_0 // "s"
-    app_global_get_ex
-    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x41238781
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
     dup
-    extract 0 32
-    swap
-    intc_2 // 256
-    getbit
-    bytec_1 // 0x00
+    pushbytes 0x01
+    b<=
+    assert // invalid EVM ABI bool
+    pushint 24
+    extract_uint64
+    intc_0 // 0
+    !=
+    bytec_0 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    intc_0 // 0
-    getbit
-    dig 1
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
     len
-    intc_3 // 64
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 64
+    intc_2 // 32
     bzero
-    uncover 2
     b|
-    bytec_1 // 0x00
-    intc_0 // 0
-    uncover 3
-    setbit
+    swap
     concat
-    pushbytes 0x151f7c75
+    callsub validate
+    pop
+    bytec_2 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_0 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x86b714e2
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    callsub s
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    swap
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    concat
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@13:
+main_ternary_false@21:
     intc_0 // 0
-    b main_ternary_merge@14
+    b main_ternary_merge@22
 
-main_validate_route@6:
+main_after_if_else@23:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytes 0xcc6b3203 // method "InitUsingReference()void"
+    bytec 4 // method "validate((uint256,bool))void"
+    pushbytes 0xcc8c5ad8 // method "s()(uint512,bool)"
+    txna ApplicationArgs 0
+    match main_InitUsingReference_route@26 main_validate_route@27 main_s_route@28
+    err
+
+main_s_route@28:
+    callsub s
+    dig 1
+    len
+    pushint 64
+    <=
+    assert // overflow
+    pushint 64
+    bzero
+    uncover 2
+    b|
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 3
+    setbit
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_validate_route@27:
     txna ApplicationArgs 1
+    dup
     len
     pushint 33
     ==
     assert // invalid number of bytes for S
+    callsub validate
+    pop
     intc_1 // 1
     return
 
-main_InitUsingReference_route@5:
+main_InitUsingReference_route@26:
+    callsub InitUsingReference
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/storage_reference_inheritance.sol.C.InitUsingReference() -> void:
+InitUsingReference:
     txn GroupIndex
-    bz main_ternary_false@20
+    bz InitUsingReference_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+InitUsingReference_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
-    bytec_0 // "s"
+    bytec_1 // "s"
     app_global_get_ex
     assert // state exists
-    intc_2 // 256
+    intc 4 // 256
     getbit
-    bytec_1 // 0x00
+    bytec_0 // 0x00
     intc_0 // 0
     uncover 2
     setbit
@@ -130,12 +267,94 @@ main_ternary_merge@21:
     extract 0 32
     pushbytes 0x80
     concat
-    bytec_0 // "s"
-    swap
+    bytec_1 // "s"
+    dig 1
     app_global_put
-    intc_1 // 1
-    return
+    callsub validate
+    pop
+    retsub
 
-main_ternary_false@20:
+InitUsingReference_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@21
+    b InitUsingReference_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/storage_reference_inheritance.sol.C.validate(ptr: bytes) -> bytes:
+validate:
+    proto 1 1
+    txn NumAppArgs
+    bz validate_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 4 // method "validate((uint256,bool))void"
+    ==
+    bz validate_after_if_else@6
+    txn GroupIndex
+    bz validate_ternary_false@4
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+validate_ternary_merge@5:
+    !
+    assert // not payable
+
+validate_after_if_else@6:
+    frame_dig -1
+    extract 0 32
+    intc_3 // 2
+    itob
+    b==
+    assert
+    frame_dig -1
+    intc 4 // 256
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    assert
+    frame_dig -1
+    retsub
+
+validate_ternary_false@4:
+    intc_0 // 0
+    b validate_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/storage_reference_inheritance.sol.C.s() -> bytes, uint64:
+s:
+    txn GroupIndex
+    bz s_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+s_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_1 // "s"
+    app_global_get_ex
+    bytec_3 // 0x000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    swap
+    intc 4 // 256
+    getbit
+    bytec_0 // 0x00
+    intc_0 // 0
+    uncover 2
+    setbit
+    intc_0 // 0
+    getbit
+    retsub
+
+s_ternary_false@2:
+    intc_0 // 0
+    b s_ternary_merge@3

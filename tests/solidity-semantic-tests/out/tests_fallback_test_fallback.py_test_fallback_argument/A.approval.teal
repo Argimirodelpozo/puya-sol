@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock 0x 0x151f7c75 "x"
-    bytec_0 // ""
+    intcblock 1 32 0 2
+    bytecblock 0x151f7c75 0x "x"
+    bytec_1 // ""
     pushint 4096
     bzero
     dup
@@ -26,130 +26,214 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_2 // "x"
-    bytec_0 // 0x
+    bytec_1 // 0x
     app_global_put
     intc_0 // 1
     return
 
 main_after_if_else@2:
-    txn NumAppArgs
-    bnz main_after_if_else@5
     txn OnCompletion
-    bnz main_after_if_else@5
-    bytec_0 // 0x
-    callsub __fallback
-    bytec_1 // 0x151f7c75
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub f
+    swap
+    itob
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
+    concat
+    dig 1
+    len
+    dup
+    itob
+    uncover 4
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    uncover 3
+    swap
+    concat
+    concat
+    concat
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_after_if_else@5:
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x0c55699c
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub x
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn NumAppArgs
+    bnz main_after_if_else@19
+    txn OnCompletion
+    bnz main_after_if_else@19
+    bytec_1 // 0x
+    callsub __fallback
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_after_if_else@19:
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_after_if_else@16
+    bz main_after_if_else@30
     pushbytess 0x9509a93a 0x856fee35 0x7c1072af // method "__fallback(byte[])byte[]", method "f()(bool,byte[])", method "x()uint256"
     txna ApplicationArgs 0
-    match main___fallback_route@11 main_f_route@12 main_x_route@13
+    match main___fallback_route@25 main_f_route@26 main_x_route@27
 
-main_after_if_else@16:
-    intc_1 // 0
+main_after_if_else@30:
+    intc_2 // 0
     bury 1
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__puya_arc4_router__@17:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__puya_arc4_router__@31:
     dup
-    bnz main_after_if_else@8
+    bnz main_after_if_else@22
     txn OnCompletion
-    bnz main_after_if_else@8
+    bnz main_after_if_else@22
     txna ApplicationArgs 0
     callsub __fallback
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     bury 1
 
-main_after_if_else@8:
+main_after_if_else@22:
     return
 
-main_x_route@13:
-    txn GroupIndex
-    bz main_ternary_false@20
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@21:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_2 // "x"
-    app_global_get_ex
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
+main_x_route@27:
+    callsub x
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__puya_arc4_router__@31
 
-main_ternary_false@20:
-    intc_1 // 0
-    b main_ternary_merge@21
-
-main_f_route@12:
-    txn GroupIndex
-    bz main_ternary_false@25
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@26:
-    !
-    assert // not payable
-    pushbytes "abc"
-    callsub __fallback
-    dup
+main_f_route@26:
+    callsub f
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 3
+    setbit
+    dig 1
     len
     itob
     extract 6 2
+    uncover 2
+    concat
+    swap
+    pushbytes 0x0003
+    concat
     swap
     concat
-    pushbytes 0x151f7c75800003
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__puya_arc4_router__@31
 
-main_ternary_false@25:
-    intc_1 // 0
-    b main_ternary_merge@26
-
-main___fallback_route@11:
+main___fallback_route@25:
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -163,13 +247,13 @@ main___fallback_route@11:
     extract 6 2
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__puya_arc4_router__@17
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__puya_arc4_router__@31
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.__fallback(_input: bytes) -> bytes:
@@ -191,9 +275,65 @@ __fallback_ternary_merge@3:
     bytec_2 // "x"
     swap
     app_global_put
-    bytec_0 // ""
+    bytec_1 // ""
     retsub
 
 __fallback_ternary_false@2:
-    intc_1 // 0
+    intc_2 // 0
     b __fallback_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.f() -> uint64, bytes:
+f:
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes "abc"
+    callsub __fallback
+    intc_0 // 1
+    swap
+    retsub
+
+f_ternary_false@2:
+    intc_2 // 0
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/fallback_argument.sol.A.x() -> bytes:
+x:
+    txn GroupIndex
+    bz x_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_2 // "x"
+    app_global_get_ex
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+x_ternary_false@2:
+    intc_2 // 0
+    b x_ternary_merge@3

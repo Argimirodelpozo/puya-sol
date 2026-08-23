@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_delete_member.sol.test.approval_program() -> uint64:
 main:
-    bytecblock "data1"
+    intcblock 1 32 0
+    bytecblock "data1" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -26,39 +27,90 @@ main:
     bytec_0 // "data1"
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
     app_global_put
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x278be33f
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub deleteMember
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
     pushbytes 0x2e16eec5 // method "deleteMember()uint256"
     txna ApplicationArgs 0
-    match main_deleteMember_route@4
+    match main_deleteMember_route@11
     err
 
-main_deleteMember_route@4:
+main_deleteMember_route@11:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
+    callsub deleteMember
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_delete_member.sol.test.deleteMember() -> bytes:
+deleteMember:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz deleteMember_ternary_false@2
     txn GroupIndex
-    pushint 1
+    intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+deleteMember_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "data1"
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
-    log
-    pushint 1
-    return
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    retsub
 
-main_ternary_false@8:
-    pushint 0
-    b main_ternary_merge@9
+deleteMember_ternary_false@2:
+    intc_2 // 0
+    b deleteMember_ternary_merge@3

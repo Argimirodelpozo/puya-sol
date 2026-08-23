@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_declaration.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -29,16 +29,170 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xf8a8fd6d
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub test
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xcd580ff3
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub b
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0xf0fdf834
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub a
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xc95a9d21 0x2930a603 0x7e9f4949 // method "test()uint256", method "b(uint256)uint256", method "a(uint256)uint256"
     txna ApplicationArgs 0
-    match main_test_route@5 main_b_route@6 main_a_route@7
+    match main_test_route@26 main_b_route@27 main_a_route@28
     err
 
-main_a_route@7:
+main_a_route@28:
     txna ApplicationArgs 1
     dup
     len
@@ -46,14 +200,14 @@ main_a_route@7:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub a
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_b_route@6:
+main_b_route@27:
     txna ApplicationArgs 1
     dup
     len
@@ -61,22 +215,33 @@ main_b_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub b
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_test_route@5:
+main_test_route@26:
+    callsub test
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_declaration.sol.C.test() -> bytes:
+test:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz test_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+test_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 32
@@ -101,20 +266,20 @@ main_ternary_merge@18:
     dup
     cover 5
     b==
-    bz main_bool_false@20
+    bz test_bool_false@6
     intc_1 // 1
 
-main_bool_merge@21:
+test_bool_merge@7:
     assert
     intc_0 // 32
     >=
     assert // EVM ABI decode out of bounds
     extract 0 32
     dupn 2
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    pushint 2
+    intc_3 // 2
     itob
     b==
     assert
@@ -136,10 +301,10 @@ main_bool_merge@21:
     itob
     dig 5
     b==
-    bz main_bool_false@23
+    bz test_bool_false@10
     intc_1 // 1
 
-main_bool_merge@24:
+test_bool_merge@11:
     assert
     intc_0 // 32
     >=
@@ -147,7 +312,7 @@ main_bool_merge@24:
     extract 0 32
     b+
     dupn 2
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     pushint 13
@@ -172,10 +337,10 @@ main_bool_merge@24:
     itob
     dig 5
     b==
-    bz main_bool_false@26
+    bz test_bool_false@14
     intc_1 // 1
 
-main_bool_merge@27:
+test_bool_merge@15:
     assert
     intc_0 // 32
     >=
@@ -183,7 +348,7 @@ main_bool_merge@27:
     extract 0 32
     b+
     dupn 2
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     pushint 114
@@ -208,10 +373,10 @@ main_bool_merge@27:
     itob
     dig 5
     b==
-    bz main_bool_false@29
+    bz test_bool_false@18
     intc_1 // 1
 
-main_bool_merge@30:
+test_bool_merge@19:
     assert
     intc_0 // 32
     >=
@@ -219,7 +384,7 @@ main_bool_merge@30:
     extract 0 32
     b+
     dupn 2
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     pushint 1115
@@ -244,10 +409,10 @@ main_bool_merge@30:
     itob
     uncover 5
     b==
-    bz main_bool_false@32
+    bz test_bool_false@22
     intc_1 // 1
 
-main_bool_merge@33:
+test_bool_merge@23:
     assert
     intc_0 // 32
     >=
@@ -255,7 +420,7 @@ main_bool_merge@33:
     extract 0 32
     b+
     dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     pushint 11116
@@ -269,36 +434,31 @@ main_bool_merge@33:
     <=
     assert // overflow
     b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-main_bool_false@32:
+test_bool_false@22:
     intc_2 // 0
-    b main_bool_merge@33
+    b test_bool_merge@23
 
-main_bool_false@29:
+test_bool_false@18:
     intc_2 // 0
-    b main_bool_merge@30
+    b test_bool_merge@19
 
-main_bool_false@26:
+test_bool_false@14:
     intc_2 // 0
-    b main_bool_merge@27
+    b test_bool_merge@15
 
-main_bool_false@23:
+test_bool_false@10:
     intc_2 // 0
-    b main_bool_merge@24
+    b test_bool_merge@11
 
-main_bool_false@20:
+test_bool_false@6:
     intc_2 // 0
-    b main_bool_merge@21
+    b test_bool_merge@7
 
-main_ternary_false@17:
+test_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@18
+    b test_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_declaration.sol.C.b(__arc4_x: bytes) -> bytes:
@@ -349,7 +509,7 @@ a_ternary_merge@3:
     frame_dig -1
     b+
     dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dup

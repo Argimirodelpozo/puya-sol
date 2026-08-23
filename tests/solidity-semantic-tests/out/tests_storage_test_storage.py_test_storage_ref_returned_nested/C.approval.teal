@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_ref_returned_nested.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock "__ctor_pending" "_m" 0x0000000000000000000000000000000000000000000000000000000000000000 "inner"
+    intcblock 32 1 0 2
+    bytecblock "__ctor_pending" 0x151f7c75 "_m" 0x0000000000000000000000000000000000000000000000000000000000000000 "inner"
     pushint 4096
     bzero
     dup
@@ -32,16 +32,166 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x46967f21
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    txna ApplicationArgs 1
+    extract 64 32
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    uncover 3
+    dig 1
+    b|
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    dig 2
+    b|
+    dig 3
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    uncover 3
+    b|
+    callsub mutate
+    bytec_1 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x75080997
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x44209038 0x4392064c // method "__postInit()void", method "mutate(uint256,uint256,uint256)void", method "read(uint256,uint256)uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_mutate_route@6 main_read_route@7
+    match main___postInit_route@19 main_mutate_route@20 main_read_route@21
     err
 
-main_read_route@7:
+main_read_route@21:
     txna ApplicationArgs 1
     dup
     len
@@ -54,50 +204,15 @@ main_read_route@7:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dup
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // "_m"
-    concat
-    sha256
-    uncover 2
-    callsub Outer.read
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    b|
-    pushbytes 0x151f7c75
+    callsub read
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@13:
-    intc_2 // 0
-    b main_ternary_merge@14
-
-main_mutate_route@6:
+main_mutate_route@20:
     txna ApplicationArgs 1
     dup
     len
@@ -112,45 +227,15 @@ main_mutate_route@6:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 3
     dup
-    cover 3
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // "_m"
-    concat
-    sha256
-    swap
-    uncover 2
-    callsub Outer.mutate
+    callsub mutate
     intc_1 // 1
     return
 
-main_ternary_false@18:
-    intc_2 // 0
-    b main_ternary_merge@19
-
-main___postInit_route@5:
+main___postInit_route@19:
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -161,8 +246,8 @@ main___postInit_route@5:
     bytec_0 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_1 // "_m"
-    pushint 2
+    bytec_2 // "_m"
+    intc_3 // 2
     box_create
     pop
     intc_1 // 1
@@ -193,7 +278,7 @@ Inner.setN:
     proto 2 0
     frame_dig -2
     box_get
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     frame_dig -1
@@ -216,7 +301,7 @@ Inner.setN:
 Outer.mutate:
     proto 3 0
     frame_dig -3
-    bytec_3 // "inner"
+    bytec 4 // "inner"
     concat
     frame_dig -2
     callsub Inner.getRef
@@ -229,7 +314,7 @@ Outer.mutate:
 Outer.read:
     proto 2 1
     frame_dig -2
-    bytec_3 // "inner"
+    bytec 4 // "inner"
     concat
     intc_0 // 32
     bzero
@@ -245,8 +330,86 @@ Outer.read:
     concat
     sha256
     box_get
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 0 32
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_ref_returned_nested.sol.C.mutate(__arc4_id: bytes, __arc4_k: bytes, __arc4_v: bytes) -> void:
+mutate:
+    proto 3 0
+    txn GroupIndex
+    bz mutate_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+mutate_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    frame_dig -3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "_m"
+    concat
+    sha256
+    frame_dig -2
+    frame_dig -1
+    callsub Outer.mutate
+    retsub
+
+mutate_ternary_false@2:
+    intc_2 // 0
+    b mutate_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_ref_returned_nested.sol.C.read(__arc4_id: bytes, __arc4_k: bytes) -> bytes:
+read:
+    proto 2 1
+    txn GroupIndex
+    bz read_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+read_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "_m"
+    concat
+    sha256
+    frame_dig -1
+    callsub Outer.read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    retsub
+
+read_ternary_false@2:
+    intc_2 // 0
+    b read_ternary_merge@3

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_push_empty.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 1 32 0
+    intcblock 32 1 2 0
     bytecblock "storageArray" "__ctor_pending"
     pushint 4096
     bzero
@@ -32,62 +32,134 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xe931873f
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub pushEmpty
+    pushbytes 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_3 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x1e3ddb1a // method "__postInit()void", method "pushEmpty(uint256)void"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_pushEmpty_route@6
+    match main___postInit_route@12 main_pushEmpty_route@13
     err
 
-main_pushEmpty_route@6:
+main_pushEmpty_route@13:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub pushEmpty
+    intc_1 // 1
+    return
+
+main___postInit_route@12:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_3 // 0
+    app_global_put
+    bytec_0 // "storageArray"
+    intc_2 // 2
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_push_empty.sol.C.pushEmpty(__arc4_len: bytes) -> void:
+pushEmpty:
+    proto 1 0
     txn GroupIndex
-    bz main_ternary_false@12
+    bz pushEmpty_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+pushEmpty_ternary_merge@3:
     !
     assert // not payable
 
-main_while_top@14:
+pushEmpty_while_top@4:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_0 // 2
+    intc_2 // 2
     >=
-    bz main_ternary_false@16
+    bz pushEmpty_ternary_false@6
     bytec_0 // "storageArray"
     box_len
     pop
 
-main_ternary_merge@17:
-    intc_0 // 2
+pushEmpty_ternary_merge@7:
+    intc_2 // 2
     -
-    intc_2 // 32
+    intc_0 // 32
     /
     itob
-    dig 1
+    frame_dig -1
     b<
-    bz main_after_while@19
+    bz pushEmpty_after_while@9
     bytec_0 // "storageArray"
     intc_3 // 0
-    intc_0 // 2
+    intc_2 // 2
     box_extract
     btoi
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_2 // 32
+    intc_0 // 32
     +
     bytec_0 // "storageArray"
     swap
@@ -101,28 +173,27 @@ main_ternary_merge@17:
     intc_3 // 0
     uncover 2
     box_replace
-    intc_2 // 32
+    intc_0 // 32
     *
-    intc_0 // 2
+    intc_2 // 2
     +
     bytec_0 // "storageArray"
     swap
     intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
-    b main_while_top@14
+    b pushEmpty_while_top@4
 
-main_after_while@19:
+pushEmpty_after_while@9:
     intc_3 // 0
     itob
     dup
-    cover 2
 
-main_while_top@20:
+pushEmpty_while_top@10:
     dup
-    dig 2
+    frame_dig -1
     b<
-    bz main_after_while@22
+    bz pushEmpty_after_while@12
     dup
     pushbytes 0x010000000000000000
     b<
@@ -136,15 +207,15 @@ main_while_top@20:
     pushint 8
     -
     extract_uint64
-    intc_2 // 32
+    intc_0 // 32
     *
-    intc_0 // 2
+    intc_2 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_2 // 32
+    intc_0 // 32
     box_extract // on error: index out of bounds
-    dig 3
+    dig 2
     b==
     assert
     pushbytes 0x01
@@ -153,34 +224,15 @@ main_while_top@20:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    b main_while_top@20
+    b pushEmpty_while_top@10
 
-main_after_while@22:
-    intc_1 // 1
-    return
+pushEmpty_after_while@12:
+    retsub
 
-main_ternary_false@16:
-    intc_0 // 2
-    b main_ternary_merge@17
+pushEmpty_ternary_false@6:
+    intc_2 // 2
+    b pushEmpty_ternary_merge@7
 
-main_ternary_false@12:
+pushEmpty_ternary_false@2:
     intc_3 // 0
-    b main_ternary_merge@13
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
-    intc_3 // 0
-    app_global_put
-    bytec_0 // "storageArray"
-    intc_0 // 2
-    box_create
-    pop
-    intc_1 // 1
-    return
+    b pushEmpty_ternary_merge@3

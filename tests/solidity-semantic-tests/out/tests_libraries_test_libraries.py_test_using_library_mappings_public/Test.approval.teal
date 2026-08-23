@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_mappings_public.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
-    bytecblock 0x "__ctor_pending" "m1" "m2"
+    intcblock 32 1 2 0
+    bytecblock 0x "__ctor_pending" "m1" "m2" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -32,27 +32,188 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub f
+    dig 6
+    uncover 6
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 6
+    uncover 6
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 5
+    uncover 5
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 4
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_3 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x8fb5753f // method "__postInit()void", method "f()(uint256,uint256,uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_f_route@6
+    match main___postInit_route@12 main_f_route@13
     err
 
-main_f_route@6:
+main_f_route@13:
+    callsub f
+    uncover 5
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main___postInit_route@12:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_3 // 0
+    app_global_put
+    bytec_2 // "m1"
+    intc_2 // 2
+    box_create
+    pop
+    bytec_3 // "m2"
+    intc_2 // 2
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+
+// __solfn_18(m: bytes, key: bytes, value: bytes) -> void:
+Lib.set:
+    proto 3 0
+    intc_0 // 32
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig -3
+    concat
+    sha256
+    dup
+    box_del
+    pop
+    frame_dig -1
+    box_put
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/using_library_mappings_public.sol.Test.f() -> bytes, bytes, bytes, bytes, bytes, bytes:
+f:
     txn GroupIndex
-    bz main_ternary_false@12
+    bz f_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+f_ternary_merge@3:
     !
     assert // not payable
-    intc_2 // 0
+    intc_3 // 0
     itob
     intc_1 // 1
     itob
@@ -60,7 +221,7 @@ main_ternary_merge@13:
     dig 2
     uncover 2
     callsub Lib.set
-    intc_3 // 2
+    intc_2 // 2
     itob
     pushint 42
     itob
@@ -154,70 +315,8 @@ main_ternary_merge@13:
     assert // overflow
     uncover 6
     b|
-    uncover 5
-    uncover 5
-    concat
-    uncover 4
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@12:
-    intc_2 // 0
-    b main_ternary_merge@13
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_2 // "m1"
-    intc_3 // 2
-    box_create
-    pop
-    bytec_3 // "m2"
-    intc_3 // 2
-    box_create
-    pop
-    intc_1 // 1
-    return
-
-
-// __solfn_18(m: bytes, key: bytes, value: bytes) -> void:
-Lib.set:
-    proto 3 0
-    intc_0 // 32
-    bzero
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    frame_dig -3
-    concat
-    sha256
-    dup
-    box_del
-    pop
-    frame_dig -1
-    box_put
     retsub
+
+f_ternary_false@2:
+    intc_3 // 0
+    b f_ternary_merge@3

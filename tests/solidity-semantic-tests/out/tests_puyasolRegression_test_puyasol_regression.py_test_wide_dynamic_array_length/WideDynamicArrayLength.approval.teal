@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.approval_program() -> uint64:
 main:
-    intcblock 1 2 0 16 4294967295
-    bytecblock 0x151f7c75 0x0001 "a" "e" "d" "c" "b" "__ctor_pending"
+    intcblock 1 32 2 0 4294967295
+    bytecblock 0x151f7c75 "a" 0x0001 "b" "c" "d" "e" "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -32,45 +32,96 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x7b473b04 0x237e4457 0x4b01c4a9 0x82a4b827 0x1d6704dc 0x2ec91b08 0x5fa9de0f 0x430a386d 0x9078d1b3 0x5fc1bfcc 0x92ee002f // method "__postInit()void", method "push(uint128)void", method "len()uint256", method "get(uint256)uint128", method "pushB(uint160)void", method "lenB()uint256", method "pushC(uint64)void", method "lenC()uint256", method "pushD(uint64)void", method "lenD()uint256", method "pushE(uint256)void", method "lenE()uint256"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_push_route@6 main_len_route@7 main_get_route@8 main_pushB_route@9 main_lenB_route@10 main_pushC_route@11 main_lenC_route@12 main_pushD_route@13 main_lenD_route@14 main_pushE_route@15 main_lenE_route@16
-    err
-
-main_lenE_route@16:
+    pushbytes 0x779bb122
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@22
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@23:
+main_ternary_merge@8:
     !
     assert // not payable
-    bytec_3 // "e"
-    box_len
-    pop
-    intc_1 // 2
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
     >=
-    bz main_ternary_false@25
-    bytec_3 // "e"
-    box_len
-    pop
-
-main_ternary_merge@26:
-    intc_1 // 2
-    -
-    pushint 32
-    /
-    itob
-    pushint 32
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 16
+    pushint 16
     bzero
+    swap
+    dig 1
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    pushint 16
+    -
+    pushint 16
+    extract3
+    dup
+    len
+    pushint 16
+    <=
+    assert // overflow
     b|
+    callsub push
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_3 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x56d88e27
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub len
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -78,53 +129,138 @@ main_ternary_merge@26:
     intc_0 // 1
     return
 
-main_ternary_false@25:
-    intc_1 // 2
-    b main_ternary_merge@26
+main_ternary_false@14:
+    intc_3 // 0
+    b main_ternary_merge@15
 
-main_ternary_false@22:
-    intc_2 // 0
-    b main_ternary_merge@23
-
-main_pushE_route@15:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 32
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_2 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x9507d39a
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
-    bz main_ternary_false@30
+    bz main_ternary_false@21
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@31:
+main_ternary_merge@22:
     !
     assert // not payable
-    bytec_1 // 0x0001
-    swap
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_1 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub get
     concat
     dup
-    extract 2 0
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
     swap
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    bytec_3 // "e"
-    intc_2 // 0
-    uncover 3
-    uncover 3
-    pushint 32
-    callsub box_dynamic_array_concat_fixed
+    concat
+    log
     intc_0 // 1
     return
 
-main_ternary_false@30:
-    intc_2 // 0
-    b main_ternary_merge@31
+main_ternary_false@21:
+    intc_3 // 0
+    b main_ternary_merge@22
 
-main_lenD_route@14:
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x0b93e71c
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    pushint 20
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    pushint 20
+    -
+    pushint 20
+    extract3
+    dup
+    len
+    pushint 20
+    <=
+    assert // overflow
+    b|
+    callsub pushB
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@28:
+    intc_3 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0x9f1a4493
+    ==
+    bz main_after_if_else@37
     txn GroupIndex
     bz main_ternary_false@35
     txn GroupIndex
@@ -135,120 +271,104 @@ main_lenD_route@14:
 main_ternary_merge@36:
     !
     assert // not payable
-    bytec 4 // "d"
-    box_len
-    pop
-    intc_1 // 2
-    >=
-    bz main_ternary_false@38
-    bytec 4 // "d"
-    box_len
-    pop
-
-main_ternary_merge@39:
-    intc_1 // 2
-    -
-    itob
-    pushint 32
+    intc_1 // 32
     bzero
-    b|
+    callsub lenB
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
-
-main_ternary_false@38:
-    intc_1 // 2
-    b main_ternary_merge@39
 
 main_ternary_false@35:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@36
 
-main_pushD_route@13:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 8
+main_after_if_else@37:
+    txn OnCompletion
+    bnz main_after_if_else@44
+    txn NumAppArgs
+    intc_2 // 2
     ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
+    bz main_after_if_else@44
+    txna ApplicationArgs 0
+    pushbytes 0x29217084
+    ==
+    bz main_after_if_else@44
     txn GroupIndex
-    bz main_ternary_false@43
+    bz main_ternary_false@42
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@44:
+main_ternary_merge@43:
     !
     assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
     dup
-    pushint 255
-    <=
-    assert // ABI validation
-    pushint 255
-    &
-    itob
-    dup
-    bitlen
-    pushint 8
-    <=
-    assert // overflow
-    extract 7 1
-    bytec_1 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    bytec 4 // "d"
-    intc_2 // 0
-    uncover 3
-    uncover 3
-    intc_0 // 1
-    callsub box_dynamic_array_concat_fixed
+    extract 0 28
+    pushint 28
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    pushint 24
+    extract_uint64
+    callsub pushC
+    bytec_0 // 0x151f7c75
+    log
     intc_0 // 1
     return
 
-main_ternary_false@43:
-    intc_2 // 0
-    b main_ternary_merge@44
+main_ternary_false@42:
+    intc_3 // 0
+    b main_ternary_merge@43
 
-main_lenC_route@12:
+main_after_if_else@44:
+    txn OnCompletion
+    bnz main_after_if_else@51
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@51
+    txna ApplicationArgs 0
+    pushbytes 0x68a1e5e0
+    ==
+    bz main_after_if_else@51
     txn GroupIndex
-    bz main_ternary_false@48
+    bz main_ternary_false@49
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@49:
+main_ternary_merge@50:
     !
     assert // not payable
-    bytec 5 // "c"
-    box_len
-    pop
-    intc_1 // 2
-    >=
-    bz main_ternary_false@51
-    bytec 5 // "c"
-    box_len
-    pop
-
-main_ternary_merge@52:
-    intc_1 // 2
-    -
-    pushint 4
-    /
-    itob
-    pushint 32
+    intc_1 // 32
     bzero
-    b|
+    callsub lenC
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -256,22 +376,21 @@ main_ternary_merge@52:
     intc_0 // 1
     return
 
-main_ternary_false@51:
-    intc_1 // 2
-    b main_ternary_merge@52
+main_ternary_false@49:
+    intc_3 // 0
+    b main_ternary_merge@50
 
-main_ternary_false@48:
-    intc_2 // 0
-    b main_ternary_merge@49
-
-main_pushC_route@11:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 8
+main_after_if_else@51:
+    txn OnCompletion
+    bnz main_after_if_else@58
+    txn NumAppArgs
+    intc_2 // 2
     ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
+    bz main_after_if_else@58
+    txna ApplicationArgs 0
+    pushbytes 0x92c2ff75
+    ==
+    bz main_after_if_else@58
     txn GroupIndex
     bz main_ternary_false@56
     txn GroupIndex
@@ -282,70 +401,62 @@ main_pushC_route@11:
 main_ternary_merge@57:
     !
     assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
     dup
-    intc 4 // 4294967295
-    <=
-    assert // ABI validation
-    intc 4 // 4294967295
-    &
-    itob
-    dup
-    bitlen
-    pushint 32
-    <=
-    assert // overflow
-    extract 4 4
-    bytec_1 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    bytec 5 // "c"
-    intc_2 // 0
-    uncover 3
-    uncover 3
-    pushint 4
-    callsub box_dynamic_array_concat_fixed
+    extract 0 31
+    pushint 31
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    pushint 24
+    extract_uint64
+    callsub pushD
+    bytec_0 // 0x151f7c75
+    log
     intc_0 // 1
     return
 
 main_ternary_false@56:
-    intc_2 // 0
+    intc_3 // 0
     b main_ternary_merge@57
 
-main_lenB_route@10:
+main_after_if_else@58:
+    txn OnCompletion
+    bnz main_after_if_else@65
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@65
+    txna ApplicationArgs 0
+    pushbytes 0x9038e416
+    ==
+    bz main_after_if_else@65
     txn GroupIndex
-    bz main_ternary_false@61
+    bz main_ternary_false@63
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@62:
+main_ternary_merge@64:
     !
     assert // not payable
-    bytec 6 // "b"
-    box_len
-    pop
-    intc_1 // 2
-    >=
-    bz main_ternary_false@64
-    bytec 6 // "b"
-    box_len
-    pop
-
-main_ternary_merge@65:
-    intc_1 // 2
-    -
-    pushint 20
-    /
-    itob
-    pushint 32
+    intc_1 // 32
     bzero
-    b|
+    callsub lenD
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -353,124 +464,199 @@ main_ternary_merge@65:
     intc_0 // 1
     return
 
-main_ternary_false@64:
-    intc_1 // 2
-    b main_ternary_merge@65
+main_ternary_false@63:
+    intc_3 // 0
+    b main_ternary_merge@64
 
-main_ternary_false@61:
-    intc_2 // 0
-    b main_ternary_merge@62
+main_after_if_else@65:
+    txn OnCompletion
+    bnz main_after_if_else@72
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@72
+    txna ApplicationArgs 0
+    pushbytes 0x01577a4a
+    ==
+    bz main_after_if_else@72
+    txn GroupIndex
+    bz main_ternary_false@70
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-main_pushB_route@9:
+main_ternary_merge@71:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    callsub pushE
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@70:
+    intc_3 // 0
+    b main_ternary_merge@71
+
+main_after_if_else@72:
+    txn OnCompletion
+    bnz main_after_if_else@79
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@79
+    txna ApplicationArgs 0
+    pushbytes 0xe44948f9
+    ==
+    bz main_after_if_else@79
+    txn GroupIndex
+    bz main_ternary_false@77
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@78:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub lenE
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@77:
+    intc_3 // 0
+    b main_ternary_merge@78
+
+main_after_if_else@79:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x7b473b04 0x237e4457 0x4b01c4a9 0x82a4b827 0x1d6704dc 0x2ec91b08 0x5fa9de0f 0x430a386d 0x9078d1b3 0x5fc1bfcc 0x92ee002f // method "__postInit()void", method "push(uint128)void", method "len()uint256", method "get(uint256)uint128", method "pushB(uint160)void", method "lenB()uint256", method "pushC(uint64)void", method "lenC()uint256", method "pushD(uint64)void", method "lenD()uint256", method "pushE(uint256)void", method "lenE()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@82 main_push_route@83 main_len_route@84 main_get_route@85 main_pushB_route@86 main_lenB_route@87 main_pushC_route@88 main_lenC_route@89 main_pushD_route@90 main_lenD_route@91 main_pushE_route@92 main_lenE_route@93
+    err
+
+main_lenE_route@93:
+    callsub lenE
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_pushE_route@92:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub pushE
+    intc_0 // 1
+    return
+
+main_lenD_route@91:
+    callsub lenD
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_pushD_route@90:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub pushD
+    intc_0 // 1
+    return
+
+main_lenC_route@89:
+    callsub lenC
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_pushC_route@88:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub pushC
+    intc_0 // 1
+    return
+
+main_lenB_route@87:
+    callsub lenB
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_pushB_route@86:
     txna ApplicationArgs 1
     dup
     len
     pushint 20
     ==
     assert // invalid number of bytes for arc4.uint160
-    txn GroupIndex
-    bz main_ternary_false@69
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@70:
-    !
-    assert // not payable
-    pushint 20
-    bzero
-    dup
-    uncover 2
-    concat
-    dup
-    len
-    pushint 20
-    -
-    pushint 20
-    extract3
-    dup
-    len
-    pushint 20
-    <=
-    assert // overflow
-    b|
-    bytec_1 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    bytec 6 // "b"
-    intc_2 // 0
-    uncover 3
-    uncover 3
-    pushint 20
-    callsub box_dynamic_array_concat_fixed
+    callsub pushB
     intc_0 // 1
     return
 
-main_ternary_false@69:
-    intc_2 // 0
-    b main_ternary_merge@70
-
-main_get_route@8:
+main_get_route@85:
     txna ApplicationArgs 1
     dup
     len
-    pushint 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@74
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@75:
-    !
-    assert // not payable
-    dup
-    pushbytes 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    intc_3 // 16
-    bzero
-    pushint 8
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    intc_3 // 16
-    *
-    intc_1 // 2
-    +
-    bytec_2 // "a"
-    swap
-    intc_3 // 16
-    box_extract // on error: index out of bounds
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_3 // 16
-    -
-    intc_3 // 16
-    extract3
-    dup
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    b|
+    callsub get
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -478,40 +664,8 @@ main_ternary_merge@75:
     intc_0 // 1
     return
 
-main_ternary_false@74:
-    intc_2 // 0
-    b main_ternary_merge@75
-
-main_len_route@7:
-    txn GroupIndex
-    bz main_ternary_false@79
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@80:
-    !
-    assert // not payable
-    bytec_2 // "a"
-    box_len
-    pop
-    intc_1 // 2
-    >=
-    bz main_ternary_false@82
-    bytec_2 // "a"
-    box_len
-    pop
-
-main_ternary_merge@83:
-    intc_1 // 2
-    -
-    intc_3 // 16
-    /
-    itob
-    pushint 32
-    bzero
-    b|
+main_len_route@84:
+    callsub len
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -519,70 +673,18 @@ main_ternary_merge@83:
     intc_0 // 1
     return
 
-main_ternary_false@82:
-    intc_1 // 2
-    b main_ternary_merge@83
-
-main_ternary_false@79:
-    intc_2 // 0
-    b main_ternary_merge@80
-
-main_push_route@6:
+main_push_route@83:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 16
+    pushint 16
     ==
     assert // invalid number of bytes for arc4.uint128
-    txn GroupIndex
-    bz main_ternary_false@87
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@88:
-    !
-    assert // not payable
-    intc_3 // 16
-    bzero
-    dup
-    uncover 2
-    concat
-    dup
-    len
-    intc_3 // 16
-    -
-    intc_3 // 16
-    extract3
-    dup
-    len
-    intc_3 // 16
-    <=
-    assert // overflow
-    b|
-    bytec_1 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    bytec_2 // "a"
-    intc_2 // 0
-    uncover 3
-    uncover 3
-    intc_3 // 16
-    callsub box_dynamic_array_concat_fixed
+    callsub push
     intc_0 // 1
     return
 
-main_ternary_false@87:
-    intc_2 // 0
-    b main_ternary_merge@88
-
-main___postInit_route@5:
+main___postInit_route@82:
     bytec 7 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -591,26 +693,26 @@ main___postInit_route@5:
     ==
     assert // __postInit callable only by the app creator
     bytec 7 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
-    bytec_2 // "a"
-    intc_1 // 2
+    bytec_1 // "a"
+    intc_2 // 2
     box_create
     pop
-    bytec 6 // "b"
-    intc_1 // 2
+    bytec_3 // "b"
+    intc_2 // 2
     box_create
     pop
-    bytec 5 // "c"
-    intc_1 // 2
+    bytec 4 // "c"
+    intc_2 // 2
     box_create
     pop
-    bytec 4 // "d"
-    intc_1 // 2
+    bytec 5 // "d"
+    intc_2 // 2
     box_create
     pop
-    bytec_3 // "e"
-    intc_1 // 2
+    bytec 6 // "e"
+    intc_2 // 2
     box_create
     pop
     intc_0 // 1
@@ -622,7 +724,7 @@ box_dynamic_array_concat_fixed:
     proto 5 0
     frame_dig -5
     frame_dig -4
-    intc_1 // 2
+    intc_2 // 2
     box_extract
     btoi
     frame_dig -5
@@ -645,7 +747,7 @@ box_dynamic_array_concat_fixed:
     uncover 2
     box_replace
     frame_dig -4
-    intc_1 // 2
+    intc_2 // 2
     +
     swap
     frame_dig -1
@@ -653,7 +755,509 @@ box_dynamic_array_concat_fixed:
     +
     frame_dig -5
     swap
-    intc_2 // 0
+    intc_3 // 0
     frame_dig -3
     box_splice
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.push(__arc4_v: bytes) -> void:
+push:
+    proto 1 0
+    txn GroupIndex
+    bz push_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+push_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 16
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 16
+    -
+    pushint 16
+    extract3
+    dup
+    len
+    pushint 16
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_1 // "a"
+    intc_3 // 0
+    uncover 3
+    uncover 3
+    pushint 16
+    callsub box_dynamic_array_concat_fixed
+    retsub
+
+push_ternary_false@2:
+    intc_3 // 0
+    b push_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.len() -> bytes:
+len:
+    txn GroupIndex
+    bz len_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+len_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "a"
+    box_len
+    pop
+    intc_2 // 2
+    >=
+    bz len_ternary_false@5
+    bytec_1 // "a"
+    box_len
+    pop
+
+len_ternary_merge@6:
+    intc_2 // 2
+    -
+    pushint 16
+    /
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+len_ternary_false@5:
+    intc_2 // 2
+    b len_ternary_merge@6
+
+len_ternary_false@2:
+    intc_3 // 0
+    b len_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.get(__arc4_i: bytes) -> bytes:
+get:
+    proto 1 1
+    txn GroupIndex
+    bz get_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+get_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    pushint 16
+    bzero
+    pushint 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    pushint 16
+    *
+    intc_2 // 2
+    +
+    bytec_1 // "a"
+    swap
+    pushint 16
+    box_extract // on error: index out of bounds
+    dig 1
+    swap
+    concat
+    dup
+    len
+    pushint 16
+    -
+    pushint 16
+    extract3
+    dup
+    len
+    pushint 16
+    <=
+    assert // overflow
+    b|
+    retsub
+
+get_ternary_false@2:
+    intc_3 // 0
+    b get_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.pushB(__arc4_v: bytes) -> void:
+pushB:
+    proto 1 0
+    txn GroupIndex
+    bz pushB_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pushB_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 20
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 20
+    -
+    pushint 20
+    extract3
+    dup
+    len
+    pushint 20
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec_3 // "b"
+    intc_3 // 0
+    uncover 3
+    uncover 3
+    pushint 20
+    callsub box_dynamic_array_concat_fixed
+    retsub
+
+pushB_ternary_false@2:
+    intc_3 // 0
+    b pushB_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.lenB() -> bytes:
+lenB:
+    txn GroupIndex
+    bz lenB_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+lenB_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_3 // "b"
+    box_len
+    pop
+    intc_2 // 2
+    >=
+    bz lenB_ternary_false@5
+    bytec_3 // "b"
+    box_len
+    pop
+
+lenB_ternary_merge@6:
+    intc_2 // 2
+    -
+    pushint 20
+    /
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+lenB_ternary_false@5:
+    intc_2 // 2
+    b lenB_ternary_merge@6
+
+lenB_ternary_false@2:
+    intc_3 // 0
+    b lenB_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.pushC(v: uint64) -> void:
+pushC:
+    proto 1 0
+    txn GroupIndex
+    bz pushC_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pushC_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    intc 4 // 4294967295
+    <=
+    assert // ABI validation
+    frame_dig -1
+    intc 4 // 4294967295
+    &
+    dup
+    frame_bury -1
+    itob
+    dup
+    bitlen
+    intc_1 // 32
+    <=
+    assert // overflow
+    extract 4 4
+    bytec_2 // 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec 4 // "c"
+    intc_3 // 0
+    uncover 3
+    uncover 3
+    pushint 4
+    callsub box_dynamic_array_concat_fixed
+    retsub
+
+pushC_ternary_false@2:
+    intc_3 // 0
+    b pushC_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.lenC() -> bytes:
+lenC:
+    txn GroupIndex
+    bz lenC_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+lenC_ternary_merge@3:
+    !
+    assert // not payable
+    bytec 4 // "c"
+    box_len
+    pop
+    intc_2 // 2
+    >=
+    bz lenC_ternary_false@5
+    bytec 4 // "c"
+    box_len
+    pop
+
+lenC_ternary_merge@6:
+    intc_2 // 2
+    -
+    pushint 4
+    /
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+lenC_ternary_false@5:
+    intc_2 // 2
+    b lenC_ternary_merge@6
+
+lenC_ternary_false@2:
+    intc_3 // 0
+    b lenC_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.pushD(v: uint64) -> void:
+pushD:
+    proto 1 0
+    txn GroupIndex
+    bz pushD_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pushD_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    pushint 255
+    <=
+    assert // ABI validation
+    frame_dig -1
+    pushint 255
+    &
+    dup
+    frame_bury -1
+    itob
+    dup
+    bitlen
+    pushint 8
+    <=
+    assert // overflow
+    extract 7 1
+    bytec_2 // 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec 5 // "d"
+    intc_3 // 0
+    uncover 3
+    uncover 3
+    intc_0 // 1
+    callsub box_dynamic_array_concat_fixed
+    retsub
+
+pushD_ternary_false@2:
+    intc_3 // 0
+    b pushD_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.lenD() -> bytes:
+lenD:
+    txn GroupIndex
+    bz lenD_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+lenD_ternary_merge@3:
+    !
+    assert // not payable
+    bytec 5 // "d"
+    box_len
+    pop
+    intc_2 // 2
+    >=
+    bz lenD_ternary_false@5
+    bytec 5 // "d"
+    box_len
+    pop
+
+lenD_ternary_merge@6:
+    intc_2 // 2
+    -
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+lenD_ternary_false@5:
+    intc_2 // 2
+    b lenD_ternary_merge@6
+
+lenD_ternary_false@2:
+    intc_3 // 0
+    b lenD_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.pushE(__arc4_v: bytes) -> void:
+pushE:
+    proto 1 0
+    txn GroupIndex
+    bz pushE_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pushE_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_2 // 0x0001
+    frame_dig -1
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    bytec 6 // "e"
+    intc_3 // 0
+    uncover 3
+    uncover 3
+    intc_1 // 32
+    callsub box_dynamic_array_concat_fixed
+    retsub
+
+pushE_ternary_false@2:
+    intc_3 // 0
+    b pushE_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.lenE() -> bytes:
+lenE:
+    txn GroupIndex
+    bz lenE_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+lenE_ternary_merge@3:
+    !
+    assert // not payable
+    bytec 6 // "e"
+    box_len
+    pop
+    intc_2 // 2
+    >=
+    bz lenE_ternary_false@5
+    bytec 6 // "e"
+    box_len
+    pop
+
+lenE_ternary_merge@6:
+    intc_2 // 2
+    -
+    intc_1 // 32
+    /
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+lenE_ternary_false@5:
+    intc_2 // 2
+    b lenE_ternary_merge@6
+
+lenE_ternary_false@2:
+    intc_3 // 0
+    b lenE_ternary_merge@3

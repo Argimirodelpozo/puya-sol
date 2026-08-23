@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_side_effect_once.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 3
-    bytecblock "cnt" 0x 0x151f7c75
+    intcblock 32 1 0 2
+    bytecblock "cnt" 0x151f7c75 0x
     pushint 4096
     bzero
     dup
@@ -25,23 +25,64 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_0 // "cnt"
-    bytec_1 // 0x
+    bytec_2 // 0x
     app_global_put
     intc_1 // 1
     return
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xc324ffdb 0xd4425ff6 0x968305e0 0x35011ef9 // method "emitOnce()uint256", method "retOnce()(uint64,uint256)", method "retDirect()uint64", method "cnt()uint256"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_emitOnce_route@5 main_retOnce_route@6 main_retDirect_route@7 main_cnt_route@8
-    err
+    pushbytes 0x582db56c
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-main_cnt_route@8:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub emitOnce
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xbba388f7
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -52,21 +93,30 @@ main_cnt_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    intc_0 // 0
-    bytec_0 // "cnt"
-    app_global_get_ex
-    bytec_1 // 0x
-    cover 2
-    select
+    intc_0 // 32
+    bzero
+    callsub retOnce
+    swap
+    itob
+    dig 2
+    swap
+    concat
     dup
     len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -74,150 +124,153 @@ main_ternary_merge@15:
     return
 
 main_ternary_false@14:
-    intc_0 // 0
+    intc_2 // 0
     b main_ternary_merge@15
 
-main_retDirect_route@7:
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0xee06f94a
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@21
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@22:
     !
     assert // not payable
-    intc_0 // 0
+    intc_0 // 32
+    bzero
+    callsub retDirect
     itob
-    bytec_0 // "cnt"
-    swap
-    app_global_put
-    callsub __solfn_25
-    dup
-    intc_3 // 3
-    <
-    assert // enum out of range
-    pushint 255
-    &
-    itob
-    bytec_2 // 0x151f7c75
-    swap
     concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@19:
-    intc_0 // 0
-    b main_ternary_merge@20
-
-main_retOnce_route@6:
-    txn GroupIndex
-    bz main_ternary_false@24
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@25:
-    !
-    assert // not payable
-    intc_0 // 0
-    itob
-    bytec_0 // "cnt"
-    swap
-    app_global_put
-    callsub __solfn_25
-    pushint 255
-    &
-    intc_0 // 0
-    bytec_0 // "cnt"
-    app_global_get_ex
-    bytec_1 // 0x
-    cover 2
-    select
     dup
     len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    swap
-    itob
-    swap
-    concat
-    bytec_2 // 0x151f7c75
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@24:
-    intc_0 // 0
-    b main_ternary_merge@25
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
 
-main_emitOnce_route@5:
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0xd6d838ad
+    ==
+    bz main_after_if_else@30
     txn GroupIndex
-    bz main_ternary_false@29
+    bz main_ternary_false@28
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+main_ternary_merge@29:
     !
     assert // not payable
-    intc_0 // 0
-    itob
-    bytec_0 // "cnt"
-    swap
-    app_global_put
-    callsub __solfn_25
-    dup
-    intc_3 // 3
-    <
-    assert // enum out of range
-    itob
-    pushbytes 0x49c42919 // method "CE(uint64)"
-    swap
+    intc_0 // 32
+    bzero
+    callsub cnt
     concat
-    log
-    intc_0 // 0
-    bytec_0 // "cnt"
-    app_global_get_ex
-    bytec_1 // 0x
-    cover 2
-    select
     dup
     len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@29:
-    intc_0 // 0
-    b main_ternary_merge@30
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xc324ffdb 0xd4425ff6 0x968305e0 0x35011ef9 // method "emitOnce()uint256", method "retOnce()(uint64,uint256)", method "retDirect()uint64", method "cnt()uint256"
+    txna ApplicationArgs 0
+    match main_emitOnce_route@33 main_retOnce_route@34 main_retDirect_route@35 main_cnt_route@36
+    err
+
+main_cnt_route@36:
+    callsub cnt
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_retDirect_route@35:
+    callsub retDirect
+    itob
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_retOnce_route@34:
+    callsub retOnce
+    swap
+    itob
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_emitOnce_route@33:
+    callsub emitOnce
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_side_effect_once.sol.C.__solfn_25() -> uint64:
 __solfn_25:
-    intc_0 // 0
+    intc_2 // 0
     bytec_0 // "cnt"
     app_global_get_ex
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     pushbytes 0x01
@@ -231,3 +284,156 @@ __solfn_25:
     app_global_put
     intc_1 // 1
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_side_effect_once.sol.C.emitOnce() -> bytes:
+emitOnce:
+    txn GroupIndex
+    bz emitOnce_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+emitOnce_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    callsub __solfn_25
+    dup
+    pushint 3
+    <
+    assert // enum out of range
+    itob
+    pushbytes 0x49c42919 // method "CE(uint64)"
+    swap
+    concat
+    log
+    intc_2 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+emitOnce_ternary_false@2:
+    intc_2 // 0
+    b emitOnce_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_side_effect_once.sol.C.retOnce() -> uint64, bytes:
+retOnce:
+    txn GroupIndex
+    bz retOnce_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+retOnce_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    callsub __solfn_25
+    pushint 255
+    &
+    intc_2 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+retOnce_ternary_false@2:
+    intc_2 // 0
+    b retOnce_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_side_effect_once.sol.C.retDirect() -> uint64:
+retDirect:
+    txn GroupIndex
+    bz retDirect_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+retDirect_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+    bytec_0 // "cnt"
+    swap
+    app_global_put
+    callsub __solfn_25
+    dup
+    pushint 3
+    <
+    assert // enum out of range
+    pushint 255
+    &
+    retsub
+
+retDirect_ternary_false@2:
+    intc_2 // 0
+    b retDirect_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_side_effect_once.sol.C.cnt() -> bytes:
+cnt:
+    txn GroupIndex
+    bz cnt_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+cnt_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+cnt_ternary_false@2:
+    intc_2 // 0
+    b cnt_ternary_merge@3

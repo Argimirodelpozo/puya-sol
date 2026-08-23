@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ctor_arg_prestmts.sol.D.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "va" 0x8000000000000000000000000000000000000000000000000000000000000000 0x
+    bytecblock "va" 0x8000000000000000000000000000000000000000000000000000000000000000 0x 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -65,25 +65,91 @@ main_else_body@3:
     b main_after_if_else@4
 
 main_after_if_else@5:
-    pushbytes 0x8323b2b3 // method "va()uint256"
-    txna ApplicationArgs 0
-    match main_va_route@7
-    err
-
-main_va_route@7:
     txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
+    bnz main_after_if_else@15
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@15
+    txna ApplicationArgs 0
+    pushbytes 0x3cc5eef8
+    ==
+    bz main_after_if_else@15
     txn GroupIndex
-    bz main_ternary_false@11
+    bz main_ternary_false@10
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@12:
+main_ternary_merge@11:
+    !
+    assert // not payable
+    callsub va
+    dup
+    intc_2 // 0
+    getbyte
+    pushint 128
+    >=
+    bz main_ternary_false@13
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@14:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@13:
+    intc_0 // 32
+    bzero
+    b main_ternary_merge@14
+
+main_ternary_false@10:
+    intc_2 // 0
+    b main_ternary_merge@11
+
+main_after_if_else@15:
+    pushbytes 0x8323b2b3 // method "va()uint256"
+    txna ApplicationArgs 0
+    match main_va_route@17
+    err
+
+main_va_route@17:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub va
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ctor_arg_prestmts.sol.D.va() -> bytes:
+va:
+    txn GroupIndex
+    bz va_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+va_ternary_merge@3:
     !
     assert // not payable
     intc_2 // 0
@@ -100,13 +166,8 @@ main_ternary_merge@12:
     intc_0 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@11:
+va_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@12
+    b va_ternary_merge@3

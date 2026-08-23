@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_before_storage_struct_delete_same_value_type.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "s" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 0 32 2
+    bytecblock "s" 0x151f7c75 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -34,57 +34,134 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x418bf109 0xf412851a // method "setAndDelete()void", method "getS()(uint256,address)"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_setAndDelete_route@5 main_getS_route@6
-    err
-
-main_getS_route@6:
+    pushbytes 0xf1f5542e
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@8:
     !
     assert // not payable
+    callsub setAndDelete
+    bytec_1 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
     intc_1 // 0
-    bytec_0 // "s"
-    app_global_get_ex
-    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 0 32
-    swap
-    extract 32 32
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xe93314ab
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    callsub getS
+    dig 2
+    uncover 2
     concat
-    pushbytes 0x151f7c75
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    dig 1
+    len
+    pushint 20
+    -
+    uncover 2
+    swap
+    pushint 20
+    extract3
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@12:
+main_ternary_false@14:
     intc_1 // 0
-    b main_ternary_merge@13
+    b main_ternary_merge@15
 
-main_setAndDelete_route@5:
+main_after_if_else@16:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x418bf109 0xf412851a // method "setAndDelete()void", method "getS()(uint256,address)"
+    txna ApplicationArgs 0
+    match main_setAndDelete_route@19 main_getS_route@20
+    err
+
+main_getS_route@20:
+    callsub getS
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_setAndDelete_route@19:
+    callsub setAndDelete
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_before_storage_struct_delete_same_value_type.sol.C.setAndDelete() -> void:
+setAndDelete:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz setAndDelete_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+setAndDelete_ternary_merge@3:
     !
     assert // not payable
     load 5
@@ -101,18 +178,46 @@ main_ternary_merge@18:
     itob
     b==
     dup
-    bnz main_after_if_else@20
+    bnz setAndDelete_after_if_else@5
     pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-main_after_if_else@20:
+setAndDelete_after_if_else@5:
     assert
     bytec_0 // "s"
-    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@17:
+setAndDelete_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@18
+    b setAndDelete_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_before_storage_struct_delete_same_value_type.sol.C.getS() -> bytes, bytes:
+getS:
+    txn GroupIndex
+    bz getS_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getS_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "s"
+    app_global_get_ex
+    bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    retsub
+
+getS_ternary_false@2:
+    intc_1 // 0
+    b getS_ternary_merge@3

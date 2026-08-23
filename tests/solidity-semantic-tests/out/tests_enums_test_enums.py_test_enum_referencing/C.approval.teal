@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_referencing.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 255
+    intcblock 1 32 0 2
     bytecblock 0x151f7c75
     pushint 4096
     bzero
@@ -29,34 +29,36 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x6ca2f943 0x7466167f 0x35009996 0xdf01cac5 0x62d38f3e // method "f()uint64", method "g()uint64", method "h()uint64", method "x()uint64", method "y()uint64"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6 main_h_route@7 main_x_route@8 main_y_route@9
-    err
-
-main_y_route@9:
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@15
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@16:
+main_ternary_merge@8:
     !
     assert // not payable
-    callsub L.g
-    dup
-    pushint 4
-    <
-    assert // enum out of range
-    intc_2 // 255
-    &
+    intc_1 // 32
+    bzero
+    callsub f
     itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -64,29 +66,42 @@ main_ternary_merge@16:
     intc_0 // 1
     return
 
-main_ternary_false@15:
-    intc_1 // 0
-    b main_ternary_merge@16
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
 
-main_x_route@8:
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xe2179b8e
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
-    bz main_ternary_false@20
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+main_ternary_merge@15:
     !
     assert // not payable
-    callsub L.f
-    dup
-    pushint 2
-    <
-    assert // enum out of range
-    intc_2 // 255
-    &
+    intc_1 // 32
+    bzero
+    callsub g
     itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -94,33 +109,109 @@ main_ternary_merge@21:
     intc_0 // 1
     return
 
-main_ternary_false@20:
-    intc_1 // 0
-    b main_ternary_merge@21
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
 
-main_h_route@7:
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0xb8c9d365
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
-    bz main_ternary_false@25
+    bz main_ternary_false@21
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@26:
+main_ternary_merge@22:
     !
     assert // not payable
-    pushbytes 0x151f7c750000000000000001
+    intc_1 // 32
+    bzero
+    callsub h
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@25:
-    intc_1 // 0
-    b main_ternary_merge@26
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
 
-main_g_route@6:
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x0c55699c
+    ==
+    bz main_after_if_else@30
     txn GroupIndex
-    bz main_ternary_false@30
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub x
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0xa56dfe4a
+    ==
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
     txn GroupIndex
     intc_0 // 1
     -
@@ -129,27 +220,88 @@ main_g_route@6:
 main_ternary_merge@36:
     !
     assert // not payable
-    pushbytes 0x151f7c750000000000000003
+    intc_1 // 32
+    bzero
+    callsub y
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@30:
-    intc_1 // 0
-    b main_ternary_merge@36
-
-main_f_route@5:
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@36
-
 main_ternary_false@35:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x6ca2f943 0x7466167f 0x35009996 0xdf01cac5 0x62d38f3e // method "f()uint64", method "g()uint64", method "h()uint64", method "x()uint64", method "y()uint64"
+    txna ApplicationArgs 0
+    match main_f_route@40 main_g_route@41 main_h_route@42 main_x_route@43 main_y_route@44
+    err
+
+main_y_route@44:
+    callsub y
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_x_route@43:
+    callsub x
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_h_route@42:
+    callsub h
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_g_route@41:
+    callsub g
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_f_route@40:
+    callsub f
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
 
 // __solfn_19() -> uint64:
@@ -162,3 +314,115 @@ L.f:
 L.g:
     pushint 3
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_referencing.sol.C.f() -> uint64:
+f:
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 3
+    retsub
+
+f_ternary_false@2:
+    intc_2 // 0
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_referencing.sol.C.g() -> uint64:
+g:
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 3
+    retsub
+
+g_ternary_false@2:
+    intc_2 // 0
+    b g_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_referencing.sol.C.h() -> uint64:
+h:
+    txn GroupIndex
+    bz h_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 1
+    retsub
+
+h_ternary_false@2:
+    intc_2 // 0
+    b h_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_referencing.sol.C.x() -> uint64:
+x:
+    txn GroupIndex
+    bz x_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@3:
+    !
+    assert // not payable
+    callsub L.f
+    dup
+    intc_3 // 2
+    <
+    assert // enum out of range
+    pushint 255
+    &
+    retsub
+
+x_ternary_false@2:
+    intc_2 // 0
+    b x_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/enums/contracts/enum_referencing.sol.C.y() -> uint64:
+y:
+    txn GroupIndex
+    bz y_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+y_ternary_merge@3:
+    !
+    assert // not payable
+    callsub L.g
+    dup
+    pushint 4
+    <
+    assert // enum out of range
+    pushint 255
+    &
+    retsub
+
+y_ternary_false@2:
+    intc_2 // 0
+    b y_ternary_merge@3

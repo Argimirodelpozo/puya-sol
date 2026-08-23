@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/external_function_pointer_address_assignment.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 8 0
-    bytecblock 0x89aac53b
+    intcblock 1 0 8
+    bytecblock 0x151f7c75 0x89aac53b
     pushint 4096
     bzero
     dup
@@ -29,17 +29,48 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xe16b4a9b
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub testFunction
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    bytec_0 // method "testFunction()void"
+    bytec_1 // method "testFunction()void"
     pushbytes 0xe20fc281 // method "testYul(address)address"
     txna ApplicationArgs 0
-    match main_testFunction_route@5 main_testYul_route@6
+    match main_testFunction_route@12 main_testYul_route@13
     err
 
-main_testYul_route@6:
+main_testYul_route@13:
     txna ApplicationArgs 1
     dup
     len
@@ -48,27 +79,27 @@ main_testYul_route@6:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@19
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@20:
     !
     assert // not payable
     global CurrentApplicationID
     itob
-    bytec_0 // method "testFunction()void"
+    bytec_1 // method "testFunction()void"
     concat
     load 0
     store 0
     swap
-    intc_1 // 8
+    intc_2 // 8
     -
     uncover 2
     swap
-    intc_1 // 8
+    intc_2 // 8
     extract3
     replace2 0
     load 0
@@ -78,31 +109,37 @@ main_ternary_merge@13:
     swap
     extract 0 8
     concat
-    pushbytes 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@12:
-    intc_2 // 0
-    b main_ternary_merge@13
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
 
-main_testFunction_route@5:
+main_testFunction_route@12:
+    callsub testFunction
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/external_function_pointer_address_assignment.sol.C.testFunction() -> void:
+testFunction:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz testFunction_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+testFunction_ternary_merge@3:
     !
     assert // not payable
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@17:
-    intc_2 // 0
-    b main_ternary_merge@18
+testFunction_ternary_false@2:
+    intc_1 // 0
+    b testFunction_ternary_merge@3

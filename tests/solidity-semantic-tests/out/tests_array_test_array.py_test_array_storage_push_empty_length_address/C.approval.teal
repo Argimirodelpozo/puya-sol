@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_push_empty_length_address.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 32 0 1
-    bytecblock "addressArray" "__ctor_pending" 0x068101
+    intcblock 2 32 1 0
+    bytecblock "addressArray" "__ctor_pending" 0x151f7c75 0x068101
     pushint 4096
     bzero
     dup
@@ -25,12 +25,68 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_3 // 1
+    intc_2 // 1
     app_global_put
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_0 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x81bc2549
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_1 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub set_get_length
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_3 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
     txn OnCompletion
     !
     assert
@@ -38,68 +94,98 @@ main_after_if_else@2:
     assert
     pushbytess 0xbacc49e3 0xd46ebdf4 // method "__postInit()void", method "set_get_length(uint256)uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_set_get_length_route@6
+    match main___postInit_route@12 main_set_get_length_route@13
     err
 
-main_set_get_length_route@6:
+main_set_get_length_route@13:
     txna ApplicationArgs 1
     dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub set_get_length
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main___postInit_route@12:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_3 // 0
+    app_global_put
+    bytec_0 // "addressArray"
+    intc_0 // 2
+    box_create
+    pop
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_push_empty_length_address.sol.C.set_get_length(__arc4_len: bytes) -> bytes:
+set_get_length:
+    proto 1 1
     txn GroupIndex
-    bz main_ternary_false@12
+    bz set_get_length_ternary_false@2
     txn GroupIndex
-    intc_3 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+set_get_length_ternary_merge@3:
     !
     assert // not payable
 
-main_while_top@33:
+set_get_length_while_top@20:
     pushint 45010
     global OpcodeBudget
     >
-    bz main_while_top@14
+    bz set_get_length_while_top@4
     itxn_begin
     pushint 6 // appl
     itxn_field TypeEnum
     pushint 5 // DeleteApplication
     itxn_field OnCompletion
-    bytec_2 // 0x068101
+    bytec_3 // 0x068101
     itxn_field ApprovalProgram
-    bytec_2 // 0x068101
+    bytec_3 // 0x068101
     itxn_field ClearStateProgram
-    intc_2 // 0
+    intc_3 // 0
     itxn_field Fee
     itxn_submit
-    b main_while_top@33
+    b set_get_length_while_top@20
 
-main_while_top@14:
+set_get_length_while_top@4:
     bytec_0 // "addressArray"
     box_len
     pop
     intc_0 // 2
     >=
-    bz main_ternary_false@16
+    bz set_get_length_ternary_false@6
     bytec_0 // "addressArray"
     box_len
     pop
 
-main_ternary_merge@17:
+set_get_length_ternary_merge@7:
     intc_0 // 2
     -
     intc_1 // 32
     /
     itob
-    dig 1
+    frame_dig -1
     b<
-    bz main_while_top@19
+    bz set_get_length_while_top@10
     bytec_0 // "addressArray"
-    intc_2 // 0
+    intc_3 // 0
     intc_0 // 2
     box_extract
     btoi
@@ -112,12 +198,12 @@ main_ternary_merge@17:
     swap
     box_resize
     dup
-    intc_3 // 1
+    intc_2 // 1
     +
     itob
     extract 6 2
     bytec_0 // "addressArray"
-    intc_2 // 0
+    intc_3 // 0
     uncover 2
     box_replace
     intc_1 // 32
@@ -126,43 +212,43 @@ main_ternary_merge@17:
     +
     bytec_0 // "addressArray"
     swap
-    intc_2 // 0
+    intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     box_splice
-    b main_while_top@14
+    b set_get_length_while_top@4
 
-main_while_top@19:
+set_get_length_while_top@10:
     bytec_0 // "addressArray"
     box_len
     pop
     intc_0 // 2
     >=
-    bz main_ternary_false@21
+    bz set_get_length_ternary_false@12
     bytec_0 // "addressArray"
     box_len
     pop
 
-main_ternary_merge@22:
+set_get_length_ternary_merge@13:
     intc_0 // 2
     -
     intc_1 // 32
     /
     itob
-    dig 1
+    frame_dig -1
     b>
-    bz main_after_while@24
+    bz set_get_length_after_while@15
     bytec_0 // "addressArray"
-    intc_2 // 0
+    intc_3 // 0
     intc_0 // 2
     box_extract
     btoi
-    intc_3 // 1
+    intc_2 // 1
     -
     dup
     itob
     extract 6 2
     bytec_0 // "addressArray"
-    intc_2 // 0
+    intc_3 // 0
     uncover 2
     box_replace
     intc_1 // 32
@@ -182,21 +268,20 @@ main_ternary_merge@22:
     bytec_0 // "addressArray"
     swap
     box_resize
-    b main_while_top@19
+    b set_get_length_while_top@10
 
-main_after_while@24:
-    pop
+set_get_length_after_while@15:
     bytec_0 // "addressArray"
     box_len
     pop
     intc_0 // 2
     >=
-    bz main_ternary_false@26
+    bz set_get_length_ternary_false@17
     bytec_0 // "addressArray"
     box_len
     pop
 
-main_ternary_merge@27:
+set_get_length_ternary_merge@18:
     intc_0 // 2
     -
     intc_1 // 32
@@ -205,43 +290,20 @@ main_ternary_merge@27:
     intc_1 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_3 // 1
-    return
+    retsub
 
-main_ternary_false@26:
+set_get_length_ternary_false@17:
     intc_0 // 2
-    b main_ternary_merge@27
+    b set_get_length_ternary_merge@18
 
-main_ternary_false@21:
+set_get_length_ternary_false@12:
     intc_0 // 2
-    b main_ternary_merge@22
+    b set_get_length_ternary_merge@13
 
-main_ternary_false@16:
+set_get_length_ternary_false@6:
     intc_0 // 2
-    b main_ternary_merge@17
+    b set_get_length_ternary_merge@7
 
-main_ternary_false@12:
-    intc_2 // 0
-    b main_ternary_merge@13
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_0 // "addressArray"
-    intc_0 // 2
-    box_create
-    pop
-    intc_3 // 1
-    return
+set_get_length_ternary_false@2:
+    intc_3 // 0
+    b set_get_length_ternary_merge@3

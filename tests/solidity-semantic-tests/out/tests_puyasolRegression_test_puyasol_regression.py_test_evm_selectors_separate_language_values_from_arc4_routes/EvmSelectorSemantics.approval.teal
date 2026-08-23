@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.approval_program() -> uint64:
 main:
     intcblock 1 32 0 4096 20480 4064
-    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000024 0x76542536 0x01e1efa5 0x49f0dfa3 0x4ceb18f5 0x11bfb764 0xe3f88c1e 0xb628d01a 0x890c45f7 0xabdb4af2 0x984a74b0 0x5042f554 0x83d99a37 0x1da899a8 0xefd3cee0 0xa7043bd9 0x77575e33 0xe13cf0f0 0x67adad22 0x5923cdaa 0xa64d0cd4 0x4d80421b 0xf8ef89f2 0x01eb435e 0x09dac9d7 0x8cf53067 0xd207632b 0xcc18591a 0x8b8cda79 0x00000000 0xa7043bd900000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000024 0xa7043bd9 0x76542536 0x77575e33 0xe13cf0f0 0x67adad22 0x5923cdaa 0xa64d0cd4 0x01eb435e 0x09dac9d7 0x8cf53067 0xd207632b 0xcc18591a 0x01e1efa5 0x49f0dfa3 0x4ceb18f5 0x11bfb764 0xe3f88c1e 0xb628d01a 0x890c45f7 0xabdb4af2 0x984a74b0 0x5042f554 0x83d99a37 0x1da899a8 0xefd3cee0 0x4d80421b 0xf8ef89f2 0x8b8cda79 0xa7043bd900000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x00000000
     intc_2 // 0
     pushbytes ""
     dup
@@ -32,29 +32,467 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    bytec_2 // 0xa7043bd9
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_1 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub alpha
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    bytec 4 // 0x77575e33
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    extract 0 32
+    callsub noReturn
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    bytec 5 // 0xe13cf0f0
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    callsub functionSelector
+    pushint 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    bytec 6 // 0x67adad22
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    callsub eventSelector
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    bytec 7 // 0x5923cdaa
+    ==
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    callsub errorSelector
+    pushint 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@35:
+    intc_2 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
+    bnz main_after_if_else@44
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@44
+    txna ApplicationArgs 0
+    bytec 8 // 0xa64d0cd4
+    ==
+    bz main_after_if_else@44
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    callsub interfaceId
+    pushint 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@42:
+    intc_2 // 0
+    b main_ternary_merge@43
+
+main_after_if_else@44:
+    txn OnCompletion
+    bnz main_after_if_else@51
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@51
+    txna ApplicationArgs 0
+    bytec 9 // 0x01eb435e
+    ==
+    bz main_after_if_else@51
+    txn GroupIndex
+    bz main_ternary_false@49
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@50:
+    !
+    assert // not payable
+    callsub pointerSelector
+    pushint 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@49:
+    intc_2 // 0
+    b main_ternary_merge@50
+
+main_after_if_else@51:
+    txn OnCompletion
+    bnz main_after_if_else@58
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@58
+    txna ApplicationArgs 0
+    bytec 10 // 0x09dac9d7
+    ==
+    bz main_after_if_else@58
+    txn GroupIndex
+    bz main_ternary_false@56
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@57:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_1 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub pointerCall
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@56:
+    intc_2 // 0
+    b main_ternary_merge@57
+
+main_after_if_else@58:
+    txn OnCompletion
+    bnz main_after_if_else@65
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@65
+    txna ApplicationArgs 0
+    bytec 11 // 0x8cf53067
+    ==
+    bz main_after_if_else@65
+    txn GroupIndex
+    bz main_ternary_false@63
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@64:
+    !
+    assert // not payable
+    callsub innerMsgSig
+    pushint 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@63:
+    intc_2 // 0
+    b main_ternary_merge@64
+
+main_after_if_else@65:
+    txn OnCompletion
+    bnz main_after_if_else@72
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@72
+    txna ApplicationArgs 0
+    bytec 12 // 0xd207632b
+    ==
+    bz main_after_if_else@72
+    txn GroupIndex
+    bz main_ternary_false@70
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@71:
+    !
+    assert // not payable
+    callsub outerMsgSig
+    pushint 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@70:
+    intc_2 // 0
+    b main_ternary_merge@71
+
+main_after_if_else@72:
+    txn OnCompletion
+    bnz main_after_if_else@79
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@79
+    txna ApplicationArgs 0
+    bytec 13 // 0xcc18591a
+    ==
+    bz main_after_if_else@79
+    txn GroupIndex
+    bz main_ternary_false@77
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@78:
+    !
+    assert // not payable
+    callsub directMsgSig
+    pushint 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@77:
+    intc_2 // 0
+    b main_ternary_merge@78
+
+main_after_if_else@79:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    bytec_3 // method "alpha(uint256)bool"
-    bytec 4 // method "noReturn(byte[32])void"
-    bytec 5 // method "functionSelector()byte[4]"
-    bytec 6 // method "eventSelector()byte[32]"
-    bytec 7 // method "errorSelector()byte[4]"
-    bytec 8 // method "interfaceId()byte[4]"
-    bytec 9 // method "encodedCallSelector()byte[4]"
-    bytec 10 // method "encodedSignatureSelector()byte[4]"
-    bytec 11 // method "pointerSelector()byte[4]"
-    bytec 12 // method "pointerCall(uint256)bool"
-    bytec_2 // method "innerMsgSig()byte[4]"
-    bytec 13 // method "outerMsgSig()byte[4]"
-    bytec 14 // method "directMsgSig()byte[4]"
-    bytec 15 // method "assemblyMsgSig(uint256)byte[4]"
+    bytec 14 // method "alpha(uint256)bool"
+    bytec 15 // method "noReturn(byte[32])void"
+    bytec 16 // method "functionSelector()byte[4]"
+    bytec 17 // method "eventSelector()byte[32]"
+    bytec 18 // method "errorSelector()byte[4]"
+    bytec 19 // method "interfaceId()byte[4]"
+    bytec 20 // method "encodedCallSelector()byte[4]"
+    bytec 21 // method "encodedSignatureSelector()byte[4]"
+    bytec 22 // method "pointerSelector()byte[4]"
+    bytec 23 // method "pointerCall(uint256)bool"
+    bytec_3 // method "innerMsgSig()byte[4]"
+    bytec 24 // method "outerMsgSig()byte[4]"
+    bytec 25 // method "directMsgSig()byte[4]"
+    bytec 26 // method "assemblyMsgSig(uint256)byte[4]"
     txna ApplicationArgs 0
-    match main_alpha_route@5 main_noReturn_route@6 main_functionSelector_route@7 main_eventSelector_route@8 main_errorSelector_route@9 main_interfaceId_route@10 main_encodedCallSelector_route@11 main_encodedSignatureSelector_route@12 main_pointerSelector_route@13 main_pointerCall_route@14 main_innerMsgSig_route@15 main_outerMsgSig_route@16 main_directMsgSig_route@17 main_assemblyMsgSig_route@18
+    match main_alpha_route@82 main_noReturn_route@83 main_functionSelector_route@84 main_eventSelector_route@85 main_errorSelector_route@86 main_interfaceId_route@87 main_encodedCallSelector_route@88 main_encodedSignatureSelector_route@89 main_pointerSelector_route@90 main_pointerCall_route@91 main_innerMsgSig_route@92 main_outerMsgSig_route@93 main_directMsgSig_route@94 main_assemblyMsgSig_route@95
     err
 
-main_assemblyMsgSig_route@18:
+main_assemblyMsgSig_route@95:
     txna ApplicationArgs 1
     dup
     bury 4
@@ -63,30 +501,30 @@ main_assemblyMsgSig_route@18:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@101
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@102:
     !
     assert // not payable
     load 0
     store 0
     txn NumAppArgs
-    bz main_ternary_false@27
+    bz main_ternary_false@104
     txna ApplicationArgs 0
 
-main_ternary_merge@28:
+main_ternary_merge@105:
     dup
-    bytec_3 // method "alpha(uint256)bool"
+    bytec 14 // method "alpha(uint256)bool"
     ==
-    bz main_ternary_false@30
+    bz main_ternary_false@107
     pop
-    bytec 16 // 0xa7043bd9
+    bytec_2 // 0xa7043bd9
 
-main_ternary_merge@70:
+main_ternary_merge@147:
     intc_1 // 32
     bzero
     dup
@@ -117,10 +555,10 @@ main_ternary_merge@70:
     dup
     cover 2
     <
-    bz main_ternary_false@72
+    bz main_ternary_false@149
     pop
 
-main_ternary_merge@73:
+main_ternary_merge@150:
     intc_1 // 32
     extract3
     concat
@@ -140,370 +578,182 @@ main_ternary_merge@73:
     intc_0 // 1
     return
 
-main_ternary_false@72:
+main_ternary_false@149:
     bury 1
-    b main_ternary_merge@73
-
-main_ternary_false@30:
-    dup
-    bytec 4 // method "noReturn(byte[32])void"
-    ==
-    bz main_ternary_false@32
-    pop
-    bytec 17 // 0x77575e33
-
-main_ternary_merge@69:
-    b main_ternary_merge@70
-
-main_ternary_false@32:
-    dup
-    bytec 5 // method "functionSelector()byte[4]"
-    ==
-    bz main_ternary_false@34
-    pop
-    bytec 18 // 0xe13cf0f0
-
-main_ternary_merge@68:
-    b main_ternary_merge@70
-
-main_ternary_false@34:
-    dup
-    bytec 6 // method "eventSelector()byte[32]"
-    ==
-    bz main_ternary_false@36
-    pop
-    bytec 19 // 0x67adad22
-
-main_ternary_merge@67:
-    b main_ternary_merge@69
-
-main_ternary_false@36:
-    dup
-    bytec 7 // method "errorSelector()byte[4]"
-    ==
-    bz main_ternary_false@38
-    pop
-    bytec 20 // 0x5923cdaa
-
-main_ternary_merge@66:
-    b main_ternary_merge@68
-
-main_ternary_false@38:
-    dup
-    bytec 8 // method "interfaceId()byte[4]"
-    ==
-    bz main_ternary_false@40
-    pop
-    bytec 21 // 0xa64d0cd4
-
-main_ternary_merge@65:
-    b main_ternary_merge@67
-
-main_ternary_false@40:
-    dup
-    bytec 9 // method "encodedCallSelector()byte[4]"
-    ==
-    bz main_ternary_false@42
-    pop
-    bytec 22 // 0x4d80421b
-
-main_ternary_merge@64:
-    b main_ternary_merge@66
-
-main_ternary_false@42:
-    dup
-    bytec 10 // method "encodedSignatureSelector()byte[4]"
-    ==
-    bz main_ternary_false@44
-    pop
-    bytec 23 // 0xf8ef89f2
-
-main_ternary_merge@63:
-    b main_ternary_merge@65
-
-main_ternary_false@44:
-    dup
-    bytec 11 // method "pointerSelector()byte[4]"
-    ==
-    bz main_ternary_false@46
-    pop
-    bytec 24 // 0x01eb435e
-
-main_ternary_merge@62:
-    b main_ternary_merge@64
-
-main_ternary_false@46:
-    dup
-    bytec 12 // method "pointerCall(uint256)bool"
-    ==
-    bz main_ternary_false@48
-    pop
-    bytec 25 // 0x09dac9d7
-
-main_ternary_merge@61:
-    b main_ternary_merge@63
-
-main_ternary_false@48:
-    dup
-    bytec_2 // method "innerMsgSig()byte[4]"
-    ==
-    bz main_ternary_false@50
-    pop
-    bytec 26 // 0x8cf53067
-
-main_ternary_merge@60:
-    b main_ternary_merge@62
-
-main_ternary_false@50:
-    dup
-    bytec 13 // method "outerMsgSig()byte[4]"
-    ==
-    bz main_ternary_false@52
-    pop
-    bytec 27 // 0xd207632b
-
-main_ternary_merge@59:
-    b main_ternary_merge@61
-
-main_ternary_false@52:
-    dup
-    bytec 14 // method "directMsgSig()byte[4]"
-    ==
-    bz main_ternary_false@54
-    pop
-    bytec 28 // 0xcc18591a
-
-main_ternary_merge@58:
-    b main_ternary_merge@60
-
-main_ternary_false@54:
-    dup
-    bytec 15 // method "assemblyMsgSig(uint256)byte[4]"
-    ==
-    bz main_ternary_false@56
-    pop
-    bytec 29 // 0x8b8cda79
-    b main_ternary_merge@59
-
-main_ternary_false@56:
-    b main_ternary_merge@58
-
-main_ternary_false@27:
-    pushint 4
-    bzero
-    b main_ternary_merge@28
-
-main_ternary_false@24:
-    intc_2 // 0
-    b main_ternary_merge@25
-
-main_directMsgSig_route@17:
-    txn GroupIndex
-    bz main_ternary_false@77
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@78:
-    !
-    assert // not payable
-    txn NumAppArgs
-    bz main_ternary_false@80
-    txna ApplicationArgs 0
-
-main_ternary_merge@81:
-    dup
-    bytec_3 // method "alpha(uint256)bool"
-    ==
-    bz main_ternary_false@83
-    pop
-    bytec 16 // 0xa7043bd9
-
-main_ternary_merge@123:
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@83:
-    dup
-    bytec 4 // method "noReturn(byte[32])void"
-    ==
-    bz main_ternary_false@85
-    pop
-    bytec 17 // 0x77575e33
-
-main_ternary_merge@122:
-    b main_ternary_merge@123
-
-main_ternary_false@85:
-    dup
-    bytec 5 // method "functionSelector()byte[4]"
-    ==
-    bz main_ternary_false@87
-    pop
-    bytec 18 // 0xe13cf0f0
-
-main_ternary_merge@121:
-    b main_ternary_merge@123
-
-main_ternary_false@87:
-    dup
-    bytec 6 // method "eventSelector()byte[32]"
-    ==
-    bz main_ternary_false@89
-    pop
-    bytec 19 // 0x67adad22
-
-main_ternary_merge@120:
-    b main_ternary_merge@122
-
-main_ternary_false@89:
-    dup
-    bytec 7 // method "errorSelector()byte[4]"
-    ==
-    bz main_ternary_false@91
-    pop
-    bytec 20 // 0x5923cdaa
-
-main_ternary_merge@119:
-    b main_ternary_merge@121
-
-main_ternary_false@91:
-    dup
-    bytec 8 // method "interfaceId()byte[4]"
-    ==
-    bz main_ternary_false@93
-    pop
-    bytec 21 // 0xa64d0cd4
-
-main_ternary_merge@118:
-    b main_ternary_merge@120
-
-main_ternary_false@93:
-    dup
-    bytec 9 // method "encodedCallSelector()byte[4]"
-    ==
-    bz main_ternary_false@95
-    pop
-    bytec 22 // 0x4d80421b
-
-main_ternary_merge@117:
-    b main_ternary_merge@119
-
-main_ternary_false@95:
-    dup
-    bytec 10 // method "encodedSignatureSelector()byte[4]"
-    ==
-    bz main_ternary_false@97
-    pop
-    bytec 23 // 0xf8ef89f2
-
-main_ternary_merge@116:
-    b main_ternary_merge@118
-
-main_ternary_false@97:
-    dup
-    bytec 11 // method "pointerSelector()byte[4]"
-    ==
-    bz main_ternary_false@99
-    pop
-    bytec 24 // 0x01eb435e
-
-main_ternary_merge@115:
-    b main_ternary_merge@117
-
-main_ternary_false@99:
-    dup
-    bytec 12 // method "pointerCall(uint256)bool"
-    ==
-    bz main_ternary_false@101
-    pop
-    bytec 25 // 0x09dac9d7
-
-main_ternary_merge@114:
-    b main_ternary_merge@116
-
-main_ternary_false@101:
-    dup
-    bytec_2 // method "innerMsgSig()byte[4]"
-    ==
-    bz main_ternary_false@103
-    pop
-    bytec 26 // 0x8cf53067
-
-main_ternary_merge@113:
-    b main_ternary_merge@115
-
-main_ternary_false@103:
-    dup
-    bytec 13 // method "outerMsgSig()byte[4]"
-    ==
-    bz main_ternary_false@105
-    pop
-    bytec 27 // 0xd207632b
-
-main_ternary_merge@112:
-    b main_ternary_merge@114
-
-main_ternary_false@105:
-    dup
-    bytec 14 // method "directMsgSig()byte[4]"
-    ==
-    bz main_ternary_false@107
-    pop
-    bytec 28 // 0xcc18591a
-
-main_ternary_merge@111:
-    b main_ternary_merge@113
+    b main_ternary_merge@150
 
 main_ternary_false@107:
     dup
-    bytec 15 // method "assemblyMsgSig(uint256)byte[4]"
+    bytec 15 // method "noReturn(byte[32])void"
     ==
     bz main_ternary_false@109
     pop
-    bytec 29 // 0x8b8cda79
-    b main_ternary_merge@112
+    bytec 4 // 0x77575e33
+
+main_ternary_merge@146:
+    b main_ternary_merge@147
 
 main_ternary_false@109:
-    b main_ternary_merge@111
+    dup
+    bytec 16 // method "functionSelector()byte[4]"
+    ==
+    bz main_ternary_false@111
+    pop
+    bytec 5 // 0xe13cf0f0
 
-main_ternary_false@80:
-    bytec 30 // 0x00000000
-    b main_ternary_merge@81
+main_ternary_merge@145:
+    b main_ternary_merge@147
 
-main_ternary_false@77:
-    intc_2 // 0
-    b main_ternary_merge@78
+main_ternary_false@111:
+    dup
+    bytec 17 // method "eventSelector()byte[32]"
+    ==
+    bz main_ternary_false@113
+    pop
+    bytec 6 // 0x67adad22
 
-main_outerMsgSig_route@16:
-    txn GroupIndex
+main_ternary_merge@144:
+    b main_ternary_merge@146
+
+main_ternary_false@113:
+    dup
+    bytec 18 // method "errorSelector()byte[4]"
+    ==
+    bz main_ternary_false@115
+    pop
+    bytec 7 // 0x5923cdaa
+
+main_ternary_merge@143:
+    b main_ternary_merge@145
+
+main_ternary_false@115:
+    dup
+    bytec 19 // method "interfaceId()byte[4]"
+    ==
+    bz main_ternary_false@117
+    pop
+    bytec 8 // 0xa64d0cd4
+
+main_ternary_merge@142:
+    b main_ternary_merge@144
+
+main_ternary_false@117:
+    dup
+    bytec 20 // method "encodedCallSelector()byte[4]"
+    ==
+    bz main_ternary_false@119
+    pop
+    bytec 27 // 0x4d80421b
+
+main_ternary_merge@141:
+    b main_ternary_merge@143
+
+main_ternary_false@119:
+    dup
+    bytec 21 // method "encodedSignatureSelector()byte[4]"
+    ==
+    bz main_ternary_false@121
+    pop
+    bytec 28 // 0xf8ef89f2
+
+main_ternary_merge@140:
+    b main_ternary_merge@142
+
+main_ternary_false@121:
+    dup
+    bytec 22 // method "pointerSelector()byte[4]"
+    ==
+    bz main_ternary_false@123
+    pop
+    bytec 9 // 0x01eb435e
+
+main_ternary_merge@139:
+    b main_ternary_merge@141
+
+main_ternary_false@123:
+    dup
+    bytec 23 // method "pointerCall(uint256)bool"
+    ==
+    bz main_ternary_false@125
+    pop
+    bytec 10 // 0x09dac9d7
+
+main_ternary_merge@138:
+    b main_ternary_merge@140
+
+main_ternary_false@125:
+    dup
+    bytec_3 // method "innerMsgSig()byte[4]"
+    ==
     bz main_ternary_false@127
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    pop
+    bytec 11 // 0x8cf53067
 
-main_ternary_merge@128:
-    !
-    assert // not payable
-    callsub innerMsgSig
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+main_ternary_merge@137:
+    b main_ternary_merge@139
 
 main_ternary_false@127:
-    intc_2 // 0
-    b main_ternary_merge@128
+    dup
+    bytec 24 // method "outerMsgSig()byte[4]"
+    ==
+    bz main_ternary_false@129
+    pop
+    bytec 12 // 0xd207632b
 
-main_innerMsgSig_route@15:
+main_ternary_merge@136:
+    b main_ternary_merge@138
+
+main_ternary_false@129:
+    dup
+    bytec 25 // method "directMsgSig()byte[4]"
+    ==
+    bz main_ternary_false@131
+    pop
+    bytec 13 // 0xcc18591a
+
+main_ternary_merge@135:
+    b main_ternary_merge@137
+
+main_ternary_false@131:
+    dup
+    bytec 26 // method "assemblyMsgSig(uint256)byte[4]"
+    ==
+    bz main_ternary_false@133
+    pop
+    bytec 29 // 0x8b8cda79
+    b main_ternary_merge@136
+
+main_ternary_false@133:
+    b main_ternary_merge@135
+
+main_ternary_false@104:
+    pushint 4
+    bzero
+    b main_ternary_merge@105
+
+main_ternary_false@101:
+    intc_2 // 0
+    b main_ternary_merge@102
+
+main_directMsgSig_route@94:
+    callsub directMsgSig
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_outerMsgSig_route@93:
+    callsub outerMsgSig
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_innerMsgSig_route@92:
     callsub innerMsgSig
     bytec_0 // 0x151f7c75
     swap
@@ -512,24 +762,14 @@ main_innerMsgSig_route@15:
     intc_0 // 1
     return
 
-main_pointerCall_route@14:
+main_pointerCall_route@91:
     txna ApplicationArgs 1
     dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@134
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@135:
-    !
-    assert // not payable
-    callsub alpha
+    callsub pointerCall
     pushbytes 0x00
     intc_2 // 0
     uncover 2
@@ -541,26 +781,8 @@ main_ternary_merge@135:
     intc_0 // 1
     return
 
-main_ternary_false@134:
-    intc_2 // 0
-    b main_ternary_merge@135
-
-main_pointerSelector_route@13:
-    txn GroupIndex
-    bz main_ternary_false@139
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@140:
-    !
-    assert // not payable
-    global CurrentApplicationID
-    itob
-    pushbytes 0xa7043bd901e1efa5
-    concat
-    extract 8 4
+main_pointerSelector_route@90:
+    callsub pointerSelector
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -568,19 +790,15 @@ main_ternary_merge@140:
     intc_0 // 1
     return
 
-main_ternary_false@139:
-    intc_2 // 0
-    b main_ternary_merge@140
-
-main_encodedSignatureSelector_route@12:
+main_encodedSignatureSelector_route@89:
     txn GroupIndex
-    bz main_ternary_false@144
+    bz main_ternary_false@164
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@145:
+main_ternary_merge@165:
     !
     assert // not payable
     intc_1 // 32
@@ -609,7 +827,7 @@ main_ternary_merge@145:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@147
+    bz main_else_body@167
     swap
     dup
     loads
@@ -618,7 +836,7 @@ main_ternary_merge@145:
     replace3
     stores
 
-main_after_if_else@148:
+main_after_if_else@168:
     load 0
     dig 2
     pushint 96
@@ -631,11 +849,11 @@ main_after_if_else@148:
     store 0
     intc_2 // 0
 
-main_while_top@149:
+main_while_top@169:
     dup
     pushint 36
     <
-    bz main_after_while@154
+    bz main_after_while@174
     dig 3
     dig 1
     dup
@@ -655,14 +873,14 @@ main_while_top@149:
     %
     dup
     cover 4
-    bytec 31 // 0xa7043bd900000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000000
+    bytec 30 // 0xa7043bd900000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000000
     uncover 2
     intc_1 // 32
     extract3
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@152
+    bz main_else_body@172
     uncover 2
     dup
     loads
@@ -671,12 +889,12 @@ main_while_top@149:
     replace3
     stores
 
-main_after_if_else@153:
+main_after_if_else@173:
     intc_1 // 32
     +
-    b main_while_top@149
+    b main_while_top@169
 
-main_else_body@152:
+main_else_body@172:
     uncover 2
     dup
     loads
@@ -709,9 +927,9 @@ main_else_body@152:
     extract3
     replace2 0
     stores
-    b main_after_if_else@153
+    b main_after_if_else@173
 
-main_after_while@154:
+main_after_while@174:
     pop
     load 0
     store 0
@@ -721,7 +939,7 @@ main_after_while@154:
     itob
     pushbytes 0x20
     b+
-    bytec 32 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 31 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     concat
     dup
@@ -746,7 +964,7 @@ main_after_while@154:
     cover 2
     intc_1 // 32
     >=
-    bz main_ternary_false@156
+    bz main_ternary_false@176
     bury 1
     intc_3 // 4096
     /
@@ -755,7 +973,7 @@ main_after_while@154:
     intc_1 // 32
     extract3
 
-main_ternary_merge@174:
+main_ternary_merge@194:
     concat
     dup
     len
@@ -773,7 +991,7 @@ main_ternary_merge@174:
     intc_0 // 1
     return
 
-main_ternary_false@156:
+main_ternary_false@176:
     intc_3 // 4096
     /
     dup
@@ -792,9 +1010,9 @@ main_ternary_false@156:
     swap
     extract3
     concat
-    b main_ternary_merge@174
+    b main_ternary_merge@194
 
-main_else_body@147:
+main_else_body@167:
     swap
     dup
     loads
@@ -827,21 +1045,21 @@ main_else_body@147:
     extract3
     replace2 0
     stores
-    b main_after_if_else@148
+    b main_after_if_else@168
 
-main_ternary_false@144:
+main_ternary_false@164:
     intc_2 // 0
-    b main_ternary_merge@145
+    b main_ternary_merge@165
 
-main_encodedCallSelector_route@11:
+main_encodedCallSelector_route@88:
     txn GroupIndex
-    bz main_ternary_false@161
+    bz main_ternary_false@181
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@162:
+main_ternary_merge@182:
     !
     assert // not payable
     intc_1 // 32
@@ -870,7 +1088,7 @@ main_ternary_merge@162:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@164
+    bz main_else_body@184
     swap
     dup
     loads
@@ -879,7 +1097,7 @@ main_ternary_merge@162:
     replace3
     stores
 
-main_after_if_else@165:
+main_after_if_else@185:
     load 0
     dig 2
     pushint 96
@@ -892,11 +1110,11 @@ main_after_if_else@165:
     store 0
     intc_2 // 0
 
-main_while_top@166:
+main_while_top@186:
     dup
     pushint 36
     <
-    bz main_after_while@171
+    bz main_after_while@191
     dig 4
     dig 1
     dup
@@ -916,14 +1134,14 @@ main_while_top@166:
     %
     dup
     cover 4
-    bytec 31 // 0xa7043bd900000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000000
+    bytec 30 // 0xa7043bd900000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000000
     uncover 2
     intc_1 // 32
     extract3
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@169
+    bz main_else_body@189
     uncover 2
     dup
     loads
@@ -932,12 +1150,12 @@ main_while_top@166:
     replace3
     stores
 
-main_after_if_else@170:
+main_after_if_else@190:
     intc_1 // 32
     +
-    b main_while_top@166
+    b main_while_top@186
 
-main_else_body@169:
+main_else_body@189:
     uncover 2
     dup
     loads
@@ -970,9 +1188,9 @@ main_else_body@169:
     extract3
     replace2 0
     stores
-    b main_after_if_else@170
+    b main_after_if_else@190
 
-main_after_while@171:
+main_after_while@191:
     pop
     load 0
     store 0
@@ -982,7 +1200,7 @@ main_after_while@171:
     itob
     pushbytes 0x20
     b+
-    bytec 32 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 31 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     concat
     dup
@@ -1007,7 +1225,7 @@ main_after_while@171:
     cover 2
     intc_1 // 32
     >=
-    bz main_ternary_false@173
+    bz main_ternary_false@193
     bury 1
     intc_3 // 4096
     /
@@ -1015,9 +1233,9 @@ main_after_while@171:
     swap
     intc_1 // 32
     extract3
-    b main_ternary_merge@174
+    b main_ternary_merge@194
 
-main_ternary_false@173:
+main_ternary_false@193:
     intc_3 // 4096
     /
     dup
@@ -1036,9 +1254,9 @@ main_ternary_false@173:
     swap
     extract3
     concat
-    b main_ternary_merge@174
+    b main_ternary_merge@194
 
-main_else_body@164:
+main_else_body@184:
     swap
     dup
     loads
@@ -1071,116 +1289,60 @@ main_else_body@164:
     extract3
     replace2 0
     stores
-    b main_after_if_else@165
+    b main_after_if_else@185
 
-main_ternary_false@161:
+main_ternary_false@181:
     intc_2 // 0
-    b main_ternary_merge@162
+    b main_ternary_merge@182
 
-main_interfaceId_route@10:
-    txn GroupIndex
-    bz main_ternary_false@178
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@179:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75d05365ea
+main_interfaceId_route@87:
+    callsub interfaceId
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@178:
-    intc_2 // 0
-    b main_ternary_merge@179
-
-main_errorSelector_route@9:
-    txn GroupIndex
-    bz main_ternary_false@183
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@184:
-    !
-    assert // not payable
-    pushbytes 0x151f7c751167d8fb
+main_errorSelector_route@86:
+    callsub errorSelector
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@183:
-    intc_2 // 0
-    b main_ternary_merge@184
-
-main_eventSelector_route@8:
-    txn GroupIndex
-    bz main_ternary_false@188
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@189:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75d643c01d22702743c4086499fc0fb9fe5e06272216181007be2387d3f1680d1e
+main_eventSelector_route@85:
+    callsub eventSelector
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@188:
-    intc_2 // 0
-    b main_ternary_merge@189
-
-main_functionSelector_route@7:
-    txn GroupIndex
-    bz main_ternary_false@193
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@194:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75a7043bd9
+main_functionSelector_route@84:
+    callsub functionSelector
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@193:
-    intc_2 // 0
-    b main_ternary_merge@194
-
-main_noReturn_route@6:
+main_noReturn_route@83:
     txna ApplicationArgs 1
+    dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@198
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@199:
-    !
-    assert // not payable
+    callsub noReturn
     intc_0 // 1
     return
 
-main_ternary_false@198:
-    intc_2 // 0
-    b main_ternary_merge@199
-
-main_alpha_route@5:
+main_alpha_route@82:
     txna ApplicationArgs 1
     dup
     len
@@ -1224,12 +1386,158 @@ alpha_ternary_false@2:
     b alpha_ternary_merge@3
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.noReturn(_param0: bytes) -> void:
+noReturn:
+    proto 1 0
+    txn GroupIndex
+    bz noReturn_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+noReturn_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+noReturn_ternary_false@2:
+    intc_2 // 0
+    b noReturn_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.functionSelector() -> bytes:
+functionSelector:
+    txn GroupIndex
+    bz functionSelector_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+functionSelector_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_2 // 0xa7043bd9
+    retsub
+
+functionSelector_ternary_false@2:
+    intc_2 // 0
+    b functionSelector_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.eventSelector() -> bytes:
+eventSelector:
+    txn GroupIndex
+    bz eventSelector_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+eventSelector_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0xd643c01d22702743c4086499fc0fb9fe5e06272216181007be2387d3f1680d1e
+    retsub
+
+eventSelector_ternary_false@2:
+    intc_2 // 0
+    b eventSelector_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.errorSelector() -> bytes:
+errorSelector:
+    txn GroupIndex
+    bz errorSelector_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+errorSelector_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x1167d8fb
+    retsub
+
+errorSelector_ternary_false@2:
+    intc_2 // 0
+    b errorSelector_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.interfaceId() -> bytes:
+interfaceId:
+    txn GroupIndex
+    bz interfaceId_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+interfaceId_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0xd05365ea
+    retsub
+
+interfaceId_ternary_false@2:
+    intc_2 // 0
+    b interfaceId_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.pointerSelector() -> bytes:
+pointerSelector:
+    txn GroupIndex
+    bz pointerSelector_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pointerSelector_ternary_merge@3:
+    !
+    assert // not payable
+    global CurrentApplicationID
+    itob
+    pushbytes 0xa7043bd901e1efa5
+    concat
+    extract 8 4
+    retsub
+
+pointerSelector_ternary_false@2:
+    intc_2 // 0
+    b pointerSelector_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.pointerCall(__arc4_value: bytes) -> uint64:
+pointerCall:
+    proto 1 1
+    txn GroupIndex
+    bz pointerCall_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pointerCall_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub alpha
+    retsub
+
+pointerCall_ternary_false@2:
+    intc_2 // 0
+    b pointerCall_ternary_merge@3
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.innerMsgSig() -> bytes:
 innerMsgSig:
     txn NumAppArgs
     bz innerMsgSig_after_if_else@6
     txna ApplicationArgs 0
-    bytec_2 // method "innerMsgSig()byte[4]"
+    bytec_3 // method "innerMsgSig()byte[4]"
     ==
     bz innerMsgSig_after_if_else@6
     txn GroupIndex
@@ -1250,150 +1558,150 @@ innerMsgSig_after_if_else@6:
 
 innerMsgSig_ternary_merge@9:
     dup
-    bytec_3 // method "alpha(uint256)bool"
+    bytec 14 // method "alpha(uint256)bool"
     ==
     bz innerMsgSig_ternary_false@11
     pop
-    bytec 16 // 0xa7043bd9
+    bytec_2 // 0xa7043bd9
 
 innerMsgSig_ternary_merge@51:
     retsub
 
 innerMsgSig_ternary_false@11:
     dup
-    bytec 4 // method "noReturn(byte[32])void"
+    bytec 15 // method "noReturn(byte[32])void"
     ==
     bz innerMsgSig_ternary_false@13
     pop
-    bytec 17 // 0x77575e33
+    bytec 4 // 0x77575e33
 
 innerMsgSig_ternary_merge@50:
     retsub
 
 innerMsgSig_ternary_false@13:
     dup
-    bytec 5 // method "functionSelector()byte[4]"
+    bytec 16 // method "functionSelector()byte[4]"
     ==
     bz innerMsgSig_ternary_false@15
     pop
-    bytec 18 // 0xe13cf0f0
+    bytec 5 // 0xe13cf0f0
 
 innerMsgSig_ternary_merge@49:
     b innerMsgSig_ternary_merge@51
 
 innerMsgSig_ternary_false@15:
     dup
-    bytec 6 // method "eventSelector()byte[32]"
+    bytec 17 // method "eventSelector()byte[32]"
     ==
     bz innerMsgSig_ternary_false@17
     pop
-    bytec 19 // 0x67adad22
+    bytec 6 // 0x67adad22
 
 innerMsgSig_ternary_merge@48:
     b innerMsgSig_ternary_merge@50
 
 innerMsgSig_ternary_false@17:
     dup
-    bytec 7 // method "errorSelector()byte[4]"
+    bytec 18 // method "errorSelector()byte[4]"
     ==
     bz innerMsgSig_ternary_false@19
     pop
-    bytec 20 // 0x5923cdaa
+    bytec 7 // 0x5923cdaa
 
 innerMsgSig_ternary_merge@47:
     b innerMsgSig_ternary_merge@49
 
 innerMsgSig_ternary_false@19:
     dup
-    bytec 8 // method "interfaceId()byte[4]"
+    bytec 19 // method "interfaceId()byte[4]"
     ==
     bz innerMsgSig_ternary_false@21
     pop
-    bytec 21 // 0xa64d0cd4
+    bytec 8 // 0xa64d0cd4
 
 innerMsgSig_ternary_merge@46:
     b innerMsgSig_ternary_merge@48
 
 innerMsgSig_ternary_false@21:
     dup
-    bytec 9 // method "encodedCallSelector()byte[4]"
+    bytec 20 // method "encodedCallSelector()byte[4]"
     ==
     bz innerMsgSig_ternary_false@23
     pop
-    bytec 22 // 0x4d80421b
+    bytec 27 // 0x4d80421b
 
 innerMsgSig_ternary_merge@45:
     b innerMsgSig_ternary_merge@47
 
 innerMsgSig_ternary_false@23:
     dup
-    bytec 10 // method "encodedSignatureSelector()byte[4]"
+    bytec 21 // method "encodedSignatureSelector()byte[4]"
     ==
     bz innerMsgSig_ternary_false@25
     pop
-    bytec 23 // 0xf8ef89f2
+    bytec 28 // 0xf8ef89f2
 
 innerMsgSig_ternary_merge@44:
     b innerMsgSig_ternary_merge@46
 
 innerMsgSig_ternary_false@25:
     dup
-    bytec 11 // method "pointerSelector()byte[4]"
+    bytec 22 // method "pointerSelector()byte[4]"
     ==
     bz innerMsgSig_ternary_false@27
     pop
-    bytec 24 // 0x01eb435e
+    bytec 9 // 0x01eb435e
 
 innerMsgSig_ternary_merge@43:
     b innerMsgSig_ternary_merge@45
 
 innerMsgSig_ternary_false@27:
     dup
-    bytec 12 // method "pointerCall(uint256)bool"
+    bytec 23 // method "pointerCall(uint256)bool"
     ==
     bz innerMsgSig_ternary_false@29
     pop
-    bytec 25 // 0x09dac9d7
+    bytec 10 // 0x09dac9d7
 
 innerMsgSig_ternary_merge@42:
     b innerMsgSig_ternary_merge@44
 
 innerMsgSig_ternary_false@29:
     dup
-    bytec_2 // method "innerMsgSig()byte[4]"
+    bytec_3 // method "innerMsgSig()byte[4]"
     ==
     bz innerMsgSig_ternary_false@31
     pop
-    bytec 26 // 0x8cf53067
+    bytec 11 // 0x8cf53067
 
 innerMsgSig_ternary_merge@41:
     b innerMsgSig_ternary_merge@43
 
 innerMsgSig_ternary_false@31:
     dup
-    bytec 13 // method "outerMsgSig()byte[4]"
+    bytec 24 // method "outerMsgSig()byte[4]"
     ==
     bz innerMsgSig_ternary_false@33
     pop
-    bytec 27 // 0xd207632b
+    bytec 12 // 0xd207632b
 
 innerMsgSig_ternary_merge@40:
     b innerMsgSig_ternary_merge@42
 
 innerMsgSig_ternary_false@33:
     dup
-    bytec 14 // method "directMsgSig()byte[4]"
+    bytec 25 // method "directMsgSig()byte[4]"
     ==
     bz innerMsgSig_ternary_false@35
     pop
-    bytec 28 // 0xcc18591a
+    bytec 13 // 0xcc18591a
 
 innerMsgSig_ternary_merge@39:
     b innerMsgSig_ternary_merge@41
 
 innerMsgSig_ternary_false@35:
     dup
-    bytec 15 // method "assemblyMsgSig(uint256)byte[4]"
+    bytec 26 // method "assemblyMsgSig(uint256)byte[4]"
     ==
     bz innerMsgSig_ternary_false@37
     pop
@@ -1404,9 +1712,209 @@ innerMsgSig_ternary_false@37:
     b innerMsgSig_ternary_merge@39
 
 innerMsgSig_ternary_false@8:
-    bytec 30 // 0x00000000
+    bytec 32 // 0x00000000
     b innerMsgSig_ternary_merge@9
 
 innerMsgSig_ternary_false@4:
     intc_2 // 0
     b innerMsgSig_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.outerMsgSig() -> bytes:
+outerMsgSig:
+    txn GroupIndex
+    bz outerMsgSig_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+outerMsgSig_ternary_merge@3:
+    !
+    assert // not payable
+    callsub innerMsgSig
+    retsub
+
+outerMsgSig_ternary_false@2:
+    intc_2 // 0
+    b outerMsgSig_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.directMsgSig() -> bytes:
+directMsgSig:
+    txn GroupIndex
+    bz directMsgSig_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+directMsgSig_ternary_merge@3:
+    !
+    assert // not payable
+    txn NumAppArgs
+    bz directMsgSig_ternary_false@5
+    txna ApplicationArgs 0
+
+directMsgSig_ternary_merge@6:
+    dup
+    bytec 14 // method "alpha(uint256)bool"
+    ==
+    bz directMsgSig_ternary_false@8
+    pop
+    bytec_2 // 0xa7043bd9
+
+directMsgSig_ternary_merge@48:
+    retsub
+
+directMsgSig_ternary_false@8:
+    dup
+    bytec 15 // method "noReturn(byte[32])void"
+    ==
+    bz directMsgSig_ternary_false@10
+    pop
+    bytec 4 // 0x77575e33
+
+directMsgSig_ternary_merge@47:
+    retsub
+
+directMsgSig_ternary_false@10:
+    dup
+    bytec 16 // method "functionSelector()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@12
+    pop
+    bytec 5 // 0xe13cf0f0
+
+directMsgSig_ternary_merge@46:
+    b directMsgSig_ternary_merge@48
+
+directMsgSig_ternary_false@12:
+    dup
+    bytec 17 // method "eventSelector()byte[32]"
+    ==
+    bz directMsgSig_ternary_false@14
+    pop
+    bytec 6 // 0x67adad22
+
+directMsgSig_ternary_merge@45:
+    b directMsgSig_ternary_merge@47
+
+directMsgSig_ternary_false@14:
+    dup
+    bytec 18 // method "errorSelector()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@16
+    pop
+    bytec 7 // 0x5923cdaa
+
+directMsgSig_ternary_merge@44:
+    b directMsgSig_ternary_merge@46
+
+directMsgSig_ternary_false@16:
+    dup
+    bytec 19 // method "interfaceId()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@18
+    pop
+    bytec 8 // 0xa64d0cd4
+
+directMsgSig_ternary_merge@43:
+    b directMsgSig_ternary_merge@45
+
+directMsgSig_ternary_false@18:
+    dup
+    bytec 20 // method "encodedCallSelector()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@20
+    pop
+    bytec 27 // 0x4d80421b
+
+directMsgSig_ternary_merge@42:
+    b directMsgSig_ternary_merge@44
+
+directMsgSig_ternary_false@20:
+    dup
+    bytec 21 // method "encodedSignatureSelector()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@22
+    pop
+    bytec 28 // 0xf8ef89f2
+
+directMsgSig_ternary_merge@41:
+    b directMsgSig_ternary_merge@43
+
+directMsgSig_ternary_false@22:
+    dup
+    bytec 22 // method "pointerSelector()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@24
+    pop
+    bytec 9 // 0x01eb435e
+
+directMsgSig_ternary_merge@40:
+    b directMsgSig_ternary_merge@42
+
+directMsgSig_ternary_false@24:
+    dup
+    bytec 23 // method "pointerCall(uint256)bool"
+    ==
+    bz directMsgSig_ternary_false@26
+    pop
+    bytec 10 // 0x09dac9d7
+
+directMsgSig_ternary_merge@39:
+    b directMsgSig_ternary_merge@41
+
+directMsgSig_ternary_false@26:
+    dup
+    bytec_3 // method "innerMsgSig()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@28
+    pop
+    bytec 11 // 0x8cf53067
+
+directMsgSig_ternary_merge@38:
+    b directMsgSig_ternary_merge@40
+
+directMsgSig_ternary_false@28:
+    dup
+    bytec 24 // method "outerMsgSig()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@30
+    pop
+    bytec 12 // 0xd207632b
+
+directMsgSig_ternary_merge@37:
+    b directMsgSig_ternary_merge@39
+
+directMsgSig_ternary_false@30:
+    dup
+    bytec 25 // method "directMsgSig()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@32
+    pop
+    bytec 13 // 0xcc18591a
+
+directMsgSig_ternary_merge@36:
+    b directMsgSig_ternary_merge@38
+
+directMsgSig_ternary_false@32:
+    dup
+    bytec 26 // method "assemblyMsgSig(uint256)byte[4]"
+    ==
+    bz directMsgSig_ternary_false@34
+    pop
+    bytec 29 // 0x8b8cda79
+    b directMsgSig_ternary_merge@37
+
+directMsgSig_ternary_false@34:
+    b directMsgSig_ternary_merge@36
+
+directMsgSig_ternary_false@5:
+    bytec 32 // 0x00000000
+    b directMsgSig_ternary_merge@6
+
+directMsgSig_ternary_false@2:
+    intc_2 // 0
+    b directMsgSig_ternary_merge@3

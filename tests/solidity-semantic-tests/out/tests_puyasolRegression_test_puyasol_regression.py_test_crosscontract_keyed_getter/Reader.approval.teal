@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/crosscontract_keyed_getter.sol.Reader.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 16
+    intcblock 32 1 0 16
     bytecblock 0x151f7c75
     pushint 4096
     bzero
@@ -24,10 +24,296 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x42907dee
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    uncover 2
+    swap
+    callsub readMap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x15138ee7
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    extract 0 16
+    intc_3 // 16
+    bzero
+    swap
+    dig 1
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    intc_0 // 32
+    bzero
+    dig 1
+    uncover 3
+    concat
+    dup
+    len
+    intc_3 // 16
+    -
+    intc_3 // 16
+    extract3
+    dup
+    len
+    intc_3 // 16
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    uncover 2
+    swap
+    callsub readNarrow
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x64429f58
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    uncover 2
+    swap
+    callsub readArr
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x210e464a
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    intc_0 // 32
+    bzero
+    swap
+    callsub readPlain
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
     txn OnCompletion
     !
     assert
@@ -35,61 +321,25 @@ main_after_if_else@2:
     assert
     pushbytess 0x702b771a 0xf858b1bb 0x93c554f0 0xdca6efa2 // method "readMap(address,uint256)uint256", method "readNarrow(address,uint128)uint256", method "readArr(address,uint256)uint256", method "readPlain(address)uint256"
     txna ApplicationArgs 0
-    match main_readMap_route@5 main_readNarrow_route@6 main_readArr_route@7 main_readPlain_route@8
+    match main_readMap_route@33 main_readNarrow_route@34 main_readArr_route@35 main_readPlain_route@36
     err
 
-main_readPlain_route@8:
+main_readPlain_route@36:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    itxn_begin
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_1 // 0
-    itxn_field OnCompletion
-    intc_1 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    pushbytes 0x1fedf7a1 // method "plain()uint256"
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
+    callsub readPlain
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_readArr_route@7:
+main_readArr_route@35:
     txna ApplicationArgs 1
     dup
     len
@@ -98,57 +348,19 @@ main_readArr_route@7:
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    cover 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@19
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@20:
-    !
-    assert // not payable
-    itxn_begin
-    pushint 24
-    extract_uint64
-    pushint 6
-    itxn_field TypeEnum
-    intc_1 // 0
-    itxn_field OnCompletion
-    intc_1 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    pushbytes 0x051b943c // method "arr(uint256)uint256"
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
+    callsub readArr
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@19:
-    intc_1 // 0
-    b main_ternary_merge@20
-
-main_readNarrow_route@6:
+main_readNarrow_route@34:
     txna ApplicationArgs 1
     dup
     len
@@ -161,21 +373,100 @@ main_readNarrow_route@6:
     intc_3 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
+    callsub readNarrow
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_readMap_route@33:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub readMap
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/crosscontract_keyed_getter.sol.Reader.readMap(a: bytes, __arc4_k: bytes) -> bytes:
+readMap:
+    proto 2 1
     txn GroupIndex
-    bz main_ternary_false@24
+    bz readMap_ternary_false@2
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+readMap_ternary_merge@3:
+    !
+    assert // not payable
+    itxn_begin
+    frame_dig -2
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x8338d04b // method "m(uint256)uint256"
+    itxn_field ApplicationArgs
+    frame_dig -1
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+readMap_ternary_false@2:
+    intc_2 // 0
+    b readMap_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/crosscontract_keyed_getter.sol.Reader.readNarrow(a: bytes, __arc4_k: bytes) -> bytes:
+readNarrow:
+    proto 2 1
+    txn GroupIndex
+    bz readNarrow_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+readNarrow_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
     intc_3 // 16
     bzero
     dup
-    uncover 2
+    frame_dig -1
     concat
     dup
     len
@@ -189,14 +480,14 @@ main_ternary_merge@25:
     <=
     assert // overflow
     b|
-    swap
+    frame_dig -2
     pushint 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_2 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
     itxn_field ApplicationID
     pushbytes 0x854bd74d // method "mNarrow(uint128)uint256"
@@ -213,53 +504,40 @@ main_ternary_merge@25:
     intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
+    retsub
 
-main_ternary_false@24:
-    intc_1 // 0
-    b main_ternary_merge@25
+readNarrow_ternary_false@2:
+    intc_2 // 0
+    b readNarrow_ternary_merge@3
 
-main_readMap_route@5:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/crosscontract_keyed_getter.sol.Reader.readArr(a: bytes, __arc4_i: bytes) -> bytes:
+readArr:
+    proto 2 1
     txn GroupIndex
-    bz main_ternary_false@29
+    bz readArr_ternary_false@2
     txn GroupIndex
-    intc_2 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+readArr_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
-    swap
+    frame_dig -2
     pushint 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_2 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    pushbytes 0x8338d04b // method "m(uint256)uint256"
+    pushbytes 0x051b943c // method "arr(uint256)uint256"
     itxn_field ApplicationArgs
+    frame_dig -1
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -272,13 +550,52 @@ main_ternary_merge@30:
     intc_0 // 32
     bzero
     b|
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
+    retsub
 
-main_ternary_false@29:
-    intc_1 // 0
-    b main_ternary_merge@30
+readArr_ternary_false@2:
+    intc_2 // 0
+    b readArr_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/crosscontract_keyed_getter.sol.Reader.readPlain(a: bytes) -> bytes:
+readPlain:
+    proto 1 1
+    txn GroupIndex
+    bz readPlain_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+readPlain_ternary_merge@3:
+    !
+    assert // not payable
+    itxn_begin
+    frame_dig -1
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x1fedf7a1 // method "plain()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+readPlain_ternary_false@2:
+    intc_2 // 0
+    b readPlain_ternary_merge@3

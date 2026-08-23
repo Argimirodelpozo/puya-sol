@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/blob_array_value_use.sol.EnumSetValues.approval_program() -> uint64:
 main:
-    intcblock 32 0 4096 1 20480 4064 65535
-    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x010000000000000000 0x0000 0x010000000000000000000000000000000000000000000000000000000000000000 0x0001
-    intc_2 // 4096
+    intcblock 32 0 1 4096 20480 4064 65535
+    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000 0x010000000000000000 0x0001 0x010000000000000000000000000000000000000000000000000000000000000000
+    intc_3 // 4096
     bzero
     dup
     store 5
@@ -24,10 +24,234 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x91ec24f3
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub countAddrs
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x87764c57
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub sumUints
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x7f38c974
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub firstUint
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x81367875
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub lastUint
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@28:
+    intc_1 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
     txn OnCompletion
     !
     assert
@@ -35,276 +259,68 @@ main_after_if_else@2:
     assert
     pushbytess 0x7c148a72 0x05733da6 0x3f6dca70 0x0f4afaee // method "countAddrs(uint256)uint256", method "sumUints(uint256)uint256", method "firstUint(uint256)uint256", method "lastUint(uint256)uint256"
     txna ApplicationArgs 0
-    match main_countAddrs_route@5 main_sumUints_route@6 main_firstUint_route@7 main_lastUint_route@8
+    match main_countAddrs_route@33 main_sumUints_route@34 main_firstUint_route@35 main_lastUint_route@36
     err
 
-main_lastUint_route@8:
+main_lastUint_route@36:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_3 // 1
-    itob
-    dup
-    cover 2
-    dig 1
-    b<=
-    bz main_bool_false@18
-    pushint 12
-    itob
-    dig 1
-    b>=
-    bz main_bool_false@18
-    intc_3 // 1
-
-main_bool_merge@19:
-    assert
-    callsub Pun.asUints
-    dup
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    itob
-    dup
-    uncover 3
-    dup
-    cover 3
-    b>=
-    assert // underflow
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    swap
-    b-
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dup
-    bytec 4 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    pushint 8
-    bzero
-    swap
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    swap
-    extract 2 0
-    swap
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    bytec_3 // 0x151f7c75
+    callsub lastUint
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
-main_bool_false@18:
-    intc_1 // 0
-    b main_bool_merge@19
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_firstUint_route@7:
+main_firstUint_route@35:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@23
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@24:
-    !
-    assert // not payable
-    intc_3 // 1
-    itob
-    dig 1
-    b<=
-    bz main_bool_false@27
-    pushint 12
-    itob
-    dig 1
-    b>=
-    bz main_bool_false@27
-    intc_3 // 1
-
-main_bool_merge@28:
-    assert
-    callsub Pun.asUints
-    extract 2 32
-    bytec_3 // 0x151f7c75
+    callsub firstUint
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
-main_bool_false@27:
-    intc_1 // 0
-    b main_bool_merge@28
-
-main_ternary_false@23:
-    intc_1 // 0
-    b main_ternary_merge@24
-
-main_sumUints_route@6:
+main_sumUints_route@34:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@32
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@33:
-    !
-    assert // not payable
-    pushint 12
-    itob
-    dig 1
-    b>=
-    assert
-    callsub Pun.asUints
-    bytec_0 // 0x
-    intc_1 // 0
-    itob
-
-main_while_top@34:
-    dig 2
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    itob
-    dig 1
-    b>
-    bz main_after_while@36
-    dup
-    bytec 4 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    pushint 8
-    bzero
-    dig 1
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dig 3
-    extract 2 0
-    swap
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    uncover 2
-    b+
-    dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    swap
-    pushbytes 0x01
-    b+
-    dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    b main_while_top@34
-
-main_after_while@36:
-    pop
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_3 // 0x151f7c75
+    callsub sumUints
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
-main_ternary_false@32:
-    intc_1 // 0
-    b main_ternary_merge@33
-
-main_countAddrs_route@5:
+main_countAddrs_route@33:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@40
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@41:
-    !
-    assert // not payable
-    pushint 12
-    itob
-    dig 1
-    b>=
-    assert
-    callsub Pun.asAddrs
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    itob
-    intc_0 // 32
-    bzero
-    b|
-    bytec_3 // 0x151f7c75
+    callsub countAddrs
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
-
-main_ternary_false@40:
-    intc_1 // 0
-    b main_ternary_merge@41
 
 
 // __solfn_43(n: bytes) -> bytes:
@@ -322,7 +338,7 @@ Pun.raw:
     extract_uint64
     intc_1 // 0
     itob
-    bytec 5 // 0x0000
+    bytec 4 // 0x0000
     swap
     intc_1 // 0
 
@@ -335,7 +351,7 @@ Pun.raw_while_top@1:
     dup
     intc_1 // 0
     extract_uint16
-    intc_3 // 1
+    intc_2 // 1
     +
     itob
     extract 6 0
@@ -343,7 +359,7 @@ Pun.raw_while_top@1:
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
     cover 2
-    intc_3 // 1
+    intc_2 // 1
     +
     b Pun.raw_while_top@1
 
@@ -359,12 +375,12 @@ Pun.raw_while_top@4:
     bz Pun.raw_after_while@6
     intc_0 // 32
     bzero
-    intc_3 // 1
+    intc_2 // 1
     itob
     dig 2
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     concat
@@ -375,7 +391,7 @@ Pun.raw_while_top@4:
     intc_0 // 32
     extract3
     dig 1
-    bytec 4 // 0x010000000000000000
+    bytec 5 // 0x010000000000000000
     b<
     assert // array index out of bounds
     dig 3
@@ -398,7 +414,7 @@ Pun.raw_while_top@4:
     pushbytes 0x01
     b+
     dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     b Pun.raw_while_top@4
@@ -413,7 +429,7 @@ Pun.raw_after_while@6:
 Pun.asAddrs:
     proto 1 1
     intc_1 // 0
-    bytec_0 // ""
+    bytec_2 // ""
     load 0
     pushint 88
     extract_uint64
@@ -441,10 +457,10 @@ Pun.asAddrs:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_2 // 4096
+    intc_3 // 4096
     /
     swap
-    intc_2 // 4096
+    intc_3 // 4096
     %
     dup
     cover 2
@@ -482,15 +498,15 @@ Pun.asAddrs_while_top@4:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_2 // 4096
+    intc_3 // 4096
     /
     cover 3
-    intc_2 // 4096
+    intc_3 // 4096
     %
     dup
     cover 2
     cover 4
-    bytec_0 // 0x
+    bytec_2 // 0x
     swap
     intc_0 // 32
     extract3 // on error: index access is out of bounds
@@ -522,7 +538,7 @@ Pun.asAddrs_while_top@4:
     stores
 
 Pun.asAddrs_after_if_else@8:
-    intc_3 // 1
+    intc_2 // 1
     +
     b Pun.asAddrs_while_top@4
 
@@ -530,7 +546,7 @@ Pun.asAddrs_else_body@7:
     uncover 2
     dup
     loads
-    intc_2 // 4096
+    intc_3 // 4096
     uncover 5
     dup
     cover 2
@@ -546,7 +562,7 @@ Pun.asAddrs_else_body@7:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -602,10 +618,10 @@ Pun.asAddrs_after_while@9:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_2 // 4096
+    intc_3 // 4096
     /
     cover 2
-    intc_2 // 4096
+    intc_3 // 4096
     %
     dup
     cover 3
@@ -653,10 +669,10 @@ Pun.asAddrs_while_top@13:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_2 // 4096
+    intc_3 // 4096
     /
     cover 4
-    intc_2 // 4096
+    intc_3 // 4096
     %
     dup
     cover 6
@@ -678,7 +694,7 @@ Pun.asAddrs_while_top@13:
     stores
 
 Pun.asAddrs_after_if_else@17:
-    intc_3 // 1
+    intc_2 // 1
     +
     b Pun.asAddrs_while_top@13
 
@@ -686,7 +702,7 @@ Pun.asAddrs_else_body@16:
     uncover 3
     dup
     loads
-    intc_2 // 4096
+    intc_3 // 4096
     uncover 7
     dup
     cover 2
@@ -702,7 +718,7 @@ Pun.asAddrs_else_body@16:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -723,7 +739,7 @@ Pun.asAddrs_after_while@18:
     store 0
     load 0
     store 0
-    intc_2 // 4096
+    intc_3 // 4096
     dig 2
     -
     dup
@@ -739,7 +755,7 @@ Pun.asAddrs_after_while@18:
 Pun.asAddrs_ternary_merge@21:
     dup
     extract 0 24
-    bytec_0 // 0x
+    bytec_2 // 0x
     b==
     assert // EVM memory word exceeds uint64
     pushint 24
@@ -748,7 +764,7 @@ Pun.asAddrs_ternary_merge@21:
     intc 6 // 65535
     <=
     assert // EVM memory array exceeds ARC4 uint16 length
-    bytec 5 // 0x0000
+    bytec 4 // 0x0000
     intc_1 // 0
 
 Pun.asAddrs_while_top@22:
@@ -772,11 +788,11 @@ Pun.asAddrs_while_top@22:
     pushint 12
     bzero
     cover 4
-    intc_2 // 4096
+    intc_3 // 4096
     %
     dup
     cover 3
-    intc_2 // 4096
+    intc_3 // 4096
     swap
     -
     dup
@@ -785,7 +801,7 @@ Pun.asAddrs_while_top@22:
     bz Pun.asAddrs_ternary_false@25
     pop
     uncover 3
-    intc_2 // 4096
+    intc_3 // 4096
     /
     loads
     uncover 3
@@ -797,7 +813,7 @@ Pun.asAddrs_ternary_merge@26:
     uncover 3
     swap
     concat
-    bytec 7 // 0x0001
+    bytec 6 // 0x0001
     swap
     concat
     dup
@@ -817,13 +833,13 @@ Pun.asAddrs_ternary_merge@26:
     swap
     concat
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     b Pun.asAddrs_while_top@22
 
 Pun.asAddrs_ternary_false@25:
     uncover 4
-    intc_2 // 4096
+    intc_3 // 4096
     /
     dup
     loads
@@ -831,7 +847,7 @@ Pun.asAddrs_ternary_false@25:
     dig 3
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
@@ -856,7 +872,7 @@ Pun.asAddrs_ternary_false@20:
     dig 3
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
@@ -872,7 +888,7 @@ Pun.asAddrs_else_body@11:
     dig 1
     dup
     loads
-    intc_2 // 4096
+    intc_3 // 4096
     dig 5
     dup
     cover 2
@@ -888,7 +904,7 @@ Pun.asAddrs_else_body@11:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -906,7 +922,7 @@ Pun.asAddrs_else_body@11:
 Pun.asAddrs_else_body@2:
     dup
     loads
-    intc_2 // 4096
+    intc_3 // 4096
     uncover 4
     dup
     cover 2
@@ -922,7 +938,7 @@ Pun.asAddrs_else_body@2:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -942,7 +958,7 @@ Pun.asAddrs_else_body@2:
 Pun.asUints:
     proto 1 1
     intc_1 // 0
-    bytec_0 // ""
+    bytec_2 // ""
     load 0
     pushint 88
     extract_uint64
@@ -970,10 +986,10 @@ Pun.asUints:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_2 // 4096
+    intc_3 // 4096
     /
     swap
-    intc_2 // 4096
+    intc_3 // 4096
     %
     dup
     cover 2
@@ -1011,15 +1027,15 @@ Pun.asUints_while_top@4:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_2 // 4096
+    intc_3 // 4096
     /
     cover 3
-    intc_2 // 4096
+    intc_3 // 4096
     %
     dup
     cover 2
     cover 4
-    bytec_0 // 0x
+    bytec_2 // 0x
     swap
     intc_0 // 32
     extract3 // on error: index access is out of bounds
@@ -1045,7 +1061,7 @@ Pun.asUints_while_top@4:
     stores
 
 Pun.asUints_after_if_else@8:
-    intc_3 // 1
+    intc_2 // 1
     +
     b Pun.asUints_while_top@4
 
@@ -1053,7 +1069,7 @@ Pun.asUints_else_body@7:
     uncover 2
     dup
     loads
-    intc_2 // 4096
+    intc_3 // 4096
     uncover 5
     dup
     cover 2
@@ -1069,7 +1085,7 @@ Pun.asUints_else_body@7:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -1125,10 +1141,10 @@ Pun.asUints_after_while@9:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_2 // 4096
+    intc_3 // 4096
     /
     cover 2
-    intc_2 // 4096
+    intc_3 // 4096
     %
     dup
     cover 3
@@ -1176,10 +1192,10 @@ Pun.asUints_while_top@13:
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
-    intc_2 // 4096
+    intc_3 // 4096
     /
     cover 4
-    intc_2 // 4096
+    intc_3 // 4096
     %
     dup
     cover 6
@@ -1201,7 +1217,7 @@ Pun.asUints_while_top@13:
     stores
 
 Pun.asUints_after_if_else@17:
-    intc_3 // 1
+    intc_2 // 1
     +
     b Pun.asUints_while_top@13
 
@@ -1209,7 +1225,7 @@ Pun.asUints_else_body@16:
     uncover 3
     dup
     loads
-    intc_2 // 4096
+    intc_3 // 4096
     uncover 7
     dup
     cover 2
@@ -1225,7 +1241,7 @@ Pun.asUints_else_body@16:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -1246,7 +1262,7 @@ Pun.asUints_after_while@18:
     store 0
     load 0
     store 0
-    intc_2 // 4096
+    intc_3 // 4096
     dig 2
     -
     dup
@@ -1262,7 +1278,7 @@ Pun.asUints_after_while@18:
 Pun.asUints_ternary_merge@21:
     dup
     extract 0 24
-    bytec_0 // 0x
+    bytec_2 // 0x
     b==
     assert // EVM memory word exceeds uint64
     pushint 24
@@ -1272,7 +1288,7 @@ Pun.asUints_ternary_merge@21:
     intc 6 // 65535
     <=
     assert // EVM memory array exceeds ARC4 uint16 length
-    bytec 5 // 0x0000
+    bytec 4 // 0x0000
     intc_1 // 0
 
 Pun.asUints_while_top@22:
@@ -1293,11 +1309,11 @@ Pun.asUints_while_top@22:
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
-    intc_2 // 4096
+    intc_3 // 4096
     %
     dup
     cover 4
-    intc_2 // 4096
+    intc_3 // 4096
     swap
     -
     dup
@@ -1306,7 +1322,7 @@ Pun.asUints_while_top@22:
     bz Pun.asUints_ternary_false@25
     pop
     swap
-    intc_2 // 4096
+    intc_3 // 4096
     /
     loads
     uncover 3
@@ -1321,7 +1337,7 @@ Pun.asUints_ternary_merge@26:
     assert // overflow
     dig 3
     b|
-    bytec 7 // 0x0001
+    bytec 6 // 0x0001
     swap
     concat
     dup
@@ -1341,13 +1357,13 @@ Pun.asUints_ternary_merge@26:
     swap
     concat
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     b Pun.asUints_while_top@22
 
 Pun.asUints_ternary_false@25:
     uncover 2
-    intc_2 // 4096
+    intc_3 // 4096
     /
     dup
     loads
@@ -1355,7 +1371,7 @@ Pun.asUints_ternary_false@25:
     dig 3
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
@@ -1380,7 +1396,7 @@ Pun.asUints_ternary_false@20:
     dig 3
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
@@ -1396,7 +1412,7 @@ Pun.asUints_else_body@11:
     dig 1
     dup
     loads
-    intc_2 // 4096
+    intc_3 // 4096
     dig 5
     dup
     cover 2
@@ -1412,7 +1428,7 @@ Pun.asUints_else_body@11:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -1430,7 +1446,7 @@ Pun.asUints_else_body@11:
 Pun.asUints_else_body@2:
     dup
     loads
-    intc_2 // 4096
+    intc_3 // 4096
     uncover 4
     dup
     cover 2
@@ -1446,7 +1462,7 @@ Pun.asUints_else_body@2:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -1460,3 +1476,243 @@ Pun.asUints_else_body@2:
     replace2 0
     stores
     b Pun.asUints_after_if_else@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/blob_array_value_use.sol.EnumSetValues.countAddrs(__arc4_n: bytes) -> bytes:
+countAddrs:
+    proto 1 1
+    txn GroupIndex
+    bz countAddrs_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+countAddrs_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 12
+    itob
+    frame_dig -1
+    b>=
+    assert
+    frame_dig -1
+    callsub Pun.asAddrs
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+countAddrs_ternary_false@2:
+    intc_1 // 0
+    b countAddrs_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/blob_array_value_use.sol.EnumSetValues.sumUints(__arc4_n: bytes) -> bytes:
+sumUints:
+    proto 1 1
+    txn GroupIndex
+    bz sumUints_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+sumUints_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 12
+    itob
+    frame_dig -1
+    b>=
+    assert
+    frame_dig -1
+    callsub Pun.asUints
+    bytec_2 // 0x
+    intc_1 // 0
+    itob
+
+sumUints_while_top@4:
+    dig 2
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    dig 1
+    b>
+    bz sumUints_after_while@6
+    dup
+    bytec 5 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    pushint 8
+    bzero
+    dig 1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 3
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    uncover 2
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    swap
+    pushbytes 0x01
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b sumUints_while_top@4
+
+sumUints_after_while@6:
+    pop
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    swap
+    retsub
+
+sumUints_ternary_false@2:
+    intc_1 // 0
+    b sumUints_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/blob_array_value_use.sol.EnumSetValues.firstUint(__arc4_n: bytes) -> bytes:
+firstUint:
+    proto 1 1
+    txn GroupIndex
+    bz firstUint_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+firstUint_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 1
+    itob
+    frame_dig -1
+    b<=
+    bz firstUint_bool_false@6
+    pushint 12
+    itob
+    frame_dig -1
+    b>=
+    bz firstUint_bool_false@6
+    intc_2 // 1
+
+firstUint_bool_merge@7:
+    assert
+    frame_dig -1
+    callsub Pun.asUints
+    extract 2 32
+    retsub
+
+firstUint_bool_false@6:
+    intc_1 // 0
+    b firstUint_bool_merge@7
+
+firstUint_ternary_false@2:
+    intc_1 // 0
+    b firstUint_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/blob_array_value_use.sol.EnumSetValues.lastUint(__arc4_n: bytes) -> bytes:
+lastUint:
+    proto 1 1
+    txn GroupIndex
+    bz lastUint_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+lastUint_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 1
+    itob
+    dup
+    frame_dig -1
+    b<=
+    bz lastUint_bool_false@6
+    pushint 12
+    itob
+    frame_dig -1
+    b>=
+    bz lastUint_bool_false@6
+    intc_2 // 1
+
+lastUint_bool_merge@7:
+    assert
+    frame_dig -1
+    callsub Pun.asUints
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    dup
+    uncover 3
+    dup
+    cover 3
+    b>=
+    assert // underflow
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    bytec 5 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    pushint 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    retsub
+
+lastUint_bool_false@6:
+    intc_1 // 0
+    b lastUint_bool_merge@7
+
+lastUint_ternary_false@2:
+    intc_1 // 0
+    b lastUint_ternary_merge@3

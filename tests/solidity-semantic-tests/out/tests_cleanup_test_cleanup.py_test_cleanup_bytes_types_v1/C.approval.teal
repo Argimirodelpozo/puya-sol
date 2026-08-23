@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/cleanup_bytes_types_v1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 258
+    intcblock 1 32 2 0
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -27,12 +28,86 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xfae4f40a
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 2 30
+    pushint 30
+    bzero
+    swap
+    dig 1
+    ==
+    assert // invalid EVM ABI fixed-bytes padding
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    extract 0 30
+    uncover 2
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    intc_1 // 32
+    bzero
+    uncover 2
+    extract 0 2
+    uncover 2
+    pushint 24
+    extract_uint64
+    callsub f
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_3 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
     pushbytes 0xba3c900b // method "f(byte[2],uint64)uint256"
     txna ApplicationArgs 0
-    match main_f_route@4
+    match main_f_route@11
     err
 
-main_f_route@4:
+main_f_route@11:
     txn OnCompletion
     !
     txn ApplicationID
@@ -41,7 +116,7 @@ main_f_route@4:
     txna ApplicationArgs 1
     dup
     len
-    pushint 2
+    intc_2 // 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
     txna ApplicationArgs 2
@@ -51,56 +126,62 @@ main_f_route@4:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    txn GroupIndex
-    bz main_ternary_false@8
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@9:
-    !
-    assert // not payable
-    pushint 65535
-    &
-    swap
-    pushbytes "ab"
-    !=
-    bz main_after_if_else@11
-    pop
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
-
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/cleanup_bytes_types_v1.sol.C.f@16:
-    pushbytes 0x151f7c75
+    callsub f
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_after_if_else@11:
-    dup
-    intc_1 // 258
-    !=
-    bz main_after_if_else@13
-    pop
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/cleanup_bytes_types_v1.sol.C.f@16
 
-main_after_if_else@13:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/cleanup_bytes_types_v1.sol.C.f(a: bytes, x: uint64) -> bytes:
+f:
+    proto 2 1
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    pushint 65535
+    &
+    frame_bury -1
+    frame_dig -2
+    pushbytes "ab"
+    !=
+    bz f_after_if_else@5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    retsub
+
+f_after_if_else@5:
+    frame_dig -1
+    pushint 258
+    !=
+    bz f_after_if_else@7
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    retsub
+
+f_after_if_else@7:
+    frame_dig -1
     itob
     extract 5 3
     btoi
-    intc_1 // 258
+    pushint 258
     !=
-    bz main_after_if_else@15
+    bz f_after_if_else@9
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/cleanup_bytes_types_v1.sol.C.f@16
+    retsub
 
-main_after_if_else@15:
+f_after_if_else@9:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/cleanup_bytes_types_v1.sol.C.f@16
+    retsub
 
-main_ternary_false@8:
-    pushint 0
-    b main_ternary_merge@9
+f_ternary_false@2:
+    intc_3 // 0
+    b f_ternary_merge@3

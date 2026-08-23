@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/error_selector.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock 0x00000000 0x34127e13 "s1" "s2" "s3" "s4"
+    intcblock 1 0 2 28
+    bytecblock 0x151f7c75 0x34127e13 0x00000000 "s1" "s2" 0xd5c1f7fc "s3" "s4"
     pushint 4096
     bzero
     dup
@@ -24,16 +24,16 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "s1"
+    bytec_3 // "s1"
     bytec_1 // method "E()"
     app_global_put
-    bytec_3 // "s2"
-    pushbytes 0xd5c1f7fc // method "E(uint256)"
+    bytec 4 // "s2"
+    bytec 5 // method "E(uint256)"
     app_global_put
-    bytec 4 // "s3"
+    bytec 6 // "s3"
     bytec_1 // method "E()"
     app_global_put
-    bytec 5 // "s4"
+    bytec 7 // "s4"
     bytec_1 // method "E()"
     app_global_put
     intc_0 // 1
@@ -41,70 +41,160 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x6b59084d
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub test1
+    intc_3 // 28
+    bzero
+    uncover 4
+    dig 1
+    concat
+    uncover 4
+    dig 2
+    concat
+    concat
+    uncover 3
+    dig 2
+    concat
+    concat
+    cover 2
+    concat
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x66e41cb7
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    callsub test2
+    intc_3 // 28
+    bzero
+    uncover 4
+    dig 1
+    concat
+    uncover 4
+    dig 2
+    concat
+    concat
+    uncover 3
+    dig 2
+    concat
+    concat
+    cover 2
+    concat
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x0a8e8e01
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    callsub test3
+    intc_3 // 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x9a053be4 0x6abab84a 0xd1b8e38f // method "test1()(byte[4],byte[4],byte[4],byte[4])", method "test2()(byte[4],byte[4],byte[4],byte[4])", method "test3()byte[4]"
     txna ApplicationArgs 0
-    match main_test1_route@5 main_test2_route@6 main_test3_route@7
+    match main_test1_route@26 main_test2_route@27 main_test3_route@28
     err
 
-main_test3_route@7:
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75f4584dfc
+main_test3_route@28:
+    callsub test3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@13:
-    intc_1 // 0
-    b main_ternary_merge@14
-
-main_test2_route@6:
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_2 // "s1"
-    app_global_get_ex
-    bytec_0 // 0x00000000
-    cover 2
-    select
-    intc_1 // 0
-    bytec_3 // "s2"
-    app_global_get_ex
-    bytec_0 // 0x00000000
-    cover 2
-    select
-    intc_1 // 0
-    bytec 4 // "s3"
-    app_global_get_ex
-    bytec_0 // 0x00000000
-    cover 2
-    select
-    intc_1 // 0
-    bytec 5 // "s4"
-    app_global_get_ex
-    bytec_0 // 0x00000000
-    cover 2
-    select
+main_test2_route@27:
+    callsub test2
     uncover 3
     uncover 3
     concat
@@ -112,33 +202,111 @@ main_ternary_merge@19:
     concat
     swap
     concat
-    pushbytes 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@18:
-    intc_1 // 0
-    b main_ternary_merge@19
+main_test1_route@26:
+    callsub test1
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
-main_test1_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/error_selector.sol.C.test1() -> bytes, bytes, bytes, bytes:
+test1:
     txn GroupIndex
-    bz main_ternary_false@23
+    bz test1_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+test1_ternary_merge@3:
     !
     assert // not payable
-    pushbytes 0x151f7c7534127e13d5c1f7fc34127e1334127e13
-    log
-    intc_0 // 1
-    return
+    bytec_1 // method "E()"
+    bytec 5 // method "E(uint256)"
+    bytec_1 // method "E()"
+    dup
+    retsub
 
-main_ternary_false@23:
+test1_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@24
+    b test1_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/error_selector.sol.C.test2() -> bytes, bytes, bytes, bytes:
+test2:
+    txn GroupIndex
+    bz test2_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test2_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_3 // "s1"
+    app_global_get_ex
+    bytec_2 // 0x00000000
+    cover 2
+    select
+    intc_1 // 0
+    bytec 4 // "s2"
+    app_global_get_ex
+    bytec_2 // 0x00000000
+    cover 2
+    select
+    intc_1 // 0
+    bytec 6 // "s3"
+    app_global_get_ex
+    bytec_2 // 0x00000000
+    cover 2
+    select
+    intc_1 // 0
+    bytec 7 // "s4"
+    app_global_get_ex
+    bytec_2 // 0x00000000
+    cover 2
+    select
+    retsub
+
+test2_ternary_false@2:
+    intc_1 // 0
+    b test2_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/error_selector.sol.C.test3() -> bytes:
+test3:
+    txn GroupIndex
+    bz test3_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test3_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0xf4584dfc // method "F()"
+    retsub
+
+test3_ternary_false@2:
+    intc_1 // 0
+    b test3_ternary_merge@3

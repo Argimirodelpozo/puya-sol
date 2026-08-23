@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_string_memory.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 2
     pushint 4096
     bzero
     dup
@@ -28,49 +28,107 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    b f
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xe2179b8e
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    b g
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x2d4970c7 0xf2b65f27 // method "f()void", method "g()void"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6
+    match f g
     err
 
-main_g_route@6:
-    txn GroupIndex
-    bz main_ternary_false@12
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
 
-main_ternary_merge@13:
-    !
-    assert // not payable
-    pushbytes 0x99be4967000d616e6f74686572526561736f6e
-    log
-    err // CustomError
-
-main_ternary_false@12:
-    intc_1 // 0
-    b main_ternary_merge@13
-
-main_f_route@5:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_string_memory.sol.C.f() -> void:
+f:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz f_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+f_ternary_merge@3:
     !
     assert // not payable
     pushbytes 0x99be4967000b6572726f72526561736f6e
     log
     err // CustomError
 
-main_ternary_false@17:
+f_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@18
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_string_memory.sol.C.g() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x99be4967000d616e6f74686572526561736f6e
+    log
+    err // CustomError
+
+g_ternary_false@2:
+    intc_1 // 0
+    b g_ternary_merge@3

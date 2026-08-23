@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/struct_with_functions.sol.Flow.approval_program() -> uint64:
 main:
-    intcblock 1 0 24 2
-    bytecblock "t" 0x000000000000000000000000000000000000000000000000 0xff07 "__ctor_pending"
+    intcblock 1 32 0 2
+    bytecblock "t" 0x000000000000000000000000000000000000000000000000 0xff07 "__ctor_pending" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -32,76 +32,79 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x219b312e // method "__postInit()void", method "f()(uint256,uint256)"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_f_route@6
-    err
-
-main_f_route@6:
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@8:
     !
     assert // not payable
-    bytec_0 // "t"
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 0 12 // on error: index access is out of bounds
-    intc_3 // 2
-    extract_uint64
-    intc_1 // 0
-    callsub __funcptr_dispatch_ret_t_uint256
-    dup
-    len
-    pushint 32
-    <=
-    assert // overflow
-    pushint 32
+    intc_1 // 32
     bzero
-    swap
-    dig 1
-    b|
-    bytec_0 // "t"
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 12 12 // on error: index access is out of bounds
-    intc_3 // 2
-    extract_uint64
-    intc_1 // 0
-    callsub __funcptr_dispatch_ret_t_uint256
+    callsub f
+    dig 2
+    uncover 2
+    concat
     dup
     len
-    pushint 32
-    <=
-    assert // overflow
-    uncover 2
-    b|
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    cover 2
     concat
-    pushbytes 0x151f7c75
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@12:
-    intc_1 // 0
-    b main_ternary_merge@13
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
 
-main___postInit_route@5:
+main_after_if_else@9:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x219b312e // method "__postInit()void", method "f()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@12 main_f_route@13
+    err
+
+main_f_route@13:
+    callsub f
+    concat
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main___postInit_route@12:
     bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -110,10 +113,10 @@ main___postInit_route@5:
     ==
     assert // __postInit callable only by the app creator
     bytec_3 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     bytec_0 // "t"
-    intc_2 // 24
+    pushint 24
     box_create
     pop
     bytec_0 // "t"
@@ -132,65 +135,7 @@ main___postInit_route@5:
     swap
     concat
     bytec_0 // "t"
-    intc_1 // 0
-    uncover 2
-    box_replace // on error: index out of bounds
-    bytec_0 // "t"
-    box_len
-    bury 1
-    bnz main_after_if_else@19
-    bytec_0 // "t"
-    intc_2 // 24
-    box_create
-    pop
-
-main_after_if_else@19:
-    bytec_0 // "t"
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 0 12 // on error: index access is out of bounds
-    dup
-    extract 0 2
-    swap
-    extract 2 8
-    concat
-    bytec_2 // 0xff07
-    concat
-    bytec_0 // "t"
-    intc_1 // 0
-    uncover 2
-    box_replace // on error: index out of bounds
-    bytec_0 // "t"
-    box_len
-    bury 1
-    bnz main_after_if_else@21
-    bytec_0 // "t"
-    intc_2 // 24
-    box_create
-    pop
-
-main_after_if_else@21:
-    bytec_0 // "t"
-    box_get
-    bytec_1 // 0x000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 12 12 // on error: index access is out of bounds
-    dup
-    extract 0 2
-    swap
-    extract 10 2
-    intc_0 // 1
-    itob
-    uncover 2
-    swap
-    concat
-    swap
-    concat
-    bytec_0 // "t"
-    pushint 12
+    intc_2 // 0
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "t"
@@ -198,7 +143,7 @@ main_after_if_else@21:
     bury 1
     bnz main_after_if_else@23
     bytec_0 // "t"
-    intc_2 // 24
+    pushint 24
     box_create
     pop
 
@@ -208,18 +153,16 @@ main_after_if_else@23:
     bytec_1 // 0x000000000000000000000000000000000000000000000000
     cover 2
     select
-    extract 12 12 // on error: index access is out of bounds
+    extract 0 12 // on error: index access is out of bounds
     dup
-    extract 10 2
+    extract 0 2
     swap
     extract 2 8
-    bytec_2 // 0xff07
-    swap
     concat
-    swap
+    bytec_2 // 0xff07
     concat
     bytec_0 // "t"
-    pushint 12
+    intc_2 // 0
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "t"
@@ -227,7 +170,7 @@ main_after_if_else@23:
     bury 1
     bnz main_after_if_else@25
     bytec_0 // "t"
-    intc_2 // 24
+    pushint 24
     box_create
     pop
 
@@ -241,6 +184,66 @@ main_after_if_else@25:
     dup
     extract 0 2
     swap
+    extract 10 2
+    intc_0 // 1
+    itob
+    uncover 2
+    swap
+    concat
+    swap
+    concat
+    bytec_0 // "t"
+    pushint 12
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "t"
+    box_len
+    bury 1
+    bnz main_after_if_else@27
+    bytec_0 // "t"
+    pushint 24
+    box_create
+    pop
+
+main_after_if_else@27:
+    bytec_0 // "t"
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 12 12 // on error: index access is out of bounds
+    dup
+    extract 10 2
+    swap
+    extract 2 8
+    bytec_2 // 0xff07
+    swap
+    concat
+    swap
+    concat
+    bytec_0 // "t"
+    pushint 12
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "t"
+    box_len
+    bury 1
+    bnz main_after_if_else@29
+    bytec_0 // "t"
+    pushint 24
+    box_create
+    pop
+
+main_after_if_else@29:
+    bytec_0 // "t"
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 12 12 // on error: index access is out of bounds
+    dup
+    extract 0 2
+    swap
     extract 2 8
     concat
     bytec_2 // 0xff07
@@ -252,13 +255,13 @@ main_after_if_else@25:
     bytec_0 // "t"
     box_len
     bury 1
-    bnz main_after_if_else@27
+    bnz main_after_if_else@31
     bytec_0 // "t"
-    intc_2 // 24
+    pushint 24
     box_create
     pop
 
-main_after_if_else@27:
+main_after_if_else@31:
     bytec_0 // "t"
     box_get
     bytec_1 // 0x000000000000000000000000000000000000000000000000
@@ -277,11 +280,67 @@ main_after_if_else@27:
     swap
     concat
     bytec_0 // "t"
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     box_replace // on error: index out of bounds
     intc_0 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/struct_with_functions.sol.Flow.f() -> bytes, bytes:
+f:
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "t"
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 12 // on error: index access is out of bounds
+    intc_3 // 2
+    extract_uint64
+    intc_2 // 0
+    callsub __funcptr_dispatch_ret_t_uint256
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    bytec_0 // "t"
+    box_get
+    bytec_1 // 0x000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 12 12 // on error: index access is out of bounds
+    intc_3 // 2
+    extract_uint64
+    intc_2 // 0
+    callsub __funcptr_dispatch_ret_t_uint256
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    retsub
+
+f_ternary_false@2:
+    intc_2 // 0
+    b f_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/struct_with_functions.sol.Flow.__funcptr_dispatch_ret_t_uint256(__funcptr_id: uint64, __static: uint64) -> bytes:

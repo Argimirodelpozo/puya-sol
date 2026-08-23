@@ -32,35 +32,94 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xd0e30db0
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub deposit
+    pushbytes 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_0 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x92e03b1c // method "__postInit()void", method "deposit()void"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_deposit_route@6
+    match main___postInit_route@12 main_deposit_route@13
     err
 
-main_deposit_route@6:
+main_deposit_route@13:
+    callsub deposit
+    intc_1 // 1
+    return
+
+main___postInit_route@12:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_3 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "y"
+    intc_2 // 128
+    box_create
+    pop
+    bytec_1 // "x"
+    bytec_2 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol.C.deposit() -> void:
+deposit:
     txn GroupIndex
-    bz main_ternary_false@12
+    bz deposit_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+deposit_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
     itob
 
-main_while_top@14:
+deposit_while_top@4:
     intc_3 // 90
     itob
     dig 1
     b>
-    bz main_after_while@16
+    bz deposit_after_while@6
     intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
@@ -78,17 +137,17 @@ main_while_top@14:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    b main_while_top@14
+    b deposit_while_top@4
 
-main_after_while@16:
+deposit_after_while@6:
     pop
     intc_0 // 0
 
-main_while_top@17:
+deposit_while_top@7:
     dup
     intc_3 // 90
     <
-    bz main_after_while@19
+    bz deposit_after_while@9
     dup
     itob
     extract 7 1
@@ -110,20 +169,20 @@ main_while_top@17:
     pushint 255
     <=
     assert // overflow
-    b main_while_top@17
+    b deposit_while_top@7
 
-main_after_while@19:
+deposit_after_while@9:
     pop
     bytec_0 // "y"
     box_len
     bury 1
-    bnz main_after_if_else@21
+    bnz deposit_after_if_else@11
     bytec_0 // "y"
     intc_2 // 128
     box_create
     pop
 
-main_after_if_else@21:
+deposit_after_if_else@11:
     bytec_0 // "y"
     intc_0 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
@@ -131,13 +190,13 @@ main_after_if_else@21:
     bytec_0 // "y"
     box_len
     bury 1
-    bnz main_after_if_else@23
+    bnz deposit_after_if_else@13
     bytec_0 // "y"
     intc_2 // 128
     box_create
     pop
 
-main_after_if_else@23:
+deposit_after_if_else@13:
     bytec_0 // "y"
     pushint 32
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
@@ -145,13 +204,13 @@ main_after_if_else@23:
     bytec_0 // "y"
     box_len
     bury 1
-    bnz main_after_if_else@25
+    bnz deposit_after_if_else@15
     bytec_0 // "y"
     intc_2 // 128
     box_create
     pop
 
-main_after_if_else@25:
+deposit_after_if_else@15:
     bytec_0 // "y"
     pushint 64
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
@@ -159,13 +218,13 @@ main_after_if_else@25:
     bytec_0 // "y"
     box_len
     bury 1
-    bnz main_after_if_else@27
+    bnz deposit_after_if_else@17
     bytec_0 // "y"
     intc_2 // 128
     box_create
     pop
 
-main_after_if_else@27:
+deposit_after_if_else@17:
     bytec_0 // "y"
     pushint 96
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
@@ -196,30 +255,8 @@ main_after_if_else@27:
     swap
     concat
     log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@12:
+deposit_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@13
-
-main___postInit_route@5:
-    bytec_3 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_3 // "__ctor_pending"
-    intc_0 // 0
-    app_global_put
-    bytec_0 // "y"
-    intc_2 // 128
-    box_create
-    pop
-    bytec_1 // "x"
-    bytec_2 // 0x
-    app_global_put
-    intc_1 // 1
-    return
+    b deposit_ternary_merge@3

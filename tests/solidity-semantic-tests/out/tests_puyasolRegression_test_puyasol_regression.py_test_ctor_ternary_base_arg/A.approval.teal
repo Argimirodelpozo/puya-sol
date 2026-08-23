@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ctor_arg_prestmts.sol.A.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock "va"
+    bytecblock "va" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -31,25 +31,91 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0x8323b2b3 // method "va()uint256"
-    txna ApplicationArgs 0
-    match main_va_route@4
-    err
-
-main_va_route@4:
     txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
+    bnz main_after_if_else@12
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@12
+    txna ApplicationArgs 0
+    pushbytes 0x3cc5eef8
+    ==
+    bz main_after_if_else@12
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub va
+    dup
+    intc_1 // 0
+    getbyte
+    pushint 128
+    >=
+    bz main_ternary_false@10
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@11:
+    swap
+    dup
+    len
+    intc_2 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@10:
+    intc_2 // 32
+    bzero
+    b main_ternary_merge@11
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@12:
+    pushbytes 0x8323b2b3 // method "va()uint256"
+    txna ApplicationArgs 0
+    match main_va_route@14
+    err
+
+main_va_route@14:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub va
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ctor_arg_prestmts.sol.A.va() -> bytes:
+va:
+    txn GroupIndex
+    bz va_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+va_ternary_merge@3:
     !
     assert // not payable
     intc_1 // 0
@@ -66,13 +132,8 @@ main_ternary_merge@9:
     intc_2 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@8:
+va_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@9
+    b va_ternary_merge@3

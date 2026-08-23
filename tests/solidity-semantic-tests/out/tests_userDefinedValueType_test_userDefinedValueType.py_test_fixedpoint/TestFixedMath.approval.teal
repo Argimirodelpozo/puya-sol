@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/fixedpoint.sol.TestFixedMath.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
+    intcblock 32 1 0 2
     bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0de0b6b3a7640000
     pushint 4096
     bzero
@@ -29,22 +29,87 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xac976e02 0x96028fa4 0x8a26489d 0x5d62f43f // method "add(uint256,uint256)uint256", method "mul(uint256,uint256)uint256", method "floor(uint256)uint256", method "toUFixed256x18(uint256)uint256"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_add_route@5 main_mul_route@6 main_floor_route@7 main_toUFixed256x18_route@8
-    err
+    pushbytes 0x771602f7
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-main_toUFixed256x18_route@8:
+main_ternary_merge@8:
+    !
+    assert // not payable
     txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub add
+    concat
     dup
     len
     intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xc8a4ac9c
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -55,15 +120,46 @@ main_toUFixed256x18_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    callsub FixedMath.toUFixed256x18
-    dup
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
     len
     intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 32
-    bzero
+    swap
+    dig 2
     b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub mul
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -75,32 +171,51 @@ main_ternary_false@14:
     intc_2 // 0
     b main_ternary_merge@15
 
-main_floor_route@7:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x504f5e56
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@21
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@22:
     !
     assert // not payable
-    callsub FixedMath.floor
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
     intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 32
-    bzero
+    dig 1
     b|
+    callsub floor
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -108,11 +223,108 @@ main_ternary_merge@20:
     intc_1 // 1
     return
 
-main_ternary_false@19:
+main_ternary_false@21:
     intc_2 // 0
-    b main_ternary_merge@20
+    b main_ternary_merge@22
 
-main_mul_route@6:
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0xdbd57bb2
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub toUFixed256x18
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xac976e02 0x96028fa4 0x8a26489d 0x5d62f43f // method "add(uint256,uint256)uint256", method "mul(uint256,uint256)uint256", method "floor(uint256)uint256", method "toUFixed256x18(uint256)uint256"
+    txna ApplicationArgs 0
+    match main_add_route@33 main_mul_route@34 main_floor_route@35 main_toUFixed256x18_route@36
+    err
+
+main_toUFixed256x18_route@36:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub toUFixed256x18
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_floor_route@35:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub floor
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_mul_route@34:
     txna ApplicationArgs 1
     dup
     len
@@ -121,31 +333,11 @@ main_mul_route@6:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    cover 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@24
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@25:
-    !
-    assert // not payable
-    swap
-    callsub FixedMath.mul
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
+    callsub mul
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -153,11 +345,7 @@ main_ternary_merge@25:
     intc_1 // 1
     return
 
-main_ternary_false@24:
-    intc_2 // 0
-    b main_ternary_merge@25
-
-main_add_route@5:
+main_add_route@33:
     txna ApplicationArgs 1
     dup
     len
@@ -166,41 +354,17 @@ main_add_route@5:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    cover 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@29
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@30:
-    !
-    assert // not payable
-    swap
-    callsub FixedMath.add
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
+    callsub add
     bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
-
-main_ternary_false@29:
-    intc_2 // 0
-    b main_ternary_merge@30
 
 
 // __solfn_35(a: bytes, b: bytes) -> bytes:
@@ -249,3 +413,125 @@ FixedMath.toUFixed256x18:
     b<=
     assert // overflow
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/fixedpoint.sol.TestFixedMath.add(__arc4_a: bytes, __arc4_b: bytes) -> bytes:
+add:
+    proto 2 1
+    txn GroupIndex
+    bz add_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+add_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    frame_dig -1
+    callsub FixedMath.add
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+add_ternary_false@2:
+    intc_2 // 0
+    b add_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/fixedpoint.sol.TestFixedMath.mul(__arc4_a: bytes, __arc4_b: bytes) -> bytes:
+mul:
+    proto 2 1
+    txn GroupIndex
+    bz mul_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+mul_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    frame_dig -1
+    callsub FixedMath.mul
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+mul_ternary_false@2:
+    intc_2 // 0
+    b mul_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/fixedpoint.sol.TestFixedMath.floor(__arc4_a: bytes) -> bytes:
+floor:
+    proto 1 1
+    txn GroupIndex
+    bz floor_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+floor_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub FixedMath.floor
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+floor_ternary_false@2:
+    intc_2 // 0
+    b floor_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/fixedpoint.sol.TestFixedMath.toUFixed256x18(__arc4_a: bytes) -> bytes:
+toUFixed256x18:
+    proto 1 1
+    txn GroupIndex
+    bz toUFixed256x18_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+toUFixed256x18_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub FixedMath.toUFixed256x18
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+toUFixed256x18_ternary_false@2:
+    intc_2 // 0
+    b toUFixed256x18_ternary_merge@3

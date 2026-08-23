@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/member_accessors.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 "data" 0x "name" "a_hash" "an_address" 0x000000000000 "super_secret_data"
+    intcblock 1 0 32 2
+    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 "data" 0x "name" "a_hash" "an_address" 0x000000000000 "super_secret_data"
     pushint 4096
     bzero
     dup
@@ -31,10 +31,10 @@ main:
     bytec 7 // 0x000000000000
     app_global_put
     bytec 5 // "a_hash"
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     bytec 6 // "an_address"
-    bytec_0 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    bytec_1 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
     bytec 8 // "super_secret_data"
     bytec_3 // 0x
@@ -63,16 +63,57 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xd93a53a3 0x4ba6bde2 0x8fed8df9 0xce9ccef0 // method "data()uint256", method "name()byte[6]", method "a_hash()byte[32]", method "an_address()address"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_data_route@5 main_name_route@6 main_a_hash_route@7 main_an_address_route@8
-    err
+    pushbytes 0x73d4a13a
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-main_an_address_route@8:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    callsub data
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x06fdde03
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -83,13 +124,11 @@ main_an_address_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    intc_1 // 0
-    bytec 6 // "an_address"
-    app_global_get_ex
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    bytec_1 // 0x151f7c75
+    callsub name
+    pushint 26
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -100,71 +139,145 @@ main_ternary_false@14:
     intc_1 // 0
     b main_ternary_merge@15
 
-main_a_hash_route@7:
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x236fa0d3
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@21
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@22:
     !
     assert // not payable
-    intc_1 // 0
-    bytec 5 // "a_hash"
-    app_global_get_ex
-    bytec_0 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    bytec_1 // 0x151f7c75
+    callsub a_hash
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@19:
+main_ternary_false@21:
     intc_1 // 0
-    b main_ternary_merge@20
+    b main_ternary_merge@22
 
-main_name_route@6:
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0xd2407f6b
+    ==
+    bz main_after_if_else@30
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@28
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@29:
     !
     assert // not payable
-    intc_1 // 0
-    bytec 4 // "name"
-    app_global_get_ex
-    bytec 7 // 0x000000000000
-    cover 2
-    select
-    bytec_1 // 0x151f7c75
+    intc_2 // 32
+    bzero
+    callsub an_address
+    dup
+    len
+    pushint 20
+    -
+    pushint 20
+    extract3
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@24:
+main_ternary_false@28:
     intc_1 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@29
 
-main_data_route@5:
+main_after_if_else@30:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd93a53a3 0x4ba6bde2 0x8fed8df9 0xce9ccef0 // method "data()uint256", method "name()byte[6]", method "a_hash()byte[32]", method "an_address()address"
+    txna ApplicationArgs 0
+    match main_data_route@33 main_name_route@34 main_a_hash_route@35 main_an_address_route@36
+    err
+
+main_an_address_route@36:
+    callsub an_address
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_a_hash_route@35:
+    callsub a_hash
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_name_route@34:
+    callsub name
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_data_route@33:
+    callsub data
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/member_accessors.sol.test.data() -> bytes:
+data:
     txn GroupIndex
-    bz main_ternary_false@29
+    bz data_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+data_ternary_merge@3:
     !
     assert // not payable
     intc_1 // 0
@@ -181,13 +294,83 @@ main_ternary_merge@30:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@29:
+data_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@30
+    b data_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/member_accessors.sol.test.name() -> bytes:
+name:
+    txn GroupIndex
+    bz name_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+name_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 4 // "name"
+    app_global_get_ex
+    bytec 7 // 0x000000000000
+    cover 2
+    select
+    retsub
+
+name_ternary_false@2:
+    intc_1 // 0
+    b name_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/member_accessors.sol.test.a_hash() -> bytes:
+a_hash:
+    txn GroupIndex
+    bz a_hash_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+a_hash_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 5 // "a_hash"
+    app_global_get_ex
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    retsub
+
+a_hash_ternary_false@2:
+    intc_1 // 0
+    b a_hash_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/member_accessors.sol.test.an_address() -> bytes:
+an_address:
+    txn GroupIndex
+    bz an_address_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+an_address_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec 6 // "an_address"
+    app_global_get_ex
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    retsub
+
+an_address_ternary_false@2:
+    intc_1 // 0
+    b an_address_ternary_merge@3

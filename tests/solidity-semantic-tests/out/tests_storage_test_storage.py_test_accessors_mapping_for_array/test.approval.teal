@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/accessors_mapping_for_array.sol.test.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93 "__ctor_pending" 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c "dynamicData" 0x151f7c75 "data" 0x0000000000000000000000000000000000000000000000000000000000000008
+    bytecblock 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93 0x151f7c75 "__ctor_pending" 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c "data" "dynamicData" 0x0000000000000000000000000000000000000000000000000000000000000008
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -32,16 +32,160 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x5173bd1e
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub data
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xd3c5fe1e
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub dynamicData
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0xcbf39868 0xb83d2dcb // method "__postInit()void", method "data(uint256,uint256)uint256", method "dynamicData(uint256,uint256)uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_data_route@6 main_dynamicData_route@7
+    match main___postInit_route@19 main_data_route@20 main_dynamicData_route@21
     err
 
-main_dynamicData_route@7:
+main_dynamicData_route@21:
     txna ApplicationArgs 1
     dup
     len
@@ -54,61 +198,15 @@ main_dynamicData_route@7:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_3 // "dynamicData"
-    concat
-    sha256
-    box_get
-    pushbytes 0x0000
-    cover 2
-    select
-    pushint 8
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    swap
-    extract 2 0
-    swap
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    bytec 4 // 0x151f7c75
+    callsub dynamicData
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@13:
-    intc_2 // 0
-    b main_ternary_merge@14
-
-main_data_route@6:
+main_data_route@20:
     txna ApplicationArgs 1
     dup
     len
@@ -121,109 +219,66 @@ main_data_route@6:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 5 // "data"
-    concat
-    sha256
-    box_get
-    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    pushint 8
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    bytec 4 // 0x151f7c75
+    callsub data
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@18:
-    intc_2 // 0
-    b main_ternary_merge@19
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+main___postInit_route@19:
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec 5 // "data"
+    bytec 4 // "data"
     intc_3 // 2
     box_create
     pop
-    bytec_3 // "dynamicData"
+    bytec 5 // "dynamicData"
     intc_3 // 2
     box_create
     pop
-    bytec_2 // 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
+    bytec_3 // 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
     box_len
     bury 1
-    bnz main_after_if_else@23
-    bytec_2 // 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
+    bnz main_after_if_else@31
+    bytec_3 // 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
     pushint 256
     box_create
     pop
 
-main_after_if_else@23:
-    bytec_2 // 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
+main_after_if_else@31:
+    bytec_3 // 0x47e2f275bb6f3e494aa17e7eba501cca7063a9c7536efbf8ca70755b4c9ce43c
     pushint 64
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000008
     box_replace // on error: index out of bounds
     intc_2 // 0
     itob
 
-main_while_top@24:
+main_while_top@32:
     pushint 3
     itob
     dig 1
     b>
-    bz main_after_while@28
+    bz main_after_while@36
     bytec_0 // 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93
     box_len
     bury 1
-    bnz main_after_if_else@27
+    bnz main_after_if_else@35
     bytec_0 // 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93
     intc_3 // 2
     box_create
     pop
 
-main_after_if_else@27:
+main_after_if_else@35:
     bytec_0 // 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93
     intc_2 // 0
     intc_3 // 2
@@ -261,23 +316,126 @@ main_after_if_else@27:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    b main_while_top@24
+    b main_while_top@32
 
-main_after_while@28:
+main_after_while@36:
     pop
     bytec_0 // 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93
     box_len
     bury 1
-    bnz main_after_if_else@30
+    bnz main_after_if_else@38
     bytec_0 // 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93
     intc_3 // 2
     box_create
     pop
 
-main_after_if_else@30:
+main_after_if_else@38:
     bytec_0 // 0x9ea24c37c409a8837e4933b329d3e0708cee511b324978e90f444c9fd7399e93
     pushint 66
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000008
     box_replace // on error: index out of bounds
     intc_1 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/accessors_mapping_for_array.sol.test.data(__arc4_key0: bytes, __arc4_key1: bytes) -> bytes:
+data:
+    proto 2 1
+    txn GroupIndex
+    bz data_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+data_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // "data"
+    concat
+    sha256
+    box_get
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushint 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    retsub
+
+data_ternary_false@2:
+    intc_2 // 0
+    b data_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/accessors_mapping_for_array.sol.test.dynamicData(__arc4_key0: bytes, __arc4_key1: bytes) -> bytes:
+dynamicData:
+    proto 2 1
+    txn GroupIndex
+    bz dynamicData_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+dynamicData_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "dynamicData"
+    concat
+    sha256
+    box_get
+    pushbytes 0x0000
+    cover 2
+    select
+    pushint 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
+    extract 2 0
+    swap
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    retsub
+
+dynamicData_ternary_false@2:
+    intc_2 // 0
+    b dynamicData_ternary_merge@3

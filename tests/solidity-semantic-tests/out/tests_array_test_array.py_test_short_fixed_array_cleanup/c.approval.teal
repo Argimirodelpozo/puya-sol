@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/short_fixed_array_cleanup.sol.c.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 8
-    bytecblock "data" 0x 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intcblock 1 0 32 2
+    bytecblock "data" 0x 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -38,62 +38,116 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xd9c55ce1
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub fill
+    bytec_3 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x52efea6e
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    callsub clear
+    bytec_3 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x5cd3f78a 0x44977246 // method "fill()void", method "clear()void"
     txna ApplicationArgs 0
-    match main_fill_route@5 main_clear_route@6
+    match main_fill_route@19 main_clear_route@20
     err
 
-main_clear_route@6:
-    txn GroupIndex
-    bz main_ternary_false@12
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@13:
-    !
-    assert // not payable
-    bytec_0 // "data"
-    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    app_global_put
+main_clear_route@20:
+    callsub clear
     intc_0 // 1
     return
 
-main_ternary_false@12:
-    intc_1 // 0
-    b main_ternary_merge@13
+main_fill_route@19:
+    callsub fill
+    intc_0 // 1
+    return
 
-main_fill_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/short_fixed_array_cleanup.sol.c.fill() -> void:
+fill:
+    proto 0 0
     txn GroupIndex
-    bz main_ternary_false@17
+    bz fill_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+fill_ternary_merge@3:
     !
     assert // not payable
     intc_1 // 0
     itob
 
-main_while_top@19:
+fill_while_top@4:
     pushint 3
     itob
     dig 1
     b>
-    bz main_after_while@21
+    bz fill_after_while@6
     intc_0 // 1
     itob
     dig 1
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dig 1
@@ -112,13 +166,13 @@ main_while_top@19:
     bytec_0 // "data"
     app_global_get_ex
     assert // state exists
-    intc_3 // 8
+    pushint 8
     bzero
     dig 3
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     intc_2 // 32
@@ -131,15 +185,36 @@ main_while_top@19:
     pushbytes 0x01
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    b main_while_top@19
+    b fill_while_top@4
 
-main_after_while@21:
-    intc_0 // 1
-    return
+fill_after_while@6:
+    retsub
 
-main_ternary_false@17:
+fill_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@18
+    b fill_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/short_fixed_array_cleanup.sol.c.clear() -> void:
+clear:
+    txn GroupIndex
+    bz clear_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+clear_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "data"
+    bytec_2 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    retsub
+
+clear_ternary_false@2:
+    intc_1 // 0
+    b clear_ternary_merge@3

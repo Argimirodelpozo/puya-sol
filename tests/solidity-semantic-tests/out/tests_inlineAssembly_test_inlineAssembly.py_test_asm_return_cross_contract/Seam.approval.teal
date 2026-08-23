@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Seam.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 24
-    bytecblock 0x703a0000000000000000 "__ctor_pending"
+    intcblock 32 0 1 20
+    bytecblock 0x703a0000000000000000 "__ctor_pending" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -32,38 +32,34 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x37afbc9f 0x87123374 // method "__postInit(address,address)void", method "got()address"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_got_route@6
-    err
-
-main_got_route@6:
+    pushbytes 0xde2111e2
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@7
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@8:
     !
     assert // not payable
     intc_0 // 32
     bzero
-    bytec_0 // 0x703a0000000000000000
-    box_len
-    bury 1
-    bz main_after_if_else@17
-    bytec_0 // 0x703a0000000000000000
-    intc_1 // 0
-    intc_0 // 32
-    box_extract
-
-main_after_inlined___puyasol___storage_read@21:
+    callsub got
+    dup
+    len
+    intc_3 // 20
+    -
+    intc_3 // 20
+    extract3
     concat
     dup
     len
@@ -71,22 +67,38 @@ main_after_inlined___puyasol___storage_read@21:
     -
     intc_0 // 32
     extract3
-    pushbytes 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-main_after_if_else@17:
-    pushbytes 0x
-    b main_after_inlined___puyasol___storage_read@21
-
-main_ternary_false@12:
+main_ternary_false@7:
     intc_1 // 0
-    b main_ternary_merge@13
+    b main_ternary_merge@8
 
-main___postInit_route@5:
+main_after_if_else@9:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x37afbc9f 0x87123374 // method "__postInit(address,address)void", method "got()address"
+    txna ApplicationArgs 0
+    match main___postInit_route@12 main_got_route@13
+    err
+
+main_got_route@13:
+    callsub got
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main___postInit_route@12:
     txna ApplicationArgs 1
     dup
     len
@@ -111,7 +123,7 @@ main___postInit_route@5:
     app_global_put
     itxn_begin
     swap
-    intc_3 // 24
+    pushint 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
@@ -148,7 +160,7 @@ main___postInit_route@5:
     box_replace
     itxn_begin
     swap
-    intc_3 // 24
+    pushint 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
@@ -165,3 +177,45 @@ main___postInit_route@5:
     itxn_submit
     intc_2 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Seam.got() -> bytes:
+got:
+    txn GroupIndex
+    bz got_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+got_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    bytec_0 // 0x703a0000000000000000
+    box_len
+    bury 1
+    bz got_after_if_else@7
+    bytec_0 // 0x703a0000000000000000
+    intc_1 // 0
+    intc_0 // 32
+    box_extract
+
+got_after_inlined___puyasol___storage_read@11:
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    retsub
+
+got_after_if_else@7:
+    pushbytes 0x
+    b got_after_inlined___puyasol___storage_read@11
+
+got_ternary_false@2:
+    intc_1 // 0
+    b got_ternary_merge@3

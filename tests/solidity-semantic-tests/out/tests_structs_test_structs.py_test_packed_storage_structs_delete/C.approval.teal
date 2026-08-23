@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/packed_storage_structs_delete.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2 3
-    bytecblock "data" 0x00000000 "x" "y"
+    intcblock 0 1 2 32
+    bytecblock "data" 0x00000000 "x" "y" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -34,25 +34,78 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0xc95a9d21 // method "test()uint256"
-    txna ApplicationArgs 0
-    match main_test_route@4
-    err
-
-main_test_route@4:
     txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xf8a8fd6d
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_3 // 32
+    bzero
+    callsub test
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_0 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    pushbytes 0xc95a9d21 // method "test()uint256"
+    txna ApplicationArgs 0
+    match main_test_route@11
+    err
+
+main_test_route@11:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub test
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/packed_storage_structs_delete.sol.C.test() -> bytes:
+test:
+    txn GroupIndex
+    bz test_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@3:
     !
     assert // not payable
     bytec_2 // "x"
@@ -83,7 +136,7 @@ main_ternary_merge@9:
     select
     intc_1 // 1
     !=
-    bnz main_if_body@14
+    bnz test_if_body@8
     intc_0 // 0
     bytec_3 // "y"
     app_global_get_ex
@@ -92,7 +145,7 @@ main_ternary_merge@9:
     select
     intc_2 // 2
     !=
-    bnz main_if_body@14
+    bnz test_if_body@8
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000
@@ -102,7 +155,7 @@ main_ternary_merge@9:
     getbyte
     intc_2 // 2
     !=
-    bnz main_if_body@14
+    bnz test_if_body@8
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000
@@ -112,30 +165,23 @@ main_ternary_merge@9:
     extract_uint16
     pushint 43981
     !=
-    bnz main_if_body@14
+    bnz test_if_body@8
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000
     cover 2
     select
-    intc_3 // 3
+    pushint 3
     getbyte
     pushint 250
     !=
-    bz main_after_if_else@15
+    bz test_after_if_else@9
 
-main_if_body@14:
+test_if_body@8:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    retsub
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/packed_storage_structs_delete.sol.C.test@22:
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_after_if_else@15:
+test_after_if_else@9:
     bytec_3 // "y"
     intc_0 // 0
     app_global_put
@@ -164,14 +210,14 @@ main_after_if_else@15:
     select
     intc_1 // 1
     !=
-    bnz main_if_body@20
+    bnz test_if_body@14
     intc_0 // 0
     bytec_3 // "y"
     app_global_get_ex
     intc_0 // 0
     cover 2
     select
-    bnz main_if_body@20
+    bnz test_if_body@14
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000
@@ -181,7 +227,7 @@ main_after_if_else@15:
     getbyte
     intc_2 // 2
     !=
-    bnz main_if_body@20
+    bnz test_if_body@14
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000
@@ -189,23 +235,23 @@ main_after_if_else@15:
     select
     intc_1 // 1
     extract_uint16
-    bnz main_if_body@20
+    bnz test_if_body@14
     bytec_0 // "data"
     box_get
     bytec_1 // 0x00000000
     cover 2
     select
-    intc_3 // 3
+    pushint 3
     getbyte
     pushint 250
     !=
-    bz main_after_if_else@21
+    bz test_after_if_else@15
 
-main_if_body@20:
+test_if_body@14:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/packed_storage_structs_delete.sol.C.test@22
+    retsub
 
-main_after_if_else@21:
+test_after_if_else@15:
     bytec_2 // "x"
     intc_0 // 0
     app_global_put
@@ -213,8 +259,8 @@ main_after_if_else@21:
     bytec_1 // 0x00000000
     box_put
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/packed_storage_structs_delete.sol.C.test@22
+    retsub
 
-main_ternary_false@8:
+test_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@9
+    b test_ternary_merge@3

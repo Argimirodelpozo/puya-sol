@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/decode_slice.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 4
+    intcblock 0 32 1 2
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -27,169 +28,293 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x13d1aa2e
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_1 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub f
+    dig 4
+    uncover 4
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 4
+    uncover 4
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_0 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
     pushbytes 0xc99c25f3 // method "f(uint256,uint256)(uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
-    match main_f_route@4
+    match main_f_route@11
     err
 
-main_f_route@4:
+main_f_route@11:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
     txna ApplicationArgs 1
+    dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
+    dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub f
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/decode_slice.sol.C.f(__arc4_a: bytes, __arc4_b: bytes) -> bytes, bytes, bytes, bytes:
+f:
+    proto 2 4
     txn GroupIndex
-    bz main_ternary_false@8
+    bz f_ternary_false@2
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+f_ternary_merge@3:
     !
     assert // not payable
     txn NumAppArgs
-    bz main_ternary_false@59
+    bz f_ternary_false@53
     txn NumAppArgs
-    bz main_ternary_false@12
+    bz f_ternary_false@6
     txna ApplicationArgs 0
 
-main_ternary_merge@13:
+f_ternary_merge@7:
     txn NumAppArgs
     intc_2 // 1
     >
-    bz main_ternary_false@15
+    bz f_ternary_false@9
     txna ApplicationArgs 1
 
-main_ternary_merge@16:
+f_ternary_merge@10:
     concat
     txn NumAppArgs
-    pushint 2
+    intc_3 // 2
     >
-    bz main_ternary_false@18
+    bz f_ternary_false@12
     txna ApplicationArgs 2
 
-main_ternary_merge@19:
+f_ternary_merge@13:
     concat
     txn NumAppArgs
     pushint 3
     >
-    bz main_ternary_false@21
+    bz f_ternary_false@15
     txna ApplicationArgs 3
 
-main_ternary_merge@22:
+f_ternary_merge@16:
     concat
     txn NumAppArgs
-    intc_3 // 4
+    pushint 4
     >
-    bz main_ternary_false@24
+    bz f_ternary_false@18
     txna ApplicationArgs 4
 
-main_ternary_merge@25:
+f_ternary_merge@19:
     concat
     txn NumAppArgs
     pushint 5
     >
-    bz main_ternary_false@27
+    bz f_ternary_false@21
     txna ApplicationArgs 5
 
-main_ternary_merge@28:
+f_ternary_merge@22:
     concat
     txn NumAppArgs
     pushint 6
     >
-    bz main_ternary_false@30
+    bz f_ternary_false@24
     txna ApplicationArgs 6
 
-main_ternary_merge@31:
+f_ternary_merge@25:
     concat
     txn NumAppArgs
     pushint 7
     >
-    bz main_ternary_false@33
+    bz f_ternary_false@27
     txna ApplicationArgs 7
 
-main_ternary_merge@34:
+f_ternary_merge@28:
     concat
     txn NumAppArgs
     pushint 8
     >
-    bz main_ternary_false@36
+    bz f_ternary_false@30
     txna ApplicationArgs 8
 
-main_ternary_merge@37:
+f_ternary_merge@31:
     concat
     txn NumAppArgs
     pushint 9
     >
-    bz main_ternary_false@39
+    bz f_ternary_false@33
     txna ApplicationArgs 9
 
-main_ternary_merge@40:
+f_ternary_merge@34:
     concat
     txn NumAppArgs
     pushint 10
     >
-    bz main_ternary_false@42
+    bz f_ternary_false@36
     txna ApplicationArgs 10
 
-main_ternary_merge@43:
+f_ternary_merge@37:
     concat
     txn NumAppArgs
     pushint 11
     >
-    bz main_ternary_false@45
+    bz f_ternary_false@39
     txna ApplicationArgs 11
 
-main_ternary_merge@46:
+f_ternary_merge@40:
     concat
     txn NumAppArgs
     pushint 12
     >
-    bz main_ternary_false@48
+    bz f_ternary_false@42
     txna ApplicationArgs 12
 
-main_ternary_merge@49:
+f_ternary_merge@43:
     concat
     txn NumAppArgs
     pushint 13
     >
-    bz main_ternary_false@51
+    bz f_ternary_false@45
     txna ApplicationArgs 13
 
-main_ternary_merge@52:
+f_ternary_merge@46:
     concat
     txn NumAppArgs
     pushint 14
     >
-    bz main_ternary_false@54
+    bz f_ternary_false@48
     txna ApplicationArgs 14
 
-main_ternary_merge@55:
+f_ternary_merge@49:
     concat
     txn NumAppArgs
     pushint 15
     >
-    bz main_ternary_false@57
+    bz f_ternary_false@51
     txna ApplicationArgs 15
 
-main_ternary_merge@58:
+f_ternary_merge@52:
     concat
 
-main_ternary_merge@60:
+f_ternary_merge@54:
     dup
     len
-    intc_3 // 4
+    pushint 4
     >=
     assert // slice: start > end
     dup
@@ -207,134 +332,134 @@ main_ternary_merge@60:
     swap
     extract 36 32
     txn NumAppArgs
-    bz main_ternary_false@110
+    bz f_ternary_false@104
     txn NumAppArgs
-    bz main_ternary_false@63
+    bz f_ternary_false@57
     txna ApplicationArgs 0
 
-main_ternary_merge@64:
+f_ternary_merge@58:
     txn NumAppArgs
     intc_2 // 1
     >
-    bz main_ternary_false@66
+    bz f_ternary_false@60
     txna ApplicationArgs 1
 
-main_ternary_merge@67:
+f_ternary_merge@61:
     concat
     txn NumAppArgs
-    pushint 2
+    intc_3 // 2
     >
-    bz main_ternary_false@69
+    bz f_ternary_false@63
     txna ApplicationArgs 2
 
-main_ternary_merge@70:
+f_ternary_merge@64:
     concat
     txn NumAppArgs
     pushint 3
     >
-    bz main_ternary_false@72
+    bz f_ternary_false@66
     txna ApplicationArgs 3
 
-main_ternary_merge@73:
+f_ternary_merge@67:
     concat
     txn NumAppArgs
-    intc_3 // 4
+    pushint 4
     >
-    bz main_ternary_false@75
+    bz f_ternary_false@69
     txna ApplicationArgs 4
 
-main_ternary_merge@76:
+f_ternary_merge@70:
     concat
     txn NumAppArgs
     pushint 5
     >
-    bz main_ternary_false@78
+    bz f_ternary_false@72
     txna ApplicationArgs 5
 
-main_ternary_merge@79:
+f_ternary_merge@73:
     concat
     txn NumAppArgs
     pushint 6
     >
-    bz main_ternary_false@81
+    bz f_ternary_false@75
     txna ApplicationArgs 6
 
-main_ternary_merge@82:
+f_ternary_merge@76:
     concat
     txn NumAppArgs
     pushint 7
     >
-    bz main_ternary_false@84
+    bz f_ternary_false@78
     txna ApplicationArgs 7
 
-main_ternary_merge@85:
+f_ternary_merge@79:
     concat
     txn NumAppArgs
     pushint 8
     >
-    bz main_ternary_false@87
+    bz f_ternary_false@81
     txna ApplicationArgs 8
 
-main_ternary_merge@88:
+f_ternary_merge@82:
     concat
     txn NumAppArgs
     pushint 9
     >
-    bz main_ternary_false@90
+    bz f_ternary_false@84
     txna ApplicationArgs 9
 
-main_ternary_merge@91:
+f_ternary_merge@85:
     concat
     txn NumAppArgs
     pushint 10
     >
-    bz main_ternary_false@93
+    bz f_ternary_false@87
     txna ApplicationArgs 10
 
-main_ternary_merge@94:
+f_ternary_merge@88:
     concat
     txn NumAppArgs
     pushint 11
     >
-    bz main_ternary_false@96
+    bz f_ternary_false@90
     txna ApplicationArgs 11
 
-main_ternary_merge@97:
+f_ternary_merge@91:
     concat
     txn NumAppArgs
     pushint 12
     >
-    bz main_ternary_false@99
+    bz f_ternary_false@93
     txna ApplicationArgs 12
 
-main_ternary_merge@100:
+f_ternary_merge@94:
     concat
     txn NumAppArgs
     pushint 13
     >
-    bz main_ternary_false@102
+    bz f_ternary_false@96
     txna ApplicationArgs 13
 
-main_ternary_merge@103:
+f_ternary_merge@97:
     concat
     txn NumAppArgs
     pushint 14
     >
-    bz main_ternary_false@105
+    bz f_ternary_false@99
     txna ApplicationArgs 14
 
-main_ternary_merge@106:
+f_ternary_merge@100:
     concat
     txn NumAppArgs
     pushint 15
     >
-    bz main_ternary_false@108
+    bz f_ternary_false@102
     txna ApplicationArgs 15
 
-main_ternary_merge@109:
+f_ternary_merge@103:
     concat
 
-main_ternary_merge@111:
+f_ternary_merge@105:
     substring 4 36
     dup
     len
@@ -344,134 +469,134 @@ main_ternary_merge@111:
     extract 0 32
     cover 2
     txn NumAppArgs
-    bz main_ternary_false@161
+    bz f_ternary_false@155
     txn NumAppArgs
-    bz main_ternary_false@114
+    bz f_ternary_false@108
     txna ApplicationArgs 0
 
-main_ternary_merge@115:
+f_ternary_merge@109:
     txn NumAppArgs
     intc_2 // 1
     >
-    bz main_ternary_false@117
+    bz f_ternary_false@111
     txna ApplicationArgs 1
 
-main_ternary_merge@118:
+f_ternary_merge@112:
     concat
     txn NumAppArgs
-    pushint 2
+    intc_3 // 2
     >
-    bz main_ternary_false@120
+    bz f_ternary_false@114
     txna ApplicationArgs 2
 
-main_ternary_merge@121:
+f_ternary_merge@115:
     concat
     txn NumAppArgs
     pushint 3
     >
-    bz main_ternary_false@123
+    bz f_ternary_false@117
     txna ApplicationArgs 3
 
-main_ternary_merge@124:
+f_ternary_merge@118:
     concat
     txn NumAppArgs
-    intc_3 // 4
+    pushint 4
     >
-    bz main_ternary_false@126
+    bz f_ternary_false@120
     txna ApplicationArgs 4
 
-main_ternary_merge@127:
+f_ternary_merge@121:
     concat
     txn NumAppArgs
     pushint 5
     >
-    bz main_ternary_false@129
+    bz f_ternary_false@123
     txna ApplicationArgs 5
 
-main_ternary_merge@130:
+f_ternary_merge@124:
     concat
     txn NumAppArgs
     pushint 6
     >
-    bz main_ternary_false@132
+    bz f_ternary_false@126
     txna ApplicationArgs 6
 
-main_ternary_merge@133:
+f_ternary_merge@127:
     concat
     txn NumAppArgs
     pushint 7
     >
-    bz main_ternary_false@135
+    bz f_ternary_false@129
     txna ApplicationArgs 7
 
-main_ternary_merge@136:
+f_ternary_merge@130:
     concat
     txn NumAppArgs
     pushint 8
     >
-    bz main_ternary_false@138
+    bz f_ternary_false@132
     txna ApplicationArgs 8
 
-main_ternary_merge@139:
+f_ternary_merge@133:
     concat
     txn NumAppArgs
     pushint 9
     >
-    bz main_ternary_false@141
+    bz f_ternary_false@135
     txna ApplicationArgs 9
 
-main_ternary_merge@142:
+f_ternary_merge@136:
     concat
     txn NumAppArgs
     pushint 10
     >
-    bz main_ternary_false@144
+    bz f_ternary_false@138
     txna ApplicationArgs 10
 
-main_ternary_merge@145:
+f_ternary_merge@139:
     concat
     txn NumAppArgs
     pushint 11
     >
-    bz main_ternary_false@147
+    bz f_ternary_false@141
     txna ApplicationArgs 11
 
-main_ternary_merge@148:
+f_ternary_merge@142:
     concat
     txn NumAppArgs
     pushint 12
     >
-    bz main_ternary_false@150
+    bz f_ternary_false@144
     txna ApplicationArgs 12
 
-main_ternary_merge@151:
+f_ternary_merge@145:
     concat
     txn NumAppArgs
     pushint 13
     >
-    bz main_ternary_false@153
+    bz f_ternary_false@147
     txna ApplicationArgs 13
 
-main_ternary_merge@154:
+f_ternary_merge@148:
     concat
     txn NumAppArgs
     pushint 14
     >
-    bz main_ternary_false@156
+    bz f_ternary_false@150
     txna ApplicationArgs 14
 
-main_ternary_merge@157:
+f_ternary_merge@151:
     concat
     txn NumAppArgs
     pushint 15
     >
-    bz main_ternary_false@159
+    bz f_ternary_false@153
     txna ApplicationArgs 15
 
-main_ternary_merge@160:
+f_ternary_merge@154:
     concat
 
-main_ternary_merge@162:
+f_ternary_merge@156:
     substring 36 68
     dup
     len
@@ -514,275 +639,263 @@ main_ternary_merge@162:
     uncover 4
     uncover 4
     b|
-    uncover 3
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
+    retsub
 
-main_ternary_false@159:
+f_ternary_false@153:
     intc_0 // 0
     bzero
-    b main_ternary_merge@160
+    b f_ternary_merge@154
 
-main_ternary_false@156:
+f_ternary_false@150:
     intc_0 // 0
     bzero
-    b main_ternary_merge@157
+    b f_ternary_merge@151
 
-main_ternary_false@153:
+f_ternary_false@147:
     intc_0 // 0
     bzero
-    b main_ternary_merge@154
+    b f_ternary_merge@148
 
-main_ternary_false@150:
+f_ternary_false@144:
     intc_0 // 0
     bzero
-    b main_ternary_merge@151
+    b f_ternary_merge@145
 
-main_ternary_false@147:
+f_ternary_false@141:
     intc_0 // 0
     bzero
-    b main_ternary_merge@148
+    b f_ternary_merge@142
 
-main_ternary_false@144:
+f_ternary_false@138:
     intc_0 // 0
     bzero
-    b main_ternary_merge@145
+    b f_ternary_merge@139
 
-main_ternary_false@141:
+f_ternary_false@135:
     intc_0 // 0
     bzero
-    b main_ternary_merge@142
+    b f_ternary_merge@136
 
-main_ternary_false@138:
+f_ternary_false@132:
     intc_0 // 0
     bzero
-    b main_ternary_merge@139
+    b f_ternary_merge@133
 
-main_ternary_false@135:
+f_ternary_false@129:
     intc_0 // 0
     bzero
-    b main_ternary_merge@136
+    b f_ternary_merge@130
 
-main_ternary_false@132:
+f_ternary_false@126:
     intc_0 // 0
     bzero
-    b main_ternary_merge@133
+    b f_ternary_merge@127
 
-main_ternary_false@129:
+f_ternary_false@123:
     intc_0 // 0
     bzero
-    b main_ternary_merge@130
+    b f_ternary_merge@124
 
-main_ternary_false@126:
+f_ternary_false@120:
     intc_0 // 0
     bzero
-    b main_ternary_merge@127
+    b f_ternary_merge@121
 
-main_ternary_false@123:
+f_ternary_false@117:
     intc_0 // 0
     bzero
-    b main_ternary_merge@124
+    b f_ternary_merge@118
 
-main_ternary_false@120:
+f_ternary_false@114:
     intc_0 // 0
     bzero
-    b main_ternary_merge@121
+    b f_ternary_merge@115
 
-main_ternary_false@117:
+f_ternary_false@111:
     intc_0 // 0
     bzero
-    b main_ternary_merge@118
+    b f_ternary_merge@112
 
-main_ternary_false@114:
+f_ternary_false@108:
     intc_0 // 0
     bzero
-    b main_ternary_merge@115
+    b f_ternary_merge@109
 
-main_ternary_false@161:
+f_ternary_false@155:
     intc_0 // 0
     bzero
-    b main_ternary_merge@162
+    b f_ternary_merge@156
 
-main_ternary_false@108:
+f_ternary_false@102:
     intc_0 // 0
     bzero
-    b main_ternary_merge@109
+    b f_ternary_merge@103
 
-main_ternary_false@105:
+f_ternary_false@99:
     intc_0 // 0
     bzero
-    b main_ternary_merge@106
+    b f_ternary_merge@100
 
-main_ternary_false@102:
+f_ternary_false@96:
     intc_0 // 0
     bzero
-    b main_ternary_merge@103
+    b f_ternary_merge@97
 
-main_ternary_false@99:
+f_ternary_false@93:
     intc_0 // 0
     bzero
-    b main_ternary_merge@100
+    b f_ternary_merge@94
 
-main_ternary_false@96:
+f_ternary_false@90:
     intc_0 // 0
     bzero
-    b main_ternary_merge@97
+    b f_ternary_merge@91
 
-main_ternary_false@93:
+f_ternary_false@87:
     intc_0 // 0
     bzero
-    b main_ternary_merge@94
+    b f_ternary_merge@88
 
-main_ternary_false@90:
+f_ternary_false@84:
     intc_0 // 0
     bzero
-    b main_ternary_merge@91
+    b f_ternary_merge@85
 
-main_ternary_false@87:
+f_ternary_false@81:
     intc_0 // 0
     bzero
-    b main_ternary_merge@88
+    b f_ternary_merge@82
 
-main_ternary_false@84:
+f_ternary_false@78:
     intc_0 // 0
     bzero
-    b main_ternary_merge@85
+    b f_ternary_merge@79
 
-main_ternary_false@81:
+f_ternary_false@75:
     intc_0 // 0
     bzero
-    b main_ternary_merge@82
+    b f_ternary_merge@76
 
-main_ternary_false@78:
+f_ternary_false@72:
     intc_0 // 0
     bzero
-    b main_ternary_merge@79
+    b f_ternary_merge@73
 
-main_ternary_false@75:
+f_ternary_false@69:
     intc_0 // 0
     bzero
-    b main_ternary_merge@76
+    b f_ternary_merge@70
 
-main_ternary_false@72:
+f_ternary_false@66:
     intc_0 // 0
     bzero
-    b main_ternary_merge@73
+    b f_ternary_merge@67
 
-main_ternary_false@69:
+f_ternary_false@63:
     intc_0 // 0
     bzero
-    b main_ternary_merge@70
+    b f_ternary_merge@64
 
-main_ternary_false@66:
+f_ternary_false@60:
     intc_0 // 0
     bzero
-    b main_ternary_merge@67
+    b f_ternary_merge@61
 
-main_ternary_false@63:
+f_ternary_false@57:
     intc_0 // 0
     bzero
-    b main_ternary_merge@64
+    b f_ternary_merge@58
 
-main_ternary_false@110:
+f_ternary_false@104:
     intc_0 // 0
     bzero
-    b main_ternary_merge@111
+    b f_ternary_merge@105
 
-main_ternary_false@57:
+f_ternary_false@51:
     intc_0 // 0
     bzero
-    b main_ternary_merge@58
+    b f_ternary_merge@52
 
-main_ternary_false@54:
+f_ternary_false@48:
     intc_0 // 0
     bzero
-    b main_ternary_merge@55
+    b f_ternary_merge@49
 
-main_ternary_false@51:
+f_ternary_false@45:
     intc_0 // 0
     bzero
-    b main_ternary_merge@52
+    b f_ternary_merge@46
 
-main_ternary_false@48:
+f_ternary_false@42:
     intc_0 // 0
     bzero
-    b main_ternary_merge@49
+    b f_ternary_merge@43
 
-main_ternary_false@45:
+f_ternary_false@39:
     intc_0 // 0
     bzero
-    b main_ternary_merge@46
+    b f_ternary_merge@40
 
-main_ternary_false@42:
+f_ternary_false@36:
     intc_0 // 0
     bzero
-    b main_ternary_merge@43
+    b f_ternary_merge@37
 
-main_ternary_false@39:
+f_ternary_false@33:
     intc_0 // 0
     bzero
-    b main_ternary_merge@40
+    b f_ternary_merge@34
 
-main_ternary_false@36:
+f_ternary_false@30:
     intc_0 // 0
     bzero
-    b main_ternary_merge@37
+    b f_ternary_merge@31
 
-main_ternary_false@33:
+f_ternary_false@27:
     intc_0 // 0
     bzero
-    b main_ternary_merge@34
+    b f_ternary_merge@28
 
-main_ternary_false@30:
+f_ternary_false@24:
     intc_0 // 0
     bzero
-    b main_ternary_merge@31
+    b f_ternary_merge@25
 
-main_ternary_false@27:
+f_ternary_false@21:
     intc_0 // 0
     bzero
-    b main_ternary_merge@28
+    b f_ternary_merge@22
 
-main_ternary_false@24:
+f_ternary_false@18:
     intc_0 // 0
     bzero
-    b main_ternary_merge@25
+    b f_ternary_merge@19
 
-main_ternary_false@21:
+f_ternary_false@15:
     intc_0 // 0
     bzero
-    b main_ternary_merge@22
+    b f_ternary_merge@16
 
-main_ternary_false@18:
+f_ternary_false@12:
     intc_0 // 0
     bzero
-    b main_ternary_merge@19
+    b f_ternary_merge@13
 
-main_ternary_false@15:
+f_ternary_false@9:
     intc_0 // 0
     bzero
-    b main_ternary_merge@16
+    b f_ternary_merge@10
 
-main_ternary_false@12:
+f_ternary_false@6:
     intc_0 // 0
     bzero
-    b main_ternary_merge@13
+    b f_ternary_merge@7
 
-main_ternary_false@59:
+f_ternary_false@53:
     intc_0 // 0
     bzero
-    b main_ternary_merge@60
+    b f_ternary_merge@54
 
-main_ternary_false@8:
+f_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@9
+    b f_ternary_merge@3

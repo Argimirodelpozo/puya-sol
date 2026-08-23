@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dce_reverting_subexpr.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 256
-    bytecblock 0x 0x151f7c75 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
-    intc_2 // 0
+    intcblock 32 1 0 2 256
+    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -30,58 +29,143 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xe4f644d7 0x9cef58c4 0x68cce9e4 0x6d74ffc9 0xb57cb53b 0x5a63ece8 // method "divdivShl(uint256)uint256", method "modShl(uint256,uint256)uint256", method "modShrRt(uint256,uint256,uint256)uint256", method "ternFold(uint256,uint256)uint256", method "expZero(uint256,uint256)uint256", method "mulZero(uint256,uint256)uint256"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_divdivShl_route@5 main_modShl_route@6 main_modShrRt_route@7 main_ternFold_route@8 main_expZero_route@9 main_mulZero_route@10
-    err
-
-main_mulZero_route@10:
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
+    pushbytes 0xcbaee4f3
     ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@16
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@54:
+main_ternary_merge@8:
     !
     assert // not payable
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub divdivShl
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@16:
+main_ternary_false@7:
     intc_2 // 0
-    b main_ternary_merge@54
+    b main_ternary_merge@8
 
-main_expZero_route@9:
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x50796509
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
     txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub modShl
+    concat
     dup
     len
     intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
+    -
     intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x8af0fbe7
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
     bz main_ternary_false@21
     txn GroupIndex
@@ -92,53 +176,62 @@ main_expZero_route@9:
 main_ternary_merge@22:
     !
     assert // not payable
-    bytec_2 // 0x01
-    cover 2
-    b%
-    swap
-    intc_2 // 0
-    itob
-
-main_while_top@23:
-    dup
-    bytec_0 // 0x
-    b>
-    bz main_after_while@27
-    dup
-    bytec_2 // 0x01
-    b&
-    bytec_0 // 0x
-    b!=
-    bz main_after_if_else@26
-    swap
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    txna ApplicationArgs 1
+    extract 64 32
     dig 2
-    b*
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    swap
-
-main_after_if_else@26:
-    pushbytes 0x02
-    b/
-    uncover 2
-    dup
-    b*
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    cover 2
-    b main_while_top@23
-
-main_after_while@27:
-    pop
-    dup
     len
     intc_0 // 32
     <=
     assert // overflow
-    intc_0 // 32
-    bzero
+    uncover 2
+    dig 3
     b|
-    bytec_1 // 0x151f7c75
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dig 3
+    b|
+    callsub modShrRt
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -149,8 +242,236 @@ main_ternary_false@21:
     intc_2 // 0
     b main_ternary_merge@22
 
-main_ternFold_route@8:
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x4d41c30f
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
     txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub ternFold
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0x9c534ee1
+    ==
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub expZero
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_2 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
+    bnz main_after_if_else@44
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@44
+    txna ApplicationArgs 0
+    pushbytes 0xa8b5c51a
+    ==
+    bz main_after_if_else@44
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub mulZero
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@42:
+    intc_2 // 0
+    b main_ternary_merge@43
+
+main_after_if_else@44:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xe4f644d7 0x9cef58c4 0x68cce9e4 0x6d74ffc9 0xb57cb53b 0x5a63ece8 // method "divdivShl(uint256)uint256", method "modShl(uint256,uint256)uint256", method "modShrRt(uint256,uint256,uint256)uint256", method "ternFold(uint256,uint256)uint256", method "expZero(uint256,uint256)uint256", method "mulZero(uint256,uint256)uint256"
+    txna ApplicationArgs 0
+    match main_divdivShl_route@47 main_modShl_route@48 main_modShrRt_route@49 main_ternFold_route@50 main_expZero_route@51 main_mulZero_route@52
+    err
+
+main_mulZero_route@52:
+    txna ApplicationArgs 1
+    dup
     len
     intc_0 // 32
     ==
@@ -161,28 +482,57 @@ main_ternFold_route@8:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@31
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@32:
-    !
-    assert // not payable
-    bytec_1 // 0x151f7c75
+    callsub mulZero
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@31:
-    intc_2 // 0
-    b main_ternary_merge@32
+main_expZero_route@51:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub expZero
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
-main_modShrRt_route@7:
+main_ternFold_route@50:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub ternFold
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_modShrRt_route@49:
     txna ApplicationArgs 1
     dup
     len
@@ -201,26 +551,118 @@ main_modShrRt_route@7:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub modShrRt
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_modShl_route@48:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub modShl
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_divdivShl_route@47:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub divdivShl
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dce_reverting_subexpr.sol.C.divdivShl(__arc4_d: bytes) -> bytes:
+divdivShl:
+    proto 1 1
     txn GroupIndex
-    bz main_ternary_false@36
+    bz divdivShl_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@37:
+divdivShl_ternary_merge@3:
     !
     assert // not payable
-    cover 2
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+divdivShl_ternary_false@2:
+    intc_2 // 0
+    b divdivShl_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dce_reverting_subexpr.sol.C.modShl(__arc4_a: bytes, __arc4_b: bytes) -> bytes:
+modShl:
+    proto 2 1
+    txn GroupIndex
+    bz modShl_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+modShl_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+modShl_ternary_false@2:
+    intc_2 // 0
+    b modShl_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dce_reverting_subexpr.sol.C.modShrRt(__arc4_a: bytes, __arc4_b: bytes, __arc4_n: bytes) -> bytes:
+modShrRt:
+    proto 3 1
+    intc_2 // 0
+    txn GroupIndex
+    bz modShrRt_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+modShrRt_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -3
+    frame_dig -2
     b%
-    bury 2
-    dup
+    frame_bury 0
+    frame_dig -1
     pushbytes 0x0100
     b<
-    bz main_ternary_false@39
+    bz modShrRt_ternary_false@5
     pushint 8
     bzero
-    swap
+    frame_dig -1
     concat
     dup
     len
@@ -228,26 +670,26 @@ main_ternary_merge@37:
     -
     extract_uint64
 
-main_ternary_merge@40:
+modShrRt_ternary_merge@6:
     dup
-    intc_3 // 256
+    intc 4 // 256
     <
-    bz main_ternary_false@42
+    bz modShrRt_ternary_false@8
     intc_0 // 32
     bzero
     swap
-    intc_3 // 256
+    intc 4 // 256
     %
     pushint 255
     swap
     -
     intc_1 // 1
     setbit
-    dig 1
+    frame_dig 0
     swap
     b/
 
-main_ternary_merge@43:
+modShrRt_ternary_merge@9:
     dup
     len
     intc_0 // 32
@@ -256,64 +698,128 @@ main_ternary_merge@43:
     intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
     swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@42:
+modShrRt_ternary_false@8:
     pop
-    bytec_0 // 0x
-    b main_ternary_merge@43
+    bytec_2 // 0x
+    b modShrRt_ternary_merge@9
 
-main_ternary_false@39:
-    pop
-    intc_3 // 256
-    b main_ternary_merge@40
+modShrRt_ternary_false@5:
+    intc 4 // 256
+    b modShrRt_ternary_merge@6
 
-main_ternary_false@36:
+modShrRt_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@37
+    b modShrRt_ternary_merge@3
 
-main_modShl_route@6:
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dce_reverting_subexpr.sol.C.ternFold(__arc4_a: bytes, __arc4_c: bytes) -> bytes:
+ternFold:
+    proto 2 1
     txn GroupIndex
-    bz main_ternary_false@47
+    bz ternFold_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
-    b main_ternary_merge@54
 
-main_ternary_false@47:
+ternFold_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    retsub
+
+ternFold_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@54
+    b ternFold_ternary_merge@3
 
-main_divdivShl_route@5:
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dce_reverting_subexpr.sol.C.expZero(__arc4_a: bytes, __arc4_b: bytes) -> bytes:
+expZero:
+    proto 2 1
     txn GroupIndex
-    bz main_ternary_false@53
+    bz expZero_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
-    b main_ternary_merge@54
 
-main_ternary_false@53:
+expZero_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_3 // 0x01
+    frame_dig -2
+    frame_dig -1
+    b%
+    swap
     intc_2 // 0
-    b main_ternary_merge@54
+    itob
+
+expZero_while_top@4:
+    dup
+    bytec_2 // 0x
+    b>
+    bz expZero_after_while@8
+    dup
+    bytec_3 // 0x01
+    b&
+    bytec_2 // 0x
+    b!=
+    bz expZero_after_if_else@7
+    swap
+    dig 2
+    b*
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+
+expZero_after_if_else@7:
+    pushbytes 0x02
+    b/
+    uncover 2
+    dup
+    b*
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    cover 2
+    b expZero_while_top@4
+
+expZero_after_while@8:
+    pop
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    swap
+    retsub
+
+expZero_ternary_false@2:
+    intc_2 // 0
+    b expZero_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dce_reverting_subexpr.sol.C.mulZero(__arc4_a: bytes, __arc4_b: bytes) -> bytes:
+mulZero:
+    proto 2 1
+    txn GroupIndex
+    bz mulZero_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+mulZero_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+mulZero_ternary_false@2:
+    intc_2 // 0
+    b mulZero_ternary_merge@3

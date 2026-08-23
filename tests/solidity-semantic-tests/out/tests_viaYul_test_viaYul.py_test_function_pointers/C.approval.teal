@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/function_pointers.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1
+    intcblock 0 1 2 6
+    bytecblock 0x151f7c75 0x00000000
     pushint 4096
     bzero
     dup
@@ -28,16 +29,42 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x2d4970c7 0xf2b65f27 0x35841bcc 0x829312b1 // method "f()void", method "g()void", method "h2()void", method "k2()void"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6 main_h2_route@7 main_k2_route@8
-    err
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-main_k2_route@8:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    b f
+
+main_ternary_false@7:
+    intc_0 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xe2179b8e
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -45,13 +72,134 @@ main_k2_route@8:
     -
     gtxns Amount
 
-main_ternary_merge@28:
+main_ternary_merge@15:
+    !
+    assert // not payable
+    callsub g
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_0 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x5092f2ec
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    b h2
+
+main_ternary_false@21:
+    intc_0 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0xa7f81e6a
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    callsub k2
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_0 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2d4970c7 0xf2b65f27 0x35841bcc 0x829312b1 // method "f()void", method "g()void", method "h2()void", method "k2()void"
+    txna ApplicationArgs 0
+    match f main_g_route@34 h2 main_k2_route@36
+    err
+
+main_k2_route@36:
+    callsub k2
+    intc_1 // 1
+    return
+
+main_g_route@34:
+    callsub g
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/function_pointers.sol.C.f() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    err // invalid function pointer
+
+f_ternary_false@2:
+    intc_0 // 0
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/function_pointers.sol.C.g() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
     !
     assert // not payable
     global CurrentApplicationID
     assert // unknown function selector in self-call dispatch
     itxn_begin
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -59,55 +207,63 @@ main_ternary_merge@28:
     itxn_field Fee
     intc_0 // 0
     itxn_field ApplicationID
-    pushbytes 0x00000000
+    bytec_1 // 0x00000000
     itxn_field ApplicationArgs
     itxn_submit
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@14:
+g_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@28
+    b g_ternary_merge@3
 
-main_h2_route@7:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/function_pointers.sol.C.h2() -> void:
+h2:
     txn GroupIndex
-    bz main_ternary_false@22
+    bz h2_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@36:
+h2_ternary_merge@3:
     !
     assert // not payable
     err // invalid function pointer
 
-main_ternary_false@22:
+h2_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@36
+    b h2_ternary_merge@3
 
-main_g_route@6:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/function_pointers.sol.C.k2() -> void:
+k2:
     txn GroupIndex
-    bz main_ternary_false@27
+    bz k2_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
-    b main_ternary_merge@28
 
-main_ternary_false@27:
+k2_ternary_merge@3:
+    !
+    assert // not payable
+    global CurrentApplicationID
+    assert // unknown function selector in self-call dispatch
+    itxn_begin
+    intc_3 // 6
+    itxn_field TypeEnum
     intc_0 // 0
-    b main_ternary_merge@28
-
-main_f_route@5:
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@36
-
-main_ternary_false@35:
+    itxn_field OnCompletion
     intc_0 // 0
-    b main_ternary_merge@36
+    itxn_field Fee
+    intc_0 // 0
+    itxn_field ApplicationID
+    bytec_1 // 0x00000000
+    itxn_field ApplicationArgs
+    itxn_submit
+    retsub
+
+k2_ternary_false@2:
+    intc_0 // 0
+    b k2_ternary_merge@3

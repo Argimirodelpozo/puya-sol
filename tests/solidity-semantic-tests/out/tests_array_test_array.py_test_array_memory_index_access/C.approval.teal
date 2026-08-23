@@ -4,9 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_memory_index_access.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0x01 0x0000 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
-    intc_2 // 0
-    pushbytes ""
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x010000000000000000 0x01 0x0000 0x0000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -31,16 +29,145 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x335932fc
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub index
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x9da47aeb
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub accessIndex
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x9c07c057 0x5dc8f718 // method "index(uint256)bool", method "accessIndex(uint256,uint256)uint256"
     txna ApplicationArgs 0
-    match main_index_route@5 main_accessIndex_route@6
+    match main_index_route@19 main_accessIndex_route@20
     err
 
-main_accessIndex_route@6:
+main_accessIndex_route@20:
     txna ApplicationArgs 1
     dup
     len
@@ -49,45 +176,74 @@ main_accessIndex_route@6:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub accessIndex
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_index_route@19:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub index
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_memory_index_access.sol.C.index(__arc4_len: bytes) -> uint64:
+index:
+    proto 1 1
+    pushbytes ""
     txn GroupIndex
-    bz main_ternary_false@12
+    bz index_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+index_ternary_merge@3:
     !
     assert // not payable
     intc_3 // 8
     bzero
     dup
-    cover 2
-    dig 1
+    frame_dig -1
     concat
     dup
     len
     intc_3 // 8
     -
     extract_uint64
-    swap
+    frame_bury 0
     intc_2 // 0
     itob
-    bytec_3 // 0x0000
-    swap
+    bytec 4 // 0x0000
     intc_2 // 0
 
-main_while_top@14:
+index_while_top@4:
     dup
-    dig 5
+    frame_dig 0
     <
-    bz main_after_while@16
-    uncover 2
+    bz index_after_while@6
+    swap
     dup
     intc_2 // 0
     extract_uint16
@@ -96,25 +252,23 @@ main_while_top@14:
     itob
     extract 6 0
     replace2 0
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    cover 2
+    swap
     intc_1 // 1
     +
-    b main_while_top@14
+    b index_while_top@4
 
-main_after_while@16:
-    pop
-    uncover 3
+index_after_while@6:
     pop
     swap
-    cover 2
-
-main_while_top@17:
     dup
-    dig 2
+
+index_while_top@7:
+    dup
+    frame_dig -1
     b<
-    bz main_after_while@19
+    bz index_after_while@9
     intc_1 // 1
     itob
     dig 1
@@ -124,7 +278,7 @@ main_while_top@17:
     b<=
     assert // overflow
     dig 1
-    bytec_1 // 0x010000000000000000
+    bytec_2 // 0x010000000000000000
     b<
     assert // array index out of bounds
     dup
@@ -152,88 +306,118 @@ main_while_top@17:
     uncover 2
     replace3 // on error: index access is out of bounds
     cover 2
-    bytec_2 // 0x01
+    bytec_3 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    b main_while_top@17
+    b index_while_top@7
 
-main_after_while@19:
-    popn 2
-    dig 3
+index_after_while@9:
+    pop
+
+index_while_top@10:
     dup
-    bytec_1 // 0x010000000000000000
+    frame_dig -1
+    b<
+    bz index_after_while@14
+    intc_1 // 1
+    itob
+    dig 1
+    dup
+    uncover 2
+    b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    bytec_2 // 0x010000000000000000
     b<
     assert // array index out of bounds
+    dig 4
     uncover 2
-    swap
     concat
     dup
     len
     intc_3 // 8
     -
     extract_uint64
-    swap
+    dig 3
     extract 2 0
     swap
     intc_0 // 32
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    bytec 5 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@12:
-    intc_2 // 0
-    b main_ternary_merge@13
-
-main_index_route@5:
-    txna ApplicationArgs 1
+    b==
     dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
+    bnz index_after_if_else@13
+    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001a556e65787065637465642076616c756520696e20617272617921000000000000
+    log
+
+index_after_if_else@13:
+    assert // Unexpected value in array!
+    bytec_3 // 0x01
+    b+
+    dup
+    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b index_while_top@10
+
+index_after_while@14:
+    pop
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    itob
+    frame_dig -1
+    b==
+    frame_bury 0
+    retsub
+
+index_ternary_false@2:
+    intc_2 // 0
+    b index_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_memory_index_access.sol.C.accessIndex(__arc4_len: bytes, __arc4_idx: bytes) -> bytes:
+accessIndex:
+    proto 2 1
     txn GroupIndex
-    bz main_ternary_false@23
+    bz accessIndex_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+accessIndex_ternary_merge@3:
     !
     assert // not payable
     intc_3 // 8
     bzero
     dup
-    cover 2
-    dig 1
+    frame_dig -2
     concat
     dup
     len
     intc_3 // 8
     -
     extract_uint64
-    bury 3
+    swap
     intc_2 // 0
     itob
+    bytec 4 // 0x0000
     swap
-    bytec_3 // 0x0000
     intc_2 // 0
 
-main_while_top@25:
+accessIndex_while_top@4:
     dup
-    dig 6
+    dig 5
     <
-    bz main_after_while@27
-    swap
+    bz accessIndex_after_while@6
+    uncover 2
     dup
     intc_2 // 0
     extract_uint16
@@ -242,23 +426,23 @@ main_while_top@25:
     itob
     extract 6 0
     replace2 0
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
-    swap
+    cover 2
     intc_1 // 1
     +
-    b main_while_top@25
+    b accessIndex_while_top@4
 
-main_after_while@27:
+accessIndex_after_while@6:
     pop
-    cover 2
-    dig 1
+    uncover 3
+    pop
 
-main_while_top@28:
+accessIndex_while_top@7:
     dup
-    dig 2
+    frame_dig -2
     b<
-    bz main_after_while@30
+    bz accessIndex_after_while@9
     intc_1 // 1
     itob
     dig 1
@@ -268,7 +452,7 @@ main_while_top@28:
     b<=
     assert // overflow
     dig 1
-    bytec_1 // 0x010000000000000000
+    bytec_2 // 0x010000000000000000
     b<
     assert // array index out of bounds
     dup
@@ -279,7 +463,7 @@ main_while_top@28:
     intc_0 // 32
     bzero
     b|
-    dig 5
+    dig 3
     dig 2
     concat
     dup
@@ -291,91 +475,42 @@ main_while_top@28:
     *
     pushint 2
     +
-    uncover 5
+    uncover 3
     swap
     uncover 2
     replace3 // on error: index access is out of bounds
-    cover 3
-    bytec_2 // 0x01
-    b+
-    dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    b main_while_top@28
-
-main_after_while@30:
-    pop
     swap
-
-main_while_top@31:
-    dup
-    dig 2
-    b<
-    bz main_after_while@35
-    intc_1 // 1
-    itob
-    dig 1
-    dup
-    uncover 2
+    bytec_3 // 0x01
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dig 1
-    bytec_1 // 0x010000000000000000
+    b accessIndex_while_top@7
+
+accessIndex_after_while@9:
+    pop
+    frame_dig -1
+    bytec_2 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    dig 5
-    uncover 2
+    swap
+    frame_dig -1
     concat
     dup
     len
     intc_3 // 8
     -
     extract_uint64
-    dig 4
+    swap
     extract 2 0
     swap
     intc_0 // 32
     *
     intc_0 // 32
     extract3 // on error: index access is out of bounds
-    b==
-    dup
-    bnz main_after_if_else@34
-    pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001a556e65787065637465642076616c756520696e20617272617921000000000000
-    log
+    retsub
 
-main_after_if_else@34:
-    assert // Unexpected value in array!
-    bytec_2 // 0x01
-    b+
-    dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    b main_while_top@31
-
-main_after_while@35:
-    pop
-    swap
+accessIndex_ternary_false@2:
     intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    itob
-    b==
-    pushbytes 0x00
-    intc_2 // 0
-    uncover 2
-    setbit
-    bytec 5 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@23:
-    intc_2 // 0
-    b main_ternary_merge@24
+    b accessIndex_ternary_merge@3

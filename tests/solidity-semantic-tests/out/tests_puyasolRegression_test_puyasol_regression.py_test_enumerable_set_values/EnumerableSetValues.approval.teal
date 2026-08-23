@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/enumerable_set_values.sol.EnumerableSetValues.approval_program() -> uint64:
 main:
     intcblock 32 0 1 4096 20480
-    bytecblock 0x0004000600000000 "_set" 0x151f7c75 "_inner" 0x0001 0x010000000000000000000000000000000000000000
+    bytecblock 0x151f7c75 0x0004000600000000 "_inner" "_set" 0x0001 0x010000000000000000000000000000000000000000
     intc_3 // 4096
     bzero
     dup
@@ -29,16 +29,72 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xba952be6 0x54411274 0x3e31836c 0xf9d47ca9 // method "add(address)bool", method "length()uint256", method "at(uint256)address", method "values()address[]"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_add_route@5 main_length_route@6 main_at_route@7 main_values_route@8
-    err
+    pushbytes 0x0a3b0a4f
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
 
-main_values_route@8:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    intc_0 // 32
+    bzero
+    swap
+    callsub add
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x1f7b6d32
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -49,9 +105,17 @@ main_values_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    bytec_1 // "_set"
-    callsub ESet.values
-    bytec_2 // 0x151f7c75
+    intc_0 // 32
+    bzero
+    callsub length
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -62,103 +126,220 @@ main_ternary_false@14:
     intc_1 // 0
     b main_ternary_merge@15
 
-main_at_route@7:
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0xe0886f90
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub at
+    dup
+    len
+    pushint 20
+    -
+    pushint 20
+    extract3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@33
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@33
+    txna ApplicationArgs 0
+    pushbytes 0x971217b7
+    ==
+    bz main_after_if_else@33
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    pushbytes 0x
+    callsub values
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_1 // 0
+
+main_while_top@30:
+    dup
+    dig 2
+    <
+    bz main_after_while@32
+    intc_0 // 32
+    bzero
+    dig 3
+    extract 2 0
+    dig 2
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    len
+    pushint 20
+    -
+    pushint 20
+    extract3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 4
+    swap
+    concat
+    cover 3
+    intc_2 // 1
+    +
+    b main_while_top@30
+
+main_after_while@32:
+    pop
+    bury 1
+    intc_0 // 32
+    bzero
+    swap
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@28:
+    intc_1 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@33:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xba952be6 0x54411274 0x3e31836c 0xf9d47ca9 // method "add(address)bool", method "length()uint256", method "at(uint256)address", method "values()address[]"
+    txna ApplicationArgs 0
+    match main_add_route@36 main_length_route@37 main_at_route@38 main_values_route@39
+    err
+
+main_values_route@39:
+    callsub values
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_at_route@38:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@19
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@20:
-    !
-    assert // not payable
-    bytec_1 // "_set"
-    swap
-    callsub ESet.at
-    bytec_2 // 0x151f7c75
+    callsub at
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-main_ternary_false@19:
-    intc_1 // 0
-    b main_ternary_merge@20
-
-main_length_route@6:
-    txn GroupIndex
-    bz main_ternary_false@24
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@25:
-    !
-    assert // not payable
-    bytec_1 // "_set"
-    callsub ESet.length
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_2 // 0x151f7c75
+main_length_route@37:
+    callsub length
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-main_ternary_false@24:
-    intc_1 // 0
-    b main_ternary_merge@25
-
-main_add_route@5:
+main_add_route@36:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@29
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@30:
-    !
-    assert // not payable
-    bytec_1 // "_set"
-    swap
-    callsub ESet.add
+    callsub add
     pushbytes 0x00
     intc_1 // 0
     uncover 2
     setbit
-    bytec_2 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
-
-main_ternary_false@29:
-    intc_1 // 0
-    b main_ternary_merge@30
 
 
 // __solfn_53(set: bytes, v: bytes) -> uint64:
@@ -190,7 +371,7 @@ ESet._add_after_if_else@2:
     bury 1
     bnz ESet._add_after_if_else@4
     frame_dig -2
-    bytec_0 // 0x0004000600000000
+    bytec_1 // 0x0004000600000000
     box_put
 
 ESet._add_after_if_else@4:
@@ -250,7 +431,7 @@ ESet._add_after_if_else@4:
     box_splice
     frame_dig -2
     box_get
-    bytec_0 // 0x0004000600000000
+    bytec_1 // 0x0004000600000000
     cover 2
     select
     dup
@@ -278,7 +459,7 @@ ESet._values:
     proto 1 1
     frame_dig -1
     box_get
-    bytec_0 // 0x0004000600000000
+    bytec_1 // 0x0004000600000000
     cover 2
     select
     dup
@@ -296,7 +477,7 @@ ESet._length:
     proto 1 1
     frame_dig -1
     box_get
-    bytec_0 // 0x0004000600000000
+    bytec_1 // 0x0004000600000000
     cover 2
     select
     dup
@@ -321,7 +502,7 @@ ESet._at:
     assert // array index out of bounds
     frame_dig -2
     box_get
-    bytec_0 // 0x0004000600000000
+    bytec_1 // 0x0004000600000000
     cover 2
     select
     pushint 8
@@ -355,7 +536,7 @@ ESet._at:
 ESet.add:
     proto 2 1
     frame_dig -2
-    bytec_3 // "_inner"
+    bytec_2 // "_inner"
     concat
     intc_0 // 32
     bzero
@@ -379,7 +560,7 @@ ESet.add:
 ESet.length:
     proto 1 1
     frame_dig -1
-    bytec_3 // "_inner"
+    bytec_2 // "_inner"
     concat
     callsub ESet._length
     retsub
@@ -391,7 +572,7 @@ ESet.at:
     intc_0 // 32
     bzero
     frame_dig -2
-    bytec_3 // "_inner"
+    bytec_2 // "_inner"
     concat
     frame_dig -1
     callsub ESet._at
@@ -411,7 +592,7 @@ ESet.at:
 ESet.values:
     proto 1 1
     frame_dig -1
-    bytec_3 // "_inner"
+    bytec_2 // "_inner"
     concat
     callsub ESet._values
     dup
@@ -748,3 +929,99 @@ ESet.values_else_body@2:
     replace2 0
     stores
     b ESet.values_after_if_else@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/enumerable_set_values.sol.EnumerableSetValues.add(a: bytes) -> uint64:
+add:
+    proto 1 1
+    txn GroupIndex
+    bz add_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+add_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_3 // "_set"
+    frame_dig -1
+    callsub ESet.add
+    retsub
+
+add_ternary_false@2:
+    intc_1 // 0
+    b add_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/enumerable_set_values.sol.EnumerableSetValues.length() -> bytes:
+length:
+    txn GroupIndex
+    bz length_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+length_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_3 // "_set"
+    callsub ESet.length
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+length_ternary_false@2:
+    intc_1 // 0
+    b length_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/enumerable_set_values.sol.EnumerableSetValues.at(__arc4_i: bytes) -> bytes:
+at:
+    proto 1 1
+    txn GroupIndex
+    bz at_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+at_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_3 // "_set"
+    frame_dig -1
+    callsub ESet.at
+    retsub
+
+at_ternary_false@2:
+    intc_1 // 0
+    b at_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/enumerable_set_values.sol.EnumerableSetValues.values() -> bytes:
+values:
+    txn GroupIndex
+    bz values_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+values_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_3 // "_set"
+    callsub ESet.values
+    retsub
+
+values_ternary_false@2:
+    intc_1 // 0
+    b values_ternary_merge@3

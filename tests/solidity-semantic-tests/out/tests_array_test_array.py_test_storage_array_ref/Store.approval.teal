@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/storage_array_ref.sol.Store.approval_program() -> uint64:
 main:
     intcblock 32 1 2 0
-    bytecblock "data" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x010000000000000000 0x0000
+    bytecblock "data" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x151f7c75 0x010000000000000000 0x0000
     pushint 4096
     bzero
     dup
@@ -32,54 +32,32 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x8e1be510 0x85d76e5a // method "__postInit()void", method "add(uint256)void", method "find(uint256)uint256"
-    txna ApplicationArgs 0
-    match main___postInit_route@5 main_add_route@6 main_find_route@7
-    err
-
-main_find_route@7:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x1003e2d2
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@13
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@14:
+main_ternary_merge@8:
     !
     assert // not payable
-    intc_3 // 0
-    itob
-    bytec_0 // "data"
-    box_len
-    pop
-    intc_2 // 2
-    >=
-    bz main_ternary_false@27
-    bytec_0 // "data"
-    box_len
-    pop
-
-main_ternary_merge@28:
-    intc_2 // 2
-    -
+    txna ApplicationArgs 1
+    len
     intc_0 // 32
-    /
-    itob
-    bytec_0 // "data"
-    cover 2
-    uncover 3
-    callsub __solfn_102
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
     intc_0 // 32
@@ -88,36 +66,139 @@ main_ternary_merge@28:
     intc_0 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
+    callsub add
+    bytec 4 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_3 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x3e530e5b
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub find(u256)
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@27:
-    intc_2 // 2
-    b main_ternary_merge@28
-
-main_ternary_false@13:
+main_ternary_false@14:
     intc_3 // 0
-    b main_ternary_merge@14
+    b main_ternary_merge@15
 
-main_add_route@6:
+main_after_if_else@16:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x8e1be510 0x85d76e5a // method "__postInit()void", method "add(uint256)void", method "find(uint256)uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@19 main_add_route@20 main_find_route@21
+    err
+
+main_find_route@21:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub find(u256)
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_add_route@20:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub add
+    intc_1 // 1
+    return
+
+main___postInit_route@19:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_3 // "__ctor_pending"
+    intc_3 // 0
+    app_global_put
+    bytec_0 // "data"
+    intc_2 // 2
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/storage_array_ref.sol.Store.add(__arc4_v: bytes) -> void:
+add:
+    proto 1 0
     txn GroupIndex
-    bz main_ternary_false@18
+    bz add_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+add_ternary_merge@3:
     !
     assert // not payable
     intc_1 // 1
@@ -158,12 +239,12 @@ main_ternary_merge@19:
     pop
     intc_2 // 2
     >=
-    bz main_ternary_false@21
+    bz add_ternary_false@5
     bytec_0 // "data"
     box_len
     pop
 
-main_ternary_merge@22:
+add_ternary_merge@6:
     intc_2 // 2
     -
     intc_0 // 32
@@ -183,19 +264,19 @@ main_ternary_merge@22:
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec 4 // 0x010000000000000000
+    bytec 5 // 0x010000000000000000
     b<
     assert // array index out of bounds
     bytec_0 // "data"
     box_len
     bury 1
-    bnz main_after_if_else@24
+    bnz add_after_if_else@8
     bytec_0 // "data"
     intc_2 // 2
     box_create
     pop
 
-main_after_if_else@24:
+add_after_if_else@8:
     pushint 8
     bzero
     swap
@@ -211,36 +292,71 @@ main_after_if_else@24:
     +
     bytec_0 // "data"
     swap
-    uncover 2
+    frame_dig -1
     box_replace // on error: index out of bounds
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@21:
+add_ternary_false@5:
     intc_2 // 2
-    b main_ternary_merge@22
+    b add_ternary_merge@6
 
-main_ternary_false@18:
+add_ternary_false@2:
     intc_3 // 0
-    b main_ternary_merge@19
+    b add_ternary_merge@3
 
-main___postInit_route@5:
-    bytec_3 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_3 // "__ctor_pending"
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/storage_array_ref.sol.Store.find(u256)(__arc4_v: bytes) -> bytes:
+find(u256):
+    proto 1 1
+    txn GroupIndex
+    bz find(u256)_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+find(u256)_ternary_merge@3:
+    !
+    assert // not payable
     intc_3 // 0
-    app_global_put
+    itob
     bytec_0 // "data"
-    intc_2 // 2
-    box_create
+    box_len
     pop
-    intc_1 // 1
-    return
+    intc_2 // 2
+    >=
+    bz find(u256)_ternary_false@6
+    bytec_0 // "data"
+    box_len
+    pop
+
+find(u256)_ternary_merge@7:
+    intc_2 // 2
+    -
+    intc_0 // 32
+    /
+    itob
+    bytec_0 // "data"
+    cover 2
+    frame_dig -1
+    callsub __solfn_102
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+find(u256)_ternary_false@6:
+    intc_2 // 2
+    b find(u256)_ternary_merge@7
+
+find(u256)_ternary_false@2:
+    intc_3 // 0
+    b find(u256)_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/storage_array_ref.sol.Store.__solfn_102(_data: bytes, _begin: bytes, _len: bytes, _value: bytes) -> bytes:
@@ -272,12 +388,12 @@ __solfn_102_after_if_else@8:
     b<=
     assert // overflow
     dup
-    bytec 4 // 0x010000000000000000
+    bytec 5 // 0x010000000000000000
     b<
     assert // array index out of bounds
     frame_dig -4
     box_get
-    bytec 5 // 0x0000
+    bytec 6 // 0x0000
     cover 2
     select
     pushint 8
@@ -355,12 +471,12 @@ __solfn_102_else_body@2:
     b==
     bz __solfn_102_else_body@4
     frame_dig -3
-    bytec 4 // 0x010000000000000000
+    bytec 5 // 0x010000000000000000
     b<
     assert // array index out of bounds
     frame_dig -4
     box_get
-    bytec 5 // 0x0000
+    bytec 6 // 0x0000
     cover 2
     select
     pushint 8

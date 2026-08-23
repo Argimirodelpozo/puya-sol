@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/calldata_bytes_to_memory.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 32 0 2
+    bytecblock 0x 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -27,12 +28,96 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xd45754f8
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_1 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_1 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    dig 1
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    uncover 2
+    intc_1 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    pushint 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    dup2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    cover 2
+    extract3
+    callsub f
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
     pushbytes 0xdfbf70d1 // method "f(byte[])byte[32]"
     txna ApplicationArgs 0
-    match main_f_route@4
+    match main_f_route@11
     err
 
-main_f_route@4:
+main_f_route@11:
     txn OnCompletion
     !
     txn ApplicationID
@@ -40,33 +125,41 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    intc_1 // 0
+    intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    txn GroupIndex
-    bz main_ternary_false@8
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@9:
-    !
-    assert // not payable
-    keccak256
-    pushbytes 0x151f7c75
+    callsub f
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@8:
-    intc_1 // 0
-    b main_ternary_merge@9
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/calldata_bytes_to_memory.sol.C.f(data: bytes) -> bytes:
+f:
+    proto 1 1
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    keccak256
+    retsub
+
+f_ternary_false@2:
+    intc_2 // 0
+    b f_ternary_merge@3

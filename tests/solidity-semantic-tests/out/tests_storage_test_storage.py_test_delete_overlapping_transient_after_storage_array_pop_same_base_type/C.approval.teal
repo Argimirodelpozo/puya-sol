@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 2
-    bytecblock "arr" "__ctor_pending" 0x 0x0000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 0 2 32
+    bytecblock "arr" "__ctor_pending" 0x151f7c75 0x 0x0000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -32,16 +32,46 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x99fe9257 0x9939b21d 0xba37d4c3 // method "__postInit()void", method "pushArr()void", method "setAndClear()void", method "getArr()uint256"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_pushArr_route@6 main_setAndClear_route@7 main_getArr_route@8
-    err
+    pushbytes 0x41af56ee
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-main_getArr_route@8:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub pushArr
+    bytec_2 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xf58e8614
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -52,176 +82,100 @@ main_getArr_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
+    callsub setAndClear
+    bytec_2 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x99fe9257 0x9939b21d 0xba37d4c3 // method "__postInit()void", method "pushArr()void", method "setAndClear()void", method "getArr()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@19 main_pushArr_route@20 main_setAndClear_route@21 main_getArr_route@22
+    err
+
+main_getArr_route@22:
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
     load 0
     store 0
     load 0
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     store 0
     bytec_0 // "arr"
     box_len
     bury 1
-    bz main_ternary_false@18
+    bz main_ternary_false@32
     bytec_0 // "arr"
     box_len
     pop
-    intc_3 // 2
+    intc_2 // 2
     -
-    intc_2 // 32
+    intc_3 // 32
     /
-    bz main_ternary_false@18
+    bz main_ternary_false@32
     bytec_0 // "arr"
-    intc_3 // 2
-    intc_2 // 32
+    intc_2 // 2
+    intc_3 // 32
     box_extract
 
-main_ternary_merge@19:
+main_ternary_merge@33:
     load 0
     store 0
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@18:
-    bytec_2 // 0x
-    b main_ternary_merge@19
+main_ternary_false@32:
+    bytec_3 // 0x
+    b main_ternary_merge@33
 
-main_ternary_false@14:
+main_ternary_false@28:
     intc_1 // 0
-    b main_ternary_merge@15
+    b main_ternary_merge@29
 
-main_setAndClear_route@7:
-    txn GroupIndex
-    bz main_ternary_false@23
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@24:
-    !
-    assert // not payable
-    load 5
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
-    replace2 0
-    store 5
-    load 5
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    replace2 0
-    store 5
-    load 5
-    extract 0 32
-    intc_1 // 0
-    itob
-    b==
-    dup
-    bnz main_after_if_else@26
-    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
-
-main_after_if_else@26:
-    assert
-    bytec_0 // "arr"
-    intc_1 // 0
-    intc_3 // 2
-    box_extract
-    btoi
-    intc_0 // 1
-    -
-    dup
-    itob
-    extract 6 2
-    bytec_0 // "arr"
-    intc_1 // 0
-    uncover 2
-    box_replace
-    intc_2 // 32
-    *
-    intc_3 // 2
-    +
-    bytec_0 // "arr"
-    swap
-    intc_2 // 32
-    bytec_2 // 0x
-    box_splice
-    bytec_0 // "arr"
-    box_len
-    pop
-    intc_2 // 32
-    -
-    bytec_0 // "arr"
-    swap
-    box_resize
+main_setAndClear_route@21:
+    callsub setAndClear
     intc_0 // 1
     return
 
-main_ternary_false@23:
-    intc_1 // 0
-    b main_ternary_merge@24
-
-main_pushArr_route@6:
-    txn GroupIndex
-    bz main_ternary_false@30
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@31:
-    !
-    assert // not payable
-    bytec_0 // "arr"
-    intc_1 // 0
-    intc_3 // 2
-    box_extract
-    btoi
-    bytec_0 // "arr"
-    box_len
-    pop
-    intc_2 // 32
-    +
-    bytec_0 // "arr"
-    swap
-    box_resize
-    dup
-    intc_0 // 1
-    +
-    itob
-    extract 6 2
-    bytec_0 // "arr"
-    intc_1 // 0
-    uncover 2
-    box_replace
-    intc_2 // 32
-    *
-    intc_3 // 2
-    +
-    bytec_0 // "arr"
-    swap
-    intc_1 // 0
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
-    box_splice
+main_pushArr_route@20:
+    callsub pushArr
     intc_0 // 1
     return
 
-main_ternary_false@30:
-    intc_1 // 0
-    b main_ternary_merge@31
-
-main___postInit_route@5:
+main___postInit_route@19:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -233,11 +187,131 @@ main___postInit_route@5:
     intc_1 // 0
     app_global_put
     bytec_0 // "arr"
-    intc_3 // 2
+    intc_2 // 2
     box_create
     pop
     pushbytes "t"
-    bytec_2 // 0x
+    bytec_3 // 0x
     app_global_put
     intc_0 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.pushArr() -> void:
+pushArr:
+    txn GroupIndex
+    bz pushArr_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pushArr_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "arr"
+    intc_1 // 0
+    intc_2 // 2
+    box_extract
+    btoi
+    bytec_0 // "arr"
+    box_len
+    pop
+    intc_3 // 32
+    +
+    bytec_0 // "arr"
+    swap
+    box_resize
+    dup
+    intc_0 // 1
+    +
+    itob
+    extract 6 2
+    bytec_0 // "arr"
+    intc_1 // 0
+    uncover 2
+    box_replace
+    intc_3 // 32
+    *
+    intc_2 // 2
+    +
+    bytec_0 // "arr"
+    swap
+    intc_1 // 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    box_splice
+    retsub
+
+pushArr_ternary_false@2:
+    intc_1 // 0
+    b pushArr_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.setAndClear() -> void:
+setAndClear:
+    txn GroupIndex
+    bz setAndClear_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setAndClear_ternary_merge@3:
+    !
+    assert // not payable
+    load 5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
+    replace2 0
+    store 5
+    load 5
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    replace2 0
+    store 5
+    load 5
+    extract 0 32
+    intc_1 // 0
+    itob
+    b==
+    dup
+    bnz setAndClear_after_if_else@5
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+setAndClear_after_if_else@5:
+    assert
+    bytec_0 // "arr"
+    intc_1 // 0
+    intc_2 // 2
+    box_extract
+    btoi
+    intc_0 // 1
+    -
+    dup
+    itob
+    extract 6 2
+    bytec_0 // "arr"
+    intc_1 // 0
+    uncover 2
+    box_replace
+    intc_3 // 32
+    *
+    intc_2 // 2
+    +
+    bytec_0 // "arr"
+    swap
+    intc_3 // 32
+    bytec_3 // 0x
+    box_splice
+    bytec_0 // "arr"
+    box_len
+    pop
+    intc_3 // 32
+    -
+    bytec_0 // "arr"
+    swap
+    box_resize
+    retsub
+
+setAndClear_ternary_false@2:
+    intc_1 // 0
+    b setAndClear_ternary_merge@3

@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_selfdestruct.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -28,59 +29,79 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xedb45529
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    callsub terminate
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x7cb116cd 0xf08d7860 0xb30e2ea6 // method "set(uint256)void", method "get()uint256", method "terminate(address)void"
     txna ApplicationArgs 0
-    match main_set_route@5 main_get_route@6 main_terminate_route@7
+    match main_set_route@12 main_get_route@13 main_terminate_route@14
     err
 
-main_terminate_route@7:
+main_terminate_route@14:
     txna ApplicationArgs 1
     dup
     len
     intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    itxn_begin
-    global CurrentApplicationAddress
-    intc_0 // 1
-    itxn_field TypeEnum
-    itxn_field Receiver
-    intc_2 // 0
-    itxn_field Fee
-    itxn_field CloseRemainderTo
-    intc_2 // 0
-    itxn_field Amount
-    itxn_submit
+    callsub terminate
     intc_0 // 1
     return
 
-main_ternary_false@13:
-    intc_2 // 0
-    b main_ternary_merge@14
-
-main_get_route@6:
+main_get_route@13:
     txn GroupIndex
-    bz main_ternary_false@18
+    bz main_ternary_false@22
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+main_ternary_merge@23:
     !
     assert // not payable
     load 0
@@ -99,18 +120,18 @@ main_ternary_merge@19:
     intc_1 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@18:
+main_ternary_false@22:
     intc_2 // 0
-    b main_ternary_merge@19
+    b main_ternary_merge@23
 
-main_set_route@5:
+main_set_route@12:
     txna ApplicationArgs 1
     dup
     len
@@ -118,13 +139,13 @@ main_set_route@5:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@23
+    bz main_ternary_false@27
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+main_ternary_merge@28:
     !
     assert // not payable
     load 0
@@ -141,6 +162,38 @@ main_ternary_merge@24:
     intc_0 // 1
     return
 
-main_ternary_false@23:
+main_ternary_false@27:
     intc_2 // 0
-    b main_ternary_merge@24
+    b main_ternary_merge@28
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_selfdestruct.sol.C.terminate(a: bytes) -> void:
+terminate:
+    proto 1 0
+    txn GroupIndex
+    bz terminate_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+terminate_ternary_merge@3:
+    !
+    assert // not payable
+    itxn_begin
+    global CurrentApplicationAddress
+    intc_0 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_2 // 0
+    itxn_field Fee
+    frame_dig -1
+    itxn_field CloseRemainderTo
+    intc_2 // 0
+    itxn_field Amount
+    itxn_submit
+    retsub
+
+terminate_ternary_false@2:
+    intc_2 // 0
+    b terminate_ternary_merge@3

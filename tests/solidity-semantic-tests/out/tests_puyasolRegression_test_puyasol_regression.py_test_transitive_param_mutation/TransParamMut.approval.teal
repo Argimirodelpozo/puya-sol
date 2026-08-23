@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/transitive_param_mutation.sol.TransParamMut.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "s" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intcblock 1 32 0 2
+    bytecblock "s" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -29,16 +29,57 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x855e2aab 0x048a6c34 0xe1635f89 0xfe392951 // method "goStorage()uint256", method "goDeep()uint256", method "goBound()uint256", method "goMemory()uint256"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_goStorage_route@5 main_goDeep_route@6 main_goBound_route@7 main_goMemory_route@8
-    err
+    pushbytes 0xca526b5d
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
-main_goMemory_route@8:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub goStorage
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x491cf97d
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -49,149 +90,157 @@ main_goMemory_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
-    load 0
-    pushint 24
+    intc_1 // 32
     bzero
-    dig 1
-    pushint 88
-    extract_uint64
-    pushint 96
-    +
-    itob
+    callsub goDeep
     concat
-    replace2 64
-    store 0
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
 main_ternary_false@14:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@15
 
-main_goBound_route@7:
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x8b9c863d
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@21
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@22:
     !
     assert // not payable
-    bytec_0 // "s"
-    box_get
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000014
-    replace2 0
-    bytec_0 // "s"
-    swap
-    box_put
-    pushint 7
-    itob
-    bytec_0 // "s"
-    swap
-    callsub LibMut.bumpVia
-    bytec_0 // "s"
-    box_get
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 0 32
-    bytec_2 // 0x151f7c75
+    intc_1 // 32
+    bzero
+    callsub goBound
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@19:
-    intc_1 // 0
-    b main_ternary_merge@20
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
 
-main_goDeep_route@6:
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0xbd385c78
+    ==
+    bz main_after_if_else@30
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@28
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@29:
     !
     assert // not payable
-    bytec_0 // "s"
-    box_get
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
-    replace2 0
-    bytec_0 // "s"
-    swap
-    box_put
-    bytec_0 // "s"
-    callsub __solfn_51
-    bytec_0 // "s"
-    box_get
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 0 32
-    bytec_2 // 0x151f7c75
+    intc_1 // 32
+    bzero
+    callsub goMemory
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@24:
-    intc_1 // 0
-    b main_ternary_merge@25
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
 
-main_goStorage_route@5:
-    txn GroupIndex
-    bz main_ternary_false@29
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@30:
+main_after_if_else@30:
+    txn OnCompletion
     !
-    assert // not payable
-    bytec_0 // "s"
-    box_get
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
-    replace2 0
-    bytec_0 // "s"
-    swap
-    box_put
-    bytec_0 // "s"
-    callsub __solfn_51
-    bytec_0 // "s"
-    box_get
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 0 32
-    bytec_2 // 0x151f7c75
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x855e2aab 0x048a6c34 0xe1635f89 0xfe392951 // method "goStorage()uint256", method "goDeep()uint256", method "goBound()uint256", method "goMemory()uint256"
+    txna ApplicationArgs 0
+    match main_goStorage_route@33 main_goDeep_route@34 main_goBound_route@35 main_goMemory_route@36
+    err
+
+main_goMemory_route@36:
+    callsub goMemory
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@29:
-    intc_1 // 0
-    b main_ternary_merge@30
+main_goBound_route@35:
+    callsub goBound
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_goDeep_route@34:
+    callsub goDeep
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_goStorage_route@33:
+    callsub goStorage
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
 
 // __solfn_16(q: bytes, v: bytes) -> void:
@@ -199,7 +248,7 @@ LibMut.bumpVia:
     proto 2 0
     frame_dig -2
     box_get
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -212,10 +261,10 @@ LibMut.bumpVia:
     assert // overflow
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     replace2 0
@@ -230,7 +279,7 @@ __solfn_51:
     proto 1 0
     frame_dig -1
     box_get
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -243,10 +292,10 @@ __solfn_51:
     assert // overflow
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     replace2 0
@@ -254,3 +303,149 @@ __solfn_51:
     swap
     box_put
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/transitive_param_mutation.sol.TransParamMut.goStorage() -> bytes:
+goStorage:
+    txn GroupIndex
+    bz goStorage_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+goStorage_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "s"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
+    replace2 0
+    bytec_0 // "s"
+    swap
+    box_put
+    bytec_0 // "s"
+    callsub __solfn_51
+    bytec_0 // "s"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 32
+    retsub
+
+goStorage_ternary_false@2:
+    intc_2 // 0
+    b goStorage_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/transitive_param_mutation.sol.TransParamMut.goDeep() -> bytes:
+goDeep:
+    txn GroupIndex
+    bz goDeep_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+goDeep_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "s"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
+    replace2 0
+    bytec_0 // "s"
+    swap
+    box_put
+    bytec_0 // "s"
+    callsub __solfn_51
+    bytec_0 // "s"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 32
+    retsub
+
+goDeep_ternary_false@2:
+    intc_2 // 0
+    b goDeep_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/transitive_param_mutation.sol.TransParamMut.goBound() -> bytes:
+goBound:
+    txn GroupIndex
+    bz goBound_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+goBound_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "s"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000014
+    replace2 0
+    bytec_0 // "s"
+    swap
+    box_put
+    pushint 7
+    itob
+    bytec_0 // "s"
+    swap
+    callsub LibMut.bumpVia
+    bytec_0 // "s"
+    box_get
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 32
+    retsub
+
+goBound_ternary_false@2:
+    intc_2 // 0
+    b goBound_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/transitive_param_mutation.sol.TransParamMut.goMemory() -> bytes:
+goMemory:
+    txn GroupIndex
+    bz goMemory_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+goMemory_ternary_merge@3:
+    !
+    assert // not payable
+    load 0
+    pushint 24
+    bzero
+    dig 1
+    pushint 88
+    extract_uint64
+    pushint 96
+    +
+    itob
+    concat
+    replace2 64
+    store 0
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000002a
+    retsub
+
+goMemory_ternary_false@2:
+    intc_2 // 0
+    b goMemory_ternary_merge@3

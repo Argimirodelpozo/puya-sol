@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_copy.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock "data" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c7580
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 "data" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -32,22 +32,72 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0xf16d85a0 0x0a8fd477 0x471d04b1 // method "__postInit()void", method "set(uint256)bool", method "copy(uint256,uint256)bool", method "retrieve(uint256)(uint256,uint256,uint256,uint256)"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_set_route@6 main_copy_route@7 main_retrieve_route@8
-    err
+    pushbytes 0x60fe47b1
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
 
-main_retrieve_route@8:
+main_ternary_merge@8:
+    !
+    assert // not payable
     txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
     intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub set
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x1ff2af2d
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
@@ -58,9 +108,40 @@ main_retrieve_route@8:
 main_ternary_merge@15:
     !
     assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
     intc_0 // 32
     bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
     swap
+    dig 2
+    b|
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    callsub copy
+    itob
     concat
     dup
     len
@@ -68,31 +149,7 @@ main_ternary_merge@15:
     -
     intc_0 // 32
     extract3
-    bytec_0 // "data"
-    concat
-    sha256
-    box_get
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    dup
-    extract 0 32
-    dig 1
-    extract 32 64
-    dup
-    extract 0 32
-    swap
-    extract 32 32
-    uncover 3
-    extract 96 32
-    uncover 3
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    pushbytes 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -103,7 +160,127 @@ main_ternary_false@14:
     intc_2 // 0
     b main_ternary_merge@15
 
-main_copy_route@7:
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x8f88708b
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub retrieve
+    dig 4
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xf16d85a0 0x0a8fd477 0x471d04b1 // method "__postInit()void", method "set(uint256)bool", method "copy(uint256,uint256)bool", method "retrieve(uint256)(uint256,uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@26 main_set_route@27 main_copy_route@28 main_retrieve_route@29
+    err
+
+main_retrieve_route@29:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub retrieve
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_copy_route@28:
     txna ApplicationArgs 1
     dup
     len
@@ -116,77 +293,72 @@ main_copy_route@7:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@19
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@20:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    dup
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // "data"
-    concat
-    sha256
-    box_get
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    swap
+    callsub copy
+    pushbytes 0x00
+    intc_2 // 0
     uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // "data"
-    concat
-    sha256
+    setbit
+    bytec_0 // 0x151f7c75
     swap
-    box_put
-    bytec_3 // 0x151f7c7580
+    concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@19:
-    intc_2 // 0
-    b main_ternary_merge@20
-
-main_set_route@6:
+main_set_route@27:
     txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
+    callsub set
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main___postInit_route@26:
+    bytec_2 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_2 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_1 // "data"
+    intc_3 // 2
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_copy.sol.c.set(__arc4_k: bytes) -> uint64:
+set:
+    proto 1 1
     txn GroupIndex
-    bz main_ternary_false@24
+    bz set_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+set_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 32
     bzero
-    swap
+    frame_dig -1
     concat
     dup
     len
@@ -194,12 +366,12 @@ main_ternary_merge@25:
     -
     intc_0 // 32
     extract3
-    bytec_0 // "data"
+    bytec_1 // "data"
     concat
     sha256
     dup
     box_get
-    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     dup
@@ -248,29 +420,109 @@ main_ternary_merge@25:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
     concat
     box_put
-    bytec_3 // 0x151f7c7580
-    log
     intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@24:
+set_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@25
+    b set_ternary_merge@3
 
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_0 // "data"
-    pushint 2
-    box_create
-    pop
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_copy.sol.c.copy(__arc4_from: bytes, __arc4_to: bytes) -> uint64:
+copy:
+    proto 2 1
+    txn GroupIndex
+    bz copy_ternary_false@2
+    txn GroupIndex
     intc_1 // 1
-    return
+    -
+    gtxns Amount
+
+copy_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // "data"
+    concat
+    sha256
+    box_get
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // "data"
+    concat
+    sha256
+    swap
+    box_put
+    intc_1 // 1
+    retsub
+
+copy_ternary_false@2:
+    intc_2 // 0
+    b copy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_copy.sol.c.retrieve(__arc4_k: bytes) -> bytes, bytes, bytes, bytes:
+retrieve:
+    proto 1 4
+    txn GroupIndex
+    bz retrieve_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+retrieve_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // "data"
+    concat
+    sha256
+    box_get
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    extract 0 32
+    dig 1
+    extract 32 64
+    dup
+    extract 0 32
+    swap
+    extract 32 32
+    uncover 3
+    extract 96 32
+    retsub
+
+retrieve_ternary_false@2:
+    intc_2 // 0
+    b retrieve_ternary_merge@3

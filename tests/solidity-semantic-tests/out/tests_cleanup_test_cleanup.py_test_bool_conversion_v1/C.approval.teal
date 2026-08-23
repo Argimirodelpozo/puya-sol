@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/bool_conversion_v1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock 0x151f7c75
+    intcblock 1 0 32 2
+    bytecblock 0x151f7c75 0x01
     pushint 4096
     bzero
     dup
@@ -29,32 +29,51 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xb168d7ea 0xda75597a // method "f(bool)uint256", method "g(bool)bool"
-    txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6
-    err
-
-main_g_route@6:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 1
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.bool
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x98c3a6c1
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@8:
     !
     assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    bytec_1 // 0x01
+    b<=
+    assert // invalid EVM ABI bool
+    intc_2 // 32
+    bzero
+    swap
+    pushint 24
+    extract_uint64
+    intc_1 // 0
+    !=
+    callsub f
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -62,11 +81,81 @@ main_ternary_merge@13:
     intc_0 // 1
     return
 
-main_ternary_false@12:
+main_ternary_false@7:
     intc_1 // 0
-    b main_ternary_merge@13
+    b main_ternary_merge@8
 
-main_f_route@5:
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xd48092f7
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    bytec_1 // 0x01
+    b<=
+    assert // invalid EVM ABI bool
+    intc_2 // 32
+    bzero
+    swap
+    pushint 24
+    extract_uint64
+    intc_1 // 0
+    !=
+    callsub g
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xb168d7ea 0xda75597a // method "f(bool)uint256", method "g(bool)bool"
+    txna ApplicationArgs 0
+    match main_f_route@19 main_g_route@20
+    err
+
+main_g_route@20:
     txna ApplicationArgs 1
     dup
     len
@@ -75,20 +164,11 @@ main_f_route@5:
     assert // invalid number of bytes for arc4.bool
     intc_1 // 0
     getbit
-    txn GroupIndex
-    bz main_ternary_false@17
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@18:
-    !
-    assert // not payable
-    bz main_else_body@20
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
-
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/bool_conversion_v1.sol.C.f@21:
+    callsub g
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -96,10 +176,67 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     intc_0 // 1
     return
 
-main_else_body@20:
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/bool_conversion_v1.sol.C.f@21
-
-main_ternary_false@17:
+main_f_route@19:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
     intc_1 // 0
-    b main_ternary_merge@18
+    getbit
+    callsub f
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/bool_conversion_v1.sol.C.f(_b: uint64) -> bytes:
+f:
+    proto 1 1
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    bz f_else_body@5
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
+    retsub
+
+f_else_body@5:
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+f_ternary_false@2:
+    intc_1 // 0
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/cleanup/contracts/bool_conversion_v1.sol.C.g(_in: uint64) -> uint64:
+g:
+    proto 1 1
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    retsub
+
+g_ternary_false@2:
+    intc_1 // 0
+    b g_ternary_merge@3

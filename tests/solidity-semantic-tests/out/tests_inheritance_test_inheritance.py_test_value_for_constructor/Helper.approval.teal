@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/value_for_constructor.sol.Helper.approval_program() -> uint64:
 main:
-    intcblock 0 1
-    bytecblock "name" "flag" 0x000000 0x151f7c75
+    intcblock 0 1 32 2
+    bytecblock 0x151f7c75 "name" "flag" 0x000000
     pushint 4096
     bzero
     dup
@@ -31,16 +31,16 @@ main:
     pushint 8
     -
     extract_uint64
-    bytec_0 // "name"
-    bytec_2 // 0x000000
+    bytec_1 // "name"
+    bytec_3 // 0x000000
     app_global_put
-    bytec_1 // "flag"
+    bytec_2 // "flag"
     intc_0 // 0
     app_global_put
-    bytec_0 // "name"
+    bytec_1 // "name"
     uncover 2
     app_global_put
-    bytec_1 // "flag"
+    bytec_2 // "flag"
     swap
     app_global_put
     intc_1 // 1
@@ -48,71 +48,162 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x17d7de7c
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub getName
+    pushint 29
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_0 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xf9633930
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    callsub getFlag
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_0 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x0a5c26e3 0x2fe85e04 // method "getName()byte[3]", method "getFlag()bool"
     txna ApplicationArgs 0
-    match main_getName_route@5 main_getFlag_route@6
+    match main_getName_route@19 main_getFlag_route@20
     err
 
-main_getFlag_route@6:
-    txn GroupIndex
-    bz main_ternary_false@12
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@13:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_1 // "flag"
-    app_global_get_ex
-    intc_0 // 0
-    cover 2
-    select
+main_getFlag_route@20:
+    callsub getFlag
     pushbytes 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec_3 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@12:
-    intc_0 // 0
-    b main_ternary_merge@13
+main_getName_route@19:
+    callsub getName
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
-main_getName_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/value_for_constructor.sol.Helper.getName() -> bytes:
+getName:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz getName_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+getName_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
-    bytec_0 // "name"
+    bytec_1 // "name"
     app_global_get_ex
-    bytec_2 // 0x000000
+    bytec_3 // 0x000000
     cover 2
     select
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@17:
+getName_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@18
+    b getName_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/value_for_constructor.sol.Helper.getFlag() -> uint64:
+getFlag:
+    txn GroupIndex
+    bz getFlag_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getFlag_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 0
+    bytec_2 // "flag"
+    app_global_get_ex
+    intc_0 // 0
+    cover 2
+    select
+    retsub
+
+getFlag_ternary_false@2:
+    intc_0 // 0
+    b getFlag_ternary_merge@3

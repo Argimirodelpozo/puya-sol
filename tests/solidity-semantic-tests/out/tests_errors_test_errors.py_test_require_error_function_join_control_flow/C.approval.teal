@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_function_join_control_flow.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 42
-    bytecblock "y" 0x "x"
-    intc_0 // 0
+    intcblock 32 0 1 42
+    bytecblock "y" 0x "x" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -25,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 0
+    intc_1 // 0
     itob
     bytec_2 // "x"
     swap
@@ -39,12 +38,91 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x98c3a6c1
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    pushbytes 0x01
+    b<=
+    assert // invalid EVM ABI bool
+    intc_0 // 32
+    bzero
+    swap
+    pushint 24
+    extract_uint64
+    intc_1 // 0
+    !=
+    callsub f
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
     pushbytes 0x6b8380f7 // method "f(bool)(uint256,uint256,uint256)"
     txna ApplicationArgs 0
-    match main_f_route@4
+    match main_f_route@11
     err
 
-main_f_route@4:
+main_f_route@11:
     txn OnCompletion
     !
     txn ApplicationID
@@ -56,29 +134,46 @@ main_f_route@4:
     intc_2 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_0 // 0
+    intc_1 // 0
     getbit
+    callsub f
+    cover 2
+    concat
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_function_join_control_flow.sol.C.f(c: uint64) -> bytes, bytes, bytes:
+f:
+    proto 1 3
+    intc_1 // 0
     txn GroupIndex
-    bz main_ternary_false@8
+    bz f_ternary_false@2
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+f_ternary_merge@3:
     !
     assert // not payable
-    dup
+    frame_dig -1
     intc_2 // 1
     <=
     assert // ABI bool validation
-    intc_0 // 0
+    intc_1 // 0
     bytec_2 // "x"
     app_global_get_ex
     bytec_1 // 0x
     cover 2
     select
-    intc_0 // 0
+    intc_1 // 0
     bytec_0 // "y"
     app_global_get_ex
     bytec_1 // 0x
@@ -87,16 +182,15 @@ main_ternary_merge@9:
     intc_3 // 42
     itob
     b==
-    bz main_else_body@11
-    bury 1
+    bz f_else_body@5
     pushint 21
     itob
     bytec_2 // "x"
     swap
     app_global_put
 
-main_after_if_else@14:
-    intc_0 // 0
+f_after_if_else@8:
+    intc_1 // 0
     bytec_0 // "y"
     app_global_get_ex
     bytec_1 // 0x
@@ -107,7 +201,7 @@ main_after_if_else@14:
     bytec_0 // "y"
     dig 1
     app_global_put
-    intc_0 // 0
+    intc_1 // 0
     bytec_2 // "x"
     app_global_get_ex
     bytec_1 // 0x
@@ -115,17 +209,17 @@ main_after_if_else@14:
     select
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     swap
     dig 1
     b|
     dig 2
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
     uncover 2
@@ -134,24 +228,16 @@ main_after_if_else@14:
     uncover 3
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
     uncover 3
     b|
-    cover 2
-    concat
-    swap
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
+    uncover 3
+    retsub
 
-main_else_body@11:
-    intc_0 // 0
+f_else_body@5:
+    intc_1 // 0
     bytec_0 // "y"
     app_global_get_ex
     bytec_1 // 0x
@@ -159,26 +245,26 @@ main_else_body@11:
     select
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
     pushbytes 0xd5c1f7fc // method "E(uint256)"
     swap
     concat
-    bury 3
-    dig 1
-    bnz main_after_if_else@13
-    dig 2
+    frame_bury 0
+    frame_dig -1
+    bnz f_after_if_else@7
+    frame_dig 0
     log
 
-main_after_if_else@13:
-    swap
+f_after_if_else@7:
+    frame_dig -1
     assert // E
-    b main_after_if_else@14
+    b f_after_if_else@8
 
-main_ternary_false@8:
-    intc_0 // 0
-    b main_ternary_merge@9
+f_ternary_false@2:
+    intc_1 // 0
+    b f_ternary_merge@3

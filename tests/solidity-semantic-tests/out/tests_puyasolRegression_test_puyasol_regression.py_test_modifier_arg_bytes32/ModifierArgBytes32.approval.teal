@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "lastRole" "members" "__ctor_pending" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 32 0 2
+    bytecblock 0x151f7c75 "lastRole" "members" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6 0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -32,115 +32,202 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0xbb2db532 0x73ad653e 0x83b7f097 0x4a493f6c 0xc8ffb6e8 0x090c1529 0x12562753 0x81775f72 0x87384e65 // method "__postInit()void", method "grant(byte[32],address)void", method "mint()uint256", method "burn()uint256", method "anyRole(byte[32])uint256", method "isMember(byte[32],address)bool", method "MINTER_ROLE()byte[32]", method "BURNER_ROLE()byte[32]", method "members(byte[32],address)bool", method "lastRole()byte[32]"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_grant_route@6 main_mint_route@7 main_burn_route@8 main_anyRole_route@9 main_isMember_route@10 main_MINTER_ROLE_route@11 main_BURNER_ROLE_route@12 main_members_route@13 main_lastRole_route@14
-    err
-
-main_lastRole_route@14:
+    pushbytes 0x4ea436ba
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@20
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+main_ternary_merge@8:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_0 // "lastRole"
-    app_global_get_ex
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@20:
-    intc_1 // 0
-    b main_ternary_merge@21
-
-main_members_route@13:
     txna ApplicationArgs 1
-    dup
     len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
     len
-    intc_2 // 32
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    assert // invalid EVM ABI address padding
+    txna ApplicationArgs 1
+    extract 0 32
+    extract 0 32
+    swap
+    callsub grant
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x1249c58b
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
-    bz main_ternary_false@25
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@26:
+main_ternary_merge@15:
     !
     assert // not payable
-    swap
-    bytec_1 // "members"
+    intc_1 // 32
+    bzero
+    callsub mint
     concat
-    sha256
-    concat
-    sha256
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    pushbytes 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    bytec_3 // 0x151f7c75
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@25:
-    intc_1 // 0
-    b main_ternary_merge@26
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
 
-main_BURNER_ROLE_route@12:
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x44df8e70
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
-    bz main_ternary_false@30
+    bz main_ternary_false@21
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@31:
+main_ternary_merge@22:
     !
     assert // not payable
-    pushbytes 0x151f7c753c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848
+    intc_1 // 32
+    bzero
+    callsub burn
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@30:
-    intc_1 // 0
-    b main_ternary_merge@31
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
 
-main_MINTER_ROLE_route@11:
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x070324cb
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_1 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    extract 0 32
+    callsub anyRole
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0x10ad56b3
+    ==
+    bz main_after_if_else@37
     txn GroupIndex
     bz main_ternary_false@35
     txn GroupIndex
@@ -151,197 +238,605 @@ main_MINTER_ROLE_route@11:
 main_ternary_merge@36:
     !
     assert // not payable
-    pushbytes 0x151f7c759f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    intc_1 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    extract 0 32
+    uncover 2
+    callsub isMember
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
 main_ternary_false@35:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@36
 
-main_isMember_route@10:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
+main_after_if_else@37:
+    txn OnCompletion
+    bnz main_after_if_else@44
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_2 // 32
+    bz main_after_if_else@44
+    txna ApplicationArgs 0
+    pushbytes 0xd5391393
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    bz main_after_if_else@44
     txn GroupIndex
-    bz main_ternary_false@40
+    bz main_ternary_false@42
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@41:
+main_ternary_merge@43:
     !
     assert // not payable
+    callsub MINTER_ROLE
+    bytec_0 // 0x151f7c75
     swap
-    bytec_1 // "members"
     concat
-    sha256
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@42:
+    intc_2 // 0
+    b main_ternary_merge@43
+
+main_after_if_else@44:
+    txn OnCompletion
+    bnz main_after_if_else@51
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@51
+    txna ApplicationArgs 0
+    pushbytes 0x282c51f3
+    ==
+    bz main_after_if_else@51
+    txn GroupIndex
+    bz main_ternary_false@49
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@50:
+    !
+    assert // not payable
+    callsub BURNER_ROLE
+    bytec_0 // 0x151f7c75
+    swap
     concat
-    sha256
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@49:
+    intc_2 // 0
+    b main_ternary_merge@50
+
+main_after_if_else@51:
+    txn OnCompletion
+    bnz main_after_if_else@58
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@58
+    txna ApplicationArgs 0
+    pushbytes 0x7e1cb559
+    ==
+    bz main_after_if_else@58
+    txn GroupIndex
+    bz main_ternary_false@56
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@57:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    intc_1 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    extract 0 32
     uncover 2
-    select
+    callsub members
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@56:
+    intc_2 // 0
+    b main_ternary_merge@57
+
+main_after_if_else@58:
+    txn OnCompletion
+    bnz main_after_if_else@65
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@65
+    txna ApplicationArgs 0
+    pushbytes 0x23cbb185
+    ==
+    bz main_after_if_else@65
+    txn GroupIndex
+    bz main_ternary_false@63
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@64:
+    !
+    assert // not payable
+    callsub lastRole
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@63:
+    intc_2 // 0
+    b main_ternary_merge@64
+
+main_after_if_else@65:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xbb2db532 0x73ad653e 0x83b7f097 0x4a493f6c 0xc8ffb6e8 0x090c1529 0x12562753 0x81775f72 0x87384e65 // method "__postInit()void", method "grant(byte[32],address)void", method "mint()uint256", method "burn()uint256", method "anyRole(byte[32])uint256", method "isMember(byte[32],address)bool", method "MINTER_ROLE()byte[32]", method "BURNER_ROLE()byte[32]", method "members(byte[32],address)bool", method "lastRole()byte[32]"
+    txna ApplicationArgs 0
+    match main___postInit_route@68 main_grant_route@69 main_mint_route@70 main_burn_route@71 main_anyRole_route@72 main_isMember_route@73 main_MINTER_ROLE_route@74 main_BURNER_ROLE_route@75 main_members_route@76 main_lastRole_route@77
+    err
+
+main_lastRole_route@77:
+    callsub lastRole
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_members_route@76:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub members
     pushbytes 0x00
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     setbit
-    bytec_3 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@40:
-    intc_1 // 0
-    b main_ternary_merge@41
-
-main_anyRole_route@9:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@45
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@46:
-    !
-    assert // not payable
-    bytec_0 // "lastRole"
+main_BURNER_ROLE_route@75:
+    callsub BURNER_ROLE
+    bytec_0 // 0x151f7c75
     swap
-    app_global_put
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000000b
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@45:
-    intc_1 // 0
-    b main_ternary_merge@46
-
-main_burn_route@8:
-    txn GroupIndex
-    bz main_ternary_false@50
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@51:
-    !
-    assert // not payable
-    bytec_0 // "lastRole"
-    pushbytes 0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848
-    app_global_put
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000009
+main_MINTER_ROLE_route@74:
+    callsub MINTER_ROLE
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@50:
-    intc_1 // 0
-    b main_ternary_merge@51
-
-main_mint_route@7:
-    txn GroupIndex
-    bz main_ternary_false@55
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@56:
-    !
-    assert // not payable
-    bytec_0 // "lastRole"
-    pushbytes 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
-    app_global_put
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000007
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@55:
-    intc_1 // 0
-    b main_ternary_merge@56
-
-main_grant_route@6:
+main_isMember_route@73:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@60
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@61:
-    !
-    assert // not payable
+    callsub isMember
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
     swap
-    bytec_1 // "members"
     concat
-    sha256
-    concat
-    sha256
-    intc_0 // 1
-    itob
-    box_put
+    log
     intc_0 // 1
     return
 
-main_ternary_false@60:
-    intc_1 // 0
-    b main_ternary_merge@61
+main_anyRole_route@72:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub anyRole
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
-main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
+main_burn_route@71:
+    callsub burn
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_mint_route@70:
+    callsub mint
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_grant_route@69:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub grant
+    intc_0 // 1
+    return
+
+main___postInit_route@68:
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
-    intc_1 // 0
+    bytec_3 // "__ctor_pending"
+    intc_2 // 0
     app_global_put
-    bytec_1 // "members"
-    pushint 2
+    bytec_2 // "members"
+    intc_3 // 2
     box_create
     pop
-    bytec_0 // "lastRole"
+    bytec_1 // "lastRole"
     bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
     app_global_put
     intc_0 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.grant(role: bytes, a: bytes) -> void:
+grant:
+    proto 2 0
+    txn GroupIndex
+    bz grant_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+grant_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    bytec_2 // "members"
+    concat
+    sha256
+    frame_dig -1
+    swap
+    concat
+    sha256
+    intc_0 // 1
+    itob
+    box_put
+    retsub
+
+grant_ternary_false@2:
+    intc_2 // 0
+    b grant_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.mint() -> bytes:
+mint:
+    txn GroupIndex
+    bz mint_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+mint_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "lastRole"
+    bytec 5 // 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
+    app_global_put
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    retsub
+
+mint_ternary_false@2:
+    intc_2 // 0
+    b mint_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.burn() -> bytes:
+burn:
+    txn GroupIndex
+    bz burn_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+burn_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "lastRole"
+    bytec 6 // 0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848
+    app_global_put
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
+    retsub
+
+burn_ternary_false@2:
+    intc_2 // 0
+    b burn_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.anyRole(r: bytes) -> bytes:
+anyRole:
+    proto 1 1
+    txn GroupIndex
+    bz anyRole_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+anyRole_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "lastRole"
+    frame_dig -1
+    app_global_put
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000b
+    retsub
+
+anyRole_ternary_false@2:
+    intc_2 // 0
+    b anyRole_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.isMember(role: bytes, a: bytes) -> uint64:
+isMember:
+    proto 2 1
+    txn GroupIndex
+    bz isMember_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+isMember_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    bytec_2 // "members"
+    concat
+    sha256
+    frame_dig -1
+    swap
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    retsub
+
+isMember_ternary_false@2:
+    intc_2 // 0
+    b isMember_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.MINTER_ROLE() -> bytes:
+MINTER_ROLE:
+    txn GroupIndex
+    bz MINTER_ROLE_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+MINTER_ROLE_ternary_merge@3:
+    !
+    assert // not payable
+    bytec 5 // 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
+    retsub
+
+MINTER_ROLE_ternary_false@2:
+    intc_2 // 0
+    b MINTER_ROLE_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.BURNER_ROLE() -> bytes:
+BURNER_ROLE:
+    txn GroupIndex
+    bz BURNER_ROLE_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+BURNER_ROLE_ternary_merge@3:
+    !
+    assert // not payable
+    bytec 6 // 0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848
+    retsub
+
+BURNER_ROLE_ternary_false@2:
+    intc_2 // 0
+    b BURNER_ROLE_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.members(key0: bytes, key1: bytes) -> uint64:
+members:
+    proto 2 1
+    txn GroupIndex
+    bz members_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+members_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    bytec_2 // "members"
+    concat
+    sha256
+    frame_dig -1
+    swap
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    retsub
+
+members_ternary_false@2:
+    intc_2 // 0
+    b members_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.lastRole() -> bytes:
+lastRole:
+    txn GroupIndex
+    bz lastRole_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+lastRole_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_1 // "lastRole"
+    app_global_get_ex
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    retsub
+
+lastRole_ternary_false@2:
+    intc_2 // 0
+    b lastRole_ternary_merge@3

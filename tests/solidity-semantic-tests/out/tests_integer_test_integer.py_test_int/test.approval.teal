@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/contracts/int.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 32 0 2
+    bytecblock 0x151f7c75 0x00
     pushint 4096
     bzero
     dup
@@ -28,122 +29,619 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xd1360398 0x464ef50c 0x62a0ddee 0x2fffa523 0x4be25097 0xfec43a1b 0x048b5886 0xd3e69cb3 // method "intMinA()bool", method "intMinB()bool", method "intMinC()bool", method "intMinD()bool", method "intMaxA()bool", method "intMaxB()bool", method "intMaxC()bool", method "intMaxD()bool"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_intMinA_route@5 main_intMinB_route@6 main_intMinC_route@7 main_intMinD_route@8 main_intMaxA_route@9 main_intMaxB_route@10 main_intMaxC_route@11 main_intMaxD_route@12
-    err
-
-main_intMaxD_route@12:
+    pushbytes 0x4b523bcf
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@18
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@107:
+main_ternary_merge@8:
     !
     assert // not payable
-    pushbytes 0x151f7c7580
+    intc_1 // 32
+    bzero
+    callsub intMinA
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@18:
-    intc_1 // 0
-    b main_ternary_merge@107
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
 
-main_intMaxC_route@11:
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xccf14a66
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
-    bz main_ternary_false@30
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@107
-
-main_ternary_false@30:
-    intc_1 // 0
-    b main_ternary_merge@107
-
-main_intMaxB_route@10:
-    txn GroupIndex
-    bz main_ternary_false@43
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@107
 
-main_ternary_false@43:
-    intc_1 // 0
-    b main_ternary_merge@107
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub intMinB
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
-main_intMaxA_route@9:
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x7cf49c80
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub intMinC
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0xef915426
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub intMinD
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0xdc74a339
+    ==
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub intMaxA
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@35:
+    intc_2 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
+    bnz main_after_if_else@44
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@44
+    txna ApplicationArgs 0
+    pushbytes 0x976555c5
+    ==
+    bz main_after_if_else@44
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub intMaxB
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@42:
+    intc_2 // 0
+    b main_ternary_merge@43
+
+main_after_if_else@44:
+    txn OnCompletion
+    bnz main_after_if_else@51
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@51
+    txna ApplicationArgs 0
+    pushbytes 0x00ab3179
+    ==
+    bz main_after_if_else@51
+    txn GroupIndex
+    bz main_ternary_false@49
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@50:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub intMaxC
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@49:
+    intc_2 // 0
+    b main_ternary_merge@50
+
+main_after_if_else@51:
+    txn OnCompletion
+    bnz main_after_if_else@58
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@58
+    txna ApplicationArgs 0
+    pushbytes 0xe280e26c
+    ==
+    bz main_after_if_else@58
     txn GroupIndex
     bz main_ternary_false@56
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@107
+
+main_ternary_merge@57:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub intMaxD
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
 main_ternary_false@56:
-    intc_1 // 0
-    b main_ternary_merge@107
+    intc_2 // 0
+    b main_ternary_merge@57
 
-main_intMinD_route@8:
+main_after_if_else@58:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd1360398 0x464ef50c 0x62a0ddee 0x2fffa523 0x4be25097 0xfec43a1b 0x048b5886 0xd3e69cb3 // method "intMinA()bool", method "intMinB()bool", method "intMinC()bool", method "intMinD()bool", method "intMaxA()bool", method "intMaxB()bool", method "intMaxC()bool", method "intMaxD()bool"
+    txna ApplicationArgs 0
+    match main_intMinA_route@61 main_intMinB_route@62 main_intMinC_route@63 main_intMinD_route@64 main_intMaxA_route@65 main_intMaxB_route@66 main_intMaxC_route@67 main_intMaxD_route@68
+    err
+
+main_intMaxD_route@68:
+    callsub intMaxD
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_intMaxC_route@67:
+    callsub intMaxC
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_intMaxB_route@66:
+    callsub intMaxB
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_intMaxA_route@65:
+    callsub intMaxA
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_intMinD_route@64:
+    callsub intMinD
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_intMinC_route@63:
+    callsub intMinC
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_intMinB_route@62:
+    callsub intMinB
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_intMinA_route@61:
+    callsub intMinA
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/contracts/int.sol.test.intMinA() -> uint64:
+intMinA:
     txn GroupIndex
-    bz main_ternary_false@68
+    bz intMinA_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@107
 
-main_ternary_false@68:
-    intc_1 // 0
-    b main_ternary_merge@107
+intMinA_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 1
+    retsub
 
-main_intMinC_route@7:
+intMinA_ternary_false@2:
+    intc_2 // 0
+    b intMinA_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/contracts/int.sol.test.intMinB() -> uint64:
+intMinB:
     txn GroupIndex
-    bz main_ternary_false@80
+    bz intMinB_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@107
 
-main_ternary_false@80:
-    intc_1 // 0
-    b main_ternary_merge@107
+intMinB_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 1
+    retsub
 
-main_intMinB_route@6:
+intMinB_ternary_false@2:
+    intc_2 // 0
+    b intMinB_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/contracts/int.sol.test.intMinC() -> uint64:
+intMinC:
     txn GroupIndex
-    bz main_ternary_false@93
+    bz intMinC_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@107
 
-main_ternary_false@93:
-    intc_1 // 0
-    b main_ternary_merge@107
+intMinC_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 1
+    retsub
 
-main_intMinA_route@5:
+intMinC_ternary_false@2:
+    intc_2 // 0
+    b intMinC_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/contracts/int.sol.test.intMinD() -> uint64:
+intMinD:
     txn GroupIndex
-    bz main_ternary_false@106
+    bz intMinD_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@107
 
-main_ternary_false@106:
-    intc_1 // 0
-    b main_ternary_merge@107
+intMinD_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 1
+    retsub
+
+intMinD_ternary_false@2:
+    intc_2 // 0
+    b intMinD_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/contracts/int.sol.test.intMaxA() -> uint64:
+intMaxA:
+    txn GroupIndex
+    bz intMaxA_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+intMaxA_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 1
+    retsub
+
+intMaxA_ternary_false@2:
+    intc_2 // 0
+    b intMaxA_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/contracts/int.sol.test.intMaxB() -> uint64:
+intMaxB:
+    txn GroupIndex
+    bz intMaxB_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+intMaxB_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 1
+    retsub
+
+intMaxB_ternary_false@2:
+    intc_2 // 0
+    b intMaxB_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/contracts/int.sol.test.intMaxC() -> uint64:
+intMaxC:
+    txn GroupIndex
+    bz intMaxC_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+intMaxC_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 1
+    retsub
+
+intMaxC_ternary_false@2:
+    intc_2 // 0
+    b intMaxC_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/integer/contracts/int.sol.test.intMaxD() -> uint64:
+intMaxD:
+    txn GroupIndex
+    bz intMaxD_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+intMaxD_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 1
+    retsub
+
+intMaxD_ternary_false@2:
+    intc_2 // 0
+    b intMaxD_ternary_merge@3

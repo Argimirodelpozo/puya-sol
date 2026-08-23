@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_library_function_attached_to_contract.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 16 32
-    bytecblock TMPL_APPROVAL_E TMPL_CLEAR_E
+    intcblock 1 32 0 16
+    bytecblock 0x151f7c75 TMPL_APPROVAL_E TMPL_CLEAR_E
     pushint 4096
     bzero
     dup
@@ -28,37 +28,98 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0xc95a9d21 // method "test()uint256"
-    txna ApplicationArgs 0
-    match main_test_route@4
-    err
-
-main_test_route@4:
     txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xf8a8fd6d
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub test
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    pushbytes 0xc95a9d21 // method "test()uint256"
+    txna ApplicationArgs 0
+    match main_test_route@11
+    err
+
+main_test_route@11:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub test
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// __solfn_12(e: bytes) -> bytes:
+L.foo:
+    proto 1 1
+    pushint 42
+    itob
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_library_function_attached_to_contract.sol.C.test() -> bytes:
+test:
+    txn GroupIndex
+    bz test_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
-    bytec_0 // TMPL_APPROVAL_E
-    bytec_1 // TMPL_CLEAR_E
+    bytec_1 // TMPL_APPROVAL_E
+    bytec_2 // TMPL_CLEAR_E
     pushint 6
     itxn_field TypeEnum
-    intc_2 // 16
+    intc_3 // 16
     itxn_field GlobalNumUint
-    intc_2 // 16
+    intc_3 // 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -73,7 +134,7 @@ main_ternary_merge@9:
     intc_0 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_2 // 0
     itxn_field Fee
     pushint 1000000
     itxn_field Amount
@@ -86,27 +147,14 @@ main_ternary_merge@9:
     callsub L.foo
     dup
     len
-    intc_3 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_3 // 32
+    intc_1 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@8:
-    intc_1 // 0
-    b main_ternary_merge@9
-
-
-// __solfn_12(e: bytes) -> bytes:
-L.foo:
-    proto 1 1
-    pushint 42
-    itob
     retsub
+
+test_ternary_false@2:
+    intc_2 // 0
+    b test_ternary_merge@3

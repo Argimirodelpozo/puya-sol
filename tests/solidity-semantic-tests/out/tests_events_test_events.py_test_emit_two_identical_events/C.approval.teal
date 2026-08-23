@@ -3,6 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/emit_two_identical_events.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 0
     bytecblock 0x2549cb93
     pushint 4096
     bzero
@@ -23,38 +24,75 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x0c08bf88
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub terminate
+    pushbytes 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
     pushbytes 0x5ff16da4 // method "terminate()void"
     txna ApplicationArgs 0
-    match main_terminate_route@4
+    match main_terminate_route@11
     err
 
-main_terminate_route@4:
+main_terminate_route@11:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
+    callsub terminate
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/emit_two_identical_events.sol.C.terminate() -> void:
+terminate:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz terminate_ternary_false@2
     txn GroupIndex
-    pushint 1
+    intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+terminate_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // method "Terminated()"
     log
     bytec_0 // method "Terminated()"
     log
-    pushint 1
-    return
+    retsub
 
-main_ternary_false@8:
-    pushint 0
-    b main_ternary_merge@9
+terminate_ternary_false@2:
+    intc_1 // 0
+    b terminate_ternary_merge@3

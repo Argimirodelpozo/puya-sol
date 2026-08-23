@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_layout_packed_address.sol.EvmLayoutPackedAddress.approval_program() -> uint64:
 main:
     intcblock 32 0 1 8
-    bytecblock 0x01 0x00 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 0x000000000000000061646472617578 0x390b6ed31e0a6ecee3f76ade35b4e4b303ee4cf0bf39809c4f0162aa94d3d1e5 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
+    bytecblock 0x01 0x151f7c75 0x00 0x0000000000000000000000000000000000000000000000000000000000000000 0x000000000000000061646472617578 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:" 0x390b6ed31e0a6ecee3f76ade35b4e4b303ee4cf0bf39809c4f0162aa94d3d1e5
     pushint 4096
     bzero
     dup
@@ -29,467 +29,361 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x808d03b3 0xaf5696e0 0xb4e740ec 0x4500e432 0x457c44d0 // method "set(address,address,uint64,bool)void", method "setSingle(address,uint64,bool)void", method "roundTrip(address)(address,uint64,bool)", method "configs(address)(address,uint64,bool)", method "single()(address,uint64,bool)"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_set_route@5 main_setSingle_route@6 main_roundTrip_route@7 main_configs_route@8 main_single_route@9
-    err
-
-main_single_route@9:
+    pushbytes 0xac221493
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@15
+    bz main_ternary_false@7
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@16:
+main_ternary_merge@8:
     !
     assert // not payable
-    intc_0 // 32
-    bzero
-    bytec 5 // 0x390b6ed31e0a6ecee3f76ade35b4e4b303ee4cf0bf39809c4f0162aa94d3d1e5
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 20 12
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 12 20
-    concat
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x01
-    callsub __storage_read
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 3
-    getbyte
-    intc_1 // 0
-    !=
-    swap
-    extract 4 8
-    uncover 2
-    swap
-    concat
-    bytec_1 // 0x00
-    intc_1 // 0
-    uncover 3
-    setbit
-    concat
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@15:
-    intc_1 // 0
-    b main_ternary_merge@16
-
-main_configs_route@8:
     txna ApplicationArgs 1
-    dup
     len
     intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@20
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@21:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    swap
-    extract 0 32
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat
-    keccak256
-    dup2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 4 // 0x000000000000000061646472617578
-    concat
-    keccak256
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 20 12
-    dig 1
-    callsub __storage_read
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 12 20
-    concat
-    dig 1
-    callsub __storage_read
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 2
-    callsub __storage_read
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 3
-    getbyte
-    intc_1 // 0
-    !=
-    swap
-    extract 4 8
-    uncover 2
-    swap
-    concat
-    bytec_1 // 0x00
-    intc_1 // 0
-    uncover 3
-    setbit
-    concat
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@20:
-    intc_1 // 0
-    b main_ternary_merge@21
-
-main_roundTrip_route@7:
+    >=
+    assert // EVM ABI decode out of bounds
     txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@25
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@26:
-    !
-    assert // not payable
     extract 0 32
-    intc_0 // 32
-    bzero
-    swap
-    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    concat
-    keccak256
-    dup2
-    concat
     dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 4 // 0x000000000000000061646472617578
-    concat
-    keccak256
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 20 12
-    dig 1
-    callsub __storage_read
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    extract 12 20
-    concat
-    dig 1
-    callsub __storage_read
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 2
-    callsub __storage_read
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 3
-    getbyte
-    intc_1 // 0
-    !=
-    swap
-    extract 4 8
-    uncover 2
-    swap
-    concat
-    bytec_1 // 0x00
-    intc_1 // 0
-    uncover 3
-    setbit
-    concat
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@25:
-    intc_1 // 0
-    b main_ternary_merge@26
-
-main_setSingle_route@6:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    cover 2
-    len
-    intc_3 // 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    txna ApplicationArgs 3
-    dup
-    cover 2
-    dup
-    len
-    intc_2 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
-    getbit
-    txn GroupIndex
-    bz main_ternary_false@30
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@31:
-    !
-    assert // not payable
-    intc_2 // 1
-    <=
-    assert // ABI bool validation
-    uncover 2
-    concat
-    swap
-    concat
-    dup
-    extract 0 32
-    intc_0 // 32
-    bzero
-    dig 1
     extract 0 12
-    bytec 5 // 0x390b6ed31e0a6ecee3f76ade35b4e4b303ee4cf0bf39809c4f0162aa94d3d1e5
-    swap
-    callsub __storage_write
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 2
-    extract 12 20
-    replace2 12
-    bytec_0 // 0x01
-    swap
-    callsub __storage_write
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_3 // 8
+    pushint 12
     bzero
-    dig 3
-    extract 32 8
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    intc_3 // 8
-    extract3
-    replace2 4
-    bytec_0 // 0x01
     swap
-    callsub __storage_write
-    bytec_0 // 0x01
-    callsub __storage_read
-    concat
-    dup
+    dig 1
+    ==
+    assert // invalid EVM ABI address padding
+    txna ApplicationArgs 1
     len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    pushint 320
-    getbit
-    bytec_1 // 0x00
-    intc_1 // 0
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    extract 0 12
     uncover 2
-    setbit
-    intc_1 // 0
-    getbit
-    itob
-    extract 7 1
-    replace2 3
+    ==
+    assert // invalid EVM ABI address padding
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 64 32
+    dup
+    extract 0 24
+    pushint 24
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    txna ApplicationArgs 1
+    len
+    pushint 128
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 96 32
+    dup
     bytec_0 // 0x01
+    b<=
+    assert // invalid EVM ABI bool
     swap
-    callsub __storage_write
+    pushint 24
+    extract_uint64
+    swap
+    pushint 24
+    extract_uint64
+    intc_1 // 0
+    !=
+    callsub set
+    bytec_1 // 0x151f7c75
+    log
     intc_2 // 1
     return
 
-main_ternary_false@30:
+main_ternary_false@7:
     intc_1 // 0
-    b main_ternary_merge@31
+    b main_ternary_merge@8
 
-main_set_route@5:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    pushint 2
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 2
-    dup
-    cover 2
-    len
-    intc_0 // 32
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x40d044ab
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txna ApplicationArgs 3
-    dup
-    cover 2
-    len
-    intc_3 // 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    txna ApplicationArgs 4
-    dup
-    cover 4
-    dup
-    len
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
     intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
     ==
-    assert // invalid number of bytes for arc4.bool
+    assert // invalid EVM ABI address padding
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    extract 0 24
+    pushint 24
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    txna ApplicationArgs 1
+    len
+    pushint 96
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 64 32
+    dup
+    bytec_0 // 0x01
+    b<=
+    assert // invalid EVM ABI bool
+    swap
+    pushint 24
+    extract_uint64
+    swap
+    pushint 24
+    extract_uint64
     intc_1 // 0
-    getbit
+    !=
+    callsub setSingle
+    bytec_1 // 0x151f7c75
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x1959e416
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    intc_0 // 32
+    bzero
+    swap
+    callsub roundTrip
+    dig 2
+    len
+    pushint 20
+    -
+    uncover 3
+    swap
+    pushint 20
+    extract3
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    itob
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    swap
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0xfce89878
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    intc_0 // 32
+    bzero
+    swap
+    callsub configs
+    dig 2
+    len
+    pushint 20
+    -
+    uncover 3
+    swap
+    pushint 20
+    extract3
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    itob
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    swap
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@28:
+    intc_1 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0xde3e828e
+    ==
+    bz main_after_if_else@37
     txn GroupIndex
     bz main_ternary_false@35
     txn GroupIndex
@@ -500,9 +394,381 @@ main_set_route@5:
 main_ternary_merge@36:
     !
     assert // not payable
+    intc_0 // 32
+    bzero
+    callsub single
+    dig 2
+    len
+    pushint 20
+    -
+    uncover 3
+    swap
+    pushint 20
+    extract3
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    itob
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    swap
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@35:
+    intc_1 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x808d03b3 0xaf5696e0 0xb4e740ec 0x4500e432 0x457c44d0 // method "set(address,address,uint64,bool)void", method "setSingle(address,uint64,bool)void", method "roundTrip(address)(address,uint64,bool)", method "configs(address)(address,uint64,bool)", method "single()(address,uint64,bool)"
+    txna ApplicationArgs 0
+    match main_set_route@40 main_setSingle_route@41 main_roundTrip_route@42 main_configs_route@43 main_single_route@44
+    err
+
+main_single_route@44:
+    callsub single
+    swap
+    itob
+    uncover 2
+    swap
+    concat
+    bytec_2 // 0x00
+    intc_1 // 0
+    uncover 3
+    setbit
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_configs_route@43:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub configs
+    swap
+    itob
+    uncover 2
+    swap
+    concat
+    bytec_2 // 0x00
+    intc_1 // 0
+    uncover 3
+    setbit
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_roundTrip_route@42:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub roundTrip
+    swap
+    itob
+    uncover 2
+    swap
+    concat
+    bytec_2 // 0x00
+    intc_1 // 0
+    uncover 3
+    setbit
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_setSingle_route@41:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    callsub setSingle
+    intc_2 // 1
+    return
+
+main_set_route@40:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    txna ApplicationArgs 4
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    callsub set
+    intc_2 // 1
+    return
+
+
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    intc_1 // 0
+    dup
+    pushbytes ""
+    frame_dig -1
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    bytec 6 // 0x010000
+    b<
+    bz __storage_read_else_body@4
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    frame_bury 2
+    pushint 64
+    /
+    itob
+    bytec 7 // "p:"
+    swap
+    concat
+    dup
+    frame_bury 1
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 2
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    frame_dig 1
+    swap
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+__storage_read_after_if_else@3:
+    pushbytes 0x
+    frame_bury 0
+    retsub
+
+__storage_read_else_body@4:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 8 // "s:"
+    swap
+    concat
+    dup
+    frame_bury 0
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 0
+    intc_1 // 0
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    frame_dig -2
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    bytec 6 // 0x010000
+    b<
+    bz __storage_write_else_body@2
+    intc_3 // 8
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    pushint 64
+    /
+    itob
+    bytec 7 // "p:"
+    swap
+    concat
+    dup
+    pushint 2048
+    box_create
+    pop
+    swap
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    box_replace
+    retsub
+
+__storage_write_else_body@2:
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 8 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    swap
+    box_replace
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_layout_packed_address.sol.EvmLayoutPackedAddress.set(who: bytes, token: bytes, r: uint64, u: uint64) -> void:
+set:
+    proto 4 0
+    txn GroupIndex
+    bz set_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
     intc_2 // 1
     <=
     assert // ABI bool validation
+    frame_dig -4
     extract 0 32
     intc_0 // 32
     bzero
@@ -510,10 +776,16 @@ main_ternary_merge@36:
     bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
     concat
     keccak256
-    uncover 3
-    uncover 3
+    frame_dig -2
+    itob
+    bytec_2 // 0x00
+    intc_1 // 0
+    frame_dig -1
+    setbit
+    frame_dig -3
+    uncover 2
     concat
-    uncover 3
+    swap
     concat
     dup
     extract 0 32
@@ -589,7 +861,7 @@ main_ternary_merge@36:
     swap
     pushint 320
     getbit
-    bytec_1 // 0x00
+    bytec_2 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -599,71 +871,54 @@ main_ternary_merge@36:
     extract 7 1
     replace2 3
     callsub __storage_write
+    retsub
+
+set_ternary_false@2:
+    intc_1 // 0
+    b set_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_layout_packed_address.sol.EvmLayoutPackedAddress.setSingle(token: bytes, r: uint64, u: uint64) -> void:
+setSingle:
+    proto 3 0
+    txn GroupIndex
+    bz setSingle_ternary_false@2
+    txn GroupIndex
     intc_2 // 1
-    return
-
-main_ternary_false@35:
-    intc_1 // 0
-    b main_ternary_merge@36
-
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    intc_1 // 0
-    dup
-    pushbytes ""
-    frame_dig -1
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    bytec 7 // 0x010000
-    b<
-    bz __storage_read_else_body@4
-    intc_3 // 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_3 // 8
     -
-    extract_uint64
-    dup
-    frame_bury 2
-    pushint 64
-    /
+    gtxns Amount
+
+setSingle_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    intc_2 // 1
+    <=
+    assert // ABI bool validation
+    frame_dig -2
     itob
-    bytec 8 // "p:"
+    bytec_2 // 0x00
+    intc_1 // 0
+    frame_dig -1
+    setbit
+    frame_dig -3
+    uncover 2
+    concat
     swap
     concat
     dup
-    frame_bury 1
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 2
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    frame_dig 1
-    swap
-    intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-__storage_read_after_if_else@3:
-    pushbytes 0x
-    frame_bury 0
-    retsub
-
-__storage_read_else_body@4:
+    extract 0 32
     intc_0 // 32
     bzero
-    frame_dig -1
+    dig 1
+    extract 0 12
+    bytec 9 // 0x390b6ed31e0a6ecee3f76ade35b4e4b303ee4cf0bf39809c4f0162aa94d3d1e5
+    swap
+    callsub __storage_write
+    bytec_0 // 0x01
+    callsub __storage_read
+    dig 1
+    swap
     concat
     dup
     len
@@ -671,76 +926,91 @@ __storage_read_else_body@4:
     -
     intc_0 // 32
     extract3
-    bytec 9 // "s:"
+    uncover 2
+    extract 12 20
+    replace2 12
+    bytec_0 // 0x01
+    swap
+    callsub __storage_write
+    bytec_0 // 0x01
+    callsub __storage_read
+    dig 1
     swap
     concat
     dup
-    frame_bury 0
-    box_len
-    bury 1
-    bz __storage_read_after_if_else@3
-    frame_dig 0
-    intc_1 // 0
+    len
     intc_0 // 32
-    box_extract
-    frame_bury 0
-    retsub
-
-
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
-__storage_write:
-    proto 2 0
-    frame_dig -2
-    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -2
-    bytec 7 // 0x010000
-    b<
-    bz __storage_write_else_body@2
+    -
+    intc_0 // 32
+    extract3
     intc_3 // 8
     bzero
-    frame_dig -2
+    dig 3
+    extract 32 8
     concat
     dup
     len
     intc_3 // 8
     -
-    extract_uint64
+    intc_3 // 8
+    extract3
+    replace2 4
+    bytec_0 // 0x01
+    swap
+    callsub __storage_write
+    bytec_0 // 0x01
+    callsub __storage_read
+    concat
     dup
-    pushint 64
-    /
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    pushint 320
+    getbit
+    bytec_2 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
     itob
-    bytec 8 // "p:"
+    extract 7 1
+    replace2 3
+    bytec_0 // 0x01
     swap
-    concat
-    dup
-    pushint 2048
-    box_create
-    pop
-    swap
-    pushint 64
-    %
-    intc_0 // 32
-    *
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    box_replace
+    callsub __storage_write
     retsub
 
-__storage_write_else_body@2:
+setSingle_ternary_false@2:
+    intc_1 // 0
+    b setSingle_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_layout_packed_address.sol.EvmLayoutPackedAddress.roundTrip(who: bytes) -> bytes, uint64, uint64:
+roundTrip:
+    proto 1 3
+    txn GroupIndex
+    bz roundTrip_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+roundTrip_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    extract 0 32
     intc_0 // 32
     bzero
-    dup
-    frame_dig -2
+    swap
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    keccak256
+    dup2
     concat
     dup
     len
@@ -748,15 +1018,12 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec 9 // "s:"
-    swap
+    bytec 4 // 0x000000000000000061646472617578
     concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
+    keccak256
+    callsub __storage_read
+    dig 2
     swap
-    frame_dig -1
     concat
     dup
     len
@@ -764,7 +1031,214 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
+    extract 20 12
+    dig 1
+    callsub __storage_read
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 12 20
+    concat
+    dig 1
+    callsub __storage_read
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 4
+    extract_uint64
+    uncover 2
+    callsub __storage_read
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 3
+    getbyte
     intc_1 // 0
-    swap
-    box_replace
+    !=
     retsub
+
+roundTrip_ternary_false@2:
+    intc_1 // 0
+    b roundTrip_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_layout_packed_address.sol.EvmLayoutPackedAddress.configs(key0: bytes) -> bytes, uint64, uint64:
+configs:
+    proto 1 3
+    txn GroupIndex
+    bz configs_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+configs_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    extract 0 32
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    concat
+    keccak256
+    dup2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 4 // 0x000000000000000061646472617578
+    concat
+    keccak256
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 20 12
+    dig 1
+    callsub __storage_read
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 12 20
+    concat
+    dig 1
+    callsub __storage_read
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 4
+    extract_uint64
+    uncover 2
+    callsub __storage_read
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 3
+    getbyte
+    intc_1 // 0
+    !=
+    retsub
+
+configs_ternary_false@2:
+    intc_1 // 0
+    b configs_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_layout_packed_address.sol.EvmLayoutPackedAddress.single() -> bytes, uint64, uint64:
+single:
+    txn GroupIndex
+    bz single_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+single_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    bytec 9 // 0x390b6ed31e0a6ecee3f76ade35b4e4b303ee4cf0bf39809c4f0162aa94d3d1e5
+    callsub __storage_read
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 20 12
+    bytec_0 // 0x01
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 12 20
+    concat
+    bytec_0 // 0x01
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 4
+    extract_uint64
+    bytec_0 // 0x01
+    callsub __storage_read
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 3
+    getbyte
+    intc_1 // 0
+    !=
+    retsub
+
+single_ternary_false@2:
+    intc_1 // 0
+    b single_ternary_merge@3

@@ -1,12 +1,10 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_oxthrcrs/base64.sol.test.approval_program() -> uint64:
+// /tmp/multisource_3l82a1nq/base64.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 4096 0 1 20480 4064 255 16777215
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0x3d 0x0000000000000000000000000000000000000000000000000000000000000040 0x03 0x3f "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" "foo" 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000040000 0x0000000000000000000000000000000000000000000000000000000000001000 0x01000000
-    intc_2 // 0
-    dup
+    intcblock 32 4096 1 0 20480 4064 255 65535 16777215
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x 0x010000000000000000 0x3d 0x0000000000000000000000000000000000000000000000000000000000000040 0x151f7c75 0x03 0x3f "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x0000000000000000000000000000000000000000000000000000000000040000 0x0000000000000000000000000000000000000000000000000000000000001000 0x01000000 "foo"
     intc_1 // 4096
     bzero
     dup
@@ -26,10 +24,298 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_3 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xf2b74b27
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 24
+    bytec_3 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    dig 1
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    uncover 2
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_3 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc 7 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    dup2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 3
+    uncover 3
+    extract3
+    callsub encode_inline_asm
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec 11 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_3 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x8dacbefb
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 24
+    bytec_3 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    dig 1
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    uncover 2
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_3 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc 7 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    dup2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 3
+    uncover 3
+    extract3
+    callsub encode_no_asm
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec 11 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@14:
+    intc_3 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x30d1b5e7
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    callsub encode_inline_asm_large
+    bytec 7 // 0x151f7c75
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@21:
+    intc_3 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x94f4ce3b
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    callsub encode_no_asm_large
+    bytec 7 // 0x151f7c75
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@28:
+    intc_3 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
     txn OnCompletion
     !
     assert
@@ -37,93 +323,23 @@ main_after_if_else@2:
     assert
     pushbytess 0x4c7cc4a4 0x930313ad 0x0e253121 0x0bb1102b // method "encode_inline_asm(byte[])string", method "encode_no_asm(byte[])string", method "encode_inline_asm_large()void", method "encode_no_asm_large()void"
     txna ApplicationArgs 0
-    match main_encode_inline_asm_route@5 main_encode_no_asm_route@6 main_encode_inline_asm_large_route@7 main_encode_no_asm_large_route@8
+    match main_encode_inline_asm_route@33 main_encode_no_asm_route@34 main_encode_inline_asm_large_route@35 main_encode_no_asm_large_route@36
     err
 
-main_encode_no_asm_large_route@8:
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_2 // 0
-    itob
-    bury 1
-
-main_while_top@16:
-    pushint 1000
-    itob
-    dig 1
-    b>
-    bz main_after_while@26
-    bytec 9 // "foo"
-    callsub NoAsmBase64.encode
-    pop
-    dup
-    bytec_1 // 0x01
-    b+
-    dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    bury 1
-    b main_while_top@16
-
-main_after_while@26:
-    intc_3 // 1
+main_encode_no_asm_large_route@36:
+    callsub encode_no_asm_large
+    intc_2 // 1
     return
 
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
+main_encode_inline_asm_large_route@35:
+    callsub encode_inline_asm_large
+    intc_2 // 1
+    return
 
-main_encode_inline_asm_large_route@7:
-    txn GroupIndex
-    bz main_ternary_false@22
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@23:
-    !
-    assert // not payable
-    intc_2 // 0
-    itob
-    bury 2
-
-main_while_top@24:
-    pushint 1000
-    itob
-    dig 2
-    b>
-    bz main_after_while@26
-    bytec 9 // "foo"
-    callsub InlineAsmBase64.encode
-    pop
-    dig 1
-    bytec_1 // 0x01
-    b+
-    dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    bury 2
-    b main_while_top@24
-
-main_ternary_false@22:
-    intc_2 // 0
-    b main_ternary_merge@23
-
-main_encode_no_asm_route@6:
+main_encode_no_asm_route@34:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -132,38 +348,24 @@ main_encode_no_asm_route@6:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    txn GroupIndex
-    bz main_ternary_false@30
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@31:
-    !
-    assert // not payable
-    callsub NoAsmBase64.encode
+    callsub encode_no_asm
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec 10 // 0x151f7c75
+    bytec 7 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
 
-main_ternary_false@30:
-    intc_2 // 0
-    b main_ternary_merge@31
-
-main_encode_inline_asm_route@5:
+main_encode_inline_asm_route@33:
     txna ApplicationArgs 1
     dup
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     pushint 2
     +
@@ -172,41 +374,27 @@ main_encode_inline_asm_route@5:
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
-    callsub InlineAsmBase64.encode
+    callsub encode_inline_asm
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec 10 // 0x151f7c75
+    bytec 7 // 0x151f7c75
     swap
     concat
     log
-    intc_3 // 1
+    intc_2 // 1
     return
-
-main_ternary_false@35:
-    intc_2 // 0
-    b main_ternary_merge@36
 
 
 // __solfn_403(data: bytes) -> bytes:
 InlineAsmBase64.encode:
     proto 1 1
-    intc_2 // 0
+    intc_3 // 0
     dupn 2
-    pushbytes ""
+    bytec_3 // ""
     frame_dig -1
     len
     dup
@@ -280,7 +468,7 @@ InlineAsmBase64.encode_after_if_else@3:
     intc_0 // 32
     -
     cover 2
-    intc_2 // 0
+    intc_3 // 0
 
 InlineAsmBase64.encode_while_top@4:
     dup
@@ -337,7 +525,7 @@ InlineAsmBase64.encode_else_body@7:
     cover 2
     -
     dig 4
-    intc_2 // 0
+    intc_3 // 0
     dig 2
     extract3
     swap
@@ -347,7 +535,7 @@ InlineAsmBase64.encode_else_body@7:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -387,7 +575,7 @@ InlineAsmBase64.encode_after_while@9:
 InlineAsmBase64.encode_ternary_merge@12:
     dup
     extract 0 24
-    pushbytes 0x
+    bytec_3 // 0x
     b==
     assert // EVM memory word exceeds uint64
     pushint 24
@@ -421,11 +609,11 @@ InlineAsmBase64.encode_ternary_merge@12:
 InlineAsmBase64.encode_ternary_merge@15:
     len
     itob
-    intc_2 // 0
+    intc_3 // 0
     itob
     b==
     bz InlineAsmBase64.encode_after_if_else@17
-    pushbytes ""
+    bytec_3 // ""
     frame_bury 0
     retsub
 
@@ -457,7 +645,7 @@ InlineAsmBase64.encode_after_if_else@17:
     dup
     loads
     uncover 2
-    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000040
     replace3
     stores
 
@@ -472,7 +660,7 @@ InlineAsmBase64.encode_after_if_else@20:
     concat
     replace2 64
     store 0
-    intc_2 // 0
+    intc_3 // 0
 
 InlineAsmBase64.encode_while_top@21:
     dup
@@ -529,7 +717,7 @@ InlineAsmBase64.encode_else_body@24:
     cover 2
     -
     dig 4
-    intc_2 // 0
+    intc_3 // 0
     dig 2
     extract3
     swap
@@ -539,7 +727,7 @@ InlineAsmBase64.encode_else_body@24:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -567,7 +755,7 @@ InlineAsmBase64.encode_after_while@26:
 InlineAsmBase64.encode_ternary_merge@29:
     dup
     extract 0 24
-    pushbytes 0x
+    bytec_3 // 0x
     b==
     assert // EVM memory word exceeds uint64
     pushint 24
@@ -745,7 +933,7 @@ InlineAsmBase64.encode_while_top@42:
     b<
     bz InlineAsmBase64.encode_after_while@77
     uncover 2
-    bytec 6 // 0x03
+    bytec 8 // 0x03
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -794,9 +982,9 @@ InlineAsmBase64.encode_ternary_merge@46:
     b%
     dup
     cover 12
-    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000040000
+    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000040000
     b/
-    bytec 7 // 0x3f
+    bytec 9 // 0x3f
     b&
     dig 11
     b+
@@ -889,9 +1077,9 @@ InlineAsmBase64.encode_ternary_merge@55:
     dup
     frame_bury 1
     dig 12
-    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000001000
+    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000001000
     b/
-    bytec 7 // 0x3f
+    bytec 9 // 0x3f
     b&
     dig 12
     b+
@@ -984,9 +1172,9 @@ InlineAsmBase64.encode_ternary_merge@64:
     dup
     frame_bury 1
     uncover 12
-    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000040
     b/
-    bytec 7 // 0x3f
+    bytec 9 // 0x3f
     b&
     dig 12
     b+
@@ -1079,7 +1267,7 @@ InlineAsmBase64.encode_ternary_merge@73:
     dup
     frame_bury 1
     uncover 9
-    bytec 7 // 0x3f
+    bytec 9 // 0x3f
     b&
     dig 11
     b+
@@ -1182,13 +1370,13 @@ InlineAsmBase64.encode_ternary_false@75:
     dig 3
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1204,13 +1392,13 @@ InlineAsmBase64.encode_ternary_false@72:
     dig 3
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1226,13 +1414,13 @@ InlineAsmBase64.encode_ternary_false@63:
     dig 3
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1248,13 +1436,13 @@ InlineAsmBase64.encode_ternary_false@54:
     dig 3
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1270,13 +1458,13 @@ InlineAsmBase64.encode_ternary_false@45:
     dig 3
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1297,7 +1485,7 @@ InlineAsmBase64.encode_after_while@77:
     extract3
 
 InlineAsmBase64.encode_ternary_merge@81:
-    bytec 6 // 0x03
+    bytec 8 // 0x03
     b%
     dig 5
     b|
@@ -1312,7 +1500,7 @@ InlineAsmBase64.encode_ternary_merge@81:
     extract3
 
 InlineAsmBase64.encode_ternary_merge@87:
-    bytec 6 // 0x03
+    bytec 8 // 0x03
     b%
     uncover 4
     b|
@@ -1346,7 +1534,7 @@ InlineAsmBase64.encode_switch_case_next@92:
 InlineAsmBase64.encode_ternary_merge@95:
     dup
     extract 0 24
-    pushbytes 0x
+    bytec_3 // 0x
     b==
     assert // EVM memory word exceeds uint64
     pushint 24
@@ -1392,13 +1580,13 @@ InlineAsmBase64.encode_ternary_false@97:
     dig 3
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     uncover 3
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1412,13 +1600,13 @@ InlineAsmBase64.encode_ternary_false@94:
     dig 3
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1454,7 +1642,7 @@ InlineAsmBase64.encode_switch_case_1@91:
     uncover 2
     intc_1 // 4096
     %
-    bytec 4 // 0x3d
+    bytec 5 // 0x3d
     replace3
     stores
     b InlineAsmBase64.encode_switch_case_next@92
@@ -1492,7 +1680,7 @@ InlineAsmBase64.encode_switch_case_0@90:
     uncover 2
     intc_1 // 4096
     %
-    bytec 4 // 0x3d
+    bytec 5 // 0x3d
     replace3
     stores
     pushbytes 0x02
@@ -1519,7 +1707,7 @@ InlineAsmBase64.encode_switch_case_0@90:
     uncover 2
     intc_1 // 4096
     %
-    bytec 4 // 0x3d
+    bytec 5 // 0x3d
     replace3
     stores
     b InlineAsmBase64.encode_switch_case_next@92
@@ -1533,13 +1721,13 @@ InlineAsmBase64.encode_ternary_false@86:
     cover 4
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1554,13 +1742,13 @@ InlineAsmBase64.encode_ternary_false@80:
     cover 4
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1575,13 +1763,13 @@ InlineAsmBase64.encode_ternary_false@40:
     cover 4
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1597,7 +1785,7 @@ InlineAsmBase64.encode_else_body@37:
     cover 2
     -
     dig 4
-    intc_2 // 0
+    intc_3 // 0
     dig 2
     extract3
     swap
@@ -1607,7 +1795,7 @@ InlineAsmBase64.encode_else_body@37:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -1634,7 +1822,7 @@ InlineAsmBase64.encode_else_body@34:
     uncover 13
     dup
     cover 5
-    intc_2 // 0
+    intc_3 // 0
     dig 2
     extract3
     swap
@@ -1644,7 +1832,7 @@ InlineAsmBase64.encode_else_body@34:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -1671,13 +1859,13 @@ InlineAsmBase64.encode_ternary_false@31:
     cover 4
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     uncover 11
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1692,13 +1880,13 @@ InlineAsmBase64.encode_ternary_false@28:
     cover 4
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1713,8 +1901,8 @@ InlineAsmBase64.encode_else_body@19:
     dup
     cover 2
     -
-    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000040
-    intc_2 // 0
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    intc_3 // 0
     dig 2
     extract3
     swap
@@ -1724,14 +1912,14 @@ InlineAsmBase64.encode_else_body@19:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
     intc_0 // 32
     dig 3
     -
-    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000040
     uncover 4
     uncover 2
     extract3
@@ -1751,13 +1939,13 @@ InlineAsmBase64.encode_ternary_false@14:
     cover 4
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     uncover 12
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1772,13 +1960,13 @@ InlineAsmBase64.encode_ternary_false@11:
     cover 4
     extract3
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     loads
     intc_0 // 32
     uncover 3
     -
-    intc_2 // 0
+    intc_3 // 0
     swap
     extract3
     concat
@@ -1794,7 +1982,7 @@ InlineAsmBase64.encode_else_body@2:
     cover 2
     -
     dig 4
-    intc_2 // 0
+    intc_3 // 0
     dig 2
     extract3
     swap
@@ -1804,7 +1992,7 @@ InlineAsmBase64.encode_else_body@2:
     swap
     stores
     swap
-    intc_3 // 1
+    intc_2 // 1
     +
     dup
     loads
@@ -1823,18 +2011,18 @@ InlineAsmBase64.encode_else_body@2:
 // __solfn_632(data: bytes) -> bytes:
 NoAsmBase64.encode:
     proto 1 1
-    intc_2 // 0
+    intc_3 // 0
     frame_dig -1
     len
     itob
     dup
-    intc_2 // 0
+    intc_3 // 0
     itob
     dup
     cover 3
     b==
     bz NoAsmBase64.encode_after_if_else@2
-    pushbytes ""
+    bytec_3 // ""
     frame_bury 0
     retsub
 
@@ -1891,7 +2079,7 @@ NoAsmBase64.encode_while_top@3:
     b<
     bz NoAsmBase64.encode_else_body@6
     dup
-    bytec_3 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     frame_dig 0
@@ -1910,7 +2098,7 @@ NoAsmBase64.encode_while_top@3:
     cover 2
 
 NoAsmBase64.encode_after_if_else@7:
-    intc_3 // 1
+    intc_2 // 1
     itob
     dig 1
     b+
@@ -1922,7 +2110,7 @@ NoAsmBase64.encode_after_if_else@7:
     b<
     bz NoAsmBase64.encode_else_body@12
     dup
-    bytec_3 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     frame_dig 0
@@ -1944,7 +2132,7 @@ NoAsmBase64.encode_after_if_else@7:
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 13 // 0x01000000
+    bytec 14 // 0x01000000
     b%
     concat
     dup
@@ -1960,7 +2148,7 @@ NoAsmBase64.encode_after_if_else@13:
     b<=
     assert // overflow
     dup
-    bytec_3 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     frame_dig 0
@@ -1983,7 +2171,7 @@ NoAsmBase64.encode_after_if_else@13:
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 13 // 0x01000000
+    bytec 14 // 0x01000000
     b%
     dig 2
     swap
@@ -1996,19 +2184,19 @@ NoAsmBase64.encode_after_if_else@13:
     uncover 3
     +
     dup
-    intc 7 // 16777215
+    intc 8 // 16777215
     <=
     assert // overflow
     uncover 4
     +
     dup
-    intc 7 // 16777215
+    intc 8 // 16777215
     <=
     assert // overflow
     dup
     itob
     dup
-    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000040000
+    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000040000
     b/
     dig 4
     swap
@@ -2020,9 +2208,9 @@ NoAsmBase64.encode_after_if_else@13:
     extract_uint64
     pushint 63
     &
-    bytec 8 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    bytec 10 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     swap
-    intc_3 // 1
+    intc_2 // 1
     extract3
     frame_dig 1
     dup
@@ -2033,7 +2221,7 @@ NoAsmBase64.encode_after_if_else@13:
     b<=
     assert // overflow
     dig 1
-    bytec_3 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     dig 6
@@ -2049,7 +2237,7 @@ NoAsmBase64.encode_after_if_else@13:
     uncover 3
     replace3
     dig 2
-    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000001000
+    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000001000
     b/
     dig 6
     swap
@@ -2061,9 +2249,9 @@ NoAsmBase64.encode_after_if_else@13:
     extract_uint64
     pushint 63
     &
-    bytec 8 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    bytec 10 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     swap
-    intc_3 // 1
+    intc_2 // 1
     extract3
     dig 2
     bytec_1 // 0x01
@@ -2073,7 +2261,7 @@ NoAsmBase64.encode_after_if_else@13:
     b<=
     assert // overflow
     dig 3
-    bytec_3 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     dig 7
@@ -2088,7 +2276,7 @@ NoAsmBase64.encode_after_if_else@13:
     cover 3
     replace3
     uncover 2
-    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000040
     b/
     dig 5
     swap
@@ -2100,9 +2288,9 @@ NoAsmBase64.encode_after_if_else@13:
     extract_uint64
     pushint 63
     &
-    bytec 8 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    bytec 10 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     swap
-    intc_3 // 1
+    intc_2 // 1
     extract3
     dig 2
     bytec_1 // 0x01
@@ -2112,7 +2300,7 @@ NoAsmBase64.encode_after_if_else@13:
     b<=
     assert // overflow
     dig 3
-    bytec_3 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     dig 6
@@ -2129,9 +2317,9 @@ NoAsmBase64.encode_after_if_else@13:
     uncover 2
     pushint 63
     &
-    bytec 8 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    bytec 10 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
     swap
-    intc_3 // 1
+    intc_2 // 1
     extract3
     dig 2
     bytec_1 // 0x01
@@ -2141,7 +2329,7 @@ NoAsmBase64.encode_after_if_else@13:
     b<=
     assert // overflow
     dig 3
-    bytec_3 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     uncover 5
@@ -2157,7 +2345,7 @@ NoAsmBase64.encode_after_if_else@13:
     replace3
     cover 3
     swap
-    bytec 6 // 0x03
+    bytec 8 // 0x03
     b+
     dup
     bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -2169,12 +2357,12 @@ NoAsmBase64.encode_after_if_else@13:
 
 NoAsmBase64.encode_else_body@12:
     pop
-    intc_2 // 0
+    intc_3 // 0
     b NoAsmBase64.encode_after_if_else@13
 
 NoAsmBase64.encode_else_body@6:
     pop
-    intc_2 // 0
+    intc_3 // 0
     cover 2
     b NoAsmBase64.encode_after_if_else@7
 
@@ -2183,7 +2371,7 @@ NoAsmBase64.encode_after_while@26:
     uncover 2
     b%
     dup
-    intc_3 // 1
+    intc_2 // 1
     itob
     b==
     bz NoAsmBase64.encode_else_body@28
@@ -2193,7 +2381,7 @@ NoAsmBase64.encode_after_while@26:
     bytec_1 // 0x01
     b-
     dup
-    bytec_3 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     frame_dig 0
@@ -2208,13 +2396,13 @@ NoAsmBase64.encode_after_while@26:
     extract_uint64
     uncover 3
     swap
-    bytec 4 // 0x3d
+    bytec 5 // 0x3d
     replace3
     swap
     bytec_1 // 0x01
     b-
     dup
-    bytec_3 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     uncover 2
@@ -2225,7 +2413,7 @@ NoAsmBase64.encode_after_while@26:
     pushint 8
     -
     extract_uint64
-    bytec 4 // 0x3d
+    bytec 5 // 0x3d
     replace3
 
 NoAsmBase64.encode_after_if_else@31:
@@ -2240,7 +2428,7 @@ NoAsmBase64.encode_else_body@28:
     bytec_1 // 0x01
     b-
     dup
-    bytec_3 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     frame_dig 0
@@ -2251,6 +2439,132 @@ NoAsmBase64.encode_else_body@28:
     pushint 8
     -
     extract_uint64
-    bytec 4 // 0x3d
+    bytec 5 // 0x3d
     replace3
     b NoAsmBase64.encode_after_if_else@31
+
+
+// /tmp/multisource_3l82a1nq/base64.sol.test.encode_inline_asm(data: bytes) -> bytes:
+encode_inline_asm:
+    proto 1 1
+    txn GroupIndex
+    bz encode_inline_asm_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+encode_inline_asm_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub InlineAsmBase64.encode
+    retsub
+
+encode_inline_asm_ternary_false@2:
+    intc_3 // 0
+    b encode_inline_asm_ternary_merge@3
+
+
+// /tmp/multisource_3l82a1nq/base64.sol.test.encode_no_asm(data: bytes) -> bytes:
+encode_no_asm:
+    proto 1 1
+    txn GroupIndex
+    bz encode_no_asm_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+encode_no_asm_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub NoAsmBase64.encode
+    retsub
+
+encode_no_asm_ternary_false@2:
+    intc_3 // 0
+    b encode_no_asm_ternary_merge@3
+
+
+// /tmp/multisource_3l82a1nq/base64.sol.test.encode_inline_asm_large() -> void:
+encode_inline_asm_large:
+    proto 0 0
+    txn GroupIndex
+    bz encode_inline_asm_large_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+encode_inline_asm_large_ternary_merge@3:
+    !
+    assert // not payable
+    intc_3 // 0
+    itob
+
+encode_inline_asm_large_while_top@4:
+    pushint 1000
+    itob
+    dig 1
+    b>
+    bz encode_inline_asm_large_after_while@6
+    bytec 15 // "foo"
+    callsub InlineAsmBase64.encode
+    pop
+    bytec_1 // 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b encode_inline_asm_large_while_top@4
+
+encode_inline_asm_large_after_while@6:
+    retsub
+
+encode_inline_asm_large_ternary_false@2:
+    intc_3 // 0
+    b encode_inline_asm_large_ternary_merge@3
+
+
+// /tmp/multisource_3l82a1nq/base64.sol.test.encode_no_asm_large() -> void:
+encode_no_asm_large:
+    proto 0 0
+    txn GroupIndex
+    bz encode_no_asm_large_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+encode_no_asm_large_ternary_merge@3:
+    !
+    assert // not payable
+    intc_3 // 0
+    itob
+
+encode_no_asm_large_while_top@4:
+    pushint 1000
+    itob
+    dig 1
+    b>
+    bz encode_no_asm_large_after_while@6
+    bytec 15 // "foo"
+    callsub NoAsmBase64.encode
+    pop
+    bytec_1 // 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b encode_no_asm_large_while_top@4
+
+encode_no_asm_large_after_while@6:
+    retsub
+
+encode_no_asm_large_ternary_false@2:
+    intc_3 // 0
+    b encode_no_asm_large_ternary_merge@3

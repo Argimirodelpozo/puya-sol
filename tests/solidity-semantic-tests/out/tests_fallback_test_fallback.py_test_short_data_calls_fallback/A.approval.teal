@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/short_data_calls_fallback.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "x" 0x
+    intcblock 1 0 32 2
+    bytecblock "x" 0x 0x151f7c75
     bytec_1 // ""
     pushint 4096
     bzero
@@ -32,49 +32,194 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
     txn NumAppArgs
-    bnz main_after_if_else@5
-    txn OnCompletion
-    bnz main_after_if_else@5
-    callsub __fallback
-    intc_0 // 1
-    return
-
-main_after_if_else@5:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    bz main_after_if_else@16
-    pushbytess 0x12b87db6 0x1bf9882b 0x7c1072af // method "fow()void", method "__fallback()void", method "x()uint256"
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_fow_route@11 main___fallback_route@12 main_x_route@13
-
-main_after_if_else@16:
-    intc_1 // 0
-    bury 1
-
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/short_data_calls_fallback.sol.A.__puya_arc4_router__@17:
-    dup
-    bnz main_after_if_else@8
-    txn OnCompletion
-    bnz main_after_if_else@8
-    callsub __fallback
-    intc_0 // 1
-    bury 1
-
-main_after_if_else@8:
-    return
-
-main_x_route@13:
+    pushbytes 0xd88e0b00
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@20
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    callsub fow
+    bytec_2 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x0c55699c
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    callsub x
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn NumAppArgs
+    bnz main_after_if_else@19
+    txn OnCompletion
+    bnz main_after_if_else@19
+    callsub __fallback
+    intc_0 // 1
+    return
+
+main_after_if_else@19:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    bz main_after_if_else@30
+    pushbytess 0x12b87db6 0x1bf9882b 0x7c1072af // method "fow()void", method "__fallback()void", method "x()uint256"
+    txna ApplicationArgs 0
+    match main_fow_route@25 main___fallback_route@26 main_x_route@27
+
+main_after_if_else@30:
+    intc_1 // 0
+    bury 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/short_data_calls_fallback.sol.A.__puya_arc4_router__@31:
+    dup
+    bnz main_after_if_else@22
+    txn OnCompletion
+    bnz main_after_if_else@22
+    callsub __fallback
+    intc_0 // 1
+    bury 1
+
+main_after_if_else@22:
+    return
+
+main_x_route@27:
+    callsub x
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/short_data_calls_fallback.sol.A.__puya_arc4_router__@31
+
+main___fallback_route@26:
+    callsub __fallback
+    intc_0 // 1
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/short_data_calls_fallback.sol.A.__puya_arc4_router__@31
+
+main_fow_route@25:
+    callsub fow
+    intc_0 // 1
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/short_data_calls_fallback.sol.A.__puya_arc4_router__@31
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/short_data_calls_fallback.sol.A.fow() -> void:
+fow:
+    txn GroupIndex
+    bz fow_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fow_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 3
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+    retsub
+
+fow_ternary_false@2:
+    intc_1 // 0
+    b fow_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/short_data_calls_fallback.sol.A.__fallback() -> void:
+__fallback:
+    txn GroupIndex
+    bz __fallback_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__fallback_ternary_merge@3:
+    !
+    assert // not payable
+    intc_3 // 2
+    itob
+    bytec_0 // "x"
+    swap
+    app_global_put
+    retsub
+
+__fallback_ternary_false@2:
+    intc_1 // 0
+    b __fallback_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/short_data_calls_fallback.sol.A.x() -> bytes:
+x:
+    txn GroupIndex
+    bz x_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@3:
     !
     assert // not payable
     intc_1 // 0
@@ -91,68 +236,8 @@ main_ternary_merge@21:
     intc_2 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/short_data_calls_fallback.sol.A.__puya_arc4_router__@17
-
-main_ternary_false@20:
-    intc_1 // 0
-    b main_ternary_merge@21
-
-main___fallback_route@12:
-    callsub __fallback
-    intc_0 // 1
-    bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/short_data_calls_fallback.sol.A.__puya_arc4_router__@17
-
-main_fow_route@11:
-    txn GroupIndex
-    bz main_ternary_false@27
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@28:
-    !
-    assert // not payable
-    pushint 3
-    itob
-    bytec_0 // "x"
-    swap
-    app_global_put
-    intc_0 // 1
-    bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/short_data_calls_fallback.sol.A.__puya_arc4_router__@17
-
-main_ternary_false@27:
-    intc_1 // 0
-    b main_ternary_merge@28
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/short_data_calls_fallback.sol.A.__fallback() -> void:
-__fallback:
-    txn GroupIndex
-    bz __fallback_ternary_false@2
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-__fallback_ternary_merge@3:
-    !
-    assert // not payable
-    pushint 2
-    itob
-    bytec_0 // "x"
-    swap
-    app_global_put
     retsub
 
-__fallback_ternary_false@2:
+x_ternary_false@2:
     intc_1 // 0
-    b __fallback_ternary_merge@3
+    b x_ternary_merge@3

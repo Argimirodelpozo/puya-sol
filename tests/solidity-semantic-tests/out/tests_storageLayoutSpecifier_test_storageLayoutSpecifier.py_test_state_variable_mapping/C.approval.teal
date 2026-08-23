@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_mapping.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 2
-    bytecblock "__ctor_pending" "locked" "rooms" 0x7003fa70d18253289a8c29a46db5d451ac9d12752f2d5ab147a158e9c36aaa87 "Empty" 0xf9d2c236c411163677b04ed91500db3d6f4ee3c00bc4b3f58cb790b244df39c4 0xf22cb7026021c45fe38491bc6356f69c76632e968f7ed9ab371f50875e80ffe2 0x57dd80aaa615bea7448a87dbe71d4c4d330b8140de01d2818d2700af225ffe96
+    intcblock 1 32 0 2
+    bytecblock "__ctor_pending" 0x151f7c75 "locked" "rooms" 0x7003fa70d18253289a8c29a46db5d451ac9d12752f2d5ab147a158e9c36aaa87 "Empty" 0xf9d2c236c411163677b04ed91500db3d6f4ee3c00bc4b3f58cb790b244df39c4 0xf22cb7026021c45fe38491bc6356f69c76632e968f7ed9ab371f50875e80ffe2 0x57dd80aaa615bea7448a87dbe71d4c4d330b8140de01d2818d2700af225ffe96
     pushint 4096
     bzero
     dup
@@ -32,104 +32,180 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x1b2fb4f5 0x83cd9325 // method "__postInit()void", method "setup()void", method "open(uint256)string"
-    txna ApplicationArgs 0
-    match main___postInit_route@5 main_setup_route@6 main_open_route@7
-    err
-
-main_open_route@7:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xba0bba40
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@13
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@14:
+main_ternary_merge@8:
     !
     assert // not payable
-    intc_2 // 32
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    dup
-    bytec_1 // "locked"
-    concat
-    sha256
-    dup
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    bz main_after_if_else@16
-    popn 2
-    pushbytes "Locked"
+    callsub setup
+    bytec_1 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_mapping.sol.C.open@17:
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x690e7c09
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_1 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub open
+    dup
+    len
+    dup
     itob
-    extract 6 2
+    uncover 3
     swap
     concat
-    pushbytes 0x151f7c75
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
     log
     intc_0 // 1
     return
 
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
 main_after_if_else@16:
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
+    txn OnCompletion
     !
     assert
-    bytec_2 // "rooms"
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x1b2fb4f5 0x83cd9325 // method "__postInit()void", method "setup()void", method "open(uint256)string"
+    txna ApplicationArgs 0
+    match main___postInit_route@19 main_setup_route@20 main_open_route@21
+    err
+
+main_open_route@21:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub open
+    dup
+    len
+    itob
+    extract 6 2
+    swap
     concat
-    sha256
-    box_get
-    pushbytes 0x
-    cover 2
-    select
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_mapping.sol.C.open@17
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
 
-main_ternary_false@13:
-    intc_1 // 0
-    b main_ternary_merge@14
+main_setup_route@20:
+    callsub setup
+    intc_0 // 1
+    return
 
-main_setup_route@6:
+main___postInit_route@19:
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_0 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_2 // "locked"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_3 // "rooms"
+    intc_3 // 2
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_mapping.sol.C.setup() -> void:
+setup:
     txn GroupIndex
-    bz main_ternary_false@21
+    bz setup_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@22:
+setup_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 1
@@ -137,7 +213,7 @@ main_ternary_merge@22:
     pushbytes 0x5d8d2f172e6d8ae4dd89369dfd1340c3f0fece333bb9abf29f922b771e55d176
     dig 1
     box_put
-    intc_1 // 0
+    intc_2 // 0
     itob
     pushbytes 0xda58e73fb23e6f428aaa11db828c3acb6f10686afb59fd57771b7a3fa676f07e
     dig 1
@@ -148,55 +224,96 @@ main_ternary_merge@22:
     pushbytes 0x8ae38631cd5c17ddc7297630d37acdf765f34ec14d650dab89c7b549acf5817c
     swap
     box_put
-    bytec_3 // 0x7003fa70d18253289a8c29a46db5d451ac9d12752f2d5ab147a158e9c36aaa87
+    bytec 4 // 0x7003fa70d18253289a8c29a46db5d451ac9d12752f2d5ab147a158e9c36aaa87
     box_del
     pop
-    bytec_3 // 0x7003fa70d18253289a8c29a46db5d451ac9d12752f2d5ab147a158e9c36aaa87
-    bytec 4 // "Empty"
+    bytec 4 // 0x7003fa70d18253289a8c29a46db5d451ac9d12752f2d5ab147a158e9c36aaa87
+    bytec 5 // "Empty"
     box_put
-    bytec 5 // 0xf9d2c236c411163677b04ed91500db3d6f4ee3c00bc4b3f58cb790b244df39c4
+    bytec 6 // 0xf9d2c236c411163677b04ed91500db3d6f4ee3c00bc4b3f58cb790b244df39c4
     box_del
     pop
-    bytec 5 // 0xf9d2c236c411163677b04ed91500db3d6f4ee3c00bc4b3f58cb790b244df39c4
+    bytec 6 // 0xf9d2c236c411163677b04ed91500db3d6f4ee3c00bc4b3f58cb790b244df39c4
     pushbytes "Monster"
     box_put
-    bytec 6 // 0xf22cb7026021c45fe38491bc6356f69c76632e968f7ed9ab371f50875e80ffe2
+    bytec 7 // 0xf22cb7026021c45fe38491bc6356f69c76632e968f7ed9ab371f50875e80ffe2
     box_del
     pop
-    bytec 6 // 0xf22cb7026021c45fe38491bc6356f69c76632e968f7ed9ab371f50875e80ffe2
+    bytec 7 // 0xf22cb7026021c45fe38491bc6356f69c76632e968f7ed9ab371f50875e80ffe2
     pushbytes "Treasure"
     box_put
-    bytec 7 // 0x57dd80aaa615bea7448a87dbe71d4c4d330b8140de01d2818d2700af225ffe96
+    bytec 8 // 0x57dd80aaa615bea7448a87dbe71d4c4d330b8140de01d2818d2700af225ffe96
     box_del
     pop
-    bytec 7 // 0x57dd80aaa615bea7448a87dbe71d4c4d330b8140de01d2818d2700af225ffe96
-    bytec 4 // "Empty"
+    bytec 8 // 0x57dd80aaa615bea7448a87dbe71d4c4d330b8140de01d2818d2700af225ffe96
+    bytec 5 // "Empty"
     box_put
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
+setup_ternary_false@2:
+    intc_2 // 0
+    b setup_ternary_merge@3
 
-main___postInit_route@5:
-    bytec_0 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_0 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    bytec_1 // "locked"
-    intc_3 // 2
-    box_create
-    pop
-    bytec_2 // "rooms"
-    intc_3 // 2
-    box_create
-    pop
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_mapping.sol.C.open(__arc4_x: bytes) -> bytes:
+open:
+    proto 1 1
+    txn GroupIndex
+    bz open_ternary_false@2
+    txn GroupIndex
     intc_0 // 1
-    return
+    -
+    gtxns Amount
+
+open_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dup
+    bytec_2 // "locked"
+    concat
+    sha256
+    dup
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    bz open_after_if_else@5
+    pushbytes "Locked"
+    frame_bury 0
+    retsub
+
+open_after_if_else@5:
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    !
+    assert
+    bytec_3 // "rooms"
+    concat
+    sha256
+    box_get
+    pushbytes 0x
+    cover 2
+    select
+    retsub
+
+open_ternary_false@2:
+    intc_2 // 0
+    b open_ternary_merge@3

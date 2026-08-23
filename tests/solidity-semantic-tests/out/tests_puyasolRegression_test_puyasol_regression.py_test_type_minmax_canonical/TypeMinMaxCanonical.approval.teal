@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/type_minmax_canonical.sol.TypeMinMaxCanonical.approval_program() -> uint64:
 main:
-    intcblock 1 0 8 18446744073709551488
-    bytecblock 0x151f7c75 0x0100 0x80 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    intcblock 1 0 32 8 128 18446744073709551488
+    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff80000000000000000000000000000000 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x0100
     pushint 4096
     bzero
     dup
@@ -29,82 +29,52 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xfbd1025d 0xaa885b70 0xe40d6cf6 0x050afd00 0x5092ba70 0xdf4adfc1 0xd16f79e0 0x2bf0ed7a 0x2c61b493 // method "mn8()uint256", method "mn16()uint256", method "mn128()uint256", method "mn256()uint256", method "mx8()uint256", method "mxu256()uint256", method "minIsLit8(uint64)bool", method "minIsLit128(uint128)bool", method "addMin8(uint64)uint256"
-    txna ApplicationArgs 0
-    match main_mn8_route@5 main_mn16_route@6 main_mn128_route@7 main_mn256_route@8 main_mx8_route@9 main_mxu256_route@10 main_minIsLit8_route@11 main_minIsLit128_route@12 main_addMin8_route@13
-    err
-
-main_addMin8_route@13:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 8
+    bnz main_after_if_else@12
+    txn NumAppArgs
+    pushint 2
     ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
+    bz main_after_if_else@12
+    txna ApplicationArgs 0
+    pushbytes 0x3316f527
+    ==
+    bz main_after_if_else@12
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@8:
     !
     assert // not payable
-    dup
-    pushint 127
-    <=
-    bnz main_bool_true@22
-    dup
-    intc_3 // 18446744073709551488
-    >=
-    bz main_bool_false@23
-
-main_bool_true@22:
-    intc_0 // 1
-
-main_bool_merge@24:
-    assert // ABI validation
-    intc_2 // 8
+    intc_3 // 8
     bzero
-    swap
-    itob
-    bytec_1 // 0x0100
-    b%
-    bytec_2 // 0x80
-    b+
-    bytec_1 // 0x0100
-    b%
+    callsub mn8
     concat
     dup
     len
-    intc_2 // 8
+    intc_3 // 8
     -
-    intc_2 // 8
+    intc_3 // 8
     extract3
-    pushbytes 0xff
-    b&
     dup
-    bytec_2 // 0x80
-    b>=
-    bz main_ternary_false@26
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
-    b+
+    intc_1 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@10
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-main_ternary_merge@27:
+main_ternary_merge@11:
+    swap
     dup
     len
-    pushint 32
-    <=
-    assert // overflow
-    pushint 32
-    bzero
-    b|
+    intc_2 // 32
+    swap
+    -
+    swap
+    replace3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -112,60 +82,173 @@ main_ternary_merge@27:
     intc_0 // 1
     return
 
-main_ternary_false@26:
-    b main_ternary_merge@27
+main_ternary_false@10:
+    intc_2 // 32
+    bzero
+    b main_ternary_merge@11
 
-main_bool_false@23:
+main_ternary_false@7:
     intc_1 // 0
-    b main_bool_merge@24
+    b main_ternary_merge@8
 
-main_ternary_false@19:
-    intc_1 // 0
-    b main_ternary_merge@20
-
-main_minIsLit128_route@12:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 16
+main_after_if_else@12:
+    txn OnCompletion
+    bnz main_after_if_else@22
+    txn NumAppArgs
+    pushint 2
     ==
-    assert // invalid number of bytes for arc4.uint128
+    bz main_after_if_else@22
+    txna ApplicationArgs 0
+    pushbytes 0xcc84d5b6
+    ==
+    bz main_after_if_else@22
     txn GroupIndex
-    bz main_ternary_false@31
+    bz main_ternary_false@17
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@32:
+main_ternary_merge@18:
     !
     assert // not payable
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b&
+    intc_3 // 8
+    bzero
+    callsub mn16
+    concat
     dup
-    bytec 4 // 0x80000000000000000000000000000000
-    b>=
-    bz main_ternary_false@34
-    bytec 5 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
-    b+
+    len
+    intc_3 // 8
+    -
+    intc_3 // 8
+    extract3
+    dup
+    intc_1 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@20
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-main_ternary_merge@35:
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
-    b&
+main_ternary_merge@21:
+    swap
     dup
-    bytec 4 // 0x80000000000000000000000000000000
-    b>=
+    len
+    intc_2 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@20:
+    intc_2 // 32
+    bzero
+    b main_ternary_merge@21
+
+main_ternary_false@17:
+    intc_1 // 0
+    b main_ternary_merge@18
+
+main_after_if_else@22:
+    txn OnCompletion
+    bnz main_after_if_else@32
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@32
+    txna ApplicationArgs 0
+    pushbytes 0xd84c1d56
+    ==
+    bz main_after_if_else@32
+    txn GroupIndex
+    bz main_ternary_false@27
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@28:
+    !
+    assert // not payable
+    callsub mn128
+    dup
+    intc_1 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@30
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@31:
+    swap
+    dup
+    len
+    intc_2 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@30:
+    intc_2 // 32
+    bzero
+    b main_ternary_merge@31
+
+main_ternary_false@27:
+    intc_1 // 0
+    b main_ternary_merge@28
+
+main_after_if_else@32:
+    txn OnCompletion
+    bnz main_after_if_else@42
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@42
+    txna ApplicationArgs 0
+    pushbytes 0x57d58baa
+    ==
+    bz main_after_if_else@42
+    txn GroupIndex
     bz main_ternary_false@37
-    bytec 5 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
-    b+
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
 
 main_ternary_merge@38:
-    pushbytes 0xffffffffffffffffffffffffffffffff80000000000000000000000000000000
-    b==
-    pushbytes 0x00
+    !
+    assert // not payable
+    callsub mn256
+    dup
     intc_1 // 0
-    uncover 2
-    setbit
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@40
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@41:
+    swap
+    dup
+    len
+    intc_2 // 32
+    swap
+    -
+    swap
+    replace3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -173,64 +256,63 @@ main_ternary_merge@38:
     intc_0 // 1
     return
 
+main_ternary_false@40:
+    intc_2 // 32
+    bzero
+    b main_ternary_merge@41
+
 main_ternary_false@37:
+    intc_1 // 0
     b main_ternary_merge@38
 
-main_ternary_false@34:
-    b main_ternary_merge@35
-
-main_ternary_false@31:
-    intc_1 // 0
-    b main_ternary_merge@32
-
-main_minIsLit8_route@11:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 8
+main_after_if_else@42:
+    txn OnCompletion
+    bnz main_after_if_else@52
+    txn NumAppArgs
+    pushint 2
     ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
+    bz main_after_if_else@52
+    txna ApplicationArgs 0
+    pushbytes 0xa274644f
+    ==
+    bz main_after_if_else@52
     txn GroupIndex
-    bz main_ternary_false@43
+    bz main_ternary_false@47
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@44:
+main_ternary_merge@48:
     !
     assert // not payable
+    intc_3 // 8
+    bzero
+    callsub mx8
+    concat
     dup
-    pushint 127
-    <=
-    bnz main_bool_true@46
+    len
+    intc_3 // 8
+    -
+    intc_3 // 8
+    extract3
     dup
-    intc_3 // 18446744073709551488
-    >=
-    bz main_bool_false@47
-
-main_bool_true@46:
-    intc_0 // 1
-
-main_bool_merge@48:
-    assert // ABI validation
-    pushint 256
-    %
-    dup
-    pushint 128
+    intc_1 // 0
+    getbyte
+    intc 4 // 128
     >=
     bz main_ternary_false@50
-    pushint 18446744073709551360
-    +
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@51:
-    intc_3 // 18446744073709551488
-    ==
-    pushbytes 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
+    swap
+    dup
+    len
+    intc_2 // 32
+    swap
+    -
+    swap
+    replace3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -239,117 +321,223 @@ main_ternary_merge@51:
     return
 
 main_ternary_false@50:
+    intc_2 // 32
+    bzero
     b main_ternary_merge@51
 
-main_bool_false@47:
+main_ternary_false@47:
     intc_1 // 0
-    b main_bool_merge@48
+    b main_ternary_merge@48
 
-main_ternary_false@43:
-    intc_1 // 0
-    b main_ternary_merge@44
-
-main_mxu256_route@10:
+main_after_if_else@52:
+    txn OnCompletion
+    bnz main_after_if_else@59
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@59
+    txna ApplicationArgs 0
+    pushbytes 0xb382aa02
+    ==
+    bz main_after_if_else@59
     txn GroupIndex
-    bz main_ternary_false@56
+    bz main_ternary_false@57
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@57:
+main_ternary_merge@58:
     !
     assert // not payable
-    pushbytes 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intc_2 // 32
+    bzero
+    callsub mxu256
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@56:
+main_ternary_false@57:
     intc_1 // 0
-    b main_ternary_merge@57
+    b main_ternary_merge@58
 
-main_mx8_route@9:
+main_after_if_else@59:
+    txn OnCompletion
+    bnz main_after_if_else@69
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@69
+    txna ApplicationArgs 0
+    pushbytes 0x96fabd61
+    ==
+    bz main_after_if_else@69
     txn GroupIndex
-    bz main_ternary_false@61
+    bz main_ternary_false@64
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@62:
+main_ternary_merge@65:
     !
     assert // not payable
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000000007f
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@61:
-    intc_1 // 0
-    b main_ternary_merge@62
-
-main_mn256_route@8:
-    txn GroupIndex
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dupn 2
+    extract 0 31
+    swap
+    pushint 31
+    getbyte
+    intc 4 // 128
+    >=
     bz main_ternary_false@67
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@68:
-    !
-    assert // not payable
-    pushbytes 0x151f7c758000000000000000000000000000000000000000000000000000000000000000
+    ==
+    assert // invalid EVM ABI signed integer padding
+    intc_2 // 32
+    bzero
+    swap
+    pushint 24
+    extract_uint64
+    callsub minIsLit8
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
 main_ternary_false@67:
-    intc_1 // 0
+    pushint 31
+    bzero
     b main_ternary_merge@68
 
-main_mn128_route@7:
+main_ternary_false@64:
+    intc_1 // 0
+    b main_ternary_merge@65
+
+main_after_if_else@69:
+    txn OnCompletion
+    bnz main_after_if_else@79
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@79
+    txna ApplicationArgs 0
+    pushbytes 0xab93228b
+    ==
+    bz main_after_if_else@79
     txn GroupIndex
-    bz main_ternary_false@72
+    bz main_ternary_false@74
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@73:
+main_ternary_merge@75:
     !
     assert // not payable
-    pushbytes 0x151f7c75ffffffffffffffffffffffffffffffff80000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dupn 2
+    extract 0 16
+    swap
+    pushint 16
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@77
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
 
-main_ternary_false@72:
-    intc_1 // 0
-    b main_ternary_merge@73
-
-main_mn16_route@6:
-    txn GroupIndex
-    bz main_ternary_false@78
-    txn GroupIndex
-    intc_0 // 1
+main_ternary_merge@78:
+    ==
+    assert // invalid EVM ABI signed integer padding
+    intc_2 // 32
+    bzero
+    pushint 16
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    pushint 16
     -
-    gtxns Amount
-
-main_ternary_merge@79:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8000
+    pushint 16
+    extract3
+    dup
+    len
+    pushint 16
+    <=
+    assert // overflow
+    b|
+    callsub minIsLit128
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@78:
-    intc_1 // 0
-    b main_ternary_merge@79
+main_ternary_false@77:
+    pushint 16
+    bzero
+    b main_ternary_merge@78
 
-main_mn8_route@5:
+main_ternary_false@74:
+    intc_1 // 0
+    b main_ternary_merge@75
+
+main_after_if_else@79:
+    txn OnCompletion
+    bnz main_after_if_else@92
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@92
+    txna ApplicationArgs 0
+    pushbytes 0x4a8517aa
+    ==
+    bz main_after_if_else@92
     txn GroupIndex
     bz main_ternary_false@84
     txn GroupIndex
@@ -360,11 +548,492 @@ main_mn8_route@5:
 main_ternary_merge@85:
     !
     assert // not payable
-    pushbytes 0x151f7c75ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80
+    txna ApplicationArgs 1
+    len
+    intc_2 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dupn 2
+    extract 0 31
+    swap
+    pushint 31
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@87
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@88:
+    ==
+    assert // invalid EVM ABI signed integer padding
+    intc_3 // 8
+    bzero
+    swap
+    pushint 24
+    extract_uint64
+    callsub addMin8
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    intc_3 // 8
+    extract3
+    dup
+    intc_1 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@90
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@91:
+    swap
+    dup
+    len
+    intc_2 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
+main_ternary_false@90:
+    intc_2 // 32
+    bzero
+    b main_ternary_merge@91
+
+main_ternary_false@87:
+    pushint 31
+    bzero
+    b main_ternary_merge@88
+
 main_ternary_false@84:
     intc_1 // 0
     b main_ternary_merge@85
+
+main_after_if_else@92:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xfbd1025d 0xaa885b70 0xe40d6cf6 0x050afd00 0x5092ba70 0xdf4adfc1 0xd16f79e0 0x2bf0ed7a 0x2c61b493 // method "mn8()uint256", method "mn16()uint256", method "mn128()uint256", method "mn256()uint256", method "mx8()uint256", method "mxu256()uint256", method "minIsLit8(uint64)bool", method "minIsLit128(uint128)bool", method "addMin8(uint64)uint256"
+    txna ApplicationArgs 0
+    match main_mn8_route@95 main_mn16_route@96 main_mn128_route@97 main_mn256_route@98 main_mx8_route@99 main_mxu256_route@100 main_minIsLit8_route@101 main_minIsLit128_route@102 main_addMin8_route@103
+    err
+
+main_addMin8_route@103:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub addMin8
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_minIsLit128_route@102:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 16
+    ==
+    assert // invalid number of bytes for arc4.uint128
+    callsub minIsLit128
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_minIsLit8_route@101:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub minIsLit8
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_mxu256_route@100:
+    callsub mxu256
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_mx8_route@99:
+    callsub mx8
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_mn256_route@98:
+    callsub mn256
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_mn128_route@97:
+    callsub mn128
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_mn16_route@96:
+    callsub mn16
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_mn8_route@95:
+    callsub mn8
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/type_minmax_canonical.sol.TypeMinMaxCanonical.mn8() -> bytes:
+mn8:
+    txn GroupIndex
+    bz mn8_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+mn8_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80
+    retsub
+
+mn8_ternary_false@2:
+    intc_1 // 0
+    b mn8_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/type_minmax_canonical.sol.TypeMinMaxCanonical.mn16() -> bytes:
+mn16:
+    txn GroupIndex
+    bz mn16_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+mn16_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8000
+    retsub
+
+mn16_ternary_false@2:
+    intc_1 // 0
+    b mn16_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/type_minmax_canonical.sol.TypeMinMaxCanonical.mn128() -> bytes:
+mn128:
+    txn GroupIndex
+    bz mn128_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+mn128_ternary_merge@3:
+    !
+    assert // not payable
+    bytec 4 // 0xffffffffffffffffffffffffffffffff80000000000000000000000000000000
+    retsub
+
+mn128_ternary_false@2:
+    intc_1 // 0
+    b mn128_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/type_minmax_canonical.sol.TypeMinMaxCanonical.mn256() -> bytes:
+mn256:
+    txn GroupIndex
+    bz mn256_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+mn256_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+mn256_ternary_false@2:
+    intc_1 // 0
+    b mn256_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/type_minmax_canonical.sol.TypeMinMaxCanonical.mx8() -> bytes:
+mx8:
+    txn GroupIndex
+    bz mx8_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+mx8_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000007f
+    retsub
+
+mx8_ternary_false@2:
+    intc_1 // 0
+    b mx8_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/type_minmax_canonical.sol.TypeMinMaxCanonical.mxu256() -> bytes:
+mxu256:
+    txn GroupIndex
+    bz mxu256_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+mxu256_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    retsub
+
+mxu256_ternary_false@2:
+    intc_1 // 0
+    b mxu256_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/type_minmax_canonical.sol.TypeMinMaxCanonical.minIsLit8(a: uint64) -> uint64:
+minIsLit8:
+    proto 1 1
+    txn GroupIndex
+    bz minIsLit8_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+minIsLit8_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    pushint 127
+    <=
+    bnz minIsLit8_bool_true@5
+    frame_dig -1
+    intc 5 // 18446744073709551488
+    >=
+    bz minIsLit8_bool_false@6
+
+minIsLit8_bool_true@5:
+    intc_0 // 1
+
+minIsLit8_bool_merge@7:
+    assert // ABI validation
+    frame_dig -1
+    pushint 256
+    %
+    dup
+    intc 4 // 128
+    >=
+    bz minIsLit8_ternary_false@9
+    pushint 18446744073709551360
+    +
+
+minIsLit8_ternary_merge@10:
+    intc 5 // 18446744073709551488
+    ==
+    retsub
+
+minIsLit8_ternary_false@9:
+    b minIsLit8_ternary_merge@10
+
+minIsLit8_bool_false@6:
+    intc_1 // 0
+    b minIsLit8_bool_merge@7
+
+minIsLit8_ternary_false@2:
+    intc_1 // 0
+    b minIsLit8_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/type_minmax_canonical.sol.TypeMinMaxCanonical.minIsLit128(__arc4_a: bytes) -> uint64:
+minIsLit128:
+    proto 1 1
+    txn GroupIndex
+    bz minIsLit128_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+minIsLit128_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec 5 // 0x80000000000000000000000000000000
+    b>=
+    bz minIsLit128_ternary_false@5
+    bytec 6 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b+
+
+minIsLit128_ternary_merge@6:
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec 5 // 0x80000000000000000000000000000000
+    b>=
+    bz minIsLit128_ternary_false@8
+    bytec 6 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b+
+
+minIsLit128_ternary_merge@9:
+    bytec 4 // 0xffffffffffffffffffffffffffffffff80000000000000000000000000000000
+    b==
+    retsub
+
+minIsLit128_ternary_false@8:
+    b minIsLit128_ternary_merge@9
+
+minIsLit128_ternary_false@5:
+    b minIsLit128_ternary_merge@6
+
+minIsLit128_ternary_false@2:
+    intc_1 // 0
+    b minIsLit128_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/type_minmax_canonical.sol.TypeMinMaxCanonical.addMin8(a: uint64) -> bytes:
+addMin8:
+    proto 1 1
+    txn GroupIndex
+    bz addMin8_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+addMin8_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    pushint 127
+    <=
+    bnz addMin8_bool_true@5
+    frame_dig -1
+    intc 5 // 18446744073709551488
+    >=
+    bz addMin8_bool_false@6
+
+addMin8_bool_true@5:
+    intc_0 // 1
+
+addMin8_bool_merge@7:
+    assert // ABI validation
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    itob
+    bytec 7 // 0x0100
+    b%
+    pushbytes 0x80
+    b+
+    bytec 7 // 0x0100
+    b%
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    intc_3 // 8
+    extract3
+    pushbytes 0xff
+    b&
+    dup
+    pushbytes 0x80
+    b>=
+    bz addMin8_ternary_false@9
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+
+addMin8_ternary_merge@10:
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    retsub
+
+addMin8_ternary_false@9:
+    b addMin8_ternary_merge@10
+
+addMin8_bool_false@6:
+    intc_1 // 0
+    b addMin8_bool_merge@7
+
+addMin8_ternary_false@2:
+    intc_1 // 0
+    b addMin8_ternary_merge@3

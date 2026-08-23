@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/contracts/mapping_contract_key.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 0 255 32
-    bytecblock "__ctor_pending" "table"
+    intcblock 1 32 0 2 255
+    bytecblock "__ctor_pending" 0x151f7c75 "table"
     pushint 4096
     bzero
     dup
@@ -32,20 +32,136 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xc2bc2efc
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    intc_1 // 32
+    bzero
+    swap
+    callsub get
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x43f9acff
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    extract 0 31
+    pushint 31
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    pushint 24
+    extract_uint64
+    callsub set
+    bytec_1 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x89e79924 0xaa60fd25 // method "__postInit()void", method "get(address)uint64", method "set(address,uint64)void"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_get_route@6 main_set_route@7
+    match main___postInit_route@19 main_get_route@20 main_set_route@21
     err
 
-main_set_route@7:
+main_set_route@21:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
@@ -55,78 +171,27 @@ main_set_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    dup
-    intc_2 // 255
-    <=
-    assert // ABI validation
-    intc_2 // 255
-    &
-    swap
-    bytec_1 // "table"
-    concat
-    sha256
-    swap
-    itob
-    box_put
+    callsub set
     intc_0 // 1
     return
 
-main_ternary_false@13:
-    intc_1 // 0
-    b main_ternary_merge@14
-
-main_get_route@6:
+main_get_route@20:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
-    bytec_1 // "table"
-    concat
-    sha256
-    box_get
-    swap
-    btoi
-    intc_1 // 0
-    swap
-    uncover 2
-    select
-    intc_2 // 255
-    &
+    callsub get
     itob
-    pushbytes 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@18:
-    intc_1 // 0
-    b main_ternary_merge@19
-
-main___postInit_route@5:
+main___postInit_route@19:
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -135,11 +200,79 @@ main___postInit_route@5:
     ==
     assert // __postInit callable only by the app creator
     bytec_0 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
-    bytec_1 // "table"
-    pushint 2
+    bytec_2 // "table"
+    intc_3 // 2
     box_create
     pop
     intc_0 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/contracts/mapping_contract_key.sol.test.get(k: bytes) -> uint64:
+get:
+    proto 1 1
+    txn GroupIndex
+    bz get_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+get_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    bytec_2 // "table"
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    intc 4 // 255
+    &
+    retsub
+
+get_ternary_false@2:
+    intc_2 // 0
+    b get_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/contracts/mapping_contract_key.sol.test.set(k: bytes, v: uint64) -> void:
+set:
+    proto 2 0
+    txn GroupIndex
+    bz set_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    intc 4 // 255
+    <=
+    assert // ABI validation
+    frame_dig -1
+    intc 4 // 255
+    &
+    frame_bury -1
+    frame_dig -2
+    bytec_2 // "table"
+    concat
+    sha256
+    frame_dig -1
+    itob
+    box_put
+    retsub
+
+set_ternary_false@2:
+    intc_2 // 0
+    b set_ternary_merge@3

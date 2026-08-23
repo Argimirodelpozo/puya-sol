@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/postinit_transitive_ctor_args.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock 0x "va" "y2" 0x151f7c75
+    intcblock 1 32 0 2
+    bytecblock 0x 0x151f7c75 "va" "y2"
     pushint 4096
     bzero
     dup
@@ -25,10 +25,10 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     txna ApplicationArgs 0
-    bytec_1 // "va"
+    bytec_2 // "va"
     bytec_0 // 0x
     app_global_put
-    bytec_2 // "y2"
+    bytec_3 // "y2"
     bytec_0 // 0x
     app_global_put
     intc_0 // 1
@@ -39,10 +39,10 @@ main:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_1 // "va"
+    bytec_2 // "va"
     swap
     app_global_put
-    bytec_2 // "y2"
+    bytec_3 // "y2"
     swap
     app_global_put
     intc_0 // 1
@@ -50,83 +50,179 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x3d379ce2
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub y2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x3cc5eef8
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub va
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x51d1611d 0x8323b2b3 // method "y2()uint256", method "va()uint256"
     txna ApplicationArgs 0
-    match main_y2_route@5 main_va_route@6
+    match main_y2_route@19 main_va_route@20
     err
 
-main_va_route@6:
-    txn GroupIndex
-    bz main_ternary_false@12
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@13:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_1 // "va"
-    app_global_get_ex
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec_3 // 0x151f7c75
+main_va_route@20:
+    callsub va
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@12:
-    intc_1 // 0
-    b main_ternary_merge@13
-
-main_y2_route@5:
-    txn GroupIndex
-    bz main_ternary_false@17
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@18:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_2 // "y2"
-    app_global_get_ex
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec_3 // 0x151f7c75
+main_y2_route@19:
+    callsub y2
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@17:
-    intc_1 // 0
-    b main_ternary_merge@18
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/postinit_transitive_ctor_args.sol.C.y2() -> bytes:
+y2:
+    txn GroupIndex
+    bz y2_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+y2_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_3 // "y2"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+y2_ternary_false@2:
+    intc_2 // 0
+    b y2_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/postinit_transitive_ctor_args.sol.C.va() -> bytes:
+va:
+    txn GroupIndex
+    bz va_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+va_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_2 // "va"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+va_ternary_false@2:
+    intc_2 // 0
+    b va_ternary_merge@3

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/inline_array_external.sol.Callee.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
-    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -24,10 +24,169 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xe1269918
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 31
+    pushint 31
+    bzero
+    swap
+    dig 1
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    extract 0 31
+    uncover 2
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    intc_0 // 32
+    bzero
+    uncover 2
+    extract 24 8
+    dup
+    bitlen
+    pushint 8
+    <=
+    assert // overflow
+    extract 7 1
+    uncover 2
+    extract 24 8
+    dup
+    bitlen
+    pushint 8
+    <=
+    assert // overflow
+    extract 7 1
+    concat
+    callsub sumU8
+    pop
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x3de074bb
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    concat
+    callsub sumU256
+    pop
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
     txn OnCompletion
     !
     assert
@@ -35,99 +194,117 @@ main_after_if_else@2:
     assert
     pushbytess 0x9ad86bbf 0xfc673658 // method "sumU8(uint8[2])uint256", method "sumU256(uint256[2])uint256"
     txna ApplicationArgs 0
-    match main_sumU8_route@5 main_sumU256_route@6
+    match main_sumU8_route@19 main_sumU256_route@20
     err
 
-main_sumU256_route@6:
+main_sumU256_route@20:
     txna ApplicationArgs 1
     dup
     len
     pushint 64
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
-    txn GroupIndex
-    bz main_ternary_false@12
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@13:
-    !
-    assert // not payable
-    dup
-    extract 0 32 // on error: index access is out of bounds
-    swap
-    extract 32 32 // on error: index access is out of bounds
-    b+
-    dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
+    callsub sumU256
+    pop
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@12:
-    intc_2 // 0
-    b main_ternary_merge@13
-
-main_sumU8_route@5:
+main_sumU8_route@19:
     txna ApplicationArgs 1
     dup
     len
-    pushint 2
+    intc_3 // 2
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 2>
+    callsub sumU8
+    pop
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/inline_array_external.sol.Callee.sumU8(a: bytes) -> bytes, bytes:
+sumU8:
+    proto 1 2
     txn GroupIndex
-    bz main_ternary_false@17
+    bz sumU8_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+sumU8_ternary_merge@3:
     !
     assert // not payable
-    dup
+    frame_dig -1
     intc_2 // 0
     getbyte
     itob
-    swap
-    intc_0 // 1
+    frame_dig -1
+    intc_1 // 1
     getbyte
     itob
     b+
     dup
-    bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    frame_dig -1
+    retsub
 
-main_ternary_false@17:
+sumU8_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@18
+    b sumU8_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/inline_array_external.sol.Callee.sumU256(a: bytes) -> bytes, bytes:
+sumU256:
+    proto 1 2
+    txn GroupIndex
+    bz sumU256_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+sumU256_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    extract 0 32 // on error: index access is out of bounds
+    frame_dig -1
+    extract 32 32 // on error: index access is out of bounds
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    frame_dig -1
+    retsub
+
+sumU256_ternary_false@2:
+    intc_2 // 0
+    b sumU256_ternary_merge@3

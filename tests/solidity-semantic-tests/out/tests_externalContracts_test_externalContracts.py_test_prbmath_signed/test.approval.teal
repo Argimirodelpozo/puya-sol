@@ -1,10 +1,10 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_4uc56s4r/prbmath.sol.test.approval_program() -> uint64:
+// /tmp/multisource_7jk1oaie/prbmath.sol.test.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 256 1000000000000000000 255 4294967296 65536
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000100000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000002 0x151f7c75 0x0de0b6b3a7640000 0x010000000000000000000000000000000000000000000000000000000000000002 0x0000000000000000000000000000000000000000000000000000000000000000 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0xc097ce7bc90715b34b9f1000000000 0x0000000000000000000000000000000000000000000000000000000100000000 0x0000000000000000000000000000000000000000000000000000000000010000 0x0000000000000000000000000000000000000000000000000000000000000100 0x0000000000000000000000000000000000000000000000000000000000000010 0x80000000000000000000000000000000 0x0100 0x0100000000000000000000000000000000 0x0000000000000000000000000000000000000000000000010000000000000000 0x0000000000000000000000000000000000000000000000000000000000000004
+    intcblock 32 1 0 2 128 256 1000000000000000000 255 4294967296 65536
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000100000000000000000000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000002 0x0de0b6b3a7640000 0x010000000000000000000000000000000000000000000000000000000000000002 0x0000000000000000000000000000000000000000000000000000000000000000 0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0xc097ce7bc90715b34b9f1000000000 0x0000000000000000000000000000000000000000000000000000000100000000 0x0000000000000000000000000000000000000000000000000000000000010000 0x0000000000000000000000000000000000000000000000000000000000000100 0x0000000000000000000000000000000000000000000000000000000000000010 0x80000000000000000000000000000000 0x0100 0x0100000000000000000000000000000000 0x0000000000000000000000000000000000000000000000010000000000000000 0x0000000000000000000000000000000000000000000000000000000000000004
     pushint 4096
     bzero
     dup
@@ -29,82 +29,120 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x06d93317 0x1c82b4fe 0x4b57d4d9 0x1bb06d86 0x23bcb8a0 0x3102179b 0x96028fa4 0xc6fa7dd3 0x2b4d0629 0x97d7df92 // method "div(uint256,uint256)uint256", method "exp(uint256)uint256", method "exp2(uint256)uint256", method "gm(uint256,uint256)uint256", method "log10(uint256)uint256", method "log2(uint256)uint256", method "mul(uint256,uint256)uint256", method "pow(uint256,uint256)uint256", method "sqrt(uint256)uint256", method "benchmark(uint256)(uint256,uint256,uint256)"
-    txna ApplicationArgs 0
-    match main_div_route@5 main_exp_route@6 main_exp2_route@7 main_gm_route@8 main_log10_route@9 main_log2_route@10 main_mul_route@11 main_pow_route@12 main_sqrt_route@13 main_benchmark_route@14
-    err
-
-main_benchmark_route@14:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
+    bnz main_after_if_else@12
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@12
+    txna ApplicationArgs 0
+    pushbytes 0x43509138
+    ==
+    bz main_after_if_else@12
     txn GroupIndex
-    bz main_ternary_false@20
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+main_ternary_merge@8:
     !
     assert // not payable
-    pushint 3
-    itob
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
     dig 1
-    swap
-    callsub PRBMathSD59x18.mul
-    callsub PRBMathSD59x18.ceil
-    swap
-    callsub PRBMathSD59x18.div
-    intc_2 // 0
-    itob
-
-main_while_top@22:
-    pushint 10
-    itob
-    dig 1
-    b>
-    bz main_after_while@24
-    swap
-    callsub PRBMathSD59x18.sqrt
-    swap
-    bytec 4 // 0x01
-    b+
-    dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
+    len
+    intc_0 // 32
+    <=
     assert // overflow
-    b main_while_top@22
-
-main_after_while@24:
-    pop
-    dupn 2
-    callsub PRBMathSD59x18.ceil
+    intc_0 // 32
+    bzero
     dup
+    cover 3
+    uncover 2
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
     cover 2
-    cover 3
-    callsub PRBMathSD59x18.sqrt
-    pushint 2
-    itob
-    callsub PRBMathSD59x18.pow
-    callsub PRBMathSD59x18.ceil
+    b|
+    callsub div
     dup
-    cover 3
-    b==
-    dup
-    bnz main_after_if_else@26
-    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
-    log
+    intc_2 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@10
+    bury 1
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-main_after_if_else@26:
-    assert
+main_ternary_merge@11:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@10:
+    swap
+    b main_ternary_merge@11
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@12:
+    txn OnCompletion
+    bnz main_after_if_else@22
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@22
+    txna ApplicationArgs 0
+    pushbytes 0xe46751e3
+    ==
+    bz main_after_if_else@22
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
     intc_0 // 32
@@ -112,30 +150,29 @@ main_after_if_else@26:
     assert // overflow
     intc_0 // 32
     bzero
-    swap
-    dig 1
-    b|
-    uncover 3
     dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 2
-    b|
-    uncover 3
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 3
-    b|
     cover 2
-    concat
+    b|
+    callsub exp
+    dup
+    intc_2 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@20
+    bury 1
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@21:
     swap
-    concat
-    bytec 7 // 0x151f7c75
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -143,27 +180,41 @@ main_after_if_else@26:
     return
 
 main_ternary_false@20:
-    intc_2 // 0
+    swap
     b main_ternary_merge@21
 
-main_sqrt_route@13:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
+main_ternary_false@17:
+    intc_2 // 0
+    b main_ternary_merge@18
+
+main_after_if_else@22:
+    txn OnCompletion
+    bnz main_after_if_else@32
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@32
+    txna ApplicationArgs 0
+    pushbytes 0xdbbb06d2
+    ==
+    bz main_after_if_else@32
     txn GroupIndex
-    bz main_ternary_false@30
+    bz main_ternary_false@27
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@31:
+main_ternary_merge@28:
     !
     assert // not payable
-    callsub PRBMathSD59x18.sqrt
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
     intc_0 // 32
@@ -171,8 +222,29 @@ main_ternary_merge@31:
     assert // overflow
     intc_0 // 32
     bzero
+    dup
+    cover 2
     b|
-    bytec 7 // 0x151f7c75
+    callsub exp2
+    dup
+    intc_2 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@30
+    bury 1
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@31:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -180,89 +252,87 @@ main_ternary_merge@31:
     return
 
 main_ternary_false@30:
-    intc_2 // 0
+    swap
     b main_ternary_merge@31
 
-main_pow_route@12:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
+main_ternary_false@27:
+    intc_2 // 0
+    b main_ternary_merge@28
+
+main_after_if_else@32:
+    txn OnCompletion
+    bnz main_after_if_else@42
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    cover 2
-    len
-    intc_0 // 32
+    bz main_after_if_else@42
+    txna ApplicationArgs 0
+    pushbytes 0xd2bc4bc9
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@42
     txn GroupIndex
-    bz main_ternary_false@35
+    bz main_ternary_false@37
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@36:
+main_ternary_merge@38:
     !
     assert // not payable
-    swap
-    callsub PRBMathSD59x18.pow
-    dup
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
     len
     intc_0 // 32
     <=
     assert // overflow
     intc_0 // 32
     bzero
+    dup
+    cover 3
+    uncover 2
+    dig 1
     b|
-    bytec 7 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@35:
-    intc_2 // 0
-    b main_ternary_merge@36
-
-main_mul_route@11:
-    txna ApplicationArgs 1
-    dup
+    dig 2
     len
     intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
+    <=
+    assert // overflow
     cover 2
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
+    b|
+    callsub gm
+    dup
+    intc_2 // 0
+    getbyte
+    intc 4 // 128
+    >=
     bz main_ternary_false@40
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    bury 1
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@41:
-    !
-    assert // not payable
     swap
-    callsub PRBMathSD59x18.mul
     dup
     len
     intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x151f7c75
+    swap
+    -
+    swap
+    replace3
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -270,27 +340,41 @@ main_ternary_merge@41:
     return
 
 main_ternary_false@40:
-    intc_2 // 0
+    swap
     b main_ternary_merge@41
 
-main_log2_route@10:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
+main_ternary_false@37:
+    intc_2 // 0
+    b main_ternary_merge@38
+
+main_after_if_else@42:
+    txn OnCompletion
+    bnz main_after_if_else@52
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@52
+    txna ApplicationArgs 0
+    pushbytes 0xb47ca3c7
+    ==
+    bz main_after_if_else@52
     txn GroupIndex
-    bz main_ternary_false@45
+    bz main_ternary_false@47
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@46:
+main_ternary_merge@48:
     !
     assert // not payable
-    callsub PRBMathSD59x18.log2
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
     intc_0 // 32
@@ -298,45 +382,29 @@ main_ternary_merge@46:
     assert // overflow
     intc_0 // 32
     bzero
-    b|
-    bytec 7 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@45:
-    intc_2 // 0
-    b main_ternary_merge@46
-
-main_log10_route@9:
-    txna ApplicationArgs 1
     dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
+    cover 2
+    b|
+    callsub log10
+    dup
+    intc_2 // 0
+    getbyte
+    intc 4 // 128
+    >=
     bz main_ternary_false@50
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    bury 1
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@51:
-    !
-    assert // not payable
-    callsub PRBMathSD59x18.log10
+    swap
     dup
     len
     intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x151f7c75
+    swap
+    -
+    swap
+    replace3
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -344,81 +412,71 @@ main_ternary_merge@51:
     return
 
 main_ternary_false@50:
-    intc_2 // 0
+    swap
     b main_ternary_merge@51
 
-main_gm_route@8:
+main_ternary_false@47:
+    intc_2 // 0
+    b main_ternary_merge@48
+
+main_after_if_else@52:
+    txn OnCompletion
+    bnz main_after_if_else@62
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@62
+    txna ApplicationArgs 0
+    pushbytes 0xe0d68737
+    ==
+    bz main_after_if_else@62
+    txn GroupIndex
+    bz main_ternary_false@57
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@58:
+    !
+    assert // not payable
     txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
     intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
     dup
     cover 2
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@55
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@56:
-    !
-    assert // not payable
-    swap
-    callsub PRBMathSD59x18.gm
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
     b|
-    bytec 7 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@55:
-    intc_2 // 0
-    b main_ternary_merge@56
-
-main_exp2_route@7:
-    txna ApplicationArgs 1
+    callsub log2
     dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
+    intc_2 // 0
+    getbyte
+    intc 4 // 128
+    >=
     bz main_ternary_false@60
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    bury 1
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@61:
-    !
-    assert // not payable
-    callsub PRBMathSD59x18.exp2
+    swap
     dup
     len
     intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x151f7c75
+    swap
+    -
+    swap
+    replace3
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
@@ -426,27 +484,217 @@ main_ternary_merge@61:
     return
 
 main_ternary_false@60:
-    intc_2 // 0
+    swap
     b main_ternary_merge@61
 
-main_exp_route@6:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
+main_ternary_false@57:
+    intc_2 // 0
+    b main_ternary_merge@58
+
+main_after_if_else@62:
+    txn OnCompletion
+    bnz main_after_if_else@72
+    txn NumAppArgs
+    intc_3 // 2
     ==
-    assert // invalid number of bytes for arc4.uint256
+    bz main_after_if_else@72
+    txna ApplicationArgs 0
+    pushbytes 0xbbe93d91
+    ==
+    bz main_after_if_else@72
     txn GroupIndex
-    bz main_ternary_false@65
+    bz main_ternary_false@67
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@66:
+main_ternary_merge@68:
     !
     assert // not payable
-    callsub PRBMathSD59x18.exp
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dup
+    cover 3
+    uncover 2
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    callsub mul
+    dup
+    intc_2 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@70
+    bury 1
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@71:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@70:
+    swap
+    b main_ternary_merge@71
+
+main_ternary_false@67:
+    intc_2 // 0
+    b main_ternary_merge@68
+
+main_after_if_else@72:
+    txn OnCompletion
+    bnz main_after_if_else@82
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@82
+    txna ApplicationArgs 0
+    pushbytes 0x6a6742dc
+    ==
+    bz main_after_if_else@82
+    txn GroupIndex
+    bz main_ternary_false@77
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@78:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    txna ApplicationArgs 1
+    extract 32 32
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dup
+    cover 3
+    uncover 2
+    dig 1
+    b|
+    dig 2
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    cover 2
+    b|
+    callsub pow
+    dup
+    intc_2 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@80
+    bury 1
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@81:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@80:
+    swap
+    b main_ternary_merge@81
+
+main_ternary_false@77:
+    intc_2 // 0
+    b main_ternary_merge@78
+
+main_after_if_else@82:
+    txn OnCompletion
+    bnz main_after_if_else@92
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@92
+    txna ApplicationArgs 0
+    pushbytes 0x665df460
+    ==
+    bz main_after_if_else@92
+    txn GroupIndex
+    bz main_ternary_false@87
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@88:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
     intc_0 // 32
@@ -454,19 +702,210 @@ main_ternary_merge@66:
     assert // overflow
     intc_0 // 32
     bzero
+    dup
+    cover 2
     b|
-    bytec 7 // 0x151f7c75
+    callsub sqrt
+    dup
+    intc_2 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@90
+    bury 1
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@91:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@65:
-    intc_2 // 0
-    b main_ternary_merge@66
+main_ternary_false@90:
+    swap
+    b main_ternary_merge@91
 
-main_div_route@5:
+main_ternary_false@87:
+    intc_2 // 0
+    b main_ternary_merge@88
+
+main_after_if_else@92:
+    txn OnCompletion
+    bnz main_after_if_else@108
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@108
+    txna ApplicationArgs 0
+    pushbytes 0x889c7955
+    ==
+    bz main_after_if_else@108
+    txn GroupIndex
+    bz main_ternary_false@97
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@98:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    b|
+    callsub benchmark
+    cover 3
+    cover 2
+    dup
+    intc_2 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@100
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@101:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    swap
+    dig 2
+    intc_2 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@103
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@104:
+    uncover 3
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    uncover 2
+    swap
+    concat
+    swap
+    dig 2
+    intc_2 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@106
+    pop
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@107:
+    uncover 2
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    concat
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@106:
+    b main_ternary_merge@107
+
+main_ternary_false@103:
+    dup
+    b main_ternary_merge@104
+
+main_ternary_false@100:
+    dig 1
+    b main_ternary_merge@101
+
+main_ternary_false@97:
+    intc_2 // 0
+    b main_ternary_merge@98
+
+main_after_if_else@108:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x06d93317 0x1c82b4fe 0x4b57d4d9 0x1bb06d86 0x23bcb8a0 0x3102179b 0x96028fa4 0xc6fa7dd3 0x2b4d0629 0x97d7df92 // method "div(uint256,uint256)uint256", method "exp(uint256)uint256", method "exp2(uint256)uint256", method "gm(uint256,uint256)uint256", method "log10(uint256)uint256", method "log2(uint256)uint256", method "mul(uint256,uint256)uint256", method "pow(uint256,uint256)uint256", method "sqrt(uint256)uint256", method "benchmark(uint256)(uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_div_route@111 main_exp_route@112 main_exp2_route@113 main_gm_route@114 main_log10_route@115 main_log2_route@116 main_mul_route@117 main_pow_route@118 main_sqrt_route@119 main_benchmark_route@120
+    err
+
+main_benchmark_route@120:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub benchmark
+    cover 2
+    concat
+    swap
+    concat
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_sqrt_route@119:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub sqrt
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_pow_route@118:
     txna ApplicationArgs 1
     dup
     len
@@ -475,41 +914,140 @@ main_div_route@5:
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
-    cover 2
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@70
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@71:
-    !
-    assert // not payable
-    swap
-    callsub PRBMathSD59x18.div
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x151f7c75
+    callsub pow
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@70:
-    intc_2 // 0
-    b main_ternary_merge@71
+main_mul_route@117:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub mul
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_log2_route@116:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub log2
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_log10_route@115:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub log10
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_gm_route@114:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub gm
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_exp2_route@113:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub exp2
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_exp_route@112:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub exp
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_div_route@111:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub div
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
 
 // __solfn_4616(x: bytes) -> bytes:
@@ -1570,12 +2108,12 @@ PRBMathCommon.exp2_after_if_else@320:
 
 PRBMathCommon.exp2_ternary_merge@326:
     dup
-    intc_3 // 256
+    intc 5 // 256
     <
     bz PRBMathCommon.exp2_ternary_false@328
-    intc_3 // 256
+    intc 5 // 256
     %
-    intc 5 // 255
+    intc 7 // 255
     swap
     -
     frame_dig 0
@@ -1600,7 +2138,7 @@ PRBMathCommon.exp2_ternary_false@328:
 
 PRBMathCommon.exp2_ternary_false@325:
     pop
-    intc_3 // 256
+    intc 5 // 256
     b PRBMathCommon.exp2_ternary_merge@326
 
 
@@ -1638,7 +2176,7 @@ PRBMathCommon.mostSignificantBit_after_if_else@5:
     frame_bury 0
 
 PRBMathCommon.mostSignificantBit_after_if_else@10:
-    intc 6 // 4294967296
+    intc 8 // 4294967296
     itob
     frame_dig -1
     b<=
@@ -1657,7 +2195,7 @@ PRBMathCommon.mostSignificantBit_after_if_else@10:
     frame_bury 0
 
 PRBMathCommon.mostSignificantBit_after_if_else@15:
-    intc 7 // 65536
+    intc 9 // 65536
     itob
     frame_dig -1
     b<=
@@ -1676,7 +2214,7 @@ PRBMathCommon.mostSignificantBit_after_if_else@15:
     frame_bury 0
 
 PRBMathCommon.mostSignificantBit_after_if_else@20:
-    intc_3 // 256
+    intc 5 // 256
     itob
     frame_dig -1
     b<=
@@ -1733,7 +2271,7 @@ PRBMathCommon.mostSignificantBit_after_if_else@30:
     frame_bury 0
 
 PRBMathCommon.mostSignificantBit_after_if_else@35:
-    pushint 2
+    intc_3 // 2
     itob
     frame_dig -1
     b<=
@@ -1948,7 +2486,7 @@ PRBMathCommon.mulDiv_ternary_merge@20:
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    pushint 2
+    intc_3 // 2
     itob
     b^
     frame_dig -1
@@ -2127,7 +2665,7 @@ PRBMathCommon.mulDivFixedPoint:
     retsub
 
 PRBMathCommon.mulDivFixedPoint_after_if_else@8:
-    intc 4 // 1000000000000000000
+    intc 6 // 1000000000000000000
     itob
     uncover 2
     dup
@@ -2219,7 +2757,7 @@ PRBMathCommon.sqrt_after_if_else@10:
     frame_bury 0
 
 PRBMathCommon.sqrt_after_if_else@18:
-    intc 6 // 4294967296
+    intc 8 // 4294967296
     itob
     dig 1
     b<=
@@ -2234,7 +2772,7 @@ PRBMathCommon.sqrt_after_if_else@18:
     frame_bury 0
 
 PRBMathCommon.sqrt_after_if_else@26:
-    intc 7 // 65536
+    intc 9 // 65536
     itob
     dig 1
     b<=
@@ -2249,7 +2787,7 @@ PRBMathCommon.sqrt_after_if_else@26:
     frame_bury 0
 
 PRBMathCommon.sqrt_after_if_else@34:
-    intc_3 // 256
+    intc 5 // 256
     itob
     dig 1
     b<=
@@ -2284,7 +2822,7 @@ PRBMathCommon.sqrt_after_if_else@50:
     b>=
     bz PRBMathCommon.sqrt_after_if_else@55
     frame_dig 0
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -2299,7 +2837,7 @@ PRBMathCommon.sqrt_after_if_else@55:
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b/
     frame_dig -1
     dig 1
@@ -2307,7 +2845,7 @@ PRBMathCommon.sqrt_after_if_else@55:
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b/
     frame_dig -1
     dig 1
@@ -2315,7 +2853,7 @@ PRBMathCommon.sqrt_after_if_else@55:
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b/
     frame_dig -1
     dig 1
@@ -2323,7 +2861,7 @@ PRBMathCommon.sqrt_after_if_else@55:
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b/
     frame_dig -1
     dig 1
@@ -2331,7 +2869,7 @@ PRBMathCommon.sqrt_after_if_else@55:
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b/
     frame_dig -1
     dig 1
@@ -2339,7 +2877,7 @@ PRBMathCommon.sqrt_after_if_else@55:
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b/
     frame_dig -1
     dig 1
@@ -2347,7 +2885,7 @@ PRBMathCommon.sqrt_after_if_else@55:
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b/
     frame_dig -1
     dig 1
@@ -2412,7 +2950,7 @@ PRBMathSD59x18.ceil:
     pushbytes 0xfffffffffffffffffffffffffffffffffffffffffffffffff5023c9904400000
     b<=
     assert
-    intc 4 // 1000000000000000000
+    intc 6 // 1000000000000000000
     itob
     frame_dig -1
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
@@ -2557,7 +3095,7 @@ PRBMathSD59x18.div_ternary_merge@3:
     b%
 
 PRBMathSD59x18.div_ternary_merge@6:
-    intc 4 // 1000000000000000000
+    intc 6 // 1000000000000000000
     itob
     swap
     callsub PRBMathCommon.mulDiv
@@ -2684,7 +3222,7 @@ PRBMathSD59x18.exp_after_if_else@2:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    intc 4 // 1000000000000000000
+    intc 6 // 1000000000000000000
     itob
     cover 2
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
@@ -2842,7 +3380,7 @@ PRBMathSD59x18.exp2_else_body@29:
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    intc 4 // 1000000000000000000
+    intc 6 // 1000000000000000000
     itob
     b/
     callsub PRBMathCommon.exp2
@@ -3401,7 +3939,7 @@ PRBMathSD59x18.log2:
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b>
     assert
-    intc 4 // 1000000000000000000
+    intc 6 // 1000000000000000000
     itob
     swap
     pushbytes 0x8000000000000000000000000000000000000000000000000de0b6b3a7640000
@@ -3466,14 +4004,14 @@ PRBMathSD59x18.log2_ternary_merge@31:
 
 PRBMathSD59x18.log2_ternary_merge@34:
     dup
-    intc_3 // 256
+    intc 5 // 256
     <
-    intc 5 // 255
+    intc 7 // 255
     cover 2
     select
     intc_0 // 32
     bzero
-    intc 5 // 255
+    intc 7 // 255
     uncover 2
     -
     intc_1 // 1
@@ -3566,7 +4104,7 @@ PRBMathSD59x18.log2_ternary_merge@66:
     swap
     uncover 2
     dup
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b/
     swap
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
@@ -3578,7 +4116,7 @@ PRBMathSD59x18.log2_ternary_merge@66:
 
 PRBMathSD59x18.log2_after_if_else@71:
     dup
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b/
     swap
     bytec_2 // 0x8000000000000000000000000000000000000000000000000000000000000000
@@ -3633,7 +4171,7 @@ PRBMathSD59x18.log2_ternary_false@36:
 PRBMathSD59x18.log2_ternary_false@33:
     uncover 2
     pop
-    intc_3 // 256
+    intc 5 // 256
     b PRBMathSD59x18.log2_ternary_merge@34
 
 PRBMathSD59x18.log2_ternary_false@19:
@@ -3862,7 +4400,7 @@ PRBMathSD59x18.pow_ternary_merge@3:
     bzero
     swap
     frame_dig -1
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b/
     frame_bury -1
 
@@ -3886,7 +4424,7 @@ PRBMathSD59x18.pow_while_top@7:
 
 PRBMathSD59x18.pow_after_if_else@10:
     frame_dig -1
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000002
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000002
     b/
     frame_bury -1
     b PRBMathSD59x18.pow_while_top@7
@@ -3947,7 +4485,7 @@ PRBMathSD59x18.pow_bool_false@17:
     b PRBMathSD59x18.pow_bool_merge@18
 
 PRBMathSD59x18.pow_ternary_false@2:
-    intc 4 // 1000000000000000000
+    intc 6 // 1000000000000000000
     itob
     b PRBMathSD59x18.pow_ternary_merge@3
 
@@ -3972,3 +4510,373 @@ PRBMathSD59x18.sqrt:
     b%
     callsub PRBMathCommon.sqrt
     retsub
+
+
+// /tmp/multisource_7jk1oaie/prbmath.sol.test.div(__arc4_x: bytes, __arc4_y: bytes) -> bytes:
+div:
+    proto 2 1
+    txn GroupIndex
+    bz div_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+div_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    frame_dig -1
+    callsub PRBMathSD59x18.div
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+div_ternary_false@2:
+    intc_2 // 0
+    b div_ternary_merge@3
+
+
+// /tmp/multisource_7jk1oaie/prbmath.sol.test.exp(__arc4_x: bytes) -> bytes:
+exp:
+    proto 1 1
+    txn GroupIndex
+    bz exp_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+exp_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub PRBMathSD59x18.exp
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+exp_ternary_false@2:
+    intc_2 // 0
+    b exp_ternary_merge@3
+
+
+// /tmp/multisource_7jk1oaie/prbmath.sol.test.exp2(__arc4_x: bytes) -> bytes:
+exp2:
+    proto 1 1
+    txn GroupIndex
+    bz exp2_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+exp2_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub PRBMathSD59x18.exp2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+exp2_ternary_false@2:
+    intc_2 // 0
+    b exp2_ternary_merge@3
+
+
+// /tmp/multisource_7jk1oaie/prbmath.sol.test.gm(__arc4_x: bytes, __arc4_y: bytes) -> bytes:
+gm:
+    proto 2 1
+    txn GroupIndex
+    bz gm_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+gm_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    frame_dig -1
+    callsub PRBMathSD59x18.gm
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+gm_ternary_false@2:
+    intc_2 // 0
+    b gm_ternary_merge@3
+
+
+// /tmp/multisource_7jk1oaie/prbmath.sol.test.log10(__arc4_x: bytes) -> bytes:
+log10:
+    proto 1 1
+    txn GroupIndex
+    bz log10_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+log10_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub PRBMathSD59x18.log10
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+log10_ternary_false@2:
+    intc_2 // 0
+    b log10_ternary_merge@3
+
+
+// /tmp/multisource_7jk1oaie/prbmath.sol.test.log2(__arc4_x: bytes) -> bytes:
+log2:
+    proto 1 1
+    txn GroupIndex
+    bz log2_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+log2_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub PRBMathSD59x18.log2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+log2_ternary_false@2:
+    intc_2 // 0
+    b log2_ternary_merge@3
+
+
+// /tmp/multisource_7jk1oaie/prbmath.sol.test.mul(__arc4_x: bytes, __arc4_y: bytes) -> bytes:
+mul:
+    proto 2 1
+    txn GroupIndex
+    bz mul_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+mul_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    frame_dig -1
+    callsub PRBMathSD59x18.mul
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+mul_ternary_false@2:
+    intc_2 // 0
+    b mul_ternary_merge@3
+
+
+// /tmp/multisource_7jk1oaie/prbmath.sol.test.pow(__arc4_x: bytes, __arc4_y: bytes) -> bytes:
+pow:
+    proto 2 1
+    txn GroupIndex
+    bz pow_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+pow_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    frame_dig -1
+    callsub PRBMathSD59x18.pow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+pow_ternary_false@2:
+    intc_2 // 0
+    b pow_ternary_merge@3
+
+
+// /tmp/multisource_7jk1oaie/prbmath.sol.test.sqrt(__arc4_x: bytes) -> bytes:
+sqrt:
+    proto 1 1
+    txn GroupIndex
+    bz sqrt_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+sqrt_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub PRBMathSD59x18.sqrt
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+sqrt_ternary_false@2:
+    intc_2 // 0
+    b sqrt_ternary_merge@3
+
+
+// /tmp/multisource_7jk1oaie/prbmath.sol.test.benchmark(__arc4_x: bytes) -> bytes, bytes, bytes:
+benchmark:
+    proto 1 3
+    txn GroupIndex
+    bz benchmark_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+benchmark_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 3
+    itob
+    frame_dig -1
+    swap
+    callsub PRBMathSD59x18.mul
+    callsub PRBMathSD59x18.ceil
+    frame_dig -1
+    callsub PRBMathSD59x18.div
+    intc_2 // 0
+    itob
+
+benchmark_while_top@4:
+    pushint 10
+    itob
+    dig 1
+    b>
+    bz benchmark_after_while@6
+    swap
+    callsub PRBMathSD59x18.sqrt
+    swap
+    bytec 4 // 0x01
+    b+
+    dup
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b benchmark_while_top@4
+
+benchmark_after_while@6:
+    pop
+    dupn 2
+    callsub PRBMathSD59x18.ceil
+    dup
+    cover 2
+    cover 3
+    callsub PRBMathSD59x18.sqrt
+    intc_3 // 2
+    itob
+    callsub PRBMathSD59x18.pow
+    callsub PRBMathSD59x18.ceil
+    dup
+    cover 3
+    b==
+    dup
+    bnz benchmark_after_if_else@8
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    log
+
+benchmark_after_if_else@8:
+    assert
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    uncover 3
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    uncover 3
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    b|
+    retsub
+
+benchmark_ternary_false@2:
+    intc_2 // 0
+    b benchmark_ternary_merge@3

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/bytes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 32 0
     bytecblock "b" "__ctor_pending"
     pushint 4096
     bzero
@@ -32,29 +32,78 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x4df7e3d0
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub b
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x7fdb925d // method "__postInit()void", method "b()byte[]"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_b_route@6
+    match main___postInit_route@12 main_b_route@13
     err
 
-main_b_route@6:
-    txn GroupIndex
-    bz main_ternary_false@12
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@13:
-    !
-    assert // not payable
-    bytec_0 // "b"
-    box_get
-    assert // box exists
+main_b_route@13:
+    callsub b
     dup
     len
     itob
@@ -68,11 +117,7 @@ main_ternary_merge@13:
     intc_0 // 1
     return
 
-main_ternary_false@12:
-    intc_1 // 0
-    b main_ternary_merge@13
-
-main___postInit_route@5:
+main___postInit_route@12:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -81,10 +126,10 @@ main___postInit_route@5:
     ==
     assert // __postInit callable only by the app creator
     bytec_1 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     bytec_0 // "b"
-    intc_1 // 0
+    intc_2 // 0
     box_create
     pop
     bytec_0 // "b"
@@ -95,3 +140,25 @@ main___postInit_route@5:
     box_put
     intc_0 // 1
     return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/bytes.sol.C.b() -> bytes:
+b:
+    txn GroupIndex
+    bz b_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+b_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "b"
+    box_get
+    assert // box exists
+    retsub
+
+b_ternary_false@2:
+    intc_2 // 0
+    b b_ternary_merge@3

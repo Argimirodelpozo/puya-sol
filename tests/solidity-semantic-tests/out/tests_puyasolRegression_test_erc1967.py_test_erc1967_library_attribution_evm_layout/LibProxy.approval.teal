@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_lib_multi.sol.LibProxy.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 24
-    bytecblock 0x703a0000000000000000 0x "__erc1967_admin" 0x151f7c75
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 0x 0x703a0000000000000000 "__erc1967_admin"
     intc_2 // 0
     dup
     pushint 4096
@@ -30,70 +30,108 @@ main:
     return
 
 main_after_if_else@2:
-    pushbytes 0x67ae7042 // method "__erc1967_update()void"
-    txna ApplicationArgs 0
-    match main___erc1967_update_route@4
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x0a4fb6b3 0x4e859a11 0xc46a4b39 0x75d12918 // method "admin()address", method "initAdmin(address)void", method "setValue(uint256)void", method "value()uint256"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_admin_route@7 main_initAdmin_route@8 main_setValue_route@9 main_value_route@10
-    err
-
-main_value_route@10:
+    pushbytes 0xf851a440
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@16
+    bz main_ternary_false@7
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@17:
+main_ternary_merge@8:
     !
     assert // not payable
-    bytec_0 // 0x703a0000000000000000
-    box_len
-    bury 1
-    bz main_after_if_else@48
-    bytec_0 // 0x703a0000000000000000
-    intc_2 // 0
     intc_0 // 32
-    box_extract
-
-main_after_inlined___puyasol___storage_read@52:
+    bzero
+    callsub admin
+    dup
+    len
+    pushint 20
+    -
+    pushint 20
+    extract3
+    concat
     dup
     len
     intc_0 // 32
-    <=
-    assert // overflow
+    -
     intc_0 // 32
-    bzero
-    b|
-    bytec_3 // 0x151f7c75
+    extract3
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_after_if_else@48:
-    bytec_1 // 0x
-    b main_after_inlined___puyasol___storage_read@52
-
-main_ternary_false@16:
+main_ternary_false@7:
     intc_2 // 0
-    b main_ternary_merge@17
+    b main_ternary_merge@8
 
-main_setValue_route@9:
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x08c4934d
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
     txna ApplicationArgs 1
-    dup
     len
     intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 12
+    pushint 12
+    bzero
     ==
-    assert // invalid number of bytes for arc4.uint256
+    assert // invalid EVM ABI address padding
+    callsub initAdmin
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x55241077
+    ==
+    bz main_after_if_else@23
     txn GroupIndex
     bz main_ternary_false@21
     txn GroupIndex
@@ -104,24 +142,24 @@ main_setValue_route@9:
 main_ternary_merge@22:
     !
     assert // not payable
-    bytec_0 // 0x703a0000000000000000
-    pushint 2048
-    box_create
-    pop
+    txna ApplicationArgs 1
+    len
     intc_0 // 32
-    bzero
-    swap
-    concat
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
     dup
     len
     intc_0 // 32
-    -
+    <=
+    assert // overflow
     intc_0 // 32
-    extract3
-    bytec_0 // 0x703a0000000000000000
-    intc_2 // 0
-    uncover 2
-    box_replace
+    bzero
+    b|
+    callsub setValue
+    bytec_0 // 0x151f7c75
+    log
     intc_1 // 1
     return
 
@@ -129,65 +167,103 @@ main_ternary_false@21:
     intc_2 // 0
     b main_ternary_merge@22
 
-main_initAdmin_route@8:
-    txna ApplicationArgs 1
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x3fa4f245
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub value
+    concat
     dup
     len
     intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@26
-    txn GroupIndex
-    intc_1 // 1
     -
-    gtxns Amount
-
-main_ternary_merge@27:
-    !
-    assert // not payable
-    callsub AdminLib.getAdmin
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
-    ==
-    dup
-    bnz main_after_if_else@29
-    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000013616c726561647920696e697469616c697a656400000000000000000000000000
-    log
-
-main_after_if_else@29:
-    assert // already initialized
-    callsub AdminLib.setAdmin
-    intc_1 // 1
-    return
-
-main_ternary_false@26:
-    intc_2 // 0
-    b main_ternary_merge@27
-
-main_admin_route@7:
-    txn GroupIndex
-    bz main_ternary_false@33
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@34:
-    !
-    assert // not payable
-    callsub AdminLib.getAdmin
-    bytec_3 // 0x151f7c75
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@33:
+main_ternary_false@28:
     intc_2 // 0
-    b main_ternary_merge@34
+    b main_ternary_merge@29
 
-main___erc1967_update_route@4:
+main_after_if_else@30:
+    pushbytes 0x67ae7042 // method "__erc1967_update()void"
+    txna ApplicationArgs 0
+    match main___erc1967_update_route@32
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0a4fb6b3 0x4e859a11 0xc46a4b39 0x75d12918 // method "admin()address", method "initAdmin(address)void", method "setValue(uint256)void", method "value()uint256"
+    txna ApplicationArgs 0
+    match main_admin_route@35 main_initAdmin_route@36 main_setValue_route@37 main_value_route@38
+    err
+
+main_value_route@38:
+    callsub value
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_setValue_route@37:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub setValue
+    intc_1 // 1
+    return
+
+main_initAdmin_route@36:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub initAdmin
+    intc_1 // 1
+    return
+
+main_admin_route@35:
+    callsub admin
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main___erc1967_update_route@32:
     txn OnCompletion
     pushint 4 // UpdateApplication
     ==
@@ -195,7 +271,7 @@ main___erc1967_update_route@4:
     &&
     assert
     intc_2 // 0
-    bytec_2 // "__erc1967_admin"
+    bytec_3 // "__erc1967_admin"
     app_global_get_ex
     bytec_1 // 0x
     cover 2
@@ -205,15 +281,15 @@ main___erc1967_update_route@4:
     txn Sender
     b==
     dup
-    bnz main_after_if_else@44
+    bnz main_after_if_else@58
     dig 2
     bytec_1 // 0x
     b!=
-    bz main_after_if_else@44
+    bz main_after_if_else@58
     dig 2
     pushbytes 0xffffffffffffffff
     b<=
-    bz main_after_if_else@44
+    bz main_after_if_else@58
     pop
     intc_0 // 32
     bzero
@@ -225,21 +301,21 @@ main___erc1967_update_route@4:
     -
     intc_0 // 32
     extract3
-    intc_3 // 24
+    pushint 24
     extract_uint64
     app_params_get AppAddress
     swap
     bury 2
-    bz main_bool_false@42
+    bz main_bool_false@56
     dup
     txn Sender
     b==
-    bz main_bool_false@42
+    bz main_bool_false@56
     intc_1 // 1
 
-main_after_if_else@44:
+main_after_if_else@58:
     assert // ERC-1967: update sender is not the proxy admin
-    intc_3 // 24
+    pushint 24
     bzero
     global CurrentApplicationID
     itob
@@ -251,9 +327,9 @@ main_after_if_else@44:
     intc_1 // 1
     return
 
-main_bool_false@42:
+main_bool_false@56:
     intc_2 // 0
-    b main_after_if_else@44
+    b main_after_if_else@58
 
 
 // __solfn_11() -> bytes:
@@ -263,7 +339,7 @@ AdminLib.getAdmin:
     intc_0 // 32
     bzero
     intc_2 // 0
-    bytec_2 // "__erc1967_admin"
+    bytec_3 // "__erc1967_admin"
     app_global_get_ex
     bytec_1 // 0x
     cover 2
@@ -285,9 +361,140 @@ AdminLib.setAdmin:
     proto 1 0
     load 0
     store 0
-    bytec_2 // "__erc1967_admin"
+    bytec_3 // "__erc1967_admin"
     frame_dig -1
     app_global_put
     load 0
     store 0
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_lib_multi.sol.LibProxy.admin() -> bytes:
+admin:
+    txn GroupIndex
+    bz admin_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+admin_ternary_merge@3:
+    !
+    assert // not payable
+    callsub AdminLib.getAdmin
+    retsub
+
+admin_ternary_false@2:
+    intc_2 // 0
+    b admin_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_lib_multi.sol.LibProxy.initAdmin(a: bytes) -> void:
+initAdmin:
+    proto 1 0
+    txn GroupIndex
+    bz initAdmin_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+initAdmin_ternary_merge@3:
+    !
+    assert // not payable
+    callsub AdminLib.getAdmin
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
+    ==
+    dup
+    bnz initAdmin_after_if_else@5
+    pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000013616c726561647920696e697469616c697a656400000000000000000000000000
+    log
+
+initAdmin_after_if_else@5:
+    assert // already initialized
+    frame_dig -1
+    callsub AdminLib.setAdmin
+    retsub
+
+initAdmin_ternary_false@2:
+    intc_2 // 0
+    b initAdmin_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_lib_multi.sol.LibProxy.setValue(__arc4_v: bytes) -> void:
+setValue:
+    proto 1 0
+    txn GroupIndex
+    bz setValue_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+setValue_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_2 // 0x703a0000000000000000
+    pushint 2048
+    box_create
+    pop
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x703a0000000000000000
+    intc_2 // 0
+    uncover 2
+    box_replace
+    retsub
+
+setValue_ternary_false@2:
+    intc_2 // 0
+    b setValue_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_lib_multi.sol.LibProxy.value() -> bytes:
+value:
+    txn GroupIndex
+    bz value_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+value_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_2 // 0x703a0000000000000000
+    box_len
+    bury 1
+    bz value_after_if_else@7
+    bytec_2 // 0x703a0000000000000000
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+
+value_after_inlined___puyasol___storage_read@11:
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+value_after_if_else@7:
+    bytec_1 // 0x
+    b value_after_inlined___puyasol___storage_read@11
+
+value_ternary_false@2:
+    intc_2 // 0
+    b value_ternary_merge@3

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/const_fold_arbitrary_precision.sol.ConstFoldArbitraryPrecision.approval_program() -> uint64:
 main:
-    intcblock 1 0 8 18446744073709551615
+    intcblock 1 32 0 2 18446744073709551615
     bytecblock 0x151f7c75 0x01 0x 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
@@ -29,104 +29,34 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x80cdd786 0xd75ae69a 0x8e2a0636 0x59f787bf 0x4ea41782 0x977ba647 // method "pow1077()uint256", method "half256p1()uint256", method "bigShift()uint256", method "bigMul()uint256", method "maxU64sqWrap()uint64", method "maxU64sqChecked()uint256"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main_pow1077_route@5 main_half256p1_route@6 main_bigShift_route@7 main_bigMul_route@8 main_maxU64sqWrap_route@9 main_maxU64sqChecked_route@10
-    err
-
-main_maxU64sqChecked_route@10:
+    pushbytes 0x51997696
+    ==
+    bz main_after_if_else@9
     txn GroupIndex
-    bz main_ternary_false@16
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@17:
-    !
-    assert // not payable
-    intc_3 // 18446744073709551615
-    pushint 2
-    exp
-    itob
-    pushint 32
-    bzero
-    b|
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@16:
-    intc_1 // 0
-    b main_ternary_merge@17
-
-main_maxU64sqWrap_route@9:
-    txn GroupIndex
-    bz main_ternary_false@22
+    bz main_ternary_false@7
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@23:
+main_ternary_merge@8:
     !
     assert // not payable
-    bytec_1 // 0x01
-    intc_3 // 18446744073709551615
-    itob
-    swap
-    pushint 2
-    itob
-
-main_while_top@24:
-    dup
-    bytec_2 // 0x
-    b>
-    bz main_after_while@28
-    dup
-    bytec_1 // 0x01
-    b&
-    bytec_2 // 0x
-    b!=
-    bz main_after_if_else@27
-    swap
-    dig 2
-    b*
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    swap
-
-main_after_if_else@27:
-    pushbytes 0x02
-    b/
-    uncover 2
-    dup
-    b*
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    cover 2
-    b main_while_top@24
-
-main_after_while@28:
-    pop
-    intc_2 // 8
+    intc_1 // 32
     bzero
-    swap
-    pushbytes 0x010000000000000000
-    b%
+    callsub pow1077
     concat
     dup
     len
-    intc_2 // 8
+    intc_1 // 32
     -
-    intc_2 // 8
+    intc_1 // 32
     extract3
     bytec_0 // 0x151f7c75
     swap
@@ -135,51 +65,190 @@ main_after_while@28:
     intc_0 // 1
     return
 
-main_ternary_false@22:
-    intc_1 // 0
-    b main_ternary_merge@23
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
 
-main_bigMul_route@8:
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xc15985d6
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
-    bz main_ternary_false@32
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@33:
-    !
-    assert // not payable
-    pushbytes 0x151f7c750000000000000300000000000000000000000000000000000000000000000000
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@32:
-    intc_1 // 0
-    b main_ternary_merge@33
-
-main_bigShift_route@7:
-    txn GroupIndex
-    bz main_ternary_false@37
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@38:
+main_ternary_merge@15:
     !
     assert // not payable
-    pushbytes 0x151f7c750000000000000100000000000000000000000000000000000000000000000000
+    intc_1 // 32
+    bzero
+    callsub half256p1
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@37:
-    intc_1 // 0
-    b main_ternary_merge@38
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
 
-main_half256p1_route@6:
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x6b6ac0e5
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub bigShift
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0x9f900241
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub bigMul
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0x5b3e743a
+    ==
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub maxU64sqWrap
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@35:
+    intc_2 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
+    bnz main_after_if_else@44
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@44
+    txna ApplicationArgs 0
+    pushbytes 0x87e233d6
+    ==
+    bz main_after_if_else@44
     txn GroupIndex
     bz main_ternary_false@42
     txn GroupIndex
@@ -190,31 +259,265 @@ main_half256p1_route@6:
 main_ternary_merge@43:
     !
     assert // not payable
-    pushbytes 0x151f7c758000000000000000000000000000000000000000000000000000000000000000
+    intc_1 // 32
+    bzero
+    callsub maxU64sqChecked
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
 main_ternary_false@42:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@43
 
-main_pow1077_route@5:
+main_after_if_else@44:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x80cdd786 0xd75ae69a 0x8e2a0636 0x59f787bf 0x4ea41782 0x977ba647 // method "pow1077()uint256", method "half256p1()uint256", method "bigShift()uint256", method "bigMul()uint256", method "maxU64sqWrap()uint64", method "maxU64sqChecked()uint256"
+    txna ApplicationArgs 0
+    match main_pow1077_route@47 main_half256p1_route@48 main_bigShift_route@49 main_bigMul_route@50 main_maxU64sqWrap_route@51 main_maxU64sqChecked_route@52
+    err
+
+main_maxU64sqChecked_route@52:
+    callsub maxU64sqChecked
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_maxU64sqWrap_route@51:
+    callsub maxU64sqWrap
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_bigMul_route@50:
+    callsub bigMul
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_bigShift_route@49:
+    callsub bigShift
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_half256p1_route@48:
+    callsub half256p1
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_pow1077_route@47:
+    callsub pow1077
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/const_fold_arbitrary_precision.sol.ConstFoldArbitraryPrecision.pow1077() -> bytes:
+pow1077:
     txn GroupIndex
-    bz main_ternary_false@47
+    bz pow1077_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@48:
+pow1077_ternary_merge@3:
     !
     assert // not payable
-    pushbytes 0x151f7c75dd15fe86affad91249ef0eb713f39ebeaa987b6e6fd2a0000000000000000000
-    log
-    intc_0 // 1
-    return
+    pushbytes 0xdd15fe86affad91249ef0eb713f39ebeaa987b6e6fd2a0000000000000000000
+    retsub
 
-main_ternary_false@47:
-    intc_1 // 0
-    b main_ternary_merge@48
+pow1077_ternary_false@2:
+    intc_2 // 0
+    b pow1077_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/const_fold_arbitrary_precision.sol.ConstFoldArbitraryPrecision.half256p1() -> bytes:
+half256p1:
+    txn GroupIndex
+    bz half256p1_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+half256p1_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+half256p1_ternary_false@2:
+    intc_2 // 0
+    b half256p1_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/const_fold_arbitrary_precision.sol.ConstFoldArbitraryPrecision.bigShift() -> bytes:
+bigShift:
+    txn GroupIndex
+    bz bigShift_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+bigShift_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x0000000000000100000000000000000000000000000000000000000000000000
+    retsub
+
+bigShift_ternary_false@2:
+    intc_2 // 0
+    b bigShift_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/const_fold_arbitrary_precision.sol.ConstFoldArbitraryPrecision.bigMul() -> bytes:
+bigMul:
+    txn GroupIndex
+    bz bigMul_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+bigMul_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x0000000000000300000000000000000000000000000000000000000000000000
+    retsub
+
+bigMul_ternary_false@2:
+    intc_2 // 0
+    b bigMul_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/const_fold_arbitrary_precision.sol.ConstFoldArbitraryPrecision.maxU64sqWrap() -> uint64:
+maxU64sqWrap:
+    proto 0 1
+    txn GroupIndex
+    bz maxU64sqWrap_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+maxU64sqWrap_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // 0x01
+    intc 4 // 18446744073709551615
+    itob
+    swap
+    intc_3 // 2
+    itob
+
+maxU64sqWrap_while_top@4:
+    dup
+    bytec_2 // 0x
+    b>
+    bz maxU64sqWrap_after_while@8
+    dup
+    bytec_1 // 0x01
+    b&
+    bytec_2 // 0x
+    b!=
+    bz maxU64sqWrap_after_if_else@7
+    swap
+    dig 2
+    b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    swap
+
+maxU64sqWrap_after_if_else@7:
+    pushbytes 0x02
+    b/
+    uncover 2
+    dup
+    b*
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    cover 2
+    b maxU64sqWrap_while_top@4
+
+maxU64sqWrap_after_while@8:
+    pop
+    pushint 8
+    bzero
+    swap
+    pushbytes 0x010000000000000000
+    b%
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
+    retsub
+
+maxU64sqWrap_ternary_false@2:
+    intc_2 // 0
+    b maxU64sqWrap_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/const_fold_arbitrary_precision.sol.ConstFoldArbitraryPrecision.maxU64sqChecked() -> bytes:
+maxU64sqChecked:
+    txn GroupIndex
+    bz maxU64sqChecked_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+maxU64sqChecked_ternary_merge@3:
+    !
+    assert // not payable
+    intc 4 // 18446744073709551615
+    intc_3 // 2
+    exp
+    itob
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+maxU64sqChecked_ternary_false@2:
+    intc_2 // 0
+    b maxU64sqChecked_ternary_merge@3

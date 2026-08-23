@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol.SignedNegate.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 16777215 1000000
-    bytecblock 0x8000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 32 1 0 2 16777215 1000000
+    bytecblock 0x151f7c75 0x8000000000000000000000000000000000000000000000000000000000000000 0x01 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -29,16 +29,203 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x8c7f433d
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub negToUint
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xb80c4f22
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub isNeg
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x9d3ef871
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    extract 0 29
+    pushint 29
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    uncover 2
+    pushint 24
+    extract_uint64
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    swap
+    dig 2
+    b|
+    swap
+    callsub lessFee
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x438ffd39 0xd555a581 0x2aa727f7 // method "negToUint(uint256)uint256", method "isNeg(uint256)bool", method "lessFee(uint256,uint64)uint256"
     txna ApplicationArgs 0
-    match main_negToUint_route@5 main_isNeg_route@6 main_lessFee_route@7
+    match main_negToUint_route@26 main_isNeg_route@27 main_lessFee_route@28
     err
 
-main_lessFee_route@7:
+main_lessFee_route@28:
     txna ApplicationArgs 1
     dup
     len
@@ -52,38 +239,156 @@ main_lessFee_route@7:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    callsub lessFee
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_isNeg_route@27:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub isNeg
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_negToUint_route@26:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub negToUint
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol.SignedNegate.negToUint(__arc4_x: bytes) -> bytes:
+negToUint:
+    proto 1 1
     txn GroupIndex
-    bz main_ternary_false@13
+    bz negToUint_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@14:
+negToUint_ternary_merge@3:
     !
     assert // not payable
-    dup
-    intc_3 // 16777215
-    <=
-    assert // ABI validation
-    intc_3 // 16777215
-    &
-    intc 4 // 1000000
-    swap
-    -
-    dup
-    intc_3 // 16777215
-    <=
-    assert // overflow
-    swap
-    dup
-    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    frame_dig -1
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b!=
     assert // signed negation overflow
     intc_0 // 32
     bzero
     dup
-    uncover 2
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    b~
+    bytec_2 // 0x01
+    b+
+    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    retsub
+
+negToUint_ternary_false@2:
+    intc_2 // 0
+    b negToUint_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol.SignedNegate.isNeg(__arc4_x: bytes) -> uint64:
+isNeg:
+    proto 1 1
+    txn GroupIndex
+    bz isNeg_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+isNeg_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b^
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b<
+    retsub
+
+isNeg_ternary_false@2:
+    intc_2 // 0
+    b isNeg_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/signed_negate.sol.SignedNegate.lessFee(__arc4_amountRemaining: bytes, feePips: uint64) -> bytes:
+lessFee:
+    proto 2 1
+    txn GroupIndex
+    bz lessFee_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+lessFee_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    intc 4 // 16777215
+    <=
+    assert // ABI validation
+    frame_dig -1
+    intc 4 // 16777215
+    &
+    frame_bury -1
+    intc 5 // 1000000
+    frame_dig -1
+    -
+    dup
+    intc 4 // 16777215
+    <=
+    assert // overflow
+    frame_dig -2
+    bytec_1 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    b!=
+    assert // signed negation overflow
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
     concat
     dup
     len
@@ -103,7 +408,7 @@ main_ternary_merge@14:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    intc 4 // 1000000
+    intc 5 // 1000000
     itob
     b/
     dup
@@ -112,103 +417,8 @@ main_ternary_merge@14:
     <=
     assert // overflow
     b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@13:
+lessFee_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@14
-
-main_isNeg_route@6:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
-    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b^
-    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b<
-    pushbytes 0x00
-    intc_2 // 0
-    uncover 2
-    setbit
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@18:
-    intc_2 // 0
-    b main_ternary_merge@19
-
-main_negToUint_route@5:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@23
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@24:
-    !
-    assert // not payable
-    dup
-    bytec_0 // 0x8000000000000000000000000000000000000000000000000000000000000000
-    b!=
-    assert // signed negation overflow
-    intc_0 // 32
-    bzero
-    dup
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    b~
-    bytec_2 // 0x01
-    b+
-    bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@23:
-    intc_2 // 0
-    b main_ternary_merge@24
+    b lessFee_ternary_merge@3

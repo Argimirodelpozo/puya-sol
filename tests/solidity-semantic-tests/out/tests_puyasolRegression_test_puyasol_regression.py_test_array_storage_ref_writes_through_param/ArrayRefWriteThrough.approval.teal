@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_ref_writethrough.sol.ArrayRefWriteThrough.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 64
-    bytecblock "arr" "__ctor_pending" 0x0000
+    intcblock 1 0 2 32
+    bytecblock "arr" "__ctor_pending" 0x151f7c75 0x0000
     pushint 4096
     bzero
     dup
@@ -32,31 +32,102 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_3 // 32
+    bzero
+    callsub f
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0xcd78b354 // method "__postInit()void", method "f()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_f_route@6
+    match main___postInit_route@12 main_f_route@13
     err
 
-main_f_route@6:
+main_f_route@13:
+    callsub f
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main___postInit_route@12:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "arr"
+    intc_2 // 2
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_ref_writethrough.sol.ArrayRefWriteThrough.f() -> bytes:
+f:
     txn GroupIndex
-    bz main_ternary_false@12
+    bz f_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+f_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "arr"
     box_del
     pop
     bytec_0 // "arr"
-    bytec_2 // 0x0000
+    bytec_3 // 0x0000
     box_put
     bytec_0 // "arr"
     intc_1 // 0
@@ -75,7 +146,7 @@ main_ternary_merge@13:
     intc_1 // 0
     uncover 2
     box_replace
-    intc_3 // 64
+    pushint 64
     *
     intc_2 // 2
     +
@@ -86,7 +157,7 @@ main_ternary_merge@13:
     box_splice
     bytec_0 // "arr"
     box_get
-    bytec_2 // 0x0000
+    bytec_3 // 0x0000
     cover 2
     select
     dup
@@ -102,34 +173,11 @@ main_ternary_merge@13:
     box_put
     bytec_0 // "arr"
     intc_2 // 2
-    intc_3 // 64
+    pushint 64
     box_extract // on error: index out of bounds
     extract 0 32
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@12:
+f_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@13
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_1 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    bytec_0 // "arr"
-    intc_2 // 2
-    box_create
-    pop
-    intc_0 // 1
-    return
+    b f_ternary_merge@3

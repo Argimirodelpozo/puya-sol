@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/struct_with_external_function.sol.Flow.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 16
-    bytecblock "t" 0x0000000000000000000000000000000000000000000000000000000000000000 0xff07 "__ctor_pending" 0xb583a38a 0xbfb0782e 0x151f7c75
+    intcblock 32 0 1 2
+    bytecblock "t" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0xff07 "__ctor_pending" 0xb583a38a 0xbfb0782e
     pushint 4096
     bzero
     dup
@@ -24,177 +24,204 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "__ctor_pending"
-    intc_1 // 1
+    bytec 4 // "__ctor_pending"
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytes 0xbacc49e3 // method "__postInit()void"
-    bytec 4 // method "X()uint256"
-    bytec 5 // method "Y()uint256"
-    pushbytes 0x219b312e // method "f()(uint256,uint256)"
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_X_route@6 main_Y_route@7 main_f_route@8
-    err
+    pushbytes 0xc1599bd9
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
 
-main_f_route@8:
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub X
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x45b3fe42
+    ==
+    bz main_after_if_else@16
     txn GroupIndex
     bz main_ternary_false@14
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 main_ternary_merge@15:
     !
     assert // not payable
-    bytec_0 // "t"
-    box_get
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 0 16 // on error: index access is out of bounds
-    extract 2 12
-    dup
-    intc_0 // 0
-    extract_uint64
-    dup
-    global CurrentApplicationID
-    ==
-    bz main_else_body@17
-    pop
-    extract 8 4
-    callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
-    intc_0 // 0
-    callsub __funcptr_dispatch_ret_t_uint256
-
-main_after_if_else@18:
-    bytec_0 // "t"
-    box_get
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 16 16 // on error: index access is out of bounds
-    extract 2 12
-    dup
-    cover 2
-    intc_0 // 0
-    extract_uint64
-    dup
-    global CurrentApplicationID
-    ==
-    bz main_else_body@20
-    pop
-    swap
-    extract 8 4
-    callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
-    intc_0 // 0
-    callsub __funcptr_dispatch_ret_t_uint256
-
-main_after_if_else@21:
-    swap
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
+    intc_0 // 32
     bzero
-    swap
-    dig 1
-    b|
-    uncover 2
+    callsub Y
+    concat
     dup
     len
-    intc_2 // 32
-    <=
-    assert // overflow
-    uncover 2
-    b|
-    concat
-    bytec 6 // 0x151f7c75
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
-
-main_else_body@20:
-    itxn_begin
-    uncover 2
-    extract 8 4
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationArgs
-    itxn_field ApplicationID
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    b main_after_if_else@21
-
-main_else_body@17:
-    itxn_begin
-    swap
-    extract 8 4
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationArgs
-    itxn_field ApplicationID
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    b main_after_if_else@18
 
 main_ternary_false@14:
-    intc_0 // 0
+    intc_1 // 0
     b main_ternary_merge@15
 
-main_Y_route@7:
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x26121ff0
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub f
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    bytec 5 // method "X()uint256"
+    bytec 6 // method "Y()uint256"
+    pushbytes 0x219b312e // method "f()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@26 main_X_route@27 main_Y_route@28 main_f_route@29
+    err
+
+main_f_route@29:
+    callsub f
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_Y_route@28:
     callsub Y
-    bytec 6 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
-main_X_route@6:
+main_X_route@27:
     callsub X
-    bytec 6 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
-main___postInit_route@5:
-    bytec_3 // "__ctor_pending"
+main___postInit_route@26:
+    bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_3 // "__ctor_pending"
-    intc_0 // 0
+    bytec 4 // "__ctor_pending"
+    intc_1 // 0
     app_global_put
     bytec_0 // "t"
-    intc_2 // 32
+    intc_0 // 32
     box_create
     pop
     bytec_0 // "t"
@@ -207,25 +234,25 @@ main___postInit_route@5:
     extract 14 2
     swap
     extract 2 12
-    bytec_2 // 0xff07
+    bytec_3 // 0xff07
     swap
     concat
     swap
     concat
     bytec_0 // "t"
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "t"
     box_len
     bury 1
-    bnz main_after_if_else@31
+    bnz main_after_if_else@43
     bytec_0 // "t"
-    intc_2 // 32
+    intc_0 // 32
     box_create
     pop
 
-main_after_if_else@31:
+main_after_if_else@43:
     bytec_0 // "t"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -237,22 +264,22 @@ main_after_if_else@31:
     swap
     extract 2 12
     concat
-    bytec_2 // 0xff07
+    bytec_3 // 0xff07
     concat
     bytec_0 // "t"
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "t"
     box_len
     bury 1
-    bnz main_after_if_else@33
+    bnz main_after_if_else@45
     bytec_0 // "t"
-    intc_2 // 32
+    intc_0 // 32
     box_create
     pop
 
-main_after_if_else@33:
+main_after_if_else@45:
     bytec_0 // "t"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -265,7 +292,7 @@ main_after_if_else@33:
     extract 14 2
     global CurrentApplicationID
     itob
-    bytec 5 // method "Y()uint256"
+    bytec 6 // method "Y()uint256"
     concat
     uncover 2
     swap
@@ -273,19 +300,19 @@ main_after_if_else@33:
     swap
     concat
     bytec_0 // "t"
-    intc_3 // 16
+    pushint 16
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "t"
     box_len
     bury 1
-    bnz main_after_if_else@35
+    bnz main_after_if_else@47
     bytec_0 // "t"
-    intc_2 // 32
+    intc_0 // 32
     box_create
     pop
 
-main_after_if_else@35:
+main_after_if_else@47:
     bytec_0 // "t"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -296,25 +323,25 @@ main_after_if_else@35:
     extract 14 2
     swap
     extract 2 12
-    bytec_2 // 0xff07
+    bytec_3 // 0xff07
     swap
     concat
     swap
     concat
     bytec_0 // "t"
-    intc_3 // 16
+    pushint 16
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "t"
     box_len
     bury 1
-    bnz main_after_if_else@37
+    bnz main_after_if_else@49
     bytec_0 // "t"
-    intc_2 // 32
+    intc_0 // 32
     box_create
     pop
 
-main_after_if_else@37:
+main_after_if_else@49:
     bytec_0 // "t"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -326,22 +353,22 @@ main_after_if_else@37:
     swap
     extract 2 12
     concat
-    bytec_2 // 0xff07
+    bytec_3 // 0xff07
     concat
     bytec_0 // "t"
-    intc_3 // 16
+    pushint 16
     uncover 2
     box_replace // on error: index out of bounds
     bytec_0 // "t"
     box_len
     bury 1
-    bnz main_after_if_else@39
+    bnz main_after_if_else@51
     bytec_0 // "t"
-    intc_2 // 32
+    intc_0 // 32
     box_create
     pop
 
-main_after_if_else@39:
+main_after_if_else@51:
     bytec_0 // "t"
     box_get
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -354,7 +381,7 @@ main_after_if_else@39:
     extract 14 2
     global CurrentApplicationID
     itob
-    bytec 4 // method "X()uint256"
+    bytec 5 // method "X()uint256"
     concat
     uncover 2
     swap
@@ -362,10 +389,10 @@ main_after_if_else@39:
     swap
     concat
     bytec_0 // "t"
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     box_replace // on error: index out of bounds
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -374,7 +401,7 @@ X:
     txn GroupIndex
     bz X_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -385,7 +412,7 @@ X_ternary_merge@3:
     retsub
 
 X_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b X_ternary_merge@3
 
 
@@ -394,7 +421,7 @@ Y:
     txn GroupIndex
     bz Y_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -405,15 +432,131 @@ Y_ternary_merge@3:
     retsub
 
 Y_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b Y_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/struct_with_external_function.sol.Flow.f() -> bytes, bytes:
+f:
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "t"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 0 16 // on error: index access is out of bounds
+    extract 2 12
+    dup
+    intc_1 // 0
+    extract_uint64
+    dup
+    global CurrentApplicationID
+    ==
+    bz f_else_body@5
+    pop
+    extract 8 4
+    callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
+    intc_1 // 0
+    callsub __funcptr_dispatch_ret_t_uint256
+
+f_after_if_else@7:
+    bytec_0 // "t"
+    box_get
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    extract 2 12
+    dup
+    cover 2
+    intc_1 // 0
+    extract_uint64
+    dup
+    global CurrentApplicationID
+    ==
+    bz f_else_body@9
+    pop
+    swap
+    extract 8 4
+    callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
+    intc_1 // 0
+    callsub __funcptr_dispatch_ret_t_uint256
+
+f_after_if_else@11:
+    swap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    uncover 2
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    retsub
+
+f_else_body@9:
+    itxn_begin
+    uncover 2
+    extract 8 4
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    b f_after_if_else@11
+
+f_else_body@5:
+    itxn_begin
+    swap
+    extract 8 4
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    b f_after_if_else@7
+
+f_ternary_false@2:
+    intc_1 // 0
+    b f_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/struct_with_external_function.sol.Flow.__funcptr_dispatch_ret_t_uint256(__funcptr_id: uint64, __static: uint64) -> bytes:
 __funcptr_dispatch_ret_t_uint256:
     proto 2 1
     frame_dig -2
-    intc_1 // 1
+    intc_2 // 1
     ==
     bz __funcptr_dispatch_ret_t_uint256_else_body@2
     callsub Y
@@ -421,7 +564,7 @@ __funcptr_dispatch_ret_t_uint256:
 
 __funcptr_dispatch_ret_t_uint256_else_body@2:
     frame_dig -2
-    pushint 2
+    intc_3 // 2
     ==
     assert // invalid function pointer
     callsub X
@@ -432,16 +575,16 @@ __funcptr_dispatch_ret_t_uint256_else_body@2:
 __sel_to_id___funcptr_dispatch_ret_t_uint256:
     proto 1 1
     frame_dig -1
-    bytec 5 // method "Y()uint256"
+    bytec 6 // method "Y()uint256"
     ==
     bz __sel_to_id___funcptr_dispatch_ret_t_uint256_else_body@2
-    intc_1 // 1
+    intc_2 // 1
     retsub
 
 __sel_to_id___funcptr_dispatch_ret_t_uint256_else_body@2:
     frame_dig -1
-    bytec 4 // method "X()uint256"
+    bytec 5 // method "X()uint256"
     ==
     assert // unknown function selector in self-call dispatch
-    pushint 2
+    intc_3 // 2
     retsub

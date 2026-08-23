@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/state_smoke_test.sol.test.approval_program() -> uint64:
 main:
-    intcblock 1 32 255 0
-    bytecblock 0x "value1" "value2"
+    intcblock 32 1 0 255
+    bytecblock 0x "value1" "value2" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -30,10 +30,129 @@ main:
     bytec_2 // "value2"
     bytec_0 // 0x
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0xf72d0b3b
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 31
+    pushint 31
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    intc_0 // 32
+    bzero
+    swap
+    pushint 24
+    extract_uint64
+    callsub get
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0x48ab5e6c
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 31
+    pushint 31
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    pushint 24
+    extract_uint64
+    txna ApplicationArgs 1
+    extract 32 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub set
+    bytec_3 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
     txn OnCompletion
     !
     assert
@@ -41,10 +160,10 @@ main_after_if_else@2:
     assert
     pushbytess 0xba51bbf2 0x4334fac7 // method "get(uint64)uint256", method "set(uint64,uint256)void"
     txna ApplicationArgs 0
-    match main_get_route@5 main_set_route@6
+    match main_get_route@19 main_set_route@20
     err
 
-main_set_route@6:
+main_set_route@20:
     txna ApplicationArgs 1
     dup
     len
@@ -55,46 +174,14 @@ main_set_route@6:
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@12
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@13:
-    !
-    assert // not payable
-    swap
-    dup
-    intc_2 // 255
-    <=
-    assert // ABI validation
-    intc_2 // 255
-    &
-    bnz main_else_body@15
-    bytec_1 // "value1"
-    swap
-    app_global_put
-
-main_after_if_else@16:
-    intc_0 // 1
+    callsub set
+    intc_1 // 1
     return
 
-main_else_body@15:
-    bytec_2 // "value2"
-    swap
-    app_global_put
-    b main_after_if_else@16
-
-main_ternary_false@12:
-    intc_3 // 0
-    b main_ternary_merge@13
-
-main_get_route@5:
+main_get_route@19:
     txna ApplicationArgs 1
     dup
     len
@@ -102,24 +189,39 @@ main_get_route@5:
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
+    callsub get
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/state_smoke_test.sol.test.get(which: uint64) -> bytes:
+get:
+    proto 1 1
     txn GroupIndex
-    bz main_ternary_false@20
+    bz get_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+get_ternary_merge@3:
     !
     assert // not payable
-    dup
-    intc_2 // 255
+    frame_dig -1
+    intc_3 // 255
     <=
     assert // ABI validation
-    intc_2 // 255
+    frame_dig -1
+    intc_3 // 255
     &
-    bnz main_else_body@23
-    intc_3 // 0
+    dup
+    frame_bury -1
+    bnz get_else_body@5
+    intc_2 // 0
     bytec_1 // "value1"
     app_global_get_ex
     bytec_0 // 0x
@@ -127,23 +229,16 @@ main_ternary_merge@21:
     select
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
+    retsub
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/state_smoke_test.sol.test.get@24:
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_else_body@23:
-    intc_3 // 0
+get_else_body@5:
+    intc_2 // 0
     bytec_2 // "value2"
     app_global_get_ex
     bytec_0 // 0x
@@ -151,14 +246,53 @@ main_else_body@23:
     select
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/state_smoke_test.sol.test.get@24
+    retsub
 
-main_ternary_false@20:
-    intc_3 // 0
-    b main_ternary_merge@21
+get_ternary_false@2:
+    intc_2 // 0
+    b get_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/state_smoke_test.sol.test.set(which: uint64, __arc4_value: bytes) -> void:
+set:
+    proto 2 0
+    txn GroupIndex
+    bz set_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    intc_3 // 255
+    <=
+    assert // ABI validation
+    frame_dig -2
+    intc_3 // 255
+    &
+    dup
+    frame_bury -2
+    bnz set_else_body@5
+    bytec_1 // "value1"
+    frame_dig -1
+    app_global_put
+    retsub
+
+set_else_body@5:
+    bytec_2 // "value2"
+    frame_dig -1
+    app_global_put
+    retsub
+
+set_ternary_false@2:
+    intc_2 // 0
+    b set_ternary_merge@3

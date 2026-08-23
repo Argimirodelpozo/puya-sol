@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/call_value_with_data.sol.Vault.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock 0x "deposits" "got" 0x151f7c75
+    intcblock 1 32 0 2
+    bytecblock 0x 0x151f7c75 "deposits" "got"
     pushint 4096
     bzero
     dup
@@ -24,10 +24,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "deposits"
+    bytec_2 // "deposits"
     bytec_0 // 0x
     app_global_put
-    bytec_2 // "got"
+    bytec_3 // "got"
     bytec_0 // 0x
     app_global_put
     intc_0 // 1
@@ -35,52 +35,74 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x92e03b1c 0xfe2a0f0f 0x9456342a // method "deposit()void", method "deposits()uint256", method "got()uint256"
+    bnz main_after_if_else@6
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@6
     txna ApplicationArgs 0
-    match main_deposit_route@5 main_deposits_route@6 main_got_route@7
-    err
+    pushbytes 0xd0e30db0
+    ==
+    bz main_after_if_else@6
+    callsub deposit
+    bytec_1 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
 
-main_got_route@7:
+main_after_if_else@6:
+    txn OnCompletion
+    bnz main_after_if_else@13
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@13
+    txna ApplicationArgs 0
+    pushbytes 0x323a5e0b
+    ==
+    bz main_after_if_else@13
     txn GroupIndex
-    bz main_ternary_false@13
+    bz main_ternary_false@11
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@14:
+main_ternary_merge@12:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_2 // "got"
-    app_global_get_ex
-    bytec_0 // 0x
-    cover 2
-    select
+    intc_1 // 32
+    bzero
+    callsub deposits
+    concat
     dup
     len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec_3 // 0x151f7c75
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@13:
-    intc_1 // 0
-    b main_ternary_merge@14
+main_ternary_false@11:
+    intc_2 // 0
+    b main_ternary_merge@12
 
-main_deposits_route@6:
+main_after_if_else@13:
+    txn OnCompletion
+    bnz main_after_if_else@20
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@20
+    txna ApplicationArgs 0
+    pushbytes 0xde2111e2
+    ==
+    bz main_after_if_else@20
     txn GroupIndex
     bz main_ternary_false@18
     txn GroupIndex
@@ -91,21 +113,17 @@ main_deposits_route@6:
 main_ternary_merge@19:
     !
     assert // not payable
-    intc_1 // 0
-    bytec_1 // "deposits"
-    app_global_get_ex
-    bytec_0 // 0x
-    cover 2
-    select
+    intc_1 // 32
+    bzero
+    callsub got
+    concat
     dup
     len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec_3 // 0x151f7c75
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -113,12 +131,48 @@ main_ternary_merge@19:
     return
 
 main_ternary_false@18:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@19
 
-main_deposit_route@5:
-    intc_1 // 0
-    bytec_1 // "deposits"
+main_after_if_else@20:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x92e03b1c 0xfe2a0f0f 0x9456342a // method "deposit()void", method "deposits()uint256", method "got()uint256"
+    txna ApplicationArgs 0
+    match main_deposit_route@23 main_deposits_route@24 main_got_route@25
+    err
+
+main_got_route@25:
+    callsub got
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_deposits_route@24:
+    callsub deposits
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_deposit_route@23:
+    callsub deposit
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/call_value_with_data.sol.Vault.deposit() -> void:
+deposit:
+    intc_2 // 0
+    bytec_2 // "deposits"
     app_global_get_ex
     bytec_0 // 0x
     cover 2
@@ -129,24 +183,89 @@ main_deposit_route@5:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_1 // "deposits"
+    bytec_2 // "deposits"
     swap
     app_global_put
     txn GroupIndex
-    bz main_ternary_false@23
+    bz deposit_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+deposit_ternary_merge@3:
     itob
-    bytec_2 // "got"
+    bytec_3 // "got"
     swap
     app_global_put
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@23:
-    intc_1 // 0
-    b main_ternary_merge@24
+deposit_ternary_false@2:
+    intc_2 // 0
+    b deposit_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/call_value_with_data.sol.Vault.deposits() -> bytes:
+deposits:
+    txn GroupIndex
+    bz deposits_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+deposits_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_2 // "deposits"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+deposits_ternary_false@2:
+    intc_2 // 0
+    b deposits_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/call_value_with_data.sol.Vault.got() -> bytes:
+got:
+    txn GroupIndex
+    bz got_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+got_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_3 // "got"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+got_ternary_false@2:
+    intc_2 // 0
+    b got_ternary_merge@3

@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_fixed_array_first_write.sol.G.approval_program() -> uint64:
 main:
-    intcblock 1 16 0 8
-    bytecblock "st" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x151f7c75 0x010000000000000000
-    intc_2 // 0
-    dup
+    intcblock 1 32 16 0
+    bytecblock 0x151f7c75 "st" 0xffffffffffffffffffffffffffffffff 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x010000000000000000
     pushint 4096
     bzero
     dup
@@ -31,271 +29,549 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@12
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@12
+    txna ApplicationArgs 0
+    pushbytes 0x5fe86c6f
+    ==
+    bz main_after_if_else@12
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    len
+    pushint 64
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 32 32
+    dupn 2
+    extract 0 16
+    swap
+    intc_2 // 16
+    getbyte
+    pushint 128
+    >=
+    bz main_ternary_false@10
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+
+main_ternary_merge@11:
+    ==
+    assert // invalid EVM ABI signed integer padding
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    intc_2 // 16
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_2 // 16
+    -
+    intc_2 // 16
+    extract3
+    dup
+    len
+    intc_2 // 16
+    <=
+    assert // overflow
+    b|
+    callsub setStInner
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@10:
+    intc_2 // 16
+    bzero
+    b main_ternary_merge@11
+
+main_ternary_false@7:
+    intc_3 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@12:
+    txn OnCompletion
+    bnz main_after_if_else@22
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@22
+    txna ApplicationArgs 0
+    pushbytes 0xd08fd3a1
+    ==
+    bz main_after_if_else@22
+    txn GroupIndex
+    bz main_ternary_false@17
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@18:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    dup
+    cover 2
+    b|
+    callsub getStInner
+    dup
+    intc_3 // 0
+    getbyte
+    pushint 128
+    >=
+    bz main_ternary_false@20
+    bury 1
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@21:
+    swap
+    dup
+    len
+    intc_1 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@20:
+    swap
+    b main_ternary_merge@21
+
+main_ternary_false@17:
+    intc_3 // 0
+    b main_ternary_merge@18
+
+main_after_if_else@22:
+    txn OnCompletion
+    bnz main_after_if_else@29
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@29
+    txna ApplicationArgs 0
+    pushbytes 0x37cab754
+    ==
+    bz main_after_if_else@29
+    txn GroupIndex
+    bz main_ternary_false@27
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@28:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 24
+    pushint 24
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    pushint 24
+    extract_uint64
+    callsub setStX
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@27:
+    intc_3 // 0
+    b main_ternary_merge@28
+
+main_after_if_else@29:
+    txn OnCompletion
+    bnz main_after_if_else@36
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@36
+    txna ApplicationArgs 0
+    pushbytes 0xf391a848
+    ==
+    bz main_after_if_else@36
+    txn GroupIndex
+    bz main_ternary_false@34
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@35:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    callsub getStX
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@34:
+    intc_3 // 0
+    b main_ternary_merge@35
+
+main_after_if_else@36:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x5d1701b7 0x7cff7f9a 0xcb3477a0 0x1a731961 // method "setStInner(uint256,uint128)void", method "getStInner(uint256)uint256", method "setStX(uint64)void", method "getStX()uint64"
     txna ApplicationArgs 0
-    match main_setStInner_route@5 main_getStInner_route@6 main_setStX_route@7 main_getStX_route@8
+    match main_setStInner_route@39 main_getStInner_route@40 main_setStX_route@41 main_getStX_route@42
     err
 
-main_getStX_route@8:
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    bytec_0 // "st"
-    box_get
-    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    extract 32 8
-    bytec 5 // 0x151f7c75
+main_getStX_route@42:
+    callsub getStX
+    itob
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_setStX_route@7:
+main_setStX_route@41:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 8
+    pushint 8
     ==
     assert // invalid number of bytes for arc4.uint64
-    txn GroupIndex
-    bz main_ternary_false@19
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@20:
-    !
-    assert // not payable
-    bytec_0 // "st"
-    box_get
-    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    swap
-    replace2 32
-    bytec_0 // "st"
-    swap
-    box_put
+    btoi
+    callsub setStX
     intc_0 // 1
     return
 
-main_ternary_false@19:
-    intc_2 // 0
-    b main_ternary_merge@20
-
-main_getStInner_route@6:
+main_getStInner_route@40:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
-    pushint 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@24
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@25:
-    !
-    assert // not payable
-    pushint 2
-    itob
-    dig 2
-    b>
-    bz main_else_body@30
-    dig 1
-    dup
-    bytec 6 // 0x010000000000000000
-    b<
-    assert // array index out of bounds
-    bytec_0 // "st"
-    box_get
-    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
-    cover 2
-    select
-    intc_3 // 8
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    swap
-    extract 0 32
-    swap
-    intc_1 // 16
-    *
-    intc_1 // 16
-    extract3 // on error: index access is out of bounds
-    bytec_2 // 0xffffffffffffffffffffffffffffffff
-    b&
-    dup
-    bytec_3 // 0x80000000000000000000000000000000
-    b>=
-    bz main_ternary_false@28
-    bytec 4 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
-    b+
-
-main_after_if_else@31:
-    bytec_2 // 0xffffffffffffffffffffffffffffffff
-    b&
-    dup
-    bytec_3 // 0x80000000000000000000000000000000
-    b>=
-    bz main_ternary_false@33
-    bytec 4 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
-    b+
-
-main_ternary_merge@34:
-    dup
-    len
-    pushint 32
-    <=
-    assert // overflow
-    pushint 32
-    bzero
-    b|
-    bytec 5 // 0x151f7c75
+    callsub getStInner
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@33:
-    b main_ternary_merge@34
-
-main_ternary_false@28:
-    b main_after_if_else@31
-
-main_else_body@30:
-    pushbytes 0x
-    b main_after_if_else@31
-
-main_ternary_false@24:
-    intc_2 // 0
-    b main_ternary_merge@25
-
-main_setStInner_route@5:
+main_setStInner_route@39:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
-    pushint 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_1 // 16
+    intc_2 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
+    callsub setStInner
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_fixed_array_first_write.sol.G.setStInner(__arc4_i: bytes, __arc4_v: bytes) -> void:
+setStInner:
+    proto 2 0
+    intc_3 // 0
     txn GroupIndex
-    bz main_ternary_false@38
+    bz setStInner_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@39:
+setStInner_ternary_merge@3:
     !
     assert // not payable
+    frame_dig -1
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec_3 // 0x80000000000000000000000000000000
+    bytec 4 // 0x80000000000000000000000000000000
     b>=
-    bz main_ternary_false@41
-    bytec 4 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    bz setStInner_ternary_false@5
+    bytec 5 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
-    bury 1
+    frame_bury 0
 
-main_ternary_merge@42:
+setStInner_ternary_merge@6:
     pushint 2
     itob
-    dig 2
+    frame_dig -2
     b>
-    bz main_after_if_else@44
-    bytec_0 // "st"
+    bz setStInner_after_if_else@8
+    bytec_1 // "st"
     box_get
-    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    dig 2
-    dup
+    frame_dig -2
     bytec 6 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    intc_1 // 16
+    intc_2 // 16
     bzero
     dup
-    dig 4
+    frame_dig 0
     concat
     dup
     len
-    intc_1 // 16
+    intc_2 // 16
     -
-    intc_1 // 16
+    intc_2 // 16
     extract3
     dup
     len
-    intc_1 // 16
+    intc_2 // 16
     <=
     assert // overflow
     b|
-    intc_3 // 8
+    pushint 8
     bzero
-    uncover 2
+    frame_dig -2
     concat
     dup
     len
-    intc_3 // 8
+    pushint 8
     -
     extract_uint64
     dig 2
     extract 0 32
     swap
-    intc_1 // 16
+    intc_2 // 16
     *
     uncover 2
     replace3 // on error: index access is out of bounds
     replace2 0
-    bytec_0 // "st"
+    bytec_1 // "st"
     swap
     box_put
 
-main_after_if_else@44:
+setStInner_after_if_else@8:
+    retsub
+
+setStInner_ternary_false@5:
+    frame_bury 0
+    b setStInner_ternary_merge@6
+
+setStInner_ternary_false@2:
+    intc_3 // 0
+    b setStInner_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_fixed_array_first_write.sol.G.getStInner(__arc4_i: bytes) -> bytes:
+getStInner:
+    proto 1 1
+    txn GroupIndex
+    bz getStInner_ternary_false@2
+    txn GroupIndex
     intc_0 // 1
-    return
+    -
+    gtxns Amount
 
-main_ternary_false@41:
-    bury 1
-    b main_ternary_merge@42
+getStInner_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 2
+    itob
+    frame_dig -1
+    b>
+    bz getStInner_else_body@8
+    frame_dig -1
+    bytec 6 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_1 // "st"
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushint 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    swap
+    extract 0 32
+    swap
+    intc_2 // 16
+    *
+    intc_2 // 16
+    extract3 // on error: index access is out of bounds
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec 4 // 0x80000000000000000000000000000000
+    b>=
+    bz getStInner_ternary_false@6
+    bytec 5 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b+
 
-main_ternary_false@38:
-    intc_2 // 0
-    b main_ternary_merge@39
+getStInner_after_if_else@9:
+    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    b&
+    dup
+    bytec 4 // 0x80000000000000000000000000000000
+    b>=
+    bz getStInner_ternary_false@11
+    bytec 5 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    b+
+
+getStInner_ternary_merge@12:
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+getStInner_ternary_false@11:
+    b getStInner_ternary_merge@12
+
+getStInner_ternary_false@6:
+    b getStInner_after_if_else@9
+
+getStInner_else_body@8:
+    pushbytes 0x
+    b getStInner_after_if_else@9
+
+getStInner_ternary_false@2:
+    intc_3 // 0
+    b getStInner_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_fixed_array_first_write.sol.G.setStX(v: uint64) -> void:
+setStX:
+    proto 1 0
+    txn GroupIndex
+    bz setStX_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setStX_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "st"
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    frame_dig -1
+    itob
+    replace2 32
+    bytec_1 // "st"
+    swap
+    box_put
+    retsub
+
+setStX_ternary_false@2:
+    intc_3 // 0
+    b setStX_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_fixed_array_first_write.sol.G.getStX() -> uint64:
+getStX:
+    txn GroupIndex
+    bz getStX_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+getStX_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "st"
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_1 // 32
+    extract_uint64
+    retsub
+
+getStX_ternary_false@2:
+    intc_3 // 0
+    b getStX_ternary_merge@3

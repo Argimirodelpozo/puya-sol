@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol.BatchACorrectness.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock 0x151f7c75
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000005
     pushint 4096
     bzero
     dup
@@ -31,51 +31,268 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x2fbd37d3
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub m4Transient
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xb3de648b
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub f(u256)
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x98c3a6c1
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    pushbytes 0x01
+    b<=
+    assert // invalid EVM ABI bool
+    intc_0 // 32
+    bzero
+    swap
+    pushint 24
+    extract_uint64
+    intc_2 // 0
+    !=
+    callsub f(b)
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0xb84ef1f3
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub m16Uint
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0x7b35c962
+    ==
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub m16Bool
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_2 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xa4abcf4b 0x1928cd24 0xb168d7ea 0x5445d317 0xa9e35567 // method "m4Transient()(uint256,uint256)", method "f(uint256)uint256", method "f(bool)uint256", method "m16Uint()uint256", method "m16Bool()uint256"
     txna ApplicationArgs 0
-    match main_m4Transient_route@5 main_f_route@6 main_f_route@7 main_m16Uint_route@8 main_m16Bool_route@9
+    match main_m4Transient_route@40 main_f_route@41 main_f_route@42 main_m16Uint_route@43 main_m16Bool_route@44
     err
 
-main_m16Bool_route@9:
-    txn GroupIndex
-    bz main_ternary_false@15
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@16:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    intc_1 // 1
-    callsub f(b)
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dup
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    extract 0 32
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    b|
+main_m16Bool_route@44:
+    callsub m16Bool
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -83,47 +300,8 @@ main_ternary_merge@16:
     intc_1 // 1
     return
 
-main_ternary_false@15:
-    intc_2 // 0
-    b main_ternary_merge@16
-
-main_m16Uint_route@8:
-    txn GroupIndex
-    bz main_ternary_false@20
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@21:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    pushint 5
-    itob
-    callsub f(u256)
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dup
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    extract 0 32
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    b|
+main_m16Uint_route@43:
+    callsub m16Uint
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -131,11 +309,7 @@ main_ternary_merge@21:
     intc_1 // 1
     return
 
-main_ternary_false@20:
-    intc_2 // 0
-    b main_ternary_merge@21
-
-main_f_route@7:
+main_f_route@42:
     txna ApplicationArgs 1
     dup
     len
@@ -152,7 +326,7 @@ main_f_route@7:
     intc_1 // 1
     return
 
-main_f_route@6:
+main_f_route@41:
     txna ApplicationArgs 1
     dup
     len
@@ -167,19 +341,31 @@ main_f_route@6:
     intc_1 // 1
     return
 
-main_m4Transient_route@5:
+main_m4Transient_route@40:
+    callsub m4Transient
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol.BatchACorrectness.m4Transient() -> bytes, bytes:
+m4Transient:
     txn GroupIndex
-    bz main_ternary_false@29
+    bz m4Transient_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+m4Transient_ternary_merge@3:
     !
     assert // not payable
     load 5
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000005
     replace2 0
     store 5
     load 5
@@ -192,16 +378,13 @@ main_ternary_merge@30:
     <=
     assert // overflow
     b|
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000005
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000005
     swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@29:
+m4Transient_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@30
+    b m4Transient_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol.BatchACorrectness.f(u256)(__arc4_x: bytes) -> bytes:
@@ -269,3 +452,92 @@ f(b)_ternary_merge@3:
 f(b)_ternary_false@2:
     intc_2 // 0
     b f(b)_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol.BatchACorrectness.m16Uint() -> bytes:
+m16Uint:
+    txn GroupIndex
+    bz m16Uint_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+m16Uint_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    pushint 5
+    itob
+    callsub f(u256)
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    retsub
+
+m16Uint_ternary_false@2:
+    intc_2 // 0
+    b m16Uint_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/batchA_correctness.sol.BatchACorrectness.m16Bool() -> bytes:
+m16Bool:
+    txn GroupIndex
+    bz m16Bool_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+m16Bool_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    intc_1 // 1
+    callsub f(b)
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    retsub
+
+m16Bool_ternary_false@2:
+    intc_2 // 0
+    b m16Bool_ternary_merge@3

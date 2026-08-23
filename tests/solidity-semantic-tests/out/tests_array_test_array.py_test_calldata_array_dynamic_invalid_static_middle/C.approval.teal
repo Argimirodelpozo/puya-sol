@@ -3,9 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/calldata_array_dynamic_invalid_static_middle.sol.C.approval_program() -> uint64:
 main:
-    intcblock 2 1 0 32
-    bytecblock 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
-    pushbytes ""
+    intcblock 32 0 1 2 65535
+    bytecblock 0x 0x0000 0x151f7c75 0x0001 0x000100020002 0x000000000000000000000000000000000000000000000000000000000000002a
+    bytec_0 // ""
+    dupn 11
     pushint 4096
     bzero
     dup
@@ -25,10 +26,775 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@15
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@15
+    txna ApplicationArgs 0
+    pushbytes 0x6ab0914c
+    ==
+    bz main_after_if_else@15
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    dup
+    bury 14
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI array length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    bury 10
+    intc 4 // 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    bytec_1 // 0x0000
+    intc_1 // 0
+
+main_while_top@9:
+    dup
+    dig 11
+    <
+    bz main_after_while@14
+    dup
+    intc_0 // 32
+    *
+    dig 14
+    dup
+    uncover 2
+    +
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    +
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    dig 1
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    +
+    dup
+    intc_0 // 32
+    +
+    dup
+    cover 4
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI array length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    bury 12
+    intc 4 // 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    bytec_1 // 0x0000
+    cover 2
+    intc_1 // 0
+
+main_while_top@11:
+    dup
+    dig 13
+    <
+    bz main_after_while@13
+    dup
+    intc_0 // 32
+    *
+    dig 5
+    +
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 5
+    dup
+    cover 2
+    intc_1 // 0
+    extract_uint16
+    +
+    itob
+    extract 6 0
+    replace2 0
+    swap
+    concat
+    cover 3
+    intc_2 // 1
+    +
+    b main_while_top@11
+
+main_after_while@13:
+    pop
+    uncover 3
+    pop
+    bytec 4 // 0x000100020002
+    uncover 3
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 3
+    cover 2
+    callsub dynamic_array_concat_dynamic_element
+    swap
+    intc_2 // 1
+    +
+    b main_while_top@9
+
+main_after_while@14:
+    pop
+    intc_0 // 32
+    bzero
+    swap
+    callsub f
+    pop
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@15:
+    txn OnCompletion
+    bnz main_after_if_else@28
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@28
+    txna ApplicationArgs 0
+    pushbytes 0x664ffb2b
+    ==
+    bz main_after_if_else@28
+    txn GroupIndex
+    bz main_ternary_false@20
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@21:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    dup
+    bury 13
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI array length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    bury 8
+    intc 4 // 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    bytec_1 // 0x0000
+    intc_1 // 0
+
+main_while_top@22:
+    dup
+    dig 9
+    <
+    bz main_after_while@27
+    dup
+    intc_0 // 32
+    *
+    dig 13
+    dup
+    uncover 2
+    +
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    +
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    dig 1
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    +
+    dup
+    intc_0 // 32
+    +
+    dup
+    cover 4
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI array length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    bury 10
+    intc 4 // 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    bytec_1 // 0x0000
+    cover 2
+    intc_1 // 0
+
+main_while_top@24:
+    dup
+    dig 11
+    <
+    bz main_after_while@26
+    dup
+    intc_0 // 32
+    *
+    dig 5
+    +
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 5
+    dup
+    cover 2
+    intc_1 // 0
+    extract_uint16
+    +
+    itob
+    extract 6 0
+    replace2 0
+    swap
+    concat
+    cover 3
+    intc_2 // 1
+    +
+    b main_while_top@24
+
+main_after_while@26:
+    pop
+    uncover 3
+    pop
+    bytec 4 // 0x000100020002
+    uncover 3
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 3
+    cover 2
+    callsub dynamic_array_concat_dynamic_element
+    swap
+    intc_2 // 1
+    +
+    b main_while_top@22
+
+main_after_while@27:
+    pop
+    intc_0 // 32
+    bzero
+    swap
+    callsub g
+    pop
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@20:
+    intc_1 // 0
+    b main_ternary_merge@21
+
+main_after_if_else@28:
+    txn OnCompletion
+    bnz main_after_if_else@41
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@41
+    txna ApplicationArgs 0
+    pushbytes 0xc2e687d8
+    ==
+    bz main_after_if_else@41
+    txn GroupIndex
+    bz main_ternary_false@33
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@34:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    dup
+    bury 12
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI array length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    bury 6
+    intc 4 // 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    bytec_1 // 0x0000
+    intc_1 // 0
+
+main_while_top@35:
+    dup
+    dig 7
+    <
+    bz main_after_while@40
+    dup
+    intc_0 // 32
+    *
+    dig 12
+    dup
+    uncover 2
+    +
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    +
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    dig 1
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    +
+    dup
+    intc_0 // 32
+    +
+    dup
+    cover 4
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI array length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    bury 8
+    intc 4 // 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    bytec_1 // 0x0000
+    cover 2
+    intc_1 // 0
+
+main_while_top@37:
+    dup
+    dig 9
+    <
+    bz main_after_while@39
+    dup
+    intc_0 // 32
+    *
+    dig 5
+    +
+    dup
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec_3 // 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 5
+    dup
+    cover 2
+    intc_1 // 0
+    extract_uint16
+    +
+    itob
+    extract 6 0
+    replace2 0
+    swap
+    concat
+    cover 3
+    intc_2 // 1
+    +
+    b main_while_top@37
+
+main_after_while@39:
+    pop
+    uncover 3
+    pop
+    bytec 4 // 0x000100020002
+    uncover 3
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 3
+    cover 2
+    callsub dynamic_array_concat_dynamic_element
+    swap
+    intc_2 // 1
+    +
+    b main_while_top@35
+
+main_after_while@40:
+    pop
+    intc_0 // 32
+    bzero
+    swap
+    callsub h
+    pop
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@33:
+    intc_1 // 0
+    b main_ternary_merge@34
+
+main_after_if_else@41:
     txn OnCompletion
     !
     assert
@@ -36,32 +802,32 @@ main_after_if_else@2:
     assert
     pushbytess 0xa3cde016 0x65b39e32 0x86efa2ab // method "f(uint256[][1][])uint256", method "g(uint256[][1][])uint256", method "h(uint256[][1][])uint256"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6 main_h_route@7
+    match main_f_route@44 main_g_route@45 main_h_route@46
     err
 
-main_h_route@7:
+main_h_route@46:
     txna ApplicationArgs 1
-    dup
-    intc_2 // 0
+    dupn 2
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    cover 2
-    intc_0 // 2
+    bury 6
+    intc_3 // 2
     *
     swap
     dup
     len
     cover 2
     extract 2 0
-    intc_2 // 0
+    intc_1 // 0
 
-main_for_header@12:
+main_for_header@51:
     dup
-    dig 5
+    dig 8
     <
-    bz main_after_for@17
+    bz main_after_for@56
     dup
-    intc_0 // 2
+    intc_3 // 2
     *
     dig 2
     dup
@@ -75,17 +841,17 @@ main_for_header@12:
     len
     substring3
     cover 3
-    intc_0 // 2
+    intc_3 // 2
     cover 3
-    intc_2 // 0
+    intc_1 // 0
 
-main_for_header@14:
+main_for_header@53:
     dup
-    intc_1 // 1
+    intc_2 // 1
     <
-    bz main_after_for@16
+    bz main_after_for@55
     dup
-    intc_0 // 2
+    intc_3 // 2
     *
     dig 6
     dup
@@ -100,19 +866,19 @@ main_for_header@14:
     dig 1
     len
     substring3
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 32
+    intc_0 // 32
     *
-    intc_0 // 2
+    intc_3 // 2
     +
     +
     cover 4
-    intc_1 // 1
+    intc_2 // 1
     +
-    b main_for_header@14
+    b main_for_header@53
 
-main_after_for@16:
+main_after_for@55:
     pop
     uncover 4
     pop
@@ -120,253 +886,390 @@ main_after_for@16:
     uncover 3
     +
     cover 2
-    intc_1 // 1
+    intc_2 // 1
     +
-    b main_for_header@12
+    b main_for_header@51
 
-main_after_for@17:
+main_after_for@56:
     popn 2
-    intc_0 // 2
+    intc_3 // 2
     +
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 1>>
+    callsub h
+    pop
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_g_route@45:
+    txna ApplicationArgs 1
+    dupn 2
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 4
+    intc_3 // 2
+    *
+    swap
+    dup
+    len
+    cover 2
+    extract 2 0
+    intc_1 // 0
+
+main_for_header@59:
+    dup
+    dig 6
+    <
+    bz main_after_for@64
+    dup
+    intc_3 // 2
+    *
+    dig 2
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 5
+    ==
+    assert // invalid tail pointer for (len+(len+uint256[])[1][])
+    dig 1
+    len
+    substring3
+    cover 3
+    intc_3 // 2
+    cover 3
+    intc_1 // 0
+
+main_for_header@61:
+    dup
+    intc_2 // 1
+    <
+    bz main_after_for@63
+    dup
+    intc_3 // 2
+    *
+    dig 6
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    uncover 7
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+uint256[])[1]
+    dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    +
+    cover 4
+    intc_2 // 1
+    +
+    b main_for_header@61
+
+main_after_for@63:
+    pop
+    uncover 4
+    pop
+    uncover 2
+    uncover 3
+    +
+    cover 2
+    intc_2 // 1
+    +
+    b main_for_header@59
+
+main_after_for@64:
+    popn 2
+    intc_3 // 2
+    +
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 1>>
+    callsub g
+    pop
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_f_route@44:
+    txna ApplicationArgs 1
+    dupn 2
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 5
+    intc_3 // 2
+    *
+    swap
+    dup
+    len
+    cover 2
+    extract 2 0
+    intc_1 // 0
+
+main_for_header@67:
+    dup
+    dig 7
+    <
+    bz main_after_for@72
+    dup
+    intc_3 // 2
+    *
+    dig 2
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 5
+    ==
+    assert // invalid tail pointer for (len+(len+uint256[])[1][])
+    dig 1
+    len
+    substring3
+    cover 3
+    intc_3 // 2
+    cover 3
+    intc_1 // 0
+
+main_for_header@69:
+    dup
+    intc_2 // 1
+    <
+    bz main_after_for@71
+    dup
+    intc_3 // 2
+    *
+    dig 6
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    uncover 7
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+uint256[])[1]
+    dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    +
+    cover 4
+    intc_2 // 1
+    +
+    b main_for_header@69
+
+main_after_for@71:
+    pop
+    uncover 4
+    pop
+    uncover 2
+    uncover 3
+    +
+    cover 2
+    intc_2 // 1
+    +
+    b main_for_header@67
+
+main_after_for@72:
+    popn 2
+    intc_3 // 2
+    +
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 1>>
+    callsub f
+    pop
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// _puya_lib.arc4.dynamic_array_concat_dynamic_element(array: bytes, new_head_and_tail: bytes, new_items_count: uint64) -> bytes:
+dynamic_array_concat_dynamic_element:
+    proto 3 1
+    frame_dig -3
+    intc_1 // 0
+    extract_uint16
+    dup
+    frame_dig -1
+    +
+    itob
+    extract 6 0
+    swap
+    frame_dig -3
+    extract 2 0
+    swap
+    intc_3 // 2
+    *
+    swap
+    frame_dig -1
+    intc_3 // 2
+    *
+    cover 2
+    intc_1 // 0
+    cover 4
+
+dynamic_array_concat_dynamic_element_for_header@1:
+    frame_dig 0
+    dig 2
+    <
+    bz dynamic_array_concat_dynamic_element_after_for@4
+    dup
+    frame_dig 0
+    dup
+    cover 2
+    extract_uint16
+    dig 4
+    +
+    itob
+    extract 6 0
+    uncover 5
+    swap
+    concat
+    cover 4
+    intc_3 // 2
+    +
+    frame_bury 0
+    b dynamic_array_concat_dynamic_element_for_header@1
+
+dynamic_array_concat_dynamic_element_after_for@4:
+    dup
+    len
+    swap
+    intc_1 // 0
+    frame_bury 0
+
+dynamic_array_concat_dynamic_element_for_header@5:
+    frame_dig 0
+    dig 4
+    <
+    bz dynamic_array_concat_dynamic_element_after_for@8
+    frame_dig -2
+    frame_dig 0
+    dup
+    cover 2
+    extract_uint16
+    dig 3
+    +
+    itob
+    extract 6 0
+    uncover 6
+    swap
+    concat
+    cover 5
+    intc_3 // 2
+    +
+    frame_bury 0
+    b dynamic_array_concat_dynamic_element_for_header@5
+
+dynamic_array_concat_dynamic_element_after_for@8:
+    cover 2
+    substring3
+    uncover 2
+    swap
+    concat
+    frame_dig -2
+    len
+    frame_dig -2
+    uncover 3
+    uncover 2
+    substring3
+    concat
+    swap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/calldata_array_dynamic_invalid_static_middle.sol.C.f(a: bytes) -> bytes, bytes:
+f:
+    proto 1 2
     txn GroupIndex
-    bz main_ternary_false@19
+    bz f_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+f_ternary_merge@3:
     !
     assert // not payable
+    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000002a
+    frame_dig -1
+    retsub
+
+f_ternary_false@2:
+    intc_1 // 0
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/calldata_array_dynamic_invalid_static_middle.sol.C.g(a: bytes) -> bytes, bytes:
+g:
+    proto 1 2
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    intc_1 // 0
+    extract_uint16
     assert // array index out of bounds
-    bytec_0 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
-    log
-    intc_1 // 1
-    return
+    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000002a
+    frame_dig -1
+    retsub
 
-main_ternary_false@19:
-    intc_2 // 0
-    b main_ternary_merge@20
+g_ternary_false@2:
+    intc_1 // 0
+    b g_ternary_merge@3
 
-main_g_route@6:
-    txna ApplicationArgs 1
-    dup
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    dup
-    cover 2
-    intc_0 // 2
-    *
-    swap
-    dup
-    len
-    cover 2
-    extract 2 0
-    intc_2 // 0
 
-main_for_header@23:
-    dup
-    dig 5
-    <
-    bz main_after_for@28
-    dup
-    intc_0 // 2
-    *
-    dig 2
-    dup
-    uncover 2
-    extract_uint16 // on error: invalid array encoding
-    dup
-    dig 5
-    ==
-    assert // invalid tail pointer for (len+(len+uint256[])[1][])
-    dig 1
-    len
-    substring3
-    cover 3
-    intc_0 // 2
-    cover 3
-    intc_2 // 0
-
-main_for_header@25:
-    dup
-    intc_1 // 1
-    <
-    bz main_after_for@27
-    dup
-    intc_0 // 2
-    *
-    dig 6
-    dup
-    uncover 2
-    extract_uint16 // on error: invalid array encoding
-    dup
-    uncover 7
-    dup
-    cover 4
-    ==
-    assert // invalid tail pointer for (len+uint256[])[1]
-    dig 1
-    len
-    substring3
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_3 // 32
-    *
-    intc_0 // 2
-    +
-    +
-    cover 4
-    intc_1 // 1
-    +
-    b main_for_header@25
-
-main_after_for@27:
-    pop
-    uncover 4
-    pop
-    uncover 2
-    uncover 3
-    +
-    cover 2
-    intc_1 // 1
-    +
-    b main_for_header@23
-
-main_after_for@28:
-    popn 2
-    intc_0 // 2
-    +
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 1>>
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/calldata_array_dynamic_invalid_static_middle.sol.C.h(a: bytes) -> bytes, bytes:
+h:
+    proto 1 2
     txn GroupIndex
-    bz main_ternary_false@30
+    bz h_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@31:
+h_ternary_merge@3:
     !
     assert // not payable
+    frame_dig -1
+    intc_1 // 0
+    extract_uint16
     assert // array index out of bounds
-    bytec_0 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
-    log
-    intc_1 // 1
-    return
+    bytec 5 // 0x000000000000000000000000000000000000000000000000000000000000002a
+    frame_dig -1
+    retsub
 
-main_ternary_false@30:
-    intc_2 // 0
-    b main_ternary_merge@31
-
-main_f_route@5:
-    txna ApplicationArgs 1
-    dup
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    dup
-    bury 3
-    intc_0 // 2
-    *
-    swap
-    dup
-    len
-    cover 2
-    extract 2 0
-    intc_2 // 0
-
-main_for_header@34:
-    dup
-    dig 5
-    <
-    bz main_after_for@39
-    dup
-    intc_0 // 2
-    *
-    dig 2
-    dup
-    uncover 2
-    extract_uint16 // on error: invalid array encoding
-    dup
-    dig 5
-    ==
-    assert // invalid tail pointer for (len+(len+uint256[])[1][])
-    dig 1
-    len
-    substring3
-    cover 3
-    intc_0 // 2
-    cover 3
-    intc_2 // 0
-
-main_for_header@36:
-    dup
-    intc_1 // 1
-    <
-    bz main_after_for@38
-    dup
-    intc_0 // 2
-    *
-    dig 6
-    dup
-    uncover 2
-    extract_uint16 // on error: invalid array encoding
-    dup
-    uncover 7
-    dup
-    cover 4
-    ==
-    assert // invalid tail pointer for (len+uint256[])[1]
-    dig 1
-    len
-    substring3
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_3 // 32
-    *
-    intc_0 // 2
-    +
-    +
-    cover 4
-    intc_1 // 1
-    +
-    b main_for_header@36
-
-main_after_for@38:
-    pop
-    uncover 4
-    pop
-    uncover 2
-    uncover 3
-    +
-    cover 2
-    intc_1 // 1
-    +
-    b main_for_header@34
-
-main_after_for@39:
-    popn 2
-    intc_0 // 2
-    +
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 1>>
-    txn GroupIndex
-    bz main_ternary_false@41
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@42:
-    !
-    assert // not payable
-    bytec_0 // 0x151f7c75000000000000000000000000000000000000000000000000000000000000002a
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@41:
-    intc_2 // 0
-    b main_ternary_merge@42
+h_ternary_false@2:
+    intc_1 // 0
+    b h_ternary_merge@3
