@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/tuple_duplicate_target.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock "y" 0x151f7c75 "x" 0x 0x7093054d
+    bytecblock 0x151f7c75 "x" 0x "y" 0x7093054d
     pushint 4096
     bzero
     dup
@@ -24,11 +24,11 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "x"
-    bytec_3 // 0x
+    bytec_1 // "x"
+    bytec_2 // 0x
     app_global_put
-    bytec_0 // "y"
-    bytec_3 // 0x
+    bytec_3 // "y"
+    bytec_2 // 0x
     app_global_put
     intc_1 // 1
     return
@@ -78,7 +78,7 @@ main_ternary_merge@8:
     -
     intc_0 // 32
     extract3
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -131,7 +131,7 @@ main_ternary_merge@15:
     intc_0 // 32
     extract3
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -184,7 +184,7 @@ main_ternary_merge@22:
     intc_0 // 32
     extract3
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -210,7 +210,7 @@ main_after_if_else@23:
 main_allCalls_route@28:
     callsub allCalls
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -220,7 +220,7 @@ main_allCalls_route@28:
 main_readBack_route@27:
     callsub readBack
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -235,7 +235,7 @@ main_set_route@26:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub set
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -264,7 +264,7 @@ set_ternary_merge@5:
     assert // not payable
 
 set_after_if_else@6:
-    bytec_2 // "x"
+    bytec_1 // "x"
     frame_dig -1
     app_global_put
     frame_dig -1
@@ -289,7 +289,7 @@ readBack_ternary_merge@3:
     assert // not payable
     pushint 9
     itob
-    bytec_0 // "y"
+    bytec_3 // "y"
     swap
     app_global_put
     intc_1 // 1
@@ -298,13 +298,14 @@ readBack_ternary_merge@3:
     intc_3 // 2
     itob
     callsub set
-    bytec_0 // "y"
-    uncover 2
+    pop
+    bytec_3 // "y"
+    dig 1
     app_global_put
     intc_2 // 0
-    bytec_2 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    bytec_3 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -345,56 +346,22 @@ allCalls_ternary_merge@3:
     assert // not payable
     intc_1 // 1
     itob
-    dup
     callsub set
-    pop
     intc_3 // 2
     itob
-    dup
     callsub set
     pop
     pushint 3
     itob
-    dup
     callsub set
     pop
-    dig 2
-    callsub set
-    pop
-    dig 1
-    callsub set
-    pop
-    dup
-    callsub set
-    bytec_0 // "y"
-    swap
-    app_global_put
-    dig 2
-    callsub set
-    pop
-    dig 1
-    callsub set
-    dig 1
-    callsub set
-    pop
-    bytec_0 // "y"
-    swap
-    app_global_put
-    uncover 2
-    callsub set
-    uncover 2
-    callsub set
-    pop
-    swap
-    callsub set
-    pop
-    bytec_0 // "y"
+    bytec_3 // "y"
     dig 1
     app_global_put
     intc_2 // 0
-    bytec_2 // "x"
+    bytec_1 // "x"
     app_global_get_ex
-    bytec_3 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup

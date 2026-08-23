@@ -1,8 +1,6 @@
 /// @file SolAssignmentTuple.cpp — handleTupleAssignment + buildTupleWithUpdatedField
 #include "builder/sol-ast/exprs/SolAssignment.h"
 
-#include <libsolidity/ast/ASTVisitor.h>
-#include <set>
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "awst/NameGen.h"
@@ -77,231 +75,91 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		}
 	}
 
-	// Literal tuple RHS of VarExpressions: snapshot into temps so `(a,b) = (b,a)`
-	// doesn't reduce to `a=b; b=a` (lazy refs). Limited to pure VarExpression
-	// items so storage-var tuples keep the (EVM-documented) in-place semantics
-	// that swap_in_storage_overwrite relies on.
-	if (auto const* rhsTuple = dynamic_cast<awst::TupleExpression const*>(_value.get()))
+	// Literal tuple RHS: materialise the WHOLE right-hand side into temps
+	// before any store — solc's rule, no conditions in it
+	// (IRGeneratorForStatements::visit(Assignment) accepts the RHS before it
+	// looks at the LHS; writeToLValue(IRLValue::Tuple) stores right-to-left).
+	// This is what makes `(a, b) = (b, a)` a real swap and keeps side-effecting
+	// items single-evaluation. Until puya's repeated-writes iterate-while-mutate
+	// bug (puyabug.md §13, fixed by upstream fix/3-consecutive-write-bug) this
+	// sat behind a pile of narrow triggers; the pile is gone.
+	//
+	// Two per-item exemptions remain, and they are the value/reference model,
+	// not heuristics — an exempt item stays un-pinned so the write loop keeps
+	// its in-place path:
+	//  - a compile-time storage-POINTER local on the LHS (`(m, v) = (m2, 21)`):
+	//    the alias rebind consumes the RHS expression itself; there is no
+	//    runtime value to pin, and pinning rebound the alias to a temp.
+	//  - a whole storage AGGREGATE state var on the LHS whose RHS item is a
+	//    plain storage READ (`(x, y) = (y, x)` on structs): references are NOT
+	//    copied into the RHS tuple, so the EVM's sequential-overwrite collapse
+	//    (swap_in_storage_overwrite) is the correct semantics; pinning would
+	//    materialise a copy and "fix" a swap the EVM itself does not perform.
+	//    The read-only condition is load-bearing: a COMPUTED item
+	//    (`(.., y, ..) = (.., returnsArray(), ..)`) must still be pinned, or
+	//    its side effects run at STORE time — right-to-left, after later
+	//    components' stores — instead of at RHS-evaluation time
+	//    (destructuring_assignment: the deferred call re-assigned arrayData
+	//    after `arrayData[3] = 2` had landed). Value types are always pinned.
+	if (auto const* rhsTuple = dynamic_cast<awst::TupleExpression const*>(_value.get());
+		rhsTuple && !rhsTuple->items.empty())
 	{
-		bool allLocalVars = !rhsTuple->items.empty();
-		for (auto const& it : rhsTuple->items)
-		{
-			auto const* ve = dynamic_cast<awst::VarExpression const*>(it.get());
-			if (!ve || ve->name.empty())
+		auto lhsComponentKeepsInPlace = [&](size_t i) -> bool {
+			if (!_sourceLhs || i >= _sourceLhs->components().size())
+				return false;
+			auto const& comp = _sourceLhs->components()[i];
+			if (!comp) return false;
+			auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(comp.get());
+			if (!id) return false;
+			auto const* decl = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+				id->annotation().referencedDeclaration);
+			if (!decl) return false;
+			// Storage-pointer local: the alias branch owns it.
+			if (decl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+				&& !decl->isStateVariable())
+				return true;
+			// Whole aggregate state var receiving a plain storage read.
+			if (decl->isStateVariable() && comp->annotation().type
+				&& !comp->annotation().type->isValueType())
 			{
-				allLocalVars = false;
-				break;
+				auto const& item = rhsTuple->items[i];
+				auto peeled = awst::unwrapStateGet(item);
+				if (awst::isRawStorageRead(peeled.get())
+					|| dynamic_cast<awst::StateGet const*>(item.get()))
+					return true;
 			}
-		}
-		// Also snapshot scalar RHS when LHS has a transient var: transient writes
-		// go through a subroutine (packed scratch blob) that can clobber other
-		// transient reads in the same tuple. Aggregates keep in-place semantics.
-		bool hasTransientLhs = false;
-		if (_sourceLhs && m_ctx.transientStorage)
-		{
-			for (auto const& comp : _sourceLhs->components())
-			{
-				if (!comp) continue;
-				auto const* id = dynamic_cast<solidity::frontend::Identifier const*>(comp.get());
-				if (!id) continue;
-				auto const* d = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
-					id->annotation().referencedDeclaration);
-				if (d && d->isStateVariable()
-					&& d->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient
-					&& m_ctx.transientStorage->isTransient(*d))
-				{
-					hasTransientLhs = true;
-					break;
-				}
-			}
-		}
-		bool allScalars = hasTransientLhs && !rhsTuple->items.empty();
-		for (auto const& it : rhsTuple->items)
-		{
-			if (!allScalars) break;
-			auto const* t = it->wtype;
-			if (!t) { allScalars = false; break; }
-			bool scalar = (t == awst::WType::uint64Type()
-				|| t == awst::WType::biguintType()
-				|| t == awst::WType::boolType()
-				|| t == awst::WType::accountType()
-				|| t == awst::WType::applicationType()
-				|| t == awst::WType::assetType()
-				|| t == awst::WType::stringType()
-				|| t == awst::WType::bytesType()
-				|| t->kind() == awst::WTypeKind::ARC4UIntN
-				|| t->kind() == awst::WTypeKind::Bytes);
-			if (!scalar) { allScalars = false; break; }
-		}
-		// Side-effecting RHS + state-var-index LHS: each LHS re-evaluates the
-		// TupleItemExpression base; repeated calls (e.g. `returnsArray()`) clobber
-		// prior writes to `arrayData[3]`. Snapshot RHS to temps.
-		// Guard: LHS must index state — avoids the (y,y,y)=(set(1),set(2),set(3))
-		// pattern where inlined temps interact badly with puya's optimizer (leaked
-		// stack values from redundant assignments).
-		bool hasSideEffectingRhs = false;
-		for (auto const& it : rhsTuple->items)
-		{
-			if (dynamic_cast<awst::SubroutineCallExpression const*>(it.get())
-				|| dynamic_cast<awst::IntrinsicCall const*>(it.get())
-				|| dynamic_cast<awst::SubmitInnerTransaction const*>(it.get())
-				|| dynamic_cast<awst::CreateInnerTransaction const*>(it.get()))
-			{
-				hasSideEffectingRhs = true;
-				break;
-			}
-		}
-		bool lhsHasStateIndex = false;
-		if (hasSideEffectingRhs)
-		{
-			auto const* lhsTuple = dynamic_cast<awst::TupleExpression const*>(_target.get());
-			if (lhsTuple)
-			{
-				for (auto const& it : lhsTuple->items)
-				{
-							// IndexExpression(StateGet(BoxValue)/AppState): write to a state-array
-					// element where re-evaluating RHS clobbers prior writes.
-					auto const* idx = dynamic_cast<awst::IndexExpression const*>(it.get());
-					if (!idx) continue;
-					auto const* base = idx->base.get();
-					if (auto const* sg = dynamic_cast<awst::StateGet const*>(base))
-						base = sg->field.get();
-					if (awst::isRawStorageRead(base))
-					{
-						lhsHasStateIndex = true;
-						break;
-					}
-				}
-			}
-		}
-		// Compound-lvalue LHS (`(arr[i],arr[j])=(arr[j],arr[i])`, `(s.a,s.b)=
-		// (s.b,s.a)`, `(m[k1],m[k2])=(m[k2],m[k1])`): a parallel tuple assignment
-		// must evaluate the whole RHS BEFORE any store, but the lazy RHS instead
-		// reduces a swap to sequential `t2=t1; t1=t2` — both targets collapse to
-		// one source value (memory element: the write reassigns the whole backing
-		// blob local; storage element/field/mapping: the in-place box write is read
-		// back by the next lazy RHS read). Snapshot the RHS into temps to restore
-		// EVM parallel semantics. Covers array elements (ArrayType index), struct
-		// value fields (MemberAccess), and mapping elements (MappingType index),
-		// storage AND memory.
-		//
-		// A plain Identifier component needs the same snapshot when it names a
-		// VALUE type AND the RHS reads it back. Solidity COPIES a value type into
-		// the RHS tuple, so `uint256 a, b; (a, b) = (b, a)` really swaps; only an
-		// AGGREGATE storage var is a reference, and only that keeps the
-		// sequential-overwrite collapse — swap_in_storage_overwrite, the fixture
-		// this exemption cites, swaps two STRUCTS. Keying on "component is an
-		// Identifier" swept the value-type case in with it and silently collapsed
-		// every value-type swap to (b, b). Nothing in the suite covered it;
-		// test_tuple_swap_value_state_vars now does.
-		//
-		// ── Why this is a gate at all ──
-		// Solidity's rule has no conditions in it. solc materialises the WHOLE RHS
-		// and then stores components right-to-left:
-		// IRGeneratorForStatements::visit(Assignment) accepts the right-hand side
-		// before it even looks at the LHS, and writeToLValue(IRLValue::Tuple) walks
-		// components in reverse. No dependency analysis, no exemption list — the
-		// storage-aggregate collapse is EMERGENT, because a reference type's temp
-		// names a slot, so the second copy reads storage the first already
-		// overwrote.
-		//
-		// We cannot copy that yet. Materialising unconditionally produces repeated
-		// stores to one key, and puya's O2 dead-store elimination removes the
-		// overwritten stores while LEAVING THEIR VALUES on the stack, where a later
-		// expression consumes one as an operand (puyabug.md §13 — correct at -O0,
-		// wrong at -O2; it reproduces in plain sequential Solidity with no tuple
-		// anywhere). So the conditions below exist to avoid emitting that shape, not
-		// because the language asks for them.
-		//
-		// Hence the read-back bound, and both halves are load-bearing:
-		// `(y, y, y) = (set(1), set(2), set(3))` writes a value type but never reads
-		// one, and snapshotting there walks straight into §13;
-		// `(m, v) = (m2, 21)` has a value-type `v`, but the RHS reads only `m2`, and
-		// snapshotting rebinds the mapping alias to a temp so later writes miss.
-		//
-		// It is a bound, not a cure: a repeated target WITH a read-back still hits
-		// §13 (test_tuple_duplicate_target_puya_o2, xfail). When §13 is fixed
-		// upstream, delete this whole gate and materialise unconditionally.
-		bool lhsNeedsRhsSnapshot = false;
-		std::set<int64_t> valueTypeTargets;
-		if (_sourceLhs)
-		{
-			for (auto const& comp : _sourceLhs->components())
-			{
-				if (!comp) continue;
-				if (auto const* lhsId =
-						dynamic_cast<solidity::frontend::Identifier const*>(comp.get()))
-				{
-					auto const* compType = comp->annotation().type;
-					if (compType && compType->isValueType())
-						if (auto const* decl = lhsId->annotation().referencedDeclaration)
-							valueTypeTargets.insert(decl->id());
-					continue;
-				}
-				if (dynamic_cast<solidity::frontend::MemberAccess const*>(comp.get()))
-				{
-					lhsNeedsRhsSnapshot = true;
-					break;
-				}
-				auto const* ia = dynamic_cast<solidity::frontend::IndexAccess const*>(comp.get());
-				if (!ia) continue;
-				auto const* baseType = ia->baseExpression().annotation().type;
-				if (dynamic_cast<solidity::frontend::ArrayType const*>(baseType)
-					|| dynamic_cast<solidity::frontend::MappingType const*>(baseType))
-				{
-					lhsNeedsRhsSnapshot = true;
-					break;
-				}
-			}
-		}
-		if (!lhsNeedsRhsSnapshot && !valueTypeTargets.empty())
-		{
-			struct ReadsTarget: solidity::frontend::ASTConstVisitor
-			{
-				std::set<int64_t> const& targets;
-				bool found = false;
-				explicit ReadsTarget(std::set<int64_t> const& _targets): targets(_targets) {}
-				bool visit(solidity::frontend::Identifier const& _id) override
-				{
-					if (auto const* decl = _id.annotation().referencedDeclaration)
-						if (targets.count(decl->id()))
-							found = true;
-					return !found;
-				}
-			} readsTarget{valueTypeTargets};
-			m_assignment.rightHandSide().accept(readsTarget);
-			lhsNeedsRhsSnapshot = readsTarget.found;
-		}
-		if (allLocalVars || allScalars || lhsNeedsRhsSnapshot || (hasSideEffectingRhs && lhsHasStateIndex))
-		{
-			std::vector<awst::WType const*> tmpTypes;
-			auto newTuple = awst::makeTupleExpression(nullptr, _value->sourceLocation);
-			for (size_t i = 0; i < rhsTuple->items.size(); ++i)
-			{
-				auto const& rhsItem = rhsTuple->items[i];
-				std::string tmpName = "__tuple_tmp_" + std::to_string(m_loc.line)
-					+ "_" + std::to_string(i);
+			return false;
+		};
 
-				auto tmpTarget = awst::makeVarExpression(tmpName, rhsItem->wtype, _value->sourceLocation);
-
-				auto tmpAssign = awst::makeAssignmentExpression(
-					tmpTarget, rhsItem, _value->sourceLocation);
-
-				auto stmt = awst::makeExpressionStatement(std::move(tmpAssign), _value->sourceLocation);
-				// Must use a pre-effect (not a post-effect): post-effects
-				// inserts AFTER the current statement, leaving temps unassigned
-				// when the bare tuple reads them — puya DCEs the assignments and
-				// leaks raw call return values on the stack.
-				m_ctx.preEffects().push_back(std::move(stmt));
-
-				auto tmpRead = awst::makeVarExpression(tmpName, rhsItem->wtype, _value->sourceLocation);
-				newTuple->items.push_back(std::move(tmpRead));
-				tmpTypes.push_back(rhsItem->wtype);
+		std::vector<awst::WType const*> tmpTypes;
+		auto newTuple = awst::makeTupleExpression(nullptr, _value->sourceLocation);
+		for (size_t i = 0; i < rhsTuple->items.size(); ++i)
+		{
+			auto const& rhsItem = rhsTuple->items[i];
+			tmpTypes.push_back(rhsItem->wtype);
+			if (lhsComponentKeepsInPlace(i))
+			{
+				newTuple->items.push_back(rhsItem);
+				continue;
 			}
-			newTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
-				std::move(tmpTypes), std::nullopt);
-			_value = std::move(newTuple);
+			std::string tmpName = "__tuple_tmp_" + std::to_string(m_loc.line)
+				+ "_" + std::to_string(i);
+			// Must use a pre-effect (not a post-effect): post-effects insert
+			// AFTER the current statement, leaving temps unassigned when the
+			// bare tuple reads them — puya DCEs the assignments and leaks raw
+			// call return values on the stack.
+			m_ctx.preEffects().push_back(awst::makeExpressionStatement(
+				awst::makeAssignmentExpression(
+					awst::makeVarExpression(
+						tmpName, rhsItem->wtype, _value->sourceLocation),
+					rhsItem, _value->sourceLocation),
+				_value->sourceLocation));
+			newTuple->items.push_back(awst::makeVarExpression(
+				tmpName, rhsItem->wtype, _value->sourceLocation));
 		}
+		newTuple->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
+			std::move(tmpTypes), std::nullopt);
+		_value = std::move(newTuple);
 	}
 
 	// Build tuple writes in their own structural effect frame. Only the writes

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/multiple_initializations.sol.B.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 0 32
     bytecblock "x" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x "y" 0x151f7c75
     pushint 4096
     bzero
@@ -32,13 +32,25 @@ main:
     bytec_3 // "y"
     bytec_2 // 0x
     app_global_put
+    intc_1 // 0
     bytec_0 // "x"
-    pushbytes 0x03
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
+    pushbytes 0x02
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_0 // "x"
+    dig 1
     app_global_put
     bytec_3 // "y"
-    pushbytes 0x03
+    swap
     app_global_put
-    intc_2 // 0
+    intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
     bytec_2 // 0x
@@ -101,15 +113,15 @@ main_after_if_else@8:
 main_ternary_merge@14:
     !
     assert // not payable
-    intc_1 // 32
+    intc_2 // 32
     bzero
     callsub get
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     bytec 4 // 0x151f7c75
     swap
@@ -119,7 +131,7 @@ main_ternary_merge@14:
     return
 
 main_ternary_false@13:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@14
 
 main_after_if_else@15:
@@ -155,7 +167,7 @@ get:
 get_ternary_merge@3:
     !
     assert // not payable
-    intc_2 // 0
+    intc_1 // 0
     bytec_0 // "x"
     app_global_get_ex
     bytec_2 // 0x
@@ -163,14 +175,14 @@ get_ternary_merge@3:
     select
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_2 // 32
     bzero
     b|
     retsub
 
 get_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b get_ternary_merge@3

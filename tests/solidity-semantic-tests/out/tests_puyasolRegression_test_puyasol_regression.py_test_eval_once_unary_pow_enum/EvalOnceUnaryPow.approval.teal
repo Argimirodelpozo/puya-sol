@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/eval_once_unary_pow.sol.EvalOnceUnaryPow.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2 128
-    bytecblock 0x151f7c75 "cnt" 0x 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000001 "st"
+    bytecblock "cnt" 0x151f7c75 0x 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000001 "st"
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "cnt"
+    bytec_0 // "cnt"
     bytec_2 // 0x
     app_global_put
     bytec 9 // "st"
@@ -84,7 +84,7 @@ main_ternary_merge@11:
     intc_0 // 32
     extract3
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -160,7 +160,7 @@ main_ternary_merge@21:
     intc_0 // 32
     extract3
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -227,7 +227,7 @@ main_ternary_merge@31:
     intc_0 // 32
     extract3
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -303,7 +303,7 @@ main_ternary_merge@38:
     intc_0 // 32
     extract3
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -356,7 +356,7 @@ main_ternary_merge@45:
     intc_0 // 32
     extract3
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -398,7 +398,7 @@ main_ternary_merge@52:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -422,7 +422,7 @@ main_after_if_else@53:
 
 main_cnt_route@61:
     callsub cnt
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -432,7 +432,7 @@ main_cnt_route@61:
 main_enumAssign_route@60:
     callsub enumAssign
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -452,7 +452,7 @@ main_powRhs_route@59:
     itob
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -462,7 +462,7 @@ main_powRhs_route@59:
 main_invWide_route@58:
     callsub invWide
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -472,7 +472,7 @@ main_invWide_route@58:
 main_negNarrow_route@57:
     callsub negNarrow
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -482,7 +482,7 @@ main_negNarrow_route@57:
 main_negWide_route@56:
     callsub negWide
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -493,7 +493,7 @@ main_negWide_route@56:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/eval_once_unary_pow.sol.EvalOnceUnaryPow.__solfn_22() -> bytes:
 __solfn_22:
     intc_2 // 0
-    bytec_1 // "cnt"
+    bytec_0 // "cnt"
     app_global_get_ex
     bytec_2 // 0x
     cover 2
@@ -504,7 +504,7 @@ __solfn_22:
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_1 // "cnt"
+    bytec_0 // "cnt"
     swap
     app_global_put
     pushbytes 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
@@ -525,7 +525,7 @@ negWide_ternary_merge@3:
     assert // not payable
     intc_2 // 0
     itob
-    bytec_1 // "cnt"
+    bytec_0 // "cnt"
     swap
     app_global_put
     callsub __solfn_22
@@ -560,7 +560,7 @@ negWide_ternary_merge@3:
 
 negWide_ternary_merge@6:
     intc_2 // 0
-    bytec_1 // "cnt"
+    bytec_0 // "cnt"
     app_global_get_ex
     bytec_2 // 0x
     cover 2
@@ -616,7 +616,7 @@ negNarrow:
 negNarrow_ternary_merge@3:
     !
     assert // not payable
-    bytec_1 // "cnt"
+    bytec_0 // "cnt"
     bytec_3 // 0x01
     app_global_put
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
@@ -642,7 +642,7 @@ invWide_ternary_merge@3:
     assert // not payable
     intc_2 // 0
     itob
-    bytec_1 // "cnt"
+    bytec_0 // "cnt"
     swap
     app_global_put
     intc_0 // 32
@@ -660,7 +660,7 @@ invWide_ternary_merge@3:
     pushbytes 0x0100000000000000000000000000000000
     b%
     intc_2 // 0
-    bytec_1 // "cnt"
+    bytec_0 // "cnt"
     app_global_get_ex
     bytec_2 // 0x
     cover 2
@@ -716,7 +716,7 @@ powRhs:
 powRhs_ternary_merge@3:
     !
     assert // not payable
-    bytec_1 // "cnt"
+    bytec_0 // "cnt"
     bytec_3 // 0x01
     app_global_put
     frame_dig -1
@@ -742,14 +742,28 @@ enumAssign:
 enumAssign_ternary_merge@3:
     !
     assert // not payable
-    bytec_1 // "cnt"
+    bytec_0 // "cnt"
     bytec_3 // 0x01
     app_global_put
     bytec 9 // "st"
     intc_1 // 1
     app_global_put
+    intc_2 // 0
+    bytec_0 // "cnt"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
+    intc_0 // 32
+    bzero
+    dig 1
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
     bytec 8 // 0x0000000000000000000000000000000000000000000000000000000000000001
-    dup
+    swap
     retsub
 
 enumAssign_ternary_false@2:
@@ -770,7 +784,7 @@ cnt_ternary_merge@3:
     !
     assert // not payable
     intc_2 // 0
-    bytec_1 // "cnt"
+    bytec_0 // "cnt"
     app_global_get_ex
     bytec_2 // 0x
     cover 2

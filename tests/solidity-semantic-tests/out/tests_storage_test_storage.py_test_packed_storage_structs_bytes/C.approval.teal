@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_storage_structs_bytes.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 2
-    bytecblock "data" 0x00000000000000000000000000000000000000000000000000000000000000000000 0x00 "y" 0x151f7c75 0x31323334353637383930 0x313233343536373839 0x6162636465666768696a
+    bytecblock "data" 0x00000000000000000000000000000000000000000000000000000000000000000000 0x00 "x" "y" 0x151f7c75 0x31323334353637383930 0x313233343536373839 0x6162636465666768696a
     pushint 4096
     bzero
     dup
@@ -24,10 +24,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushbytes "x"
+    bytec_3 // "x"
     bytec_2 // 0x00
     app_global_put
-    bytec_3 // "y"
+    bytec 4 // "y"
     bytec_2 // 0x00
     app_global_put
     intc_0 // 1
@@ -65,7 +65,7 @@ main_ternary_merge@8:
     -
     intc_2 // 32
     extract3
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
@@ -93,7 +93,7 @@ main_test_route@11:
     intc_1 // 0
     uncover 2
     setbit
-    bytec 4 // 0x151f7c75
+    bytec 5 // 0x151f7c75
     swap
     concat
     log
@@ -113,7 +113,8 @@ test:
 test_ternary_merge@3:
     !
     assert // not payable
-    pushbytess "x" 0x01
+    bytec_3 // "x"
+    pushbytes 0x01
     app_global_put
     bytec_0 // "data"
     box_get
@@ -134,17 +135,17 @@ test_ternary_merge@3:
     replace2 1
     dup
     extract 1 31
-    bytec 5 // 0x31323334353637383930
+    bytec 6 // 0x31323334353637383930
     replace2 2
     replace2 1
     dup
     extract 1 31
-    bytec 6 // 0x313233343536373839
+    bytec 7 // 0x313233343536373839
     replace2 12
     replace2 1
     dup
     extract 1 31
-    bytec 7 // 0x6162636465666768696a
+    bytec 8 // 0x6162636465666768696a
     replace2 21
     replace2 1
     pushbytes 0x05
@@ -152,11 +153,26 @@ test_ternary_merge@3:
     pushbytes 0x06
     replace2 33
     bytec_0 // "data"
-    dig 1
+    swap
     box_put
-    bytec_3 // "y"
+    bytec 4 // "y"
     pushbytes 0x07
     app_global_put
+    intc_1 // 0
+    bytec_3 // "x"
+    app_global_get_ex
+    bytec_2 // 0x00
+    cover 2
+    select
+    btoi
+    intc_0 // 1
+    ==
+    bz test_bool_false@14
+    bytec_0 // "data"
+    box_get
+    bytec_1 // 0x00000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     intc_1 // 0
     getbyte
     intc_3 // 2
@@ -191,7 +207,7 @@ test_ternary_merge@3:
     select
     extract 1 31
     extract 2 10
-    bytec 5 // "1234567890"
+    bytec 6 // "1234567890"
     ==
     bz test_bool_false@14
     bytec_0 // "data"
@@ -201,7 +217,7 @@ test_ternary_merge@3:
     select
     extract 1 31
     extract 12 9
-    bytec 6 // "123456789"
+    bytec 7 // "123456789"
     ==
     bz test_bool_false@14
     bytec_0 // "data"
@@ -211,7 +227,7 @@ test_ternary_merge@3:
     select
     extract 1 31
     extract 21 10
-    bytec 7 // "abcdefghij"
+    bytec 8 // "abcdefghij"
     ==
     bz test_bool_false@14
     bytec_0 // "data"
@@ -234,7 +250,7 @@ test_ternary_merge@3:
     ==
     bz test_bool_false@14
     intc_1 // 0
-    bytec_3 // "y"
+    bytec 4 // "y"
     app_global_get_ex
     bytec_2 // 0x00
     cover 2

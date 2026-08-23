@@ -2128,26 +2128,19 @@ def test_modifier_param_decode(harness):
     assert call1("arg1(uint256)", 8) == 7322           # mArg(8%5=3 -> 70+3) + body(22)
 
 
-@pytest.mark.xfail(reason="puyabug.md §13: O2 dead-store elimination drops the "
-                          "overwritten stores but leaves their values on the AVM "
-                          "stack, and the return consumes a leftover instead of "
-                          "reading y. Correct at --optimization-level 0. The AWST "
-                          "is already right (temps in source order, stores "
-                          "right-to-left); confirmed not a frontend shape issue.",
-                   strict=False)
 def test_tuple_duplicate_target_puya_o2(harness):
     """viaYul/contracts/tuple_duplicate_target.sol — NOT an o.g. semantic test.
 
-    Pins the one tuple-assignment shape still diverging from solc: the same
-    value-type target named more than once with a side-effecting RHS. Solidity
-    evaluates the RHS fully left-to-right, then stores right-to-left, so
-    component 0's value survives.
+    The same value-type target named more than once with a side-effecting RHS:
+    Solidity evaluates the RHS fully left-to-right, then stores right-to-left,
+    so component 0's value survives.
 
-    This is also why SolAssignmentTuple's RHS-snapshot gate is a set of narrow
-    conditions instead of solc's actual rule (always materialise the RHS, then
-    store in reverse — no dependency analysis anywhere). Materialising
-    unconditionally is precisely what produces the repeated same-key stores this
-    bug mangles.
+    Was xfail on puyabug.md §13 (repeated_loads_elimination mutated block.ops
+    while iterating it, so a removed superseded write silently skipped the next
+    op and leaked its value onto the stack). Fixed upstream by
+    fix/3-consecutive-write-bug; with that in the submodule, SolAssignmentTuple
+    dropped its trigger pile and materialises the RHS unconditionally, so this
+    now pins BOTH the backend fix and the frontend's solc-shaped rule.
     """
     app = harness.compile_and_deploy("viaYul/contracts/tuple_duplicate_target.sol")
     assert tuple(as_int(v) for v in
