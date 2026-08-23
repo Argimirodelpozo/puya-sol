@@ -122,7 +122,7 @@ void printUsage(char const* _progName)
 		<< "  --opup-budget <N>      Inject ensure_budget(N) into ALL public methods (OpUp)\n"
 		<< "  --ensure-budget <f:N>  Inject ensure_budget(N) into function f (repeatable)\n"
 		<< "  --optimization-level <N>   Puya optimization level: 0, 1, 2 (default: 2)\n"
-		<< "  --evm-memory-slots <N> Scratch slots for EVM memory (default 5 = 20KB; UltraHonk needs ~32)\n"
+		<< "  --evm-memory-slots <N> Scratch slots for EVM memory, contiguous from slot 0 (default 5 = 20KB,\n                         max 88; UltraHonk needs ~32). Transient/flash reservations follow at N..N+10\n"
 		<< "  --evm-layout           FULL EVM data-location semantics: implies both\n"
 		<< "                         --evm-storage-layout and --evm-memory-layout (plus the\n"
 		<< "                         transient space coherent with them). The recommended\n"

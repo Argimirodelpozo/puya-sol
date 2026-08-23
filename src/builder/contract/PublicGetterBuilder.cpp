@@ -214,7 +214,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 
 			std::shared_ptr<awst::Expression> readExpr;
 			// Transient vars are NOT in the storage layout (slot space is
-			// persistent storage only) — they keep the TRANSIENT_SLOT blob
+			// persistent storage only) — they keep the transient blob
 			// getter below, same as default mode.
 			if (!var->isConstant() && !var->immutable()
 				&& var->referenceLocation()
@@ -464,7 +464,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 					auto* readType = signedGetterBits > 0
 						? m_typeMapper.map(var->type()) : getter.returnType;
 
-					// Transient vars: route through TRANSIENT_SLOT blob (same as named-var reads).
+					// Transient vars: route through transient blob (same as named-var reads).
 					if (var->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient
 						&& m_transientStorage.isTransient(*var))
 					{

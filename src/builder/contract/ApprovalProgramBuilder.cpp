@@ -793,7 +793,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 		auto createReturn = awst::makeReturnStatement(awst::makeTrue(method.sourceLocation), method.sourceLocation);
 		createBlock->body.push_back(createReturn);
 
-		// Init transient-storage blob (scratch TRANSIENT_SLOT) BEFORE the create/dispatch
+		// Init transient-storage blob (transient scratch slot) BEFORE the create/dispatch
 		// split so the ctor body can use tload/tstore (create branch returns early).
 		// Per-txn scratch bzero matches EIP-1153; writes persist across callsub.
 		// Size = declared transient vars (packed), minimum SLOT_SIZE for asm tload/tstore.
@@ -803,7 +803,7 @@ awst::ContractMethod ContractBuilder::buildApprovalProgram(
 				blobBytes = AssemblyBuilder::SLOT_SIZE;
 
 			auto storeOp = awst::makeStoreSlot(
-				AssemblyBuilder::TRANSIENT_SLOT,
+				m_typeMapper.profile().scratchLayout.transientSlot(),
 				awst::makeBzero(blobBytes, method.sourceLocation),
 				method.sourceLocation);
 

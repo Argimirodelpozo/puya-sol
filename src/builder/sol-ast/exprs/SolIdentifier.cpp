@@ -223,7 +223,7 @@ std::shared_ptr<awst::Expression> SolIdentifier::toAwst()
 				return awst::makeUtf8BytesConstant(name, m_loc, awst::WType::bytesType());
 			}
 
-			// Transient state vars: packed blob in AssemblyBuilder::TRANSIENT_SLOT
+			// Transient state vars: packed blob in the transient scratch slot
 			// (same slot asm tload/tstore uses); StorageBackend dispatches to TransientStorage.
 			if (varDecl->referenceLocation() == VariableDeclaration::Location::Transient
 				&& m_ctx.storageBackend && m_ctx.storageBackend->isTransient(*varDecl))

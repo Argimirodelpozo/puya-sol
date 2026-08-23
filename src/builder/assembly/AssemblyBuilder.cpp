@@ -413,7 +413,12 @@ void AssemblyBuilder::initializeMemoryBlob(
 	// MEMORY_VAR declared as vestigial; memoryVar()/assignMemoryVar() go straight to scratch slot 0.
 	m_locals[MEMORY_VAR] = awst::WType::bytesType();
 	{
-		auto blob = loadMemoryBlob(loc, memorySlotFirst());
+		// loadMemoryBlob takes a PAGE index (it adds memorySlotFirst() itself).
+		// Passing memorySlotFirst() here double-added the base: page 0 became
+		// slot 2*base — an unreserved, unseeded slot whose uint64 0 then
+		// clobbered page 0 (the --evm-memory-slots 16 aave failure). Under the
+		// default base-0 layout the same bug was an invisible `load 0; store 0`.
+		auto blob = loadMemoryBlob(loc, 0);
 		assignMemoryVar(std::move(blob), loc, _out);
 	}
 

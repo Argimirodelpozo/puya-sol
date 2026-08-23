@@ -779,10 +779,17 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 		auto contract = std::dynamic_pointer_cast<awst::Contract>(root);
 		if (!contract)
 			continue;
-		for (int slot : contract->reservedScratchSpace)
-			if (slot < builder::ScratchLayout::transientSlot ||
-				slot > builder::ScratchLayout::flashLast)
-				programMemorySlots.push_back(slot);
+		// reservedScratchSpace = memory pages ++ transient ++ flash, and the
+		// layout is contiguous (pages 0..N-1, transient N, flash N+1..N+10) —
+		// so the page count falls out of the list size.
+		{
+			auto reserved = contract->reservedScratchSpace;
+			int pages = static_cast<int>(reserved.size()) - 1
+				- builder::ScratchLayout::flashSlotCount;
+			for (int slot : reserved)
+				if (pages > 0 && slot < pages)
+					programMemorySlots.push_back(slot);
+		}
 		if (!programMemorySlots.empty())
 			break;
 	}
@@ -810,10 +817,14 @@ FunctionSplitter::SplitResult FunctionSplitter::splitAt(
 				st.method = &m;
 				st.parentContract = contract.get();
 				st.loc = m.sourceLocation;
-				for (int slot : contract->reservedScratchSpace)
-					if (slot < builder::ScratchLayout::transientSlot ||
-						slot > builder::ScratchLayout::flashLast)
-						st.memorySlots.push_back(slot);
+				{
+					auto reserved = contract->reservedScratchSpace;
+					int pages = static_cast<int>(reserved.size()) - 1
+						- builder::ScratchLayout::flashSlotCount;
+					for (int slot : reserved)
+						if (pages > 0 && slot < pages)
+							st.memorySlots.push_back(slot);
+				}
 				if (st.memorySlots.empty())
 					st.memorySlots = programMemorySlots;
 				// Name lookup uses the bare member name.

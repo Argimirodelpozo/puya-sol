@@ -126,7 +126,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 	awst::SourceLocation const& _loc
 )
 {
-	// extract3(TRANSIENT_SLOT blob, slot*32, 32) → biguint.
+	// extract3(transient blob, slot*32, 32) → biguint.
 	// Scratch slot bzero'd in preamble; persists across callsub within an app call.
 	if (_args.empty()) return nullptr;
 
@@ -142,7 +142,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleTload(
 		awst::makeIntegerConstant("32", _loc), _loc);
 
 	return awst::makeAsBiguint(
-		awst::makeExtract3(awst::makeLoadSlot(TRANSIENT_SLOT, _loc),
+		awst::makeExtract3(awst::makeLoadSlot(transientSlot(), _loc),
 			std::move(offset), awst::makeIntegerConstant("32", _loc), _loc), _loc);
 }
 
@@ -153,7 +153,7 @@ void AssemblyBuilder::handleTstore(
 	std::vector<std::shared_ptr<awst::Statement>>& _out
 )
 {
-	// replace3(TRANSIENT_SLOT blob, slot*32, zeroExtend(value, 32)).
+	// replace3(transient blob, slot*32, zeroExtend(value, 32)).
 	if (_args.size() < 2) return;
 
 	auto slot = awst::makeEvalOnce(ensureBiguint(_args[0], _loc), _loc);
@@ -163,11 +163,11 @@ void AssemblyBuilder::handleTstore(
 	auto offset = awst::makeUInt64BinOp(std::move(slotU64), awst::UInt64BinaryOperator::Mult,
 		awst::makeIntegerConstant("32", _loc), _loc);
 	auto padded = awst::makeZeroExtendToN(awst::makeAsBytes(std::move(value), _loc), 32, _loc);
-	auto replace = awst::makeReplace3(awst::makeLoadSlot(TRANSIENT_SLOT, _loc),
+	auto replace = awst::makeReplace3(awst::makeLoadSlot(transientSlot(), _loc),
 		std::move(offset), std::move(padded), _loc);
 	// Direct scratch write: side-effectful, can't be DCE'd, persists across callsub.
 	_out.push_back(awst::makeExpressionStatement(
-		awst::makeStoreSlot(TRANSIENT_SLOT, std::move(replace), _loc), _loc));
+		awst::makeStoreSlot(transientSlot(), std::move(replace), _loc), _loc));
 }
 
 

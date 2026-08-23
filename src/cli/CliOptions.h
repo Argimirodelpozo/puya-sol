@@ -42,7 +42,9 @@ struct Options
 	std::string evmBlockGasLimit;
 	std::string evmCoinbase;
 	// --evm-memory-slots <N>: 0 means unspecified/default (5 slots=20KB).
-	// UltraHonk needs 32; extended memory is placed above reserved slots 5..15.
+	// Pages are contiguous from slot 0; the transient blob sits at N and the
+	// AVM.sol group-scratch range at N+1..N+10 (default N=5 reproduces the
+	// historical 0..4 / 5 / 6..15 layout exactly). UltraHonk needs ~32.
 	int evmMemorySlots = 0;
 	// --evm-memory-layout: universal blob memory — every asm-touched memory
 	// aggregate is pointer-modeled (EVM layout) regardless of allocation shape.

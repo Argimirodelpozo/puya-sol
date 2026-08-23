@@ -899,7 +899,7 @@ awst::ContractMethod ContractBuilder::buildFunction(
 			}
 		}
 
-		// Transient blob init is in the approval-program preamble (TRANSIENT_SLOT);
+		// Transient blob init is in the approval-program preamble (transient slot);
 		// per-method init would reset it mid-dispatch, clobbering earlier writes.
 
 		// Modifiers → a per-modifier SUBROUTINE CHAIN (mirrors solc's IR modifier lowering,

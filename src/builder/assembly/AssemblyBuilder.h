@@ -182,15 +182,13 @@ public:
 
 	static constexpr int SLOT_SIZE = ScratchLayout::slotSize;
 
-	/// Scratch slot for EIP-1153 transient storage. 4096-byte zeroed blob; persists across
-	/// callsub within one app call; cleared per-txn (matches Solidity transient semantics).
-	static constexpr int TRANSIENT_SLOT = ScratchLayout::transientSlot;
-
-	/// Scratch slots for the AVM.sol `Scratch` library (flash-accounting deltas; later
-	/// group txns read them via gload). Reserved so puya's allocator never reuses them.
-	/// Fixed ABI-visible range; extended memory is placed above it.
-	static constexpr int FLASH_SCRATCH_FIRST = ScratchLayout::flashFirst;
-	static constexpr int FLASH_SCRATCH_LAST = ScratchLayout::flashLast;
+	/// Scratch slot for EIP-1153 transient storage: the slot right after the
+	/// memory pages (layout: pages 0..N-1, transient N, flash N+1..N+10).
+	/// 4096-byte zeroed blob; persists across callsub within one app call;
+	/// cleared per-txn (matches Solidity transient semantics). Instance method
+	/// because the number now depends on --evm-memory-slots; the historical
+	/// FLASH_SCRATCH_* constants were consumed by nothing and are gone.
+	int transientSlot() const { return scratchLayout().transientSlot(); }
 
 	/// Share the enclosing FUNCTION's seeded-calldata-pointer set across this
 	/// function's per-block AssemblyBuilders (each block constructs a fresh

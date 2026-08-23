@@ -1,6 +1,7 @@
 #pragma once
 
 #include "awst/Node.h"
+#include "builder/ScratchLayout.h"
 #include "builder/sol-types/TypeMapper.h"
 
 #include <libsolidity/ast/ASTForward.h>
@@ -15,7 +16,7 @@ namespace puyasol::builder
 
 /// Transient state variables (`transient T x;`, EIP-1153).
 ///
-/// AVM: packed into scratch slot AssemblyBuilder::TRANSIENT_SLOT (bzero'd
+/// AVM: packed into the scratch slot right after the memory pages (bzero'd
 /// in the approval preamble). Scratch is per-txn, so the blob clears
 /// between top-level app calls and persists across callsub within one call.
 /// Packing rules match StorageLayout.cpp (same slot-sharing / alignment).
@@ -40,8 +41,13 @@ public:
 		solidity::frontend::Type const* solType = nullptr;
 	};
 
-	/// Collect transient vars and compute packed layout.
+	/// Collect transient vars and compute packed layout. Also latches the
+	/// scratch slot the blob lives in — the slot right after the memory pages,
+	/// so it depends on --evm-memory-slots (ScratchLayout::transientSlot).
 	void collectVars(solidity::frontend::ContractDefinition const& _contract, TypeMapper& _typeMapper);
+
+	/// Scratch slot holding the packed transient blob.
+	int scratchSlot() const { return m_scratchSlot; }
 
 	/// True if the contract has any transient variables.
 	bool hasTransientVars() const { return !m_vars.empty(); }
@@ -76,6 +82,7 @@ public:
 		awst::SourceLocation const& _loc) const;
 
 private:
+	int m_scratchSlot = 5;
 	std::vector<TransientVar> m_vars;
 	std::map<std::string, size_t> m_varByName;
 	std::map<int64_t, size_t> m_varById;

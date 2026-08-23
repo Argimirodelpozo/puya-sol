@@ -444,7 +444,7 @@ def compile_sol(
     ensure_budget: dict[str, int] | None = None,
     via_yul_behavior: bool = False,
     evm_version: str | None = None,
-    timeout: int = 120,
+    timeout: int | None = None,
     extra_sources: list[Path] | None = None,
     extra_import_dir: Path | None = None,
     extra_remappings: list[str] | None = None,
@@ -464,6 +464,13 @@ def compile_sol(
     _env_extra = shlex.split(os.environ.get("PUYA_SOL_EXTRA_ARGS", ""))
     if _env_extra:
         extra_args = list(extra_args or []) + _env_extra
+
+    # PUYA_SOL_COMPILE_TIMEOUT: seconds before a compile is abandoned. The
+    # 120s default fits the semantic suite; giant O2 programs (the aave hub,
+    # anything at --evm-memory-slots beyond the default) legitimately need
+    # more, and a timeout there reads as a spurious leg failure.
+    if timeout is None:
+        timeout = int(os.environ.get("PUYA_SOL_COMPILE_TIMEOUT", "120"))
 
     out_dir.mkdir(parents=True, exist_ok=True)
     if extra_sources is not None:

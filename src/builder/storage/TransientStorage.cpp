@@ -16,6 +16,7 @@ void TransientStorage::collectVars(
 	solidity::frontend::ContractDefinition const& _contract,
 	TypeMapper& _typeMapper)
 {
+	m_scratchSlot = _typeMapper.profile().scratchLayout.transientSlot();
 	m_vars.clear();
 	m_varByName.clear();
 	m_varById.clear();
@@ -143,16 +144,18 @@ TransientStorage::TransientVar const* TransientStorage::getVarInfoById(int64_t _
 
 namespace
 {
-	std::shared_ptr<awst::Expression> loadTransientBlob(awst::SourceLocation const& _loc)
+	std::shared_ptr<awst::Expression> loadTransientBlob(
+		int _scratchSlot, awst::SourceLocation const& _loc)
 	{
-		return awst::makeLoadSlot(AssemblyBuilder::TRANSIENT_SLOT, _loc);
+		return awst::makeLoadSlot(_scratchSlot, _loc);
 	}
 
 	/// Extract byteSize bytes from the transient blob at absByte.
 	std::shared_ptr<awst::Expression> extractBytes(
-		unsigned absByte, unsigned byteSize, awst::SourceLocation const& _loc)
+		int _scratchSlot, unsigned absByte, unsigned byteSize,
+		awst::SourceLocation const& _loc)
 	{
-		auto blob = loadTransientBlob(_loc);
+		auto blob = loadTransientBlob(_scratchSlot, _loc);
 		return awst::makeExtract(
 			std::move(blob),
 			static_cast<int>(absByte), static_cast<int>(byteSize), _loc);
@@ -176,7 +179,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 	if (_type == awst::WType::uint64Type() || _type == awst::WType::boolType())
 	{
 		unsigned readSize = sz <= 8 ? sz : 8;
-		auto raw = extractBytes(absByte, readSize, _loc);
+		auto raw = extractBytes(m_scratchSlot, absByte, readSize, _loc);
 		auto btoi = awst::makeBtoi(std::move(raw), _loc);
 		// bool: btoi gives uint64; compare != 0 for callers expecting bool (e.g. `!lock`).
 		if (_type == awst::WType::boolType())
@@ -200,7 +203,7 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 	// biguint: extract sz bytes and reinterpret (leading-zero-invariant).
 	if (_type == awst::WType::biguintType())
 	{
-		auto raw = extractBytes(absByte, sz, _loc);
+		auto raw = extractBytes(m_scratchSlot, absByte, sz, _loc);
 		std::shared_ptr<awst::Expression> bg = awst::makeAsBiguint(std::move(raw), _loc);
 		// Sign-extend signed sub-256 (e.g. int128) to canonical 256-bit on read.
 		// No-op for unsigned/int256/non-integer (see TypeCoercion).
@@ -210,13 +213,13 @@ std::shared_ptr<awst::Expression> TransientStorage::buildRead(
 	// Account: stored as 20B (EVM layout), AVM needs 32B; left-pad 12 zeros.
 	if (_type == awst::WType::accountType() && sz < 32)
 	{
-		auto raw = extractBytes(absByte, sz, _loc);
+		auto raw = extractBytes(m_scratchSlot, absByte, sz, _loc);
 		auto cat = awst::makeLeftPad(std::move(raw), 32 - sz, _loc);
 		return awst::makeAsAccount(std::move(cat), _loc);
 	}
 
 	// Default (e.g. bytesN): raw bytes; reinterpret to requested type.
-	auto raw = extractBytes(absByte, sz, _loc);
+	auto raw = extractBytes(m_scratchSlot, absByte, sz, _loc);
 	if (_type && _type != awst::WType::bytesType())
 		return awst::makeReinterpretCast(std::move(raw), _type, _loc);
 	return raw;
@@ -286,7 +289,7 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 
 	auto raw = truncateToBytes(std::move(_value), info->byteSize, _loc);
 
-	auto blobRead = loadTransientBlob(_loc);
+	auto blobRead = loadTransientBlob(m_scratchSlot, _loc);
 
 	// replace2(blob, raw) with compile-time absByte immediate.
 	auto replace = awst::makeIntrinsicCall("replace2", awst::WType::bytesType(), _loc);
@@ -295,7 +298,7 @@ std::shared_ptr<awst::Statement> TransientStorage::buildWrite(
 	replace->stackArgs.push_back(std::move(raw));
 
 	auto storeOp = awst::makeStoreSlot(
-		AssemblyBuilder::TRANSIENT_SLOT, std::move(replace), _loc);
+		m_scratchSlot, std::move(replace), _loc);
 
 	return awst::makeExpressionStatement(std::move(storeOp), _loc);
 }
