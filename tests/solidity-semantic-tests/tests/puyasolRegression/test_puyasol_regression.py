@@ -4844,3 +4844,22 @@ def test_slot_storage_ref_materializes_at_value_boundaries(harness):
     for fn in ("viaDecl", "viaArg", "viaReturn", "viaTernary"):
         assert as_int(harness.call(app, f"{fn}(bool)", True).abi_return) == 3, fn
         assert as_int(harness.call(app, f"{fn}(bool)", False).abi_return) == 70, fn
+
+
+def test_slot_storage_ref_materializes_in_itxn_args(harness):
+    """puyasolRegression/contracts/slot_storage_ref_ext_arg.sol — NOT an o.g. test.
+
+    SLOT mode, EXTERNAL call: `sink.take(s)` with `s` a storage ref and the
+    callee param `memory`. The itxn arg encoders passed the raw slot handle
+    padded to 32 bytes as the encoded arg — the callee's ARC-4 length assert
+    rejected it (and the harness's swallowed populate failure surfaced it as
+    a misleading "invalid Box reference"). encodeArgToBytes /
+    encodeEvmArgumentBody / the this-call subroutine leg now materialize via
+    EvmSlotLowering::materializeRefValue before conversion.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/slot_storage_ref_ext_arg.sol", "ExtArg",
+        extra_args=["--evm-storage-layout"],
+        fund_wei=2_000_000, postinit_inner_txns=1)
+    assert as_int(harness.call(app, "viaExtArg(bool)", True).abi_return) == 3
+    assert as_int(harness.call(app, "viaExtArg(bool)", False).abi_return) == 70

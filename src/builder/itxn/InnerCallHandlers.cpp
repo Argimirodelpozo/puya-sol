@@ -11,6 +11,7 @@
 #include "builder/itxn/InnerCallInternal.h"
 #include "builder/itxn/CallResolver.h"
 #include "builder/sol-eb/SolBoolBuilder.h"
+#include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
@@ -146,6 +147,13 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeArgToBytes(
 	awst::SourceLocation const& _loc)
 {
 	using namespace solidity::frontend;
+	// Slot mode: a storage-ref arg bound to a VALUE param materializes before
+	// conversion — the raw slot handle padded to 32 bytes otherwise BECOMES
+	// the encoded arg (callee's ARC-4 length assert rejects it).
+	if (_argExpr && _paramSolType)
+		_argExpr = sol_ast::EvmSlotLowering::materializeRefValue(
+			_ctx, std::move(_argExpr), _sourceSolType,
+			_ctx.typeMapper.map(_paramSolType), _loc);
 	if (_paramSolType)
 		_argExpr = builder::ConversionPlan{
 			_sourceSolType,
@@ -276,6 +284,11 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::encodeEvmArgumentBody(
 		if (targetType && targetType->category() == Type::Category::StringLiteral)
 			targetType = targetType->mobileType();
 		auto value = _ctx.buildExpr(*_args[i]);
+		// Slot mode: materialize storage-ref args (see encodeArgToBytes).
+		if (value && i < _paramTypes.size() && _paramTypes[i])
+			value = sol_ast::EvmSlotLowering::materializeRefValue(
+				_ctx, std::move(value), sourceType,
+				_ctx.typeMapper.map(_paramTypes[i]), _loc);
 		if (i < _paramTypes.size() && _paramTypes[i])
 			value = builder::ConversionPlan{
 				sourceType, _paramTypes[i], _ctx.typeMapper.map(_paramTypes[i]),
@@ -775,6 +788,13 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 								{
 									auto const& argument = resolvedArgs[i];
 									auto value = _ctx.buildExpr(*argument);
+									if (value && i < target->parameters().size())
+										value = sol_ast::EvmSlotLowering::materializeRefValue(
+											_ctx, std::move(value),
+											argument->annotation().type,
+											_ctx.typeMapper.map(
+												target->parameters()[i]->type()),
+											_loc);
 									if (i < target->parameters().size())
 									{
 										auto const* parameterType = target->parameters()[i]->type();

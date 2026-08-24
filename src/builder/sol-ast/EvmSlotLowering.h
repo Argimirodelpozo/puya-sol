@@ -145,6 +145,15 @@ public:
 		awst::WType const* _targetW,
 		awst::SourceLocation const& _loc);
 
+	/// Convenience for call sites that only hold a ContractContext (the itxn
+	/// arg encoders): uses _ctx.currentScope; no-op when unset.
+	static std::shared_ptr<awst::Expression> materializeRefValue(
+		eb::ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _value,
+		solidity::frontend::Type const* _srcSolType,
+		awst::WType const* _targetW,
+		awst::SourceLocation const& _loc);
+
 	/// Materialise a whole STRUCT at `_a.slot` as a NewStruct value (per-slot
 	/// word reads via SlotHandleAccess::readStructElem; temps go to
 	/// ctx.preEffects()). Null + loud error when `_a` isn't a struct.

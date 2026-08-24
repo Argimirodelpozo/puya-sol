@@ -402,6 +402,7 @@ def call(
          otherwise CallError.
     """
     global _LAST_POPULATE_ERROR
+    _LAST_POPULATE_ERROR = ""  # per-call: a stale value would mislabel this failure
     algod = localnet.algod
     sender = localnet.account.address
     signer = AccountTransactionSigner(localnet.account.private_key)
@@ -589,6 +590,12 @@ def call(
         # the failure report, so -n2 flakes self-diagnose from gate logs.
         print(f"[call] {getattr(abi_method, 'name', '?')} FAILED after retries: "
               f"{str(e)[:300]}")
+        # A swallowed populate failure usually holds the REAL error: populate's
+        # own simulate hits the genuine program failure, and the unpopulated
+        # submit then dies on a MISLEADING resource error ("invalid Box
+        # reference" masked a callee arg-length assert for a day).
+        if _LAST_POPULATE_ERROR:
+            print(f"[call]   populate had failed first: {_LAST_POPULATE_ERROR[:300]}")
         if not sim_result.reverted and not _method_is_readonly(app, abi_method):
             # The SIMULATION succeeds (simulate allows unnamed resources and pooled
             # budget the real txn group can't carry) while the actual submission

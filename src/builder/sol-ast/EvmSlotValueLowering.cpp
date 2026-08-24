@@ -124,6 +124,19 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::materializeRefValue(
 	return a.slot;
 }
 
+std::shared_ptr<awst::Expression> EvmSlotLowering::materializeRefValue(
+	eb::ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _value,
+	solidity::frontend::Type const* _srcSolType,
+	awst::WType const* _targetW,
+	awst::SourceLocation const& _loc)
+{
+	if (!_ctx.currentScope)
+		return _value;
+	return materializeRefValue(
+		_ctx, *_ctx.currentScope, std::move(_value), _srcSolType, _targetW, _loc);
+}
+
 std::shared_ptr<awst::Expression> EvmSlotLowering::readStructValue(Addr const& _a)
 {
 	auto const* st = dynamic_cast<StructType const*>(_a.solType);
