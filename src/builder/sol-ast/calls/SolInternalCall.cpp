@@ -444,6 +444,14 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 			if (mappingStorageParamIndices.count(paramIdx))
 				return extractMappingKeyPrefix(*sortedArgs[i]);
 			auto v = buildExpr(*sortedArgs[i]);
+			// Slot mode: a storage-ref arg bound to a VALUE (memory) param
+			// materializes here — the slot handle can't coerce to the value
+			// type (it crashed field reads: "extraction end 8 beyond length").
+			if (v && paramIdx < paramTypes.size())
+				v = sol_ast::EvmSlotLowering::materializeRefValue(
+					m_ctx, m_scope, std::move(v),
+					sortedArgs[i]->annotation().type,
+					paramTypes[paramIdx], m_loc);
 			if (_funcDef && paramIdx < _funcDef->parameters().size()
 				&& paramIdx < paramTypes.size())
 				v = builder::ConversionPlan{

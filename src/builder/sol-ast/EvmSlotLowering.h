@@ -129,6 +129,22 @@ public:
 		std::shared_ptr<awst::Expression> _value,
 		std::vector<std::shared_ptr<awst::Statement>>& _out);
 
+	/// Slot mode: a storage-ref VALUE (bare biguint slot handle) flowing into a
+	/// value-typed use — memory param binding, memory return, ternary-to-value —
+	/// must MATERIALIZE the referenced aggregate; the handle can never coerce to
+	/// the struct/array value type. solc's equivalent lives in CONVERSION
+	/// (convert-to-common-type performs the storage→memory copy), so this is the
+	/// one site-independent hook: no-op unless the profile is slot mode, `_value`
+	/// is a bare biguint, `_targetW` is an ARC4 aggregate, and `_srcSolType` is
+	/// storage-located.
+	static std::shared_ptr<awst::Expression> materializeRefValue(
+		eb::ContractContext& _ctx,
+		Context& _scope,
+		std::shared_ptr<awst::Expression> _value,
+		solidity::frontend::Type const* _srcSolType,
+		awst::WType const* _targetW,
+		awst::SourceLocation const& _loc);
+
 	/// Materialise a whole STRUCT at `_a.slot` as a NewStruct value (per-slot
 	/// word reads via SlotHandleAccess::readStructElem; temps go to
 	/// ctx.preEffects()). Null + loud error when `_a` isn't a struct.

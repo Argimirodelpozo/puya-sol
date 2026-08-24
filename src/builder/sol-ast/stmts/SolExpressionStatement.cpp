@@ -324,6 +324,12 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 			{
 				auto const* targetSolType = retParams[0]->type();
 				auto const* targetWType = m_blk.typeMapper().map(targetSolType);
+				// Slot mode: `return <storage ref>` from a MEMORY-typed return
+				// materializes the aggregate (the storage-declared return case
+				// exited earlier with the raw slot).
+				stmt->value = EvmSlotLowering::materializeRefValue(
+					m_blk.builderCtx(), m_blk, std::move(stmt->value),
+					m_node.expression()->annotation().type, targetWType, m_loc);
 				stmt->value = builder::ConversionPlan{
 					m_node.expression()->annotation().type,
 					targetSolType,
@@ -364,6 +370,10 @@ std::vector<std::shared_ptr<awst::Statement>> SolReturnStatement::toAwst()
 							m_blk.typeMapper().map(targetSolType);
 						auto const* sourceSolType =
 							i < sourceTypes.size() ? sourceTypes[i] : nullptr;
+						tuple->items[i] = EvmSlotLowering::materializeRefValue(
+							m_blk.builderCtx(), m_blk,
+							std::move(tuple->items[i]), sourceSolType,
+							targetWType, m_loc);
 						tuple->items[i] = builder::ConversionPlan{
 							sourceSolType,
 							targetSolType,

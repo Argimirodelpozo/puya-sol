@@ -4825,3 +4825,22 @@ def test_transient_incdec_semantics(harness):
     assert harness.call(app, "underflowDec()", expect_revert=True).reverted
     # unchecked wraps mod 2^8.
     assert as_int(harness.call(app, "uncheckedWrap()").abi_return) == 0
+
+
+def test_slot_storage_ref_materializes_at_value_boundaries(harness):
+    """puyasolRegression/contracts/slot_storage_ref_materialize.sol — NOT an o.g. test.
+
+    SLOT mode: a storage-ref (bare biguint slot handle) flowing into a
+    VALUE-typed use must materialize the referenced aggregate. The ternary
+    and vardecl sites had hand-rolled copies; passing a ref to a MEMORY
+    param and returning one from a memory-typed function leaked the raw
+    handle into field reads ("extraction end 8 is beyond length: 0").
+    Now one conversion-boundary hook (EvmSlotLowering::materializeRefValue)
+    covers ternary, internal-call args, and returns.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/slot_storage_ref_materialize.sol",
+        extra_args=["--evm-storage-layout"])
+    for fn in ("viaDecl", "viaArg", "viaReturn", "viaTernary"):
+        assert as_int(harness.call(app, f"{fn}(bool)", True).abi_return) == 3, fn
+        assert as_int(harness.call(app, f"{fn}(bool)", False).abi_return) == 70, fn

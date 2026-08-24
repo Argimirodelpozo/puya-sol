@@ -65,33 +65,14 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 	// Slot mode: a branch that is a STORAGE REF (biguint slot handle — e.g.
 	// OZ Checkpoints' `pos == 0 ? Checkpoint(0,0) : _unsafeAccess(ckpts, …)`,
 	// whose false arm returns `Checkpoint storage`) flowing into a VALUE-typed
-	// ternary must MATERIALIZE the referenced aggregate; the handle itself can
-	// never coerce to the struct/array value type.
+	// ternary must MATERIALIZE the referenced aggregate — the shared
+	// conversion-boundary hook (also used by internal-call args and returns).
 	auto materializeSlotRef = [&](std::shared_ptr<awst::Expression> branch,
 		solidity::frontend::Expression const& srcExpr)
 		-> std::shared_ptr<awst::Expression>
 	{
-		if (!m_ctx.typeMapper.profile().evmStorageLayout || !branch || !e->wtype
-			|| branch->wtype != awst::WType::biguintType())
-			return branch;
-		auto k = e->wtype->kind();
-		if (k != awst::WTypeKind::ARC4Struct
-			&& k != awst::WTypeKind::ARC4StaticArray
-			&& k != awst::WTypeKind::ARC4DynamicArray)
-			return branch;
-		auto const* st = srcExpr.annotation().type;
-		if (!st || !st->dataStoredIn(solidity::frontend::DataLocation::Storage))
-			return branch;
-		EvmSlotLowering low(m_ctx, m_scope, m_loc);
-		EvmSlotLowering::Addr a;
-		a.slot = std::move(branch);
-		a.solType = st;
-		a.wtype = e->wtype;
-		if (dynamic_cast<solidity::frontend::StructType const*>(st))
-			return low.readStructValue(a);
-		if (auto const* at = dynamic_cast<solidity::frontend::ArrayType const*>(st))
-			return low.readArrayValue(a, at);
-		return a.slot;
+		return EvmSlotLowering::materializeRefValue(m_ctx, m_scope,
+			std::move(branch), srcExpr.annotation().type, e->wtype, m_loc);
 	};
 	// Materialising a slot-backed aggregate can itself emit reads/loops.  Keep
 	// those effects in the branch delta; otherwise both arms' materialisation
