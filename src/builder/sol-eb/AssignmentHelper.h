@@ -46,6 +46,33 @@ public:
 		std::shared_ptr<awst::Expression> _initialTarget,
 		std::shared_ptr<awst::Expression> _initialValue,
 		awst::SourceLocation const& _loc);
+
+	/// A struct-field COW STORE ready for assembly: writable target + rebuilt
+	/// outer value + the walked field chain (reverse it to re-extract the
+	/// stored field for an assignment-expression result).
+	struct StructFieldCowStore
+	{
+		std::shared_ptr<awst::Expression> target;
+		std::shared_ptr<awst::Expression> value;
+		std::vector<std::pair<std::string, awst::WType const*>> fieldChain;
+	};
+
+	/// THE struct-field copy-on-write store — shared by SolAssignment
+	/// (`s.f = v`, `s.f op= v`, tuple destructure, `s.b[i] = v`) and
+	/// SolUnaryOperation (`s.f++`, `--s.f`). Encodes `_fieldValue` at the
+	/// field's ARC4 type (no-op if already encoded), reads sibling fields
+	/// with-default (fresh box yields defaults instead of reverting),
+	/// rebuilds the outer struct chain COW, strips StateGet/ARC4Decode from
+	/// the write target, and queues the lazy-root-box ensure (mapping-entry
+	/// boxes must exist before box_replace — the inc/dec path historically
+	/// skipped this and `n[k][i].f++` on a fresh key died on "no such box").
+	/// Callers assemble the statement/expression themselves.
+	static StructFieldCowStore buildStructFieldCowStore(
+		ContractContext& _ctx,
+		awst::FieldExpression const* _fieldExpr,
+		awst::ARC4Struct const* _structType,
+		std::shared_ptr<awst::Expression> _fieldValue,
+		awst::SourceLocation const& _loc);
 };
 
 } // namespace puyasol::builder::eb

@@ -374,27 +374,18 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				structType = dynamic_cast<awst::ARC4Struct const*>(sg->field->wtype);
 		return structType;
 	};
+	// Shared struct-field COW store (AssignmentHelper) — including the
+	// lazy-root-box ensure this path used to skip (`n[k][i].f++` on a fresh
+	// mapping key died on "no such box" where `= v` worked).
 	auto buildStructFieldCowWrite = [&](std::shared_ptr<awst::Expression> const& writeTarget,
 		awst::ARC4Struct const* structType,
 		std::shared_ptr<awst::Expression> nativeFieldValue) -> std::shared_ptr<awst::Statement>
 	{
 		auto const* fieldExpr = dynamic_cast<awst::FieldExpression const*>(writeTarget.get());
-		awst::WType const* arc4FieldType = awst::structFieldType(structType, fieldExpr->name);
-		std::shared_ptr<awst::Expression> encoded = std::move(nativeFieldValue);
-		if (arc4FieldType && encoded->wtype != arc4FieldType)
-			encoded = awst::makeARC4Encode(std::move(encoded), arc4FieldType, m_loc);
-		auto fbase = awst::unwrapStateGet(fieldExpr->base);
-		// Read the OTHER fields with-default so a fresh (non-existent) top-level box yields defaults
-		// instead of reverting (matches compound). rebuildArc4StructChainCOW only wraps the read base for
-		// NESTED structs; for a top-level struct (fbase is a bare BoxValue) we must wrap it here. The
-		// write target stays the bare box (unwrapped).
-		auto readBase = fbase;
-		if (dynamic_cast<awst::BoxValueExpression const*>(fbase.get()))
-			readBase = builder::StorageMapper::makeStateGetWithDefault(fbase, fbase->wtype, m_loc);
-		auto newStruct = awst::makeStructWithReplacedField(structType, readBase, fieldExpr->name, std::move(encoded), m_loc);
-		auto cow = eb::AssignmentHelper::rebuildArc4StructChainCOW(m_ctx, fbase, std::move(newStruct), m_loc);
-		auto target = awst::makeWritableTarget(std::move(cow.assignTarget));
-		return awst::makeAssignmentStatement(std::move(target), std::move(cow.assignValue), m_loc);
+		auto store = eb::AssignmentHelper::buildStructFieldCowStore(
+			m_ctx, fieldExpr, structType, std::move(nativeFieldValue), m_loc);
+		return awst::makeAssignmentStatement(
+			std::move(store.target), std::move(store.value), m_loc);
 	};
 
 	if (isPrefix)
@@ -587,32 +578,24 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 	if (auto const* decodeExpr = dynamic_cast<awst::ARC4Decode const*>(target.get()))
 		target = decodeExpr->value;
 
-	// ARC4Struct field: COW with zeroed field.
+	// ARC4Struct field: COW with the field zeroed — the shared store
+	// (AssignmentHelper). The old inline copy wrote to the single-stripped
+	// base: no chain COW, no writable-target strip (puya rejected
+	// `delete n[k][1].f` — StateGet kept inside the index target), no
+	// lazy-root-box ensure.
 	if (auto const* fieldExpr = dynamic_cast<awst::FieldExpression const*>(target.get()))
 	{
 		auto const* arc4StructType = dynamic_cast<awst::ARC4Struct const*>(fieldExpr->base->wtype);
 		if (arc4StructType)
 		{
-			auto base = fieldExpr->base;
-			std::string fieldName = fieldExpr->name;
-
-			auto readBase = base;
-			if (dynamic_cast<awst::BoxValueExpression const*>(base.get()))
-				readBase = builder::StorageMapper::makeStateGetWithDefault(base, base->wtype, m_loc);
-
-			awst::WType const* arc4FieldType = awst::structFieldType(arc4StructType, fieldName);
-
+			awst::WType const* arc4FieldType = awst::structFieldType(
+				arc4StructType, fieldExpr->name);
 			auto zeroVal = builder::StorageMapper::makeDefaultValue(
 				arc4FieldType ? arc4FieldType : fieldExpr->wtype, m_loc);
-
-			auto newStruct = awst::makeStructWithReplacedField(
-				arc4StructType, readBase, fieldName, std::move(zeroVal), m_loc);
-
-			auto writeTarget = base;
-			if (auto const* sg = dynamic_cast<awst::StateGet const*>(base.get()))
-				writeTarget = sg->field;
-
-			m_ctx.queuePostEffect(awst::makeAssignmentStatement(std::move(writeTarget), std::move(newStruct), m_loc));
+			auto store = eb::AssignmentHelper::buildStructFieldCowStore(
+				m_ctx, fieldExpr, arc4StructType, std::move(zeroVal), m_loc);
+			m_ctx.queuePostEffect(awst::makeAssignmentStatement(
+				std::move(store.target), std::move(store.value), m_loc));
 			return _operand;
 		}
 	}

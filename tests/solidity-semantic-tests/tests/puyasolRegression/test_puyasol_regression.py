@@ -4863,3 +4863,24 @@ def test_slot_storage_ref_materializes_in_itxn_args(harness):
         fund_wei=2_000_000, postinit_inner_txns=1)
     assert as_int(harness.call(app, "viaExtArg(bool)", True).abi_return) == 3
     assert as_int(harness.call(app, "viaExtArg(bool)", False).abi_return) == 70
+
+
+def test_struct_field_cow_store_shared(harness):
+    """puyasolRegression/contracts/struct_field_cow_store.sol — NOT an o.g. test.
+
+    ONE struct-field COW store (AssignmentHelper::buildStructFieldCowStore)
+    now backs `=`, `op=`, `++/--`, and `delete`. The per-site copies drifted:
+    inc/dec lacked the lazy-root-box ensure (`n[k][i].f++` on a fresh mapping
+    key died "no such box"); delete's copy left StateGet inside the index
+    target ("unsupported assignment target" — `delete n[k][1].f` failed to
+    COMPILE) and lacked the chain rebuild.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/struct_field_cow_store.sol")
+    assert as_int(harness.call(app, "setNested(uint256)", 1).abi_return) == 1
+    assert as_int(harness.call(app, "incNested(uint256)", 2).abi_return) == 1
+    assert as_int(harness.call(app, "preNested(uint256)", 3).abi_return) == 1
+    assert as_int(harness.call(app, "incFlat(uint256)", 4).abi_return) == 1
+    assert as_int(harness.call(app, "delNestedFresh(uint256)", 5).abi_return) == 0
+    # delete zeroes ONLY the field; the sibling survives.
+    assert as_int(harness.call(app, "delNestedSet(uint256)", 6).abi_return) == 5

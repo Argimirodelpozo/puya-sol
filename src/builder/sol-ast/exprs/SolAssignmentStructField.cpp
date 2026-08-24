@@ -20,35 +20,12 @@ std::shared_ptr<awst::Expression> SolAssignment::buildStructFieldBytesWrite(
 	awst::ARC4Struct const* _structType,
 	std::shared_ptr<awst::Expression> _newBytes)
 {
-	auto base = _fieldExpr->base;
-	std::string fieldName = _fieldExpr->name;
-
-	base = awst::unwrapStateGet(std::move(base)); // StateGet is not an lvalue
-
-	// Encode bytes → ARC4 byte[] (prepends length prefix in puya)
-	awst::WType const* arc4FieldType = awst::structFieldType(_structType, fieldName);
-
-	std::shared_ptr<awst::Expression> encodedValue = std::move(_newBytes);
-	if (arc4FieldType && encodedValue->wtype != arc4FieldType)
-	{
-		auto encode = awst::makeARC4Encode(std::move(encodedValue), arc4FieldType, m_loc);
-		encodedValue = std::move(encode);
-	}
-
-	auto newStruct = awst::makeStructWithReplacedField(
-		_structType, base, fieldName, encodedValue, m_loc);
-
-	// Rebuild outer FieldExpression chain COW (nested `outer.inner.b[i] = v`).
-	auto cow = eb::AssignmentHelper::rebuildArc4StructChainCOW(
-		m_ctx, base, std::move(newStruct), m_loc);
-	auto assignTarget = std::move(cow.assignTarget);
-	auto assignValue = std::move(cow.assignValue);
-
-	// Strip surviving StateGet/ARC4Decode wrappers to get a writable target.
-	assignTarget = awst::makeWritableTarget(std::move(assignTarget));
-
+	// Shared struct-field COW store (encodes bytes → ARC4 byte[], with-default
+	// sibling reads, chain rebuild, writable target, lazy-root-box ensure).
+	auto store = eb::AssignmentHelper::buildStructFieldCowStore(
+		m_ctx, _fieldExpr, _structType, std::move(_newBytes), m_loc);
 	return awst::makeAssignmentExpression(
-		std::move(assignTarget), std::move(assignValue), m_loc);
+		std::move(store.target), std::move(store.value), m_loc);
 }
 
 std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
@@ -107,35 +84,13 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 		_value = std::move(encode);
 	}
 
-	auto newStruct = awst::makeStructWithReplacedField(
-		arc4StructType, readBase, fieldName, std::move(_value), m_loc);
-
-	// COW for nested structs.
-	auto cow = eb::AssignmentHelper::rebuildArc4StructChainCOW(
-		m_ctx, std::move(base), std::move(newStruct), m_loc);
-	auto assignTarget2 = std::move(cow.assignTarget);
-	auto assignValue2 = std::move(cow.assignValue);
-	auto& fieldChain = cow.fieldChain;
-
-	// `data[2].x = v` on a box-stored static array: unwrap StateGet so
-	// the assignment target is a raw BoxValue (puya rejects StateGet inside an lvalue).
-	if (auto const* idx = dynamic_cast<awst::IndexExpression const*>(assignTarget2.get()))
-	{
-		if (auto const* sg = dynamic_cast<awst::StateGet const*>(idx->base.get()))
-		{
-			auto newIdx = awst::makeIndexExpression(sg->field, idx->index, idx->wtype, idx->sourceLocation);
-			assignTarget2 = std::move(newIdx);
-		}
-	}
-
-	// Centralized box-lifecycle: `n[k][i].f = v` / `n[k][i] = v` — the lazy mapping-entry box must
-	// exist before box_replace. Shared with maybePrePopulateBox / SolArrayMethod::emitEnsureBox.
-	if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
-			m_ctx.typeMapper, assignTarget2, /*isResize=*/false, m_loc))
-		m_ctx.queuePreEffect(std::move(stmt));
+	// Shared struct-field COW store (encode no-ops — value already encoded above).
+	auto store = eb::AssignmentHelper::buildStructFieldCowStore(
+		m_ctx, _fieldExpr, arc4StructType, std::move(_value), m_loc);
+	auto& fieldChain = store.fieldChain;
 
 	auto e = awst::makeAssignmentExpression(
-		std::move(assignTarget2), std::move(assignValue2), m_loc);
+		std::move(store.target), std::move(store.value), m_loc);
 
 	// Tuple-destructure context: queue the COW store as a statement and return
 	// a truthy sentinel (field-value decode uses the single assignment's result

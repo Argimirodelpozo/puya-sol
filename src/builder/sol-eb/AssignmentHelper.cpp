@@ -114,4 +114,46 @@ ArcStructCowResult AssignmentHelper::rebuildArc4StructChainCOW(
 	return result;
 }
 
+AssignmentHelper::StructFieldCowStore AssignmentHelper::buildStructFieldCowStore(
+	ContractContext& _ctx,
+	awst::FieldExpression const* _fieldExpr,
+	awst::ARC4Struct const* _structType,
+	std::shared_ptr<awst::Expression> _fieldValue,
+	awst::SourceLocation const& _loc)
+{
+	auto base = awst::unwrapStateGet(_fieldExpr->base);
+	std::string fieldName = _fieldExpr->name;
+
+	// Read the sibling fields with-default so a fresh (nonexistent) top-level
+	// box yields defaults instead of reverting. rebuildArc4StructChainCOW only
+	// wraps the read base for NESTED structs; a top-level bare BoxValue is
+	// wrapped here. The write target stays the bare box (unwrapped).
+	auto readBase = base;
+	if (dynamic_cast<awst::BoxValueExpression const*>(base.get()))
+		readBase = builder::StorageMapper::makeStateGetWithDefault(base, base->wtype, _loc);
+
+	awst::WType const* arc4FieldType = awst::structFieldType(_structType, fieldName);
+	if (arc4FieldType && _fieldValue->wtype != arc4FieldType)
+		_fieldValue = awst::makeARC4Encode(std::move(_fieldValue), arc4FieldType, _loc);
+
+	auto newStruct = awst::makeStructWithReplacedField(
+		_structType, std::move(readBase), fieldName, std::move(_fieldValue), _loc);
+
+	auto cow = rebuildArc4StructChainCOW(
+		_ctx, std::move(base), std::move(newStruct), _loc);
+
+	// Strip StateGet/ARC4Decode anywhere in the target chain (puya rejects
+	// them as lvalues; covers the IndexExpression(StateGet(box), i) shape).
+	auto target = awst::makeWritableTarget(std::move(cow.assignTarget));
+
+	// Centralized box-lifecycle: the lazy mapping-entry box must exist before
+	// box_replace. Shared with maybePrePopulateBox / SolArrayMethod::emitEnsureBox.
+	if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
+			_ctx.typeMapper, target, /*isResize=*/false, _loc))
+		_ctx.queuePreEffect(std::move(stmt));
+
+	return StructFieldCowStore{
+		std::move(target), std::move(cow.assignValue), std::move(cow.fieldChain)};
+}
+
 } // namespace puyasol::builder::eb
