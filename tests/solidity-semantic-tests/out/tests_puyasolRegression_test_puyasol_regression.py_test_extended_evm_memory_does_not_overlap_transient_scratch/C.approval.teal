@@ -8,24 +8,24 @@ main:
     pushint 4096
     bzero
     dup
+    store 7
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    dup
+    store 4
+    dup
     store 5
-    dup
-    store 16
-    dup
-    store 17
-    dup
-    store 18
-    dup
-    store 19
-    dup
-    store 20
-    dup
-    store 21
-    store 22
-    load 16
+    store 6
+    load 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
     replace2 64
-    store 16
+    store 0
     txn ApplicationID
     bnz main_after_if_else@2
     intc_0 // 1
@@ -53,22 +53,22 @@ main_probe_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    load 32
-    store 16
-    load 5
+    load 0
+    store 0
+    load 7
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000006f
     replace2 0
-    store 5
-    load 21
+    store 7
+    load 5
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000de
     replace2 0
-    store 21
+    store 5
+    load 7
+    extract 0 32
     load 5
     extract 0 32
-    load 21
-    extract 0 32
-    load 16
-    store 16
+    load 0
+    store 0
     swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
