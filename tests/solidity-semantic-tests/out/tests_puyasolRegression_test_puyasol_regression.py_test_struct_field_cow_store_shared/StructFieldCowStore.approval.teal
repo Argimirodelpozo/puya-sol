@@ -1,0 +1,961 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_field_cow_store.sol.StructFieldCowStore.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 2
+    bytecblock 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 "n" "__ctor_pending" 0x0000000000000000
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    pushbytes 0x4302be5e
+    ==
+    bz main_after_if_else@9
+    txn GroupIndex
+    bz main_ternary_false@7
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@8:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub setNested
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_2 // 0
+    b main_ternary_merge@8
+
+main_after_if_else@9:
+    txn OnCompletion
+    bnz main_after_if_else@16
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@16
+    txna ApplicationArgs 0
+    pushbytes 0xd49df173
+    ==
+    bz main_after_if_else@16
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub incNested
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+main_after_if_else@16:
+    txn OnCompletion
+    bnz main_after_if_else@23
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@23
+    txna ApplicationArgs 0
+    pushbytes 0x5be82256
+    ==
+    bz main_after_if_else@23
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub preNested
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
+
+main_after_if_else@23:
+    txn OnCompletion
+    bnz main_after_if_else@30
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@30
+    txna ApplicationArgs 0
+    pushbytes 0xc7c5aedf
+    ==
+    bz main_after_if_else@30
+    txn GroupIndex
+    bz main_ternary_false@28
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@29:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub incFlat
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@28:
+    intc_2 // 0
+    b main_ternary_merge@29
+
+main_after_if_else@30:
+    txn OnCompletion
+    bnz main_after_if_else@37
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@37
+    txna ApplicationArgs 0
+    pushbytes 0x045fa49a
+    ==
+    bz main_after_if_else@37
+    txn GroupIndex
+    bz main_ternary_false@35
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@36:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub delNestedFresh
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@35:
+    intc_2 // 0
+    b main_ternary_merge@36
+
+main_after_if_else@37:
+    txn OnCompletion
+    bnz main_after_if_else@44
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@44
+    txna ApplicationArgs 0
+    pushbytes 0xa58ba0de
+    ==
+    bz main_after_if_else@44
+    txn GroupIndex
+    bz main_ternary_false@42
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@43:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub delNestedSet
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@42:
+    intc_2 // 0
+    b main_ternary_merge@43
+
+main_after_if_else@44:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xa91fc89a 0x379277dd 0x781cb4ef 0xd52f3411 0xda7dda36 0x055b6723 // method "__postInit()void", method "setNested(uint256)uint256", method "incNested(uint256)uint256", method "preNested(uint256)uint256", method "incFlat(uint256)uint256", method "delNestedFresh(uint256)uint256", method "delNestedSet(uint256)uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@47 main_setNested_route@48 main_incNested_route@49 main_preNested_route@50 main_incFlat_route@51 main_delNestedFresh_route@52 main_delNestedSet_route@53
+    err
+
+main_delNestedSet_route@53:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub delNestedSet
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_delNestedFresh_route@52:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub delNestedFresh
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_incFlat_route@51:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub incFlat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_preNested_route@50:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub preNested
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_incNested_route@49:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub incNested
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_setNested_route@48:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub setNested
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main___postInit_route@47:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_3 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_2 // "n"
+    intc_3 // 2
+    box_create
+    pop
+    pushbytes "m"
+    intc_3 // 2
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_field_cow_store.sol.StructFieldCowStore.setNested(__arc4_k: bytes) -> bytes:
+setNested:
+    proto 1 1
+    txn GroupIndex
+    bz setNested_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+setNested_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "n"
+    concat
+    sha256
+    dup
+    box_len
+    bury 1
+    bnz setNested_after_if_else@5
+    dup
+    pushint 48
+    box_create
+    pop
+
+setNested_after_if_else@5:
+    intc_1 // 1
+    itob
+    dig 1
+    box_get
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    extract 8 8
+    concat
+    dig 1
+    pushint 16
+    uncover 2
+    box_replace // on error: index out of bounds
+    box_get
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    extract 0 8
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    retsub
+
+setNested_ternary_false@2:
+    intc_2 // 0
+    b setNested_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_field_cow_store.sol.StructFieldCowStore.incNested(__arc4_k: bytes) -> bytes:
+incNested:
+    proto 1 1
+    txn GroupIndex
+    bz incNested_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+incNested_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "n"
+    concat
+    sha256
+    dupn 2
+    box_get
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    intc_2 // 0
+    extract_uint64
+    swap
+    box_len
+    bury 1
+    bnz incNested_after_if_else@5
+    dig 1
+    pushint 48
+    box_create
+    pop
+
+incNested_after_if_else@5:
+    intc_1 // 1
+    +
+    itob
+    dig 1
+    box_get
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    extract 8 8
+    concat
+    dig 1
+    pushint 16
+    uncover 2
+    box_replace // on error: index out of bounds
+    box_get
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    extract 0 8
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    retsub
+
+incNested_ternary_false@2:
+    intc_2 // 0
+    b incNested_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_field_cow_store.sol.StructFieldCowStore.preNested(__arc4_k: bytes) -> bytes:
+preNested:
+    proto 1 1
+    txn GroupIndex
+    bz preNested_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+preNested_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "n"
+    concat
+    sha256
+    dupn 2
+    box_get
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 32 16 // on error: index access is out of bounds
+    pushint 8
+    extract_uint64
+    intc_1 // 1
+    +
+    swap
+    box_len
+    bury 1
+    bnz preNested_after_if_else@5
+    dig 1
+    pushint 48
+    box_create
+    pop
+
+preNested_after_if_else@5:
+    swap
+    dup
+    box_get
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 32 16 // on error: index access is out of bounds
+    extract 0 8
+    uncover 2
+    itob
+    swap
+    dig 1
+    concat
+    uncover 2
+    intc_0 // 32
+    uncover 2
+    box_replace // on error: index out of bounds
+    b|
+    retsub
+
+preNested_ternary_false@2:
+    intc_2 // 0
+    b preNested_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_field_cow_store.sol.StructFieldCowStore.incFlat(__arc4_k: bytes) -> bytes:
+incFlat:
+    proto 1 1
+    txn GroupIndex
+    bz incFlat_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+incFlat_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes "m"
+    concat
+    sha256
+    dup
+    box_get
+    pushbytes 0x00000000000000000000000000000000
+    cover 2
+    select
+    dup
+    intc_2 // 0
+    extract_uint64
+    intc_1 // 1
+    +
+    itob
+    swap
+    extract 8 8
+    concat
+    swap
+    dig 1
+    box_put
+    extract 0 8
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    retsub
+
+incFlat_ternary_false@2:
+    intc_2 // 0
+    b incFlat_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_field_cow_store.sol.StructFieldCowStore.delNestedFresh(__arc4_k: bytes) -> bytes:
+delNestedFresh:
+    proto 1 1
+    txn GroupIndex
+    bz delNestedFresh_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+delNestedFresh_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "n"
+    concat
+    sha256
+    dup
+    box_len
+    bury 1
+    bnz delNestedFresh_after_if_else@5
+    dup
+    pushint 48
+    box_create
+    pop
+
+delNestedFresh_after_if_else@5:
+    dup
+    box_get
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    extract 8 8
+    bytec 4 // 0x0000000000000000
+    swap
+    concat
+    dig 1
+    pushint 16
+    uncover 2
+    box_replace // on error: index out of bounds
+    box_get
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    extract 0 8
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    retsub
+
+delNestedFresh_ternary_false@2:
+    intc_2 // 0
+    b delNestedFresh_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_field_cow_store.sol.StructFieldCowStore.delNestedSet(__arc4_k: bytes) -> bytes:
+delNestedSet:
+    proto 1 1
+    txn GroupIndex
+    bz delNestedSet_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+delNestedSet_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "n"
+    concat
+    sha256
+    dup
+    box_len
+    bury 1
+    bnz delNestedSet_after_if_else@5
+    dup
+    pushint 48
+    box_create
+    pop
+
+delNestedSet_after_if_else@5:
+    pushint 9
+    itob
+    dig 1
+    dup
+    cover 2
+    box_get
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    extract 8 8
+    concat
+    dig 1
+    pushint 16
+    uncover 2
+    box_replace // on error: index out of bounds
+    box_len
+    bury 1
+    bnz delNestedSet_after_if_else@7
+    dup
+    pushint 48
+    box_create
+    pop
+
+delNestedSet_after_if_else@7:
+    dupn 2
+    box_get
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    extract 0 8
+    pushint 5
+    itob
+    concat
+    dig 1
+    pushint 16
+    uncover 2
+    box_replace // on error: index out of bounds
+    box_len
+    bury 1
+    bnz delNestedSet_after_if_else@9
+    dup
+    pushint 48
+    box_create
+    pop
+
+delNestedSet_after_if_else@9:
+    dup
+    box_get
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    extract 8 8
+    bytec 4 // 0x0000000000000000
+    swap
+    concat
+    dig 1
+    pushint 16
+    uncover 2
+    box_replace // on error: index out of bounds
+    box_get
+    bytec_0 // 0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    extract 16 16 // on error: index access is out of bounds
+    dup
+    intc_2 // 0
+    extract_uint64
+    pushint 100
+    *
+    swap
+    pushint 8
+    extract_uint64
+    +
+    itob
+    b|
+    retsub
+
+delNestedSet_ternary_false@2:
+    intc_2 // 0
+    b delNestedSet_ternary_merge@3
