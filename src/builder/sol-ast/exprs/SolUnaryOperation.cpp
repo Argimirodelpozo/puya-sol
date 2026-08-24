@@ -9,6 +9,7 @@
 #include "builder/sol-eb/NodeBuilder.h"
 #include "builder/sol-eb/BuilderOps.h"
 #include "builder/sol-eb/AssignmentHelper.h"
+#include "builder/sol-eb/BigUIntMathHelpers.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/storage/SlotHandleAccess.h"
@@ -30,8 +31,8 @@ using Token = solidity::frontend::Token;
 namespace
 {
 // Promote a value to a signed 256-bit biguint: a uint64 value is widened via
-// itob then reinterpreted as biguint; any other type is passed through. Shared
-// by handleNegate and makeNewValue's signed branch (identical two-step).
+// itob then reinterpreted as biguint; any other type is passed through.
+// (Inc/dec's copy of this now lives in eb::promoteToBiguint via buildIncDec.)
 std::shared_ptr<awst::Expression> promoteToSignedBiguint(
 	std::shared_ptr<awst::Expression> value, awst::SourceLocation const& loc)
 {
@@ -258,50 +259,22 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 	bool isPrefix = m_unaryOp.isPrefixOperation();
 	bool isInc = (m_unaryOp.getOperator() == Token::Inc);
 
-	// Transient state var: read/compute/write via TransientStorage
-	// (AssignmentStatement with read expr as target isn't an lvalue).
+	// Transient state var: no AWST lvalue (AssignmentStatement with a read
+	// expr as target isn't one) — writes go through TransientStorage::buildWrite.
+	// Detected here, HANDLED after makeNewValue below so it shares the same
+	// width/sign/checked rules as every other target: the old early-out
+	// computed a bare ±1 (uint8 t=255; t++ silently wrapped to 0 where EVM
+	// panics) and pushed the postfix write to POST-effects (`t++ + t` read the
+	// stale value; EVM writes immediately).
+	VariableDeclaration const* transientVar = nullptr;
 	if (auto const* ident = dynamic_cast<Identifier const*>(&m_unaryOp.subExpression()))
-	{
 		if (auto const* varDecl = dynamic_cast<VariableDeclaration const*>(
 				ident->annotation().referencedDeclaration))
-		{
 			if (varDecl->isStateVariable()
 				&& varDecl->referenceLocation() == VariableDeclaration::Location::Transient
 				&& m_ctx.transientStorage
 				&& m_ctx.transientStorage->isTransient(*varDecl))
-			{
-				auto const* info = m_ctx.transientStorage->getVarInfoById(varDecl->id());
-				auto* wt = info ? info->wtype : _operand->wtype;
-				auto one = (wt == awst::WType::biguintType())
-					? awst::makeOne(m_loc, awst::WType::biguintType())
-					: awst::makeOne(m_loc);
-				std::shared_ptr<awst::Expression> newValue;
-				if (wt == awst::WType::biguintType())
-					newValue = awst::makeBigUIntBinOp(_operand,
-						isInc ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Sub,
-						std::move(one), m_loc);
-				else
-					newValue = awst::makeUInt64BinOp(_operand,
-						isInc ? awst::UInt64BinaryOperator::Add : awst::UInt64BinaryOperator::Sub,
-						std::move(one), m_loc);
-				auto writeStmt = m_ctx.transientStorage->buildWrite(
-					*varDecl, newValue, m_loc);
-				if (!writeStmt)
-					return _operand;
-				if (isPrefix)
-				{
-					m_ctx.preEffects().push_back(std::move(writeStmt));
-					// Re-read for the expression value (post-update)
-					return m_ctx.transientStorage->buildRead(*varDecl, wt, m_loc);
-				}
-				else
-				{
-					m_ctx.postEffects().push_back(std::move(writeStmt));
-					return _operand;
-				}
-			}
-		}
-	}
+				transientVar = varDecl;
 
 	// NB: raw cast, NOT SolIntType::fromSol — this path historically does not unwrap
 	// UDVTs here; a UDVT operand is treated as non-int (isSigned=false). Hoisted once
@@ -322,156 +295,46 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		}
 	}
 
-	static const std::string pow256Minus1 =
-		"115792089237316195423570985008687907853269984665640564039457584007913129639935";
-
 	unsigned signedBits = (opInt && isSigned) ? opInt->numBits() : 0;
 	unsigned unsignedBits = (opInt && !isSigned) ? opInt->numBits() : 0;
 
-	// Checked unsigned `++` overflow guard. The signed path (below) and `x += 1` both check, but the
-	// unsigned inc just computes base+1: native uint64 add reverts on its own, but a sub-word
-	// (uint8..uint56) add yields e.g. 256 that later masks to 0, and a biguint (uint65..uint256) add
-	// yields the exact 2^N with no auto-revert — both silently wrapped. Assert result <= 2^bits-1 via a
-	// self-contained comma so it composes in both the prefix value and the postfix write. (Dec underflow
-	// is already caught: uint64 `-` and biguint `b-` revert on a negative result.) Found by the differential fuzzer.
-	auto guardUIncOverflow = [&](std::shared_ptr<awst::Expression> bin, unsigned bits)
-		-> std::shared_ptr<awst::Expression>
-	{
-		auto* wt = bin->wtype;
-		std::string tmpName = "__uinc_" + std::to_string(awst::NameGen::next("SolUnaryOperation.s_uincCounter"));
-		solidity::u256 maxV = (bits >= 256) ? (solidity::u256(0) - 1)
-		                                     : ((solidity::u256(1) << bits) - 1);
-		std::ostringstream oss; oss << maxV;
-		auto bind = awst::makeAssignmentExpression(
-			awst::makeVarExpression(tmpName, wt, m_loc), std::move(bin), m_loc, wt);
-		auto cmp = awst::makeNumericCompare(
-			awst::makeVarExpression(tmpName, wt, m_loc), awst::NumericComparison::Lte,
-			awst::makeIntegerConstant(oss.str(), m_loc, wt), m_loc);
-		auto comma = awst::makeCommaExpression(wt, m_loc);
-		comma->expressions.push_back(std::move(bind));
-		comma->expressions.push_back(awst::makeAssert(std::move(cmp), m_loc, "overflow"));
-		comma->expressions.push_back(awst::makeVarExpression(tmpName, wt, m_loc));
-		return comma;
-	};
-
+	// All width/sign/checked/wrap rules for `base ± 1` live in eb::buildIncDec
+	// (BigUIntMathHelpers), shared with the transient path below.
 	auto makeNewValue = [&](std::shared_ptr<awst::Expression> base)
 		-> std::shared_ptr<awst::Expression>
 	{
-		if (isSigned && signedBits > 0)
-		{
-			auto [pow2NStr2, halfNStr2] = builder::TypeCoercion::pow2NAndHalf(signedBits);
-
-			auto makeBConst = [&](std::string const& v) {
-				auto c = awst::makeIntegerConstant(v, m_loc, awst::WType::biguintType());
-				return c;
-			};
-
-			auto val = promoteToSignedBiguint(std::move(base), m_loc);
-
-			if (signedBits < 256)
-			{
-				auto mask = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Mod, makeBConst(pow2NStr2), m_loc);
-				val = std::move(mask);
-			}
-
-			// Overflow check: inc at MAX (half-1), dec at MIN (half)
-			if (!m_scope.isUnchecked())
-			{
-				std::string limitStr;
-				if (isInc)
-				{
-					solidity::u256 maxVal = (solidity::u256(1) << (signedBits - 1)) - 1;
-					std::ostringstream oss; oss << maxVal; limitStr = oss.str();
-				}
-				else
-					limitStr = halfNStr2; // MIN = half
-
-				auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Ne, makeBConst(limitStr), m_loc);
-
-				m_ctx.queuePreExpression(awst::makeAssert(std::move(cmp), m_loc, "signed inc/dec overflow"), m_loc);
-			}
-
-			std::shared_ptr<awst::Expression> added;
-			if (isInc)
-			{
-				auto add = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Add, makeBConst("1"), m_loc);
-				added = std::move(add);
-			}
-			else
-			{
-				solidity::u256 decOffset = (signedBits == 256)
-					? solidity::u256(0) // special: use string directly
-					: (solidity::u256(1) << signedBits) - 1;
-				std::string decOffsetStr;
-				if (signedBits == 256)
-					decOffsetStr = pow256Minus1;
-				else
-				{
-					std::ostringstream oss; oss << decOffset; decOffsetStr = oss.str();
-				}
-				auto add = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Add, makeBConst(decOffsetStr), m_loc);
-				added = std::move(add);
-			}
-
-			auto mod = awst::makeBigUIntBinOp(std::move(added), awst::BigUIntBinaryOperator::Mod, makeBConst(pow2NStr2), m_loc);
-
-			if (signedBits <= 64)
-			{
-				return awst::makeBiguintToUInt64(std::move(mod), m_loc);
-			}
-			return mod;
-		}
-		else if (!isSigned && m_scope.isUnchecked() && unsignedBits > 0)
-		{
-			// Unsigned UNCHECKED inc/dec must WRAP mod 2^N (EVM), but the native uint64 +/- opcodes and
-			// the biguint b- opcode REVERT at the boundary (uint64 max+1 overflows, 0-1 underflows).
-			// Compute in biguint: inc = v+1; dec = v + (2^N-1) [add max, not subtract 1, to dodge
-			// underflow]; then mod 2^N. Narrow back to uint64 for sub-word/uint64 backings.
-			auto makeBConst = [&](std::string const& v) {
-				return awst::makeIntegerConstant(v, m_loc, awst::WType::biguintType());
-			};
-			static const std::string pow2_256Str =
-				"115792089237316195423570985008687907853269984665640564039457584007913129639936";
-			bool nativeBack = !isBigUInt(base->wtype);
-			auto val = promoteToSignedBiguint(std::move(base), m_loc);
-			std::shared_ptr<awst::Expression> added;
-			if (isInc)
-				added = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Add, makeBConst("1"), m_loc);
-			else
-			{
-				std::string maxStr = (unsignedBits >= 256)
-					? pow256Minus1
-					: ((solidity::u256(1) << unsignedBits) - 1).str();
-				added = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Add, makeBConst(maxStr), m_loc);
-			}
-			std::string pow2NStr = (unsignedBits >= 256)
-				? pow2_256Str
-				: (solidity::u256(1) << unsignedBits).str();
-			auto mod = awst::makeBigUIntBinOp(std::move(added), awst::BigUIntBinaryOperator::Mod, makeBConst(pow2NStr), m_loc);
-			if (nativeBack)
-				return awst::makeBiguintToUInt64(std::move(mod), m_loc);
-			return mod;
-		}
-		else if (isBigUInt(base->wtype))
-		{
-			auto one = awst::makeOne(m_loc, awst::WType::biguintType());
-			auto bin = awst::makeBigUIntBinOp(std::move(base), isInc ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Sub, std::move(one), m_loc);
-			// biguint (uint65..uint256) add never auto-reverts — guard checked inc at 2^N.
-			if (isInc && !m_scope.isUnchecked() && unsignedBits > 0)
-				return guardUIncOverflow(std::move(bin), unsignedBits);
-			return bin;
-		}
-		else
-		{
-			auto one = awst::makeOne(m_loc);
-			auto bin = awst::makeUInt64BinOp(std::move(base), isInc ? awst::UInt64BinaryOperator::Add : awst::UInt64BinaryOperator::Sub, std::move(one), m_loc);
-			// Sub-word (uint8..uint56) add yields up to 2^bits that masks to 0 — guard checked inc.
-			// uint64 (bits==64) is left to the native `+` opcode, which reverts on overflow.
-			if (isInc && !m_scope.isUnchecked() && unsignedBits > 0 && unsignedBits < 64)
-				return guardUIncOverflow(std::move(bin), unsignedBits);
-			return bin;
-		}
+		return eb::buildIncDec(m_ctx, m_scope.isUnchecked(), isInc,
+			signedBits, unsignedBits, std::move(base), m_loc);
 	};
+
+	if (transientVar)
+	{
+		if (isPrefix)
+		{
+			// Pin the new value, write it, return the pin (mirrors the
+			// struct-field prefix shape; cheaper and safer than re-reading).
+			std::string pName = "__tpre_" + std::to_string(awst::NameGen::next("SolUnaryOperation.transientPreCounter"));
+			auto nv = makeNewValue(_operand);
+			auto* nvType = nv->wtype;
+			m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+				awst::makeVarExpression(pName, nvType, m_loc), std::move(nv), m_loc));
+			if (auto writeStmt = m_ctx.transientStorage->buildWrite(*transientVar,
+					awst::makeVarExpression(pName, nvType, m_loc), m_loc))
+				m_ctx.preEffects().push_back(std::move(writeStmt));
+			return awst::makeVarExpression(pName, nvType, m_loc);
+		}
+		// Postfix: save the old value, then write the increment as a
+		// PRE-effect so a later read in the same statement observes it
+		// (`t++ + t`) — matches the general postfix path below.
+		std::string tempName = "__postinc_" + std::to_string(awst::NameGen::next("SolUnaryOperation.postIncCounter"));
+		auto tempVar = awst::makeVarExpression(tempName, _operand->wtype, m_loc);
+		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(tempVar, _operand, m_loc));
+		if (auto writeStmt = m_ctx.transientStorage->buildWrite(*transientVar,
+				makeNewValue(tempVar), m_loc))
+			m_ctx.preEffects().push_back(std::move(writeStmt));
+		return tempVar;
+	}
+
 
 	// Derive write target from the ALREADY-BUILT operand — rebuilding re-runs
 	// side-effecting indexes (verified: `arr[i++]++` gave i==2 on rebuild).

@@ -112,4 +112,25 @@ std::shared_ptr<awst::Expression> buildSignedArithmetic(
 	unsigned _bits,
 	awst::SourceLocation const& _loc);
 
+/// Inc/dec (`++`/`--`) new-value computation — ALL width/sign/checked/wrap
+/// rules for `base ± 1` in one place (solc keeps these in per-type
+/// increment/decrement helper builders; per-site copies are how the transient
+/// path silently skipped them). Branches: signed intN (biguint mask +
+/// MIN/MAX guard queued as a pre-effect via _ctx), unsigned UNCHECKED (wrap
+/// mod 2^N: +1, or +(2^N-1) to dodge underflow), checked biguint (guard inc
+/// at 2^N — b+ never auto-reverts), checked uint64/sub-word (native revert;
+/// sub-word inc guarded against masking past 2^bits). `_signedBits` /
+/// `_unsignedBits` are >0 for signed/unsigned intN operands and BOTH 0 for
+/// the non-int path (UDVT operands deliberately un-unwrapped — the call
+/// sites' raw IntegerType cast). Shared by the general lvalue path and the
+/// transient path in SolUnaryOperation.
+std::shared_ptr<awst::Expression> buildIncDec(
+	ContractContext& _ctx,
+	bool _isUnchecked,
+	bool _isInc,
+	unsigned _signedBits,
+	unsigned _unsignedBits,
+	std::shared_ptr<awst::Expression> _base,
+	awst::SourceLocation const& _loc);
+
 } // namespace puyasol::builder::eb

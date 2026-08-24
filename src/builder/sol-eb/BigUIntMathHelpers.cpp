@@ -543,4 +543,159 @@ std::shared_ptr<awst::Expression> buildSignedArithmetic(
 	return rawResult;
 }
 
+std::shared_ptr<awst::Expression> buildIncDec(
+	ContractContext& _ctx,
+	bool _isUnchecked,
+	bool _isInc,
+	unsigned _signedBits,
+	unsigned _unsignedBits,
+	std::shared_ptr<awst::Expression> _base,
+	awst::SourceLocation const& _loc)
+{
+	static const std::string pow256Minus1 =
+		"115792089237316195423570985008687907853269984665640564039457584007913129639935";
+
+	// Checked unsigned `++` overflow guard: native uint64 add reverts on its
+	// own, but a sub-word (uint8..uint56) add yields e.g. 256 that later masks
+	// to 0, and a biguint (uint65..uint256) add yields the exact 2^N with no
+	// auto-revert — both silently wrapped. Assert result <= 2^bits-1 via a
+	// self-contained comma so it composes in both the prefix value and the
+	// postfix write. (Dec underflow is already caught: uint64 `-` and biguint
+	// `b-` revert on a negative result.) Found by the differential fuzzer.
+	auto guardUIncOverflow = [&](std::shared_ptr<awst::Expression> bin, unsigned bits)
+		-> std::shared_ptr<awst::Expression>
+	{
+		auto* wt = bin->wtype;
+		std::string tmpName = "__uinc_" + std::to_string(awst::NameGen::next("SolUnaryOperation.s_uincCounter"));
+		solidity::u256 maxV = (bits >= 256) ? (solidity::u256(0) - 1)
+		                                     : ((solidity::u256(1) << bits) - 1);
+		std::ostringstream oss; oss << maxV;
+		auto bind = awst::makeAssignmentExpression(
+			awst::makeVarExpression(tmpName, wt, _loc), std::move(bin), _loc, wt);
+		auto cmp = awst::makeNumericCompare(
+			awst::makeVarExpression(tmpName, wt, _loc), awst::NumericComparison::Lte,
+			awst::makeIntegerConstant(oss.str(), _loc, wt), _loc);
+		auto comma = awst::makeCommaExpression(wt, _loc);
+		comma->expressions.push_back(std::move(bind));
+		comma->expressions.push_back(awst::makeAssert(std::move(cmp), _loc, "overflow"));
+		comma->expressions.push_back(awst::makeVarExpression(tmpName, wt, _loc));
+		return comma;
+	};
+
+	if (_signedBits > 0)
+	{
+		auto [pow2NStr2, halfNStr2] = builder::TypeCoercion::pow2NAndHalf(_signedBits);
+
+		auto makeBConst = [&](std::string const& v) {
+			auto c = awst::makeIntegerConstant(v, _loc, awst::WType::biguintType());
+			return c;
+		};
+
+		auto val = promoteToBiguint(std::move(_base), _loc);
+
+		if (_signedBits < 256)
+		{
+			auto mask = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Mod, makeBConst(pow2NStr2), _loc);
+			val = std::move(mask);
+		}
+
+		// Overflow check: inc at MAX (half-1), dec at MIN (half)
+		if (!_isUnchecked)
+		{
+			std::string limitStr;
+			if (_isInc)
+			{
+				solidity::u256 maxVal = (solidity::u256(1) << (_signedBits - 1)) - 1;
+				std::ostringstream oss; oss << maxVal; limitStr = oss.str();
+			}
+			else
+				limitStr = halfNStr2; // MIN = half
+
+			auto cmp = awst::makeNumericCompare(val, awst::NumericComparison::Ne, makeBConst(limitStr), _loc);
+
+			_ctx.queuePreExpression(awst::makeAssert(std::move(cmp), _loc, "signed inc/dec overflow"), _loc);
+		}
+
+		std::shared_ptr<awst::Expression> added;
+		if (_isInc)
+		{
+			auto add = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Add, makeBConst("1"), _loc);
+			added = std::move(add);
+		}
+		else
+		{
+			solidity::u256 decOffset = (_signedBits == 256)
+				? solidity::u256(0) // special: use string directly
+				: (solidity::u256(1) << _signedBits) - 1;
+			std::string decOffsetStr;
+			if (_signedBits == 256)
+				decOffsetStr = pow256Minus1;
+			else
+			{
+				std::ostringstream oss; oss << decOffset; decOffsetStr = oss.str();
+			}
+			auto add = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Add, makeBConst(decOffsetStr), _loc);
+			added = std::move(add);
+		}
+
+		auto mod = awst::makeBigUIntBinOp(std::move(added), awst::BigUIntBinaryOperator::Mod, makeBConst(pow2NStr2), _loc);
+
+		if (_signedBits <= 64)
+		{
+			return awst::makeBiguintToUInt64(std::move(mod), _loc);
+		}
+		return mod;
+	}
+	else if (_isUnchecked && _unsignedBits > 0)
+	{
+		// Unsigned UNCHECKED inc/dec must WRAP mod 2^N (EVM), but the native uint64 +/- opcodes and
+		// the biguint b- opcode REVERT at the boundary (uint64 max+1 overflows, 0-1 underflows).
+		// Compute in biguint: inc = v+1; dec = v + (2^N-1) [add max, not subtract 1, to dodge
+		// underflow]; then mod 2^N. Narrow back to uint64 for sub-word/uint64 backings.
+		auto makeBConst = [&](std::string const& v) {
+			return awst::makeIntegerConstant(v, _loc, awst::WType::biguintType());
+		};
+		static const std::string pow2_256Str =
+			"115792089237316195423570985008687907853269984665640564039457584007913129639936";
+		bool nativeBack = _base->wtype != awst::WType::biguintType();
+		auto val = promoteToBiguint(std::move(_base), _loc);
+		std::shared_ptr<awst::Expression> added;
+		if (_isInc)
+			added = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Add, makeBConst("1"), _loc);
+		else
+		{
+			std::string maxStr = (_unsignedBits >= 256)
+				? pow256Minus1
+				: ((solidity::u256(1) << _unsignedBits) - 1).str();
+			added = awst::makeBigUIntBinOp(std::move(val), awst::BigUIntBinaryOperator::Add, makeBConst(maxStr), _loc);
+		}
+		std::string pow2NStr = (_unsignedBits >= 256)
+			? pow2_256Str
+			: (solidity::u256(1) << _unsignedBits).str();
+		auto mod = awst::makeBigUIntBinOp(std::move(added), awst::BigUIntBinaryOperator::Mod, makeBConst(pow2NStr), _loc);
+		if (nativeBack)
+			return awst::makeBiguintToUInt64(std::move(mod), _loc);
+		return mod;
+	}
+	else if (_base->wtype == awst::WType::biguintType())
+	{
+		auto one = awst::makeOne(_loc, awst::WType::biguintType());
+		auto bin = awst::makeBigUIntBinOp(std::move(_base), _isInc ? awst::BigUIntBinaryOperator::Add : awst::BigUIntBinaryOperator::Sub, std::move(one), _loc);
+		// biguint (uint65..uint256) add never auto-reverts — guard checked inc at 2^N.
+		if (_isInc && !_isUnchecked && _unsignedBits > 0)
+			return guardUIncOverflow(std::move(bin), _unsignedBits);
+		return bin;
+	}
+	else
+	{
+		auto one = awst::makeOne(_loc);
+		auto bin = awst::makeUInt64BinOp(std::move(_base), _isInc ? awst::UInt64BinaryOperator::Add : awst::UInt64BinaryOperator::Sub, std::move(one), _loc);
+		// Sub-word (uint8..uint56) add yields up to 2^bits that masks to 0 — guard checked inc.
+		// uint64 (bits==64) is left to the native `+` opcode, which reverts on overflow.
+		if (_isInc && !_isUnchecked && _unsignedBits > 0 && _unsignedBits < 64)
+			return guardUIncOverflow(std::move(bin), _unsignedBits);
+		return bin;
+	}
+}
+
 } // namespace puyasol::builder::eb

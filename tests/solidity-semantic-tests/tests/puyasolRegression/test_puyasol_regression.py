@@ -4801,3 +4801,27 @@ def test_dowhile_braceless_body(harness):
     assert as_int(harness.call(app, "bracelessSimple()").abi_return) == 3
     # Terminating brace-less body.
     assert as_int(harness.call(app, "bracelessReturn(uint256)", 4).abi_return) == 5
+
+
+def test_transient_incdec_semantics(harness):
+    """puyasolRegression/contracts/transient_incdec.sol — NOT an o.g. semantic test.
+
+    Transient ++/-- used to bypass the general lvalue path: it computed a bare
+    ±1 (no checked-overflow guard — uint8 at 255 silently wrapped where solc
+    Panics 0x11) and pushed the postfix write to POST-effects (look(t++, t)
+    read the stale t for the second argument; legacy solc writes immediately
+    → 506). Now routes through eb::buildIncDec + immediate PRE-effect write.
+    Expected values verified against solc 0.8.28 LEGACY codegen on py-evm
+    (the differential oracle): intra/pre are 10/11 there, NOT via-IR's 11/12.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/transient_incdec.sol")
+    assert as_int(harness.call(app, "callArgs()").abi_return) == 506
+    assert as_int(harness.call(app, "intra()").abi_return) == 10
+    assert as_int(harness.call(app, "pre()").abi_return) == 11
+    assert as_int(harness.call(app, "chained()").abi_return) == 7
+    # Checked boundary crossings revert (EVM: Panic 0x11).
+    assert harness.call(app, "overflowInc()", expect_revert=True).reverted
+    assert harness.call(app, "underflowDec()", expect_revert=True).reverted
+    # unchecked wraps mod 2^8.
+    assert as_int(harness.call(app, "uncheckedWrap()").abi_return) == 0
