@@ -572,6 +572,22 @@ SolAssignment::tryHandleOffsetStructRefFieldWrite()
 	};
 	std::string rootName = "__osref_root_" + std::to_string(
 		awst::NameGen::next("SolAssignment.offsetStructRoot"));
+	// Build the RHS BEFORE snapshotting the root, and PIN it when it can
+	// write state — the same guard tryHandleBoxedAggregatePathWrite carries
+	// (see its comment): an unpinned side-effecting RHS evaluated after the
+	// snapshot, and the whole-struct write-back clobbered the callee's
+	// writes (`s.f += bump(s)` lost bump's `s.g += 1`; probe gave g==0).
+	auto rhs = buildExpr(m_assignment.rightHandSide());
+	if (rhs && EffectScan::mayWrite(m_assignment.rightHandSide()))
+	{
+		std::string pinName = "__osref_rhs_" + std::to_string(
+			awst::NameGen::next("SolAssignment.offsetStructRhs"));
+		auto const* pinW = rhs->wtype;
+		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(pinName, pinW, m_loc), std::move(rhs), m_loc));
+		rhs = awst::makeVarExpression(pinName, pinW, m_loc);
+	}
+
 	auto rootBytes = awst::makeBoxExtract(
 		makeKey(), makeOffset(),
 		awst::makeIntegerConstant(static_cast<uint64_t>(rootSize), m_loc), m_loc);
@@ -597,7 +613,6 @@ SolAssignment::tryHandleOffsetStructRefFieldWrite()
 
 	auto const* valueSol = m_assignment.leftHandSide().annotation().type;
 	auto const* nativeW = m_ctx.typeMapper.map(valueSol);
-	auto rhs = buildExpr(m_assignment.rightHandSide());
 	if (op != Token::Assign)
 	{
 		std::shared_ptr<awst::Expression> current = target;

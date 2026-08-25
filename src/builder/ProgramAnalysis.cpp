@@ -292,10 +292,24 @@ ProgramAnalysis ProgramAnalysis::analyze(
 			if (params.size() != arguments.size() + shift)
 				return true;
 			for (size_t i = 0; i < arguments.size(); ++i)
-				if (isArrayElementStructRef(arguments[i].get())
-					&& params[i + shift]->referenceLocation()
-						== VariableDeclaration::Location::Storage)
+			{
+				if (params[i + shift]->referenceLocation()
+					!= VariableDeclaration::Location::Storage)
+					continue;
+				bool carries = isArrayElementStructRef(arguments[i].get());
+				// Param-to-param forwarding: `inner(S storage s) { bump(s); }`
+				// — the callee's param carries the SAME runtime offset. Without
+				// this, bump compiled offset-less and wrote ELEMENT 0 of the
+				// root array (probe: s.g += 1 through two levels landed on
+				// arr[0], not arr[i]). Resolved to a fixpoint by the caller.
+				if (!carries)
+					if (auto const* id = dynamic_cast<Identifier const*>(
+							arguments[i].get()))
+						if (auto const* d = id->annotation().referencedDeclaration)
+							carries = structRefOffsetParams.count(d->id()) != 0;
+				if (carries)
 					structRefOffsetParams.insert(params[i + shift]->id());
+			}
 			return true;
 		}
 	} bodyFactsWalker(
@@ -304,23 +318,32 @@ ProgramAnalysis ProgramAnalysis::analyze(
 		result.asmSlotReferenceDeclarations,
 		result.structRefOffsetParams, !_evmStorageLayout);
 
-	forEachFunction(_compiler, [&](FunctionDefinition const* function,
-		ContractDefinition const*) {
-		if (function && function->isImplemented())
-		{
-			bodyFactsWalker.callableId = function->id();
-			function->body().accept(bodyFactsWalker);
-		}
-	});
-	for (auto const& sourceName: _compiler.sourceNames())
-		for (auto const* contract: ASTNode::filteredNodes<ContractDefinition>(
-			_compiler.ast(sourceName).nodes()))
-			for (auto const* modifier: contract->functionModifiers())
-				if (modifier && modifier->isImplemented())
-				{
-					bodyFactsWalker.callableId = modifier->id();
-					modifier->body().accept(bodyFactsWalker);
-				}
+	// Fixpoint: structRefOffsetParams grows through param-to-param
+	// forwarding chains (f passes its offset param to g, g to h, …), and the
+	// walk order is arbitrary — iterate until stable (depth-bounded).
+	for (int pass = 0; pass < 8; ++pass)
+	{
+		size_t const before = result.structRefOffsetParams.size();
+		forEachFunction(_compiler, [&](FunctionDefinition const* function,
+			ContractDefinition const*) {
+			if (function && function->isImplemented())
+			{
+				bodyFactsWalker.callableId = function->id();
+				function->body().accept(bodyFactsWalker);
+			}
+		});
+		for (auto const& sourceName: _compiler.sourceNames())
+			for (auto const* contract: ASTNode::filteredNodes<ContractDefinition>(
+				_compiler.ast(sourceName).nodes()))
+				for (auto const* modifier: contract->functionModifiers())
+					if (modifier && modifier->isImplemented())
+					{
+						bodyFactsWalker.callableId = modifier->id();
+						modifier->body().accept(bodyFactsWalker);
+					}
+		if (result.structRefOffsetParams.size() == before && pass > 0)
+			break;
+	}
 
 	return result;
 }

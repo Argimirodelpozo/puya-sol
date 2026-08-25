@@ -4905,3 +4905,22 @@ def test_multibox_direct_element_compound(harness):
     assert signed(as_int(harness.call(app, "signedAdd()").abi_return)) == 95
     assert signed(as_int(harness.call(app, "signedNeg()").abi_return)) == -58
     assert as_int(harness.call(app, "unsignedMul()").abi_return) == 42
+
+
+def test_struct_ref_offset_forwards_through_calls(harness):
+    """puyasolRegression/contracts/struct_ref_offset_forwarding.sol — NOT o.g.
+
+    An array-element struct storage-ref (`arr[i]`) passed as a param carries a
+    runtime byte OFFSET. Passing that param onward (`inner(S storage s) {
+    s.f += bump(s); }`) lost it twice: the analysis only marked params fed a
+    LITERAL `arr[i]` (no param-to-param closure), and the call leg forwarded
+    offset 0 — so bump's `s.g += 1` wrote ELEMENT 0 of the array. Also the
+    offset path lacked the boxed twin's side-effecting-RHS pin, so the
+    whole-struct write-back could clobber the callee's sibling writes.
+    Expected values verified against solc 0.8.28 legacy on py-evm.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/struct_ref_offset_forwarding.sol")
+    # [f, g, g0] — f compound applied, bump's g write SURVIVES on element i,
+    # element 0 untouched.
+    assert harness.call(app, "probe(uint256)", 3).abi_return == [12, 1, 0]

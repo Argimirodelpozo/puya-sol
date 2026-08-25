@@ -502,6 +502,17 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	if (_funcDef)
 	{
 		auto offsetForArg = [&](Expression const* argExpr) -> std::shared_ptr<awst::Expression> {
+			// A storage-ref PARAM passed onward carries ITS caller-supplied
+			// runtime offset — forward the offset var (bump(s) inside
+			// inner(S storage s) wrote element 0 without this).
+			if (argExpr)
+				if (auto const* id = dynamic_cast<Identifier const*>(argExpr))
+					if (auto const* vd = dynamic_cast<VariableDeclaration const*>(
+							id->annotation().referencedDeclaration))
+						if (auto offVar = m_scope.findStructRefOffset(vd->id());
+							!offVar.empty())
+							return awst::makeVarExpression(
+								offVar, awst::WType::uint64Type(), m_loc);
 			if (argExpr)
 				if (auto path = boxedArrayPath(*argExpr))
 					if (auto key = boxedArrayKey(*path))
