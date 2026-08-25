@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/function_type_copy.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 32
+    intcblock 1 0 32 6
     bytecblock 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 "__ctor_pending" 0x21f5b0f3 0x79c18c5e 0x769c4dc6 TMPL_APPROVAL_C TMPL_CLEAR_C
     pushint 4096
     bzero
@@ -32,141 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@10
     txn NumAppArgs
-    intc_2 // 2
+    pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@10
+    pushbytess 0xf8a8fd6d 0xd24c5a36 0xc5337ed4 0xafb0db5f
     txna ApplicationArgs 0
-    pushbytes 0xf8a8fd6d
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_3 // 32
-    bzero
-    callsub test
-    itob
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xd24c5a36
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    callsub random1
-    bytec_0 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xc5337ed4
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    callsub random2
-    bytec_0 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0xafb0db5f
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
-    callsub random3
-    bytec_0 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@28:
-    intc_1 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
+main_after_if_else@10:
     txn OnCompletion
     !
     assert
@@ -177,25 +52,25 @@ main_after_if_else@30:
     bytec 4 // method "random2()void"
     bytec 5 // method "random3()void"
     txna ApplicationArgs 0
-    match main___postInit_route@33 main_test_route@34 main_random1_route@35 main_random2_route@36 main_random3_route@37
+    match main___postInit_route@13 main_test_route@14 main_random1_route@15 main_random2_route@16 main_random3_route@17
     err
 
-main_random3_route@37:
+main_random3_route@17:
     callsub random3
     intc_0 // 1
     return
 
-main_random2_route@36:
+main_random2_route@16:
     callsub random2
     intc_0 // 1
     return
 
-main_random1_route@35:
+main_random1_route@15:
     callsub random1
     intc_0 // 1
     return
 
-main_test_route@34:
+main_test_route@14:
     callsub test
     pushbytes 0x00
     intc_1 // 0
@@ -208,7 +83,7 @@ main_test_route@34:
     intc_0 // 1
     return
 
-main___postInit_route@33:
+main___postInit_route@13:
     bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -222,7 +97,7 @@ main___postInit_route@33:
     itxn_begin
     bytec 6 // TMPL_APPROVAL_C
     bytec 7 // TMPL_CLEAR_C
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
@@ -256,6 +131,50 @@ main___postInit_route@33:
     pushbytes "c"
     swap
     app_global_put
+    intc_0 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    callsub random3
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    callsub random2
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub random1
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub test
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     intc_0 // 1
     return
 
@@ -300,7 +219,7 @@ test_ternary_merge@3:
     select
     pushint 24
     extract_uint64
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_1 // 0
     itxn_field OnCompletion
@@ -436,3 +355,22 @@ random3_ternary_merge@3:
 random3_ternary_false@2:
     intc_1 // 0
     b random3_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/function_type_copy.sol.Test.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

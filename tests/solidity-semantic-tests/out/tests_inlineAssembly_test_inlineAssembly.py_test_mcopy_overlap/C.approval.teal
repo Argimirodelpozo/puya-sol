@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/mcopy_overlap.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 4096 1 0 20480 4064
-    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x151f7c75 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000060 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytecblock 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000060 0x010000000000000000000000000000000000000000000000000000000000000000
     intc_1 // 4096
     bzero
     dup
@@ -29,310 +29,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@11
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@11
+    pushbytess 0xafdce848 0xfb6f25ef 0xeb48dad5 0x50cff8ff 0xa576d508
     txna ApplicationArgs 0
-    pushbytes 0xafdce848
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub mcopy_to_right_overlap
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@7:
-    intc_3 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xfb6f25ef
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub mcopy_to_left_overlap
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@14:
-    intc_3 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xeb48dad5
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub mcopy_in_place
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@21:
-    intc_3 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0x50cff8ff
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub mcopy_to_right_no_overlap
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@28:
-    intc_3 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    bnz main_after_if_else@37
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@37
-    txna ApplicationArgs 0
-    pushbytes 0xa576d508
-    ==
-    bz main_after_if_else@37
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub mcopy_to_left_no_overlap
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@35:
-    intc_3 // 0
-    b main_ternary_merge@36
-
-main_after_if_else@37:
+main_after_if_else@11:
     txn OnCompletion
     !
     assert
@@ -340,10 +46,10 @@ main_after_if_else@37:
     assert
     pushbytess 0x65d22ba7 0xbb51d244 0xc218d8eb 0x5be00e5e 0x138fdc65 // method "mcopy_to_right_overlap()byte[]", method "mcopy_to_left_overlap()byte[]", method "mcopy_in_place()byte[]", method "mcopy_to_right_no_overlap()byte[]", method "mcopy_to_left_no_overlap()byte[]"
     txna ApplicationArgs 0
-    match main_mcopy_to_right_overlap_route@40 main_mcopy_to_left_overlap_route@41 main_mcopy_in_place_route@42 main_mcopy_to_right_no_overlap_route@43 main_mcopy_to_left_no_overlap_route@44
+    match main_mcopy_to_right_overlap_route@14 main_mcopy_to_left_overlap_route@15 main_mcopy_in_place_route@16 main_mcopy_to_right_no_overlap_route@17 main_mcopy_to_left_no_overlap_route@18
     err
 
-main_mcopy_to_left_no_overlap_route@44:
+main_mcopy_to_left_no_overlap_route@18:
     callsub mcopy_to_left_no_overlap
     dup
     len
@@ -351,14 +57,14 @@ main_mcopy_to_left_no_overlap_route@44:
     extract 6 2
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-main_mcopy_to_right_no_overlap_route@43:
+main_mcopy_to_right_no_overlap_route@17:
     callsub mcopy_to_right_no_overlap
     dup
     len
@@ -366,14 +72,14 @@ main_mcopy_to_right_no_overlap_route@43:
     extract 6 2
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-main_mcopy_in_place_route@42:
+main_mcopy_in_place_route@16:
     callsub mcopy_in_place
     dup
     len
@@ -381,14 +87,14 @@ main_mcopy_in_place_route@42:
     extract 6 2
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-main_mcopy_to_left_overlap_route@41:
+main_mcopy_to_left_overlap_route@15:
     callsub mcopy_to_left_overlap
     dup
     len
@@ -396,14 +102,14 @@ main_mcopy_to_left_overlap_route@41:
     extract 6 2
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-main_mcopy_to_right_overlap_route@40:
+main_mcopy_to_right_overlap_route@14:
     callsub mcopy_to_right_overlap
     dup
     len
@@ -411,7 +117,197 @@ main_mcopy_to_right_overlap_route@40:
     extract 6 2
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub mcopy_to_left_no_overlap
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub mcopy_to_right_no_overlap
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub mcopy_in_place
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub mcopy_to_left_overlap
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub mcopy_to_right_overlap
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
     log
@@ -1268,3 +1164,22 @@ mcopy_to_left_no_overlap_ternary_merge@3:
 mcopy_to_left_no_overlap_ternary_false@2:
     intc_3 // 0
     b mcopy_to_left_no_overlap_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/mcopy_overlap.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_3 // 0
+    b __evm_npy_ternary_merge@3

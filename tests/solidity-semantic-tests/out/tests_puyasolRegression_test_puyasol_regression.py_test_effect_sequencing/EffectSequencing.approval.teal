@@ -32,391 +32,31 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@20
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@20
+    pushbytess 0x297c1538 0x3e3bb77e 0x8cc2f4aa 0x27198df0 0x0b211729 0x7af77f25 0xb9f19a54 0xc086928b 0xdfe157c1 0x7e350034 0xe36ddbb4 0xa16d7d61 0x52e634e9 0xee6359ee
     txna ApplicationArgs 0
-    pushbytes 0x297c1538
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11 main_switch_case_7@12 main_switch_case_8@13 main_switch_case_9@14 main_switch_case_10@15 main_switch_case_11@16 main_switch_case_12@17 main_switch_case_13@18
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub h4a
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
+main_after_if_else@20:
     txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x3e3bb77e
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
     !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub h4b
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@23
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x74aa0f61 0x2fa9f0ba 0x4903925a 0x21afdabf 0x0b0ab138 0xe438d5d6 0x128c2117 0x7f5f4671 0x14a56d12 0x2f89d735 0x9adb88a1 0x9657083b 0x75903792 0xed37114b // method "__postInit()void", method "h4a()uint256", method "h4b()uint256", method "h4c()uint256", method "h4d()uint256", method "h4e()uint256", method "h4h()uint256", method "h4f()uint256", method "h4g()uint256", method "m5a()(uint256,uint256,uint256)", method "m5b()(uint256,uint256,uint256)", method "m5c()(uint256,uint256)", method "m5d()uint256", method "m5e()uint256", method "m5f()(uint256,uint256,uint256)"
     txna ApplicationArgs 0
-    pushbytes 0x8cc2f4aa
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main___postInit_route@23 main_h4a_route@24 main_h4b_route@25 main_h4c_route@26 main_h4d_route@27 main_h4e_route@28 main_h4h_route@29 main_h4f_route@30 main_h4g_route@31 main_m5a_route@32 main_m5b_route@33 main_m5c_route@34 main_m5d_route@35 main_m5e_route@36 main_m5f_route@37
+    err
 
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub h4c
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@21:
-    intc_2 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0x27198df0
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub h4d
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@28:
-    intc_2 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    bnz main_after_if_else@37
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@37
-    txna ApplicationArgs 0
-    pushbytes 0x0b211729
-    ==
-    bz main_after_if_else@37
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub h4e
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@35:
-    intc_2 // 0
-    b main_ternary_merge@36
-
-main_after_if_else@37:
-    txn OnCompletion
-    bnz main_after_if_else@44
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@44
-    txna ApplicationArgs 0
-    pushbytes 0x7af77f25
-    ==
-    bz main_after_if_else@44
-    txn GroupIndex
-    bz main_ternary_false@42
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@43:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub h4h
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@42:
-    intc_2 // 0
-    b main_ternary_merge@43
-
-main_after_if_else@44:
-    txn OnCompletion
-    bnz main_after_if_else@51
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@51
-    txna ApplicationArgs 0
-    pushbytes 0xb9f19a54
-    ==
-    bz main_after_if_else@51
-    txn GroupIndex
-    bz main_ternary_false@49
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@50:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub h4f
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@49:
-    intc_2 // 0
-    b main_ternary_merge@50
-
-main_after_if_else@51:
-    txn OnCompletion
-    bnz main_after_if_else@58
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@58
-    txna ApplicationArgs 0
-    pushbytes 0xc086928b
-    ==
-    bz main_after_if_else@58
-    txn GroupIndex
-    bz main_ternary_false@56
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@57:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub h4g
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@56:
-    intc_2 // 0
-    b main_ternary_merge@57
-
-main_after_if_else@58:
-    txn OnCompletion
-    bnz main_after_if_else@65
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@65
-    txna ApplicationArgs 0
-    pushbytes 0xdfe157c1
-    ==
-    bz main_after_if_else@65
-    txn GroupIndex
-    bz main_ternary_false@63
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@64:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub m5a
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
+main_m5f_route@37:
+    callsub m5f
     cover 2
     concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    swap
     concat
     bytec_3 // 0x151f7c75
     swap
@@ -425,34 +65,155 @@ main_ternary_merge@64:
     intc_1 // 1
     return
 
-main_ternary_false@63:
-    intc_2 // 0
-    b main_ternary_merge@64
-
-main_after_if_else@65:
-    txn OnCompletion
-    bnz main_after_if_else@72
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@72
-    txna ApplicationArgs 0
-    pushbytes 0x7e350034
-    ==
-    bz main_after_if_else@72
-    txn GroupIndex
-    bz main_ternary_false@70
-    txn GroupIndex
+main_m5e_route@36:
+    callsub m5e
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
     intc_1 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@71:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
+main_m5d_route@35:
+    callsub m5d
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_m5c_route@34:
+    callsub m5c
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_m5b_route@33:
     callsub m5b
+    cover 2
+    concat
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_m5a_route@32:
+    callsub m5a
+    cover 2
+    concat
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_h4g_route@31:
+    callsub h4g
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_h4f_route@30:
+    callsub h4f
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_h4h_route@29:
+    callsub h4h
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_h4e_route@28:
+    callsub h4e
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_h4d_route@27:
+    callsub h4d
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_h4c_route@26:
+    callsub h4c
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_h4b_route@25:
+    callsub h4b
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_h4a_route@24:
+    callsub h4a
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main___postInit_route@23:
+    bytec 8 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec 8 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_1 // "arr"
+    intc_3 // 2
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+main_switch_case_13@18:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub m5f
     dig 3
     uncover 3
     concat
@@ -488,31 +249,46 @@ main_ternary_merge@71:
     intc_1 // 1
     return
 
-main_ternary_false@70:
-    intc_2 // 0
-    b main_ternary_merge@71
-
-main_after_if_else@72:
-    txn OnCompletion
-    bnz main_after_if_else@79
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@79
-    txna ApplicationArgs 0
-    pushbytes 0xe36ddbb4
-    ==
-    bz main_after_if_else@79
-    txn GroupIndex
-    bz main_ternary_false@77
-    txn GroupIndex
-    intc_1 // 1
+main_switch_case_12@17:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub m5e
+    concat
+    dup
+    len
+    intc_0 // 32
     -
-    gtxns Amount
+    intc_0 // 32
+    extract3
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
-main_ternary_merge@78:
-    !
-    assert // not payable
+main_switch_case_11@16:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub m5d
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_10@15:
+    callsub __evm_npy
     intc_0 // 32
     bzero
     callsub m5c
@@ -541,214 +317,38 @@ main_ternary_merge@78:
     intc_1 // 1
     return
 
-main_ternary_false@77:
-    intc_2 // 0
-    b main_ternary_merge@78
-
-main_after_if_else@79:
-    txn OnCompletion
-    bnz main_after_if_else@86
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@86
-    txna ApplicationArgs 0
-    pushbytes 0xa16d7d61
-    ==
-    bz main_after_if_else@86
-    txn GroupIndex
-    bz main_ternary_false@84
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@85:
-    !
-    assert // not payable
+main_switch_case_9@14:
+    callsub __evm_npy
     intc_0 // 32
     bzero
-    callsub m5d
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@84:
-    intc_2 // 0
-    b main_ternary_merge@85
-
-main_after_if_else@86:
-    txn OnCompletion
-    bnz main_after_if_else@93
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@93
-    txna ApplicationArgs 0
-    pushbytes 0x52e634e9
-    ==
-    bz main_after_if_else@93
-    txn GroupIndex
-    bz main_ternary_false@91
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@92:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub m5e
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@91:
-    intc_2 // 0
-    b main_ternary_merge@92
-
-main_after_if_else@93:
-    txn OnCompletion
-    bnz main_after_if_else@100
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@100
-    txna ApplicationArgs 0
-    pushbytes 0xee6359ee
-    ==
-    bz main_after_if_else@100
-    txn GroupIndex
-    bz main_ternary_false@98
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@99:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub m5f
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    cover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@98:
-    intc_2 // 0
-    b main_ternary_merge@99
-
-main_after_if_else@100:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x74aa0f61 0x2fa9f0ba 0x4903925a 0x21afdabf 0x0b0ab138 0xe438d5d6 0x128c2117 0x7f5f4671 0x14a56d12 0x2f89d735 0x9adb88a1 0x9657083b 0x75903792 0xed37114b // method "__postInit()void", method "h4a()uint256", method "h4b()uint256", method "h4c()uint256", method "h4d()uint256", method "h4e()uint256", method "h4h()uint256", method "h4f()uint256", method "h4g()uint256", method "m5a()(uint256,uint256,uint256)", method "m5b()(uint256,uint256,uint256)", method "m5c()(uint256,uint256)", method "m5d()uint256", method "m5e()uint256", method "m5f()(uint256,uint256,uint256)"
-    txna ApplicationArgs 0
-    match main___postInit_route@103 main_h4a_route@104 main_h4b_route@105 main_h4c_route@106 main_h4d_route@107 main_h4e_route@108 main_h4h_route@109 main_h4f_route@110 main_h4g_route@111 main_m5a_route@112 main_m5b_route@113 main_m5c_route@114 main_m5d_route@115 main_m5e_route@116 main_m5f_route@117
-    err
-
-main_m5f_route@117:
-    callsub m5f
-    cover 2
-    concat
-    swap
-    concat
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_m5e_route@116:
-    callsub m5e
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_m5d_route@115:
-    callsub m5d
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_m5c_route@114:
-    callsub m5c
-    concat
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_m5b_route@113:
     callsub m5b
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
     cover 2
     concat
-    swap
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     bytec_3 // 0x151f7c75
     swap
@@ -757,11 +357,38 @@ main_m5b_route@113:
     intc_1 // 1
     return
 
-main_m5a_route@112:
+main_switch_case_8@13:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
     callsub m5a
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
     cover 2
     concat
-    swap
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     bytec_3 // 0x151f7c75
     swap
@@ -770,8 +397,18 @@ main_m5a_route@112:
     intc_1 // 1
     return
 
-main_h4g_route@111:
+main_switch_case_7@12:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
     callsub h4g
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_3 // 0x151f7c75
     swap
     concat
@@ -779,8 +416,18 @@ main_h4g_route@111:
     intc_1 // 1
     return
 
-main_h4f_route@110:
+main_switch_case_6@11:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
     callsub h4f
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_3 // 0x151f7c75
     swap
     concat
@@ -788,8 +435,18 @@ main_h4f_route@110:
     intc_1 // 1
     return
 
-main_h4h_route@109:
+main_switch_case_5@10:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
     callsub h4h
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_3 // 0x151f7c75
     swap
     concat
@@ -797,8 +454,18 @@ main_h4h_route@109:
     intc_1 // 1
     return
 
-main_h4e_route@108:
+main_switch_case_4@9:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
     callsub h4e
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_3 // 0x151f7c75
     swap
     concat
@@ -806,8 +473,18 @@ main_h4e_route@108:
     intc_1 // 1
     return
 
-main_h4d_route@107:
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
     callsub h4d
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_3 // 0x151f7c75
     swap
     concat
@@ -815,8 +492,18 @@ main_h4d_route@107:
     intc_1 // 1
     return
 
-main_h4c_route@106:
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
     callsub h4c
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_3 // 0x151f7c75
     swap
     concat
@@ -824,8 +511,18 @@ main_h4c_route@106:
     intc_1 // 1
     return
 
-main_h4b_route@105:
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
     callsub h4b
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_3 // 0x151f7c75
     swap
     concat
@@ -833,30 +530,22 @@ main_h4b_route@105:
     intc_1 // 1
     return
 
-main_h4a_route@104:
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
     callsub h4a
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_3 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
-    return
-
-main___postInit_route@103:
-    bytec 8 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec 8 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec_1 // "arr"
-    intc_3 // 2
-    box_create
-    pop
     intc_1 // 1
     return
 
@@ -1742,3 +1431,22 @@ m5f_after_if_else@5:
 m5f_ternary_false@2:
     intc_2 // 0
     b m5f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/effect_sequencing.sol.EffectSequencing.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

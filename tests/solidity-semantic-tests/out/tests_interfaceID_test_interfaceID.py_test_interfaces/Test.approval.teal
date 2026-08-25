@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/interfaces.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 28
+    intcblock 1 0 28
     bytecblock 0x151f7c75 "ghello_world_interfaceId" 0x9335d03f "ERC165_interfaceId" 0x307ed880 0x00000000
     pushint 4096
     bzero
@@ -35,293 +35,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@14
     txn NumAppArgs
-    intc_2 // 2
+    pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@14
+    pushbytess 0x19ff1d21 0x30b67baa 0x9476f922 0x16bebf73 0x85295877 0x23a4f6f2 0x507977f2 0x89ae2887
     txna ApplicationArgs 0
-    pushbytes 0x19ff1d21
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11 main_switch_case_7@12
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    callsub hello
-    intc_3 // 28
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x30b67baa
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    callsub world
-    intc_3 // 28
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0x9476f922
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    callsub hello_world
-    intc_3 // 28
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0x16bebf73
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
-    callsub hello_world_interfaceId
-    intc_3 // 28
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@28:
-    intc_1 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    bnz main_after_if_else@37
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@37
-    txna ApplicationArgs 0
-    pushbytes 0x85295877
-    ==
-    bz main_after_if_else@37
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
-    callsub other
-    intc_3 // 28
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@35:
-    intc_1 // 0
-    b main_ternary_merge@36
-
-main_after_if_else@37:
-    txn OnCompletion
-    bnz main_after_if_else@44
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@44
-    txna ApplicationArgs 0
-    pushbytes 0x23a4f6f2
-    ==
-    bz main_after_if_else@44
-    txn GroupIndex
-    bz main_ternary_false@42
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@43:
-    !
-    assert // not payable
-    callsub hello_world_derived_interfaceId
-    intc_3 // 28
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@42:
-    intc_1 // 0
-    b main_ternary_merge@43
-
-main_after_if_else@44:
-    txn OnCompletion
-    bnz main_after_if_else@51
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@51
-    txna ApplicationArgs 0
-    pushbytes 0x507977f2
-    ==
-    bz main_after_if_else@51
-    txn GroupIndex
-    bz main_ternary_false@49
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@50:
-    !
-    assert // not payable
-    callsub ghello_world_interfaceId
-    intc_3 // 28
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@49:
-    intc_1 // 0
-    b main_ternary_merge@50
-
-main_after_if_else@51:
-    txn OnCompletion
-    bnz main_after_if_else@58
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@58
-    txna ApplicationArgs 0
-    pushbytes 0x89ae2887
-    ==
-    bz main_after_if_else@58
-    txn GroupIndex
-    bz main_ternary_false@56
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@57:
-    !
-    assert // not payable
-    callsub ERC165_interfaceId
-    intc_3 // 28
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@56:
-    intc_1 // 0
-    b main_ternary_merge@57
-
-main_after_if_else@58:
+main_after_if_else@14:
     txn OnCompletion
     !
     assert
@@ -329,10 +52,10 @@ main_after_if_else@58:
     assert
     pushbytess 0xc079a281 0xff0eed01 0xde7e7430 0xb701ebe6 0xe2a72f14 0xf7b333b0 0x438c683d 0x8bf5e24b // method "hello()byte[4]", method "world()byte[4]", method "hello_world()byte[4]", method "hello_world_interfaceId()byte[4]", method "other()byte[4]", method "hello_world_derived_interfaceId()byte[4]", method "ghello_world_interfaceId()byte[4]", method "ERC165_interfaceId()byte[4]"
     txna ApplicationArgs 0
-    match main_hello_route@61 main_world_route@62 main_hello_world_route@63 main_hello_world_interfaceId_route@64 main_other_route@65 main_hello_world_derived_interfaceId_route@66 main_ghello_world_interfaceId_route@67 main_ERC165_interfaceId_route@68
+    match main_hello_route@17 main_world_route@18 main_hello_world_route@19 main_hello_world_interfaceId_route@20 main_other_route@21 main_hello_world_derived_interfaceId_route@22 main_ghello_world_interfaceId_route@23 main_ERC165_interfaceId_route@24
     err
 
-main_ERC165_interfaceId_route@68:
+main_ERC165_interfaceId_route@24:
     callsub ERC165_interfaceId
     bytec_0 // 0x151f7c75
     swap
@@ -341,7 +64,7 @@ main_ERC165_interfaceId_route@68:
     intc_0 // 1
     return
 
-main_ghello_world_interfaceId_route@67:
+main_ghello_world_interfaceId_route@23:
     callsub ghello_world_interfaceId
     bytec_0 // 0x151f7c75
     swap
@@ -350,7 +73,7 @@ main_ghello_world_interfaceId_route@67:
     intc_0 // 1
     return
 
-main_hello_world_derived_interfaceId_route@66:
+main_hello_world_derived_interfaceId_route@22:
     callsub hello_world_derived_interfaceId
     bytec_0 // 0x151f7c75
     swap
@@ -359,7 +82,7 @@ main_hello_world_derived_interfaceId_route@66:
     intc_0 // 1
     return
 
-main_other_route@65:
+main_other_route@21:
     callsub other
     bytec_0 // 0x151f7c75
     swap
@@ -368,7 +91,7 @@ main_other_route@65:
     intc_0 // 1
     return
 
-main_hello_world_interfaceId_route@64:
+main_hello_world_interfaceId_route@20:
     callsub hello_world_interfaceId
     bytec_0 // 0x151f7c75
     swap
@@ -377,7 +100,7 @@ main_hello_world_interfaceId_route@64:
     intc_0 // 1
     return
 
-main_hello_world_route@63:
+main_hello_world_route@19:
     callsub hello_world
     bytec_0 // 0x151f7c75
     swap
@@ -386,7 +109,7 @@ main_hello_world_route@63:
     intc_0 // 1
     return
 
-main_world_route@62:
+main_world_route@18:
     callsub world
     bytec_0 // 0x151f7c75
     swap
@@ -395,8 +118,112 @@ main_world_route@62:
     intc_0 // 1
     return
 
-main_hello_route@61:
+main_hello_route@17:
     callsub hello
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_7@12:
+    callsub __evm_npy
+    callsub ERC165_interfaceId
+    intc_2 // 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_6@11:
+    callsub __evm_npy
+    callsub ghello_world_interfaceId
+    intc_2 // 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    callsub hello_world_derived_interfaceId
+    intc_2 // 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    callsub other
+    intc_2 // 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    callsub hello_world_interfaceId
+    intc_2 // 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    callsub hello_world
+    intc_2 // 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub world
+    intc_2 // 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub hello
+    intc_2 // 28
+    bzero
+    concat
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -573,3 +400,22 @@ ERC165_interfaceId_ternary_merge@3:
 ERC165_interfaceId_ternary_false@2:
     intc_1 // 0
     b ERC165_interfaceId_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/interfaceID/contracts/interfaces.sol.Test.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

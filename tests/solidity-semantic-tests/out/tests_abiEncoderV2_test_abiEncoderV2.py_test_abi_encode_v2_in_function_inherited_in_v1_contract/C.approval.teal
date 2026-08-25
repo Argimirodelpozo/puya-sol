@@ -1,9 +1,9 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_2ugfn7vh/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_gzuqiiqj/B.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 2
+    intcblock 32 1 0 6
     bytecblock 0x151f7c75 0xa7cfec26 TMPL_APPROVAL_A TMPL_CLEAR_A
     pushint 4096
     bzero
@@ -24,75 +24,61 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@8
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@8
+    pushbytess 0xf8a8fd6d 0xfdf80bda
     txna ApplicationArgs 0
-    pushbytes 0xf8a8fd6d
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6
 
-main_ternary_merge@8:
+main_after_if_else@8:
+    txn OnCompletion
     !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub test
-    concat
+    assert
+    txn ApplicationID
+    assert
+    pushbytes 0xc95a9d21 // method "test()uint256"
+    bytec_1 // method "foo(address)uint256"
+    txna ApplicationArgs 0
+    match main_test_route@11 main_foo_route@12
+    err
+
+main_foo_route@12:
+    txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub foo
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
+main_test_route@11:
+    callsub test
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xfdf80bda
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
+main_switch_case_1@6:
+    callsub __evm_npy
     txna ApplicationArgs 1
     len
-    intc_1 // 32
+    intc_0 // 32
     >=
     assert // EVM ABI decode out of bounds
     txna ApplicationArgs 1
@@ -103,71 +89,50 @@ main_ternary_merge@15:
     bzero
     ==
     assert // invalid EVM ABI address padding
-    intc_1 // 32
+    intc_0 // 32
     bzero
     swap
     callsub foo
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytes 0xc95a9d21 // method "test()uint256"
-    bytec_1 // method "foo(address)uint256"
-    txna ApplicationArgs 0
-    match main_test_route@19 main_foo_route@20
-    err
-
-main_foo_route@20:
-    txna ApplicationArgs 1
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub test
+    concat
     dup
     len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub foo
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
-    return
-
-main_test_route@19:
-    callsub test
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
-// /tmp/multisource_2ugfn7vh/B.sol.C.test() -> bytes:
+// /tmp/multisource_gzuqiiqj/B.sol.C.test() -> bytes:
 test:
     txn GroupIndex
     bz test_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -177,7 +142,7 @@ test_ternary_merge@3:
     itxn_begin
     bytec_2 // TMPL_APPROVAL_A
     bytec_3 // TMPL_CLEAR_A
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
@@ -195,7 +160,7 @@ test_ternary_merge@3:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_0 // 1
+    intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_2 // 0
@@ -211,10 +176,10 @@ test_ternary_merge@3:
     callsub foo
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
     retsub
@@ -224,7 +189,7 @@ test_ternary_false@2:
     b test_ternary_merge@3
 
 
-// /tmp/multisource_2ugfn7vh/B.sol.C.foo(_a: bytes) -> bytes:
+// /tmp/multisource_gzuqiiqj/B.sol.C.foo(_a: bytes) -> bytes:
 foo:
     proto 1 1
     txn NumAppArgs
@@ -236,7 +201,7 @@ foo:
     txn GroupIndex
     bz foo_ternary_false@4
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -249,7 +214,7 @@ foo_after_if_else@6:
     frame_dig -1
     pushint 24
     extract_uint64
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_2 // 0
     itxn_field OnCompletion
@@ -267,3 +232,22 @@ foo_after_if_else@6:
 foo_ternary_false@4:
     intc_2 // 0
     b foo_ternary_merge@5
+
+
+// /tmp/multisource_gzuqiiqj/B.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

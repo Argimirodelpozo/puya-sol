@@ -32,78 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@8
     txn NumAppArgs
     intc_0 // 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@8
+    pushbytess 0xd9c55ce1 0x52efea6e
     txna ApplicationArgs 0
-    pushbytes 0xd9c55ce1
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    pushint 32
-    bzero
-    callsub fill
-    concat
-    dup
-    len
-    pushint 32
-    -
-    pushint 32
-    extract3
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_0 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x52efea6e
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    callsub clear
-    bytec_2 // 0x151f7c75
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
+main_after_if_else@8:
     txn OnCompletion
     !
     assert
@@ -111,15 +49,15 @@ main_after_if_else@16:
     assert
     pushbytess 0xbacc49e3 0x827395d2 0x44977246 // method "__postInit()void", method "fill()uint256", method "clear()void"
     txna ApplicationArgs 0
-    match main___postInit_route@19 main_fill_route@20 main_clear_route@21
+    match main___postInit_route@11 main_fill_route@12 main_clear_route@13
     err
 
-main_clear_route@21:
+main_clear_route@13:
     callsub clear
     intc_2 // 1
     return
 
-main_fill_route@20:
+main_fill_route@12:
     callsub fill
     bytec_2 // 0x151f7c75
     swap
@@ -128,7 +66,7 @@ main_fill_route@20:
     intc_2 // 1
     return
 
-main___postInit_route@19:
+main___postInit_route@11:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -143,6 +81,33 @@ main___postInit_route@19:
     intc_0 // 2
     box_create
     pop
+    intc_2 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub clear
+    bytec_2 // 0x151f7c75
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    pushint 32
+    bzero
+    callsub fill
+    concat
+    dup
+    len
+    pushint 32
+    -
+    pushint 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
     intc_2 // 1
     return
 
@@ -832,3 +797,22 @@ clear_ternary_merge@3:
 clear_ternary_false@2:
     intc_1 // 0
     b clear_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/dynamic_multi_array_cleanup.sol.c.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

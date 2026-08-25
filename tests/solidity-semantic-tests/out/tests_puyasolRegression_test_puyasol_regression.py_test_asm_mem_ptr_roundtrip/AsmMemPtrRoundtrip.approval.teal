@@ -33,110 +33,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@7
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@9
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0x6e78aa75
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    swap
-    dig 1
-    ==
-    assert // invalid EVM ABI address padding
-    txna ApplicationArgs 1
-    len
-    pushint 64
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 32 32
-    dup
-    extract 0 12
-    uncover 2
-    ==
-    assert // invalid EVM ABI address padding
-    txna ApplicationArgs 1
-    len
-    pushint 96
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 64 32
-    dup
-    extract 4 28
-    pushint 28
-    bzero
-    ==
-    assert // invalid EVM ABI fixed-bytes padding
-    intc_0 // 32
-    bzero
-    swap
-    extract 0 4
-    swap
-    cover 3
-    callsub expectedEncodedCall
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_3 // 1
-    return
-
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
+main_after_if_else@7:
     txn OnCompletion
     !
     assert
@@ -144,10 +50,10 @@ main_after_if_else@9:
     assert
     pushbytess 0xeca47fe2 0x0c3fff64 0x8edb178d 0xc03a8d0d 0x40d50421 // method "rt(uint256)uint256", method "rt2(uint256)uint256", method "expRt(uint160)uint160", method "echoEncodedCall(address,address,byte[4])(bool,byte[])", method "expectedEncodedCall(address,address,byte[4])byte[]"
     txna ApplicationArgs 0
-    match main_rt_route@12 main_rt2_route@13 main_expRt_route@14 main_echoEncodedCall_route@15 main_expectedEncodedCall_route@16
+    match main_rt_route@10 main_rt2_route@11 main_expRt_route@12 main_echoEncodedCall_route@13 main_expectedEncodedCall_route@14
     err
 
-main_expectedEncodedCall_route@16:
+main_expectedEncodedCall_route@14:
     txna ApplicationArgs 1
     dup
     len
@@ -180,7 +86,7 @@ main_expectedEncodedCall_route@16:
     intc_3 // 1
     return
 
-main_echoEncodedCall_route@15:
+main_echoEncodedCall_route@13:
     txna ApplicationArgs 1
     dup
     bury 11
@@ -207,13 +113,13 @@ main_echoEncodedCall_route@15:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@27
     txn GroupIndex
     intc_3 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@28:
     !
     assert // not payable
     load 0
@@ -240,7 +146,7 @@ main_ternary_merge@25:
     cover 4
     intc 5 // 4064
     <=
-    bz main_else_body@27
+    bz main_else_body@30
     dup
     loads
     uncover 2
@@ -248,7 +154,7 @@ main_ternary_merge@25:
     replace3
     stores
 
-main_after_if_else@28:
+main_after_if_else@31:
     load 0
     dig 1
     itob
@@ -262,11 +168,11 @@ main_after_if_else@28:
     cover 2
     intc_2 // 0
 
-main_while_top@29:
+main_while_top@32:
     dup
     intc_2 // 0
     <
-    bz main_after_while@34
+    bz main_after_while@37
     dup2
     dup
     cover 2
@@ -292,7 +198,7 @@ main_while_top@29:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@32
+    bz main_else_body@35
     uncover 2
     dup
     loads
@@ -301,12 +207,12 @@ main_while_top@29:
     replace3
     stores
 
-main_after_if_else@33:
+main_after_if_else@36:
     intc_0 // 32
     +
-    b main_while_top@29
+    b main_while_top@32
 
-main_else_body@32:
+main_else_body@35:
     uncover 2
     dup
     loads
@@ -339,9 +245,9 @@ main_else_body@32:
     extract3
     replace2 0
     stores
-    b main_after_if_else@33
+    b main_after_if_else@36
 
-main_after_while@34:
+main_after_while@37:
     popn 2
     dig 3
     pushint 20
@@ -420,7 +326,7 @@ main_after_while@34:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@36
+    bz main_else_body@39
     dig 1
     dup
     loads
@@ -429,7 +335,7 @@ main_after_while@34:
     replace3
     stores
 
-main_after_if_else@37:
+main_after_if_else@40:
     load 0
     uncover 5
     pushint 31
@@ -457,11 +363,11 @@ main_after_if_else@37:
     cover 3
     intc_2 // 0
 
-main_while_top@38:
+main_while_top@41:
     dup
     dig 5
     <
-    bz main_after_while@43
+    bz main_after_while@46
     dig 2
     dig 1
     dup
@@ -488,7 +394,7 @@ main_while_top@38:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@41
+    bz main_else_body@44
     uncover 3
     dup
     loads
@@ -497,12 +403,12 @@ main_while_top@38:
     replace3
     stores
 
-main_after_if_else@42:
+main_after_if_else@45:
     intc_0 // 32
     +
-    b main_while_top@38
+    b main_while_top@41
 
-main_else_body@41:
+main_else_body@44:
     uncover 3
     dup
     loads
@@ -535,9 +441,9 @@ main_else_body@41:
     extract3
     replace2 0
     stores
-    b main_after_if_else@42
+    b main_after_if_else@45
 
-main_after_while@43:
+main_after_while@46:
     pop
     uncover 3
     pop
@@ -552,14 +458,14 @@ main_after_while@43:
     >=
     dup
     cover 4
-    bz main_ternary_false@45
+    bz main_ternary_false@48
     dup
     loads
     dig 3
     intc_0 // 32
     extract3
 
-main_ternary_merge@46:
+main_ternary_merge@49:
     dup
     extract 0 24
     bytec_3 // 0x
@@ -584,7 +490,7 @@ main_ternary_merge@46:
     dup
     cover 2
     <=
-    bz main_ternary_false@48
+    bz main_ternary_false@51
     pop
     swap
     intc_1 // 4096
@@ -594,7 +500,7 @@ main_ternary_merge@46:
     uncover 7
     extract3
 
-main_ternary_merge@49:
+main_ternary_merge@52:
     len
     bzero
     dup
@@ -631,7 +537,7 @@ main_ternary_merge@49:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@51
+    bz main_else_body@54
     dig 2
     dup
     loads
@@ -640,7 +546,7 @@ main_ternary_merge@49:
     replace3
     stores
 
-main_after_if_else@52:
+main_after_if_else@55:
     load 0
     uncover 9
     pushint 31
@@ -668,11 +574,11 @@ main_after_if_else@52:
     cover 4
     intc_2 // 0
 
-main_while_top@53:
+main_while_top@56:
     dup
     dig 6
     <
-    bz main_after_while@58
+    bz main_after_while@61
     dig 3
     dig 1
     dup
@@ -699,7 +605,7 @@ main_while_top@53:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@56
+    bz main_else_body@59
     uncover 4
     dup
     loads
@@ -708,12 +614,12 @@ main_while_top@53:
     replace3
     stores
 
-main_after_if_else@57:
+main_after_if_else@60:
     intc_0 // 32
     +
-    b main_while_top@53
+    b main_while_top@56
 
-main_else_body@56:
+main_else_body@59:
     uncover 4
     dup
     loads
@@ -746,9 +652,9 @@ main_else_body@56:
     extract3
     replace2 0
     stores
-    b main_after_if_else@57
+    b main_after_if_else@60
 
-main_after_while@58:
+main_after_while@61:
     pop
     uncover 4
     pop
@@ -774,20 +680,20 @@ main_after_while@58:
     extract_uint64
     bury 13
     dig 5
-    bz main_ternary_false@60
+    bz main_ternary_false@63
     dup
     loads
     dig 4
     intc_0 // 32
     extract3
 
-main_ternary_merge@61:
+main_ternary_merge@64:
     dig 5
     swap
     concat
     cover 4
     uncover 6
-    bz main_ternary_false@63
+    bz main_ternary_false@66
     uncover 7
     pop
     loads
@@ -795,7 +701,7 @@ main_ternary_merge@61:
     intc_0 // 32
     extract3
 
-main_ternary_merge@64:
+main_ternary_merge@67:
     dig 4
     swap
     concat
@@ -811,11 +717,11 @@ main_ternary_merge@64:
     intc_2 // 0
     cover 2
 
-main_while_top@65:
+main_while_top@68:
     dig 2
     dig 7
     <
-    bz main_after_while@70
+    bz main_after_while@73
     dig 11
     dig 3
     +
@@ -831,7 +737,7 @@ main_while_top@65:
     dup
     intc_0 // 32
     >=
-    bz main_ternary_false@68
+    bz main_ternary_false@71
     pop
     dig 10
     intc_1 // 4096
@@ -841,7 +747,7 @@ main_while_top@65:
     intc_0 // 32
     extract3
 
-main_ternary_merge@69:
+main_ternary_merge@72:
     uncover 2
     swap
     concat
@@ -850,9 +756,9 @@ main_ternary_merge@69:
     intc_0 // 32
     +
     cover 2
-    b main_while_top@65
+    b main_while_top@68
 
-main_ternary_false@68:
+main_ternary_false@71:
     dig 11
     intc_1 // 4096
     /
@@ -872,9 +778,9 @@ main_ternary_false@68:
     swap
     extract3
     concat
-    b main_ternary_merge@69
+    b main_ternary_merge@72
 
-main_after_while@70:
+main_after_while@73:
     uncover 2
     pop
     swap
@@ -920,7 +826,7 @@ main_after_while@70:
     dup
     intc_0 // 32
     >=
-    bz main_ternary_false@72
+    bz main_ternary_false@75
     pop
     dig 1
     intc_1 // 4096
@@ -930,7 +836,7 @@ main_after_while@70:
     intc_0 // 32
     extract3
 
-main_ternary_merge@73:
+main_ternary_merge@76:
     intc_0 // 32
     uncover 6
     dup
@@ -943,12 +849,12 @@ main_ternary_merge@73:
     cover 3
     intc_2 // 0
 
-main_while_top@74:
+main_while_top@77:
     dig 4
     len
     dig 1
     >
-    bz main_after_while@79
+    bz main_after_while@82
     dig 9
     dig 1
     dup
@@ -975,7 +881,7 @@ main_while_top@74:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@77
+    bz main_else_body@80
     uncover 3
     dup
     loads
@@ -984,12 +890,12 @@ main_while_top@74:
     replace3
     stores
 
-main_after_if_else@78:
+main_after_if_else@81:
     intc_0 // 32
     +
-    b main_while_top@74
+    b main_while_top@77
 
-main_else_body@77:
+main_else_body@80:
     uncover 3
     dup
     loads
@@ -1022,9 +928,9 @@ main_else_body@77:
     extract3
     replace2 0
     stores
-    b main_after_if_else@78
+    b main_after_if_else@81
 
-main_after_while@79:
+main_after_while@82:
     pop
     uncover 3
     pop
@@ -1048,14 +954,14 @@ main_after_while@79:
     dup
     intc_0 // 32
     >=
-    bz main_ternary_false@81
+    bz main_ternary_false@84
     pop
     loads
     uncover 2
     intc_0 // 32
     extract3
 
-main_ternary_merge@82:
+main_ternary_merge@85:
     dup
     extract 0 24
     bytec_3 // 0x
@@ -1080,7 +986,7 @@ main_ternary_merge@82:
     dup
     cover 2
     <=
-    bz main_ternary_false@84
+    bz main_ternary_false@87
     pop
     intc_1 // 4096
     /
@@ -1089,7 +995,7 @@ main_ternary_merge@82:
     uncover 2
     extract3
 
-main_ternary_merge@85:
+main_ternary_merge@88:
     dup
     len
     itob
@@ -1103,7 +1009,7 @@ main_ternary_merge@85:
     intc_3 // 1
     return
 
-main_ternary_false@84:
+main_ternary_false@87:
     swap
     intc_1 // 4096
     /
@@ -1123,9 +1029,9 @@ main_ternary_false@84:
     swap
     extract3
     concat
-    b main_ternary_merge@85
+    b main_ternary_merge@88
 
-main_ternary_false@81:
+main_ternary_false@84:
     swap
     dup
     loads
@@ -1143,9 +1049,9 @@ main_ternary_false@81:
     swap
     extract3
     concat
-    b main_ternary_merge@82
+    b main_ternary_merge@85
 
-main_ternary_false@72:
+main_ternary_false@75:
     dig 2
     intc_1 // 4096
     /
@@ -1165,9 +1071,9 @@ main_ternary_false@72:
     swap
     extract3
     concat
-    b main_ternary_merge@73
+    b main_ternary_merge@76
 
-main_ternary_false@63:
+main_ternary_false@66:
     dup
     loads
     uncover 4
@@ -1186,9 +1092,9 @@ main_ternary_false@63:
     swap
     extract3
     concat
-    b main_ternary_merge@64
+    b main_ternary_merge@67
 
-main_ternary_false@60:
+main_ternary_false@63:
     dupn 2
     loads
     dig 5
@@ -1207,9 +1113,9 @@ main_ternary_false@60:
     swap
     extract3
     concat
-    b main_ternary_merge@61
+    b main_ternary_merge@64
 
-main_else_body@51:
+main_else_body@54:
     dig 2
     dup
     loads
@@ -1242,9 +1148,9 @@ main_else_body@51:
     extract3
     replace2 0
     stores
-    b main_after_if_else@52
+    b main_after_if_else@55
 
-main_ternary_false@48:
+main_ternary_false@51:
     uncover 2
     intc_1 // 4096
     /
@@ -1264,9 +1170,9 @@ main_ternary_false@48:
     swap
     extract3
     concat
-    b main_ternary_merge@49
+    b main_ternary_merge@52
 
-main_ternary_false@45:
+main_ternary_false@48:
     dupn 2
     loads
     dig 4
@@ -1285,9 +1191,9 @@ main_ternary_false@45:
     swap
     extract3
     concat
-    b main_ternary_merge@46
+    b main_ternary_merge@49
 
-main_else_body@36:
+main_else_body@39:
     dig 1
     dup
     loads
@@ -1320,9 +1226,9 @@ main_else_body@36:
     extract3
     replace2 0
     stores
-    b main_after_if_else@37
+    b main_after_if_else@40
 
-main_else_body@27:
+main_else_body@30:
     dup
     loads
     intc_1 // 4096
@@ -1354,13 +1260,13 @@ main_else_body@27:
     extract3
     replace2 0
     stores
-    b main_after_if_else@28
+    b main_after_if_else@31
 
-main_ternary_false@24:
+main_ternary_false@27:
     intc_2 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@28
 
-main_expRt_route@14:
+main_expRt_route@12:
     txna ApplicationArgs 1
     dup
     len
@@ -1368,13 +1274,13 @@ main_expRt_route@14:
     ==
     assert // invalid number of bytes for arc4.uint160
     txn GroupIndex
-    bz main_ternary_false@89
+    bz main_ternary_false@92
     txn GroupIndex
     intc_3 // 1
     -
     gtxns Amount
 
-main_ternary_merge@90:
+main_ternary_merge@93:
     !
     assert // not payable
     load 0
@@ -1401,7 +1307,7 @@ main_ternary_merge@90:
     cover 4
     intc 5 // 4064
     <=
-    bz main_else_body@92
+    bz main_else_body@95
     dup
     loads
     uncover 2
@@ -1409,7 +1315,7 @@ main_ternary_merge@90:
     replace3
     stores
 
-main_after_if_else@93:
+main_after_if_else@96:
     load 0
     uncover 3
     dup
@@ -1469,7 +1375,7 @@ main_after_if_else@93:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@95
+    bz main_else_body@98
     dig 1
     dup
     loads
@@ -1478,7 +1384,7 @@ main_after_if_else@93:
     replace3
     stores
 
-main_after_if_else@96:
+main_after_if_else@99:
     load 0
     store 0
     load 0
@@ -1489,14 +1395,14 @@ main_after_if_else@96:
     dup
     intc_0 // 32
     >=
-    bz main_ternary_false@98
+    bz main_ternary_false@101
     pop
     loads
     swap
     intc_0 // 32
     extract3
 
-main_ternary_merge@99:
+main_ternary_merge@102:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec 8 // 0x01000000000000000000000000
@@ -1530,7 +1436,7 @@ main_ternary_merge@99:
     intc_3 // 1
     return
 
-main_ternary_false@98:
+main_ternary_false@101:
     swap
     dup
     loads
@@ -1548,9 +1454,9 @@ main_ternary_false@98:
     swap
     extract3
     concat
-    b main_ternary_merge@99
+    b main_ternary_merge@102
 
-main_else_body@95:
+main_else_body@98:
     dig 1
     dup
     loads
@@ -1578,6 +1484,40 @@ main_else_body@95:
     dig 3
     -
     uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@99
+
+main_else_body@95:
+    dup
+    loads
+    intc_1 // 4096
+    uncover 3
+    dup
+    cover 2
+    -
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000014
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000014
     uncover 4
     uncover 2
     extract3
@@ -1585,45 +1525,11 @@ main_else_body@95:
     stores
     b main_after_if_else@96
 
-main_else_body@92:
-    dup
-    loads
-    intc_1 // 4096
-    uncover 3
-    dup
-    cover 2
-    -
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000014
+main_ternary_false@92:
     intc_2 // 0
-    dig 2
-    extract3
-    swap
-    cover 3
-    replace3
-    dig 2
-    swap
-    stores
-    swap
-    intc_3 // 1
-    +
-    dup
-    loads
-    intc_0 // 32
-    dig 3
-    -
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000014
-    uncover 4
-    uncover 2
-    extract3
-    replace2 0
-    stores
-    b main_after_if_else@93
+    b main_ternary_merge@93
 
-main_ternary_false@89:
-    intc_2 // 0
-    b main_ternary_merge@90
-
-main_rt2_route@13:
+main_rt2_route@11:
     txna ApplicationArgs 1
     dup
     len
@@ -1631,13 +1537,13 @@ main_rt2_route@13:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@104
+    bz main_ternary_false@107
     txn GroupIndex
     intc_3 // 1
     -
     gtxns Amount
 
-main_ternary_merge@105:
+main_ternary_merge@108:
     !
     assert // not payable
     load 0
@@ -1664,7 +1570,7 @@ main_ternary_merge@105:
     cover 4
     intc 5 // 4064
     <=
-    bz main_else_body@107
+    bz main_else_body@110
     dup
     loads
     uncover 2
@@ -1672,7 +1578,7 @@ main_ternary_merge@105:
     replace3
     stores
 
-main_after_if_else@108:
+main_after_if_else@111:
     load 0
     uncover 3
     dup
@@ -1730,7 +1636,7 @@ main_after_if_else@108:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@110
+    bz main_else_body@113
     dig 1
     dup
     loads
@@ -1739,7 +1645,7 @@ main_after_if_else@108:
     replace3
     stores
 
-main_after_if_else@111:
+main_after_if_else@114:
     load 0
     store 0
     load 0
@@ -1750,14 +1656,14 @@ main_after_if_else@111:
     dup
     intc_0 // 32
     >=
-    bz main_ternary_false@113
+    bz main_ternary_false@116
     pop
     loads
     uncover 2
     intc_0 // 32
     extract3
 
-main_ternary_merge@114:
+main_ternary_merge@117:
     load 0
     store 0
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -1775,7 +1681,7 @@ main_ternary_merge@114:
     intc_3 // 1
     return
 
-main_ternary_false@113:
+main_ternary_false@116:
     swap
     dup
     loads
@@ -1793,9 +1699,9 @@ main_ternary_false@113:
     swap
     extract3
     concat
-    b main_ternary_merge@114
+    b main_ternary_merge@117
 
-main_else_body@110:
+main_else_body@113:
     dig 1
     dup
     loads
@@ -1823,6 +1729,40 @@ main_else_body@110:
     dig 3
     -
     uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@114
+
+main_else_body@110:
+    dup
+    loads
+    intc_1 // 4096
+    uncover 3
+    dup
+    cover 2
+    -
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
     uncover 4
     uncover 2
     extract3
@@ -1830,45 +1770,11 @@ main_else_body@110:
     stores
     b main_after_if_else@111
 
-main_else_body@107:
-    dup
-    loads
-    intc_1 // 4096
-    uncover 3
-    dup
-    cover 2
-    -
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
+main_ternary_false@107:
     intc_2 // 0
-    dig 2
-    extract3
-    swap
-    cover 3
-    replace3
-    dig 2
-    swap
-    stores
-    swap
-    intc_3 // 1
-    +
-    dup
-    loads
-    intc_0 // 32
-    dig 3
-    -
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000020
-    uncover 4
-    uncover 2
-    extract3
-    replace2 0
-    stores
-    b main_after_if_else@108
+    b main_ternary_merge@108
 
-main_ternary_false@104:
-    intc_2 // 0
-    b main_ternary_merge@105
-
-main_rt_route@12:
+main_rt_route@10:
     txna ApplicationArgs 1
     dup
     len
@@ -1876,13 +1782,13 @@ main_rt_route@12:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@118
+    bz main_ternary_false@121
     txn GroupIndex
     intc_3 // 1
     -
     gtxns Amount
 
-main_ternary_merge@119:
+main_ternary_merge@122:
     !
     assert // not payable
     load 0
@@ -1909,7 +1815,7 @@ main_ternary_merge@119:
     cover 4
     intc 5 // 4064
     <=
-    bz main_else_body@121
+    bz main_else_body@124
     dup
     loads
     uncover 2
@@ -1917,7 +1823,7 @@ main_ternary_merge@119:
     replace3
     stores
 
-main_after_if_else@122:
+main_after_if_else@125:
     load 0
     uncover 3
     dup
@@ -1975,7 +1881,7 @@ main_after_if_else@122:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@124
+    bz main_else_body@127
     dig 1
     dup
     loads
@@ -1984,21 +1890,21 @@ main_after_if_else@122:
     replace3
     stores
 
-main_after_if_else@125:
+main_after_if_else@128:
     intc_1 // 4096
     dig 3
     -
     dup
     intc_0 // 32
     >=
-    bz main_ternary_false@127
+    bz main_ternary_false@130
     pop
     loads
     uncover 2
     intc_0 // 32
     extract3
 
-main_ternary_merge@128:
+main_ternary_merge@131:
     load 0
     store 0
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -2016,7 +1922,7 @@ main_ternary_merge@128:
     intc_3 // 1
     return
 
-main_ternary_false@127:
+main_ternary_false@130:
     swap
     dup
     loads
@@ -2034,9 +1940,9 @@ main_ternary_false@127:
     swap
     extract3
     concat
-    b main_ternary_merge@128
+    b main_ternary_merge@131
 
-main_else_body@124:
+main_else_body@127:
     dig 1
     dup
     loads
@@ -2069,9 +1975,9 @@ main_else_body@124:
     extract3
     replace2 0
     stores
-    b main_after_if_else@125
+    b main_after_if_else@128
 
-main_else_body@121:
+main_else_body@124:
     dup
     loads
     intc_1 // 4096
@@ -2103,11 +2009,91 @@ main_else_body@121:
     extract3
     replace2 0
     stores
-    b main_after_if_else@122
+    b main_after_if_else@125
 
-main_ternary_false@118:
+main_ternary_false@121:
     intc_2 // 0
-    b main_ternary_merge@119
+    b main_ternary_merge@122
+
+main_switch_case_0@5:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    swap
+    dig 1
+    ==
+    assert // invalid EVM ABI address padding
+    intc_0 // 32
+    callsub __evm_decw
+    dup
+    extract 0 12
+    uncover 2
+    ==
+    assert // invalid EVM ABI address padding
+    pushint 64
+    callsub __evm_decw
+    dup
+    extract 4 28
+    pushint 28
+    bzero
+    ==
+    assert // invalid EVM ABI fixed-bytes padding
+    intc_0 // 32
+    bzero
+    swap
+    extract 0 4
+    swap
+    cover 3
+    callsub expectedEncodedCall
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_ternary_false@21:
+    intc_2 // 0
+    b main_ternary_merge@22
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_mem_ptr_roundtrip.sol.AsmMemPtrRoundtrip.expectedEncodedCall(caller: bytes, target: bytes, selector: bytes) -> bytes:
@@ -2174,3 +2160,20 @@ expectedEncodedCall_ternary_merge@3:
 expectedEncodedCall_ternary_false@2:
     intc_2 // 0
     b expectedEncodedCall_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_mem_ptr_roundtrip.sol.AsmMemPtrRoundtrip.__evm_decw(__off: uint64) -> bytes:
+__evm_decw:
+    proto 1 1
+    frame_dig -1
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    frame_dig -1
+    intc_0 // 32
+    extract3
+    retsub

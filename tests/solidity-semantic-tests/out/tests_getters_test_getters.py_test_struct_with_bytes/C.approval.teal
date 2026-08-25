@@ -32,78 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@7
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@9
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0x86b714e2
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub s
-    dig 2
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
-    concat
-    dig 1
-    len
-    dup
-    itob
-    uncover 4
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 3
-    swap
-    concat
-    concat
-    concat
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
+main_after_if_else@7:
     txn OnCompletion
     !
     assert
@@ -111,10 +49,10 @@ main_after_if_else@9:
     assert
     pushbytess 0xbacc49e3 0xfe78d151 // method "__postInit()void", method "s()(uint512,byte[])"
     txna ApplicationArgs 0
-    match main___postInit_route@12 main_s_route@13
+    match main___postInit_route@10 main_s_route@11
     err
 
-main_s_route@13:
+main_s_route@11:
     callsub s
     dig 1
     len
@@ -143,7 +81,7 @@ main_s_route@13:
     intc_1 // 1
     return
 
-main___postInit_route@12:
+main___postInit_route@10:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -265,6 +203,69 @@ main___postInit_route@12:
     box_put
     intc_1 // 1
     return
+
+main_switch_case_0@5:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub s
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
+    concat
+    dig 1
+    len
+    dup
+    itob
+    uncover 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 3
+    swap
+    concat
+    concat
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/getters/contracts/struct_with_bytes.sol.C.s() -> bytes, bytes:

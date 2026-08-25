@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 32 1000
+    intcblock 1 0 32 2 1000
     bytecblock "array" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "__ctor_pending" 0x151f7c75 0x01
     pushint 4096
     bzero
@@ -34,96 +34,14 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@9
     txn NumAppArgs
-    intc_2 // 2
+    intc_3 // 2
     ==
     bz main_after_if_else@9
+    pushbytess 0xe1c7392a 0x6901f668 0x52efea6e
     txna ApplicationArgs 0
-    pushbytes 0xe1c7392a
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@8:
-    !
-    assert // not payable
-    callsub init
-    bytec_3 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
 
 main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x6901f668
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    callsub validate
-    bytec_3 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0x52efea6e
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    callsub clear
-    bytec_3 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
     txn OnCompletion
     !
     assert
@@ -131,25 +49,25 @@ main_after_if_else@23:
     assert
     pushbytess 0xbacc49e3 0x83f14748 0xc121d597 0x44977246 // method "__postInit()void", method "init()void", method "validate()void", method "clear()void"
     txna ApplicationArgs 0
-    match main___postInit_route@26 main_init_route@27 main_validate_route@28 main_clear_route@29
+    match main___postInit_route@12 main_init_route@13 main_validate_route@14 main_clear_route@15
     err
 
-main_clear_route@29:
+main_clear_route@15:
     callsub clear
     intc_0 // 1
     return
 
-main_validate_route@28:
+main_validate_route@14:
     callsub validate
     intc_0 // 1
     return
 
-main_init_route@27:
+main_init_route@13:
     callsub init
     intc_0 // 1
     return
 
-main___postInit_route@26:
+main___postInit_route@12:
     bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -161,9 +79,33 @@ main___postInit_route@26:
     intc_1 // 0
     app_global_put
     bytec_0 // "array"
-    intc_2 // 2
+    intc_3 // 2
     box_create
     pop
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    callsub clear
+    bytec_3 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub validate
+    bytec_3 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub init
+    bytec_3 // 0x151f7c75
+    log
     intc_0 // 1
     return
 
@@ -200,10 +142,10 @@ init_while_top@4:
     assert // overflow
     dup
     len
-    intc_3 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 32
+    intc_2 // 32
     bzero
     b|
     pushbytes 0x0001
@@ -216,14 +158,14 @@ init_while_top@4:
     extract_uint16 // on error: invalid array length header
     bytec_0 // "array"
     intc_1 // 0
-    intc_2 // 2
+    intc_3 // 2
     box_extract
     btoi
     bytec_0 // "array"
     box_len
     pop
     dig 2
-    intc_3 // 32
+    intc_2 // 32
     *
     +
     bytec_0 // "array"
@@ -238,9 +180,9 @@ init_while_top@4:
     intc_1 // 0
     uncover 2
     box_replace
-    intc_3 // 32
+    intc_2 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
     bytec_0 // "array"
     swap
@@ -306,13 +248,13 @@ validate_while_top@4:
     pushint 8
     -
     extract_uint64
-    intc_3 // 32
+    intc_2 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
     bytec_0 // "array"
     swap
-    intc_3 // 32
+    intc_2 // 32
     box_extract // on error: index out of bounds
     b==
     assert
@@ -356,7 +298,7 @@ clear_while_top@4:
     bz clear_after_while@6
     bytec_0 // "array"
     intc_1 // 0
-    intc_2 // 2
+    intc_3 // 2
     box_extract
     btoi
     intc_0 // 1
@@ -368,19 +310,19 @@ clear_while_top@4:
     intc_1 // 0
     uncover 2
     box_replace
-    intc_3 // 32
+    intc_2 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
     bytec_0 // "array"
     swap
-    intc_3 // 32
+    intc_2 // 32
     pushbytes 0x
     box_splice
     bytec_0 // "array"
     box_len
     pop
-    intc_3 // 32
+    intc_2 // 32
     -
     bytec_0 // "array"
     swap
@@ -399,3 +341,22 @@ clear_after_while@6:
 clear_ternary_false@2:
     intc_1 // 0
     b clear_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/dynamic_array_storage_end.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

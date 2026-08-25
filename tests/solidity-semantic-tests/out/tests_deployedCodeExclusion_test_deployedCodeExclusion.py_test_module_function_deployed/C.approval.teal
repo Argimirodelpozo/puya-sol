@@ -1,7 +1,7 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource__mbqg7fk/main.sol.C.approval_program() -> uint64:
+// /tmp/multisource_5o_1gk0p/main.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
     bytecblock "data" "__ctor_pending" 0x151f7c75 "f"
@@ -32,48 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@7
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@9
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0xf8a8fd6d
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_2 // 32
-    bzero
-    callsub test
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
+main_after_if_else@7:
     txn OnCompletion
     !
     assert
@@ -81,10 +49,10 @@ main_after_if_else@9:
     assert
     pushbytess 0xbacc49e3 0xf59e3cc4 // method "__postInit()void", method "test()bool"
     txna ApplicationArgs 0
-    match main___postInit_route@12 main_test_route@13
+    match main___postInit_route@10 main_test_route@11
     err
 
-main_test_route@13:
+main_test_route@11:
     callsub test
     pushbytes 0x00
     intc_1 // 0
@@ -97,7 +65,7 @@ main_test_route@13:
     intc_0 // 1
     return
 
-main___postInit_route@12:
+main___postInit_route@10:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -125,6 +93,39 @@ main___postInit_route@12:
     intc_0 // 1
     return
 
+main_switch_case_0@5:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    callsub test
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
 
 // __solfn_49() -> bytes:
 longdata:
@@ -132,7 +133,7 @@ longdata:
     retsub
 
 
-// /tmp/multisource__mbqg7fk/main.sol.C.test() -> uint64:
+// /tmp/multisource_5o_1gk0p/main.sol.C.test() -> uint64:
 test:
     txn GroupIndex
     bz test_ternary_false@2

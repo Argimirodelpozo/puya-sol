@@ -29,23 +29,135 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@7
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@9
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0xdab1fa12
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd6dcd2fd 0x0fada4b7 0x141ea530 // method "resizeRoots(uint256,uint256)void", method "resizeMembers(uint256,uint256)void", method "lengths()(uint256,uint256,uint256,uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_resizeRoots_route@10 main_resizeMembers_route@11 main_lengths_route@12
+    err
+
+main_lengths_route@12:
+    callsub lengths
+    uncover 5
+    uncover 5
+    concat
+    uncover 4
+    concat
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_resizeMembers_route@11:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
     ==
-    bz main_after_if_else@9
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@7
+    bz main_ternary_false@25
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@8:
+main_ternary_merge@26:
+    !
+    assert // not payable
+    load 0
+    store 0
+    pushbytes 0x02
+    uncover 2
+    callsub __storage_write
+    bytec_0 // 0x03
+    swap
+    callsub __storage_write
+    load 0
+    store 0
+    intc_1 // 1
+    return
+
+main_ternary_false@25:
+    intc_2 // 0
+    b main_ternary_merge@26
+
+main_resizeRoots_route@10:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    load 0
+    store 0
+    bytec_1 // 0x
+    uncover 2
+    callsub __storage_write
+    bytec_2 // 0x01
+    swap
+    callsub __storage_write
+    load 0
+    store 0
+    intc_1 // 1
+    return
+
+main_ternary_false@30:
+    intc_2 // 0
+    b main_ternary_merge@31
+
+main_switch_case_0@5:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
     !
     assert // not payable
     intc_0 // 32
@@ -116,120 +228,9 @@ main_ternary_merge@8:
     intc_1 // 1
     return
 
-main_ternary_false@7:
+main_ternary_false@19:
     intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xd6dcd2fd 0x0fada4b7 0x141ea530 // method "resizeRoots(uint256,uint256)void", method "resizeMembers(uint256,uint256)void", method "lengths()(uint256,uint256,uint256,uint256,uint256,uint256)"
-    txna ApplicationArgs 0
-    match main_resizeRoots_route@12 main_resizeMembers_route@13 main_lengths_route@14
-    err
-
-main_lengths_route@14:
-    callsub lengths
-    uncover 5
-    uncover 5
-    concat
-    uncover 4
-    concat
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_resizeMembers_route@13:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@22
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@23:
-    !
-    assert // not payable
-    load 0
-    store 0
-    pushbytes 0x02
-    uncover 2
-    callsub __storage_write
-    bytec_0 // 0x03
-    swap
-    callsub __storage_write
-    load 0
-    store 0
-    intc_1 // 1
-    return
-
-main_ternary_false@22:
-    intc_2 // 0
-    b main_ternary_merge@23
-
-main_resizeRoots_route@12:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@27
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@28:
-    !
-    assert // not payable
-    load 0
-    store 0
-    bytec_1 // 0x
-    uncover 2
-    callsub __storage_write
-    bytec_2 // 0x01
-    swap
-    callsub __storage_write
-    load 0
-    store 0
-    intc_1 // 1
-    return
-
-main_ternary_false@27:
-    intc_2 // 0
-    b main_ternary_merge@28
+    b main_ternary_merge@20
 
 
 // __puyasol___storage_read(__slot: bytes) -> bytes:

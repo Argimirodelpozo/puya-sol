@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeBoxRef.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 32 1 0 8
     bytecblock 0x01 0x151f7c75 0x02 0x 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61d9 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22 0x03 0x04 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b 0x8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d23 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:" 0x0000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
@@ -29,66 +29,29 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@12
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@12
+    pushbytess 0x7d94792a 0xc0406226 0xef8fa0a4 0xaefeb5d0 0x4ca4f61b 0x8506762e
     txna ApplicationArgs 0
-    pushbytes 0x7d94792a
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    callsub seed
-    bytec_1 // 0x151f7c75
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
+main_after_if_else@12:
     txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xc0406226
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
     !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub run
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x100b7c32 0x0c098fbf 0x33ef9faa 0x209caf0a 0x809d3515 0x8c95cb47 // method "seed()void", method "run()uint256", method "runElementRef()uint256", method "runNestedRef()(uint256,bool)", method "runScalarRef()(uint256,uint256,uint256)", method "runMixedRef()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_seed_route@15 main_run_route@16 main_runElementRef_route@17 main_runNestedRef_route@18 main_runScalarRef_route@19 main_runMixedRef_route@20
+    err
+
+main_runMixedRef_route@20:
+    callsub runMixedRef
     concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
     bytec_1 // 0x151f7c75
     swap
     concat
@@ -96,41 +59,35 @@ main_ternary_merge@15:
     intc_1 // 1
     return
 
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xef8fa0a4
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
+main_runScalarRef_route@19:
+    callsub runScalarRef
+    cover 2
+    concat
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
     intc_1 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
+main_runNestedRef_route@18:
+    callsub runNestedRef
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_runElementRef_route@17:
     callsub runElementRef
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
     bytec_1 // 0x151f7c75
     swap
     concat
@@ -138,31 +95,92 @@ main_ternary_merge@22:
     intc_1 // 1
     return
 
-main_ternary_false@21:
-    intc_2 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0xaefeb5d0
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
+main_run_route@16:
+    callsub run
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
     intc_1 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@29:
-    !
-    assert // not payable
+main_seed_route@15:
+    callsub seed
+    intc_1 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub runMixedRef
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub runScalarRef
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
     intc_0 // 32
     bzero
     callsub runNestedRef
@@ -194,176 +212,18 @@ main_ternary_merge@29:
     intc_1 // 1
     return
 
-main_ternary_false@28:
-    intc_2 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    bnz main_after_if_else@37
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@37
-    txna ApplicationArgs 0
-    pushbytes 0x4ca4f61b
-    ==
-    bz main_after_if_else@37
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
+main_switch_case_2@7:
+    callsub __evm_npy
     intc_0 // 32
     bzero
-    callsub runScalarRef
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    cover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@35:
-    intc_2 // 0
-    b main_ternary_merge@36
-
-main_after_if_else@37:
-    txn OnCompletion
-    bnz main_after_if_else@44
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@44
-    txna ApplicationArgs 0
-    pushbytes 0x8506762e
-    ==
-    bz main_after_if_else@44
-    txn GroupIndex
-    bz main_ternary_false@42
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@43:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub runMixedRef
-    dig 2
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    cover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@42:
-    intc_2 // 0
-    b main_ternary_merge@43
-
-main_after_if_else@44:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x100b7c32 0x0c098fbf 0x33ef9faa 0x209caf0a 0x809d3515 0x8c95cb47 // method "seed()void", method "run()uint256", method "runElementRef()uint256", method "runNestedRef()(uint256,bool)", method "runScalarRef()(uint256,uint256,uint256)", method "runMixedRef()(uint256,uint256)"
-    txna ApplicationArgs 0
-    match main_seed_route@47 main_run_route@48 main_runElementRef_route@49 main_runNestedRef_route@50 main_runScalarRef_route@51 main_runMixedRef_route@52
-    err
-
-main_runMixedRef_route@52:
-    callsub runMixedRef
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_runScalarRef_route@51:
-    callsub runScalarRef
-    cover 2
-    concat
-    swap
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_runNestedRef_route@50:
-    callsub runNestedRef
-    pushbytes 0x00
-    intc_2 // 0
-    uncover 2
-    setbit
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_runElementRef_route@49:
     callsub runElementRef
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_1 // 0x151f7c75
     swap
     concat
@@ -371,8 +231,18 @@ main_runElementRef_route@49:
     intc_1 // 1
     return
 
-main_run_route@48:
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
     callsub run
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_1 // 0x151f7c75
     swap
     concat
@@ -380,8 +250,11 @@ main_run_route@48:
     intc_1 // 1
     return
 
-main_seed_route@47:
+main_switch_case_0@5:
+    callsub __evm_npy
     callsub seed
+    bytec_1 // 0x151f7c75
+    log
     intc_1 // 1
     return
 
@@ -400,13 +273,13 @@ __storage_read:
     bytec 15 // 0x010000
     b<
     bz __storage_read_else_body@4
-    pushint 8
+    intc_3 // 8
     bzero
     frame_dig -1
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
     dup
@@ -477,13 +350,13 @@ __storage_write:
     bytec 15 // 0x010000
     b<
     bz __storage_write_else_body@2
-    pushint 8
+    intc_3 // 8
     bzero
     frame_dig -2
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
     dup
@@ -677,7 +550,7 @@ seed_after_if_else@9:
     bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
     dig 1
     b+
-    intc_3 // 2
+    pushint 2
     itob
     callsub __storage_write
     bytec_0 // 0x01
@@ -1104,3 +977,22 @@ runMixedRef_ternary_merge@3:
 runMixedRef_ternary_false@2:
     intc_2 // 0
     b runMixedRef_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeBoxRef.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

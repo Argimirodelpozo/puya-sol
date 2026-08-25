@@ -32,82 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@12
+    bnz main_after_if_else@10
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@12
-    txna ApplicationArgs 0
+    bz main_after_if_else@10
     pushbytes 0xdcbec4cd
-    ==
-    bz main_after_if_else@12
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_3 // 8
-    bzero
-    callsub transientSigned
-    cover 2
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    intc_3 // 8
-    extract3
-    dup
-    intc_2 // 0
-    getbyte
-    pushint 128
-    >=
-    bz main_ternary_false@10
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-
-main_ternary_merge@11:
-    swap
-    dup
-    len
-    intc_0 // 32
-    swap
-    -
-    swap
-    replace3
-    intc_0 // 32
-    bzero
-    uncover 2
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@10:
-    intc_0 // 32
-    bzero
-    b main_ternary_merge@11
-
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@12:
+main_after_if_else@10:
     txn OnCompletion
     !
     assert
@@ -115,18 +49,18 @@ main_after_if_else@12:
     assert
     pushbytess 0x3536f425 0x061e9929 0x1e7b3323 0xbe2a3a55 // method "transientSigned()(uint256,bool)", method "kec48(uint256,uint256)byte[32]", method "inlineLocals(uint256)uint256", method "argOrder()(uint256,uint256)"
     txna ApplicationArgs 0
-    match main_transientSigned_route@15 main_kec48_route@16 main_inlineLocals_route@17 main_argOrder_route@18
+    match main_transientSigned_route@13 main_kec48_route@14 main_inlineLocals_route@15 main_argOrder_route@16
     err
 
-main_argOrder_route@18:
+main_argOrder_route@16:
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@27
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@28:
     !
     assert // not payable
     load 0
@@ -225,11 +159,11 @@ main_ternary_merge@25:
     intc_1 // 1
     return
 
-main_ternary_false@24:
+main_ternary_false@27:
     intc_2 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@28
 
-main_inlineLocals_route@17:
+main_inlineLocals_route@15:
     txna ApplicationArgs 1
     dup
     len
@@ -237,13 +171,13 @@ main_inlineLocals_route@17:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@29
+    bz main_ternary_false@32
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+main_ternary_merge@33:
     !
     assert // not payable
     load 0
@@ -277,11 +211,11 @@ main_ternary_merge@30:
     intc_1 // 1
     return
 
-main_ternary_false@29:
+main_ternary_false@32:
     intc_2 // 0
-    b main_ternary_merge@30
+    b main_ternary_merge@33
 
-main_kec48_route@16:
+main_kec48_route@14:
     txna ApplicationArgs 1
     dup
     len
@@ -295,13 +229,13 @@ main_kec48_route@16:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@34
+    bz main_ternary_false@37
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@35:
+main_ternary_merge@38:
     !
     assert // not payable
     load 0
@@ -358,11 +292,11 @@ main_ternary_merge@35:
     intc_1 // 1
     return
 
-main_ternary_false@34:
+main_ternary_false@37:
     intc_2 // 0
-    b main_ternary_merge@35
+    b main_ternary_merge@38
 
-main_transientSigned_route@15:
+main_transientSigned_route@13:
     callsub transientSigned
     pushbytes 0x00
     intc_2 // 0
@@ -375,6 +309,73 @@ main_transientSigned_route@15:
     log
     intc_1 // 1
     return
+
+main_switch_case_0@5:
+    txn GroupIndex
+    bz main_ternary_false@23
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@24:
+    !
+    assert // not payable
+    intc_3 // 8
+    bzero
+    callsub transientSigned
+    cover 2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    intc_3 // 8
+    extract3
+    dup
+    intc_2 // 0
+    getbyte
+    pushint 128
+    >=
+    bz main_ternary_false@7
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@8:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    intc_0 // 32
+    bzero
+    uncover 2
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@7:
+    intc_0 // 32
+    bzero
+    b main_ternary_merge@8
+
+main_ternary_false@23:
+    intc_2 // 0
+    b main_ternary_merge@24
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_semantics_batch.sol.AsmSemanticsBatch.transientSigned() -> bytes, uint64:

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/mapping_key_collision.sol.MappingKeyCollision.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2 65535
+    intcblock 32 1 0 24 65535
     bytecblock 0x 0x151f7c75 "a" "ba" "c" "bc" "__ctor_pending"
     pushint 4096
     bzero
@@ -32,1145 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@18
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@18
+    pushbytess 0x93525868 0xcc178025 0xa0acb9dd 0xc0c75eca 0x9aa937ca 0x5554a7ac 0xa82ad90e 0x5913d5a4 0x059274c9 0xc33970a2 0x5ab004dc 0x36ec2043
     txna ApplicationArgs 0
-    pushbytes 0x93525868
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11 main_switch_case_7@12 main_switch_case_8@13 main_switch_case_9@14 main_switch_case_10@15 main_switch_case_11@16
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    intc_0 // 32
-    +
-    txna ApplicationArgs 1
-    len
-    dig 1
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    uncover 2
-    intc_0 // 32
-    extract3
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    dup2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    len
-    pushint 64
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    cover 2
-    extract3
-    txna ApplicationArgs 1
-    extract 32 32
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    callsub setA
-    bytec_1 // 0x151f7c75
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xcc178025
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    intc_0 // 32
-    +
-    txna ApplicationArgs 1
-    len
-    dig 1
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    uncover 2
-    intc_0 // 32
-    extract3
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    dup2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    len
-    pushint 64
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    cover 2
-    extract3
-    txna ApplicationArgs 1
-    extract 32 32
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    callsub setBa
-    bytec_1 // 0x151f7c75
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xa0acb9dd
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    intc_0 // 32
-    +
-    txna ApplicationArgs 1
-    len
-    dig 1
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    uncover 2
-    intc_0 // 32
-    extract3
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    dup2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
-    txna ApplicationArgs 1
-    uncover 3
-    uncover 3
-    extract3
-    callsub getA
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@21:
-    intc_2 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0xc0c75eca
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    intc_0 // 32
-    +
-    txna ApplicationArgs 1
-    len
-    dig 1
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    uncover 2
-    intc_0 // 32
-    extract3
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    dup2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
-    txna ApplicationArgs 1
-    uncover 3
-    uncover 3
-    extract3
-    callsub getBa
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@28:
-    intc_2 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    bnz main_after_if_else@37
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@37
-    txna ApplicationArgs 0
-    pushbytes 0x9aa937ca
-    ==
-    bz main_after_if_else@37
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    intc_0 // 32
-    +
-    txna ApplicationArgs 1
-    len
-    dig 1
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    uncover 2
-    intc_0 // 32
-    extract3
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    dup2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    len
-    pushint 64
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    cover 2
-    extract3
-    txna ApplicationArgs 1
-    extract 32 32
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    callsub setC
-    bytec_1 // 0x151f7c75
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@35:
-    intc_2 // 0
-    b main_ternary_merge@36
-
-main_after_if_else@37:
-    txn OnCompletion
-    bnz main_after_if_else@44
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@44
-    txna ApplicationArgs 0
-    pushbytes 0x5554a7ac
-    ==
-    bz main_after_if_else@44
-    txn GroupIndex
-    bz main_ternary_false@42
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@43:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    intc_0 // 32
-    +
-    txna ApplicationArgs 1
-    len
-    dig 1
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    uncover 2
-    intc_0 // 32
-    extract3
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    dup2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    len
-    pushint 64
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    cover 2
-    extract3
-    txna ApplicationArgs 1
-    extract 32 32
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    callsub setBc
-    bytec_1 // 0x151f7c75
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@42:
-    intc_2 // 0
-    b main_ternary_merge@43
-
-main_after_if_else@44:
-    txn OnCompletion
-    bnz main_after_if_else@51
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@51
-    txna ApplicationArgs 0
-    pushbytes 0xa82ad90e
-    ==
-    bz main_after_if_else@51
-    txn GroupIndex
-    bz main_ternary_false@49
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@50:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    intc_0 // 32
-    +
-    txna ApplicationArgs 1
-    len
-    dig 1
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    uncover 2
-    intc_0 // 32
-    extract3
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    dup2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
-    txna ApplicationArgs 1
-    uncover 3
-    uncover 3
-    extract3
-    callsub getC
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@49:
-    intc_2 // 0
-    b main_ternary_merge@50
-
-main_after_if_else@51:
-    txn OnCompletion
-    bnz main_after_if_else@58
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@58
-    txna ApplicationArgs 0
-    pushbytes 0x5913d5a4
-    ==
-    bz main_after_if_else@58
-    txn GroupIndex
-    bz main_ternary_false@56
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@57:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    intc_0 // 32
-    +
-    txna ApplicationArgs 1
-    len
-    dig 1
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    uncover 2
-    intc_0 // 32
-    extract3
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    dup2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
-    txna ApplicationArgs 1
-    uncover 3
-    uncover 3
-    extract3
-    callsub getBc
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@56:
-    intc_2 // 0
-    b main_ternary_merge@57
-
-main_after_if_else@58:
-    txn OnCompletion
-    bnz main_after_if_else@65
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@65
-    txna ApplicationArgs 0
-    pushbytes 0x059274c9
-    ==
-    bz main_after_if_else@65
-    txn GroupIndex
-    bz main_ternary_false@63
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@64:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    intc_0 // 32
-    +
-    txna ApplicationArgs 1
-    len
-    dig 1
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    uncover 2
-    intc_0 // 32
-    extract3
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    dup2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
-    txna ApplicationArgs 1
-    uncover 3
-    uncover 3
-    extract3
-    callsub a
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@63:
-    intc_2 // 0
-    b main_ternary_merge@64
-
-main_after_if_else@65:
-    txn OnCompletion
-    bnz main_after_if_else@72
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@72
-    txna ApplicationArgs 0
-    pushbytes 0xc33970a2
-    ==
-    bz main_after_if_else@72
-    txn GroupIndex
-    bz main_ternary_false@70
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@71:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    intc_0 // 32
-    +
-    txna ApplicationArgs 1
-    len
-    dig 1
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    uncover 2
-    intc_0 // 32
-    extract3
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    dup2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
-    txna ApplicationArgs 1
-    uncover 3
-    uncover 3
-    extract3
-    callsub ba
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@70:
-    intc_2 // 0
-    b main_ternary_merge@71
-
-main_after_if_else@72:
-    txn OnCompletion
-    bnz main_after_if_else@79
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@79
-    txna ApplicationArgs 0
-    pushbytes 0x5ab004dc
-    ==
-    bz main_after_if_else@79
-    txn GroupIndex
-    bz main_ternary_false@77
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@78:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    intc_0 // 32
-    +
-    txna ApplicationArgs 1
-    len
-    dig 1
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    uncover 2
-    intc_0 // 32
-    extract3
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    dup2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
-    txna ApplicationArgs 1
-    uncover 3
-    uncover 3
-    extract3
-    callsub c
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@77:
-    intc_2 // 0
-    b main_ternary_merge@78
-
-main_after_if_else@79:
-    txn OnCompletion
-    bnz main_after_if_else@86
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@86
-    txna ApplicationArgs 0
-    pushbytes 0x36ec2043
-    ==
-    bz main_after_if_else@86
-    txn GroupIndex
-    bz main_ternary_false@84
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@85:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    intc_0 // 32
-    +
-    txna ApplicationArgs 1
-    len
-    dig 1
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    uncover 2
-    intc_0 // 32
-    extract3
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    dup2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
-    txna ApplicationArgs 1
-    uncover 3
-    uncover 3
-    extract3
-    callsub bc
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@84:
-    intc_2 // 0
-    b main_ternary_merge@85
-
-main_after_if_else@86:
+main_after_if_else@18:
     txn OnCompletion
     !
     assert
@@ -1178,15 +49,15 @@ main_after_if_else@86:
     assert
     pushbytess 0xbacc49e3 0x61f6baa0 0xe3a7590d 0xb188b93d 0x0d4dd036 0xbad4cd78 0x3184776c 0x15e6c042 0xace7a134 0x75ef946e 0x2cc76383 0x9df350f8 0x7b76d334 // method "__postInit()void", method "setA(string,uint256)void", method "setBa(string,uint256)void", method "getA(string)uint256", method "getBa(string)uint256", method "setC(byte[],uint256)void", method "setBc(byte[],uint256)void", method "getC(byte[])uint256", method "getBc(byte[])uint256", method "a(string)uint256", method "ba(string)uint256", method "c(byte[])uint256", method "bc(byte[])uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@89 main_setA_route@90 main_setBa_route@91 main_getA_route@92 main_getBa_route@93 main_setC_route@94 main_setBc_route@95 main_getC_route@96 main_getBc_route@97 main_a_route@98 main_ba_route@99 main_c_route@100 main_bc_route@101
+    match main___postInit_route@21 main_setA_route@22 main_setBa_route@23 main_getA_route@24 main_getBa_route@25 main_setC_route@26 main_setBc_route@27 main_getC_route@28 main_getBc_route@29 main_a_route@30 main_ba_route@31 main_c_route@32 main_bc_route@33
     err
 
-main_bc_route@101:
+main_bc_route@33:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -1201,12 +72,12 @@ main_bc_route@101:
     intc_1 // 1
     return
 
-main_c_route@100:
+main_c_route@32:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -1221,12 +92,12 @@ main_c_route@100:
     intc_1 // 1
     return
 
-main_ba_route@99:
+main_ba_route@31:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -1241,12 +112,12 @@ main_ba_route@99:
     intc_1 // 1
     return
 
-main_a_route@98:
+main_a_route@30:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -1261,12 +132,12 @@ main_a_route@98:
     intc_1 // 1
     return
 
-main_getBc_route@97:
+main_getBc_route@29:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -1281,12 +152,12 @@ main_getBc_route@97:
     intc_1 // 1
     return
 
-main_getC_route@96:
+main_getC_route@28:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -1301,12 +172,12 @@ main_getC_route@96:
     intc_1 // 1
     return
 
-main_setBc_route@95:
+main_setBc_route@27:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -1323,12 +194,12 @@ main_setBc_route@95:
     intc_1 // 1
     return
 
-main_setC_route@94:
+main_setC_route@26:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -1345,12 +216,12 @@ main_setC_route@94:
     intc_1 // 1
     return
 
-main_getBa_route@93:
+main_getBa_route@25:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -1365,12 +236,12 @@ main_getBa_route@93:
     intc_1 // 1
     return
 
-main_getA_route@92:
+main_getA_route@24:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -1385,12 +256,12 @@ main_getA_route@92:
     intc_1 // 1
     return
 
-main_setBa_route@91:
+main_setBa_route@23:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -1407,12 +278,12 @@ main_setBa_route@91:
     intc_1 // 1
     return
 
-main_setA_route@90:
+main_setA_route@22:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_3 // 2
+    pushint 2
     +
     dig 1
     len
@@ -1429,7 +300,7 @@ main_setA_route@90:
     intc_1 // 1
     return
 
-main___postInit_route@89:
+main___postInit_route@21:
     bytec 6 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -1441,21 +312,737 @@ main___postInit_route@89:
     intc_2 // 0
     app_global_put
     bytec_2 // "a"
-    intc_3 // 2
+    pushint 2
     box_create
     pop
     bytec_3 // "ba"
-    intc_3 // 2
+    pushint 2
     box_create
     pop
     bytec 4 // "c"
-    intc_3 // 2
+    pushint 2
     box_create
     pop
     bytec 5 // "bc"
-    intc_3 // 2
+    pushint 2
     box_create
     pop
+    intc_1 // 1
+    return
+
+main_switch_case_11@16:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 2
+    uncover 3
+    extract3
+    callsub bc
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_10@15:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 2
+    uncover 3
+    extract3
+    callsub c
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_9@14:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 2
+    uncover 3
+    extract3
+    callsub ba
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_8@13:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 2
+    uncover 3
+    extract3
+    callsub a
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_7@12:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 2
+    uncover 3
+    extract3
+    callsub getBc
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_6@11:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 2
+    uncover 3
+    extract3
+    callsub getC
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    uncover 2
+    extract3
+    intc_0 // 32
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub setBc
+    bytec_1 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    uncover 2
+    extract3
+    intc_0 // 32
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub setC
+    bytec_1 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 2
+    uncover 3
+    extract3
+    callsub getBa
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    uncover 2
+    uncover 3
+    extract3
+    callsub getA
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    uncover 2
+    extract3
+    intc_0 // 32
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub setBa
+    bytec_1 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI length exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    uncover 2
+    extract3
+    intc_0 // 32
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub setA
+    bytec_1 // 0x151f7c75
+    log
     intc_1 // 1
     return
 
@@ -1874,3 +1461,39 @@ bc_ternary_merge@3:
 bc_ternary_false@2:
     intc_2 // 0
     b bc_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/mapping_key_collision.sol.MappingKeyCollision.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/mapping_key_collision.sol.MappingKeyCollision.__evm_decw(__off: uint64) -> bytes:
+__evm_decw:
+    proto 1 1
+    frame_dig -1
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    frame_dig -1
+    intc_0 // 32
+    extract3
+    retsub

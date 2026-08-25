@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 32
+    intcblock 1 0 32 2
     bytecblock "arr" "__ctor_pending" 0x151f7c75 0x 0x0000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
@@ -32,67 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@8
     txn NumAppArgs
-    intc_2 // 2
+    intc_3 // 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@8
+    pushbytess 0x41af56ee 0xf58e8614
     txna ApplicationArgs 0
-    pushbytes 0x41af56ee
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    callsub pushArr
-    bytec_2 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xf58e8614
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    callsub setAndClear
-    bytec_2 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
+main_after_if_else@8:
     txn OnCompletion
     !
     assert
@@ -100,18 +49,18 @@ main_after_if_else@16:
     assert
     pushbytess 0xbacc49e3 0x99fe9257 0x9939b21d 0xba37d4c3 // method "__postInit()void", method "pushArr()void", method "setAndClear()void", method "getArr()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@19 main_pushArr_route@20 main_setAndClear_route@21 main_getArr_route@22
+    match main___postInit_route@11 main_pushArr_route@12 main_setAndClear_route@13 main_getArr_route@14
     err
 
-main_getArr_route@22:
+main_getArr_route@14:
     txn GroupIndex
-    bz main_ternary_false@28
+    bz main_ternary_false@20
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@29:
+main_ternary_merge@21:
     !
     assert // not payable
     load 0
@@ -123,31 +72,31 @@ main_ternary_merge@29:
     bytec_0 // "arr"
     box_len
     bury 1
-    bz main_ternary_false@32
+    bz main_ternary_false@24
     bytec_0 // "arr"
     box_len
     pop
-    intc_2 // 2
+    intc_3 // 2
     -
-    intc_3 // 32
+    intc_2 // 32
     /
-    bz main_ternary_false@32
+    bz main_ternary_false@24
     bytec_0 // "arr"
-    intc_2 // 2
-    intc_3 // 32
+    intc_3 // 2
+    intc_2 // 32
     box_extract
 
-main_ternary_merge@33:
+main_ternary_merge@25:
     load 0
     store 0
     pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
-    intc_3 // 32
+    intc_2 // 32
     <=
     assert // overflow
-    intc_3 // 32
+    intc_2 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -157,25 +106,25 @@ main_ternary_merge@33:
     intc_0 // 1
     return
 
-main_ternary_false@32:
+main_ternary_false@24:
     bytec_3 // 0x
-    b main_ternary_merge@33
+    b main_ternary_merge@25
 
-main_ternary_false@28:
+main_ternary_false@20:
     intc_1 // 0
-    b main_ternary_merge@29
+    b main_ternary_merge@21
 
-main_setAndClear_route@21:
+main_setAndClear_route@13:
     callsub setAndClear
     intc_0 // 1
     return
 
-main_pushArr_route@20:
+main_pushArr_route@12:
     callsub pushArr
     intc_0 // 1
     return
 
-main___postInit_route@19:
+main___postInit_route@11:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -187,12 +136,28 @@ main___postInit_route@19:
     intc_1 // 0
     app_global_put
     bytec_0 // "arr"
-    intc_2 // 2
+    intc_3 // 2
     box_create
     pop
     pushbytes "t"
     bytec_3 // 0x
     app_global_put
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub setAndClear
+    bytec_2 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub pushArr
+    bytec_2 // 0x151f7c75
+    log
     intc_0 // 1
     return
 
@@ -211,13 +176,13 @@ pushArr_ternary_merge@3:
     assert // not payable
     bytec_0 // "arr"
     intc_1 // 0
-    intc_2 // 2
+    intc_3 // 2
     box_extract
     btoi
     bytec_0 // "arr"
     box_len
     pop
-    intc_3 // 32
+    intc_2 // 32
     +
     bytec_0 // "arr"
     swap
@@ -231,9 +196,9 @@ pushArr_ternary_merge@3:
     intc_1 // 0
     uncover 2
     box_replace
-    intc_3 // 32
+    intc_2 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
     bytec_0 // "arr"
     swap
@@ -281,7 +246,7 @@ setAndClear_after_if_else@5:
     assert
     bytec_0 // "arr"
     intc_1 // 0
-    intc_2 // 2
+    intc_3 // 2
     box_extract
     btoi
     intc_0 // 1
@@ -293,19 +258,19 @@ setAndClear_after_if_else@5:
     intc_1 // 0
     uncover 2
     box_replace
-    intc_3 // 32
+    intc_2 // 32
     *
-    intc_2 // 2
+    intc_3 // 2
     +
     bytec_0 // "arr"
     swap
-    intc_3 // 32
+    intc_2 // 32
     bytec_3 // 0x
     box_splice
     bytec_0 // "arr"
     box_len
     pop
-    intc_3 // 32
+    intc_2 // 32
     -
     bytec_0 // "arr"
     swap
@@ -315,3 +280,22 @@ setAndClear_after_if_else@5:
 setAndClear_ternary_false@2:
     intc_1 // 0
     b setAndClear_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

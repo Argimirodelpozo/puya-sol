@@ -120,29 +120,59 @@ main_bool_false@4:
 
 main_after_if_else@6:
     txn OnCompletion
-    bnz main_after_if_else@13
+    bnz main_after_if_else@16
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@13
+    bz main_after_if_else@16
+    pushbytess 0xc5d7802e 0xa56dfe4a 0x0c55699c
     txna ApplicationArgs 0
-    pushbytes 0xc5d7802e
-    ==
-    bz main_after_if_else@13
-    txn GroupIndex
-    bz main_ternary_false@11
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@9 main_switch_case_1@10 main_switch_case_2@14
 
-main_ternary_merge@12:
+main_after_if_else@16:
+    txn OnCompletion
     !
-    assert // not payable
-    intc_2 // 32
-    bzero
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x5bb3453a 0x5c5e3bbc 0x7c1072af // method "z()uint64", method "y()uint256", method "x()uint256"
+    txna ApplicationArgs 0
+    match main_z_route@19 main_y_route@20 main_x_route@21
+    err
+
+main_x_route@21:
+    callsub x
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_y_route@20:
+    callsub y
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_z_route@19:
     callsub z
     itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@14:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub x
     concat
     dup
     len
@@ -157,31 +187,8 @@ main_ternary_merge@12:
     intc_1 // 1
     return
 
-main_ternary_false@11:
-    intc_0 // 0
-    b main_ternary_merge@12
-
-main_after_if_else@13:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xa56dfe4a
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
+main_switch_case_1@10:
+    callsub __evm_npy
     intc_3 // 8
     bzero
     callsub y
@@ -197,10 +204,10 @@ main_ternary_merge@19:
     getbyte
     pushint 128
     >=
-    bz main_ternary_false@21
+    bz main_ternary_false@12
     bytec 7 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-main_ternary_merge@22:
+main_ternary_merge@13:
     swap
     dup
     len
@@ -216,39 +223,17 @@ main_ternary_merge@22:
     intc_1 // 1
     return
 
-main_ternary_false@21:
+main_ternary_false@12:
     intc_2 // 32
     bzero
-    b main_ternary_merge@22
+    b main_ternary_merge@13
 
-main_ternary_false@18:
-    intc_0 // 0
-    b main_ternary_merge@19
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0x0c55699c
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
+main_switch_case_0@9:
+    callsub __evm_npy
     intc_2 // 32
     bzero
-    callsub x
+    callsub z
+    itob
     concat
     dup
     len
@@ -256,49 +241,6 @@ main_ternary_merge@29:
     -
     intc_2 // 32
     extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@28:
-    intc_0 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x5bb3453a 0x5c5e3bbc 0x7c1072af // method "z()uint64", method "y()uint256", method "x()uint256"
-    txna ApplicationArgs 0
-    match main_z_route@33 main_y_route@34 main_x_route@35
-    err
-
-main_x_route@35:
-    callsub x
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_y_route@34:
-    callsub y
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_z_route@33:
-    callsub z
-    itob
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -410,3 +352,22 @@ x_ternary_merge@3:
 x_ternary_false@2:
     intc_0 // 0
     b x_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/constructor.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_0 // 0
+    b __evm_npy_ternary_merge@3

@@ -38,163 +38,46 @@ main_after_if_else@2:
     pushint 2
     ==
     bz main_after_if_else@9
+    pushbytess 0xd264e05e 0x52efea6e 0x3c6bb436
     txna ApplicationArgs 0
-    pushbytes 0xd264e05e
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_2 // 32
-    bzero
-    callsub forward
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@7:
-    intc_0 // 0
-    b main_ternary_merge@8
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
 
 main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
     txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x52efea6e
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_2 // 32
-    bzero
-    callsub clear
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@14:
-    intc_0 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
+    bnz main_after_if_else@12
     txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0x3c6bb436
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_2 // 32
-    bzero
-    callsub val
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@21:
-    intc_0 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn NumAppArgs
-    bnz main_after_if_else@26
-    txn OnCompletion
-    bnz main_after_if_else@26
+    bnz main_after_if_else@12
     callsub __fallback
     intc_1 // 1
     return
 
-main_after_if_else@26:
+main_after_if_else@12:
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_after_if_else@39
+    bz main_after_if_else@25
     pushbytess 0xbacc49e3 0x1bf9882b 0x0d0be52f 0xf321bc3d 0x70b65ae3 // method "__postInit()void", method "__fallback()void", method "forward()bool", method "clear()bool", method "val()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@32 main___fallback_route@33 main_forward_route@34 main_clear_route@35 main_val_route@36
+    match main___postInit_route@18 main___fallback_route@19 main_forward_route@20 main_clear_route@21 main_val_route@22
 
-main_after_if_else@39:
+main_after_if_else@25:
     intc_0 // 0
     bury 1
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@40:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@26:
     dup
-    bnz main_after_if_else@29
+    bnz main_after_if_else@15
     txn OnCompletion
-    bnz main_after_if_else@29
+    bnz main_after_if_else@15
     callsub __fallback
     intc_1 // 1
     bury 1
 
-main_after_if_else@29:
+main_after_if_else@15:
     return
 
-main_val_route@36:
+main_val_route@22:
     callsub val
     bytec_1 // 0x151f7c75
     swap
@@ -202,9 +85,9 @@ main_val_route@36:
     log
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@40
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@26
 
-main_clear_route@35:
+main_clear_route@21:
     callsub clear
     pushbytes 0x00
     intc_0 // 0
@@ -216,9 +99,9 @@ main_clear_route@35:
     log
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@40
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@26
 
-main_forward_route@34:
+main_forward_route@20:
     callsub forward
     pushbytes 0x00
     intc_0 // 0
@@ -230,15 +113,15 @@ main_forward_route@34:
     log
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@40
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@26
 
-main___fallback_route@33:
+main___fallback_route@19:
     callsub __fallback
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@40
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@26
 
-main___postInit_route@32:
+main___postInit_route@18:
     bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -292,7 +175,66 @@ main___postInit_route@32:
     app_global_put
     intc_1 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@40
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@26
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub val
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub clear
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub forward
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__fallback() -> void:
@@ -685,3 +627,22 @@ val_ternary_merge@3:
 val_ternary_false@2:
     intc_0 // 0
     b val_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_0 // 0
+    b __evm_npy_ternary_merge@3

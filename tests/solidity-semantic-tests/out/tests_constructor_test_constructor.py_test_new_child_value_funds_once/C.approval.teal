@@ -32,35 +32,37 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@6
+    bnz main_after_if_else@8
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@6
+    bz main_after_if_else@8
+    pushbytess 0x775c300c 0x237b5e96
     txna ApplicationArgs 0
-    pushbytes 0x775c300c
-    ==
-    bz main_after_if_else@6
-    intc_0 // 32
-    bzero
+    match main_switch_case_0@5 main_switch_case_1@6
+
+main_after_if_else@8:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xf4beeb5d 0x216b17e3 // method "deploy()(uint256,uint256)", method "child()address"
+    txna ApplicationArgs 0
+    match main_deploy_route@11 main_child_route@12
+    err
+
+main_child_route@12:
+    callsub child
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_deploy_route@11:
     callsub deploy
-    dig 2
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    cover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -69,25 +71,15 @@ main_after_if_else@2:
     intc_2 // 1
     return
 
-main_after_if_else@6:
-    txn OnCompletion
-    bnz main_after_if_else@13
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@13
-    txna ApplicationArgs 0
-    pushbytes 0x237b5e96
-    ==
-    bz main_after_if_else@13
+main_switch_case_1@6:
     txn GroupIndex
-    bz main_ternary_false@11
+    bz main_ternary_false@19
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@12:
+main_ternary_merge@20:
     !
     assert // not payable
     intc_0 // 32
@@ -113,32 +105,31 @@ main_ternary_merge@12:
     intc_2 // 1
     return
 
-main_ternary_false@11:
+main_ternary_false@19:
     intc_1 // 0
-    b main_ternary_merge@12
+    b main_ternary_merge@20
 
-main_after_if_else@13:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xf4beeb5d 0x216b17e3 // method "deploy()(uint256,uint256)", method "child()address"
-    txna ApplicationArgs 0
-    match main_deploy_route@16 main_child_route@17
-    err
-
-main_child_route@17:
-    callsub child
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_deploy_route@16:
+main_switch_case_0@5:
+    intc_0 // 32
+    bzero
     callsub deploy
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     bytec_0 // 0x151f7c75
     swap

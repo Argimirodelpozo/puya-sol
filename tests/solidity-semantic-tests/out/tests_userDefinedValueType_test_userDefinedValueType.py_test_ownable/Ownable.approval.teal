@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/ownable.sol.Ownable.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 2
+    intcblock 1 0 32 20
     bytecblock "owner" 0x0000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 "__ctor_pending" 0x7b9d8e89
     pushint 4096
     bzero
@@ -34,23 +34,101 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@9
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
     bz main_after_if_else@9
+    pushbytess 0x13af4035 0x715018a6 0x8da5cb5b
     txna ApplicationArgs 0
-    pushbytes 0x13af4035
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
 
-main_ternary_merge@8:
+main_after_if_else@9:
+    txn OnCompletion
     !
-    assert // not payable
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x64e61812 0x3e2c61e5 0xb1bbb0a8 // method "__postInit()void", method "setOwner(address)void", method "renounceOwnership()void", method "owner()address"
+    txna ApplicationArgs 0
+    match main___postInit_route@12 main_setOwner_route@13 main_renounceOwnership_route@14 main_owner_route@15
+    err
+
+main_owner_route@15:
+    callsub owner
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_renounceOwnership_route@14:
+    callsub renounceOwnership
+    intc_0 // 1
+    return
+
+main_setOwner_route@13:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub setOwner
+    intc_0 // 1
+    return
+
+main___postInit_route@12:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_3 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "owner"
+    txn Sender
+    app_global_put
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub owner
+    dup
+    len
+    intc_3 // 20
+    -
+    intc_3 // 20
+    extract3
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub renounceOwnership
+    bytec_2 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
     txna ApplicationArgs 1
     len
     intc_2 // 32
@@ -67,142 +145,6 @@ main_ternary_merge@8:
     callsub setOwner
     bytec_2 // 0x151f7c75
     log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x715018a6
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    callsub renounceOwnership
-    bytec_2 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0x8da5cb5b
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_2 // 32
-    bzero
-    callsub owner
-    dup
-    len
-    pushint 20
-    -
-    pushint 20
-    extract3
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x64e61812 0x3e2c61e5 0xb1bbb0a8 // method "__postInit()void", method "setOwner(address)void", method "renounceOwnership()void", method "owner()address"
-    txna ApplicationArgs 0
-    match main___postInit_route@26 main_setOwner_route@27 main_renounceOwnership_route@28 main_owner_route@29
-    err
-
-main_owner_route@29:
-    callsub owner
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_renounceOwnership_route@28:
-    callsub renounceOwnership
-    intc_0 // 1
-    return
-
-main_setOwner_route@27:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub setOwner
-    intc_0 // 1
-    return
-
-main___postInit_route@26:
-    bytec_3 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_3 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    bytec_0 // "owner"
-    txn Sender
-    app_global_put
     intc_0 // 1
     return
 
@@ -346,3 +288,22 @@ owner_ternary_merge@3:
 owner_ternary_false@2:
     intc_1 // 0
     b owner_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/ownable.sol.Ownable.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

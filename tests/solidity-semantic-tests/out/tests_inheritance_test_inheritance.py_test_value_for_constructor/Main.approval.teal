@@ -37,132 +37,11 @@ main_after_if_else@2:
     pushint 2
     ==
     bz main_after_if_else@9
+    pushbytess 0xf9633930 0x17d7de7c 0x00113e08
     txna ApplicationArgs 0
-    pushbytes 0xf9633930
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_2 // 32
-    bzero
-    callsub getFlag
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@7:
-    intc_0 // 0
-    b main_ternary_merge@8
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
 
 main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x17d7de7c
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    callsub getName
-    pushint 29
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@14:
-    intc_0 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0x00113e08
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_2 // 32
-    bzero
-    callsub getBalances
-    dig 2
-    uncover 2
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    cover 2
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@21:
-    intc_0 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
     txn OnCompletion
     !
     assert
@@ -173,10 +52,10 @@ main_after_if_else@23:
     bytec 5 // method "getName()byte[3]"
     pushbytes 0x482b5f7f // method "getBalances()(uint256,uint256)"
     txna ApplicationArgs 0
-    match main___postInit_route@26 main_getFlag_route@27 main_getName_route@28 main_getBalances_route@29
+    match main___postInit_route@12 main_getFlag_route@13 main_getName_route@14 main_getBalances_route@15
     err
 
-main_getBalances_route@29:
+main_getBalances_route@15:
     callsub getBalances
     concat
     bytec_0 // 0x151f7c75
@@ -186,7 +65,7 @@ main_getBalances_route@29:
     intc_1 // 1
     return
 
-main_getName_route@28:
+main_getName_route@14:
     callsub getName
     bytec_0 // 0x151f7c75
     swap
@@ -195,7 +74,7 @@ main_getName_route@28:
     intc_1 // 1
     return
 
-main_getFlag_route@27:
+main_getFlag_route@13:
     callsub getFlag
     pushbytes 0x00
     intc_0 // 0
@@ -208,7 +87,7 @@ main_getFlag_route@27:
     intc_1 // 1
     return
 
-main___postInit_route@26:
+main___postInit_route@12:
     bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -261,6 +140,69 @@ main___postInit_route@26:
     bytec_1 // "h"
     swap
     app_global_put
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub getBalances
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub getName
+    pushint 29
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub getFlag
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     intc_1 // 1
     return
 
@@ -390,3 +332,22 @@ getBalances_ternary_merge@3:
 getBalances_ternary_false@2:
     intc_0 // 0
     b getBalances_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/value_for_constructor.sol.Main.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_0 // 0
+    b __evm_npy_ternary_merge@3

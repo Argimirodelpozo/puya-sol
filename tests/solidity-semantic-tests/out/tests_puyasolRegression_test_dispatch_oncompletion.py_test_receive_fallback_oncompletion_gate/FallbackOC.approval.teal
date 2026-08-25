@@ -33,23 +33,81 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@7
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@9
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0xcf2470f6
-    ==
-    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
+    txn NumAppArgs
+    bnz main_after_if_else@10
+    txn OnCompletion
+    bnz main_after_if_else@10
+    callsub __receive
+    intc_0 // 1
+    return
+
+main_after_if_else@10:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    bz main_after_if_else@21
+    pushbytess 0xc599eb05 0x1bf9882b 0x412f5d6f // method "__receive()void", method "__fallback()void", method "hits()uint256"
+    txna ApplicationArgs 0
+    match main___receive_route@16 main___fallback_route@17 main_hits_route@18
+
+main_after_if_else@21:
+    intc_1 // 0
+    bury 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fallback_oncompletion.sol.FallbackOC.__puya_arc4_router__@22:
+    dup
+    bnz main_after_if_else@13
+    txn OnCompletion
+    bnz main_after_if_else@13
+    callsub __fallback
+    intc_0 // 1
+    bury 1
+
+main_after_if_else@13:
+    return
+
+main_hits_route@18:
+    callsub hits
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fallback_oncompletion.sol.FallbackOC.__puya_arc4_router__@22
+
+main___fallback_route@17:
+    callsub __fallback
+    intc_0 // 1
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fallback_oncompletion.sol.FallbackOC.__puya_arc4_router__@22
+
+main___receive_route@16:
+    callsub __receive
+    intc_0 // 1
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fallback_oncompletion.sol.FallbackOC.__puya_arc4_router__@22
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@7
+    bz main_ternary_false@25
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@8:
+main_ternary_merge@26:
     !
     assert // not payable
     intc_2 // 32
@@ -69,66 +127,9 @@ main_ternary_merge@8:
     intc_0 // 1
     return
 
-main_ternary_false@7:
+main_ternary_false@25:
     intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn NumAppArgs
-    bnz main_after_if_else@12
-    txn OnCompletion
-    bnz main_after_if_else@12
-    callsub __receive
-    intc_0 // 1
-    return
-
-main_after_if_else@12:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    bz main_after_if_else@23
-    pushbytess 0xc599eb05 0x1bf9882b 0x412f5d6f // method "__receive()void", method "__fallback()void", method "hits()uint256"
-    txna ApplicationArgs 0
-    match main___receive_route@18 main___fallback_route@19 main_hits_route@20
-
-main_after_if_else@23:
-    intc_1 // 0
-    bury 1
-
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fallback_oncompletion.sol.FallbackOC.__puya_arc4_router__@24:
-    dup
-    bnz main_after_if_else@15
-    txn OnCompletion
-    bnz main_after_if_else@15
-    callsub __fallback
-    intc_0 // 1
-    bury 1
-
-main_after_if_else@15:
-    return
-
-main_hits_route@20:
-    callsub hits
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fallback_oncompletion.sol.FallbackOC.__puya_arc4_router__@24
-
-main___fallback_route@19:
-    callsub __fallback
-    intc_0 // 1
-    bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fallback_oncompletion.sol.FallbackOC.__puya_arc4_router__@24
-
-main___receive_route@18:
-    callsub __receive
-    intc_0 // 1
-    bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fallback_oncompletion.sol.FallbackOC.__puya_arc4_router__@24
+    b main_ternary_merge@26
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fallback_oncompletion.sol.FallbackOC.__receive() -> void:

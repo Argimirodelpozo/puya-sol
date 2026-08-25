@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/unary_fixedbytes.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 7
+    intcblock 1 0 7 25
     bytecblock 0x151f7c75 0x00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff 0x00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00 0x00ff00ff00ff00ff00ff00ff00ff00ff 0x00ff00ff00ff00ff 0x00ff00ff
     pushint 4096
     bzero
@@ -29,40 +29,28 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@21
     txn NumAppArgs
-    intc_2 // 2
+    pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@21
+    pushbytess 0xa446202f 0xd00f9c64 0xef8fd134 0x4bf60c4d 0x436c732a 0xedfce9e9 0x6309b37e 0xa8b6fbec 0x52f19cbe 0xa2934ffb 0xd0575cf9 0x99fd50c7 0x3e6b7a14 0x134abb08 0x984a43a1
     txna ApplicationArgs 0
-    pushbytes 0xa446202f
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11 main_switch_case_7@12 main_switch_case_8@13 main_switch_case_9@14 main_switch_case_10@15 main_switch_case_11@16 main_switch_case_12@17 main_switch_case_13@18 main_switch_case_14@19
 
-main_ternary_merge@8:
+main_after_if_else@21:
+    txn OnCompletion
     !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    pushint 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 25 7
-    intc_3 // 7
-    bzero
-    ==
-    assert // invalid EVM ABI fixed-bytes padding
-    extract 0 25
-    callsub conv
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x799af982 0x936f4ad8 0xb7258c2c 0x20d2d67d 0x648961ea 0x9053542c 0xcf0ba49d 0x9bb92dca 0x68984879 0x39b5063e 0x1dbdb901 0x7bfecb37 0x7dec205d 0x36753191 0x5bc49b31 // method "conv(byte[25])byte[32]", method "upcast(byte[25])byte[32]", method "downcast(byte[25])byte[12]", method "r_b32()byte[32]", method "r_b25()byte[25]", method "r_b16()byte[16]", method "r_b8()byte[8]", method "r_b4()byte[4]", method "r_b1()byte[1]", method "a_b32()byte[32]", method "a_b25()byte[25]", method "a_b16()byte[16]", method "a_b8()byte[8]", method "a_b4()byte[4]", method "a_b1()byte[1]"
+    txna ApplicationArgs 0
+    match main_conv_route@24 main_upcast_route@25 main_downcast_route@26 main_r_b32_route@27 main_r_b25_route@28 main_r_b16_route@29 main_r_b8_route@30 main_r_b4_route@31 main_r_b1_route@32 main_a_b32_route@33 main_a_b25_route@34 main_a_b16_route@35 main_a_b8_route@36 main_a_b4_route@37 main_a_b1_route@38
+    err
+
+main_a_b1_route@38:
+    callsub a_b1
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -70,45 +58,127 @@ main_ternary_merge@8:
     intc_0 // 1
     return
 
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xd00f9c64
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
+main_a_b4_route@37:
+    callsub a_b4
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     intc_0 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@15:
-    !
-    assert // not payable
+main_a_b8_route@36:
+    callsub a_b8
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_a_b16_route@35:
+    callsub a_b16
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_a_b25_route@34:
+    callsub a_b25
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_a_b32_route@33:
+    callsub a_b32
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_r_b1_route@32:
+    callsub r_b1
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_r_b4_route@31:
+    callsub r_b4
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_r_b8_route@30:
+    callsub r_b8
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_r_b16_route@29:
+    callsub r_b16
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_r_b25_route@28:
+    callsub r_b25
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_r_b32_route@27:
+    callsub r_b32
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_downcast_route@26:
     txna ApplicationArgs 1
-    len
-    pushint 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
     dup
-    extract 25 7
-    intc_3 // 7
-    bzero
+    len
+    intc_3 // 25
     ==
-    assert // invalid EVM ABI fixed-bytes padding
-    extract 0 25
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 25>
+    callsub downcast
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_upcast_route@25:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 25
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 25>
     callsub upcast
     bytec_0 // 0x151f7c75
     swap
@@ -117,41 +187,178 @@ main_ternary_merge@15:
     intc_0 // 1
     return
 
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xef8fd134
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
+main_conv_route@24:
     txna ApplicationArgs 1
+    dup
     len
-    pushint 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
+    intc_3 // 25
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 25>
+    callsub conv
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_14@19:
+    callsub __evm_npy
+    callsub a_b1
+    pushint 31
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_13@18:
+    callsub __evm_npy
+    callsub a_b4
+    pushint 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_12@17:
+    callsub __evm_npy
+    callsub a_b8
+    pushint 24
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_11@16:
+    callsub __evm_npy
+    callsub a_b16
+    pushint 16
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_10@15:
+    callsub __evm_npy
+    callsub a_b25
+    intc_2 // 7
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_9@14:
+    callsub __evm_npy
+    callsub a_b32
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_8@13:
+    callsub __evm_npy
+    callsub r_b1
+    pushint 31
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_7@12:
+    callsub __evm_npy
+    callsub r_b4
+    pushint 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_6@11:
+    callsub __evm_npy
+    callsub r_b8
+    pushint 24
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    callsub r_b16
+    pushint 16
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    callsub r_b25
+    intc_2 // 7
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    callsub r_b32
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_1 // 0
+    callsub __evm_decw
     dup
     extract 25 7
-    intc_3 // 7
+    intc_2 // 7
     bzero
     ==
     assert // invalid EVM ABI fixed-bytes padding
@@ -167,577 +374,17 @@ main_ternary_merge@22:
     intc_0 // 1
     return
 
-main_ternary_false@21:
+main_switch_case_1@6:
+    callsub __evm_npy
     intc_1 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0x4bf60c4d
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
-    callsub r_b32
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@28:
-    intc_1 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    bnz main_after_if_else@37
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@37
-    txna ApplicationArgs 0
-    pushbytes 0x436c732a
-    ==
-    bz main_after_if_else@37
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
-    callsub r_b25
-    intc_3 // 7
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@35:
-    intc_1 // 0
-    b main_ternary_merge@36
-
-main_after_if_else@37:
-    txn OnCompletion
-    bnz main_after_if_else@44
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@44
-    txna ApplicationArgs 0
-    pushbytes 0xedfce9e9
-    ==
-    bz main_after_if_else@44
-    txn GroupIndex
-    bz main_ternary_false@42
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@43:
-    !
-    assert // not payable
-    callsub r_b16
-    pushint 16
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@42:
-    intc_1 // 0
-    b main_ternary_merge@43
-
-main_after_if_else@44:
-    txn OnCompletion
-    bnz main_after_if_else@51
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@51
-    txna ApplicationArgs 0
-    pushbytes 0x6309b37e
-    ==
-    bz main_after_if_else@51
-    txn GroupIndex
-    bz main_ternary_false@49
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@50:
-    !
-    assert // not payable
-    callsub r_b8
-    pushint 24
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@49:
-    intc_1 // 0
-    b main_ternary_merge@50
-
-main_after_if_else@51:
-    txn OnCompletion
-    bnz main_after_if_else@58
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@58
-    txna ApplicationArgs 0
-    pushbytes 0xa8b6fbec
-    ==
-    bz main_after_if_else@58
-    txn GroupIndex
-    bz main_ternary_false@56
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@57:
-    !
-    assert // not payable
-    callsub r_b4
-    pushint 28
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@56:
-    intc_1 // 0
-    b main_ternary_merge@57
-
-main_after_if_else@58:
-    txn OnCompletion
-    bnz main_after_if_else@65
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@65
-    txna ApplicationArgs 0
-    pushbytes 0x52f19cbe
-    ==
-    bz main_after_if_else@65
-    txn GroupIndex
-    bz main_ternary_false@63
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@64:
-    !
-    assert // not payable
-    callsub r_b1
-    pushint 31
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@63:
-    intc_1 // 0
-    b main_ternary_merge@64
-
-main_after_if_else@65:
-    txn OnCompletion
-    bnz main_after_if_else@72
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@72
-    txna ApplicationArgs 0
-    pushbytes 0xa2934ffb
-    ==
-    bz main_after_if_else@72
-    txn GroupIndex
-    bz main_ternary_false@70
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@71:
-    !
-    assert // not payable
-    callsub a_b32
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@70:
-    intc_1 // 0
-    b main_ternary_merge@71
-
-main_after_if_else@72:
-    txn OnCompletion
-    bnz main_after_if_else@79
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@79
-    txna ApplicationArgs 0
-    pushbytes 0xd0575cf9
-    ==
-    bz main_after_if_else@79
-    txn GroupIndex
-    bz main_ternary_false@77
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@78:
-    !
-    assert // not payable
-    callsub a_b25
-    intc_3 // 7
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@77:
-    intc_1 // 0
-    b main_ternary_merge@78
-
-main_after_if_else@79:
-    txn OnCompletion
-    bnz main_after_if_else@86
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@86
-    txna ApplicationArgs 0
-    pushbytes 0x99fd50c7
-    ==
-    bz main_after_if_else@86
-    txn GroupIndex
-    bz main_ternary_false@84
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@85:
-    !
-    assert // not payable
-    callsub a_b16
-    pushint 16
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@84:
-    intc_1 // 0
-    b main_ternary_merge@85
-
-main_after_if_else@86:
-    txn OnCompletion
-    bnz main_after_if_else@93
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@93
-    txna ApplicationArgs 0
-    pushbytes 0x3e6b7a14
-    ==
-    bz main_after_if_else@93
-    txn GroupIndex
-    bz main_ternary_false@91
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@92:
-    !
-    assert // not payable
-    callsub a_b8
-    pushint 24
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@91:
-    intc_1 // 0
-    b main_ternary_merge@92
-
-main_after_if_else@93:
-    txn OnCompletion
-    bnz main_after_if_else@100
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@100
-    txna ApplicationArgs 0
-    pushbytes 0x134abb08
-    ==
-    bz main_after_if_else@100
-    txn GroupIndex
-    bz main_ternary_false@98
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@99:
-    !
-    assert // not payable
-    callsub a_b4
-    pushint 28
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@98:
-    intc_1 // 0
-    b main_ternary_merge@99
-
-main_after_if_else@100:
-    txn OnCompletion
-    bnz main_after_if_else@107
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@107
-    txna ApplicationArgs 0
-    pushbytes 0x984a43a1
-    ==
-    bz main_after_if_else@107
-    txn GroupIndex
-    bz main_ternary_false@105
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@106:
-    !
-    assert // not payable
-    callsub a_b1
-    pushint 31
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@105:
-    intc_1 // 0
-    b main_ternary_merge@106
-
-main_after_if_else@107:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x799af982 0x936f4ad8 0xb7258c2c 0x20d2d67d 0x648961ea 0x9053542c 0xcf0ba49d 0x9bb92dca 0x68984879 0x39b5063e 0x1dbdb901 0x7bfecb37 0x7dec205d 0x36753191 0x5bc49b31 // method "conv(byte[25])byte[32]", method "upcast(byte[25])byte[32]", method "downcast(byte[25])byte[12]", method "r_b32()byte[32]", method "r_b25()byte[25]", method "r_b16()byte[16]", method "r_b8()byte[8]", method "r_b4()byte[4]", method "r_b1()byte[1]", method "a_b32()byte[32]", method "a_b25()byte[25]", method "a_b16()byte[16]", method "a_b8()byte[8]", method "a_b4()byte[4]", method "a_b1()byte[1]"
-    txna ApplicationArgs 0
-    match main_conv_route@110 main_upcast_route@111 main_downcast_route@112 main_r_b32_route@113 main_r_b25_route@114 main_r_b16_route@115 main_r_b8_route@116 main_r_b4_route@117 main_r_b1_route@118 main_a_b32_route@119 main_a_b25_route@120 main_a_b16_route@121 main_a_b8_route@122 main_a_b4_route@123 main_a_b1_route@124
-    err
-
-main_a_b1_route@124:
-    callsub a_b1
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_a_b4_route@123:
-    callsub a_b4
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_a_b8_route@122:
-    callsub a_b8
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_a_b16_route@121:
-    callsub a_b16
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_a_b25_route@120:
-    callsub a_b25
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_a_b32_route@119:
-    callsub a_b32
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_r_b1_route@118:
-    callsub r_b1
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_r_b4_route@117:
-    callsub r_b4
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_r_b8_route@116:
-    callsub r_b8
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_r_b16_route@115:
-    callsub r_b16
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_r_b25_route@114:
-    callsub r_b25
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_r_b32_route@113:
-    callsub r_b32
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_downcast_route@112:
-    txna ApplicationArgs 1
+    callsub __evm_decw
     dup
-    len
-    pushint 25
+    extract 25 7
+    intc_2 // 7
+    bzero
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 25>
-    callsub downcast
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_upcast_route@111:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 25
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 25>
+    assert // invalid EVM ABI fixed-bytes padding
+    extract 0 25
     callsub upcast
     bytec_0 // 0x151f7c75
     swap
@@ -746,13 +393,17 @@ main_upcast_route@111:
     intc_0 // 1
     return
 
-main_conv_route@110:
-    txna ApplicationArgs 1
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_1 // 0
+    callsub __evm_decw
     dup
-    len
-    pushint 25
+    extract 25 7
+    intc_2 // 7
+    bzero
     ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 25>
+    assert // invalid EVM ABI fixed-bytes padding
+    extract 0 25
     callsub conv
     bytec_0 // 0x151f7c75
     swap
@@ -804,7 +455,7 @@ upcast_ternary_merge@3:
     assert // not payable
     frame_dig -1
     b~
-    intc_3 // 7
+    intc_2 // 7
     bzero
     concat
     retsub
@@ -1075,3 +726,39 @@ a_b1_ternary_merge@3:
 a_b1_ternary_false@2:
     intc_1 // 0
     b a_b1_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/unary_fixedbytes.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/unary_fixedbytes.sol.C.__evm_decw(__off: uint64) -> bytes:
+__evm_decw:
+    proto 1 1
+    frame_dig -1
+    pushint 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    frame_dig -1
+    pushint 32
+    extract3
+    retsub

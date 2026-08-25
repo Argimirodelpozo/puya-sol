@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 2
+    intcblock 32 0 1 2
     bytecblock 0x151f7c75 0x000000000000000000000000 0x0000000000000000 "externalDefaultArray" "internalDefaultArray" 0x328c6da9 "externalViewArray" "internalViewArray" 0x6c72e23e
     pushint 4096
     bzero
@@ -47,290 +47,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@12
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@12
+    pushbytess 0xe3db2257 0x7fb3a0c3 0x32de51f2 0xea84b69f 0x77df1859 0x78f13937
     txna ApplicationArgs 0
-    pushbytes 0xe3db2257
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub externalDefault
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@7:
-    intc_0 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x7fb3a0c3
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub externalView
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@14:
-    intc_0 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0x32de51f2
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub externalPure
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@21:
-    intc_0 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0xea84b69f
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub testViewToDefault
-    dig 2
-    uncover 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    cover 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@28:
-    intc_0 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    bnz main_after_if_else@37
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@37
-    txna ApplicationArgs 0
-    pushbytes 0x77df1859
-    ==
-    bz main_after_if_else@37
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub testPureToDefault
-    dig 2
-    uncover 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    cover 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@35:
-    intc_0 // 0
-    b main_ternary_merge@36
-
-main_after_if_else@37:
-    txn OnCompletion
-    bnz main_after_if_else@44
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@44
-    txna ApplicationArgs 0
-    pushbytes 0x78f13937
-    ==
-    bz main_after_if_else@44
-    txn GroupIndex
-    bz main_ternary_false@42
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@43:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub testPureToView
-    dig 2
-    uncover 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    cover 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@42:
-    intc_0 // 0
-    b main_ternary_merge@43
-
-main_after_if_else@44:
+main_after_if_else@12:
     txn OnCompletion
     !
     assert
@@ -341,10 +67,10 @@ main_after_if_else@44:
     bytec 5 // method "externalPure()uint256"
     pushbytess 0xff45d0bd 0xb88b20ee 0xb20ff76f // method "testViewToDefault()(uint256,uint256)", method "testPureToDefault()(uint256,uint256)", method "testPureToView()(uint256,uint256)"
     txna ApplicationArgs 0
-    match main_externalDefault_route@47 main_externalView_route@48 main_externalPure_route@49 main_testViewToDefault_route@50 main_testPureToDefault_route@51 main_testPureToView_route@52
+    match main_externalDefault_route@15 main_externalView_route@16 main_externalPure_route@17 main_testViewToDefault_route@18 main_testPureToDefault_route@19 main_testPureToView_route@20
     err
 
-main_testPureToView_route@52:
+main_testPureToView_route@20:
     callsub testPureToView
     concat
     bytec_0 // 0x151f7c75
@@ -354,7 +80,7 @@ main_testPureToView_route@52:
     intc_2 // 1
     return
 
-main_testPureToDefault_route@51:
+main_testPureToDefault_route@19:
     callsub testPureToDefault
     concat
     bytec_0 // 0x151f7c75
@@ -364,7 +90,7 @@ main_testPureToDefault_route@51:
     intc_2 // 1
     return
 
-main_testViewToDefault_route@50:
+main_testViewToDefault_route@18:
     callsub testViewToDefault
     concat
     bytec_0 // 0x151f7c75
@@ -374,7 +100,7 @@ main_testViewToDefault_route@50:
     intc_2 // 1
     return
 
-main_externalPure_route@49:
+main_externalPure_route@17:
     callsub externalPure
     bytec_0 // 0x151f7c75
     swap
@@ -383,7 +109,7 @@ main_externalPure_route@49:
     intc_2 // 1
     return
 
-main_externalView_route@48:
+main_externalView_route@16:
     callsub externalView
     bytec_0 // 0x151f7c75
     swap
@@ -392,8 +118,155 @@ main_externalView_route@48:
     intc_2 // 1
     return
 
-main_externalDefault_route@47:
+main_externalDefault_route@15:
     callsub externalDefault
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub testPureToView
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub testPureToDefault
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub testViewToDefault
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub externalPure
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub externalView
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub externalDefault
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -418,7 +291,7 @@ externalDefault_ternary_merge@3:
     retsub
 
 externalDefault_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b externalDefault_ternary_merge@3
 
 
@@ -438,7 +311,7 @@ externalView_ternary_merge@3:
     retsub
 
 externalView_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b externalView_ternary_merge@3
 
 
@@ -458,7 +331,7 @@ externalPure_ternary_merge@3:
     retsub
 
 externalPure_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b externalPure_ternary_merge@3
 
 
@@ -486,7 +359,7 @@ testViewToDefault_ternary_merge@3:
     bytec 4 // "internalDefaultArray"
     swap
     app_global_put
-    intc_0 // 0
+    intc_1 // 0
     bytec_3 // "externalDefaultArray"
     app_global_get_ex
     bytec_1 // 0x000000000000000000000000
@@ -494,7 +367,7 @@ testViewToDefault_ternary_merge@3:
     select
     extract 0 12 // on error: index access is out of bounds
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint64
     dup
     global CurrentApplicationID
@@ -503,33 +376,33 @@ testViewToDefault_ternary_merge@3:
     pop
     extract 8 4
     callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
-    intc_0 // 0
+    intc_1 // 0
     callsub __funcptr_dispatch_ret_t_uint256
 
 testViewToDefault_after_if_else@7:
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     swap
     dig 1
     b|
-    intc_0 // 0
+    intc_1 // 0
     bytec 4 // "internalDefaultArray"
     app_global_get_ex
     bytec_2 // 0x0000000000000000
     cover 2
     select
-    intc_0 // 0
+    intc_1 // 0
     extract_uint64
-    intc_0 // 0
+    intc_1 // 0
     callsub __funcptr_dispatch_ret_t_uint256
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
     uncover 2
@@ -542,9 +415,9 @@ testViewToDefault_else_body@5:
     extract 8 4
     pushint 6
     itxn_field TypeEnum
-    intc_0 // 0
+    intc_1 // 0
     itxn_field OnCompletion
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationArgs
     itxn_field ApplicationID
@@ -554,7 +427,7 @@ testViewToDefault_else_body@5:
     b testViewToDefault_after_if_else@7
 
 testViewToDefault_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b testViewToDefault_ternary_merge@3
 
 
@@ -582,7 +455,7 @@ testPureToDefault_ternary_merge@3:
     bytec 4 // "internalDefaultArray"
     swap
     app_global_put
-    intc_0 // 0
+    intc_1 // 0
     bytec_3 // "externalDefaultArray"
     app_global_get_ex
     bytec_1 // 0x000000000000000000000000
@@ -590,7 +463,7 @@ testPureToDefault_ternary_merge@3:
     select
     extract 0 12 // on error: index access is out of bounds
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint64
     dup
     global CurrentApplicationID
@@ -599,33 +472,33 @@ testPureToDefault_ternary_merge@3:
     pop
     extract 8 4
     callsub __sel_to_id___funcptr_dispatch_ret_t_uint256
-    intc_0 // 0
+    intc_1 // 0
     callsub __funcptr_dispatch_ret_t_uint256
 
 testPureToDefault_after_if_else@7:
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     swap
     dig 1
     b|
-    intc_0 // 0
+    intc_1 // 0
     bytec 4 // "internalDefaultArray"
     app_global_get_ex
     bytec_2 // 0x0000000000000000
     cover 2
     select
-    intc_0 // 0
+    intc_1 // 0
     extract_uint64
-    intc_0 // 0
+    intc_1 // 0
     callsub __funcptr_dispatch_ret_t_uint256
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
     uncover 2
@@ -638,9 +511,9 @@ testPureToDefault_else_body@5:
     extract 8 4
     pushint 6
     itxn_field TypeEnum
-    intc_0 // 0
+    intc_1 // 0
     itxn_field OnCompletion
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationArgs
     itxn_field ApplicationID
@@ -650,7 +523,7 @@ testPureToDefault_else_body@5:
     b testPureToDefault_after_if_else@7
 
 testPureToDefault_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b testPureToDefault_ternary_merge@3
 
 
@@ -678,7 +551,7 @@ testPureToView_ternary_merge@3:
     bytec 7 // "internalViewArray"
     swap
     app_global_put
-    intc_0 // 0
+    intc_1 // 0
     bytec 6 // "externalViewArray"
     app_global_get_ex
     bytec_1 // 0x000000000000000000000000
@@ -686,7 +559,7 @@ testPureToView_ternary_merge@3:
     select
     extract 0 12 // on error: index access is out of bounds
     dup
-    intc_0 // 0
+    intc_1 // 0
     extract_uint64
     dup
     global CurrentApplicationID
@@ -701,27 +574,27 @@ testPureToView_ternary_merge@3:
 testPureToView_after_if_else@7:
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_1 // 32
+    intc_0 // 32
     bzero
     swap
     dig 1
     b|
-    intc_0 // 0
+    intc_1 // 0
     bytec 7 // "internalViewArray"
     app_global_get_ex
     bytec_2 // 0x0000000000000000
     cover 2
     select
-    intc_0 // 0
+    intc_1 // 0
     extract_uint64
     intc_2 // 1
     callsub __funcptr_dispatch_ret_t_uint256
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
     uncover 2
@@ -734,9 +607,9 @@ testPureToView_else_body@5:
     extract 8 4
     pushint 6
     itxn_field TypeEnum
-    intc_0 // 0
+    intc_1 // 0
     itxn_field OnCompletion
-    intc_0 // 0
+    intc_1 // 0
     itxn_field Fee
     itxn_field ApplicationArgs
     itxn_field ApplicationID
@@ -746,8 +619,27 @@ testPureToView_else_body@5:
     b testPureToView_after_if_else@7
 
 testPureToView_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b testPureToView_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/function_type_array_to_storage.sol.C.__funcptr_dispatch_ret_t_uint256(__funcptr_id: uint64, __static: uint64) -> bytes:

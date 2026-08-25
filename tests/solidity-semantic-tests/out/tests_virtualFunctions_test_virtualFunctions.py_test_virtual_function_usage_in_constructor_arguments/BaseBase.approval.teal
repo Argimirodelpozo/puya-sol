@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_function_usage_in_constructor_arguments.sol.BaseBase.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 2
+    intcblock 1 32 0
     bytecblock 0x151f7c75 0xd3661b80
     pushint 4096
     bzero
@@ -32,89 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@8
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@8
+    pushbytess 0x275a4dcc 0xe2179b8e
     txna ApplicationArgs 0
-    pushbytes 0x275a4dcc
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub overridden
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xe2179b8e
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub g
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
+main_after_if_else@8:
     txn OnCompletion
     !
     assert
@@ -123,10 +50,10 @@ main_after_if_else@16:
     bytec_1 // method "overridden()uint256"
     pushbytes 0x4b2c0376 // method "g()uint256"
     txna ApplicationArgs 0
-    match main_overridden_route@19 main_g_route@20
+    match main_overridden_route@11 main_g_route@12
     err
 
-main_g_route@20:
+main_g_route@12:
     callsub g
     bytec_0 // 0x151f7c75
     swap
@@ -135,8 +62,46 @@ main_g_route@20:
     intc_0 // 1
     return
 
-main_overridden_route@19:
+main_overridden_route@11:
     callsub overridden
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub g
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub overridden
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -199,3 +164,22 @@ g_ternary_merge@3:
 g_ternary_false@2:
     intc_2 // 0
     b g_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_function_usage_in_constructor_arguments.sol.BaseBase.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

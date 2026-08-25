@@ -29,258 +29,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@12
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@12
+    pushbytess 0x51997696 0xc15985d6 0x6b6ac0e5 0x9f900241 0x5b3e743a 0x87e233d6
     txna ApplicationArgs 0
-    pushbytes 0x51997696
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub pow1077
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xc15985d6
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub half256p1
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0x6b6ac0e5
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub bigShift
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@21:
-    intc_2 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0x9f900241
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub bigMul
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@28:
-    intc_2 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    bnz main_after_if_else@37
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@37
-    txna ApplicationArgs 0
-    pushbytes 0x5b3e743a
-    ==
-    bz main_after_if_else@37
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub maxU64sqWrap
-    itob
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@35:
-    intc_2 // 0
-    b main_ternary_merge@36
-
-main_after_if_else@37:
-    txn OnCompletion
-    bnz main_after_if_else@44
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@44
-    txna ApplicationArgs 0
-    pushbytes 0x87e233d6
-    ==
-    bz main_after_if_else@44
-    txn GroupIndex
-    bz main_ternary_false@42
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@43:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub maxU64sqChecked
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@42:
-    intc_2 // 0
-    b main_ternary_merge@43
-
-main_after_if_else@44:
+main_after_if_else@12:
     txn OnCompletion
     !
     assert
@@ -288,10 +46,10 @@ main_after_if_else@44:
     assert
     pushbytess 0x80cdd786 0xd75ae69a 0x8e2a0636 0x59f787bf 0x4ea41782 0x977ba647 // method "pow1077()uint256", method "half256p1()uint256", method "bigShift()uint256", method "bigMul()uint256", method "maxU64sqWrap()uint64", method "maxU64sqChecked()uint256"
     txna ApplicationArgs 0
-    match main_pow1077_route@47 main_half256p1_route@48 main_bigShift_route@49 main_bigMul_route@50 main_maxU64sqWrap_route@51 main_maxU64sqChecked_route@52
+    match main_pow1077_route@15 main_half256p1_route@16 main_bigShift_route@17 main_bigMul_route@18 main_maxU64sqWrap_route@19 main_maxU64sqChecked_route@20
     err
 
-main_maxU64sqChecked_route@52:
+main_maxU64sqChecked_route@20:
     callsub maxU64sqChecked
     bytec_0 // 0x151f7c75
     swap
@@ -300,7 +58,7 @@ main_maxU64sqChecked_route@52:
     intc_0 // 1
     return
 
-main_maxU64sqWrap_route@51:
+main_maxU64sqWrap_route@19:
     callsub maxU64sqWrap
     itob
     bytec_0 // 0x151f7c75
@@ -310,7 +68,7 @@ main_maxU64sqWrap_route@51:
     intc_0 // 1
     return
 
-main_bigMul_route@50:
+main_bigMul_route@18:
     callsub bigMul
     bytec_0 // 0x151f7c75
     swap
@@ -319,7 +77,7 @@ main_bigMul_route@50:
     intc_0 // 1
     return
 
-main_bigShift_route@49:
+main_bigShift_route@17:
     callsub bigShift
     bytec_0 // 0x151f7c75
     swap
@@ -328,7 +86,7 @@ main_bigShift_route@49:
     intc_0 // 1
     return
 
-main_half256p1_route@48:
+main_half256p1_route@16:
     callsub half256p1
     bytec_0 // 0x151f7c75
     swap
@@ -337,8 +95,123 @@ main_half256p1_route@48:
     intc_0 // 1
     return
 
-main_pow1077_route@47:
+main_pow1077_route@15:
     callsub pow1077
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub maxU64sqChecked
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub maxU64sqWrap
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub bigMul
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub bigShift
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub half256p1
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub pow1077
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -521,3 +394,22 @@ maxU64sqChecked_ternary_merge@3:
 maxU64sqChecked_ternary_false@2:
     intc_2 // 0
     b maxU64sqChecked_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/const_fold_arbitrary_precision.sol.ConstFoldArbitraryPrecision.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

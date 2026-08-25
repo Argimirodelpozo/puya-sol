@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/contracts/shortcircuit_side_effect.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 32 1 0
     bytecblock 0x151f7c75 "cnt" 0x00 0x 0x0000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
@@ -32,48 +32,28 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@10
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@10
+    pushbytess 0x6ccc155a 0x2264c1ff 0x705188c0 0xd6d838ad
     txna ApplicationArgs 0
-    pushbytes 0x6ccc155a
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8
 
-main_ternary_merge@8:
+main_after_if_else@10:
+    txn OnCompletion
     !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub andSC
-    swap
-    itob
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    cover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x281a6ea8 0xc8b49bc9 0xf615effb 0x35011ef9 // method "andSC()(bool,uint256)", method "orSC()(bool,uint256)", method "divGuard(uint256)bool", method "cnt()uint256"
+    txna ApplicationArgs 0
+    match main_andSC_route@13 main_orSC_route@14 main_divGuard_route@15 main_cnt_route@16
+    err
+
+main_cnt_route@16:
+    callsub cnt
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -81,53 +61,32 @@ main_ternary_merge@8:
     intc_1 // 1
     return
 
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x2264c1ff
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
+main_divGuard_route@15:
+    txna ApplicationArgs 1
+    dup
+    len
     intc_0 // 32
-    bzero
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub divGuard
+    bytec_2 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_orSC_route@14:
     callsub orSC
+    bytec_2 // 0x00
+    intc_2 // 0
+    uncover 3
+    setbit
     swap
-    itob
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    cover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -136,38 +95,49 @@ main_ternary_merge@15:
     intc_1 // 1
     return
 
-main_ternary_false@14:
+main_andSC_route@13:
+    callsub andSC
+    bytec_2 // 0x00
     intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0x705188c0
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
+    uncover 3
+    setbit
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     intc_1 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@22:
-    !
-    assert // not payable
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub cnt
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
     txna ApplicationArgs 1
     len
     intc_0 // 32
     >=
     assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
     txna ApplicationArgs 1
     extract 0 32
     dup
@@ -193,34 +163,15 @@ main_ternary_merge@22:
     intc_1 // 1
     return
 
-main_ternary_false@21:
-    intc_2 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0xd6d838ad
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
+main_switch_case_1@6:
+    callsub __evm_npy
     intc_0 // 32
     bzero
-    callsub cnt
+    callsub orSC
+    swap
+    itob
+    dig 2
+    swap
     concat
     dup
     len
@@ -228,63 +179,14 @@ main_ternary_merge@29:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
-    swap
+    cover 2
     concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@28:
-    intc_2 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x281a6ea8 0xc8b49bc9 0xf615effb 0x35011ef9 // method "andSC()(bool,uint256)", method "orSC()(bool,uint256)", method "divGuard(uint256)bool", method "cnt()uint256"
-    txna ApplicationArgs 0
-    match main_andSC_route@33 main_orSC_route@34 main_divGuard_route@35 main_cnt_route@36
-    err
-
-main_cnt_route@36:
-    callsub cnt
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_divGuard_route@35:
-    txna ApplicationArgs 1
     dup
     len
     intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub divGuard
-    bytec_2 // 0x00
-    intc_2 // 0
-    uncover 2
-    setbit
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_orSC_route@34:
-    callsub orSC
-    bytec_2 // 0x00
-    intc_2 // 0
-    uncover 3
-    setbit
-    swap
+    -
+    intc_0 // 32
+    extract3
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -293,13 +195,30 @@ main_orSC_route@34:
     intc_1 // 1
     return
 
-main_andSC_route@33:
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
     callsub andSC
-    bytec_2 // 0x00
-    intc_2 // 0
-    uncover 3
-    setbit
     swap
+    itob
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -430,3 +349,22 @@ cnt_ternary_merge@3:
 cnt_ternary_false@2:
     intc_2 // 0
     b cnt_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/contracts/shortcircuit_side_effect.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

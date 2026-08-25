@@ -29,15 +29,40 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@6
+    bnz main_after_if_else@7
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@6
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0xb74af5a9
-    ==
-    bz main_after_if_else@6
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
+    pushbytes 0x17619333 // method "probe()(uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_probe_route@9
+    err
+
+main_probe_route@9:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub probe
+    cover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_0@5:
     intc_1 // 32
     bzero
     callsub probe
@@ -68,30 +93,6 @@ main_after_if_else@2:
     -
     intc_1 // 32
     extract3
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_after_if_else@6:
-    pushbytes 0x17619333 // method "probe()(uint256,uint256,uint256)"
-    txna ApplicationArgs 0
-    match main_probe_route@8
-    err
-
-main_probe_route@8:
-    txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
-    callsub probe
-    cover 2
-    concat
-    swap
     concat
     bytec_0 // 0x151f7c75
     swap

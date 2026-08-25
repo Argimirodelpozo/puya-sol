@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_elem_ref.sol.StructElemRef.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 32
+    intcblock 1 0 32 2
     bytecblock "arr" 0x151f7c75 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "single" 0x0ffa993b5c47bfc6b7c2b2b8ee09d01ac715a33caa91878b0daaafd68753f964 "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000005 0x0000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
@@ -34,129 +34,14 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@9
     txn NumAppArgs
-    intc_2 // 2
+    intc_3 // 2
     ==
     bz main_after_if_else@9
+    pushbytess 0xe91f5144 0xe88a4ed5 0xa9e2fd37
     txna ApplicationArgs 0
-    pushbytes 0xe91f5144
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_3 // 32
-    bzero
-    callsub arrayElem
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
 
 main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xe88a4ed5
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_3 // 32
-    bzero
-    callsub structVar
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xa9e2fd37
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_3 // 32
-    bzero
-    callsub mapVal
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
     txn OnCompletion
     !
     assert
@@ -164,10 +49,10 @@ main_after_if_else@23:
     assert
     pushbytess 0xbacc49e3 0x45e8c4c9 0xe946430c 0xe8c78a66 // method "__postInit()void", method "arrayElem()uint256", method "structVar()uint256", method "mapVal()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@26 main_arrayElem_route@27 main_structVar_route@28 main_mapVal_route@29
+    match main___postInit_route@12 main_arrayElem_route@13 main_structVar_route@14 main_mapVal_route@15
     err
 
-main_mapVal_route@29:
+main_mapVal_route@15:
     callsub mapVal
     bytec_1 // 0x151f7c75
     swap
@@ -176,7 +61,7 @@ main_mapVal_route@29:
     intc_0 // 1
     return
 
-main_structVar_route@28:
+main_structVar_route@14:
     callsub structVar
     bytec_1 // 0x151f7c75
     swap
@@ -185,7 +70,7 @@ main_structVar_route@28:
     intc_0 // 1
     return
 
-main_arrayElem_route@27:
+main_arrayElem_route@13:
     callsub arrayElem
     bytec_1 // 0x151f7c75
     swap
@@ -194,7 +79,7 @@ main_arrayElem_route@27:
     intc_0 // 1
     return
 
-main___postInit_route@26:
+main___postInit_route@12:
     bytec 5 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -206,13 +91,70 @@ main___postInit_route@26:
     intc_1 // 0
     app_global_put
     bytec_0 // "arr"
-    intc_2 // 2
+    intc_3 // 2
     box_create
     pop
     pushbytes "m"
-    intc_2 // 2
+    intc_3 // 2
     box_create
     pop
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub mapVal
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub structVar
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub arrayElem
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
     intc_0 // 1
     return
 
@@ -237,7 +179,7 @@ arrayElem_ternary_merge@3:
     box_put
     bytec_0 // "arr"
     intc_1 // 0
-    intc_2 // 2
+    intc_3 // 2
     box_extract
     btoi
     bytec_0 // "arr"
@@ -254,7 +196,7 @@ arrayElem_ternary_merge@3:
     box_replace
     pushint 64
     *
-    intc_2 // 2
+    intc_3 // 2
     +
     bytec_0 // "arr"
     swap
@@ -262,17 +204,17 @@ arrayElem_ternary_merge@3:
     bytec_2 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     box_splice
     bytec_0 // "arr"
-    intc_2 // 2
+    intc_3 // 2
     pushint 64
     box_extract
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000005
     replace2 0
     bytec_0 // "arr"
-    intc_2 // 2
+    intc_3 // 2
     uncover 2
     box_replace
     bytec_0 // "arr"
-    intc_2 // 2
+    intc_3 // 2
     pushint 64
     box_extract // on error: index out of bounds
     extract 0 32
@@ -373,3 +315,22 @@ mapVal_ternary_merge@3:
 mapVal_ternary_false@2:
     intc_1 // 0
     b mapVal_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_elem_ref.sol.StructElemRef.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

@@ -29,23 +29,89 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@7
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@9
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0xa68ff3ed
-    ==
-    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x87be92fe 0xc95a9d21 // method "tested(uint64)uint256", method "test()uint256"
+    txna ApplicationArgs 0
+    match main_tested_route@10 main_test_route@11
+    err
+
+main_test_route@11:
     txn GroupIndex
-    bz main_ternary_false@7
+    bz main_ternary_false@22
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@8:
+main_ternary_merge@23:
+    !
+    assert // not payable
+    load 0
+    store 0
+    load 0
+    store 0
+    pushint 5
+    callsub tested
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@22:
+    intc_2 // 0
+    b main_ternary_merge@23
+
+main_tested_route@10:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub tested
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
     !
     assert // not payable
     txna ApplicationArgs 1
@@ -85,74 +151,9 @@ main_ternary_merge@8:
     intc_0 // 1
     return
 
-main_ternary_false@7:
+main_ternary_false@18:
     intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x87be92fe 0xc95a9d21 // method "tested(uint64)uint256", method "test()uint256"
-    txna ApplicationArgs 0
-    match main_tested_route@12 main_test_route@13
-    err
-
-main_test_route@13:
-    txn GroupIndex
-    bz main_ternary_false@19
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@20:
-    !
-    assert // not payable
-    load 0
-    store 0
-    load 0
-    store 0
-    pushint 5
-    callsub tested
-    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@19:
-    intc_2 // 0
-    b main_ternary_merge@20
-
-main_tested_route@12:
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
-    callsub tested
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    b main_ternary_merge@19
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/invalid_enum_as_external_arg.sol.C.tested(x: uint64) -> bytes:

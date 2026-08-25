@@ -32,67 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@8
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@8
+    pushbytess 0xe1c7392a 0x6901f668
     txna ApplicationArgs 0
-    pushbytes 0xe1c7392a
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    callsub init
-    bytec_3 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x6901f668
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    callsub validate
-    bytec_3 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
+main_after_if_else@8:
     txn OnCompletion
     !
     assert
@@ -100,20 +49,20 @@ main_after_if_else@16:
     assert
     pushbytess 0xbacc49e3 0x83f14748 0xc121d597 // method "__postInit()void", method "init()void", method "validate()void"
     txna ApplicationArgs 0
-    match main___postInit_route@19 main_init_route@20 main_validate_route@21
+    match main___postInit_route@11 main_init_route@12 main_validate_route@13
     err
 
-main_validate_route@21:
+main_validate_route@13:
     callsub validate
     intc_0 // 1
     return
 
-main_init_route@20:
+main_init_route@12:
     callsub init
     intc_0 // 1
     return
 
-main___postInit_route@19:
+main___postInit_route@11:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -128,6 +77,22 @@ main___postInit_route@19:
     intc_3 // 2
     box_create
     pop
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub validate
+    bytec_3 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub init
+    bytec_3 // 0x151f7c75
+    log
     intc_0 // 1
     return
 
@@ -259,3 +224,22 @@ validate_after_while@6:
 validate_ternary_false@2:
     intc_1 // 0
     b validate_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/mapping_storage_end.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

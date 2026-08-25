@@ -29,23 +29,50 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@7
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@9
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0x99dbd65d
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
+    pushbytes 0xe9e47f35 // method "bytesToBytes(byte[4])byte[2]"
+    txna ApplicationArgs 0
+    match main_bytesToBytes_route@9
+    err
+
+main_bytesToBytes_route@9:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 4
     ==
-    bz main_after_if_else@9
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
+    callsub bytesToBytes
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@7
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@8:
+main_ternary_merge@15:
     !
     assert // not payable
     txna ApplicationArgs 1
@@ -73,35 +100,9 @@ main_ternary_merge@8:
     intc_0 // 1
     return
 
-main_ternary_false@7:
+main_ternary_false@14:
     intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    pushbytes 0xe9e47f35 // method "bytesToBytes(byte[4])byte[2]"
-    txna ApplicationArgs 0
-    match main_bytesToBytes_route@11
-    err
-
-main_bytesToBytes_route@11:
-    txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
-    txna ApplicationArgs 1
-    dup
-    len
-    pushint 4
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
-    callsub bytesToBytes
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    b main_ternary_merge@15
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/contracts/convert_fixed_bytes_to_fixed_bytes_smaller_size.sol.Test.bytesToBytes(input: bytes) -> bytes:

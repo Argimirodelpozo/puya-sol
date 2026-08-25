@@ -1,9 +1,9 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_9qiibmjh/s3.sol.C.approval_program() -> uint64:
+// /tmp/multisource_474dyiz9/s3.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
+    intcblock 1 0
     pushint 4096
     bzero
     dup
@@ -30,84 +30,14 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@9
     txn NumAppArgs
-    intc_2 // 2
+    pushint 2
     ==
     bz main_after_if_else@9
+    pushbytess 0x0c55699c 0xa56dfe4a 0xc5d7802e
     txna ApplicationArgs 0
-    pushbytes 0x0c55699c
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@8:
-    !
-    assert // not payable
-    b x
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
 
 main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xa56dfe4a
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    b y
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xc5d7802e
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    b z
-
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
     txn OnCompletion
     !
     assert
@@ -118,8 +48,20 @@ main_after_if_else@23:
     match x y z
     err
 
+main_switch_case_2@7:
+    callsub __evm_npy
+    b z
 
-// /tmp/multisource_9qiibmjh/s3.sol.C.x() -> void:
+main_switch_case_1@6:
+    callsub __evm_npy
+    b y
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    b x
+
+
+// /tmp/multisource_474dyiz9/s3.sol.C.x() -> void:
 x:
     txn GroupIndex
     bz x_ternary_false@2
@@ -140,7 +82,7 @@ x_ternary_false@2:
     b x_ternary_merge@3
 
 
-// /tmp/multisource_9qiibmjh/s3.sol.C.y() -> void:
+// /tmp/multisource_474dyiz9/s3.sol.C.y() -> void:
 y:
     txn GroupIndex
     bz y_ternary_false@2
@@ -161,7 +103,7 @@ y_ternary_false@2:
     b y_ternary_merge@3
 
 
-// /tmp/multisource_9qiibmjh/s3.sol.C.z() -> void:
+// /tmp/multisource_474dyiz9/s3.sol.C.z() -> void:
 z:
     txn GroupIndex
     bz z_ternary_false@2
@@ -180,3 +122,22 @@ z_ternary_merge@3:
 z_ternary_false@2:
     intc_1 // 0
     b z_ternary_merge@3
+
+
+// /tmp/multisource_474dyiz9/s3.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/string_format.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 2
+    intcblock 1 32 0
     bytecblock 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     pushint 4096
     bzero
@@ -29,147 +29,36 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@10
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@10
+    pushbytess 0xc27fc305 0x9942ec6f 0xe2179b8e 0xb8c9d365
     txna ApplicationArgs 0
-    pushbytes 0xc27fc305
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8
 
-main_ternary_merge@8:
+main_after_if_else@10:
+    txn OnCompletion
     !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub f1
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    swap
-    intc_1 // 32
-    %
-    intc_1 // 32
-    swap
-    -
-    intc_1 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xdb29d683 0xe8832835 0x3fc82556 0xd63ef4f0 // method "f1()string", method "f2()string", method "g()byte[32]", method "h()byte[4]"
+    txna ApplicationArgs 0
+    match main_f1_route@13 main_f2_route@14 main_g_route@15 main_h_route@16
+    err
+
+main_h_route@16:
+    callsub h
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x9942ec6f
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub f2
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    swap
-    intc_1 // 32
-    %
-    intc_1 // 32
-    swap
-    -
-    intc_1 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xe2179b8e
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
+main_g_route@15:
     callsub g
     bytec_0 // 0x151f7c75
     swap
@@ -178,31 +67,38 @@ main_ternary_merge@22:
     intc_0 // 1
     return
 
-main_ternary_false@21:
-    intc_2 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0xb8c9d365
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
+main_f2_route@14:
+    callsub f2
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     intc_0 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@29:
-    !
-    assert // not payable
+main_f1_route@13:
+    callsub f1
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
     callsub h
     pushint 28
     bzero
@@ -214,31 +110,8 @@ main_ternary_merge@29:
     intc_0 // 1
     return
 
-main_ternary_false@28:
-    intc_2 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xdb29d683 0xe8832835 0x3fc82556 0xd63ef4f0 // method "f1()string", method "f2()string", method "g()byte[32]", method "h()byte[4]"
-    txna ApplicationArgs 0
-    match main_f1_route@33 main_f2_route@34 main_g_route@35 main_h_route@36
-    err
-
-main_h_route@36:
-    callsub h
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_g_route@35:
+main_switch_case_2@7:
+    callsub __evm_npy
     callsub g
     bytec_0 // 0x151f7c75
     swap
@@ -247,30 +120,76 @@ main_g_route@35:
     intc_0 // 1
     return
 
-main_f2_route@34:
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
     callsub f2
     dup
     len
+    dup
     itob
-    extract 6 2
+    uncover 3
     swap
     concat
-    bytec_0 // 0x151f7c75
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_f1_route@33:
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
     callsub f1
     dup
     len
+    dup
     itob
-    extract 6 2
+    uncover 3
     swap
     concat
-    bytec_0 // 0x151f7c75
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
     log
@@ -356,3 +275,22 @@ h_ternary_merge@3:
 h_ternary_false@2:
     intc_2 // 0
     b h_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/string_format.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

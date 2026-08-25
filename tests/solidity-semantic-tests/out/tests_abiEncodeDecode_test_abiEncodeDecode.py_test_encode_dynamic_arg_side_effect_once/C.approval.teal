@@ -37,32 +37,32 @@ main_after_if_else@2:
     intc_3 // 2
     ==
     bz main_after_if_else@9
+    pushbytess 0xb910e426 0x890cbb73 0xd6d838ad
     txna ApplicationArgs 0
-    pushbytes 0xb910e426
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
 
-main_ternary_merge@8:
+main_after_if_else@9:
+    txn OnCompletion
     !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub encStrOnce
-    cover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x8203e835 0x711cd253 0x35011ef9 // method "encStrOnce()(uint256,byte[32])", method "encArrOnce()(uint256,uint256)", method "cnt()uint256"
+    txna ApplicationArgs 0
+    match main_encStrOnce_route@12 main_encArrOnce_route@13 main_cnt_route@14
+    err
+
+main_cnt_route@14:
+    callsub cnt
+    bytec_1 // 0x151f7c75
     swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_encArrOnce_route@13:
+    callsub encArrOnce
     concat
     bytec_1 // 0x151f7c75
     swap
@@ -71,31 +71,37 @@ main_ternary_merge@8:
     intc_1 // 1
     return
 
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x890cbb73
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
+main_encStrOnce_route@12:
+    callsub encStrOnce
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
     intc_1 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@15:
-    !
-    assert // not payable
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub cnt
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
     intc_0 // 32
     bzero
     callsub encArrOnce
@@ -124,34 +130,12 @@ main_ternary_merge@15:
     intc_1 // 1
     return
 
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xd6d838ad
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
+main_switch_case_0@5:
+    callsub __evm_npy
     intc_0 // 32
     bzero
-    callsub cnt
+    callsub encStrOnce
+    cover 2
     concat
     dup
     len
@@ -159,49 +143,7 @@ main_ternary_merge@22:
     -
     intc_0 // 32
     extract3
-    bytec_1 // 0x151f7c75
     swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@21:
-    intc_2 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x8203e835 0x711cd253 0x35011ef9 // method "encStrOnce()(uint256,byte[32])", method "encArrOnce()(uint256,uint256)", method "cnt()uint256"
-    txna ApplicationArgs 0
-    match main_encStrOnce_route@26 main_encArrOnce_route@27 main_cnt_route@28
-    err
-
-main_cnt_route@28:
-    callsub cnt
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_encArrOnce_route@27:
-    callsub encArrOnce
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_encStrOnce_route@26:
-    callsub encStrOnce
     concat
     bytec_1 // 0x151f7c75
     swap
@@ -452,3 +394,22 @@ cnt_ternary_merge@3:
 cnt_ternary_false@2:
     intc_2 // 0
     b cnt_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/encode_dyn_side_effect.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

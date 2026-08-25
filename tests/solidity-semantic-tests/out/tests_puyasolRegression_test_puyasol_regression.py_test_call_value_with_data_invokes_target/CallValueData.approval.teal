@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/call_value_with_data.sol.CallValueData.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 6
+    intcblock 0 32 1 6
     bytecblock 0x151f7c75 TMPL_APPROVAL_Vault TMPL_CLEAR_Vault
     pushint 4096
     bzero
@@ -29,16 +29,45 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@6
+    bnz main_after_if_else@7
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@6
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0xc0406226
-    ==
-    bz main_after_if_else@6
-    intc_0 // 32
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
+    pushbytes 0xb5707a59 // method "run()(bool,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_run_route@9
+    err
+
+main_run_route@9:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub run
+    pushbytes 0x00
+    intc_0 // 0
+    uncover 4
+    setbit
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_0@5:
+    intc_1 // 32
     bzero
     callsub run
     uncover 2
@@ -48,56 +77,28 @@ main_after_if_else@2:
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     dig 3
     uncover 3
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     concat
     cover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_after_if_else@6:
-    pushbytes 0xb5707a59 // method "run()(bool,uint256,uint256)"
-    txna ApplicationArgs 0
-    match main_run_route@8
-    err
-
-main_run_route@8:
-    txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
-    callsub run
-    pushbytes 0x00
-    intc_1 // 0
-    uncover 4
-    setbit
-    uncover 2
-    concat
-    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -118,7 +119,7 @@ run:
     itxn_field GlobalNumUint
     pushint 16
     itxn_field GlobalNumByteSlice
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 3
     itxn_field ExtraProgramPages
@@ -133,7 +134,7 @@ run:
     intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 1000000
     itxn_field Amount
@@ -148,7 +149,7 @@ run:
     itxn_field TypeEnum
     dup
     itxn_field Receiver
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     pushint 150000
     itxn_field Amount
@@ -157,9 +158,9 @@ run:
     extract_uint64
     intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
@@ -169,9 +170,9 @@ run:
     itxn_begin
     intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     dup
     itxn_field ApplicationID
@@ -183,9 +184,9 @@ run:
     itxn_begin
     intc_3 // 6
     itxn_field TypeEnum
-    intc_1 // 0
+    intc_0 // 0
     itxn_field OnCompletion
-    intc_1 // 0
+    intc_0 // 0
     itxn_field Fee
     swap
     itxn_field ApplicationID
@@ -196,17 +197,17 @@ run:
     extract 4 0
     dig 1
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     uncover 2
     dig 1
     b|
     dig 2
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     cover 2

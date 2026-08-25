@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/arrays.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 "__ctor_pending" "flags" 0x000400090003616e790003616e79 0x0006000b00100003616e790003616e790003616e79
+    bytecblock 0x151f7c75 0x 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 "__ctor_pending" "flags" 0x000400090003616e790003616e79 0x0006000b00100003616e790003616e790003616e79
     intc_2 // 0
     dupn 2
     pushint 4096
@@ -34,40 +34,662 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@12
+    bnz main_after_if_else@44
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@12
+    bz main_after_if_else@44
+    pushbytess 0x6c8ae38c 0x86b714e2 0xc6a898c5 0x7c2efcba 0x7e44755b 0x03cf8a20 0xa044c987 0x0c55699c
     txna ApplicationArgs 0
-    pushbytes 0x6c8ae38c
-    ==
-    bz main_after_if_else@12
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@9 main_switch_case_2@13 main_switch_case_3@17 main_switch_case_4@24 main_switch_case_5@28 main_switch_case_6@32 main_switch_case_7@36
 
-main_ternary_merge@8:
+main_after_if_else@44:
+    txn OnCompletion
     !
-    assert // not payable
-    bytec_0 // 0x
-    intc_2 // 0
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x3f91f9c7 0xc6420dec 0xd28042fd 0x3b5a1911 0x29bb6014 0x4dcad27e 0x9f19ada4 0xdad9e060 // method "__postInit()void", method "r()bool[3]", method "s()(uint256[2],uint256)", method "u()(uint256,uint256,string)[2]", method "v()bool[2][]", method "w1()string[1]", method "w2()string[2]", method "w3()string[3]", method "x()(string[2],string[3])"
+    txna ApplicationArgs 0
+    match main___postInit_route@47 main_r_route@48 main_s_route@49 main_u_route@50 main_v_route@51 main_w1_route@52 main_w2_route@53 main_w3_route@54 main_x_route@55
+    err
 
-main_while_top@9:
+main_x_route@55:
+    callsub x
+    dig 1
+    len
+    pushint 4
+    +
+    itob
+    extract 6 2
+    pushbytes 0x0004
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_w3_route@54:
+    callsub w3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_w2_route@53:
+    callsub w2
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_w1_route@52:
+    callsub w1
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_v_route@51:
+    callsub v
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_u_route@50:
+    callsub u
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_s_route@49:
+    callsub s
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_r_route@48:
+    callsub r
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main___postInit_route@47:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_3 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec 4 // "flags"
+    intc_3 // 2
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+main_switch_case_7@36:
+    callsub __evm_npy
+    bytec_1 // 0x
     dup
+    intc_2 // 0
+    pushint 64
+
+main_while_top@37:
+    dig 1
+    intc_3 // 2
+    <
+    dup
+    bz main_after_while@39
+    intc_0 // 32
+    bzero
+    uncover 2
+    dup
+    cover 2
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 5
+    swap
+    concat
+    cover 4
+    callsub x
+    bury 8
+    uncover 3
+    assert // index access is out of bounds
+    uncover 3
+    dup
+    cover 3
+    callsub static_array_read_byte_length_element
+    dup
+    intc_2 // 0
+    extract_uint16
+    intc_3 // 2
+    swap
+    extract3
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    uncover 4
+    dig 1
+    concat
+    cover 4
+    len
+    uncover 2
+    +
+    swap
+    intc_1 // 1
+    +
+    swap
+    b main_while_top@37
+
+main_after_while@39:
+    popn 3
+    bytec_1 // 0x
+    swap
+    bytec_1 // 0x
+    cover 3
+    intc_2 // 0
+    pushint 96
+
+main_while_top@40:
+    dig 1
     pushint 3
     <
     dup
-    bz main_after_while@11
+    bz main_after_while@42
     intc_0 // 32
     bzero
-    callsub r
+    uncover 2
+    dup
+    cover 2
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 6
+    swap
+    concat
+    cover 5
     uncover 2
     assert // index access is out of bounds
+    dig 7
+    uncover 3
+    dup
+    cover 3
+    callsub static_array_read_byte_length_element
+    dup
+    intc_2 // 0
+    extract_uint16
+    intc_3 // 2
+    swap
+    extract3
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    uncover 6
+    dig 1
+    concat
+    cover 6
+    len
+    uncover 2
+    +
+    swap
+    intc_1 // 1
+    +
+    swap
+    b main_while_top@40
+
+main_after_while@42:
+    popn 3
+    intc_0 // 32
+    bzero
+    swap
+    uncover 3
+    concat
+    dup
+    len
+    pushint 64
+    +
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
+    swap
+    concat
+    uncover 2
+    uncover 3
+    concat
+    uncover 2
+    swap
+    concat
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_6@32:
+    callsub __evm_npy
+    bytec_1 // 0x
+    dup
+    intc_2 // 0
+    pushint 96
+
+main_while_top@33:
+    dig 1
+    pushint 3
+    <
+    dup
+    bz main_after_while@35
+    intc_0 // 32
+    bzero
+    uncover 2
+    dup
+    cover 2
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 5
+    swap
+    concat
+    cover 4
+    callsub w3
+    uncover 3
+    assert // index access is out of bounds
+    uncover 3
+    dup
+    cover 3
+    callsub static_array_read_byte_length_element
+    dup
+    intc_2 // 0
+    extract_uint16
+    intc_3 // 2
+    swap
+    extract3
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    uncover 4
+    dig 1
+    concat
+    cover 4
+    len
+    uncover 2
+    +
+    swap
+    intc_1 // 1
+    +
+    swap
+    b main_while_top@33
+
+main_after_while@35:
+    popn 3
+    swap
+    concat
+    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_5@28:
+    callsub __evm_npy
+    bytec_1 // 0x
+    dup
+    intc_2 // 0
+    pushint 64
+
+main_while_top@29:
+    dig 1
+    intc_3 // 2
+    <
+    dup
+    bz main_after_while@31
+    intc_0 // 32
+    bzero
+    uncover 2
+    dup
+    cover 2
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 5
+    swap
+    concat
+    cover 4
+    callsub w2
+    uncover 3
+    assert // index access is out of bounds
+    uncover 3
+    dup
+    cover 3
+    callsub static_array_read_byte_length_element
+    dup
+    intc_2 // 0
+    extract_uint16
+    intc_3 // 2
+    swap
+    extract3
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    uncover 4
+    dig 1
+    concat
+    cover 4
+    len
+    uncover 2
+    +
+    swap
+    intc_1 // 1
+    +
+    swap
+    b main_while_top@29
+
+main_after_while@31:
+    popn 3
+    swap
+    concat
+    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_4@24:
+    callsub __evm_npy
+    bytec_1 // 0x
+    dup
+    intc_2 // 0
+    intc_0 // 32
+
+main_while_top@25:
+    dig 1
+    intc_1 // 1
+    <
+    dup
+    bz main_after_while@27
+    intc_0 // 32
+    bzero
+    uncover 2
+    dup
+    cover 2
+    itob
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 5
+    swap
+    concat
+    cover 4
+    callsub w1
+    uncover 3
+    assert // index access is out of bounds
+    uncover 3
+    dup
+    cover 3
+    callsub static_array_read_byte_length_element
+    dup
+    intc_2 // 0
+    extract_uint16
+    intc_3 // 2
+    swap
+    extract3
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    uncover 4
+    dig 1
+    concat
+    cover 4
+    len
+    uncover 2
+    +
+    swap
+    intc_1 // 1
+    +
+    swap
+    b main_while_top@25
+
+main_after_while@27:
+    popn 3
+    swap
+    concat
+    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_3@17:
+    callsub __evm_npy
+    bytec_1 // 0x
+    callsub v
+    dup
+    bury 5
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_2 // 0
+
+main_while_top@18:
+    dup
     dig 2
+    <
+    bz main_after_while@23
+    bytec_1 // 0x
+    cover 3
+    intc_2 // 0
+    cover 2
+
+main_while_top@20:
+    dig 2
+    intc_3 // 2
+    <
+    dup
+    bz main_after_while@22
+    intc_0 // 32
+    bzero
+    dig 9
+    extract 2 0
+    dig 3
+    intc_1 // 1
+    extract3 // on error: index access is out of bounds
+    uncover 2
+    assert // index access is out of bounds
+    uncover 4
+    dup
+    cover 3
     getbit
     pushbytes 0x00
     intc_2 // 0
@@ -83,85 +705,33 @@ main_while_top@9:
     -
     intc_0 // 32
     extract3
-    uncover 2
+    uncover 5
     swap
     concat
-    swap
+    cover 4
     intc_1 // 1
     +
-    b main_while_top@9
+    cover 2
+    b main_while_top@20
 
-main_after_while@11:
-    popn 2
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@12:
-    txn OnCompletion
-    bnz main_after_if_else@22
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@22
-    txna ApplicationArgs 0
-    pushbytes 0x86b714e2
-    ==
-    bz main_after_if_else@22
-    txn GroupIndex
-    bz main_ternary_false@17
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@18:
-    !
-    assert // not payable
-    bytec_0 // 0x
-    intc_2 // 0
-
-main_while_top@19:
-    dup
-    intc_3 // 2
-    <
-    bz main_after_while@21
-    intc_0 // 32
-    bzero
-    callsub s
-    bury 6
-    dig 2
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+main_after_while@22:
+    pop
     uncover 2
-    swap
+    pop
+    uncover 2
+    uncover 3
     concat
-    swap
+    cover 2
     intc_1 // 1
     +
-    b main_while_top@19
+    b main_while_top@18
 
-main_after_while@21:
+main_after_while@23:
     pop
     intc_0 // 32
     bzero
-    dig 3
+    swap
+    itob
     concat
     dup
     len
@@ -169,49 +739,27 @@ main_after_while@21:
     -
     intc_0 // 32
     extract3
+    swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@17:
-    intc_2 // 0
-    b main_ternary_merge@18
-
-main_after_if_else@22:
-    txn OnCompletion
-    bnz main_after_if_else@32
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@32
-    txna ApplicationArgs 0
-    pushbytes 0xc6a898c5
-    ==
-    bz main_after_if_else@32
-    txn GroupIndex
-    bz main_ternary_false@27
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@28:
-    !
-    assert // not payable
-    bytec_0 // 0x
+main_switch_case_2@13:
+    callsub __evm_npy
+    bytec_1 // 0x
     dup
     intc_2 // 0
     pushint 64
 
-main_while_top@29:
+main_while_top@14:
     dig 1
     intc_3 // 2
     <
-    bz main_after_while@31
+    bz main_after_while@16
     intc_0 // 32
     bzero
     dig 1
@@ -317,9 +865,9 @@ main_while_top@29:
     intc_1 // 1
     +
     swap
-    b main_while_top@29
+    b main_while_top@14
 
-main_after_while@31:
+main_after_while@16:
     popn 2
     swap
     concat
@@ -330,67 +878,77 @@ main_after_while@31:
     intc_1 // 1
     return
 
-main_ternary_false@27:
+main_switch_case_1@9:
+    callsub __evm_npy
+    bytec_1 // 0x
     intc_2 // 0
-    b main_ternary_merge@28
 
-main_after_if_else@32:
-    txn OnCompletion
-    bnz main_after_if_else@45
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@45
-    txna ApplicationArgs 0
-    pushbytes 0x7c2efcba
-    ==
-    bz main_after_if_else@45
-    txn GroupIndex
-    bz main_ternary_false@37
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@38:
-    !
-    assert // not payable
-    bytec_0 // 0x
-    callsub v
+main_while_top@10:
     dup
-    bury 5
-    intc_2 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_2 // 0
-
-main_while_top@39:
-    dup
-    dig 2
-    <
-    bz main_after_while@44
-    bytec_0 // 0x
-    cover 3
-    intc_2 // 0
-    cover 2
-
-main_while_top@41:
-    dig 2
     intc_3 // 2
     <
-    dup
-    bz main_after_while@43
+    bz main_after_while@12
     intc_0 // 32
     bzero
-    dig 9
-    extract 2 0
-    dig 3
-    intc_1 // 1
+    callsub s
+    bury 6
+    dig 2
+    intc_0 // 32
+    *
+    intc_0 // 32
     extract3 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    intc_1 // 1
+    +
+    b main_while_top@10
+
+main_after_while@12:
+    pop
+    intc_0 // 32
+    bzero
+    dig 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    bytec_1 // 0x
+    intc_2 // 0
+
+main_while_top@6:
+    dup
+    pushint 3
+    <
+    dup
+    bz main_after_while@8
+    intc_0 // 32
+    bzero
+    callsub r
     uncover 2
     assert // index access is out of bounds
-    uncover 4
-    dup
-    cover 3
+    dig 2
     getbit
     pushbytes 0x00
     intc_2 // 0
@@ -406,751 +964,20 @@ main_while_top@41:
     -
     intc_0 // 32
     extract3
-    uncover 5
+    uncover 2
     swap
     concat
-    cover 4
+    swap
     intc_1 // 1
     +
-    cover 2
-    b main_while_top@41
+    b main_while_top@6
 
-main_after_while@43:
-    pop
-    uncover 2
-    pop
-    uncover 2
-    uncover 3
-    concat
-    cover 2
-    intc_1 // 1
-    +
-    b main_while_top@39
-
-main_after_while@44:
-    pop
-    intc_0 // 32
-    bzero
-    swap
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    concat
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+main_after_while@8:
+    popn 2
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
-    return
-
-main_ternary_false@37:
-    intc_2 // 0
-    b main_ternary_merge@38
-
-main_after_if_else@45:
-    txn OnCompletion
-    bnz main_after_if_else@55
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@55
-    txna ApplicationArgs 0
-    pushbytes 0x7e44755b
-    ==
-    bz main_after_if_else@55
-    txn GroupIndex
-    bz main_ternary_false@50
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@51:
-    !
-    assert // not payable
-    bytec_0 // 0x
-    dup
-    intc_2 // 0
-    intc_0 // 32
-
-main_while_top@52:
-    dig 1
-    intc_1 // 1
-    <
-    dup
-    bz main_after_while@54
-    intc_0 // 32
-    bzero
-    uncover 2
-    dup
-    cover 2
-    itob
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 5
-    swap
-    concat
-    cover 4
-    callsub w1
-    uncover 3
-    assert // index access is out of bounds
-    uncover 3
-    dup
-    cover 3
-    callsub static_array_read_byte_length_element
-    dup
-    intc_2 // 0
-    extract_uint16
-    intc_3 // 2
-    swap
-    extract3
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    uncover 4
-    dig 1
-    concat
-    cover 4
-    len
-    uncover 2
-    +
-    swap
-    intc_1 // 1
-    +
-    swap
-    b main_while_top@52
-
-main_after_while@54:
-    popn 3
-    swap
-    concat
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@50:
-    intc_2 // 0
-    b main_ternary_merge@51
-
-main_after_if_else@55:
-    txn OnCompletion
-    bnz main_after_if_else@65
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@65
-    txna ApplicationArgs 0
-    pushbytes 0x03cf8a20
-    ==
-    bz main_after_if_else@65
-    txn GroupIndex
-    bz main_ternary_false@60
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@61:
-    !
-    assert // not payable
-    bytec_0 // 0x
-    dup
-    intc_2 // 0
-    pushint 64
-
-main_while_top@62:
-    dig 1
-    intc_3 // 2
-    <
-    dup
-    bz main_after_while@64
-    intc_0 // 32
-    bzero
-    uncover 2
-    dup
-    cover 2
-    itob
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 5
-    swap
-    concat
-    cover 4
-    callsub w2
-    uncover 3
-    assert // index access is out of bounds
-    uncover 3
-    dup
-    cover 3
-    callsub static_array_read_byte_length_element
-    dup
-    intc_2 // 0
-    extract_uint16
-    intc_3 // 2
-    swap
-    extract3
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    uncover 4
-    dig 1
-    concat
-    cover 4
-    len
-    uncover 2
-    +
-    swap
-    intc_1 // 1
-    +
-    swap
-    b main_while_top@62
-
-main_after_while@64:
-    popn 3
-    swap
-    concat
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@60:
-    intc_2 // 0
-    b main_ternary_merge@61
-
-main_after_if_else@65:
-    txn OnCompletion
-    bnz main_after_if_else@75
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@75
-    txna ApplicationArgs 0
-    pushbytes 0xa044c987
-    ==
-    bz main_after_if_else@75
-    txn GroupIndex
-    bz main_ternary_false@70
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@71:
-    !
-    assert // not payable
-    bytec_0 // 0x
-    dup
-    intc_2 // 0
-    pushint 96
-
-main_while_top@72:
-    dig 1
-    pushint 3
-    <
-    dup
-    bz main_after_while@74
-    intc_0 // 32
-    bzero
-    uncover 2
-    dup
-    cover 2
-    itob
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 5
-    swap
-    concat
-    cover 4
-    callsub w3
-    uncover 3
-    assert // index access is out of bounds
-    uncover 3
-    dup
-    cover 3
-    callsub static_array_read_byte_length_element
-    dup
-    intc_2 // 0
-    extract_uint16
-    intc_3 // 2
-    swap
-    extract3
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    uncover 4
-    dig 1
-    concat
-    cover 4
-    len
-    uncover 2
-    +
-    swap
-    intc_1 // 1
-    +
-    swap
-    b main_while_top@72
-
-main_after_while@74:
-    popn 3
-    swap
-    concat
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@70:
-    intc_2 // 0
-    b main_ternary_merge@71
-
-main_after_if_else@75:
-    txn OnCompletion
-    bnz main_after_if_else@88
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@88
-    txna ApplicationArgs 0
-    pushbytes 0x0c55699c
-    ==
-    bz main_after_if_else@88
-    txn GroupIndex
-    bz main_ternary_false@80
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@81:
-    !
-    assert // not payable
-    bytec_0 // 0x
-    dup
-    intc_2 // 0
-    pushint 64
-
-main_while_top@82:
-    dig 1
-    intc_3 // 2
-    <
-    dup
-    bz main_after_while@84
-    intc_0 // 32
-    bzero
-    uncover 2
-    dup
-    cover 2
-    itob
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 5
-    swap
-    concat
-    cover 4
-    callsub x
-    bury 8
-    uncover 3
-    assert // index access is out of bounds
-    uncover 3
-    dup
-    cover 3
-    callsub static_array_read_byte_length_element
-    dup
-    intc_2 // 0
-    extract_uint16
-    intc_3 // 2
-    swap
-    extract3
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    uncover 4
-    dig 1
-    concat
-    cover 4
-    len
-    uncover 2
-    +
-    swap
-    intc_1 // 1
-    +
-    swap
-    b main_while_top@82
-
-main_after_while@84:
-    popn 3
-    bytec_0 // 0x
-    swap
-    bytec_0 // 0x
-    cover 3
-    intc_2 // 0
-    pushint 96
-
-main_while_top@85:
-    dig 1
-    pushint 3
-    <
-    dup
-    bz main_after_while@87
-    intc_0 // 32
-    bzero
-    uncover 2
-    dup
-    cover 2
-    itob
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 6
-    swap
-    concat
-    cover 5
-    uncover 2
-    assert // index access is out of bounds
-    dig 7
-    uncover 3
-    dup
-    cover 3
-    callsub static_array_read_byte_length_element
-    dup
-    intc_2 // 0
-    extract_uint16
-    intc_3 // 2
-    swap
-    extract3
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    uncover 6
-    dig 1
-    concat
-    cover 6
-    len
-    uncover 2
-    +
-    swap
-    intc_1 // 1
-    +
-    swap
-    b main_while_top@85
-
-main_after_while@87:
-    popn 3
-    intc_0 // 32
-    bzero
-    swap
-    uncover 3
-    concat
-    dup
-    len
-    pushint 64
-    +
-    itob
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000040
-    swap
-    concat
-    uncover 2
-    uncover 3
-    concat
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@80:
-    intc_2 // 0
-    b main_ternary_merge@81
-
-main_after_if_else@88:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x3f91f9c7 0xc6420dec 0xd28042fd 0x3b5a1911 0x29bb6014 0x4dcad27e 0x9f19ada4 0xdad9e060 // method "__postInit()void", method "r()bool[3]", method "s()(uint256[2],uint256)", method "u()(uint256,uint256,string)[2]", method "v()bool[2][]", method "w1()string[1]", method "w2()string[2]", method "w3()string[3]", method "x()(string[2],string[3])"
-    txna ApplicationArgs 0
-    match main___postInit_route@91 main_r_route@92 main_s_route@93 main_u_route@94 main_v_route@95 main_w1_route@96 main_w2_route@97 main_w3_route@98 main_x_route@99
-    err
-
-main_x_route@99:
-    callsub x
-    dig 1
-    len
-    pushint 4
-    +
-    itob
-    extract 6 2
-    pushbytes 0x0004
-    swap
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_w3_route@98:
-    callsub w3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_w2_route@97:
-    callsub w2
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_w1_route@96:
-    callsub w1
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_v_route@95:
-    callsub v
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_u_route@94:
-    callsub u
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_s_route@93:
-    callsub s
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_r_route@92:
-    callsub r
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main___postInit_route@91:
-    bytec_3 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec_3 // "__ctor_pending"
-    intc_2 // 0
-    app_global_put
-    bytec 4 // "flags"
-    intc_3 // 2
-    box_create
-    pop
     intc_1 // 1
     return
 
@@ -1390,3 +1217,22 @@ x_ternary_merge@3:
 x_ternary_false@2:
     intc_2 // 0
     b x_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/arrays.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

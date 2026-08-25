@@ -39,23 +39,56 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@7
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@9
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0x98c3a6c1
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
+    pushbytes 0x6b8380f7 // method "f(bool)(uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_f_route@9
+    err
+
+main_f_route@9:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 1
     ==
-    bz main_after_if_else@9
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    callsub f
+    cover 2
+    concat
+    swap
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@7
+    bz main_ternary_false@14
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@8:
+main_ternary_merge@15:
     !
     assert // not payable
     txna ApplicationArgs 1
@@ -112,41 +145,9 @@ main_ternary_merge@8:
     intc_2 // 1
     return
 
-main_ternary_false@7:
+main_ternary_false@14:
     intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    pushbytes 0x6b8380f7 // method "f(bool)(uint256,uint256,uint256)"
-    txna ApplicationArgs 0
-    match main_f_route@11
-    err
-
-main_f_route@11:
-    txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
-    getbit
-    callsub f
-    cover 2
-    concat
-    swap
-    concat
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
+    b main_ternary_merge@15
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_function_join_control_flow.sol.C.f(c: uint64) -> bytes, bytes, bytes:

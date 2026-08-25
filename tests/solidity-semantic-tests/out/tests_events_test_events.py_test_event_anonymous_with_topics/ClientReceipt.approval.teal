@@ -28,36 +28,22 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@6
+    bnz main_after_if_else@7
     txn NumAppArgs
     intc_2 // 2
     ==
-    bz main_after_if_else@6
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0xb214faa5
-    ==
-    bz main_after_if_else@6
-    txna ApplicationArgs 1
-    len
-    intc_1 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    extract 0 32
-    callsub deposit
-    pushbytes 0x151f7c75
-    log
-    intc_0 // 1
-    return
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
 
-main_after_if_else@6:
+main_after_if_else@7:
     pushbytes 0xc7d12872 // method "deposit(byte[32])void"
     txna ApplicationArgs 0
-    match main_deposit_route@8
+    match main_deposit_route@9
     err
 
-main_deposit_route@8:
+main_deposit_route@9:
     txn OnCompletion
     !
     txn ApplicationID
@@ -70,6 +56,21 @@ main_deposit_route@8:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     callsub deposit
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    extract 0 32
+    callsub deposit
+    pushbytes 0x151f7c75
+    log
     intc_0 // 1
     return
 

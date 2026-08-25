@@ -32,248 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@12
+    bnz main_after_if_else@19
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@12
+    bz main_after_if_else@19
+    pushbytess 0xd5cfd270 0x18572920 0x211a1ae9 0xd6d838ad
     txna ApplicationArgs 0
-    pushbytes 0xd5cfd270
-    ==
-    bz main_after_if_else@12
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@9 main_switch_case_2@13 main_switch_case_3@17
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    callsub sdiv
-    swap
-    dup
-    intc_1 // 0
-    getbyte
-    intc 7 // 128
-    >=
-    bz main_ternary_false@10
-    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-
-main_ternary_merge@11:
-    swap
-    dup
-    len
-    intc_0 // 32
-    swap
-    -
-    swap
-    replace3
-    intc_0 // 32
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    bytec 5 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@10:
-    intc_0 // 32
-    bzero
-    b main_ternary_merge@11
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@12:
-    txn OnCompletion
-    bnz main_after_if_else@22
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@22
-    txna ApplicationArgs 0
-    pushbytes 0x18572920
-    ==
-    bz main_after_if_else@22
-    txn GroupIndex
-    bz main_ternary_false@17
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@18:
-    !
-    assert // not payable
-    callsub smod
-    swap
-    dup
-    intc_1 // 0
-    getbyte
-    intc 7 // 128
-    >=
-    bz main_ternary_false@20
-    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-
-main_ternary_merge@21:
-    swap
-    dup
-    len
-    intc_0 // 32
-    swap
-    -
-    swap
-    replace3
-    intc_0 // 32
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    bytec 5 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@20:
-    intc_0 // 32
-    bzero
-    b main_ternary_merge@21
-
-main_ternary_false@17:
-    intc_1 // 0
-    b main_ternary_merge@18
-
-main_after_if_else@22:
-    txn OnCompletion
-    bnz main_after_if_else@32
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@32
-    txna ApplicationArgs 0
-    pushbytes 0x211a1ae9
-    ==
-    bz main_after_if_else@32
-    txn GroupIndex
-    bz main_ternary_false@27
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@28:
-    !
-    assert // not payable
-    callsub sexp
-    swap
-    dup
-    intc_1 // 0
-    getbyte
-    intc 7 // 128
-    >=
-    bz main_ternary_false@30
-    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-
-main_ternary_merge@31:
-    swap
-    dup
-    len
-    intc_0 // 32
-    swap
-    -
-    swap
-    replace3
-    intc_0 // 32
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    bytec 5 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@30:
-    intc_0 // 32
-    bzero
-    b main_ternary_merge@31
-
-main_ternary_false@27:
-    intc_1 // 0
-    b main_ternary_merge@28
-
-main_after_if_else@32:
-    txn OnCompletion
-    bnz main_after_if_else@39
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@39
-    txna ApplicationArgs 0
-    pushbytes 0xd6d838ad
-    ==
-    bz main_after_if_else@39
-    txn GroupIndex
-    bz main_ternary_false@37
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@38:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub cnt
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 5 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@37:
-    intc_1 // 0
-    b main_ternary_merge@38
-
-main_after_if_else@39:
+main_after_if_else@19:
     txn OnCompletion
     !
     assert
@@ -281,10 +49,10 @@ main_after_if_else@39:
     assert
     pushbytess 0xe6fe71fd 0x60d65a14 0xe62344d6 0x35011ef9 // method "sdiv()(uint256,uint256)", method "smod()(uint256,uint256)", method "sexp()(uint256,uint256)", method "cnt()uint256"
     txna ApplicationArgs 0
-    match main_sdiv_route@42 main_smod_route@43 main_sexp_route@44 main_cnt_route@45
+    match main_sdiv_route@22 main_smod_route@23 main_sexp_route@24 main_cnt_route@25
     err
 
-main_cnt_route@45:
+main_cnt_route@25:
     callsub cnt
     bytec 5 // 0x151f7c75
     swap
@@ -293,7 +61,7 @@ main_cnt_route@45:
     intc_2 // 1
     return
 
-main_sexp_route@44:
+main_sexp_route@24:
     callsub sexp
     concat
     bytec 5 // 0x151f7c75
@@ -303,7 +71,7 @@ main_sexp_route@44:
     intc_2 // 1
     return
 
-main_smod_route@43:
+main_smod_route@23:
     callsub smod
     concat
     bytec 5 // 0x151f7c75
@@ -313,7 +81,7 @@ main_smod_route@43:
     intc_2 // 1
     return
 
-main_sdiv_route@42:
+main_sdiv_route@22:
     callsub sdiv
     concat
     bytec 5 // 0x151f7c75
@@ -322,6 +90,157 @@ main_sdiv_route@42:
     log
     intc_2 // 1
     return
+
+main_switch_case_3@17:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub cnt
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_2@13:
+    callsub __evm_npy
+    callsub sexp
+    swap
+    dup
+    intc_1 // 0
+    getbyte
+    intc 7 // 128
+    >=
+    bz main_ternary_false@15
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@16:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    intc_0 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@15:
+    intc_0 // 32
+    bzero
+    b main_ternary_merge@16
+
+main_switch_case_1@9:
+    callsub __evm_npy
+    callsub smod
+    swap
+    dup
+    intc_1 // 0
+    getbyte
+    intc 7 // 128
+    >=
+    bz main_ternary_false@11
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@12:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    intc_0 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@11:
+    intc_0 // 32
+    bzero
+    b main_ternary_merge@12
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub sdiv
+    swap
+    dup
+    intc_1 // 0
+    getbyte
+    intc 7 // 128
+    >=
+    bz main_ternary_false@7
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@8:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    intc_0 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_0 // 32
+    bzero
+    b main_ternary_merge@8
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/contracts/signed_divmodexp_side_effect.sol.C.__solfn_14() -> uint64:
@@ -1196,3 +1115,22 @@ cnt_ternary_merge@3:
 cnt_ternary_false@2:
     intc_1 // 0
     b cnt_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/operators/contracts/signed_divmodexp_side_effect.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_calling_functions_in_creation_context.sol.A.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 2
+    intcblock 1 0 32
     bytecblock 0x151f7c75 "data" 0x 0xe1ff2398 0xe54503a7 0x7abeaa76
     pushint 4096
     bzero
@@ -34,118 +34,55 @@ main:
 
 main_after_if_else@5:
     txn OnCompletion
-    bnz main_after_if_else@12
+    bnz main_after_if_else@13
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@12
+    bz main_after_if_else@13
+    pushbytess 0xc27fc305 0x9942ec6f 0xaaf05f3d 0x3bc5de30
     txna ApplicationArgs 0
-    pushbytes 0xc27fc305
-    ==
-    bz main_after_if_else@12
-    txn GroupIndex
-    bz main_ternary_false@10
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@8 main_switch_case_1@9 main_switch_case_2@10 main_switch_case_3@11
 
-main_ternary_merge@11:
+main_after_if_else@13:
+    txn OnCompletion
     !
-    assert // not payable
-    callsub f1
+    assert
+    txn ApplicationID
+    assert
+    bytec_3 // method "f1()void"
+    bytec 4 // method "f2()void"
+    bytec 5 // method "f3()void"
+    pushbytes 0xe1e64a74 // method "getData()uint256"
+    txna ApplicationArgs 0
+    match main_f1_route@16 main_f2_route@17 main_f3_route@18 main_getData_route@19
+    err
+
+main_getData_route@19:
+    callsub getData
     bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@10:
-    intc_1 // 0
-    b main_ternary_merge@11
-
-main_after_if_else@12:
-    txn OnCompletion
-    bnz main_after_if_else@19
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@19
-    txna ApplicationArgs 0
-    pushbytes 0x9942ec6f
-    ==
-    bz main_after_if_else@19
-    txn GroupIndex
-    bz main_ternary_false@17
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@18:
-    !
-    assert // not payable
-    callsub f2
-    bytec_0 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@17:
-    intc_1 // 0
-    b main_ternary_merge@18
-
-main_after_if_else@19:
-    txn OnCompletion
-    bnz main_after_if_else@26
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@26
-    txna ApplicationArgs 0
-    pushbytes 0xaaf05f3d
-    ==
-    bz main_after_if_else@26
-    txn GroupIndex
-    bz main_ternary_false@24
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@25:
-    !
-    assert // not payable
+main_f3_route@18:
     callsub f3
-    bytec_0 // 0x151f7c75
-    log
     intc_0 // 1
     return
 
-main_ternary_false@24:
-    intc_1 // 0
-    b main_ternary_merge@25
-
-main_after_if_else@26:
-    txn OnCompletion
-    bnz main_after_if_else@33
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@33
-    txna ApplicationArgs 0
-    pushbytes 0x3bc5de30
-    ==
-    bz main_after_if_else@33
-    txn GroupIndex
-    bz main_ternary_false@31
-    txn GroupIndex
+main_f2_route@17:
+    callsub f2
     intc_0 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@32:
-    !
-    assert // not payable
+main_f1_route@16:
+    callsub f1
+    intc_0 // 1
+    return
+
+main_switch_case_3@11:
+    callsub __evm_npy
     intc_2 // 32
     bzero
     callsub getData
@@ -163,45 +100,27 @@ main_ternary_merge@32:
     intc_0 // 1
     return
 
-main_ternary_false@31:
-    intc_1 // 0
-    b main_ternary_merge@32
-
-main_after_if_else@33:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    bytec_3 // method "f1()void"
-    bytec 4 // method "f2()void"
-    bytec 5 // method "f3()void"
-    pushbytes 0xe1e64a74 // method "getData()uint256"
-    txna ApplicationArgs 0
-    match main_f1_route@36 main_f2_route@37 main_f3_route@38 main_getData_route@39
-    err
-
-main_getData_route@39:
-    callsub getData
+main_switch_case_2@10:
+    callsub __evm_npy
+    callsub f3
     bytec_0 // 0x151f7c75
-    swap
-    concat
     log
     intc_0 // 1
     return
 
-main_f3_route@38:
-    callsub f3
-    intc_0 // 1
-    return
-
-main_f2_route@37:
+main_switch_case_1@9:
+    callsub __evm_npy
     callsub f2
+    bytec_0 // 0x151f7c75
+    log
     intc_0 // 1
     return
 
-main_f1_route@36:
+main_switch_case_0@8:
+    callsub __evm_npy
     callsub f1
+    bytec_0 // 0x151f7c75
+    log
     intc_0 // 1
     return
 
@@ -330,3 +249,22 @@ getData_ternary_merge@3:
 getData_ternary_false@2:
     intc_1 // 0
     b getData_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_calling_functions_in_creation_context.sol.A.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

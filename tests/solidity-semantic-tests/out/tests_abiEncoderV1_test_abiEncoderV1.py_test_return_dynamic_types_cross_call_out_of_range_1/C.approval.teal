@@ -29,32 +29,84 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@7
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@9
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0xb3de648b
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xede71d09 0x06897437 // method "dyn(uint256)byte[]", method "f(uint256)bool"
+    txna ApplicationArgs 0
+    match main_dyn_route@10 main_f_route@11
+    err
+
+main_f_route@11:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
     ==
-    bz main_after_if_else@9
+    assert // invalid number of bytes for arc4.uint256
+    callsub f
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_dyn_route@10:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub dyn
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@7
+    bz main_ternary_false@18
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@8:
+main_ternary_merge@19:
     !
     assert // not payable
+    intc_0 // 32
+    bzero
     txna ApplicationArgs 1
     len
     intc_0 // 32
     >=
     assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
     txna ApplicationArgs 1
     extract 0 32
     dup
@@ -80,60 +132,9 @@ main_ternary_merge@8:
     intc_1 // 1
     return
 
-main_ternary_false@7:
+main_ternary_false@18:
     intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xede71d09 0x06897437 // method "dyn(uint256)byte[]", method "f(uint256)bool"
-    txna ApplicationArgs 0
-    match main_dyn_route@12 main_f_route@13
-    err
-
-main_f_route@13:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub f
-    pushbytes 0x00
-    intc_2 // 0
-    uncover 2
-    setbit
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_dyn_route@12:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub dyn
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    b main_ternary_merge@19
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV1/contracts/return_dynamic_types_cross_call_out_of_range_1.sol.C.dyn(__arc4_x: bytes) -> bytes:

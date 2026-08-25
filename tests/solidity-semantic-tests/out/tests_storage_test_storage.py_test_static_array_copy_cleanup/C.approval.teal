@@ -32,332 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@20
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@20
+    pushbytess 0xf4002504 0x4ab249e8 0x07299d44 0x0e616869 0xffcfee9c 0x6964b25f 0x64a048bc 0x2591432d
     txna ApplicationArgs 0
-    pushbytes 0xf4002504
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@14 main_switch_case_7@18
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    callsub fillSource
-    bytec_2 // 0x151f7c75
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x4ab249e8
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    callsub fillDest
-    bytec_2 // 0x151f7c75
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0x07299d44
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    callsub copySourceToDest
-    bytec_2 // 0x151f7c75
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@21:
-    intc_2 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0x0e616869
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
-    callsub deleteSource
-    bytec_2 // 0x151f7c75
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@28:
-    intc_2 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    bnz main_after_if_else@37
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@37
-    txna ApplicationArgs 0
-    pushbytes 0xffcfee9c
-    ==
-    bz main_after_if_else@37
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
-    callsub deleteDest
-    bytec_2 // 0x151f7c75
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@35:
-    intc_2 // 0
-    b main_ternary_merge@36
-
-main_after_if_else@37:
-    txn OnCompletion
-    bnz main_after_if_else@47
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@47
-    txna ApplicationArgs 0
-    pushbytes 0x6964b25f
-    ==
-    bz main_after_if_else@47
-    txn GroupIndex
-    bz main_ternary_false@42
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@43:
-    !
-    assert // not payable
-    pushbytes 0x
-    intc_2 // 0
-
-main_while_top@44:
-    dup
-    pushint 20
-    <
-    bz main_after_while@46
-    intc_3 // 32
-    bzero
-    callsub getSourceAsUint
-    dig 2
-    intc_0 // 8
-    *
-    intc_0 // 8
-    extract3 // on error: index access is out of bounds
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    uncover 2
-    swap
-    concat
-    swap
-    intc_1 // 1
-    +
-    b main_while_top@44
-
-main_after_while@46:
-    pop
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@42:
-    intc_2 // 0
-    b main_ternary_merge@43
-
-main_after_if_else@47:
-    txn OnCompletion
-    bnz main_after_if_else@57
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@57
-    txna ApplicationArgs 0
-    pushbytes 0x64a048bc
-    ==
-    bz main_after_if_else@57
-    txn GroupIndex
-    bz main_ternary_false@52
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@53:
-    !
-    assert // not payable
-    pushbytes 0x
-    intc_2 // 0
-
-main_while_top@54:
-    dup
-    pushint 40
-    <
-    bz main_after_while@56
-    intc_3 // 32
-    bzero
-    callsub getDestAsUint
-    dig 2
-    intc_0 // 8
-    *
-    intc_0 // 8
-    extract3 // on error: index access is out of bounds
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    uncover 2
-    swap
-    concat
-    swap
-    intc_1 // 1
-    +
-    b main_while_top@54
-
-main_after_while@56:
-    pop
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@52:
-    intc_2 // 0
-    b main_ternary_merge@53
-
-main_after_if_else@57:
-    txn OnCompletion
-    bnz main_after_if_else@64
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@64
-    txna ApplicationArgs 0
-    pushbytes 0x2591432d
-    ==
-    bz main_after_if_else@64
-    txn GroupIndex
-    bz main_ternary_false@62
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@63:
-    !
-    assert // not payable
-    intc_3 // 32
-    bzero
-    callsub canary
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@62:
-    intc_2 // 0
-    b main_ternary_merge@63
-
-main_after_if_else@64:
+main_after_if_else@20:
     txn OnCompletion
     !
     assert
@@ -365,10 +49,10 @@ main_after_if_else@64:
     assert
     pushbytess 0xbacc49e3 0x30df5fb9 0x356d5853 0xa0e79d05 0x8e21369f 0x7f05186a 0x5b6e5e89 0x751fd609 0x96e93f04 // method "__postInit()void", method "fillSource()void", method "fillDest()void", method "copySourceToDest()void", method "deleteSource()void", method "deleteDest()void", method "getSourceAsUint()uint64[20]", method "getDestAsUint()uint64[40]", method "canary()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@67 main_fillSource_route@68 main_fillDest_route@69 main_copySourceToDest_route@70 main_deleteSource_route@71 main_deleteDest_route@72 main_getSourceAsUint_route@73 main_getDestAsUint_route@74 main_canary_route@75
+    match main___postInit_route@23 main_fillSource_route@24 main_fillDest_route@25 main_copySourceToDest_route@26 main_deleteSource_route@27 main_deleteDest_route@28 main_getSourceAsUint_route@29 main_getDestAsUint_route@30 main_canary_route@31
     err
 
-main_canary_route@75:
+main_canary_route@31:
     callsub canary
     bytec_2 // 0x151f7c75
     swap
@@ -377,7 +61,7 @@ main_canary_route@75:
     intc_1 // 1
     return
 
-main_getDestAsUint_route@74:
+main_getDestAsUint_route@30:
     callsub getDestAsUint
     bytec_2 // 0x151f7c75
     swap
@@ -386,7 +70,7 @@ main_getDestAsUint_route@74:
     intc_1 // 1
     return
 
-main_getSourceAsUint_route@73:
+main_getSourceAsUint_route@29:
     callsub getSourceAsUint
     bytec_2 // 0x151f7c75
     swap
@@ -395,32 +79,32 @@ main_getSourceAsUint_route@73:
     intc_1 // 1
     return
 
-main_deleteDest_route@72:
+main_deleteDest_route@28:
     callsub deleteDest
     intc_1 // 1
     return
 
-main_deleteSource_route@71:
+main_deleteSource_route@27:
     callsub deleteSource
     intc_1 // 1
     return
 
-main_copySourceToDest_route@70:
+main_copySourceToDest_route@26:
     callsub copySourceToDest
     intc_1 // 1
     return
 
-main_fillDest_route@69:
+main_fillDest_route@25:
     callsub fillDest
     intc_1 // 1
     return
 
-main_fillSource_route@68:
+main_fillSource_route@24:
     callsub fillSource
     intc_1 // 1
     return
 
-main___postInit_route@67:
+main___postInit_route@23:
     bytec 7 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -442,6 +126,149 @@ main___postInit_route@67:
     bytec 9 // "canary"
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     app_global_put
+    intc_1 // 1
+    return
+
+main_switch_case_7@18:
+    callsub __evm_npy
+    intc_3 // 32
+    bzero
+    callsub canary
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_6@14:
+    callsub __evm_npy
+    pushbytes 0x
+    intc_2 // 0
+
+main_while_top@15:
+    dup
+    pushint 40
+    <
+    bz main_after_while@17
+    intc_3 // 32
+    bzero
+    callsub getDestAsUint
+    dig 2
+    intc_0 // 8
+    *
+    intc_0 // 8
+    extract3 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    intc_1 // 1
+    +
+    b main_while_top@15
+
+main_after_while@17:
+    pop
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    pushbytes 0x
+    intc_2 // 0
+
+main_while_top@11:
+    dup
+    pushint 20
+    <
+    bz main_after_while@13
+    intc_3 // 32
+    bzero
+    callsub getSourceAsUint
+    dig 2
+    intc_0 // 8
+    *
+    intc_0 // 8
+    extract3 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    intc_1 // 1
+    +
+    b main_while_top@11
+
+main_after_while@13:
+    pop
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    callsub deleteDest
+    bytec_2 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    callsub deleteSource
+    bytec_2 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    callsub copySourceToDest
+    bytec_2 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub fillDest
+    bytec_2 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub fillSource
+    bytec_2 // 0x151f7c75
+    log
     intc_1 // 1
     return
 
@@ -1231,3 +1058,22 @@ canary_ternary_merge@3:
 canary_ternary_false@2:
     intc_2 // 0
     b canary_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/static_array_copy_cleanup.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

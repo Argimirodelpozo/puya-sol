@@ -32,95 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@8
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@8
+    pushbytess 0xdefa0da0 0x237b5e96
     txna ApplicationArgs 0
-    pushbytes 0xdefa0da0
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub childAnswer
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x237b5e96
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub child
-    dup
-    len
-    pushint 20
-    -
-    pushint 20
-    extract3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
+main_after_if_else@8:
     txn OnCompletion
     !
     assert
@@ -128,18 +49,18 @@ main_after_if_else@16:
     assert
     pushbytess 0xbacc49e3 0x7e7c6f67 0x216b17e3 0xaa44e9d1 // method "__postInit()void", method "childAnswer()uint256", method "child()address", method "rawLibraryValue()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@19 main_childAnswer_route@20 main_child_route@21 main_rawLibraryValue_route@22
+    match main___postInit_route@11 main_childAnswer_route@12 main_child_route@13 main_rawLibraryValue_route@14
     err
 
-main_rawLibraryValue_route@22:
+main_rawLibraryValue_route@14:
     txn GroupIndex
-    bz main_ternary_false@28
+    bz main_ternary_false@20
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@29:
+main_ternary_merge@21:
     !
     assert // not payable
     load 0
@@ -165,11 +86,11 @@ main_ternary_merge@29:
     intc_1 // 1
     return
 
-main_ternary_false@28:
+main_ternary_false@20:
     intc_2 // 0
-    b main_ternary_merge@29
+    b main_ternary_merge@21
 
-main_child_route@21:
+main_child_route@13:
     callsub child
     bytec_0 // 0x151f7c75
     swap
@@ -178,7 +99,7 @@ main_child_route@21:
     intc_1 // 1
     return
 
-main_childAnswer_route@20:
+main_childAnswer_route@12:
     callsub childAnswer
     bytec_0 // 0x151f7c75
     swap
@@ -187,7 +108,7 @@ main_childAnswer_route@20:
     intc_1 // 1
     return
 
-main___postInit_route@19:
+main___postInit_route@11:
     bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -239,6 +160,50 @@ main___postInit_route@19:
     pushint 91
     itob
     callsub NewReviewCtorLib.store
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub child
+    dup
+    len
+    pushint 20
+    -
+    pushint 20
+    extract3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub childAnswer
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     intc_1 // 1
     return
 
@@ -500,3 +465,22 @@ child_ternary_merge@3:
 child_ternary_false@2:
     intc_2 // 0
     b child_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/new_review_constructor.sol.NewReviewConstructor.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

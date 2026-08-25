@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/error_in_library_and_interface.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2
+    intcblock 1 0
     pushint 4096
     bzero
     dup
@@ -30,84 +30,14 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@9
     txn NumAppArgs
-    intc_2 // 2
+    pushint 2
     ==
     bz main_after_if_else@9
+    pushbytess 0x26121ff0 0xe2179b8e 0xb8c9d365
     txna ApplicationArgs 0
-    pushbytes 0x26121ff0
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@8:
-    !
-    assert // not payable
-    b f
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
 
 main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xe2179b8e
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    b g
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xb8c9d365
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    b h
-
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
     txn OnCompletion
     !
     assert
@@ -117,6 +47,18 @@ main_after_if_else@23:
     txna ApplicationArgs 0
     match f g h
     err
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    b h
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    b g
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    b f
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/error_in_library_and_interface.sol.C.f() -> void:
@@ -180,3 +122,22 @@ h_ternary_merge@3:
 h_ternary_false@2:
     intc_1 // 0
     b h_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/error_in_library_and_interface.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/call_options_overload.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 2 0
-    bytecblock 0x151f7c750000000000000000000000000000000000000000000000000000000000000001 0x151f7c750000000000000000000000000000000000000000000000000000000000000002 0x151f7c750000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002 0x151f7c75
+    intcblock 32 1 0
+    bytecblock 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002 0x151f7c750000000000000000000000000000000000000000000000000000000000000002 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
     dup
@@ -26,196 +26,152 @@ main:
     bnz main_after_if_else@2
 
 main_if_body@1:
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@6
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@6
-    txna ApplicationArgs 0
-    pushbytes 0xb3de648b
-    ==
-    bz main_after_if_else@6
-    txna ApplicationArgs 1
-    len
-    intc_1 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
-    log
-    intc_0 // 1
-    return
-
-main_after_if_else@6:
-    txn OnCompletion
     bnz main_after_if_else@10
     txn NumAppArgs
-    intc_2 // 2
+    pushint 2
     ==
     bz main_after_if_else@10
+    pushbytess 0xb3de648b 0x13d1aa2e 0x28b5e32b 0x3d79d1c8
     txna ApplicationArgs 0
-    pushbytes 0x13d1aa2e
-    ==
-    bz main_after_if_else@10
-    txna ApplicationArgs 1
-    len
-    intc_1 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    len
-    pushint 64
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    txna ApplicationArgs 1
-    extract 32 32
-    swap
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
-    log
-    intc_0 // 1
-    return
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8
 
 main_after_if_else@10:
-    txn OnCompletion
-    bnz main_after_if_else@14
     txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@14
+    bnz main_after_if_else@13
+    txn OnCompletion
+    bz main_if_body@1
+
+main_after_if_else@13:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    bz main_after_if_else@23
+    pushbytess 0x1928cd24 0x2b9082ff 0x74551a15 0xf3869829 0xc599eb05 // method "f(uint256)uint256", method "f(uint256,uint256)uint256", method "call()(uint256,uint256,uint256,uint256)", method "bal()uint256", method "__receive()void"
     txna ApplicationArgs 0
-    pushbytes 0x28b5e32b
-    ==
-    bz main_after_if_else@14
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002
-    log
-    intc_0 // 1
+    match main_f_route@16 main_f_route@17 main_call_route@18 main_bal_route@19 main___receive_route@20
+
+main_after_if_else@23:
+    err
+
+main___receive_route@20:
+    intc_1 // 1
     return
 
-main_after_if_else@14:
-    txn OnCompletion
-    bnz main_after_if_else@21
-    txn NumAppArgs
-    intc_2 // 2
+main_bal_route@19:
+    callsub bal
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_call_route@18:
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_1 // 1
+    return
+
+main_f_route@17:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
     ==
-    bz main_after_if_else@21
-    txna ApplicationArgs 0
-    pushbytes 0x3d79d1c8
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    len
+    intc_0 // 32
     ==
-    bz main_after_if_else@21
+    assert // invalid number of bytes for arc4.uint256
+    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_1 // 1
+    return
+
+main_f_route@16:
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_3@8:
     txn GroupIndex
-    bz main_ternary_false@19
+    bz main_ternary_false@29
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+main_ternary_merge@30:
     !
     assert // not payable
-    intc_1 // 32
+    intc_0 // 32
     bzero
     callsub bal
     concat
     dup
     len
-    intc_1 // 32
+    intc_0 // 32
     -
-    intc_1 // 32
+    intc_0 // 32
     extract3
-    bytec_3 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@19:
-    intc_3 // 0
-    b main_ternary_merge@20
+main_ternary_false@29:
+    intc_2 // 0
+    b main_ternary_merge@30
 
-main_after_if_else@21:
-    txn NumAppArgs
-    bnz main_after_if_else@24
-    txn OnCompletion
-    bz main_if_body@1
-
-main_after_if_else@24:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    bz main_after_if_else@34
-    pushbytess 0x1928cd24 0x2b9082ff 0x74551a15 0xf3869829 0xc599eb05 // method "f(uint256)uint256", method "f(uint256,uint256)uint256", method "call()(uint256,uint256,uint256,uint256)", method "bal()uint256", method "__receive()void"
-    txna ApplicationArgs 0
-    match main_f_route@27 main_f_route@28 main_call_route@29 main_bal_route@30 main___receive_route@31
-
-main_after_if_else@34:
-    err
-
-main___receive_route@31:
-    intc_0 // 1
+main_switch_case_2@7:
+    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002
+    log
+    intc_1 // 1
     return
 
-main_bal_route@30:
-    callsub bal
-    bytec_3 // 0x151f7c75
+main_switch_case_1@6:
+    intc_2 // 0
+    callsub __evm_decw
+    intc_0 // 32
+    callsub __evm_decw
     swap
-    concat
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_call_route@29:
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002
-    log
-    intc_0 // 1
-    return
-
-main_f_route@28:
-    txna ApplicationArgs 1
+main_switch_case_0@5:
+    intc_2 // 0
+    callsub __evm_decw
     len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000002
+    intc_0 // 32
+    <=
+    assert // overflow
+    bytec_3 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
     log
-    intc_0 // 1
-    return
-
-main_f_route@27:
-    txna ApplicationArgs 1
-    len
-    intc_1 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    bytec_0 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
-    log
-    intc_0 // 1
+    intc_1 // 1
     return
 
 
@@ -224,7 +180,7 @@ bal:
     txn GroupIndex
     bz bal_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -235,11 +191,28 @@ bal_ternary_merge@3:
     acct_params_get AcctBalance
     pop
     itob
-    intc_1 // 32
+    intc_0 // 32
     bzero
     b|
     retsub
 
 bal_ternary_false@2:
-    intc_3 // 0
+    intc_2 // 0
     b bal_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/call_options_overload.sol.C.__evm_decw(__off: uint64) -> bytes:
+__evm_decw:
+    proto 1 1
+    frame_dig -1
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    frame_dig -1
+    intc_0 // 32
+    extract3
+    retsub

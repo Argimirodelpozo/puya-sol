@@ -29,89 +29,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@6
+    bnz main_after_if_else@9
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@6
+    bz main_after_if_else@9
+    pushbytess 0x26121ff0 0xe2179b8e 0xb8c9d365
     txna ApplicationArgs 0
-    pushbytes 0x26121ff0
-    ==
-    bz main_after_if_else@6
-    intc_1 // 32
-    bzero
-    callsub f
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
 
-main_after_if_else@6:
-    txn OnCompletion
-    bnz main_after_if_else@10
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@10
-    txna ApplicationArgs 0
-    pushbytes 0xe2179b8e
-    ==
-    bz main_after_if_else@10
-    intc_1 // 32
-    bzero
-    callsub g
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_after_if_else@10:
-    txn OnCompletion
-    bnz main_after_if_else@14
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@14
-    txna ApplicationArgs 0
-    pushbytes 0xb8c9d365
-    ==
-    bz main_after_if_else@14
-    intc_1 // 32
-    bzero
-    callsub h
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_after_if_else@14:
+main_after_if_else@9:
     txn OnCompletion
     !
     assert
@@ -121,10 +48,10 @@ main_after_if_else@14:
     bytec_2 // method "g()uint256"
     pushbytes 0xafedb2e5 // method "h()uint256"
     txna ApplicationArgs 0
-    match main_f_route@17 main_g_route@18 main_h_route@19
+    match main_f_route@12 main_g_route@13 main_h_route@14
     err
 
-main_h_route@19:
+main_h_route@14:
     callsub h
     bytec_0 // 0x151f7c75
     swap
@@ -133,7 +60,7 @@ main_h_route@19:
     intc_0 // 1
     return
 
-main_g_route@18:
+main_g_route@13:
     callsub g
     bytec_0 // 0x151f7c75
     swap
@@ -142,8 +69,62 @@ main_g_route@18:
     intc_0 // 1
     return
 
-main_f_route@17:
+main_f_route@12:
     callsub f
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    intc_1 // 32
+    bzero
+    callsub h
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    intc_1 // 32
+    bzero
+    callsub g
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    intc_1 // 32
+    bzero
+    callsub f
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat

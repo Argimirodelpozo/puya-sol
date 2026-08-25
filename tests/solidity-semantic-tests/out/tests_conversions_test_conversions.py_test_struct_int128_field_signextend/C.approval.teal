@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/struct_int128_field_signext.sol.C.approval_program() -> uint64:
 main:
-    intcblock 16 1 32 0 128
+    intcblock 16 32 1 0 128
     bytecblock 0xffffffffffffffffffffffffffffffff 0x151f7c75 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
@@ -24,316 +24,103 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
-    txn OnCompletion
-    bnz main_after_if_else@12
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@12
-    txna ApplicationArgs 0
-    pushbytes 0xb981100b
-    ==
-    bz main_after_if_else@12
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@8:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_2 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dupn 2
-    extract 0 16
-    swap
-    intc_0 // 16
-    getbyte
-    intc 4 // 128
-    >=
-    bz main_ternary_false@10
-    bytec_0 // 0xffffffffffffffffffffffffffffffff
-
-main_ternary_merge@11:
-    ==
-    assert // invalid EVM ABI signed integer padding
-    intc_2 // 32
-    bzero
-    intc_0 // 16
-    bzero
-    dup
-    uncover 3
-    concat
-    dup
-    len
-    intc_0 // 16
-    -
-    intc_0 // 16
-    extract3
-    dup
-    len
-    intc_0 // 16
-    <=
-    assert // overflow
-    b|
-    callsub eq
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@10:
-    intc_0 // 16
-    bzero
-    b main_ternary_merge@11
-
-main_ternary_false@7:
-    intc_3 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@12:
     txn OnCompletion
     bnz main_after_if_else@25
     txn NumAppArgs
     pushint 2
     ==
     bz main_after_if_else@25
+    pushbytess 0xb981100b 0xe18f7257 0x794b9539 0x0a757d60
     txna ApplicationArgs 0
-    pushbytes 0xe18f7257
-    ==
-    bz main_after_if_else@25
-    txn GroupIndex
-    bz main_ternary_false@17
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@18:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_2 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dupn 2
-    extract 0 16
-    swap
-    intc_0 // 16
-    getbyte
-    intc 4 // 128
-    >=
-    bz main_ternary_false@20
-    bytec_0 // 0xffffffffffffffffffffffffffffffff
-
-main_ternary_merge@21:
-    ==
-    assert // invalid EVM ABI signed integer padding
-    intc_0 // 16
-    bzero
-    dup
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 16
-    -
-    intc_0 // 16
-    extract3
-    dup
-    len
-    intc_0 // 16
-    <=
-    assert // overflow
-    b|
-    callsub widen
-    dup
-    intc_3 // 0
-    getbyte
-    intc 4 // 128
-    >=
-    bz main_ternary_false@23
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-
-main_ternary_merge@24:
-    swap
-    dup
-    len
-    intc_2 // 32
-    swap
-    -
-    swap
-    replace3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@23:
-    intc_2 // 32
-    bzero
-    b main_ternary_merge@24
-
-main_ternary_false@20:
-    intc_0 // 16
-    bzero
-    b main_ternary_merge@21
-
-main_ternary_false@17:
-    intc_3 // 0
-    b main_ternary_merge@18
+    match main_switch_case_0@5 main_switch_case_1@9 main_switch_case_2@16 main_switch_case_3@23
 
 main_after_if_else@25:
     txn OnCompletion
-    bnz main_after_if_else@38
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@38
-    txna ApplicationArgs 0
-    pushbytes 0x794b9539
-    ==
-    bz main_after_if_else@38
-    txn GroupIndex
-    bz main_ternary_false@30
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@31:
     !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_2 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dupn 2
-    extract 0 16
-    swap
-    intc_0 // 16
-    getbyte
-    intc 4 // 128
-    >=
-    bz main_ternary_false@33
-    bytec_0 // 0xffffffffffffffffffffffffffffffff
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x56583b0a 0x39b66198 0xda6adb5d 0xf851f820 // method "eq(uint128)bool", method "widen(uint128)uint256", method "arith(uint128)uint256", method "unsignedOk(uint128)bool"
+    txna ApplicationArgs 0
+    match main_eq_route@28 main_widen_route@29 main_arith_route@30 main_unsignedOk_route@31
+    err
 
-main_ternary_merge@34:
+main_unsignedOk_route@31:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 16
     ==
-    assert // invalid EVM ABI signed integer padding
-    intc_0 // 16
-    bzero
-    dup
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 16
-    -
-    intc_0 // 16
-    extract3
-    dup
-    len
-    intc_0 // 16
-    <=
-    assert // overflow
-    b|
-    callsub arith
-    dup
+    assert // invalid number of bytes for arc4.uint128
+    callsub unsignedOk
+    pushbytes 0x00
     intc_3 // 0
-    getbyte
-    intc 4 // 128
-    >=
-    bz main_ternary_false@36
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-
-main_ternary_merge@37:
-    swap
-    dup
-    len
-    intc_2 // 32
-    swap
-    -
-    swap
-    replace3
+    uncover 2
+    setbit
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
-main_ternary_false@36:
-    intc_2 // 32
-    bzero
-    b main_ternary_merge@37
-
-main_ternary_false@33:
-    intc_0 // 16
-    bzero
-    b main_ternary_merge@34
-
-main_ternary_false@30:
-    intc_3 // 0
-    b main_ternary_merge@31
-
-main_after_if_else@38:
-    txn OnCompletion
-    bnz main_after_if_else@45
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@45
-    txna ApplicationArgs 0
-    pushbytes 0x0a757d60
-    ==
-    bz main_after_if_else@45
-    txn GroupIndex
-    bz main_ternary_false@43
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@44:
-    !
-    assert // not payable
+main_arith_route@30:
     txna ApplicationArgs 1
+    dup
     len
-    intc_2 // 32
-    >=
-    assert // EVM ABI decode out of bounds
+    intc_0 // 16
+    ==
+    assert // invalid number of bytes for arc4.uint128
+    callsub arith
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_widen_route@29:
     txna ApplicationArgs 1
-    extract 0 32
+    dup
+    len
+    intc_0 // 16
+    ==
+    assert // invalid number of bytes for arc4.uint128
+    callsub widen
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_eq_route@28:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 16
+    ==
+    assert // invalid number of bytes for arc4.uint128
+    callsub eq
+    pushbytes 0x00
+    intc_3 // 0
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_3@23:
+    callsub __evm_npy
+    intc_3 // 0
+    callsub __evm_decw
     dup
     extract 0 16
     intc_0 // 16
@@ -342,7 +129,7 @@ main_ternary_merge@44:
     dig 1
     ==
     assert // invalid EVM ABI unsigned integer padding
-    intc_2 // 32
+    intc_1 // 32
     bzero
     dig 1
     uncover 3
@@ -365,99 +152,211 @@ main_ternary_merge@44:
     concat
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     -
-    intc_2 // 32
+    intc_1 // 32
     extract3
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
-main_ternary_false@43:
+main_switch_case_2@16:
+    callsub __evm_npy
     intc_3 // 0
-    b main_ternary_merge@44
-
-main_after_if_else@45:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x56583b0a 0x39b66198 0xda6adb5d 0xf851f820 // method "eq(uint128)bool", method "widen(uint128)uint256", method "arith(uint128)uint256", method "unsignedOk(uint128)bool"
-    txna ApplicationArgs 0
-    match main_eq_route@48 main_widen_route@49 main_arith_route@50 main_unsignedOk_route@51
-    err
-
-main_unsignedOk_route@51:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 16
-    ==
-    assert // invalid number of bytes for arc4.uint128
-    callsub unsignedOk
-    pushbytes 0x00
-    intc_3 // 0
-    uncover 2
-    setbit
-    bytec_1 // 0x151f7c75
+    callsub __evm_decw
+    dupn 2
+    extract 0 16
     swap
-    concat
-    log
-    intc_1 // 1
-    return
+    intc_0 // 16
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@18
+    bytec_0 // 0xffffffffffffffffffffffffffffffff
 
-main_arith_route@50:
-    txna ApplicationArgs 1
+main_ternary_merge@19:
+    ==
+    assert // invalid EVM ABI signed integer padding
+    intc_0 // 16
+    bzero
+    dup
+    uncover 2
+    concat
     dup
     len
     intc_0 // 16
-    ==
-    assert // invalid number of bytes for arc4.uint128
+    -
+    intc_0 // 16
+    extract3
+    dup
+    len
+    intc_0 // 16
+    <=
+    assert // overflow
+    b|
     callsub arith
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_widen_route@49:
-    txna ApplicationArgs 1
     dup
-    len
-    intc_0 // 16
-    ==
-    assert // invalid number of bytes for arc4.uint128
-    callsub widen
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_eq_route@48:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 16
-    ==
-    assert // invalid number of bytes for arc4.uint128
-    callsub eq
-    pushbytes 0x00
     intc_3 // 0
-    uncover 2
-    setbit
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@21
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@22:
+    swap
+    dup
+    len
+    intc_1 // 32
+    swap
+    -
+    swap
+    replace3
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
+
+main_ternary_false@21:
+    intc_1 // 32
+    bzero
+    b main_ternary_merge@22
+
+main_ternary_false@18:
+    intc_0 // 16
+    bzero
+    b main_ternary_merge@19
+
+main_switch_case_1@9:
+    callsub __evm_npy
+    intc_3 // 0
+    callsub __evm_decw
+    dupn 2
+    extract 0 16
+    swap
+    intc_0 // 16
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@11
+    bytec_0 // 0xffffffffffffffffffffffffffffffff
+
+main_ternary_merge@12:
+    ==
+    assert // invalid EVM ABI signed integer padding
+    intc_0 // 16
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 16
+    -
+    intc_0 // 16
+    extract3
+    dup
+    len
+    intc_0 // 16
+    <=
+    assert // overflow
+    b|
+    callsub widen
+    dup
+    intc_3 // 0
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@14
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@15:
+    swap
+    dup
+    len
+    intc_1 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 32
+    bzero
+    b main_ternary_merge@15
+
+main_ternary_false@11:
+    intc_0 // 16
+    bzero
+    b main_ternary_merge@12
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_3 // 0
+    callsub __evm_decw
+    dupn 2
+    extract 0 16
+    swap
+    intc_0 // 16
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@7
+    bytec_0 // 0xffffffffffffffffffffffffffffffff
+
+main_ternary_merge@8:
+    ==
+    assert // invalid EVM ABI signed integer padding
+    intc_1 // 32
+    bzero
+    intc_0 // 16
+    bzero
+    dup
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 16
+    -
+    intc_0 // 16
+    extract3
+    dup
+    len
+    intc_0 // 16
+    <=
+    assert // overflow
+    b|
+    callsub eq
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_0 // 16
+    bzero
+    b main_ternary_merge@8
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/struct_int128_field_signext.sol.C.eq(__arc4_v: bytes) -> uint64:
@@ -466,7 +365,7 @@ eq:
     txn GroupIndex
     bz eq_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -563,7 +462,7 @@ widen:
     txn GroupIndex
     bz widen_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -615,10 +514,10 @@ widen_ternary_merge@6:
 widen_ternary_merge@9:
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     retsub
@@ -641,7 +540,7 @@ arith:
     txn GroupIndex
     bz arith_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -711,7 +610,7 @@ arith_ternary_merge@9:
     bz arith_bool_false@12
 
 arith_bool_true@11:
-    intc_1 // 1
+    intc_2 // 1
 
 arith_bool_merge@13:
     assert // signed arithmetic overflow
@@ -721,10 +620,10 @@ arith_bool_merge@13:
     b%
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     swap
@@ -751,7 +650,7 @@ unsignedOk:
     txn GroupIndex
     bz unsignedOk_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -783,3 +682,39 @@ unsignedOk_ternary_merge@3:
 unsignedOk_ternary_false@2:
     intc_3 // 0
     b unsignedOk_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/struct_int128_field_signext.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_3 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/struct_int128_field_signext.sol.C.__evm_decw(__off: uint64) -> bytes:
+__evm_decw:
+    proto 1 1
+    frame_dig -1
+    intc_1 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    frame_dig -1
+    intc_1 // 32
+    extract3
+    retsub

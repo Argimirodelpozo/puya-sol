@@ -37,93 +37,11 @@ main_after_if_else@2:
     intc_2 // 2
     ==
     bz main_after_if_else@9
+    pushbytess 0xd9c55ce1 0x38b28cb8 0x6bc5fb19
     txna ApplicationArgs 0
-    pushbytes 0xd9c55ce1
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@8:
-    !
-    assert // not payable
-    callsub fill
-    bytec_2 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
 
 main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x38b28cb8
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    callsub halfClear
-    bytec_2 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0x6bc5fb19
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    callsub fullClear
-    bytec_2 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
     txn OnCompletion
     !
     assert
@@ -131,25 +49,25 @@ main_after_if_else@23:
     assert
     pushbytess 0xbacc49e3 0x5cd3f78a 0x5b7ea1f3 0x3b2ed18f // method "__postInit()void", method "fill()void", method "halfClear()void", method "fullClear()void"
     txna ApplicationArgs 0
-    match main___postInit_route@26 main_fill_route@27 main_halfClear_route@28 main_fullClear_route@29
+    match main___postInit_route@12 main_fill_route@13 main_halfClear_route@14 main_fullClear_route@15
     err
 
-main_fullClear_route@29:
+main_fullClear_route@15:
     callsub fullClear
     intc_0 // 1
     return
 
-main_halfClear_route@28:
+main_halfClear_route@14:
     callsub halfClear
     intc_0 // 1
     return
 
-main_fill_route@27:
+main_fill_route@13:
     callsub fill
     intc_0 // 1
     return
 
-main___postInit_route@26:
+main___postInit_route@12:
     bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -168,6 +86,30 @@ main___postInit_route@26:
     intc_2 // 2
     box_create
     pop
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    callsub fullClear
+    bytec_2 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub halfClear
+    bytec_2 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub fill
+    bytec_2 // 0x151f7c75
+    log
     intc_0 // 1
     return
 
@@ -369,3 +311,22 @@ fullClear_ternary_merge@3:
 fullClear_ternary_false@2:
     intc_1 // 0
     b fullClear_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/dynamic_array_cleanup.sol.c.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

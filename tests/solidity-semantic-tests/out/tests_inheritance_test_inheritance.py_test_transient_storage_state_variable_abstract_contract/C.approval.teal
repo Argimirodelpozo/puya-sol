@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/transient_storage_state_variable_abstract_contract.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 2
+    intcblock 32 0 1 128
     bytecblock 0x "y" "w" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75 0x02 0x01 0xf2b65f27
     pushint 4096
     bzero
@@ -41,56 +41,50 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@14
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@14
+    pushbytess 0xe2179b8e 0x26121ff0
     txna ApplicationArgs 0
-    pushbytes 0xe2179b8e
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6
 
-main_ternary_merge@8:
+main_after_if_else@14:
+    txn OnCompletion
     !
-    assert // not payable
-    callsub g
+    assert
+    txn ApplicationID
+    assert
+    bytec 9 // method "g()void"
+    pushbytes 0xa46062d6 // method "f()(uint256,uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_g_route@17 main_f_route@18
+    err
+
+main_f_route@18:
+    callsub f
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
     bytec 6 // 0x151f7c75
+    swap
+    concat
     log
     intc_2 // 1
     return
 
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@22
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@22
-    txna ApplicationArgs 0
-    pushbytes 0x26121ff0
-    ==
-    bz main_after_if_else@22
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
+main_g_route@17:
+    callsub g
     intc_2 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@15:
-    !
-    assert // not payable
+main_switch_case_1@6:
+    callsub __evm_npy
     intc_0 // 32
     bzero
     dup
@@ -110,12 +104,12 @@ main_ternary_merge@15:
     cover 2
     intc_1 // 0
     getbyte
-    pushint 128
+    intc_3 // 128
     >=
-    bz main_ternary_false@17
+    bz main_ternary_false@8
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-main_ternary_merge@18:
+main_ternary_merge@9:
     swap
     dup
     len
@@ -138,13 +132,13 @@ main_ternary_merge@18:
     dig 2
     intc_1 // 0
     getbyte
-    pushint 128
+    intc_3 // 128
     >=
-    bz main_ternary_false@20
+    bz main_ternary_false@11
     bury 1
     bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-main_ternary_merge@21:
+main_ternary_merge@12:
     uncover 2
     dup
     len
@@ -161,48 +155,19 @@ main_ternary_merge@21:
     intc_2 // 1
     return
 
-main_ternary_false@20:
+main_ternary_false@11:
     swap
-    b main_ternary_merge@21
+    b main_ternary_merge@12
 
-main_ternary_false@17:
+main_ternary_false@8:
     dig 2
-    b main_ternary_merge@18
+    b main_ternary_merge@9
 
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@22:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    bytec 9 // method "g()void"
-    pushbytes 0xa46062d6 // method "f()(uint256,uint256,uint256,uint256)"
-    txna ApplicationArgs 0
-    match main_g_route@25 main_f_route@26
-    err
-
-main_f_route@26:
-    callsub f
-    uncover 3
-    uncover 3
-    concat
-    uncover 2
-    concat
-    swap
-    concat
-    bytec 6 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_g_route@25:
+main_switch_case_0@5:
+    callsub __evm_npy
     callsub g
+    bytec 6 // 0x151f7c75
+    log
     intc_2 // 1
     return
 
@@ -417,3 +382,22 @@ f_bool_false@6:
 f_ternary_false@2:
     intc_1 // 0
     b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/transient_storage_state_variable_abstract_contract.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

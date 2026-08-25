@@ -32,23 +32,44 @@ main:
 
 main_after_if_else@5:
     txn OnCompletion
-    bnz main_after_if_else@12
+    bnz main_after_if_else@10
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@12
-    txna ApplicationArgs 0
+    bz main_after_if_else@10
     pushbytes 0x3bc5de30
-    ==
-    bz main_after_if_else@12
+    txna ApplicationArgs 0
+    match main_switch_case_0@8
+
+main_after_if_else@10:
+    pushbytes 0xe1e64a74 // method "getData()uint256"
+    txna ApplicationArgs 0
+    match main_getData_route@12
+    err
+
+main_getData_route@12:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub getData
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@8:
     txn GroupIndex
-    bz main_ternary_false@10
+    bz main_ternary_false@17
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@11:
+main_ternary_merge@18:
     !
     assert // not payable
     intc_1 // 32
@@ -68,29 +89,9 @@ main_ternary_merge@11:
     intc_0 // 1
     return
 
-main_ternary_false@10:
+main_ternary_false@17:
     intc_2 // 0
-    b main_ternary_merge@11
-
-main_after_if_else@12:
-    pushbytes 0xe1e64a74 // method "getData()uint256"
-    txna ApplicationArgs 0
-    match main_getData_route@14
-    err
-
-main_getData_route@14:
-    txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
-    callsub getData
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    b main_ternary_merge@18
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/modifiers/contracts/function_modifier_for_constructor.sol.A.getData() -> bytes:

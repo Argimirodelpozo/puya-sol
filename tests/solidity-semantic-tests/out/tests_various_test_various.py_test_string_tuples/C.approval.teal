@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/string_tuples.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
-    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000040 0x42d0ae76 "abc"
+    intcblock 32 1 0
+    bytecblock 0x151f7c75 0x42d0ae76 0x0000000000000000000000000000000000000000000000000000000000000040 "abc"
     pushint 4096
     bzero
     dup
@@ -31,64 +31,32 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@9
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
     bz main_after_if_else@9
+    pushbytess 0x26121ff0 0xe2179b8e 0xb8c9d365
     txna ApplicationArgs 0
-    pushbytes 0x26121ff0
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
 
-main_ternary_merge@8:
+main_after_if_else@9:
+    txn OnCompletion
     !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub f
-    dig 2
-    swap
-    concat
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x234f2859 0xf3d2904e // method "f()(string,uint256)", method "g()(string,string)"
+    bytec_1 // method "h()string"
+    txna ApplicationArgs 0
+    match main_f_route@12 main_g_route@13 main_h_route@14
+    err
+
+main_h_route@14:
+    callsub h
     dup
     len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000040
-    swap
-    concat
-    dig 1
-    len
-    dup
     itob
-    uncover 4
+    extract 6 2
     swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 3
-    swap
-    concat
-    concat
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -97,31 +65,101 @@ main_ternary_merge@8:
     intc_1 // 1
     return
 
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xe2179b8e
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
+main_g_route@13:
+    callsub g
+    dig 1
+    len
+    itob
+    extract 6 2
+    uncover 2
+    concat
+    dup
+    len
+    pushint 4
+    +
+    dig 2
+    len
+    itob
+    extract 6 2
+    uncover 3
+    concat
+    swap
+    itob
+    extract 6 2
+    pushbytes 0x0004
+    swap
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     intc_1 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@15:
-    !
-    assert // not payable
+main_f_route@12:
+    callsub f
+    dig 1
+    len
+    itob
+    extract 6 2
+    uncover 2
+    concat
+    pushbytes 0x0022
+    uncover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub h
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
     intc_0 // 32
     bzero
     callsub g
@@ -165,7 +203,7 @@ main_ternary_merge@15:
     -
     intc_0 // 32
     extract3
-    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000040
     swap
     concat
     dig 2
@@ -205,39 +243,28 @@ main_ternary_merge@15:
     intc_1 // 1
     return
 
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xb8c9d365
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
+main_switch_case_0@5:
+    callsub __evm_npy
     intc_0 // 32
     bzero
-    callsub h
+    callsub f
+    dig 2
+    swap
+    concat
     dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    swap
+    concat
+    dig 1
     len
     dup
     itob
-    uncover 3
+    uncover 4
     swap
     concat
     dup
@@ -255,95 +282,10 @@ main_ternary_merge@22:
     intc_0 // 32
     %
     bzero
-    uncover 2
-    swap
-    concat
-    concat
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@21:
-    intc_2 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x234f2859 0xf3d2904e // method "f()(string,uint256)", method "g()(string,string)"
-    bytec_2 // method "h()string"
-    txna ApplicationArgs 0
-    match main_f_route@26 main_g_route@27 main_h_route@28
-    err
-
-main_h_route@28:
-    callsub h
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_g_route@27:
-    callsub g
-    dig 1
-    len
-    itob
-    extract 6 2
-    uncover 2
-    concat
-    dup
-    len
-    pushint 4
-    +
-    dig 2
-    len
-    itob
-    extract 6 2
     uncover 3
-    concat
-    swap
-    itob
-    extract 6 2
-    pushbytes 0x0004
     swap
     concat
-    uncover 2
     concat
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_f_route@26:
-    callsub f
-    dig 1
-    len
-    itob
-    extract 6 2
-    uncover 2
-    concat
-    pushbytes 0x0022
-    uncover 2
-    concat
-    swap
     concat
     bytec_0 // 0x151f7c75
     swap
@@ -400,7 +342,7 @@ h:
     txn NumAppArgs
     bz h_after_if_else@6
     txna ApplicationArgs 0
-    bytec_2 // method "h()string"
+    bytec_1 // method "h()string"
     ==
     bz h_after_if_else@6
     txn GroupIndex
@@ -421,3 +363,22 @@ h_after_if_else@6:
 h_ternary_false@4:
     intc_2 // 0
     b h_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/string_tuples.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

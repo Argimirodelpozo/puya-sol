@@ -32,145 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@6
+    bnz main_after_if_else@9
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@6
+    bz main_after_if_else@9
+    pushbytess 0xfd72b6e9 0x31fe52e8 0x96dfcbea
     txna ApplicationArgs 0
-    pushbytes 0xfd72b6e9
-    ==
-    bz main_after_if_else@6
-    txna ApplicationArgs 1
-    len
-    intc_1 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    intc_1 // 32
-    bzero
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    dig 1
-    b|
-    callsub sendAmount
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
 
-main_after_if_else@6:
-    txn OnCompletion
-    bnz main_after_if_else@13
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@13
-    txna ApplicationArgs 0
-    pushbytes 0x31fe52e8
-    ==
-    bz main_after_if_else@13
-    txn GroupIndex
-    bz main_ternary_false@11
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@12:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub outOfGas
-    itob
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@11:
-    intc_0 // 0
-    b main_ternary_merge@12
-
-main_after_if_else@13:
-    txn OnCompletion
-    bnz main_after_if_else@20
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@20
-    txna ApplicationArgs 0
-    pushbytes 0x96dfcbea
-    ==
-    bz main_after_if_else@20
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub checkState
-    swap
-    itob
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    cover 2
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@18:
-    intc_0 // 0
-    b main_ternary_merge@19
-
-main_after_if_else@20:
+main_after_if_else@9:
     txn OnCompletion
     !
     assert
@@ -178,10 +49,10 @@ main_after_if_else@20:
     assert
     pushbytess 0xbacc49e3 0xafa0ab92 0xd1b41813 0x1cded7a1 // method "__postInit()void", method "sendAmount(uint256)uint256", method "outOfGas()bool", method "checkState()(bool,uint256)"
     txna ApplicationArgs 0
-    match main___postInit_route@23 main_sendAmount_route@24 main_outOfGas_route@25 main_checkState_route@26
+    match main___postInit_route@12 main_sendAmount_route@13 main_outOfGas_route@14 main_checkState_route@15
     err
 
-main_checkState_route@26:
+main_checkState_route@15:
     callsub checkState
     pushbytes 0x00
     intc_0 // 0
@@ -196,7 +67,7 @@ main_checkState_route@26:
     intc_2 // 1
     return
 
-main_outOfGas_route@25:
+main_outOfGas_route@14:
     callsub outOfGas
     pushbytes 0x00
     intc_0 // 0
@@ -209,7 +80,7 @@ main_outOfGas_route@25:
     intc_2 // 1
     return
 
-main_sendAmount_route@24:
+main_sendAmount_route@13:
     txna ApplicationArgs 1
     dup
     len
@@ -224,7 +95,7 @@ main_sendAmount_route@24:
     intc_2 // 1
     return
 
-main___postInit_route@23:
+main___postInit_route@12:
     bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -272,6 +143,90 @@ main___postInit_route@23:
     bytec_1 // "h"
     swap
     app_global_put
+    intc_2 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub checkState
+    swap
+    itob
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub outOfGas
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_0@5:
+    intc_1 // 32
+    bzero
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub sendAmount
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     intc_2 // 1
     return
 
@@ -399,3 +354,22 @@ checkState_ternary_merge@3:
 checkState_ternary_false@2:
     intc_0 // 0
     b checkState_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/gas_and_value_basic.sol.test.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_0 // 0
+    b __evm_npy_ternary_merge@3

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/blob_memory_address_write.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1 4096 20480 4064
-    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" "_count" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 "_list"
+    bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" "_count" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "_list" 0x151f7c75
     intc_1 // 0
     dup
     bytec_0 // ""
@@ -36,63 +36,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@7
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@9
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0x289add0c
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_0 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    swap
-    dig 1
-    ==
-    assert // invalid EVM ABI address padding
-    txna ApplicationArgs 1
-    len
-    pushint 64
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 32 32
-    dup
-    extract 0 12
-    uncover 2
-    ==
-    assert // invalid EVM ABI address padding
-    callsub seed
-    bytec 6 // 0x151f7c75
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
+main_after_if_else@7:
     txn OnCompletion
     !
     assert
@@ -100,18 +53,18 @@ main_after_if_else@9:
     assert
     pushbytess 0xbacc49e3 0xcbf90cf8 0xecb7bef0 // method "__postInit()void", method "seed(address,address)void", method "copyOut()address[]"
     txna ApplicationArgs 0
-    match main___postInit_route@12 main_seed_route@13 main_copyOut_route@14
+    match main___postInit_route@10 main_seed_route@11 main_copyOut_route@12
     err
 
-main_copyOut_route@14:
+main_copyOut_route@12:
     txn GroupIndex
-    bz main_ternary_false@20
+    bz main_ternary_false@23
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+main_ternary_merge@24:
     !
     assert // not payable
     intc_1 // 0
@@ -141,11 +94,11 @@ main_ternary_merge@21:
     bury 8
     intc_1 // 0
 
-main_while_top@22:
+main_while_top@25:
     dup
     dig 6
     <
-    bz main_after_while@24
+    bz main_after_while@27
     swap
     dup
     intc_1 // 0
@@ -160,9 +113,9 @@ main_while_top@22:
     swap
     intc_2 // 1
     +
-    b main_while_top@22
+    b main_while_top@25
 
-main_after_while@24:
+main_after_while@27:
     pop
     dup
     intc_1 // 0
@@ -225,7 +178,7 @@ main_after_while@24:
     <=
     dup
     bury 10
-    bz main_else_body@26
+    bz main_else_body@29
     dupn 2
     loads
     dig 4
@@ -233,14 +186,14 @@ main_after_while@24:
     replace3
     stores
 
-main_after_if_else@27:
+main_after_if_else@30:
     intc_1 // 0
 
-main_while_top@28:
+main_while_top@31:
     dup
     dig 11
     <
-    bz main_after_while@33
+    bz main_after_while@36
     dup
     intc_0 // 32
     *
@@ -285,7 +238,7 @@ main_while_top@28:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@31
+    bz main_else_body@34
     uncover 4
     dup
     loads
@@ -294,12 +247,12 @@ main_while_top@28:
     replace3
     stores
 
-main_after_if_else@32:
+main_after_if_else@35:
     intc_2 // 1
     +
-    b main_while_top@28
+    b main_while_top@31
 
-main_else_body@31:
+main_else_body@34:
     uncover 4
     dup
     loads
@@ -332,18 +285,18 @@ main_else_body@31:
     extract3
     replace2 0
     stores
-    b main_after_if_else@32
+    b main_after_if_else@35
 
-main_after_while@33:
+main_after_while@36:
     pop
     bury 1
     dig 2
 
-main_while_top@34:
+main_while_top@37:
     dup
     dig 5
     b<
-    bz main_after_while@45
+    bz main_after_while@48
     dig 5
     dig 1
     concat
@@ -353,7 +306,7 @@ main_while_top@34:
     -
     intc_0 // 32
     extract3
-    bytec 7 // "_list"
+    bytec 6 // "_list"
     concat
     sha256
     dup
@@ -364,7 +317,7 @@ main_while_top@34:
     select
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
-    bz main_else_body@43
+    bz main_else_body@46
     dup
     dig 4
     b>=
@@ -375,7 +328,7 @@ main_while_top@34:
     dup
     intc_0 // 32
     >=
-    bz main_ternary_false@38
+    bz main_ternary_false@41
     pop
     dig 1
     loads
@@ -383,7 +336,7 @@ main_while_top@34:
     intc_0 // 32
     extract3
 
-main_ternary_merge@39:
+main_ternary_merge@42:
     dup
     extract 0 24
     bytec_0 // 0x
@@ -457,7 +410,7 @@ main_ternary_merge@39:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@41
+    bz main_else_body@44
     uncover 3
     dup
     loads
@@ -466,16 +419,16 @@ main_ternary_merge@39:
     replace3
     stores
 
-main_after_if_else@44:
+main_after_if_else@47:
     pushbytes 0x01
     b+
     dup
     bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    b main_while_top@34
+    b main_while_top@37
 
-main_else_body@41:
+main_else_body@44:
     uncover 3
     dup
     loads
@@ -508,9 +461,9 @@ main_else_body@41:
     extract3
     replace2 0
     stores
-    b main_after_if_else@44
+    b main_after_if_else@47
 
-main_ternary_false@38:
+main_ternary_false@41:
     dig 2
     dup
     loads
@@ -528,9 +481,9 @@ main_ternary_false@38:
     swap
     extract3
     concat
-    b main_ternary_merge@39
+    b main_ternary_merge@42
 
-main_else_body@43:
+main_else_body@46:
     uncover 4
     pop
     uncover 3
@@ -541,9 +494,9 @@ main_else_body@43:
     b<=
     assert // overflow
     cover 3
-    b main_after_if_else@44
+    b main_after_if_else@47
 
-main_after_while@45:
+main_after_while@48:
     pop
     load 0
     store 0
@@ -564,7 +517,7 @@ main_after_while@45:
     intc_0 // 32
     extract3
     dig 4
-    bz main_else_body@47
+    bz main_else_body@50
     dig 1
     dup
     loads
@@ -573,7 +526,7 @@ main_after_while@45:
     replace3
     stores
 
-main_after_if_else@48:
+main_after_if_else@51:
     load 0
     store 0
     intc_3 // 4096
@@ -582,14 +535,14 @@ main_after_if_else@48:
     dup
     intc_0 // 32
     >=
-    bz main_ternary_false@50
+    bz main_ternary_false@53
     pop
     loads
     swap
     intc_0 // 32
     extract3
 
-main_ternary_merge@51:
+main_ternary_merge@54:
     dup
     extract 0 24
     bytec_0 // 0x
@@ -604,11 +557,11 @@ main_ternary_merge@51:
     intc_1 // 0
     dig 7
 
-main_while_top@52:
+main_while_top@55:
     dig 1
     dig 3
     <
-    bz main_after_while@57
+    bz main_after_while@60
     dig 1
     intc_0 // 32
     *
@@ -635,7 +588,7 @@ main_while_top@52:
     dup
     intc_0 // 32
     >=
-    bz main_ternary_false@55
+    bz main_ternary_false@58
     pop
     uncover 3
     intc_3 // 4096
@@ -645,7 +598,7 @@ main_while_top@52:
     intc_0 // 32
     extract3
 
-main_ternary_merge@56:
+main_ternary_merge@59:
     extract 12 20
     uncover 3
     swap
@@ -673,9 +626,9 @@ main_ternary_merge@56:
     intc_2 // 1
     +
     swap
-    b main_while_top@52
+    b main_while_top@55
 
-main_ternary_false@55:
+main_ternary_false@58:
     uncover 4
     intc_3 // 4096
     /
@@ -695,17 +648,17 @@ main_ternary_false@55:
     swap
     extract3
     concat
-    b main_ternary_merge@56
+    b main_ternary_merge@59
 
-main_after_while@57:
-    bytec 6 // 0x151f7c75
+main_after_while@60:
+    bytec 7 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
     return
 
-main_ternary_false@50:
+main_ternary_false@53:
     swap
     dup
     loads
@@ -723,9 +676,9 @@ main_ternary_false@50:
     swap
     extract3
     concat
-    b main_ternary_merge@51
+    b main_ternary_merge@54
 
-main_else_body@47:
+main_else_body@50:
     dig 1
     dup
     loads
@@ -758,9 +711,9 @@ main_else_body@47:
     extract3
     replace2 0
     stores
-    b main_after_if_else@48
+    b main_after_if_else@51
 
-main_else_body@26:
+main_else_body@29:
     dupn 2
     loads
     intc_3 // 4096
@@ -794,13 +747,13 @@ main_else_body@26:
     extract3
     replace2 0
     stores
-    b main_after_if_else@27
+    b main_after_if_else@30
 
-main_ternary_false@20:
+main_ternary_false@23:
     intc_1 // 0
-    b main_ternary_merge@21
+    b main_ternary_merge@24
 
-main_seed_route@13:
+main_seed_route@11:
     txna ApplicationArgs 1
     dup
     len
@@ -817,7 +770,7 @@ main_seed_route@13:
     intc_2 // 1
     return
 
-main___postInit_route@12:
+main___postInit_route@10:
     bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -828,7 +781,7 @@ main___postInit_route@12:
     bytec_3 // "__ctor_pending"
     intc_1 // 0
     app_global_put
-    bytec 7 // "_list"
+    bytec 6 // "_list"
     pushint 2
     box_create
     pop
@@ -837,6 +790,44 @@ main___postInit_route@12:
     app_global_put
     intc_2 // 1
     return
+
+main_switch_case_0@5:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_1 // 0
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    swap
+    dig 1
+    ==
+    assert // invalid EVM ABI address padding
+    intc_0 // 32
+    callsub __evm_decw
+    dup
+    extract 0 12
+    uncover 2
+    ==
+    assert // invalid EVM ABI address padding
+    callsub seed
+    bytec 7 // 0x151f7c75
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/blob_memory_address_write.sol.C.seed(a: bytes, b: bytes) -> void:
@@ -868,3 +859,20 @@ seed_ternary_merge@3:
 seed_ternary_false@2:
     intc_1 // 0
     b seed_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/blob_memory_address_write.sol.C.__evm_decw(__off: uint64) -> bytes:
+__evm_decw:
+    proto 1 1
+    frame_dig -1
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    frame_dig -1
+    intc_0 // 32
+    extract3
+    retsub

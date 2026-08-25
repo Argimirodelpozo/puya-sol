@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/function_external_delete_storage.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 2
+    intcblock 1 0 32
     bytecblock 0x151f7c75 "x" 0x000000000000000000000000 0x2d4970c7
     pushint 4096
     bzero
@@ -32,184 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@11
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@11
+    pushbytess 0x26121ff0 0xb8e010de 0xae2c7667 0x4896bcb1 0x58805e72
     txna ApplicationArgs 0
-    pushbytes 0x26121ff0
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    callsub f
-    bytec_0 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xb8e010de
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    callsub set
-    bytec_0 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xae2c7667
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_2 // 32
-    bzero
-    callsub isF
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0x4896bcb1
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
-    intc_2 // 32
-    bzero
-    callsub isZero
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@28:
-    intc_1 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    bnz main_after_if_else@37
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@37
-    txna ApplicationArgs 0
-    pushbytes 0x58805e72
-    ==
-    bz main_after_if_else@37
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
-    callsub deleteFunction
-    bytec_0 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@35:
-    intc_1 // 0
-    b main_ternary_merge@36
-
-main_after_if_else@37:
+main_after_if_else@11:
     txn OnCompletion
     !
     assert
@@ -218,18 +50,18 @@ main_after_if_else@37:
     bytec_3 // method "f()void"
     pushbytess 0x0f76205a 0xcbdac6d6 0x65514ada 0xcc3adfed 0xe2a086c6 // method "set()void", method "isF()bool", method "isZero()bool", method "deleteFunction()void", method "x()byte[12]"
     txna ApplicationArgs 0
-    match main_f_route@40 main_set_route@41 main_isF_route@42 main_isZero_route@43 main_deleteFunction_route@44 main_x_route@45
+    match main_f_route@14 main_set_route@15 main_isF_route@16 main_isZero_route@17 main_deleteFunction_route@18 main_x_route@19
     err
 
-main_x_route@45:
+main_x_route@19:
     txn GroupIndex
-    bz main_ternary_false@51
+    bz main_ternary_false@25
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@52:
+main_ternary_merge@26:
     !
     assert // not payable
     intc_1 // 0
@@ -245,16 +77,16 @@ main_ternary_merge@52:
     intc_0 // 1
     return
 
-main_ternary_false@51:
+main_ternary_false@25:
     intc_1 // 0
-    b main_ternary_merge@52
+    b main_ternary_merge@26
 
-main_deleteFunction_route@44:
+main_deleteFunction_route@18:
     callsub deleteFunction
     intc_0 // 1
     return
 
-main_isZero_route@43:
+main_isZero_route@17:
     callsub isZero
     pushbytes 0x00
     intc_1 // 0
@@ -267,7 +99,7 @@ main_isZero_route@43:
     intc_0 // 1
     return
 
-main_isF_route@42:
+main_isF_route@16:
     callsub isF
     pushbytes 0x00
     intc_1 // 0
@@ -280,13 +112,77 @@ main_isF_route@42:
     intc_0 // 1
     return
 
-main_set_route@41:
+main_set_route@15:
     callsub set
     intc_0 // 1
     return
 
-main_f_route@40:
+main_f_route@14:
     callsub f
+    intc_0 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    callsub deleteFunction
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub isZero
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub isF
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub set
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub f
+    bytec_0 // 0x151f7c75
+    log
     intc_0 // 1
     return
 
@@ -413,3 +309,22 @@ deleteFunction_ternary_merge@3:
 deleteFunction_ternary_false@2:
     intc_1 // 0
     b deleteFunction_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/function_external_delete_storage.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

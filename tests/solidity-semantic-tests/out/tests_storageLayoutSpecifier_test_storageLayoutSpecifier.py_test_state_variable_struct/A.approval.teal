@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_struct.sol.A.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 20
-    bytecblock 0x151f7c75 0x00
+    intcblock 32 1 0 64
+    bytecblock 0x00 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -31,23 +31,60 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@7
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@9
-    txna ApplicationArgs 0
+    bz main_after_if_else@7
     pushbytes 0x6cc014de
-    ==
-    bz main_after_if_else@9
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
+    pushbytes 0x999aa266 // method "s1()(uint512,address,bool)"
+    txna ApplicationArgs 0
+    match main_s1_route@9
+    err
+
+main_s1_route@9:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    callsub s1
+    dig 2
+    len
+    intc_3 // 64
+    <=
+    assert // overflow
+    intc_3 // 64
+    bzero
+    uncover 3
+    b|
+    uncover 2
+    concat
+    bytec_0 // 0x00
+    intc_2 // 0
+    uncover 3
+    setbit
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@7
+    bz main_ternary_false@14
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@8:
+main_ternary_merge@15:
     !
     assert // not payable
     intc_0 // 32
@@ -64,11 +101,11 @@ main_ternary_merge@8:
     extract3
     dig 2
     len
-    intc_3 // 20
+    pushint 20
     -
     uncover 3
     swap
-    intc_3 // 20
+    pushint 20
     extract3
     dig 3
     swap
@@ -92,52 +129,16 @@ main_ternary_merge@8:
     intc_0 // 32
     extract3
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@7:
+main_ternary_false@14:
     intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    pushbytes 0x999aa266 // method "s1()(uint512,address,bool)"
-    txna ApplicationArgs 0
-    match main_s1_route@11
-    err
-
-main_s1_route@11:
-    txn OnCompletion
-    !
-    txn ApplicationID
-    &&
-    assert
-    callsub s1
-    dig 2
-    len
-    pushint 64
-    <=
-    assert // overflow
-    pushint 64
-    bzero
-    uncover 3
-    b|
-    uncover 2
-    concat
-    bytec_1 // 0x00
-    intc_2 // 0
-    uncover 3
-    setbit
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    b main_ternary_merge@15
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_struct.sol.A.s1() -> bytes, bytes, uint64:
@@ -164,7 +165,7 @@ s1_ternary_merge@3:
     uncover 2
     pushint 512
     getbit
-    bytec_1 // 0x00
+    bytec_0 // 0x00
     intc_2 // 0
     uncover 2
     setbit

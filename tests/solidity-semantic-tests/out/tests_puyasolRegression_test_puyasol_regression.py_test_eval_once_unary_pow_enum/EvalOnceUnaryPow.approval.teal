@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/eval_once_unary_pow.sol.EvalOnceUnaryPow.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2 128
+    intcblock 32 1 0 8 128
     bytecblock "cnt" 0x151f7c75 0x 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000001 "st"
     pushint 4096
     bzero
@@ -35,54 +35,37 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@12
+    bnz main_after_if_else@21
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@12
+    bz main_after_if_else@21
+    pushbytess 0xb64bd039 0xd474ac3d 0x8132c215 0x2733de9f 0xefbf2e3a 0xd6d838ad
     txna ApplicationArgs 0
-    pushbytes 0xb64bd039
-    ==
-    bz main_after_if_else@12
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@9 main_switch_case_2@13 main_switch_case_3@17 main_switch_case_4@18 main_switch_case_5@19
 
-main_ternary_merge@8:
+main_after_if_else@21:
+    txn OnCompletion
     !
-    assert // not payable
-    callsub negWide
-    swap
-    dup
-    intc_2 // 0
-    getbyte
-    intc 4 // 128
-    >=
-    bz main_ternary_false@10
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x5eb71c7d 0x0d538e87 0x729ca8ff 0xdd486d40 0x35bec66e 0x35011ef9 // method "negWide()(uint256,uint256)", method "negNarrow()(uint256,uint256)", method "invWide()(uint256,uint256)", method "powRhs(uint64)(uint64,uint256)", method "enumAssign()(uint256,uint256)", method "cnt()uint256"
+    txna ApplicationArgs 0
+    match main_negWide_route@24 main_negNarrow_route@25 main_invWide_route@26 main_powRhs_route@27 main_enumAssign_route@28 main_cnt_route@29
+    err
 
-main_ternary_merge@11:
+main_cnt_route@29:
+    callsub cnt
+    bytec_1 // 0x151f7c75
     swap
-    dup
-    len
-    intc_0 // 32
-    swap
-    -
-    swap
-    replace3
-    intc_0 // 32
-    bzero
-    uncover 2
     concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    log
+    intc_1 // 1
+    return
+
+main_enumAssign_route@28:
+    callsub enumAssign
     concat
     bytec_1 // 0x151f7c75
     swap
@@ -91,70 +74,93 @@ main_ternary_merge@11:
     intc_1 // 1
     return
 
-main_ternary_false@10:
+main_powRhs_route@27:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_3 // 8
+    ==
+    assert // invalid number of bytes for arc4.uint64
+    btoi
+    callsub powRhs
+    swap
+    itob
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_invWide_route@26:
+    callsub invWide
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_negNarrow_route@25:
+    callsub negNarrow
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_negWide_route@24:
+    callsub negWide
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_5@19:
+    callsub __evm_npy
     intc_0 // 32
     bzero
-    b main_ternary_merge@11
-
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@12:
-    txn OnCompletion
-    bnz main_after_if_else@22
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@22
-    txna ApplicationArgs 0
-    pushbytes 0xd474ac3d
-    ==
-    bz main_after_if_else@22
-    txn GroupIndex
-    bz main_ternary_false@17
-    txn GroupIndex
-    intc_1 // 1
+    callsub cnt
+    concat
+    dup
+    len
+    intc_0 // 32
     -
-    gtxns Amount
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
-main_ternary_merge@18:
-    !
-    assert // not payable
-    pushint 8
+main_switch_case_4@18:
+    callsub __evm_npy
+    intc_0 // 32
     bzero
-    callsub negNarrow
+    callsub enumAssign
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     cover 2
     concat
     dup
     len
-    pushint 8
-    -
-    pushint 8
-    extract3
-    dup
-    intc_2 // 0
-    getbyte
-    intc 4 // 128
-    >=
-    bz main_ternary_false@20
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-
-main_ternary_merge@21:
-    swap
-    dup
-    len
-    intc_0 // 32
-    swap
-    -
-    swap
-    replace3
-    intc_0 // 32
-    bzero
-    uncover 2
-    concat
-    dup
-    len
     intc_0 // 32
     -
     intc_0 // 32
@@ -167,103 +173,8 @@ main_ternary_merge@21:
     intc_1 // 1
     return
 
-main_ternary_false@20:
-    intc_0 // 32
-    bzero
-    b main_ternary_merge@21
-
-main_ternary_false@17:
-    intc_2 // 0
-    b main_ternary_merge@18
-
-main_after_if_else@22:
-    txn OnCompletion
-    bnz main_after_if_else@32
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@32
-    txna ApplicationArgs 0
-    pushbytes 0x8132c215
-    ==
-    bz main_after_if_else@32
-    txn GroupIndex
-    bz main_ternary_false@27
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@28:
-    !
-    assert // not payable
-    callsub invWide
-    swap
-    dup
-    intc_2 // 0
-    getbyte
-    intc 4 // 128
-    >=
-    bz main_ternary_false@30
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-
-main_ternary_merge@31:
-    swap
-    dup
-    len
-    intc_0 // 32
-    swap
-    -
-    swap
-    replace3
-    intc_0 // 32
-    bzero
-    uncover 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@30:
-    intc_0 // 32
-    bzero
-    b main_ternary_merge@31
-
-main_ternary_false@27:
-    intc_2 // 0
-    b main_ternary_merge@28
-
-main_after_if_else@32:
-    txn OnCompletion
-    bnz main_after_if_else@39
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@39
-    txna ApplicationArgs 0
-    pushbytes 0x2733de9f
-    ==
-    bz main_after_if_else@39
-    txn GroupIndex
-    bz main_ternary_false@37
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@38:
-    !
-    assert // not payable
+main_switch_case_3@17:
+    callsub __evm_npy
     txna ApplicationArgs 1
     len
     intc_0 // 32
@@ -310,35 +221,29 @@ main_ternary_merge@38:
     intc_1 // 1
     return
 
-main_ternary_false@37:
+main_switch_case_2@13:
+    callsub __evm_npy
+    callsub invWide
+    swap
+    dup
     intc_2 // 0
-    b main_ternary_merge@38
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@15
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-main_after_if_else@39:
-    txn OnCompletion
-    bnz main_after_if_else@46
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@46
-    txna ApplicationArgs 0
-    pushbytes 0xefbf2e3a
-    ==
-    bz main_after_if_else@46
-    txn GroupIndex
-    bz main_ternary_false@44
-    txn GroupIndex
-    intc_1 // 1
+main_ternary_merge@16:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
     -
-    gtxns Amount
-
-main_ternary_merge@45:
-    !
-    assert // not payable
+    swap
+    replace3
     intc_0 // 32
     bzero
-    callsub enumAssign
-    dig 2
     uncover 2
     concat
     dup
@@ -347,50 +252,52 @@ main_ternary_merge@45:
     -
     intc_0 // 32
     extract3
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@15:
+    intc_0 // 32
+    bzero
+    b main_ternary_merge@16
+
+main_switch_case_1@9:
+    callsub __evm_npy
+    intc_3 // 8
+    bzero
+    callsub negNarrow
     cover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_3 // 8
     -
-    intc_0 // 32
+    intc_3 // 8
     extract3
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@44:
+    dup
     intc_2 // 0
-    b main_ternary_merge@45
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@11
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-main_after_if_else@46:
-    txn OnCompletion
-    bnz main_after_if_else@53
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@53
-    txna ApplicationArgs 0
-    pushbytes 0xd6d838ad
-    ==
-    bz main_after_if_else@53
-    txn GroupIndex
-    bz main_ternary_false@51
-    txn GroupIndex
-    intc_1 // 1
+main_ternary_merge@12:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
     -
-    gtxns Amount
-
-main_ternary_merge@52:
-    !
-    assert // not payable
+    swap
+    replace3
     intc_0 // 32
     bzero
-    callsub cnt
+    uncover 2
     concat
     dup
     len
@@ -398,6 +305,7 @@ main_ternary_merge@52:
     -
     intc_0 // 32
     extract3
+    concat
     bytec_1 // 0x151f7c75
     swap
     concat
@@ -405,52 +313,42 @@ main_ternary_merge@52:
     intc_1 // 1
     return
 
-main_ternary_false@51:
+main_ternary_false@11:
+    intc_0 // 32
+    bzero
+    b main_ternary_merge@12
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub negWide
+    swap
+    dup
     intc_2 // 0
-    b main_ternary_merge@52
+    getbyte
+    intc 4 // 128
+    >=
+    bz main_ternary_false@7
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-main_after_if_else@53:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x5eb71c7d 0x0d538e87 0x729ca8ff 0xdd486d40 0x35bec66e 0x35011ef9 // method "negWide()(uint256,uint256)", method "negNarrow()(uint256,uint256)", method "invWide()(uint256,uint256)", method "powRhs(uint64)(uint64,uint256)", method "enumAssign()(uint256,uint256)", method "cnt()uint256"
-    txna ApplicationArgs 0
-    match main_negWide_route@56 main_negNarrow_route@57 main_invWide_route@58 main_powRhs_route@59 main_enumAssign_route@60 main_cnt_route@61
-    err
-
-main_cnt_route@61:
-    callsub cnt
-    bytec_1 // 0x151f7c75
+main_ternary_merge@8:
     swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_enumAssign_route@60:
-    callsub enumAssign
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_powRhs_route@59:
-    txna ApplicationArgs 1
     dup
     len
-    pushint 8
-    ==
-    assert // invalid number of bytes for arc4.uint64
-    btoi
-    callsub powRhs
+    intc_0 // 32
     swap
-    itob
+    -
     swap
+    replace3
+    intc_0 // 32
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     concat
     bytec_1 // 0x151f7c75
     swap
@@ -459,35 +357,10 @@ main_powRhs_route@59:
     intc_1 // 1
     return
 
-main_invWide_route@58:
-    callsub invWide
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_negNarrow_route@57:
-    callsub negNarrow
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_negWide_route@56:
-    callsub negWide
-    concat
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+main_ternary_false@7:
+    intc_0 // 32
+    bzero
+    b main_ternary_merge@8
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/eval_once_unary_pow.sol.EvalOnceUnaryPow.__solfn_22() -> bytes:
@@ -802,3 +675,22 @@ cnt_ternary_merge@3:
 cnt_ternary_false@2:
     intc_2 // 0
     b cnt_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/eval_once_unary_pow.sol.EvalOnceUnaryPow.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

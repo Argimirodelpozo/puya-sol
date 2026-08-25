@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/constructor.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 32 1 0
     bytecblock 0x151f7c75 "state"
     pushint 4096
     bzero
@@ -32,18 +32,60 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@6
+    bnz main_after_if_else@9
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@6
+    bz main_after_if_else@9
+    pushbytess 0xb69ef8a8 0x82ab890a 0xc19d93fb
     txna ApplicationArgs 0
-    pushbytes 0xb69ef8a8
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
+
+main_after_if_else@9:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x76d8a28f 0x70dc8bf7 0xd327fc16 // method "balance()uint256", method "update(uint256)void", method "state()uint256"
+    txna ApplicationArgs 0
+    match main_balance_route@12 main_update_route@13 main_state_route@14
+    err
+
+main_state_route@14:
+    callsub state
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_update_route@13:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
     ==
-    bz main_after_if_else@6
+    assert // invalid number of bytes for arc4.uint256
+    callsub update
+    intc_1 // 1
+    return
+
+main_balance_route@12:
+    callsub balance
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
     intc_0 // 32
     bzero
-    callsub balance
+    callsub state
     concat
     dup
     len
@@ -58,27 +100,8 @@ main_after_if_else@2:
     intc_1 // 1
     return
 
-main_after_if_else@6:
-    txn OnCompletion
-    bnz main_after_if_else@13
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@13
-    txna ApplicationArgs 0
-    pushbytes 0x82ab890a
-    ==
-    bz main_after_if_else@13
-    txn GroupIndex
-    bz main_ternary_false@11
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@12:
-    !
-    assert // not payable
+main_switch_case_1@6:
+    callsub __evm_npy
     txna ApplicationArgs 1
     len
     intc_0 // 32
@@ -100,34 +123,10 @@ main_ternary_merge@12:
     intc_1 // 1
     return
 
-main_ternary_false@11:
-    intc_2 // 0
-    b main_ternary_merge@12
-
-main_after_if_else@13:
-    txn OnCompletion
-    bnz main_after_if_else@20
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@20
-    txna ApplicationArgs 0
-    pushbytes 0xc19d93fb
-    ==
-    bz main_after_if_else@20
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
+main_switch_case_0@5:
     intc_0 // 32
     bzero
-    callsub state
+    callsub balance
     concat
     dup
     len
@@ -135,50 +134,6 @@ main_ternary_merge@19:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@18:
-    intc_2 // 0
-    b main_ternary_merge@19
-
-main_after_if_else@20:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x76d8a28f 0x70dc8bf7 0xd327fc16 // method "balance()uint256", method "update(uint256)void", method "state()uint256"
-    txna ApplicationArgs 0
-    match main_balance_route@23 main_update_route@24 main_state_route@25
-    err
-
-main_state_route@25:
-    callsub state
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_update_route@24:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub update
-    intc_1 // 1
-    return
-
-main_balance_route@23:
-    callsub balance
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -253,3 +208,22 @@ state_ternary_merge@3:
 state_ternary_false@2:
     intc_2 // 0
     b state_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/constructor.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

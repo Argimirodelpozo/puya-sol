@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_packed_array_copy.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 8 1 0
-    bytecblock 0x 0x01 0x04 0x151f7c75 0x09 0x0c 0x0b 0x703a0000000000000000 "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0a 0x03 0x0000000000000002000000000000000000 0x010000000000000000
+    bytecblock 0x01 0x 0x04 0x151f7c75 0x09 0x0c 0x0b 0x703a0000000000000000 "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0a 0x03 0x0000000000000002000000000000000000 0x010000000000000000
     pushint 4096
     bzero
     dup
@@ -32,166 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@12
+    bnz main_after_if_else@15
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@12
+    bz main_after_if_else@15
+    pushbytess 0x697d64a3 0x33f767b9 0x60726abb
     txna ApplicationArgs 0
-    pushbytes 0x697d64a3
-    ==
-    bz main_after_if_else@12
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@9 main_switch_case_2@13
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    bytec_0 // 0x
-    intc_3 // 0
-
-main_while_top@9:
-    dup
-    pushint 9
-    <
-    bz main_after_while@11
-    intc_0 // 32
-    bzero
-    callsub getXAsUint
-    dig 2
-    intc_1 // 8
-    *
-    intc_1 // 8
-    extract3 // on error: index access is out of bounds
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 2
-    swap
-    concat
-    swap
-    intc_2 // 1
-    +
-    b main_while_top@9
-
-main_after_while@11:
-    pop
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@7:
-    intc_3 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@12:
-    txn OnCompletion
-    bnz main_after_if_else@22
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@22
-    txna ApplicationArgs 0
-    pushbytes 0x33f767b9
-    ==
-    bz main_after_if_else@22
-    txn GroupIndex
-    bz main_ternary_false@17
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@18:
-    !
-    assert // not payable
-    bytec_0 // 0x
-    intc_3 // 0
-
-main_while_top@19:
-    dup
-    pushint 10
-    <
-    bz main_after_while@21
-    intc_0 // 32
-    bzero
-    callsub getYAsUint
-    dig 2
-    intc_1 // 8
-    *
-    intc_1 // 8
-    extract3 // on error: index access is out of bounds
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 2
-    swap
-    concat
-    swap
-    intc_2 // 1
-    +
-    b main_while_top@19
-
-main_after_while@21:
-    pop
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@17:
-    intc_3 // 0
-    b main_ternary_merge@18
-
-main_after_if_else@22:
-    txn OnCompletion
-    bnz main_after_if_else@29
-    txn NumAppArgs
-    pushint 2
-    ==
-    bz main_after_if_else@29
-    txna ApplicationArgs 0
-    pushbytes 0x60726abb
-    ==
-    bz main_after_if_else@29
-    txn GroupIndex
-    bz main_ternary_false@27
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@28:
-    !
-    assert // not payable
-    callsub copy
-    bytec_3 // 0x151f7c75
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@27:
-    intc_3 // 0
-    b main_ternary_merge@28
-
-main_after_if_else@29:
+main_after_if_else@15:
     txn OnCompletion
     !
     assert
@@ -199,15 +49,15 @@ main_after_if_else@29:
     assert
     pushbytess 0xbacc49e3 0xda3febbc 0x88341a61 0x22df8963 // method "__postInit()void", method "getXAsUint()uint64[9]", method "getYAsUint()uint64[10]", method "copy()void"
     txna ApplicationArgs 0
-    match main___postInit_route@32 main_getXAsUint_route@33 main_getYAsUint_route@34 main_copy_route@35
+    match main___postInit_route@18 main_getXAsUint_route@19 main_getYAsUint_route@20 main_copy_route@21
     err
 
-main_copy_route@35:
+main_copy_route@21:
     callsub copy
     intc_2 // 1
     return
 
-main_getYAsUint_route@34:
+main_getYAsUint_route@20:
     callsub getYAsUint
     bytec_3 // 0x151f7c75
     swap
@@ -216,7 +66,7 @@ main_getYAsUint_route@34:
     intc_2 // 1
     return
 
-main_getXAsUint_route@33:
+main_getXAsUint_route@19:
     callsub getXAsUint
     bytec_3 // 0x151f7c75
     swap
@@ -225,7 +75,7 @@ main_getXAsUint_route@33:
     intc_2 // 1
     return
 
-main___postInit_route@32:
+main___postInit_route@18:
     bytec 8 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -239,12 +89,12 @@ main___postInit_route@32:
     intc_3 // 0
     itob
 
-main_while_top@46:
+main_while_top@32:
     pushint 9
     itob
     dig 1
     b>
-    bz main_after_while@48
+    bz main_after_while@34
     intc_1 // 8
     bzero
     dup
@@ -295,15 +145,15 @@ main_while_top@46:
     uncover 3
     replace3
     callsub __storage_write
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     dup
     bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    b main_while_top@46
+    b main_while_top@32
 
-main_after_while@48:
+main_after_while@34:
     intc_0 // 32
     bzero
     bytec 5 // 0x0c
@@ -339,6 +189,98 @@ main_after_while@48:
     intc_2 // 1
     return
 
+main_switch_case_2@13:
+    callsub __evm_npy
+    callsub copy
+    bytec_3 // 0x151f7c75
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_1@9:
+    callsub __evm_npy
+    bytec_1 // 0x
+    intc_3 // 0
+
+main_while_top@10:
+    dup
+    pushint 10
+    <
+    bz main_after_while@12
+    intc_0 // 32
+    bzero
+    callsub getYAsUint
+    dig 2
+    intc_1 // 8
+    *
+    intc_1 // 8
+    extract3 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    intc_2 // 1
+    +
+    b main_while_top@10
+
+main_after_while@12:
+    pop
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    bytec_1 // 0x
+    intc_3 // 0
+
+main_while_top@6:
+    dup
+    pushint 9
+    <
+    bz main_after_while@8
+    intc_0 // 32
+    bzero
+    callsub getXAsUint
+    dig 2
+    intc_1 // 8
+    *
+    intc_1 // 8
+    extract3 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    intc_2 // 1
+    +
+    b main_while_top@6
+
+main_after_while@8:
+    pop
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
 
 // __puyasol___storage_read(__slot: bytes) -> bytes:
 __storage_read:
@@ -365,7 +307,7 @@ __storage_read:
     retsub
 
 __storage_read_after_if_else@2:
-    bytec_0 // 0x
+    bytec_1 // 0x
     swap
     retsub
 
@@ -496,7 +438,7 @@ getXAsUint_while_top@4:
     uncover 2
     replace3 // on error: index access is out of bounds
     swap
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     dup
     bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -586,7 +528,7 @@ getYAsUint_while_top@4:
     uncover 2
     replace3 // on error: index access is out of bounds
     swap
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     b+
     dup
     bytec 9 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -628,7 +570,7 @@ copy_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x
+    bytec_1 // 0x
     callsub __storage_read
     dig 2
     swap
@@ -662,7 +604,7 @@ copy_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x
+    bytec_1 // 0x
     callsub __storage_read
     dig 3
     swap
@@ -691,7 +633,7 @@ copy_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x
+    bytec_1 // 0x
     callsub __storage_read
     dig 3
     swap
@@ -720,7 +662,7 @@ copy_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x
+    bytec_1 // 0x
     callsub __storage_read
     dig 3
     swap
@@ -749,7 +691,7 @@ copy_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     callsub __storage_read
     dig 3
     swap
@@ -778,7 +720,7 @@ copy_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     callsub __storage_read
     dig 3
     swap
@@ -807,7 +749,7 @@ copy_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     callsub __storage_read
     dig 3
     swap
@@ -836,7 +778,7 @@ copy_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec_1 // 0x01
+    bytec_0 // 0x01
     callsub __storage_read
     dig 3
     swap
@@ -902,3 +844,22 @@ copy_ternary_merge@3:
 copy_ternary_false@2:
     intc_3 // 0
     b copy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_packed_array_copy.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_3 // 0
+    b __evm_npy_ternary_merge@3

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/canonical_storage_layout_same_name.sol.LeftStorage.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 2
+    intcblock 1 32 0
     bytecblock "value" 0x151f7c75 0x
     pushint 4096
     bzero
@@ -32,93 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@8
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@8
+    pushbytess 0x632f0397 0x8735a342
     txna ApplicationArgs 0
-    pushbytes 0x632f0397
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    txna ApplicationArgs 1
-    len
-    intc_1 // 32
-    >=
-    assert // EVM ABI decode out of bounds
-    txna ApplicationArgs 1
-    extract 0 32
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
-    callsub setLeft
-    bytec_1 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x8735a342
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_1 // 32
-    bzero
-    callsub getLeft
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
+main_after_if_else@8:
     txn OnCompletion
     !
     assert
@@ -126,10 +49,10 @@ main_after_if_else@16:
     assert
     pushbytess 0x5a397930 0x035280c0 0x7cea8a7e 0x5166e6aa 0x24c2e6e3 // method "setLeft(uint256)void", method "getLeft()uint256", method "leftSlot()uint256", method "rawLeft()uint256", method "storeLeft(uint256)void"
     txna ApplicationArgs 0
-    match main_setLeft_route@19 main_getLeft_route@20 main_leftSlot_route@21 main_rawLeft_route@22 main_storeLeft_route@23
+    match main_setLeft_route@11 main_getLeft_route@12 main_leftSlot_route@13 main_rawLeft_route@14 main_storeLeft_route@15
     err
 
-main_storeLeft_route@23:
+main_storeLeft_route@15:
     txna ApplicationArgs 1
     dup
     len
@@ -137,13 +60,13 @@ main_storeLeft_route@23:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@29
+    bz main_ternary_false@21
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+main_ternary_merge@22:
     !
     assert // not payable
     load 0
@@ -156,19 +79,19 @@ main_ternary_merge@30:
     intc_0 // 1
     return
 
-main_ternary_false@29:
+main_ternary_false@21:
     intc_2 // 0
-    b main_ternary_merge@30
+    b main_ternary_merge@22
 
-main_rawLeft_route@22:
+main_rawLeft_route@14:
     txn GroupIndex
-    bz main_ternary_false@34
+    bz main_ternary_false@26
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@35:
+main_ternary_merge@27:
     !
     assert // not payable
     load 0
@@ -196,19 +119,19 @@ main_ternary_merge@35:
     intc_0 // 1
     return
 
-main_ternary_false@34:
+main_ternary_false@26:
     intc_2 // 0
-    b main_ternary_merge@35
+    b main_ternary_merge@27
 
-main_leftSlot_route@21:
+main_leftSlot_route@13:
     txn GroupIndex
-    bz main_ternary_false@39
+    bz main_ternary_false@31
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@40:
+main_ternary_merge@32:
     !
     assert // not payable
     load 0
@@ -220,11 +143,11 @@ main_ternary_merge@40:
     intc_0 // 1
     return
 
-main_ternary_false@39:
+main_ternary_false@31:
     intc_2 // 0
-    b main_ternary_merge@40
+    b main_ternary_merge@32
 
-main_getLeft_route@20:
+main_getLeft_route@12:
     callsub getLeft
     bytec_1 // 0x151f7c75
     swap
@@ -233,7 +156,7 @@ main_getLeft_route@20:
     intc_0 // 1
     return
 
-main_setLeft_route@19:
+main_setLeft_route@11:
     txna ApplicationArgs 1
     dup
     len
@@ -241,6 +164,48 @@ main_setLeft_route@19:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub setLeft
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub getLeft
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    callsub setLeft
+    bytec_1 // 0x151f7c75
+    log
     intc_0 // 1
     return
 
@@ -299,3 +264,22 @@ getLeft_ternary_merge@3:
 getLeft_ternary_false@2:
     intc_2 // 0
     b getLeft_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/canonical_storage_layout_same_name.sol.LeftStorage.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

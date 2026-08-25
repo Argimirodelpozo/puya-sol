@@ -32,66 +32,29 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@12
     txn NumAppArgs
     intc_0 // 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@12
+    pushbytess 0x7d94792a 0xc0406226 0xef8fa0a4 0xaefeb5d0 0x4ca4f61b 0x8506762e
     txna ApplicationArgs 0
-    pushbytes 0x7d94792a
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    callsub seed
-    bytec 4 // 0x151f7c75
-    log
-    intc_3 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
+main_after_if_else@12:
     txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_0 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xc0406226
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
     !
-    assert // not payable
-    intc_2 // 32
-    bzero
-    callsub run
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x100b7c32 0x0c098fbf 0x33ef9faa 0x209caf0a 0x809d3515 0x8c95cb47 // method "__postInit()void", method "seed()void", method "run()uint256", method "runElementRef()uint256", method "runNestedRef()(uint256,bool)", method "runScalarRef()(uint256,uint256,uint256)", method "runMixedRef()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main___postInit_route@15 main_seed_route@16 main_run_route@17 main_runElementRef_route@18 main_runNestedRef_route@19 main_runScalarRef_route@20 main_runMixedRef_route@21
+    err
+
+main_runMixedRef_route@21:
+    callsub runMixedRef
     concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
     bytec 4 // 0x151f7c75
     swap
     concat
@@ -99,41 +62,35 @@ main_ternary_merge@15:
     intc_3 // 1
     return
 
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_0 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xef8fa0a4
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
+main_runScalarRef_route@20:
+    callsub runScalarRef
+    cover 2
+    concat
+    swap
+    concat
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
     intc_3 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_2 // 32
-    bzero
+main_runNestedRef_route@19:
+    callsub runNestedRef
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    concat
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_runElementRef_route@18:
     callsub runElementRef
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
     bytec 4 // 0x151f7c75
     swap
     concat
@@ -141,31 +98,121 @@ main_ternary_merge@22:
     intc_3 // 1
     return
 
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_0 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0xaefeb5d0
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
+main_run_route@17:
+    callsub run
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
     intc_3 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@29:
-    !
-    assert // not payable
+main_seed_route@16:
+    callsub seed
+    intc_3 // 1
+    return
+
+main___postInit_route@15:
+    bytec 7 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec 7 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "values"
+    intc_0 // 2
+    box_create
+    pop
+    bytec_1 // "holders"
+    intc_0 // 2
+    box_create
+    pop
+    bytec_3 // "scalarValues"
+    intc_0 // 2
+    box_create
+    pop
+    bytec_2 // "mixedValues"
+    bytec 5 // 0x0004000600000000
+    box_put
+    intc_3 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub runMixedRef
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    concat
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub runScalarRef
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    concat
+    bytec 4 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_3 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
     intc_2 // 32
     bzero
     callsub runNestedRef
@@ -197,176 +244,18 @@ main_ternary_merge@29:
     intc_3 // 1
     return
 
-main_ternary_false@28:
-    intc_1 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
-    txn OnCompletion
-    bnz main_after_if_else@37
-    txn NumAppArgs
-    intc_0 // 2
-    ==
-    bz main_after_if_else@37
-    txna ApplicationArgs 0
-    pushbytes 0x4ca4f61b
-    ==
-    bz main_after_if_else@37
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
+main_switch_case_2@7:
+    callsub __evm_npy
     intc_2 // 32
     bzero
-    callsub runScalarRef
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    dig 3
-    uncover 3
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    concat
-    cover 2
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    concat
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_3 // 1
-    return
-
-main_ternary_false@35:
-    intc_1 // 0
-    b main_ternary_merge@36
-
-main_after_if_else@37:
-    txn OnCompletion
-    bnz main_after_if_else@44
-    txn NumAppArgs
-    intc_0 // 2
-    ==
-    bz main_after_if_else@44
-    txna ApplicationArgs 0
-    pushbytes 0x8506762e
-    ==
-    bz main_after_if_else@44
-    txn GroupIndex
-    bz main_ternary_false@42
-    txn GroupIndex
-    intc_3 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@43:
-    !
-    assert // not payable
-    intc_2 // 32
-    bzero
-    callsub runMixedRef
-    dig 2
-    uncover 2
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    cover 2
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    concat
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_3 // 1
-    return
-
-main_ternary_false@42:
-    intc_1 // 0
-    b main_ternary_merge@43
-
-main_after_if_else@44:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0xbacc49e3 0x100b7c32 0x0c098fbf 0x33ef9faa 0x209caf0a 0x809d3515 0x8c95cb47 // method "__postInit()void", method "seed()void", method "run()uint256", method "runElementRef()uint256", method "runNestedRef()(uint256,bool)", method "runScalarRef()(uint256,uint256,uint256)", method "runMixedRef()(uint256,uint256)"
-    txna ApplicationArgs 0
-    match main___postInit_route@47 main_seed_route@48 main_run_route@49 main_runElementRef_route@50 main_runNestedRef_route@51 main_runScalarRef_route@52 main_runMixedRef_route@53
-    err
-
-main_runMixedRef_route@53:
-    callsub runMixedRef
-    concat
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_3 // 1
-    return
-
-main_runScalarRef_route@52:
-    callsub runScalarRef
-    cover 2
-    concat
-    swap
-    concat
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_3 // 1
-    return
-
-main_runNestedRef_route@51:
-    callsub runNestedRef
-    pushbytes 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    concat
-    bytec 4 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_3 // 1
-    return
-
-main_runElementRef_route@50:
     callsub runElementRef
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
     bytec 4 // 0x151f7c75
     swap
     concat
@@ -374,8 +263,18 @@ main_runElementRef_route@50:
     intc_3 // 1
     return
 
-main_run_route@49:
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
     callsub run
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
     bytec 4 // 0x151f7c75
     swap
     concat
@@ -383,37 +282,11 @@ main_run_route@49:
     intc_3 // 1
     return
 
-main_seed_route@48:
+main_switch_case_0@5:
+    callsub __evm_npy
     callsub seed
-    intc_3 // 1
-    return
-
-main___postInit_route@47:
-    bytec 7 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    txn Sender
-    global CreatorAddress
-    ==
-    assert // __postInit callable only by the app creator
-    bytec 7 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    bytec_0 // "values"
-    intc_0 // 2
-    box_create
-    pop
-    bytec_1 // "holders"
-    intc_0 // 2
-    box_create
-    pop
-    bytec_3 // "scalarValues"
-    intc_0 // 2
-    box_create
-    pop
-    bytec_2 // "mixedValues"
-    bytec 5 // 0x0004000600000000
-    box_put
+    bytec 4 // 0x151f7c75
+    log
     intc_3 // 1
     return
 
@@ -1610,3 +1483,22 @@ runMixedRef_ternary_merge@3:
 runMixedRef_ternary_false@2:
     intc_1 // 0
     b runMixedRef_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeBoxRef.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

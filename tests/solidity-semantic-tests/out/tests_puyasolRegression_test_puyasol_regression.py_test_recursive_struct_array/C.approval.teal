@@ -32,176 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@10
     txn NumAppArgs
     intc_2 // 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@10
+    pushbytess 0xbf74609e 0x6854171d 0xb84e88d3 0x56d88e27
     txna ApplicationArgs 0
-    pushbytes 0xbf74609e
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_3 // 32
-    bzero
-    callsub v0
-    itob
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x6854171d
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_3 // 32
-    bzero
-    callsub v1
-    itob
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0xb84e88d3
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_3 // 32
-    bzero
-    callsub sv
-    itob
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_2 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0x56d88e27
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
-    intc_3 // 32
-    bzero
-    callsub len
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@28:
-    intc_1 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
+main_after_if_else@10:
     txn OnCompletion
     !
     assert
@@ -209,10 +49,10 @@ main_after_if_else@30:
     assert
     pushbytess 0xbacc49e3 0x19692217 0xf098ce49 0x6fd772ee 0x237e4457 // method "__postInit()void", method "v0()uint64", method "v1()uint64", method "sv()uint64", method "len()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@33 main_v0_route@34 main_v1_route@35 main_sv_route@36 main_len_route@37
+    match main___postInit_route@13 main_v0_route@14 main_v1_route@15 main_sv_route@16 main_len_route@17
     err
 
-main_len_route@37:
+main_len_route@17:
     callsub len
     bytec_1 // 0x151f7c75
     swap
@@ -221,7 +61,7 @@ main_len_route@37:
     intc_0 // 1
     return
 
-main_sv_route@36:
+main_sv_route@16:
     callsub sv
     itob
     bytec_1 // 0x151f7c75
@@ -231,7 +71,7 @@ main_sv_route@36:
     intc_0 // 1
     return
 
-main_v1_route@35:
+main_v1_route@15:
     callsub v1
     itob
     bytec_1 // 0x151f7c75
@@ -241,7 +81,7 @@ main_v1_route@35:
     intc_0 // 1
     return
 
-main_v0_route@34:
+main_v0_route@14:
     callsub v0
     itob
     bytec_1 // 0x151f7c75
@@ -251,7 +91,7 @@ main_v0_route@34:
     intc_0 // 1
     return
 
-main___postInit_route@33:
+main___postInit_route@13:
     bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -379,6 +219,85 @@ main___postInit_route@33:
     bytec_0 // "s"
     swap
     box_put
+    intc_0 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_3 // 32
+    bzero
+    callsub len
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_3 // 32
+    bzero
+    callsub sv
+    itob
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_3 // 32
+    bzero
+    callsub v1
+    itob
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_3 // 32
+    bzero
+    callsub v0
+    itob
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
     intc_0 // 1
     return
 
@@ -732,3 +651,22 @@ len_ternary_merge@3:
 len_ternary_false@2:
     intc_1 // 0
     b len_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_struct_array.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

@@ -32,69 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@12
+    bnz main_after_if_else@10
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@12
-    txna ApplicationArgs 0
+    bz main_after_if_else@10
     pushbytes 0x0c55699c
-    ==
-    bz main_after_if_else@12
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_3 // 8
-    bzero
-    callsub x
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    intc_3 // 8
-    extract3
-    dup
-    intc_0 // 0
-    getbyte
-    pushint 128
-    >=
-    bz main_ternary_false@10
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-
-main_ternary_merge@11:
-    swap
-    dup
-    len
-    intc_1 // 32
-    swap
-    -
-    swap
-    replace3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@10:
-    intc_1 // 32
-    bzero
-    b main_ternary_merge@11
-
-main_ternary_false@7:
-    intc_0 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@12:
+main_after_if_else@10:
     txn OnCompletion
     !
     assert
@@ -102,10 +49,10 @@ main_after_if_else@12:
     assert
     pushbytess 0x9172775d 0x0232350d 0x7c1072af // method "create_dirty_slot()void", method "read_unclean_value()byte[32]", method "x()uint256"
     txna ApplicationArgs 0
-    match main_create_dirty_slot_route@15 main_read_unclean_value_route@16 main_x_route@17
+    match main_create_dirty_slot_route@13 main_read_unclean_value_route@14 main_x_route@15
     err
 
-main_x_route@17:
+main_x_route@15:
     callsub x
     bytec_1 // 0x151f7c75
     swap
@@ -114,15 +61,15 @@ main_x_route@17:
     intc_2 // 1
     return
 
-main_read_unclean_value_route@16:
+main_read_unclean_value_route@14:
     txn GroupIndex
-    bz main_ternary_false@25
+    bz main_ternary_false@28
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@26:
+main_ternary_merge@29:
     !
     assert // not payable
     intc_0 // 0
@@ -139,11 +86,11 @@ main_ternary_merge@26:
     dup
     bytec_3 // 0x80
     b>=
-    bz main_ternary_false@28
+    bz main_ternary_false@31
     bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
     b+
 
-main_ternary_merge@29:
+main_ternary_merge@32:
     intc_1 // 32
     bzero
     swap
@@ -164,22 +111,22 @@ main_ternary_merge@29:
     intc_2 // 1
     return
 
+main_ternary_false@31:
+    b main_ternary_merge@32
+
 main_ternary_false@28:
+    intc_0 // 0
     b main_ternary_merge@29
 
-main_ternary_false@25:
-    intc_0 // 0
-    b main_ternary_merge@26
-
-main_create_dirty_slot_route@15:
+main_create_dirty_slot_route@13:
     txn GroupIndex
-    bz main_ternary_false@33
+    bz main_ternary_false@36
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@34:
+main_ternary_merge@37:
     !
     assert // not payable
     load 0
@@ -212,11 +159,11 @@ main_ternary_merge@34:
     dup
     pushint 128
     >=
-    bz main_ternary_false@42
+    bz main_ternary_false@45
     pushint 18446744073709551360
     +
 
-main_ternary_merge@43:
+main_ternary_merge@46:
     bytec_0 // "x"
     swap
     app_global_put
@@ -225,12 +172,66 @@ main_ternary_merge@43:
     intc_2 // 1
     return
 
-main_ternary_false@42:
-    b main_ternary_merge@43
+main_ternary_false@45:
+    b main_ternary_merge@46
 
-main_ternary_false@33:
+main_ternary_false@36:
     intc_0 // 0
-    b main_ternary_merge@34
+    b main_ternary_merge@37
+
+main_switch_case_0@5:
+    txn GroupIndex
+    bz main_ternary_false@22
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@23:
+    !
+    assert // not payable
+    intc_3 // 8
+    bzero
+    callsub x
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    intc_3 // 8
+    extract3
+    dup
+    intc_0 // 0
+    getbyte
+    pushint 128
+    >=
+    bz main_ternary_false@7
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@8:
+    swap
+    dup
+    len
+    intc_1 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@7:
+    intc_1 // 32
+    bzero
+    b main_ternary_merge@8
+
+main_ternary_false@22:
+    intc_0 // 0
+    b main_ternary_merge@23
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/dirty_uint8_read.sol.C.x() -> bytes:

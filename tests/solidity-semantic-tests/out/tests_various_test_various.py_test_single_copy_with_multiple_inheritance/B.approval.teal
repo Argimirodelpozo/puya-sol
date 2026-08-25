@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/single_copy_with_multiple_inheritance.sol.B.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 32 1 0
     bytecblock 0x151f7c75 "data" 0x 0xc9bcbbdf
     pushint 4096
     bzero
@@ -34,26 +34,59 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@9
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
     bz main_after_if_else@9
+    pushbytess 0xa531d066 0x5b4b73a9 0x099bd978
     txna ApplicationArgs 0
-    pushbytes 0xa531d066
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
 
-main_ternary_merge@8:
+main_after_if_else@9:
+    txn OnCompletion
     !
-    assert // not payable
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x0640f355 0x6fe076ab // method "getViaB()uint256", method "setData(uint256)void"
+    bytec_3 // method "getViaBase()uint256"
+    txna ApplicationArgs 0
+    match main_getViaB_route@12 main_setData_route@13 main_getViaBase_route@14
+    err
+
+main_getViaBase_route@14:
+    callsub getViaBase
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_setData_route@13:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub setData
+    intc_1 // 1
+    return
+
+main_getViaB_route@12:
+    callsub getViaB
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
     intc_0 // 32
     bzero
-    callsub getViaB
+    callsub getViaBase
     concat
     dup
     len
@@ -68,31 +101,8 @@ main_ternary_merge@8:
     intc_1 // 1
     return
 
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x5b4b73a9
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
+main_switch_case_1@6:
+    callsub __evm_npy
     txna ApplicationArgs 1
     len
     intc_0 // 32
@@ -114,34 +124,11 @@ main_ternary_merge@15:
     intc_1 // 1
     return
 
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0x099bd978
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
+main_switch_case_0@5:
+    callsub __evm_npy
     intc_0 // 32
     bzero
-    callsub getViaBase
+    callsub getViaB
     concat
     dup
     len
@@ -149,51 +136,6 @@ main_ternary_merge@22:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@21:
-    intc_2 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x0640f355 0x6fe076ab // method "getViaB()uint256", method "setData(uint256)void"
-    bytec_3 // method "getViaBase()uint256"
-    txna ApplicationArgs 0
-    match main_getViaB_route@26 main_setData_route@27 main_getViaBase_route@28
-    err
-
-main_getViaBase_route@28:
-    callsub getViaBase
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_setData_route@27:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub setData
-    intc_1 // 1
-    return
-
-main_getViaB_route@26:
-    callsub getViaB
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -292,3 +234,22 @@ getViaBase_after_if_else@6:
 getViaBase_ternary_false@4:
     intc_2 // 0
     b getViaBase_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/single_copy_with_multiple_inheritance.sol.B.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

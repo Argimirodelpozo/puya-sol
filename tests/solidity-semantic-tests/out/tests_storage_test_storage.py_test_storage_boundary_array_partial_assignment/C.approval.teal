@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_partial_assignment.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 32 1 0 10
     bytecblock 0x151f7c75 0x01 0x02 0x03 0x04 0x05 0x06 0x07 0x08 0x09 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
     pushint 4096
     bzero
@@ -29,64 +29,76 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@13
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@13
+    pushbytess 0xf460473e 0x0c55699c 0x7d4cb2c3 0x9a2c301a
     txna ApplicationArgs 0
-    pushbytes 0xf460473e
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@10 main_switch_case_3@11
 
-main_ternary_merge@8:
+main_after_if_else@13:
+    txn OnCompletion
     !
-    assert // not payable
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x2bbf0199 0x3e40144f 0x8b47da4a 0x55a8717a // method "fillArray()void", method "x()uint256[10]", method "partialAssignArrayBeforeStorageBoundary()void", method "partialAssignArrayCrossStorageBoundary()void"
+    txna ApplicationArgs 0
+    match main_fillArray_route@16 main_x_route@17 main_partialAssignArrayBeforeStorageBoundary_route@18 main_partialAssignArrayCrossStorageBoundary_route@19
+    err
+
+main_partialAssignArrayCrossStorageBoundary_route@19:
+    callsub partialAssignArrayCrossStorageBoundary
+    intc_1 // 1
+    return
+
+main_partialAssignArrayBeforeStorageBoundary_route@18:
+    callsub partialAssignArrayBeforeStorageBoundary
+    intc_1 // 1
+    return
+
+main_x_route@17:
+    callsub x
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_fillArray_route@16:
     callsub fillArray
+    intc_1 // 1
+    return
+
+main_switch_case_3@11:
+    callsub __evm_npy
+    callsub partialAssignArrayCrossStorageBoundary
     bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
 
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@19
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@19
-    txna ApplicationArgs 0
-    pushbytes 0x0c55699c
-    ==
-    bz main_after_if_else@19
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
+main_switch_case_2@10:
+    callsub __evm_npy
+    callsub partialAssignArrayBeforeStorageBoundary
+    bytec_0 // 0x151f7c75
+    log
     intc_1 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@15:
-    !
-    assert // not payable
+main_switch_case_1@6:
+    callsub __evm_npy
     pushbytes 0x
     intc_2 // 0
 
-main_while_top@16:
+main_while_top@7:
     dup
-    pushint 10
+    intc_3 // 10
     <
-    bz main_after_while@18
+    bz main_after_while@9
     intc_0 // 32
     bzero
     callsub x
@@ -108,9 +120,9 @@ main_while_top@16:
     swap
     intc_1 // 1
     +
-    b main_while_top@16
+    b main_while_top@7
 
-main_after_while@18:
+main_after_while@9:
     pop
     bytec_0 // 0x151f7c75
     swap
@@ -119,104 +131,11 @@ main_after_while@18:
     intc_1 // 1
     return
 
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@19:
-    txn OnCompletion
-    bnz main_after_if_else@26
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@26
-    txna ApplicationArgs 0
-    pushbytes 0x7d4cb2c3
-    ==
-    bz main_after_if_else@26
-    txn GroupIndex
-    bz main_ternary_false@24
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@25:
-    !
-    assert // not payable
-    callsub partialAssignArrayBeforeStorageBoundary
-    bytec_0 // 0x151f7c75
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@24:
-    intc_2 // 0
-    b main_ternary_merge@25
-
-main_after_if_else@26:
-    txn OnCompletion
-    bnz main_after_if_else@33
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@33
-    txna ApplicationArgs 0
-    pushbytes 0x9a2c301a
-    ==
-    bz main_after_if_else@33
-    txn GroupIndex
-    bz main_ternary_false@31
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@32:
-    !
-    assert // not payable
-    callsub partialAssignArrayCrossStorageBoundary
-    bytec_0 // 0x151f7c75
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@31:
-    intc_2 // 0
-    b main_ternary_merge@32
-
-main_after_if_else@33:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x2bbf0199 0x3e40144f 0x8b47da4a 0x55a8717a // method "fillArray()void", method "x()uint256[10]", method "partialAssignArrayBeforeStorageBoundary()void", method "partialAssignArrayCrossStorageBoundary()void"
-    txna ApplicationArgs 0
-    match main_fillArray_route@36 main_x_route@37 main_partialAssignArrayBeforeStorageBoundary_route@38 main_partialAssignArrayCrossStorageBoundary_route@39
-    err
-
-main_partialAssignArrayCrossStorageBoundary_route@39:
-    callsub partialAssignArrayCrossStorageBoundary
-    intc_1 // 1
-    return
-
-main_partialAssignArrayBeforeStorageBoundary_route@38:
-    callsub partialAssignArrayBeforeStorageBoundary
-    intc_1 // 1
-    return
-
-main_x_route@37:
-    callsub x
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_fillArray_route@36:
+main_switch_case_0@5:
+    callsub __evm_npy
     callsub fillArray
+    bytec_0 // 0x151f7c75
+    log
     intc_1 // 1
     return
 
@@ -319,7 +238,7 @@ fillArray_ternary_merge@3:
     itob
 
 fillArray_while_top@4:
-    pushint 10
+    intc_3 // 10
     itob
     dig 1
     b>
@@ -748,3 +667,22 @@ partialAssignArrayCrossStorageBoundary_ternary_merge@3:
 partialAssignArrayCrossStorageBoundary_ternary_false@2:
     intc_2 // 0
     b partialAssignArrayCrossStorageBoundary_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_partial_assignment.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

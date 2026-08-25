@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 2
+    intcblock 1 0 32 24
     bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 "c" 0xb30e2ea6 "account1" "account2" TMPL_APPROVAL_C TMPL_CLEAR_C
     pushint 4096
     bzero
@@ -38,42 +38,126 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@6
+    bnz main_after_if_else@11
     txn NumAppArgs
-    intc_3 // 2
+    pushint 2
     ==
-    bz main_after_if_else@6
+    bz main_after_if_else@11
+    pushbytess 0x775c300c 0xedb45529 0xd6be6231 0x267c4ae4 0xc3da42b8
     txna ApplicationArgs 0
-    pushbytes 0x775c300c
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9
+
+main_after_if_else@11:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytes 0x739b0889 // method "deploy()void"
+    bytec_3 // method "terminate(address)void"
+    pushbytess 0xcf19aed1 0x082c5ced 0xd7fc866d // method "test_deploy_and_terminate_twice()void", method "exists()bool", method "c()address"
+    txna ApplicationArgs 0
+    match main_deploy_route@14 main_terminate_route@15 main_test_deploy_and_terminate_twice_route@16 main_exists_route@17 main_c_route@18
+    err
+
+main_c_route@18:
+    callsub c
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_exists_route@17:
+    callsub exists
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_test_deploy_and_terminate_twice_route@16:
+    callsub test_deploy_and_terminate_twice
+    intc_0 // 1
+    return
+
+main_terminate_route@15:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_2 // 32
     ==
-    bz main_after_if_else@6
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub terminate
+    intc_0 // 1
+    return
+
+main_deploy_route@14:
     callsub deploy
+    intc_0 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub c
+    dup
+    len
+    pushint 20
+    -
+    pushint 20
+    extract3
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub exists
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    callsub test_deploy_and_terminate_twice
     bytec_0 // 0x151f7c75
     log
     intc_0 // 1
     return
 
-main_after_if_else@6:
-    txn OnCompletion
-    bnz main_after_if_else@13
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@13
-    txna ApplicationArgs 0
-    pushbytes 0xedb45529
-    ==
-    bz main_after_if_else@13
-    txn GroupIndex
-    bz main_ternary_false@11
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@12:
-    !
-    assert // not payable
+main_switch_case_1@6:
+    callsub __evm_npy
     txna ApplicationArgs 1
     len
     intc_2 // 32
@@ -93,185 +177,10 @@ main_ternary_merge@12:
     intc_0 // 1
     return
 
-main_ternary_false@11:
-    intc_1 // 0
-    b main_ternary_merge@12
-
-main_after_if_else@13:
-    txn OnCompletion
-    bnz main_after_if_else@20
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@20
-    txna ApplicationArgs 0
-    pushbytes 0xd6be6231
-    ==
-    bz main_after_if_else@20
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
-    callsub test_deploy_and_terminate_twice
-    bytec_0 // 0x151f7c75
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@18:
-    intc_1 // 0
-    b main_ternary_merge@19
-
-main_after_if_else@20:
-    txn OnCompletion
-    bnz main_after_if_else@27
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@27
-    txna ApplicationArgs 0
-    pushbytes 0x267c4ae4
-    ==
-    bz main_after_if_else@27
-    txn GroupIndex
-    bz main_ternary_false@25
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@26:
-    !
-    assert // not payable
-    intc_2 // 32
-    bzero
-    callsub exists
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@25:
-    intc_1 // 0
-    b main_ternary_merge@26
-
-main_after_if_else@27:
-    txn OnCompletion
-    bnz main_after_if_else@34
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@34
-    txna ApplicationArgs 0
-    pushbytes 0xc3da42b8
-    ==
-    bz main_after_if_else@34
-    txn GroupIndex
-    bz main_ternary_false@32
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@33:
-    !
-    assert // not payable
-    intc_2 // 32
-    bzero
-    callsub c
-    dup
-    len
-    pushint 20
-    -
-    pushint 20
-    extract3
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@32:
-    intc_1 // 0
-    b main_ternary_merge@33
-
-main_after_if_else@34:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytes 0x739b0889 // method "deploy()void"
-    bytec_3 // method "terminate(address)void"
-    pushbytess 0xcf19aed1 0x082c5ced 0xd7fc866d // method "test_deploy_and_terminate_twice()void", method "exists()bool", method "c()address"
-    txna ApplicationArgs 0
-    match main_deploy_route@37 main_terminate_route@38 main_test_deploy_and_terminate_twice_route@39 main_exists_route@40 main_c_route@41
-    err
-
-main_c_route@41:
-    callsub c
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_exists_route@40:
-    callsub exists
-    pushbytes 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_test_deploy_and_terminate_twice_route@39:
-    callsub test_deploy_and_terminate_twice
-    intc_0 // 1
-    return
-
-main_terminate_route@38:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    callsub terminate
-    intc_0 // 1
-    return
-
-main_deploy_route@37:
+main_switch_case_0@5:
     callsub deploy
+    bytec_0 // 0x151f7c75
+    log
     intc_0 // 1
     return
 
@@ -307,7 +216,7 @@ deploy:
     pushint 1000000000001000000
     itxn_field Amount
     itxn_submit
-    pushint 24
+    intc_3 // 24
     bzero
     swap
     itob
@@ -346,7 +255,7 @@ terminate_after_if_else@6:
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    pushint 24
+    intc_3 // 24
     extract_uint64
     pushint 6
     itxn_field TypeEnum
@@ -419,7 +328,7 @@ exists_ternary_merge@3:
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    pushint 24
+    intc_3 // 24
     extract_uint64
     dup
     bz exists_ternary_false@8
@@ -479,3 +388,22 @@ c_ternary_merge@3:
 c_ternary_false@2:
     intc_1 // 0
     b c_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

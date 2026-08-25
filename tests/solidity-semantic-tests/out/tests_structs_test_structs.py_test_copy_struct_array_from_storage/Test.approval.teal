@@ -32,177 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@10
     txn NumAppArgs
     intc_0 // 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@10
+    pushbytess 0x6b59084d 0x66e41cb7 0x0a8e8e01 0x8f0d282d
     txna ApplicationArgs 0
-    pushbytes 0x6b59084d
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8
 
-main_ternary_merge@8:
-    !
-    assert // not payable
-    intc_3 // 32
-    bzero
-    callsub test1
-    itob
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@7:
-    intc_1 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_0 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0x66e41cb7
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_3 // 32
-    bzero
-    callsub test2
-    itob
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@14:
-    intc_1 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    bnz main_after_if_else@23
-    txn NumAppArgs
-    intc_0 // 2
-    ==
-    bz main_after_if_else@23
-    txna ApplicationArgs 0
-    pushbytes 0x0a8e8e01
-    ==
-    bz main_after_if_else@23
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_3 // 32
-    bzero
-    callsub test3
-    itob
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
-
-main_after_if_else@23:
-    txn OnCompletion
-    bnz main_after_if_else@30
-    txn NumAppArgs
-    intc_0 // 2
-    ==
-    bz main_after_if_else@30
-    txna ApplicationArgs 0
-    pushbytes 0x8f0d282d
-    ==
-    bz main_after_if_else@30
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
-    intc_3 // 32
-    bzero
-    callsub test4
-    itob
-    concat
-    dup
-    len
-    intc_3 // 32
-    -
-    intc_3 // 32
-    extract3
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@28:
-    intc_1 // 0
-    b main_ternary_merge@29
-
-main_after_if_else@30:
+main_after_if_else@10:
     txn OnCompletion
     !
     assert
@@ -210,10 +49,10 @@ main_after_if_else@30:
     assert
     pushbytess 0xbacc49e3 0x8d8e1dcf 0x99fc972e 0xeb2fadae 0xfd096ac6 // method "__postInit()void", method "test1()bool", method "test2()bool", method "test3()bool", method "test4()bool"
     txna ApplicationArgs 0
-    match main___postInit_route@33 main_test1_route@34 main_test2_route@35 main_test3_route@36 main_test4_route@37
+    match main___postInit_route@13 main_test1_route@14 main_test2_route@15 main_test3_route@16 main_test4_route@17
     err
 
-main_test4_route@37:
+main_test4_route@17:
     callsub test4
     bytec 4 // 0x00
     intc_1 // 0
@@ -226,7 +65,7 @@ main_test4_route@37:
     intc_2 // 1
     return
 
-main_test3_route@36:
+main_test3_route@16:
     callsub test3
     bytec 4 // 0x00
     intc_1 // 0
@@ -239,7 +78,7 @@ main_test3_route@36:
     intc_2 // 1
     return
 
-main_test2_route@35:
+main_test2_route@15:
     callsub test2
     bytec 4 // 0x00
     intc_1 // 0
@@ -252,7 +91,7 @@ main_test2_route@35:
     intc_2 // 1
     return
 
-main_test1_route@34:
+main_test1_route@14:
     callsub test1
     bytec 4 // 0x00
     intc_1 // 0
@@ -265,7 +104,7 @@ main_test1_route@34:
     intc_2 // 1
     return
 
-main___postInit_route@33:
+main___postInit_route@13:
     bytec 5 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -299,25 +138,25 @@ main___postInit_route@33:
     bytec_0 // "a"
     box_len
     bury 1
-    bz main_ternary_false@51
+    bz main_ternary_false@31
     bytec_0 // "a"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-main_ternary_merge@52:
+main_ternary_merge@32:
     assert // array index out of bounds
     bytec_0 // "a"
     box_len
     bury 1
-    bnz main_after_if_else@54
+    bnz main_after_if_else@34
     bytec_0 // "a"
     intc_0 // 2
     box_create
     pop
 
-main_after_if_else@54:
+main_after_if_else@34:
     bytec_0 // "a"
     box_get
     assert // box exists
@@ -361,25 +200,25 @@ main_after_if_else@54:
     bytec_0 // "a"
     box_len
     bury 1
-    bz main_ternary_false@56
+    bz main_ternary_false@36
     bytec_0 // "a"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-main_ternary_merge@57:
+main_ternary_merge@37:
     assert // array index out of bounds
     bytec_0 // "a"
     box_len
     bury 1
-    bnz main_after_if_else@59
+    bnz main_after_if_else@39
     bytec_0 // "a"
     intc_0 // 2
     box_create
     pop
 
-main_after_if_else@59:
+main_after_if_else@39:
     bytec_0 // "a"
     box_get
     assert // box exists
@@ -423,25 +262,25 @@ main_after_if_else@59:
     bytec_0 // "a"
     box_len
     bury 1
-    bz main_ternary_false@61
+    bz main_ternary_false@41
     bytec_0 // "a"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-main_ternary_merge@62:
+main_ternary_merge@42:
     assert // array index out of bounds
     bytec_0 // "a"
     box_len
     bury 1
-    bnz main_after_if_else@64
+    bnz main_after_if_else@44
     bytec_0 // "a"
     intc_0 // 2
     box_create
     pop
 
-main_after_if_else@64:
+main_after_if_else@44:
     bytec_0 // "a"
     box_get
     assert // box exists
@@ -509,17 +348,97 @@ main_after_if_else@64:
     intc_2 // 1
     return
 
-main_ternary_false@61:
+main_ternary_false@41:
     intc_1 // 0
-    b main_ternary_merge@62
+    b main_ternary_merge@42
 
-main_ternary_false@56:
+main_ternary_false@36:
     intc_1 // 0
-    b main_ternary_merge@57
+    b main_ternary_merge@37
 
-main_ternary_false@51:
+main_ternary_false@31:
     intc_1 // 0
-    b main_ternary_merge@52
+    b main_ternary_merge@32
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_3 // 32
+    bzero
+    callsub test4
+    itob
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_3 // 32
+    bzero
+    callsub test3
+    itob
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_3 // 32
+    bzero
+    callsub test2
+    itob
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_3 // 32
+    bzero
+    callsub test1
+    itob
+    concat
+    dup
+    len
+    intc_3 // 32
+    -
+    intc_3 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
 
 
 // _puya_lib.box_arc4.box_dynamic_array_concat_fixed(box_key: bytes, array_offset: uint64, new_items_bytes: bytes, new_items_count: uint64, fixed_element_size: uint64) -> void:
@@ -1750,3 +1669,22 @@ test4_ternary_false@5:
 test4_ternary_false@2:
     intc_1 // 0
     b test4_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_struct_array_from_storage.sol.Test.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

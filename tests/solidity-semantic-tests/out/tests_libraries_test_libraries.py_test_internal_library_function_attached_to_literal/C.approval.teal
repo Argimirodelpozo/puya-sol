@@ -29,35 +29,34 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@9
+    bnz main_after_if_else@8
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@9
+    bz main_after_if_else@8
+    pushbytess 0xd3734291 0xb1c549b8
     txna ApplicationArgs 0
-    pushbytes 0xd3734291
-    ==
-    bz main_after_if_else@9
-    txn GroupIndex
-    bz main_ternary_false@7
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
+    match main_switch_case_0@5 main_switch_case_1@6
 
-main_ternary_merge@8:
+main_after_if_else@8:
+    txn OnCompletion
     !
-    assert // not payable
-    intc_0 // 32
-    bzero
-    callsub double42
-    concat
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x936e3d1e 0x66f61d21 // method "double42()uint256", method "doubleABC()byte[]"
+    txna ApplicationArgs 0
+    match main_double42_route@11 main_doubleABC_route@12
+    err
+
+main_doubleABC_route@12:
+    callsub doubleABC
     dup
     len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    itob
+    extract 6 2
+    swap
+    concat
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -65,31 +64,17 @@ main_ternary_merge@8:
     intc_1 // 1
     return
 
-main_ternary_false@7:
-    intc_2 // 0
-    b main_ternary_merge@8
-
-main_after_if_else@9:
-    txn OnCompletion
-    bnz main_after_if_else@16
-    txn NumAppArgs
-    intc_3 // 2
-    ==
-    bz main_after_if_else@16
-    txna ApplicationArgs 0
-    pushbytes 0xb1c549b8
-    ==
-    bz main_after_if_else@16
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
+main_double42_route@11:
+    callsub double42
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     intc_1 // 1
-    -
-    gtxns Amount
+    return
 
-main_ternary_merge@15:
-    !
-    assert // not payable
+main_switch_case_1@6:
+    callsub __evm_npy
     intc_0 // 32
     bzero
     callsub doubleABC
@@ -126,38 +111,18 @@ main_ternary_merge@15:
     intc_1 // 1
     return
 
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_after_if_else@16:
-    txn OnCompletion
-    !
-    assert
-    txn ApplicationID
-    assert
-    pushbytess 0x936e3d1e 0x66f61d21 // method "double42()uint256", method "doubleABC()byte[]"
-    txna ApplicationArgs 0
-    match main_double42_route@19 main_doubleABC_route@20
-    err
-
-main_doubleABC_route@20:
-    callsub doubleABC
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub double42
+    concat
     dup
     len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_double42_route@19:
-    callsub double42
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
@@ -238,3 +203,22 @@ doubleABC_ternary_merge@3:
 doubleABC_ternary_false@2:
     intc_2 // 0
     b doubleABC_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/libraries/contracts/internal_library_function_attached_to_literal.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3
