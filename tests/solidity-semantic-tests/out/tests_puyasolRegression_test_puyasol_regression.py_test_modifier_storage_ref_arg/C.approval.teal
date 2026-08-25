@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_storage_ref_arg.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock "arr" 0x151f7c75 "__ctor_pending" "m" 0x010000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock "arr" 0x151f7c75 "m" "__ctor_pending" 0x010000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -113,21 +113,21 @@ main_fArr_route@14:
     return
 
 main___postInit_route@13:
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_2 // 0
     app_global_put
     bytec_0 // "arr"
     intc_3 // 2
     box_create
     pop
-    bytec_3 // "m"
+    bytec_2 // "m"
     intc_3 // 2
     box_create
     pop
@@ -404,7 +404,8 @@ fMap_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec_3 // "m"
+    dup
+    bytec_2 // "m"
     concat
     sha256
     dup
@@ -421,9 +422,14 @@ fMap_ternary_merge@3:
     dig 1
     box_del
     pop
-    swap
-    dig 1
     box_put
+    bytec_2 // "m"
+    concat
+    sha256
+    box_get
+    pushbytes 0x
+    cover 2
+    select
     dup
     len
     intc_0 // 32
@@ -502,7 +508,7 @@ getMap_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec_3 // "m"
+    bytec_2 // "m"
     concat
     sha256
     box_get

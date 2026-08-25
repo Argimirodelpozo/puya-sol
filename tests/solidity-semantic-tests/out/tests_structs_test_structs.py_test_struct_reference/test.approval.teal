@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_reference.sol.test.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2
-    bytecblock 0x0000000000060000 "data" 0x151f7c75 0x854c3a619055065f1247b31394e3e605cd4ea7a38049b1d13261f1ebf69639ba 0xc1ac4acb02ce8bc62e9a2fb0697381ae7d0e8549881951b3b9ec334bd7f806fb
+    bytecblock 0x0000000000060000 "data" 0xfb5fbe2d0865de7cc3cb7c72e4bc113908062c2b8eeb03f25a1820b5ee6e9bca 0x11a554ce756766dd1f2c71098b48504dd49de59e6354227614f1d683e3f83430 0x151f7c75 0x4fa01c11e1883ce4e36c10dd220d660cdacba1a960fa14475352319b8a2f54c7
     pushint 4096
     bzero
     dup
@@ -60,7 +60,7 @@ main_check_route@11:
     intc_0 // 0
     uncover 2
     setbit
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -70,7 +70,7 @@ main_check_route@11:
 main_switch_case_1@6:
     callsub __evm_npy
     callsub set
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -88,7 +88,7 @@ main_switch_case_0@5:
     -
     intc_2 // 32
     extract3
-    bytec_2 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -118,7 +118,7 @@ check_ternary_merge@3:
     intc_3 // 2
     ==
     bz check_else_body@5
-    pushbytes 0xfb5fbe2d0865de7cc3cb7c72e4bc113908062c2b8eeb03f25a1820b5ee6e9bca
+    bytec_2 // 0xfb5fbe2d0865de7cc3cb7c72e4bc113908062c2b8eeb03f25a1820b5ee6e9bca
     box_get
     bytec_0 // 0x0000000000060000
     cover 2
@@ -130,7 +130,7 @@ check_ternary_merge@3:
 
 check_after_if_else@6:
     bz check_else_body@8
-    pushbytes 0x4fa01c11e1883ce4e36c10dd220d660cdacba1a960fa14475352319b8a2f54c7
+    bytec 5 // 0x4fa01c11e1883ce4e36c10dd220d660cdacba1a960fa14475352319b8a2f54c7
     box_get
     bytec_0 // 0x0000000000060000
     cover 2
@@ -141,7 +141,7 @@ check_after_if_else@6:
 
 check_after_if_else@9:
     bz check_else_body@11
-    pushbytes 0x11a554ce756766dd1f2c71098b48504dd49de59e6354227614f1d683e3f83430
+    bytec_3 // 0x11a554ce756766dd1f2c71098b48504dd49de59e6354227614f1d683e3f83430
     box_get
     bytec_0 // 0x0000000000060000
     cover 2
@@ -194,7 +194,7 @@ set_ternary_merge@3:
     bytec_1 // "data"
     swap
     box_put
-    bytec_3 // 0x854c3a619055065f1247b31394e3e605cd4ea7a38049b1d13261f1ebf69639ba
+    bytec_2 // 0xfb5fbe2d0865de7cc3cb7c72e4bc113908062c2b8eeb03f25a1820b5ee6e9bca
     box_get
     bytec_0 // 0x0000000000060000
     cover 2
@@ -215,13 +215,13 @@ set_ternary_merge@3:
     pushbytes 0x000000030006
     swap
     concat
-    bytec_3 // 0x854c3a619055065f1247b31394e3e605cd4ea7a38049b1d13261f1ebf69639ba
+    bytec_2 // 0xfb5fbe2d0865de7cc3cb7c72e4bc113908062c2b8eeb03f25a1820b5ee6e9bca
     box_del
     pop
-    bytec_3 // 0x854c3a619055065f1247b31394e3e605cd4ea7a38049b1d13261f1ebf69639ba
+    bytec_2 // 0xfb5fbe2d0865de7cc3cb7c72e4bc113908062c2b8eeb03f25a1820b5ee6e9bca
     swap
     box_put
-    pushbytes 0x4cd0914c47debef6b9838e512e0ca9aaebbc38499e547ee2bc76e723cf3c1d47
+    bytec 5 // 0x4fa01c11e1883ce4e36c10dd220d660cdacba1a960fa14475352319b8a2f54c7
     box_get
     bytec_0 // 0x0000000000060000
     cover 2
@@ -234,7 +234,7 @@ set_ternary_merge@3:
     pushint 4294967295
     <=
     assert // overflow
-    bytec 4 // 0xc1ac4acb02ce8bc62e9a2fb0697381ae7d0e8549881951b3b9ec334bd7f806fb
+    bytec_3 // 0x11a554ce756766dd1f2c71098b48504dd49de59e6354227614f1d683e3f83430
     box_get
     bytec_0 // 0x0000000000060000
     cover 2
@@ -265,10 +265,10 @@ set_ternary_merge@3:
     concat
     swap
     concat
-    bytec 4 // 0xc1ac4acb02ce8bc62e9a2fb0697381ae7d0e8549881951b3b9ec334bd7f806fb
+    bytec_3 // 0x11a554ce756766dd1f2c71098b48504dd49de59e6354227614f1d683e3f83430
     box_del
     pop
-    bytec 4 // 0xc1ac4acb02ce8bc62e9a2fb0697381ae7d0e8549881951b3b9ec334bd7f806fb
+    bytec_3 // 0x11a554ce756766dd1f2c71098b48504dd49de59e6354227614f1d683e3f83430
     swap
     box_put
     retsub
