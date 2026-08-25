@@ -4,7 +4,7 @@
 /// place as INDEPENDENT nodes — e.g. a modifier with multiple `_;` placeholders runs the function
 /// body N times, and the body inliner splices the body once per `_;`. Splicing the same shared_ptr
 /// nodes aliases them, so a later in-place pass (checked-arithmetic temps, SingleEvaluation caching)
-/// corrupts every copy. cloneExpr/cloneStmt produce structurally-equal but disjoint trees.
+/// corrupts every copy. cloneStmt/cloneBlock produce structurally-equal but disjoint trees.
 ///
 /// WType pointers are interned/immutable and intentionally SHARED (not cloned). SingleEvaluation ids
 /// are re-minted (nextSingleEvalId) so puya's (source,id) eval cache does not merge the copies.
@@ -15,7 +15,6 @@
 namespace puyasol::awst
 {
 
-std::shared_ptr<Expression> cloneExpr(std::shared_ptr<Expression> const& e);
 std::shared_ptr<Statement> cloneStmt(std::shared_ptr<Statement> const& s);
 std::shared_ptr<Block> cloneBlock(std::shared_ptr<Block> const& b);
 

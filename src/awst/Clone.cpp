@@ -95,6 +95,7 @@ std::shared_ptr<Expression> cloneE(std::shared_ptr<Expression> const& e, CloneCt
 	LEAF(TemplateVar)
 	LEAF(MethodConstant)
 	LEAF(AddressConstant)
+	LEAF(ARC4Router)
 	CHILD2(UInt64BinaryOperation, left, right)
 	CHILD2(BigUIntBinaryOperation, left, right)
 	CHILD2(BytesBinaryOperation, left, right)
@@ -257,12 +258,6 @@ std::shared_ptr<Statement> cloneS(std::shared_ptr<Statement> const& s, CloneCtx&
 }
 
 } // namespace
-
-std::shared_ptr<Expression> cloneExpr(std::shared_ptr<Expression> const& e)
-{
-	CloneCtx ctx;
-	return cloneE(e, ctx);
-}
 
 std::shared_ptr<Statement> cloneStmt(std::shared_ptr<Statement> const& s)
 {

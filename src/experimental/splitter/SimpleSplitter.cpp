@@ -602,12 +602,9 @@ std::shared_ptr<awst::Contract> buildHelperContract(
 		// every public body back into every page and defeat splitting.
 		if (delegateMode && evmRouteMode && original.approvalProgram.body)
 		{
-			for (auto const& stmt: original.approvalProgram.body->body)
-			{
-				if (!std::dynamic_pointer_cast<awst::IfElse>(stmt)) continue;
-				auto candidate = awst::cloneStmt(stmt);
-				bool callsMovedMethod = false;
-				walkStatement(*candidate, [&](awst::Expression const& expr)
+			auto callsMoved = [&](awst::Statement& probe) {
+				bool hit = false;
+				walkStatement(probe, [&](awst::Expression const& expr)
 					-> std::shared_ptr<awst::Expression>
 				{
 					auto const* call = dynamic_cast<
@@ -616,10 +613,40 @@ std::shared_ptr<awst::Contract> buildHelperContract(
 					if (auto const* target = std::get_if<
 						awst::InstanceMethodTarget>(&call->target))
 						if (movedMethodNames.count(target->memberName))
-							callsMovedMethod = true;
+							hit = true;
 					return nullptr;
 				});
-				if (callsMovedMethod)
+				return hit;
+			};
+			for (auto const& stmt: original.approvalProgram.body->body)
+			{
+				auto const asIf = std::dynamic_pointer_cast<awst::IfElse>(stmt);
+				if (!asIf) continue;
+				// The EVM arms live in ONE guard IfElse holding a selector
+				// Switch (match-table dispatch). Copying it wholesale would
+				// pull every arm into every page — keep only this page's cases.
+				awst::Switch const* armSwitch = nullptr;
+				if (asIf->ifBranch && asIf->ifBranch->body.size() == 1)
+					armSwitch = dynamic_cast<awst::Switch const*>(
+						asIf->ifBranch->body.front().get());
+				if (armSwitch)
+				{
+					auto candidate = awst::cloneStmt(stmt);
+					auto& clonedIf = static_cast<awst::IfElse&>(*candidate);
+					auto& clonedSwitch = static_cast<awst::Switch&>(
+						*clonedIf.ifBranch->body.front());
+					decltype(clonedSwitch.cases) kept;
+					for (auto& c: clonedSwitch.cases)
+						if (c.second && callsMoved(*c.second))
+							kept.push_back(std::move(c));
+					if (kept.empty())
+						continue;
+					clonedSwitch.cases = std::move(kept);
+					body->body.push_back(std::move(candidate));
+					continue;
+				}
+				auto candidate = awst::cloneStmt(stmt);
+				if (callsMoved(*candidate))
 					body->body.push_back(std::move(candidate));
 			}
 		}
@@ -929,6 +956,55 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 		helper->methods.push_back(std::move(m));
 	}
 
+	// The copied adapter arms (and any retained body) may call synthesized
+	// member subroutines that were not moved with the page — e.g. the shared
+	// EVM-entry helpers __evm_npy / __evm_decw. Pull every referenced-but-
+	// missing member method over from the primary (bodies cloned so pages
+	// never alias the orchestrator's trees). Fixpoint: copied bodies may
+	// reference further members.
+	for (int pass = 0; pass < 8; ++pass)
+	{
+		std::set<std::string> have;
+		for (auto const& hm: helper->methods)
+			have.insert(hm.memberName);
+		std::set<std::string> wanted;
+		auto scan = [&](awst::Statement& probe) {
+			walkStatement(probe, [&](awst::Expression const& expr)
+				-> std::shared_ptr<awst::Expression>
+			{
+				auto const* call = dynamic_cast<
+					awst::SubroutineCallExpression const*>(&expr);
+				if (!call) return nullptr;
+				if (auto const* target = std::get_if<
+					awst::InstanceMethodTarget>(&call->target))
+					if (!have.count(target->memberName))
+						wanted.insert(target->memberName);
+				return nullptr;
+			});
+		};
+		if (helper->approvalProgram.body)
+			scan(*helper->approvalProgram.body);
+		for (auto const& hm: helper->methods)
+			if (hm.body)
+				scan(*hm.body);
+		bool added = false;
+		for (auto const& name: wanted)
+			for (auto const& pm: primary->methods)
+				if (pm.memberName == name)
+				{
+					awst::ContractMethod copy = pm;
+					copy.cref = helper->id;
+					copy.arc4MethodConfig = std::nullopt;
+					if (copy.body)
+						copy.body = awst::cloneBlock(copy.body);
+					helper->methods.push_back(std::move(copy));
+					added = true;
+					break;
+				}
+		if (!added)
+			break;
+	}
+
 	ContractAWST helperOut;
 	helperOut.contractId = helper->id;
 	helperOut.contractName = helper->name;
@@ -970,26 +1046,56 @@ std::vector<SimpleSplitter::ContractAWST> SimpleSplitter::split(
 			orchContract->approvalProgram.body = awst::cloneBlock(
 				orchContract->approvalProgram.body);
 			auto& statements = orchContract->approvalProgram.body->body;
-			statements.erase(std::remove_if(statements.begin(), statements.end(),
-				[&](std::shared_ptr<awst::Statement> const& stmt) {
-					if (!std::dynamic_pointer_cast<awst::IfElse>(stmt))
-						return false;
-					auto candidate = awst::cloneStmt(stmt);
-					bool callsMovedMethod = false;
-					walkStatement(*candidate, [&](awst::Expression const& expr)
-						-> std::shared_ptr<awst::Expression>
-					{
-						auto const* call = dynamic_cast<
-							awst::SubroutineCallExpression const*>(&expr);
-						if (!call) return nullptr;
-						if (auto const* target = std::get_if<
-							awst::InstanceMethodTarget>(&call->target))
-							if (movedMethodNames.count(target->memberName))
-								callsMovedMethod = true;
-						return nullptr;
-					});
-					return callsMovedMethod;
-				}), statements.end());
+			auto callsMoved = [&](awst::Statement& probe) {
+				bool hit = false;
+				walkStatement(probe, [&](awst::Expression const& expr)
+					-> std::shared_ptr<awst::Expression>
+				{
+					auto const* call = dynamic_cast<
+						awst::SubroutineCallExpression const*>(&expr);
+					if (!call) return nullptr;
+					if (auto const* target = std::get_if<
+						awst::InstanceMethodTarget>(&call->target))
+						if (movedMethodNames.count(target->memberName))
+							hit = true;
+					return nullptr;
+				});
+				return hit;
+			};
+			std::vector<std::shared_ptr<awst::Statement>> keptStatements;
+			keptStatements.reserve(statements.size());
+			for (auto& stmt: statements)
+			{
+				auto asIf = std::dynamic_pointer_cast<awst::IfElse>(stmt);
+				if (!asIf)
+				{
+					keptStatements.push_back(std::move(stmt));
+					continue;
+				}
+				// The arm SWITCH (one guard IfElse holding the selector match
+				// table): drop only the moved methods' cases; the resident
+				// methods keep their arms. Removing the whole statement — the
+				// old per-arm behavior — silently unrouted EVERY method.
+				awst::Switch* armSwitch = nullptr;
+				if (asIf->ifBranch && asIf->ifBranch->body.size() == 1)
+					armSwitch = dynamic_cast<awst::Switch*>(
+						asIf->ifBranch->body.front().get());
+				if (armSwitch)
+				{
+					decltype(armSwitch->cases) kept;
+					for (auto& c: armSwitch->cases)
+						if (!c.second || !callsMoved(*c.second))
+							kept.push_back(std::move(c));
+					if (kept.empty())
+						continue; // every case moved — drop the guard too
+					armSwitch->cases = std::move(kept);
+					keptStatements.push_back(std::move(stmt));
+					continue;
+				}
+				if (!callsMoved(*stmt))
+					keptStatements.push_back(std::move(stmt));
+			}
+			statements = std::move(keptStatements);
 		}
 	}
 

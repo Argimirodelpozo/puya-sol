@@ -1,4 +1,5 @@
 #include "builder/abi/EvmAbiDecode.h"
+#include "builder/AwstShorthand.h"
 
 #include "Logger.h"
 #include "awst/NameGen.h"
@@ -12,26 +13,12 @@
 
 namespace puyasol::builder::abi
 {
+using namespace puyasol::builder::shorthand;
 using namespace solidity::frontend;
 
 namespace
 {
 using Statements = std::vector<std::shared_ptr<awst::Statement>>;
-
-std::shared_ptr<awst::Expression> u64(uint64_t value,
-	awst::SourceLocation const& loc)
-{
-	return awst::makeIntegerConstant(value, loc);
-}
-
-std::shared_ptr<awst::Expression> add(
-	std::shared_ptr<awst::Expression> left,
-	std::shared_ptr<awst::Expression> right,
-	awst::SourceLocation const& loc)
-{
-	return awst::makeUInt64BinOp(std::move(left),
-		awst::UInt64BinaryOperator::Add, std::move(right), loc);
-}
 
 
 
@@ -40,8 +27,10 @@ class Decoder
 public:
 	Decoder(TypeMapper& typeMapper,
 		std::shared_ptr<awst::Expression> blob,
-		awst::SourceLocation const& loc):
-		m_typeMapper(typeMapper), m_blob(std::move(blob)), m_loc(loc)
+		awst::SourceLocation const& loc,
+		char const* wordFetchSub = nullptr):
+		m_typeMapper(typeMapper), m_blob(std::move(blob)), m_loc(loc),
+		m_wordFetchSub(wordFetchSub)
 	{
 	}
 
@@ -79,6 +68,15 @@ private:
 	std::shared_ptr<awst::Expression> word(
 		std::shared_ptr<awst::Expression> position, Statements& out)
 	{
+		// Shared fetch subroutine (bounds assert lives in its body).
+		if (m_wordFetchSub)
+		{
+			auto call = awst::makeSubroutineCall(
+				awst::InstanceMethodTarget{m_wordFetchSub},
+				awst::WType::bytesType(), m_loc);
+			awst::pushCallArg(call->args, std::move(position));
+			return call;
+		}
 		auto pos = awst::makeEvalOnce(std::move(position), m_loc);
 		bounds(pos, u64(32, m_loc), out);
 		return awst::makeExtract3(m_blob, pos, u64(32, m_loc), m_loc);
@@ -289,6 +287,7 @@ private:
 	}
 
 	TypeMapper& m_typeMapper;
+	char const* m_wordFetchSub = nullptr;
 	std::shared_ptr<awst::Expression> m_blob;
 	awst::SourceLocation const& m_loc;
 };
@@ -309,9 +308,10 @@ std::shared_ptr<awst::Expression> decodeEvmAbi(
 	std::vector<Type const*> const& components,
 	awst::WType const* targetType,
 	awst::SourceLocation const& loc,
-	Statements& out)
+	Statements& out,
+	char const* wordFetchSub)
 {
-	return Decoder(typeMapper, std::move(blob), loc).tuple(
+	return Decoder(typeMapper, std::move(blob), loc, wordFetchSub).tuple(
 		components, targetType, out);
 }
 

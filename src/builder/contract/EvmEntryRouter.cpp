@@ -1,4 +1,5 @@
 #include "builder/contract/ContractBuilder.h"
+#include "builder/AwstShorthand.h"
 
 #include "builder/contract/RouterConditions.h"
 
@@ -17,16 +18,11 @@
 
 namespace puyasol::builder
 {
+using namespace puyasol::builder::shorthand;
 using namespace solidity::frontend;
 
 namespace
 {
-std::shared_ptr<awst::Expression> u64(
-	uint64_t value, awst::SourceLocation const& loc)
-{
-	return awst::makeIntegerConstant(value, loc);
-}
-
 std::string methodNameFor(
 	FunctionType const& function, OverloadedNamesSet const& overloaded)
 {
@@ -90,6 +86,74 @@ void emitNonPayableCheck(
 			awst::makeNumericCompare(std::move(value),
 				awst::NumericComparison::Eq, u64(0, loc), loc),
 			loc, "not payable"), loc));
+}
+
+/// Emit `callsub __evm_npy` — the shared non-payable guard.
+void emitNonPayableCall(
+	awst::SourceLocation const& loc,
+	std::vector<std::shared_ptr<awst::Statement>>& out)
+{
+	auto call = awst::makeSubroutineCall(
+		awst::InstanceMethodTarget{"__evm_npy"}, awst::WType::voidType(), loc);
+	out.push_back(awst::makeExpressionStatement(std::move(call), loc));
+}
+
+/// Synthesize the shared EVM-entry helper subroutines once per contract:
+///   __evm_npy() — the non-payable guard every non-payable arm runs;
+///   __evm_decw(__off) — bounds-checked 32-byte word fetch from
+///                       ApplicationArgs[1] (the EVM calldata body).
+/// Emitting these inline per arm made a 55-method contract spend hundreds of
+/// lines repeating them; puya strips whichever helper ends up uncalled.
+void synthesizeEvmEntryHelpers(
+	awst::Contract& contract, awst::SourceLocation const& loc)
+{
+	if (contract.methods.empty() || findMethod(contract, "__evm_npy"))
+		return;
+	std::string cref = contract.methods.front().cref;
+	{
+		awst::ContractMethod sub;
+		sub.sourceLocation = loc;
+		sub.cref = cref;
+		sub.memberName = "__evm_npy";
+		sub.returnType = awst::WType::voidType();
+		sub.arc4MethodConfig = std::nullopt;
+		auto body = awst::makeBlock(loc);
+		emitNonPayableCheck(loc, body->body);
+		body->body.push_back(awst::makeReturnStatement(nullptr, loc));
+		sub.body = std::move(body);
+		contract.methods.push_back(std::move(sub));
+	}
+	{
+		awst::ContractMethod sub;
+		sub.sourceLocation = loc;
+		sub.cref = cref;
+		sub.memberName = "__evm_decw";
+		sub.returnType = awst::WType::bytesType();
+		sub.arc4MethodConfig = std::nullopt;
+		awst::SubroutineArgument offArg;
+		offArg.name = "__off";
+		offArg.wtype = awst::WType::uint64Type();
+		offArg.sourceLocation = loc;
+		sub.args.push_back(offArg);
+		auto off = [&]() {
+			return awst::makeVarExpression(
+				"__off", awst::WType::uint64Type(), loc);
+		};
+		auto body = awst::makeBlock(loc);
+		body->body.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(
+				awst::makeNumericCompare(
+					awst::makeUInt64BinOp(off(),
+						awst::UInt64BinaryOperator::Add, u64(32, loc), loc),
+					awst::NumericComparison::Lte,
+					awst::makeLen(awst::makeAppArg(1, loc), loc), loc),
+				loc, "EVM ABI decode out of bounds"), loc));
+		body->body.push_back(awst::makeReturnStatement(
+			awst::makeExtract3(
+				awst::makeAppArg(1, loc), off(), u64(32, loc), loc), loc));
+		sub.body = std::move(body);
+		contract.methods.push_back(std::move(sub));
+	}
 }
 
 struct EvmRoute
@@ -193,27 +257,20 @@ std::vector<EvmRoute> collectEvmRoutes(
 ///   -> non-payable check, EVM-decode Args[1], call, EVM-encode + return log.
 /// Shared verbatim by the EVM entry profile and the ARC-4 profile's
 /// compatibility alias mount.
-void emitEvmRouteArm(
+/// One EVM route's arm BODY (non-payable check, calldata decode, dispatch,
+/// return encode + log). The transaction-shape/selector guards live in the
+/// shared arm SWITCH below — emitting them per arm made a 55-method contract
+/// spend ~half its program on sequential selector compares.
+std::shared_ptr<awst::Block> buildEvmArmBody(
 	TypeMapper& typeMapper,
 	EvmRoute const& route,
-	std::vector<std::shared_ptr<awst::Statement>>& sink,
 	awst::SourceLocation const& loc)
 {
 	auto const& paramTypes = route.function->parameterTypes();
 	auto const& returnTypes = route.function->returnParameterTypes();
-	auto selectorMatches = awst::makeBytesComparison(
-		awst::makeAppArg(0, loc), awst::EqualityComparison::Eq,
-		awst::makeBytesConstant(route.selector, loc,
-			awst::BytesEncoding::Base16, awst::WType::bytesType()), loc);
-	auto shapeMatches = awst::makeBoolBinOp(
-		appArgCountIs(2, loc), awst::BinaryBooleanOperator::And,
-		std::move(selectorMatches), loc);
-	auto condition = awst::makeBoolBinOp(
-		isNoOpCall(loc), awst::BinaryBooleanOperator::And,
-		std::move(shapeMatches), loc);
 	auto body = awst::makeBlock(loc);
 	if (!route.function->isPayable())
-		emitNonPayableCheck(loc, body->body);
+		emitNonPayableCall(loc, body->body);
 
 	std::vector<std::shared_ptr<awst::Expression>> values;
 	if (!paramTypes.empty())
@@ -231,7 +288,7 @@ void emitEvmRouteArm(
 		}
 		auto decoded = abi::decodeEvmAbi(
 			typeMapper, awst::makeAppArg(1, loc), paramTypes,
-			decodedType, loc, body->body);
+			decodedType, loc, body->body, "__evm_decw");
 		if (paramTypes.size() == 1)
 			values.push_back(std::move(decoded));
 		else
@@ -278,8 +335,37 @@ void emitEvmRouteArm(
 		typeMapper, returnTypes, std::move(returnValues), loc, body->body);
 	emitReturnLog(std::move(encoded), loc, body->body);
 	body->body.push_back(awst::makeReturnStatement(awst::makeTrue(loc), loc));
+	return body;
+}
+
+/// ONE guard + ONE selector match table for every EVM arm:
+///   if (NoOp && NumAppArgs == 2) switch (Args[0]) { case sel_i: <arm_i> }
+/// puya lowers the constant-case Switch to a pushbytess/match table (the
+/// ARC-4 router's own shape). An unmatched selector falls through the switch
+/// to whatever dispatch follows, exactly like the old per-arm if-chain.
+void emitEvmArmSwitch(
+	TypeMapper& typeMapper,
+	std::vector<EvmRoute> const& routes,
+	std::vector<std::shared_ptr<awst::Statement>>& sink,
+	awst::SourceLocation const& loc)
+{
+	if (routes.empty())
+		return;
+	auto switchNode = std::make_shared<awst::Switch>();
+	switchNode->sourceLocation = loc;
+	switchNode->value = awst::makeAppArg(0, loc);
+	for (auto const& route: routes)
+		switchNode->cases.emplace_back(
+			awst::makeBytesConstant(route.selector, loc,
+				awst::BytesEncoding::Base16, awst::WType::bytesType()),
+			buildEvmArmBody(typeMapper, route, loc));
+	auto guarded = awst::makeBlock(loc);
+	guarded->body.push_back(std::move(switchNode));
+	auto condition = awst::makeBoolBinOp(
+		isNoOpCall(loc), awst::BinaryBooleanOperator::And,
+		appArgCountIs(2, loc), loc);
 	sink.push_back(awst::makeIfElse(
-		std::move(condition), std::move(body), nullptr, loc));
+		std::move(condition), std::move(guarded), nullptr, loc));
 }
 }
 
@@ -292,6 +378,10 @@ void ContractBuilder::emitEvmEntryDispatch(
 		return;
 	auto const& loc = approval.sourceLocation;
 
+	// Synthesize helpers BEFORE collecting routes: collectEvmRoutes stores
+	// ContractMethod pointers, and appending methods afterwards could
+	// reallocate the vector under them.
+	synthesizeEvmEntryHelpers(contract, loc);
 	auto routes = collectEvmRoutes(
 		contractDefinition, contract, m_overloadedNames, loc, /*quiet=*/false);
 	// The methods remain ordinary callable subroutines, but are no longer
@@ -352,7 +442,7 @@ void ContractBuilder::emitEvmEntryDispatch(
 			appArgCountIs(0, loc), loc);
 		auto body = awst::makeBlock(loc);
 		if (emptyDefinition && !emptyDefinition->isPayable())
-			emitNonPayableCheck(loc, body->body);
+			emitNonPayableCall(loc, body->body);
 		auto call = awst::makeSubroutineCall(
 			awst::InstanceMethodTarget{emptyTarget->memberName},
 			emptyTarget->returnType, loc);
@@ -370,8 +460,7 @@ void ContractBuilder::emitEvmEntryDispatch(
 			std::move(condition), std::move(body), nullptr, loc));
 	}
 
-	for (auto const& route: routes)
-		emitEvmRouteArm(m_typeMapper, route, approval.body->body, loc);
+	emitEvmArmSwitch(m_typeMapper, routes, approval.body->body, loc);
 
 	// Unmatched non-empty calldata selects fallback(). Reconstruct exactly the
 	// Solidity byte stream from the AVM carrier split: selector ++ ABI body.
@@ -403,7 +492,7 @@ void ContractBuilder::emitEvmEntryDispatch(
 			std::move(carrierShape), loc);
 		auto fallbackBody = awst::makeBlock(loc);
 		if (fallbackDefinition && !fallbackDefinition->isPayable())
-			emitNonPayableCheck(loc, fallbackBody->body);
+			emitNonPayableCall(loc, fallbackBody->body);
 		auto call = awst::makeSubroutineCall(
 			awst::InstanceMethodTarget{fallbackMethod->memberName},
 			fallbackMethod->returnType, loc);
@@ -449,11 +538,13 @@ void ContractBuilder::emitEvmCompatRoutes(
 	// before. arc4MethodConfigs are NOT reset — ARC-4 stays the primary
 	// transport; methods whose types cannot round-trip the EVM codec simply
 	// have no alias (quiet mode) and keep their ARC-4 route.
+	// Helpers go in BEFORE route collection (pointer stability, see
+	// emitEvmEntryDispatch); puya strips them when no arm ends up calling.
+	synthesizeEvmEntryHelpers(contract, loc);
 	auto routes = collectEvmRoutes(
 		contractDefinition, contract, m_overloadedNames, loc, /*quiet=*/true,
 		&m_typeMapper.analysis());
-	for (auto const& route: routes)
-		emitEvmRouteArm(m_typeMapper, route, approval.body->body, loc);
+	emitEvmArmSwitch(m_typeMapper, routes, approval.body->body, loc);
 }
 
 } // namespace puyasol::builder
