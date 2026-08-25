@@ -5,6 +5,7 @@
 #include "builder/sol-ast/calls/SolInternalCall.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/sol-ast/MappingPrefix.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "awst/NameGen.h"
 #include "builder/sol-types/SolIntType.h"
@@ -334,56 +335,32 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 				d && !m_scope.findMappingKeyParam(d->id()).empty())
 				return awst::makeVarExpression(name, awst::WType::bytesType(), m_loc);
 			// A storage-ref LOCAL (`P storage allowed = allowance[a][b][c];`)
-			// carries its element's box key in its ALIAS — lift it. The
-			// name fallback below literally named a box after the local, so
-			// every entry the callee wrote through such a param COLLAPSED
-			// into one shared "allowed" box (Permit2's allowance).
+			// carries its element's box key in its ALIAS — the shared
+			// resolver lifts it, INCLUDING any field names the alias walked
+			// (the old inline peel handled ReinterpretCast wrappers but
+			// dropped FieldExpression names; the direct-access peel had the
+			// opposite gap — MappingPrefix.h). The name fallback below
+			// literally named a box after the local, so every entry the
+			// callee wrote through such a param COLLAPSED into one shared
+			// "allowed" box (Permit2's allowance).
 			if (auto const* d = ident->annotation().referencedDeclaration)
-				if (auto const* alias = m_scope.findStorageAlias(d->id()))
-				{
-					auto e = awst::unwrapStateGet(alias->expr);
-					while (auto const* rc =
-						dynamic_cast<awst::ReinterpretCast const*>(e.get()))
-						e = rc->expr;
-					if (auto const* box =
-							dynamic_cast<awst::BoxValueExpression const*>(e.get());
-						box && box->key)
+				if (m_scope.findStorageAlias(d->id()))
+					if (auto holder = sol_ast::resolveHolderRoot(
+							m_ctx, m_scope, argExpr, m_loc))
 						return awst::makeReinterpretCast(
-							box->key, awst::WType::bytesType(), m_loc);
-				}
+							std::move(holder), awst::WType::bytesType(), m_loc);
 		}
 		else if (auto const* ma = dynamic_cast<MemberAccess const*>(&argExpr))
 		{
-			// `self.field` (registered mappingKeyParam): prefix = base runtime
-			// box-key ++ utf8(field) — mirrors self.field[k] (resolveCursorContext)
-			// so V4 `self.positions.get(k)` keys under the same box as direct access.
-			if (auto const* baseId = dynamic_cast<Identifier const*>(&ma->expression()))
-			{
-				if (auto const* d = baseId->annotation().referencedDeclaration;
-					d && !m_scope.findMappingKeyParam(d->id()).empty())
-					return awst::makeReinterpretCast(
-						awst::makeConcat(
-							awst::makeVarExpression(
-								baseId->name(), awst::WType::bytesType(), m_loc),
-							awst::makeUtf8BytesConstant(ma->memberName(), m_loc),
-							m_loc),
-						awst::WType::bytesType(), m_loc);
-				// `st.field` where st is a struct STATE VAR: utf8(st) ++
-				// utf8(field) — matches resolveCursorContext's state-var-struct
-				// branch, so a passed `st.m` keys the same boxes as direct
-				// st.m[k]. Plain utf8(field) aliased every same-typed struct
-				// state var.
-				if (auto const* vd = dynamic_cast<VariableDeclaration const*>(
-						baseId->annotation().referencedDeclaration);
-					vd && vd->isStateVariable() && !vd->isConstant() && !vd->immutable())
-					return awst::makeReinterpretCast(
-						awst::makeConcat(
-							awst::makeUtf8BytesConstant(
-								m_ctx.storageMapper.physicalBindingFor(*vd).name, m_loc),
-							awst::makeUtf8BytesConstant(ma->memberName(), m_loc),
-							m_loc),
-						awst::WType::bytesType(), m_loc);
-			}
+			// Full-depth field-chain derivation shared with direct access
+			// (resolveCursorContext): root holder ++ utf8(f) per level. The
+			// old inline version resolved DEPTH-1 only, so `f(st.a.m)` keyed
+			// bare utf8("m") while st.a.m[k] keyed utf8(st)++"a"++"m" —
+			// split-brain state between direct and ref-param access.
+			if (auto prefix = sol_ast::resolveMappingHolderPrefix(
+					m_ctx, m_scope, argExpr, m_loc))
+				return awst::makeReinterpretCast(
+					std::move(prefix), awst::WType::bytesType(), m_loc);
 			name = ma->memberName();
 		}
 		if (name.empty())

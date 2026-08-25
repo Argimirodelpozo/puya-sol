@@ -184,6 +184,7 @@ set(SOURCES
 	src/builder/sol-ast/exprs/SolUnaryOperation.cpp
 	src/builder/sol-ast/exprs/SolIndexAccess.cpp
 	src/builder/sol-ast/exprs/SolIndexAccessHandlers.cpp
+	src/builder/sol-ast/MappingPrefix.cpp
 	src/builder/sol-ast/exprs/SolAssignment.cpp
 	src/builder/sol-ast/exprs/SolAssignmentEarlyOuts.cpp
 	src/builder/sol-ast/exprs/SolAssignmentTuple.cpp

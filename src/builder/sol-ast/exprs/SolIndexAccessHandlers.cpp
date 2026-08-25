@@ -2,6 +2,7 @@
 /// toAwst dispatchers remain in SolIndexAccess.cpp.
 
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
+#include "builder/sol-ast/MappingPrefix.h"
 #include "awst/NameGen.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/sol-ast/members/SolLengthAccess.h"
@@ -478,22 +479,15 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 			auto const* alias = m_scope.findStorageAlias(decl->id());
 			if (alias)
 			{
-				// An alias re-roots the chain at somebody else's box.
+				// An alias re-roots the chain at somebody else's box. The
+				// shared resolver COLLECTS the field names the alias walked —
+				// the old inline peel dropped them, so `Inner storage p =
+				// st.a; p.m[k]` keyed utf8(st)++"m" (losing "a") and read a
+				// different box than st.a.m[k].
 				out.rootIsStateVarBox = false;
-				auto aliasExpr = alias->expr;
-				if (auto sg = std::dynamic_pointer_cast<awst::StateGet>(aliasExpr))
-					aliasExpr = sg->field;
-				// Peel to root state expression.
-				while (auto fe = std::dynamic_pointer_cast<awst::FieldExpression>(aliasExpr))
-					aliasExpr = fe->base;
-				// Alias's box-key IS the slot pointer — use directly as starting prefix.
-				if (auto boxVal = std::dynamic_pointer_cast<awst::BoxValueExpression>(aliasExpr))
-					out.aliasOverridePrefix = boxVal->key;
-				else if (auto appState = std::dynamic_pointer_cast<awst::AppStateExpression>(aliasExpr))
-					out.aliasOverridePrefix = appState->key;
-				// Holder-name alias: BytesConstant of state-var's encoded name.
-				else if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(aliasExpr.get()))
-					out.varName = std::string(bc->value.begin(), bc->value.end());
+				if (auto holder = resolveHolderRoot(m_ctx, m_scope, *ident, m_loc))
+					out.aliasOverridePrefix = awst::makeReinterpretCast(
+						std::move(holder), awst::WType::boxKeyType(), m_loc);
 			}
 		}
 	}
@@ -620,32 +614,12 @@ SolIndexAccess::CursorContext SolIndexAccess::resolveCursorContext(
 					holder = box->key;
 			}
 		}
-		else if (auto const* baseId = dynamic_cast<Identifier const*>(rootE))
-		{
-			if (auto const* decl = baseId->annotation().referencedDeclaration)
-			{
-				auto const& selfPrefix = m_scope.findMappingKeyParam(decl->id());
-				if (!selfPrefix.empty())
-					holder = awst::makeVarExpression(
-						selfPrefix, awst::WType::bytesType(), m_loc);
-				else if (auto const* alias = m_scope.findStorageAlias(decl->id()))
-				{
-					auto aliasExpr = alias->expr;
-					if (auto sg = std::dynamic_pointer_cast<awst::StateGet>(aliasExpr))
-						aliasExpr = sg->field;
-					while (auto fe = std::dynamic_pointer_cast<awst::FieldExpression>(aliasExpr))
-						aliasExpr = fe->base;
-					if (auto boxVal = std::dynamic_pointer_cast<awst::BoxValueExpression>(aliasExpr))
-						holder = boxVal->key;
-					else if (auto appState = std::dynamic_pointer_cast<awst::AppStateExpression>(aliasExpr))
-						holder = appState->key;
-				}
-				else if (auto const* vd = dynamic_cast<VariableDeclaration const*>(decl);
-					vd && vd->isStateVariable() && !vd->isConstant() && !vd->immutable())
-					holder = awst::makeUtf8BytesConstant(
-						m_ctx.storageMapper.physicalBindingFor(*vd).name, m_loc);
-			}
-		}
+		else
+			// Identifier roots (mapping-key param / storage alias incl. the
+			// field names the alias walked / state var) — the SHARED
+			// derivation, so direct access and ref-param arguments cannot
+			// key different boxes (MappingPrefix.h).
+			holder = resolveHolderRoot(m_ctx, m_scope, *rootE, m_loc);
 
 		if (holder)
 		{

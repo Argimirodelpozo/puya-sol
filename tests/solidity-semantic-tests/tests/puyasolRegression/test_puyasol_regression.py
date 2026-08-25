@@ -4924,3 +4924,23 @@ def test_struct_ref_offset_forwards_through_calls(harness):
     # [f, g, g0] — f compound applied, bump's g write SURVIVES on element i,
     # element 0 untouched.
     assert harness.call(app, "probe(uint256)", 3).abi_return == [12, 1, 0]
+
+
+def test_nested_mapping_prefix_consistency(harness):
+    """puyasolRegression/contracts/nested_mapping_prefix.sol — NOT an o.g. test.
+
+    The mapping box-key prefix was derived by TWO drifting implementations:
+    direct access walked the full field chain (utf8(st)++"a"++"m") while the
+    call-argument side resolved depth-1 only (f(st.a.m) keyed bare utf8("m")),
+    and the two alias peels handled different wrapper nodes — the direct peel
+    even dropped the field names the alias walked (Inner storage p = st.a;
+    p.m[k] lost "a"). Four live split-brain shapes; one shared resolver
+    (MappingPrefix) now feeds both sides.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/nested_mapping_prefix.sol")
+    assert harness.call(app, "flatParam(uint256)", 1).abi_return == [11, 11]
+    assert harness.call(app, "nestedParam(uint256)", 2).abi_return == [22, 22]
+    assert as_int(harness.call(app, "nestedWriteVia(uint256)", 3).abi_return) == 33
+    assert harness.call(app, "aliasDirect(uint256)", 4).abi_return == [44, 44]
+    assert as_int(harness.call(app, "aliasParam(uint256)", 5).abi_return) == 55
