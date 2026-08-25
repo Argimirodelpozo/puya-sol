@@ -1152,13 +1152,9 @@ SolAssignment::trySlotBasedScalarWrite(
 
 		auto* targetSolType = m_assignment.leftHandSide().annotation().type;
 		_value = widenSignedCompoundRhs(std::move(_value));
-		auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
-			m_ctx, _op, targetSolType, readCall, _value, m_loc);
-		if (builderResult)
-			_value = std::move(builderResult);
-		else
-			_value = m_ctx.buildBinaryOp(_op, std::move(readCall), std::move(_value),
-				_target->wtype, m_loc);
+		_value = eb::AssignmentHelper::computeCompoundOrFallback(
+			m_ctx, _op, _op, targetSolType, std::move(readCall),
+			std::move(_value), _target->wtype, m_loc);
 	}
 
 	auto btoi = builder::StorageMapper::biguintSlotToBtoi(_target, m_loc);
@@ -1226,13 +1222,9 @@ SolAssignment::tryStructOrNamedTupleFieldAssignment(
 	{
 		auto currentField = awst::makeFieldExpression(base, fieldName, fieldExpr->wtype, m_loc);
 		auto* solType = m_assignment.leftHandSide().annotation().type;
-		auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
-			m_ctx, _op, solType, currentField, _value, m_loc);
-		if (builderResult)
-			_value = std::move(builderResult);
-		else
-			_value = m_ctx.buildBinaryOp(_op, std::move(currentField), std::move(_value),
-				fieldExpr->wtype, m_loc);
+		_value = eb::AssignmentHelper::computeCompoundOrFallback(
+			m_ctx, _op, _op, solType, std::move(currentField),
+			std::move(_value), fieldExpr->wtype, m_loc);
 	}
 
 	_value = builder::TypeCoercion::implicitNumericCast(
@@ -1306,12 +1298,9 @@ SolAssignment::applyCompoundAssignment(
 					awst::makeARC4Decode(currentValue, nativeType, m_loc), targetSolType, m_loc);
 		}
 	}
-	auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
-		m_ctx, _op, targetSolType, currentValue, _value, m_loc);
-	if (builderResult)
-		return builderResult;
-	return m_ctx.buildBinaryOp(_op, std::move(currentValue), std::move(_value),
-		_target->wtype, m_loc);
+	return eb::AssignmentHelper::computeCompoundOrFallback(
+		m_ctx, _op, _op, targetSolType, std::move(currentValue),
+		std::move(_value), _target->wtype, m_loc);
 }
 
 std::shared_ptr<awst::Expression>

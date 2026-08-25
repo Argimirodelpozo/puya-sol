@@ -745,13 +745,10 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleEvmStorageIncDecDelet
 	auto one = awst::makeIntegerConstant("1", m_loc,
 		addr->wtype == awst::WType::biguintType()
 			? awst::WType::biguintType() : awst::WType::uint64Type());
-	auto newValue = eb::AssignmentHelper::tryComputeCompoundValue(
+	auto newValue = eb::AssignmentHelper::computeCompoundOrFallback(
 		m_ctx, isInc ? Token::AssignAdd : Token::AssignSub,
-		solType, current, one, m_loc);
-	if (!newValue)
-		newValue = m_ctx.buildBinaryOp(
-			isInc ? Token::Add : Token::Sub, current, std::move(one),
-			current->wtype, m_loc);
+		isInc ? Token::Add : Token::Sub,
+		solType, current, std::move(one), current->wtype, m_loc);
 	if (newValue && addr->wtype && newValue->wtype != addr->wtype
 		&& (newValue->wtype == awst::WType::uint64Type()
 			|| newValue->wtype == awst::WType::biguintType())

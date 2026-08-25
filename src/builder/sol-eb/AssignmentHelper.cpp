@@ -114,6 +114,23 @@ ArcStructCowResult AssignmentHelper::rebuildArc4StructChainCOW(
 	return result;
 }
 
+std::shared_ptr<awst::Expression> AssignmentHelper::computeCompoundOrFallback(
+	ContractContext& _ctx,
+	solidity::frontend::Token _tryOp,
+	solidity::frontend::Token _fallbackOp,
+	solidity::frontend::Type const* _targetSolType,
+	std::shared_ptr<awst::Expression> _current,
+	std::shared_ptr<awst::Expression> _rhs,
+	awst::WType const* _fallbackW,
+	awst::SourceLocation const& _loc)
+{
+	if (auto computed = tryComputeCompoundValue(
+			_ctx, _tryOp, _targetSolType, _current, _rhs, _loc))
+		return computed;
+	return _ctx.buildBinaryOp(
+		_fallbackOp, std::move(_current), std::move(_rhs), _fallbackW, _loc);
+}
+
 AssignmentHelper::StructFieldCowStore AssignmentHelper::buildStructFieldCowStore(
 	ContractContext& _ctx,
 	awst::FieldExpression const* _fieldExpr,

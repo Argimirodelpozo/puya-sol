@@ -28,13 +28,9 @@ std::shared_ptr<awst::Expression> SolAssignment::handleBytesElementAssignment(
 		auto currentValue = awst::makeIndexExpression(
 			_indexExpr->base, _indexExpr->index, _indexExpr->wtype, m_loc);
 		auto* solType = m_assignment.leftHandSide().annotation().type;
-		auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
-			m_ctx, op, solType, currentValue, _value, m_loc);
-		if (builderResult)
-			_value = std::move(builderResult);
-		else
-			_value = m_ctx.buildBinaryOp(op, std::move(currentValue), std::move(_value),
-				_indexExpr->wtype, m_loc);
+		_value = eb::AssignmentHelper::computeCompoundOrFallback(
+			m_ctx, op, op, solType, std::move(currentValue),
+			std::move(_value), _indexExpr->wtype, m_loc);
 	}
 
 	// Coerce value to single byte

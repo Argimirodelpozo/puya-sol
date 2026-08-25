@@ -38,6 +38,22 @@ public:
 		std::shared_ptr<awst::Expression> _rhs,
 		awst::SourceLocation const& _loc);
 
+	/// tryComputeCompoundValue with the uniform fallback every compound site
+	/// carried by hand: when no typed builder claims the op, compute
+	/// `current fallbackOp rhs` via the generic binary builder at
+	/// `_fallbackW`. `_tryOp` and `_fallbackOp` differ only at the slot-mode
+	/// inc/dec site (Assign{Add,Sub} vs {Add,Sub}); every other caller passes
+	/// the same token twice.
+	static std::shared_ptr<awst::Expression> computeCompoundOrFallback(
+		ContractContext& _ctx,
+		solidity::frontend::Token _tryOp,
+		solidity::frontend::Token _fallbackOp,
+		solidity::frontend::Type const* _targetSolType,
+		std::shared_ptr<awst::Expression> _current,
+		std::shared_ptr<awst::Expression> _rhs,
+		awst::WType const* _fallbackW,
+		awst::SourceLocation const& _loc);
+
 	/// Walk the outer FieldExpression chain, rebuilding a NewStruct at each ARC4Struct level
 	/// (copy-on-write). Stops when the base is not an ARC4Struct. StateGet wrappers are
 	/// stripped for the write target and preserved for read bases.

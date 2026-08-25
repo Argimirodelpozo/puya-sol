@@ -53,13 +53,9 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleTransie
 		auto currentValue = sb->emitReadForVar(*lhsDecl, name, varType, m_loc);
 		auto* solType = m_assignment.leftHandSide().annotation().type;
 		rhs = widenSignedCompoundRhs(std::move(rhs));
-		auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
-			m_ctx, op, solType, currentValue, rhs, m_loc);
-		if (builderResult)
-			newValue = std::move(builderResult);
-		else
-			newValue = m_ctx.buildBinaryOp(
-				op, std::move(currentValue), std::move(rhs), varType, m_loc);
+		newValue = eb::AssignmentHelper::computeCompoundOrFallback(
+			m_ctx, op, op, solType, std::move(currentValue),
+			std::move(rhs), varType, m_loc);
 	}
 
 	newValue = builder::TypeCoercion::coerceForAssignment(std::move(newValue), varType, m_loc);
@@ -291,13 +287,9 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 			current = awst::makeARC4Decode(
 				std::move(current), expectedNative, m_loc);
 		rhs = widenSignedCompoundRhs(std::move(rhs));
-		if (auto computed = eb::AssignmentHelper::tryComputeCompoundValue(
-				m_ctx, op, m_assignment.leftHandSide().annotation().type,
-				current, rhs, m_loc))
-			rhs = std::move(computed);
-		else
-			rhs = m_ctx.buildBinaryOp(
-				op, std::move(current), std::move(rhs), expectedNative, m_loc);
+		rhs = eb::AssignmentHelper::computeCompoundOrFallback(
+			m_ctx, op, op, m_assignment.leftHandSide().annotation().type,
+			std::move(current), std::move(rhs), expectedNative, m_loc);
 	}
 	rhs = builder::TypeCoercion::coerceForAssignment(
 		std::move(rhs), expectedNative, m_loc);
@@ -496,12 +488,9 @@ SolAssignment::tryHandleBoxedAggregatePathWrite()
 			current = awst::makeARC4Decode(
 				std::move(current), nativeW, m_loc);
 		rhs = widenSignedCompoundRhs(std::move(rhs));
-		if (auto computed = eb::AssignmentHelper::tryComputeCompoundValue(
-				m_ctx, op, valueSol, current, rhs, m_loc))
-			rhs = std::move(computed);
-		else
-			rhs = m_ctx.buildBinaryOp(
-				op, std::move(current), std::move(rhs), nativeW, m_loc);
+		rhs = eb::AssignmentHelper::computeCompoundOrFallback(
+			m_ctx, op, op, valueSol, std::move(current),
+			std::move(rhs), nativeW, m_loc);
 	}
 	rhs = builder::TypeCoercion::coerceForAssignment(
 		std::move(rhs), nativeW, m_loc);
@@ -606,12 +595,9 @@ SolAssignment::tryHandleOffsetStructRefFieldWrite()
 			current = awst::makeARC4Decode(
 				std::move(current), nativeW, m_loc);
 		rhs = widenSignedCompoundRhs(std::move(rhs));
-		if (auto computed = eb::AssignmentHelper::tryComputeCompoundValue(
-				m_ctx, op, valueSol, current, rhs, m_loc))
-			rhs = std::move(computed);
-		else
-			rhs = m_ctx.buildBinaryOp(
-				op, std::move(current), std::move(rhs), nativeW, m_loc);
+		rhs = eb::AssignmentHelper::computeCompoundOrFallback(
+			m_ctx, op, op, valueSol, std::move(current),
+			std::move(rhs), nativeW, m_loc);
 	}
 	rhs = builder::TypeCoercion::coerceForAssignment(
 		std::move(rhs), nativeW, m_loc);

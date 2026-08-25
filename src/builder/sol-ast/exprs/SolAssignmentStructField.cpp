@@ -55,13 +55,10 @@ std::shared_ptr<awst::Expression> SolAssignment::handleStructFieldAssignment(
 		auto currentField = awst::makeFieldExpression(readBase, fieldName, _fieldExpr->wtype, m_loc);
 		auto decoded = awst::makeARC4Decode(std::move(currentField), m_ctx.typeMapper.map(m_assignment.leftHandSide().annotation().type), m_loc);
 		auto* solType = m_assignment.leftHandSide().annotation().type;
-		auto builderResult = eb::AssignmentHelper::tryComputeCompoundValue(
-			m_ctx, op, solType, decoded, _value, m_loc);
-		if (builderResult)
-			_value = std::move(builderResult);
-		else
-			_value = m_ctx.buildBinaryOp(op, std::move(decoded), std::move(_value),
-				decoded->wtype, m_loc);
+		auto* decodedW = decoded->wtype;
+		_value = eb::AssignmentHelper::computeCompoundOrFallback(
+			m_ctx, op, op, solType, std::move(decoded),
+			std::move(_value), decodedW, m_loc);
 	}
 
 	// ARC4Encode the value
