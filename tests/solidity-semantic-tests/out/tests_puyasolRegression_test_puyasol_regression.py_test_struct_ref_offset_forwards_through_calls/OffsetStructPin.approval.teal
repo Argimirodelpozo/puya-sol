@@ -1,0 +1,281 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_ref_offset_forwarding.sol.OffsetStructPin.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 8
+    bytecblock "arr" "__ctor_pending" 0x151f7c75 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@7
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@7
+    pushbytes 0xdb082440
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0x585f75fb // method "__postInit()void", method "probe(uint256)(uint64,uint64,uint64)"
+    txna ApplicationArgs 0
+    match main___postInit_route@10 main_probe_route@11
+    err
+
+main_probe_route@11:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub probe
+    uncover 2
+    itob
+    uncover 2
+    itob
+    concat
+    swap
+    itob
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main___postInit_route@10:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_0 // "arr"
+    pushint 160
+    box_create
+    pop
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    txn GroupIndex
+    bz main_ternary_false@18
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@19:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub probe
+    uncover 2
+    itob
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    itob
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    swap
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_2 // 0
+    b main_ternary_merge@19
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/struct_ref_offset_forwarding.sol.OffsetStructPin.probe(__arc4_i: bytes) -> uint64, uint64, uint64:
+probe:
+    proto 1 3
+    txn GroupIndex
+    bz probe_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+probe_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    pushbytes 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    bytec_0 // "arr"
+    box_len
+    bury 1
+    bnz probe_after_if_else@5
+    bytec_0 // "arr"
+    pushint 160
+    box_create
+    pop
+
+probe_after_if_else@5:
+    pushint 10
+    itob
+    bytec_0 // "arr"
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 16
+    *
+    swap
+    dig 1
+    pushint 16
+    extract3 // on error: index access is out of bounds
+    extract 8 8
+    uncover 2
+    swap
+    concat
+    bytec_0 // "arr"
+    dig 2
+    uncover 2
+    box_replace // on error: index out of bounds
+    bytec_0 // "arr"
+    dig 1
+    pushint 16
+    box_extract
+    dup
+    intc_3 // 8
+    extract_uint64
+    intc_1 // 1
+    +
+    itob
+    replace2 8
+    bytec_0 // "arr"
+    dig 2
+    uncover 2
+    box_replace
+    bytec_0 // "arr"
+    dig 1
+    pushint 16
+    box_extract
+    dup
+    intc_2 // 0
+    extract_uint64
+    pushint 2
+    +
+    itob
+    replace2 0
+    bytec_0 // "arr"
+    dig 2
+    uncover 2
+    box_replace
+    bytec_0 // "arr"
+    box_get
+    bytec_3 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    dup
+    uncover 2
+    pushint 16
+    extract3 // on error: index access is out of bounds
+    dup
+    intc_2 // 0
+    extract_uint64
+    swap
+    intc_3 // 8
+    extract_uint64
+    uncover 2
+    extract 0 16 // on error: index access is out of bounds
+    intc_3 // 8
+    extract_uint64
+    retsub
+
+probe_ternary_false@2:
+    intc_2 // 0
+    b probe_ternary_merge@3
