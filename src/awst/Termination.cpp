@@ -3,7 +3,9 @@
 namespace puyasol::awst
 {
 
-bool statementAlwaysTerminates(Statement const& _stmt)
+// True if this statement always terminates control flow on every path
+// (a `return` or an `assert(false)` produced by `revert`/`require(false)`).
+static bool statementAlwaysTerminates(Statement const& _stmt)
 {
 	if (dynamic_cast<ReturnStatement const*>(&_stmt))
 		return true;

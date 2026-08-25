@@ -93,8 +93,6 @@ private:
 		std::set<std::string>& _uses);
 	void collectStmtDefs(awst::Statement const& _stmt,
 		std::set<std::string>& _defs);
-	void collectVarType(awst::Expression const& _expr);
-
 	std::map<std::string, awst::WType const*> m_varTypes;
 };
 

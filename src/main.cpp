@@ -184,11 +184,9 @@ int main(int _argc, char* _argv[])
 
 	// Build AWST
 	// --evm-memory-layout (and the memory half of the --evm-layout umbrella)
-	// currently changes NOTHING: TargetProfile::evmMemoryLayout is written here
-	// and read nowhere in the compiler. Whether memory is modelled as the flat
-	// pointer blob is decided per call site, not by this flag. Say so rather
-	// than accepting a switch that silently does nothing -- --evm-layout still
-	// applies its storage half, which does work.
+	// currently changes NOTHING: memory modelling is decided per call site, so
+	// the flag is accepted but only warned about (no TargetProfile field
+	// carries it). --evm-layout still applies its storage half, which works.
 	if (opts.evmMemoryLayout)
 		logger.warning(
 			"--evm-memory-layout is not implemented: the flag is accepted but "
@@ -199,7 +197,6 @@ int main(int _argc, char* _argv[])
 	puyasol::builder::AWSTBuilder builder;
 	puyasol::builder::TargetProfile targetProfile{
 		.evmStorageLayout = opts.evmStorageLayout,
-		.evmMemoryLayout = opts.evmMemoryLayout,
 		.evmSelectors = opts.evmSelectors || opts.contractAbi == "evm",
 		.contractAbi = opts.contractAbi == "evm"
 			? puyasol::builder::ContractAbi::Evm

@@ -75,44 +75,4 @@ std::string base85Encode(std::vector<uint8_t> const& _data)
 	return result;
 }
 
-std::vector<uint8_t> base85Decode(std::string const& _encoded)
-{
-	if (_encoded.empty())
-		return {};
-
-	std::vector<uint8_t> result;
-	size_t i = 0;
-
-	while (i + 5 <= _encoded.size())
-	{
-		uint32_t acc = 0;
-		for (int j = 0; j < 5; ++j)
-			acc = acc * 85 + static_cast<uint32_t>(charIndex(_encoded[i + j]));
-
-		result.push_back(static_cast<uint8_t>((acc >> 24) & 0xFF));
-		result.push_back(static_cast<uint8_t>((acc >> 16) & 0xFF));
-		result.push_back(static_cast<uint8_t>((acc >> 8) & 0xFF));
-		result.push_back(static_cast<uint8_t>(acc & 0xFF));
-		i += 5;
-	}
-
-	size_t remaining = _encoded.size() - i;
-	if (remaining > 0)
-	{
-		uint32_t acc = 0;
-		for (size_t j = 0; j < remaining; ++j)
-			acc = acc * 85 + static_cast<uint32_t>(charIndex(_encoded[i + j]));
-
-		// Pad with highest value to reconstruct
-		for (size_t j = remaining; j < 5; ++j)
-			acc = acc * 85 + 84;
-
-		size_t outputBytes = remaining - 1;
-		for (size_t j = 0; j < outputBytes; ++j)
-			result.push_back(static_cast<uint8_t>((acc >> (24 - j * 8)) & 0xFF));
-	}
-
-	return result;
-}
-
 } // namespace puyasol::json

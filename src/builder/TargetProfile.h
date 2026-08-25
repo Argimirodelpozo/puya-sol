@@ -20,7 +20,6 @@ enum class ContractAbi
 struct TargetProfile
 {
 	bool evmStorageLayout = false;
-	bool evmMemoryLayout = false;
 	bool evmSelectors = false;
 	/// Wire protocol at the AVM application entry/return boundary. This does
 	/// not alter Solidity `abi.*` expression semantics. The EVM profile also

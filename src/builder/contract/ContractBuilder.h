@@ -72,11 +72,6 @@ std::shared_ptr<awst::Expression> materializeBlobValue(
 	awst::SourceLocation const& _loc,
 	std::vector<std::shared_ptr<awst::Statement>>& _out);
 
-/// True iff any inline-assembly block in `_block` references declaration
-/// `_declId` (used to decide blob-backed named-return materialisation).
-bool blockUsesDeclInAsm(
-	solidity::frontend::Block const& _block, int64_t _declId);
-
 /// --evm-memory-layout: recursively allocate and spill `_value` using solc's
 /// memory head/data sizes.  Reference children receive real pointer words;
 /// scalar width conversion is delegated to the shared EVM leaf codec.

@@ -591,14 +591,12 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeArc4(
 	return awst::makeARC4Decode(std::move(wire), targetType, _loc);
 }
 
-// ── arc4EncodeValues / encodeArgsAsArc4 ──
 // Shared ARC4 value encoder for explicit `arc4.encode` and compiler-private
 // ARC4 transports. It is a thin wrapper over puya's codec (no EVM head/tail
 // layout): 0 values → empty bytes, 1 → its ARC4 bytes, N → an ARC4 tuple.
 //
 // ── THE ENCODE-CONVENTION MAP (do not add a fifth copy) ──
 // Four ARC4-encode entry points exist ON PURPOSE, one per width convention:
-//   1. arc4EncodeValues (here, + the encodeArgsAsArc4 / arc4EncodeArgsAtParamTypes
 //      wrappers): explicit arc4.* and compiler-private payloads — encodes at
 //      the value's BACKING width (uint16 value → arc4.uint64/8B); custom-error
 //      payloads ride arc4EncodeArgsAtParamTypes deliberately.
@@ -648,19 +646,6 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::arc4EncodeValues(
 	auto const* arc4TupleT = _ctx.typeMapper.createType<awst::ARC4Tuple>(arc4Types);
 	auto enc = awst::makeARC4Encode(std::move(tupleExpr), arc4TupleT, _loc);
 	return awst::makeAsBytes(std::move(enc), _loc);
-}
-
-std::shared_ptr<awst::Expression> AbiEncoderBuilder::encodeArgsAsArc4(
-	ContractContext& _ctx,
-	solidity::frontend::FunctionCall const& _callNode,
-	size_t _startIdx,
-	awst::SourceLocation const& _loc)
-{
-	auto const& args = _callNode.arguments();
-	std::vector<std::shared_ptr<awst::Expression>> vals;
-	for (size_t i = _startIdx; i < args.size(); ++i)
-		vals.push_back(_ctx.buildExpr(*args[i]));
-	return arc4EncodeValues(_ctx, std::move(vals), _loc);
 }
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(

@@ -238,11 +238,6 @@ void visitStmt(Statement const* _statement, ExpressionVisitor const& _visitor)
 
 } // namespace
 
-void visitExpressions(Expression const& _expression, ExpressionVisitor const& _visitor)
-{
-	visitExpr(&_expression, _visitor);
-}
-
 void visitExpressions(Statement const& _statement, ExpressionVisitor const& _visitor)
 {
 	visitStmt(&_statement, _visitor);
@@ -251,14 +246,6 @@ void visitExpressions(Statement const& _statement, ExpressionVisitor const& _vis
 void visitExpressions(ContractMethod const& _method, ExpressionVisitor const& _visitor)
 {
 	visitStmt(_method.body.get(), _visitor);
-}
-
-void visitExpressions(Expression& _expression, MutableExpressionVisitor const& _visitor)
-{
-	visitExpressions(static_cast<Expression const&>(_expression),
-		[&_visitor](Expression const& expression) {
-			_visitor(const_cast<Expression&>(expression));
-		});
 }
 
 void visitExpressions(Statement& _statement, MutableExpressionVisitor const& _visitor)

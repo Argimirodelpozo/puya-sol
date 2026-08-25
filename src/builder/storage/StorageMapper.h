@@ -134,10 +134,6 @@ public:
 	/// and handleDelete (box_put-empty instead of box_del).
 	static bool isTopLevelDynamicBox(awst::BoxValueExpression const* _box);
 
-	/// True for mapping-derived keys: BoxPrefixedKey or sha256 IntrinsicCall.
-	/// Gates pre-create-per-entry-box logic for `mapping(K => sized_type)`.
-	static bool isMappingDerivedKey(awst::Expression const* _key);
-
 	/// box_len(<key>) as WTuple(uint64, bool); callers pick item 0 (len) or 1 (exists).
 	static std::shared_ptr<awst::Expression> makeBoxLenTuple(
 		TypeMapper& _typeMapper,

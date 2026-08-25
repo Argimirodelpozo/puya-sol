@@ -453,13 +453,6 @@ void FunctionSplitter::collectStmtDefs(
 	}
 }
 
-void FunctionSplitter::collectVarType(awst::Expression const& _expr)
-{
-	// collectExprUses already populates m_varTypes for VarExpression.
-	std::set<std::string> dummy;
-	collectExprUses(_expr, dummy);
-}
-
 // ─── computeLiveVars ─────────────────────────────────────────────────
 
 std::vector<FunctionSplitter::VarInfo> FunctionSplitter::computeLiveVars(

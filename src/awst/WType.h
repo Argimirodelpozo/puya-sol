@@ -47,7 +47,6 @@ public:
 	static WType const* stringType();
 	static WType const* bytesType();
 	static WType const* accountType();
-	static WType const* assetType();
 	static WType const* applicationType();
 	static WType const* stateKeyType();
 	static WType const* boxKeyType();

@@ -220,26 +220,6 @@ void emitAsmParamSpills(
 	}
 }
 
-bool blockUsesDeclInAsm(
-	solidity::frontend::Block const& _block, int64_t _declId)
-{
-	struct Scan: solidity::frontend::ASTConstVisitor
-	{
-		int64_t id;
-		bool found = false;
-		bool visit(solidity::frontend::InlineAssembly const& _asm) override
-		{
-			for (auto const& ref: _asm.annotation().externalReferences)
-				if (ref.second.declaration && ref.second.declaration->id() == id)
-					found = true;
-			return !found;
-		}
-	} scan;
-	scan.id = _declId;
-	_block.accept(scan);
-	return scan.found;
-}
-
 bool emitBlobBackValue(
 	TypeMapper& typeMapper,
 	solidity::frontend::Type const* declType,

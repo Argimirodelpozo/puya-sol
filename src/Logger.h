@@ -16,10 +16,7 @@ public:
 	static Logger& instance();
 
 	void setMinLevel(LogLevel _level);
-	void setColorEnabled(bool _enabled);
 	void setOutputLogFile(std::string const& _path);
-	void closeLogFile();
-
 	void debug(std::string const& _msg);
 	void debug(std::string const& _msg, awst::SourceLocation const& _loc);
 	void info(std::string const& _msg);
@@ -30,10 +27,7 @@ public:
 	void error(std::string const& _msg, awst::SourceLocation const& _loc);
 
 	int warningCount() const;
-	int errorCount() const;
 	bool hasErrors() const;
-	void resetCounters();
-
 private:
 	Logger();
 	void log(LogLevel _level, std::string const& _msg, awst::SourceLocation const* _loc);

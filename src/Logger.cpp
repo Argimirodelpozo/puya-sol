@@ -23,11 +23,6 @@ void Logger::setMinLevel(LogLevel _level)
 	m_minLevel = _level;
 }
 
-void Logger::setColorEnabled(bool _enabled)
-{
-	m_colorEnabled = _enabled;
-}
-
 void Logger::debug(std::string const& _msg)
 {
 	log(LogLevel::Debug, _msg, nullptr);
@@ -77,31 +72,14 @@ int Logger::warningCount() const
 	return m_warningCount;
 }
 
-int Logger::errorCount() const
-{
-	return m_errorCount;
-}
-
 bool Logger::hasErrors() const
 {
 	return m_errorCount > 0;
 }
 
-void Logger::resetCounters()
-{
-	m_warningCount = 0;
-	m_errorCount = 0;
-}
-
 void Logger::setOutputLogFile(std::string const& _path)
 {
 	m_logFile.open(_path, std::ios::out | std::ios::trunc);
-}
-
-void Logger::closeLogFile()
-{
-	if (m_logFile.is_open())
-		m_logFile.close();
 }
 
 void Logger::log(LogLevel _level, std::string const& _msg, awst::SourceLocation const* _loc)

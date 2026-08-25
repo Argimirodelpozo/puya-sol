@@ -26,8 +26,6 @@ namespace puyasol::builder::builtin
 /// caller references it.
 std::string const& ripemd160SubroutineId();
 
-/// Stable display name (used as `Subroutine.name`).
-std::string const& ripemd160SubroutineName();
 
 /// Build the AWST Subroutine that computes RIPEMD-160 of an arbitrary-length
 /// `bytes` input and returns a 20-byte digest. Takes one source location

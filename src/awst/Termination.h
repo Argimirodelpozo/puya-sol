@@ -16,10 +16,6 @@
 namespace puyasol::awst
 {
 
-/// True if this statement always terminates control flow on every path
-/// (a `return` or an `assert(false)` produced by `revert`/`require(false)`).
-bool statementAlwaysTerminates(Statement const& _stmt);
-
 /// True if every path through this block reaches a terminator.
 /// Recurses through nested blocks and `if/else` where both arms terminate.
 bool blockAlwaysTerminates(Block const& _block);

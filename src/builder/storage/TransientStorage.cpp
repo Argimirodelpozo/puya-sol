@@ -130,12 +130,6 @@ bool TransientStorage::isTransient(VariableDeclaration const& _var) const
 	return m_varById.count(_var.id()) > 0;
 }
 
-TransientStorage::TransientVar const* TransientStorage::getVarInfo(std::string const& _name) const
-{
-	auto it = m_varByName.find(_name);
-	return (it != m_varByName.end()) ? &m_vars[it->second] : nullptr;
-}
-
 TransientStorage::TransientVar const* TransientStorage::getVarInfoById(int64_t _declId) const
 {
 	auto it = m_varById.find(_declId);

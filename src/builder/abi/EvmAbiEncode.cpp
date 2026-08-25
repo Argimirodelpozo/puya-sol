@@ -1,4 +1,5 @@
 #include "builder/abi/EvmAbiEncode.h"
+#include "builder/AwstShorthand.h"
 
 #include "awst/NameGen.h"
 #include "builder/codec/EvmValueCodec.h"
@@ -12,26 +13,12 @@
 
 namespace puyasol::builder::abi
 {
+using namespace puyasol::builder::shorthand;
 using namespace solidity::frontend;
 
 namespace
 {
 using Statements = std::vector<std::shared_ptr<awst::Statement>>;
-
-std::shared_ptr<awst::Expression> u64(
-	uint64_t value, awst::SourceLocation const& loc)
-{
-	return awst::makeIntegerConstant(value, loc);
-}
-
-std::shared_ptr<awst::Expression> add(
-	std::shared_ptr<awst::Expression> left,
-	std::shared_ptr<awst::Expression> right,
-	awst::SourceLocation const& loc)
-{
-	return awst::makeUInt64BinOp(std::move(left),
-		awst::UInt64BinaryOperator::Add, std::move(right), loc);
-}
 
 std::shared_ptr<awst::Expression> multiply(
 	std::shared_ptr<awst::Expression> left,

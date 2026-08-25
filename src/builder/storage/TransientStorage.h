@@ -61,9 +61,6 @@ public:
 	/// True iff _var is a tracked transient state variable.
 	bool isTransient(solidity::frontend::VariableDeclaration const& _var) const;
 
-	/// Variable layout by name, or nullptr.
-	TransientVar const* getVarInfo(std::string const& _name) const;
-
 	/// Variable layout by AST declaration id, or nullptr.
 	TransientVar const* getVarInfoById(int64_t _declId) const;
 

@@ -30,7 +30,6 @@
 namespace puyasol::builder
 {
 
-using awst::statementAlwaysTerminates;
 using awst::blockAlwaysTerminates;
 
 /// Apply dead code elimination to all methods in a contract.

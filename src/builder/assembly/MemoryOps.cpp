@@ -249,32 +249,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDirect(
 	return acc;
 }
 
-std::shared_ptr<awst::Expression> AssemblyBuilder::materializeBlobBytesValue(
-	ScratchLayout const& _scratch,
-	std::string const& _offVar,
-	bool _isString,
-	awst::SourceLocation const& _loc)
-{
-	auto offRead = [&]() {
-		return awst::makeVarExpression(_offVar, awst::WType::uint64Type(), _loc);
-	};
-	auto length = awst::makeExtractUInt64(
-		readMemWordDirect(_scratch, offRead(), _loc),
-		awst::makeIntegerConstant("24", _loc), _loc);
-	auto dataStart = awst::makeUInt64BinOp(offRead(),
-		awst::UInt64BinaryOperator::Add,
-		awst::makeIntegerConstant("32", _loc), _loc);
-	// Slot-routed: the data region starts at the buffer's FMP offset, which
-	// passes 4096 in any --evm-memory-slots contract. The old slot-0 extract
-	// read the wrong bytes (or panicked) for every buffer past the first slot.
-	auto data = readMemStackRange(_scratch, std::move(dataStart),
-		std::move(length), _loc);
-	if (_isString)
-		return awst::makeReinterpretCast(std::move(data),
-			awst::WType::stringType(), _loc);
-	return data;
-}
-
 void AssemblyBuilder::writeMemBytesDirect(
 	ScratchLayout const& _scratch,
 	std::shared_ptr<awst::Expression> _offU64,

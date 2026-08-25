@@ -56,7 +56,7 @@ namespace puyasol::builder
 ///   - BitwiseShiftOps.cpp      — shl, shr, div, byte, signextend, sload, gas, timestamp
 ///   - SignedOps.cpp             — sdiv, smod, slt, sgt, sar, tload, tstore, isNegative256, negate256
 ///   - DataOps.cpp              — calldataload, resolveConstantYulValue, keccak256
-///   - MemoryHelpers.cpp        — readMemSlot, padTo32Bytes, concatSlots, storeResultToMemory
+///   - MemoryHelpers.cpp        — readMemSlot, padTo32Bytes, concatSlotsRT, storeResultToMemory
 ///   - MemoryOps.cpp            — mload, mstore, handleReturn, tryHandleBytesMemoryRead
 ///   - PrecompileDispatch.cpp   — Routes call/staticcall to specific precompile handlers
 ///   - PrecompileHandlers.cpp   — ecAdd, ecMul, ecPairing, ecRecover, sha256, modExp, identity
@@ -271,15 +271,6 @@ public:
 		ScratchLayout const& _scratch,
 		std::shared_ptr<awst::Expression> _offset,
 		int _byteLen,
-		awst::SourceLocation const& _loc
-	);
-
-	/// Materialise a blob-backed bytes/string VALUE from its offset var:
-	/// length = low 8 bytes of the word at `off`, data = blob[off+32 .. +len].
-	static std::shared_ptr<awst::Expression> materializeBlobBytesValue(
-		ScratchLayout const& _scratch,
-		std::string const& _offVar,
-		bool _isString,
 		awst::SourceLocation const& _loc
 	);
 
@@ -883,13 +874,7 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
-	/// Read a contiguous region from the blob (single extract3).
-	std::shared_ptr<awst::Expression> concatSlots(
-		uint64_t _baseOffset, int _startSlot, int _count,
-		awst::SourceLocation const& _loc
-	);
-
-	/// Runtime-offset variant of concatSlots (base offset is an Expression).
+	/// Concat `_slotCount` scratch slots starting at a runtime base offset.
 	std::shared_ptr<awst::Expression> concatSlotsRT(
 		std::shared_ptr<awst::Expression> _baseOffset, int _startSlot, int _count,
 		awst::SourceLocation const& _loc

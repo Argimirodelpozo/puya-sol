@@ -26,9 +26,4 @@ void walkBlock(awst::Block& _block, ExprRewriteFn const& _fn);
 /// Walk all Expression slots in `_stmt` (including child blocks). Mutates in place.
 void walkStatement(awst::Statement& _stmt, ExprRewriteFn const& _fn);
 
-/// Walk `_expr` and its subtree in pre-order via `_fn`.
-/// `_expr` is by reference because the slot's pointee may be replaced.
-void walkExpression(
-	std::shared_ptr<awst::Expression>& _expr, ExprRewriteFn const& _fn);
-
 } // namespace puyasol::splitter

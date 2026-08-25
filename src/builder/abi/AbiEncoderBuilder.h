@@ -61,22 +61,11 @@ public:
 	/// expression: 0 values → empty bytes; 1 value → that value's ARC4 bytes (NO
 	/// tuple wrapper); N values → an ARC4 tuple. Each value is encoded at
 	/// mapToARC4Type(value->wtype), so a value that is already ARC4 just
-	/// reinterpret-casts to bytes. Shared by encodeArgsAsArc4 and abi.encodeCall
-	/// (which pre-coerces each value to its declared parameter type first).
+	/// reinterpret-casts to bytes. Used by abi.encodeCall (which pre-coerces
+	/// each value to its declared parameter type first).
 	static std::shared_ptr<awst::Expression> arc4EncodeValues(
 		ContractContext& _ctx,
 		std::vector<std::shared_ptr<awst::Expression>> _vals,
-		awst::SourceLocation const& _loc);
-
-	/// ARC4-encode the call arguments in the half-open range [_startIdx, end) at
-	/// their own value types (single → bare value bytes; multiple → ARC4 tuple).
-	/// Used by abi.encode (start 0) and abi.encodeWith{Selector,Signature} (start
-	/// 1, after the leading selector/signature arg). The ARC4 counterpart to the
-	/// EVM-layout encodeArgsHeadTail.
-	static std::shared_ptr<awst::Expression> encodeArgsAsArc4(
-		ContractContext& _ctx,
-		solidity::frontend::FunctionCall const& _callNode,
-		size_t _startIdx,
 		awst::SourceLocation const& _loc);
 
 	/// ARC4-encode a list of call arguments coerced to the callee's DECLARED

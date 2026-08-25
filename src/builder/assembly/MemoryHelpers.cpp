@@ -1,5 +1,5 @@
 /// @file MemoryHelpers.cpp
-/// readMemSlot, padTo32Bytes, concatSlots, storeResultToMemory — scratch-slot memory helpers.
+/// readMemSlot, padTo32Bytes, concatSlotsRT, storeResultToMemory — scratch-slot memory helpers.
 
 #include "builder/assembly/AssemblyBuilder.h"
 #include "awst/NameGen.h"
@@ -33,18 +33,6 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::padTo32Bytes(
 	auto cast = awst::makeAsBytes(std::move(_expr), _loc);
 	auto concatPad = awst::makeLeftPad(std::move(cast), 32, _loc);
 	return awst::makeExtractLastN(std::move(concatPad), 32, _loc);
-}
-
-std::shared_ptr<awst::Expression> AssemblyBuilder::concatSlots(
-	uint64_t _baseOffset, int _startSlot, int _count,
-	awst::SourceLocation const& _loc
-)
-{
-	// Slot-routed range read (M7): words straddling SLOT_SIZE are handled.
-	uint64_t byteOffset = _baseOffset + static_cast<uint64_t>(_startSlot) * 0x20;
-	int byteLen = _count * 0x20;
-	return readMemRangeDirect(scratchLayout(),
-		awst::makeIntegerConstant(byteOffset, _loc), byteLen, _loc);
 }
 
 void AssemblyBuilder::storeResultToMemory(

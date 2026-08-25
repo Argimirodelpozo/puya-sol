@@ -1033,29 +1033,4 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	return nullptr;
 }
 
-void InnerCallHandlers::fundCreatedApp(
-	ContractContext& _ctx,
-	std::shared_ptr<awst::Expression> _amount,
-	awst::SourceLocation const& _loc)
-{
-	auto appId = awst::makeItxn("CreatedApplicationID", awst::WType::uint64Type(), _loc);
-
-	auto* tupleType = _ctx.typeMapper.createType<awst::WTuple>(
-		std::vector<awst::WType const*>{awst::WType::bytesType(), awst::WType::boolType()});
-	auto appParams = awst::makeAppParamsGet(
-		"AppAddress", std::move(appId), tupleType, _loc);
-
-	auto addrBytes = awst::makeTupleItem(std::move(appParams), 0, awst::WType::bytesType(), _loc);
-
-	auto receiver = awst::makeAsAccount(std::move(addrBytes), _loc);
-
-	auto create = buildPaymentTransaction(_ctx, std::move(receiver), std::move(_amount), _loc);
-	static awst::WInnerTransaction s_payTxnType(TxnTypePay);
-	auto submit = awst::makeSubmitInnerTransaction(&s_payTxnType, _loc);
-	submit->itxns.push_back(std::move(create));
-
-	auto stmt = awst::makeExpressionStatement(std::move(submit), _loc);
-	_ctx.preEffects().push_back(std::move(stmt));
-}
-
 } // namespace puyasol::builder::eb

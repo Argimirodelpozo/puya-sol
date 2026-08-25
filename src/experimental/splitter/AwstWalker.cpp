@@ -277,12 +277,6 @@ void recurseStmt(
 
 } // namespace
 
-void walkExpression(
-	std::shared_ptr<awst::Expression>& _expr, ExprRewriteFn const& _fn)
-{
-	visitSlot(_expr, _fn);
-}
-
 void walkStatement(awst::Statement& _stmt, ExprRewriteFn const& _fn)
 {
 	std::shared_ptr<awst::Statement> tmp(&_stmt, [](awst::Statement*){});

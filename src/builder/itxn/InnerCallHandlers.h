@@ -17,12 +17,6 @@ namespace puyasol::builder::eb
 class InnerCallHandlers
 {
 public:
-	/// Pay `amount` to the address of the just-created inner app (for `{value: X}`).
-	static void fundCreatedApp(
-		ContractContext& _ctx,
-		std::shared_ptr<awst::Expression> _amount,
-		awst::SourceLocation const& _loc);
-
 	/// Try to handle an address member call; nullptr if not handled.
 	static std::unique_ptr<InstanceBuilder> tryHandleAddressCall(
 		ContractContext& _ctx,

@@ -501,7 +501,6 @@ void emitProcessChunk(Block& body, SourceLocation const& loc)
 } // anonymous namespace
 
 std::string const& ripemd160SubroutineId() { return SUBROUTINE_ID; }
-std::string const& ripemd160SubroutineName() { return SUBROUTINE_ID; }
 
 std::shared_ptr<Subroutine> buildRipemd160Subroutine(SourceLocation loc)
 {

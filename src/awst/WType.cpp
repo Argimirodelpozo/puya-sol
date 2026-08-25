@@ -137,7 +137,6 @@ BasicWType const g_biguintType("biguint", WTypeKind::Basic, true);
 BasicWType const g_stringType("string", WTypeKind::Basic, true);
 BytesWType const g_bytesType(std::nullopt);
 BasicWType const g_accountType("account", WTypeKind::Basic, true);
-BasicWType const g_assetType("asset", WTypeKind::Basic, true);
 BasicWType const g_applicationType("application", WTypeKind::Basic, true);
 BasicWType const g_stateKeyType("state_key", WTypeKind::Basic, true);
 BasicWType const g_boxKeyType("box_key", WTypeKind::Basic, true);
@@ -151,7 +150,6 @@ WType const* WType::biguintType() { return &g_biguintType; }
 WType const* WType::stringType() { return &g_stringType; }
 WType const* WType::bytesType() { return &g_bytesType; }
 WType const* WType::accountType() { return &g_accountType; }
-WType const* WType::assetType() { return &g_assetType; }
 WType const* WType::applicationType() { return &g_applicationType; }
 WType const* WType::stateKeyType() { return &g_stateKeyType; }
 WType const* WType::boxKeyType() { return &g_boxKeyType; }
