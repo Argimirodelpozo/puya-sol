@@ -69,21 +69,9 @@ void emitNonPayableCheck(
 	// The normal method-body guard is keyed by the ARC4 selector. EVM entry
 	// routes have a different selector, so enforce the same payment rule at the
 	// adapter while the selected external function is known.
-	auto groupIndex = awst::makeTxn(
-		"GroupIndex", awst::WType::uint64Type(), loc);
-	auto hasPrecedingTxn = awst::makeNumericCompare(
-		groupIndex, awst::NumericComparison::Gt, u64(0, loc), loc);
-	auto paymentIndex = awst::makeUInt64BinOp(
-		awst::makeTxn("GroupIndex", awst::WType::uint64Type(), loc),
-		awst::UInt64BinaryOperator::Sub, u64(1, loc), loc);
-	auto amount = awst::makeGtxns(
-		"Amount", std::move(paymentIndex), awst::WType::uint64Type(), loc);
-	auto value = awst::makeConditional(
-		std::move(hasPrecedingTxn), std::move(amount), u64(0, loc),
-		awst::WType::uint64Type(), loc);
 	out.push_back(awst::makeExpressionStatement(
 		awst::makeAssert(
-			awst::makeNumericCompare(std::move(value),
+			awst::makeNumericCompare(makeMsgValueAmount(loc),
 				awst::NumericComparison::Eq, u64(0, loc), loc),
 			loc, "not payable"), loc));
 }

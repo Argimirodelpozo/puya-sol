@@ -1,4 +1,5 @@
 #include "builder/SourceLocConvert.h"
+#include "builder/contract/RouterConditions.h"
 #include "builder/ProgramAnalysis.h"
 #include <variant>
 #include "builder/contract/ContractBuilder.h"
@@ -381,25 +382,8 @@ void ContractBuilder::prependNonPayableCheck(awst::ContractMethod& _method,
 
 	auto loc = _method.sourceLocation;
 
-	auto groupIdx = awst::makeTxn(std::string("GroupIndex"), awst::WType::uint64Type(), loc);
-
-	auto hasPayment = awst::makeNumericCompare(
-		groupIdx, awst::NumericComparison::Gt,
-		awst::makeIntegerConstant("0", loc), loc);
-
-	auto groupIdx2 = awst::makeTxn(std::string("GroupIndex"), awst::WType::uint64Type(), loc);
-	auto payIdx = awst::makeUInt64BinOp(
-		std::move(groupIdx2), awst::UInt64BinaryOperator::Sub,
-		awst::makeIntegerConstant("1", loc), loc);
-
-	auto amount = awst::makeGtxns(
-		"Amount", std::move(payIdx), awst::WType::uint64Type(), loc);
-
-	// Mirrors msg.value shape — avoids GroupIndex-1 when GroupIndex==0 (underflow-safe).
-	auto msgValue = awst::makeConditional(
-		std::move(hasPayment), std::move(amount),
-		awst::makeIntegerConstant("0", loc),
-		awst::WType::uint64Type(), loc);
+	// msg.value shape — avoids GroupIndex-1 when GroupIndex==0 (underflow-safe).
+	auto msgValue = makeMsgValueAmount(loc);
 
 	auto isZero = awst::makeNumericCompare(
 		std::move(msgValue), awst::NumericComparison::Eq,

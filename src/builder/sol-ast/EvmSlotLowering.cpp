@@ -325,12 +325,8 @@ std::optional<EvmSlotLowering::Addr> EvmSlotLowering::resolve(Expression const& 
 	// arm (or adding another shape-specific allowance).
 	if (auto const* cond = dynamic_cast<Conditional const*>(&_e))
 	{
-		auto loweredCondition = m_ctx.lower(cond->condition(), false);
-		auto condition = std::move(loweredCondition.value);
-		bool const conditionHadPost = !loweredCondition.effects.post.empty();
-		condition = m_ctx.emitSequencedOperand(
-			std::move(loweredCondition.effects), std::move(condition),
-			conditionHadPost, m_loc);
+		auto condition = m_ctx.pinIfWriteBacks(
+			m_ctx.lower(cond->condition(), false), m_loc);
 
 		auto lowerSlotArm = [&](Expression const& _arm) {
 			return m_ctx.lowerOperand([&]() -> std::shared_ptr<awst::Expression> {

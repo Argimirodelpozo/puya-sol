@@ -30,12 +30,8 @@ std::shared_ptr<awst::Expression> SolConditional::toAwst()
 	// The condition evaluates unconditionally and FIRST: hoist its write-backs
 	// (post-pendings) so both branches observe them (`bump(s) > 0 ? s.f : 0`
 	// reads the post-call s.f on EVM). Pin the condition value before the hoist.
-	auto loweredCondition = m_ctx.lower(m_conditional.condition(), false);
-	e->condition = std::move(loweredCondition.value);
-	auto condD = std::move(loweredCondition.effects);
-	bool condHadPost = !condD.post.empty();
-	e->condition = m_ctx.emitSequencedOperand(
-		std::move(condD), std::move(e->condition), condHadPost, m_loc);
+	e->condition = m_ctx.pinIfWriteBacks(
+		m_ctx.lower(m_conditional.condition(), false), m_loc);
 	if (dynamic_cast<awst::AssignmentExpression*>(e->condition.get()))
 	{
 		// Side-effecting condition `(x=f()) ? a : b`: emit as pre-statement so

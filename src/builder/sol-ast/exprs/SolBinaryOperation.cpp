@@ -70,11 +70,8 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolShortCircuit()
 	// pendings) so the RHS observes them (`bump(s) > 0 && s.f == 6` — the RHS
 	// runs at call-return state on EVM, not pre-write-back). Pin the left value
 	// before the hoist so it keeps its pre-write-back reads.
-	auto loweredLeft = m_ctx.lower(m_binOp.leftExpression(), false);
-	auto left = std::move(loweredLeft.value);
-	auto leftD = std::move(loweredLeft.effects);
-	bool leftHadPost = !leftD.post.empty();
-	left = m_ctx.emitSequencedOperand(std::move(leftD), std::move(left), leftHadPost, m_loc);
+	auto left = m_ctx.pinIfWriteBacks(
+		m_ctx.lower(m_binOp.leftExpression(), false), m_loc);
 
 	// Build the RHS, capturing any side effects it pushes (a checked op's overflow/zero assert, a
 	// `**` square-and-multiply loop, a nested short-circuit, a call's write-back). They must run

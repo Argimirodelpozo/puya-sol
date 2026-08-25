@@ -2,6 +2,7 @@
 /// msg.sender, block.timestamp, block.prevrandao, block.difficulty, etc.
 
 #include "builder/sol-ast/members/SolIntrinsicAccess.h"
+#include "builder/contract/RouterConditions.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/SelectorSemantics.h"
 #include "builder/sol-intrinsics/IntrinsicMapper.h"
@@ -154,26 +155,8 @@ std::shared_ptr<awst::Expression> SolIntrinsicAccess::toAwst()
 	// msg.value → GroupIndex > 0 ? gtxns Amount[GroupIndex-1] : 0
 	if (baseName == "msg" && member == "value")
 	{
-		auto groupIdx = awst::makeTxn(std::string("GroupIndex"), awst::WType::uint64Type(), m_loc);
-
-		auto zero = awst::makeZero(m_loc);
-		auto hasPayment = awst::makeNumericCompare(groupIdx, awst::NumericComparison::Gt, std::move(zero), m_loc);
-
-		auto groupIdx2 = awst::makeTxn(std::string("GroupIndex"), awst::WType::uint64Type(), m_loc);
-		auto one = awst::makeOne(m_loc);
-		auto payIdx = awst::makeUInt64BinOp(std::move(groupIdx2), awst::UInt64BinaryOperator::Sub, std::move(one), m_loc);
-
-		auto amount = awst::makeGtxns(
-			"Amount", std::move(payIdx), awst::WType::uint64Type(), m_loc);
-
-		auto zeroVal = awst::makeZero(m_loc);
-
-		auto cond = awst::makeConditional(
-			std::move(hasPayment), std::move(amount), std::move(zeroVal),
-			awst::WType::uint64Type(), m_loc);
-
-			// Promote uint64 → biguint (Solidity msg.value is uint256)
-		auto itob = awst::makeItob(std::move(cond), m_loc);
+		// Promote uint64 → biguint (Solidity msg.value is uint256).
+		auto itob = awst::makeItob(builder::makeMsgValueAmount(m_loc), m_loc);
 		return awst::makeAsBiguint(std::move(itob), m_loc);
 	}
 

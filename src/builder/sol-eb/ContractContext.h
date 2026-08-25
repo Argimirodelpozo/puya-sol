@@ -293,6 +293,19 @@ public:
 		bool _pin,
 		awst::SourceLocation const& _loc);
 
+	/// Unconditionally-evaluated operand (ternary condition, short-circuit
+	/// LEFT): re-emit its effects, pinning the value only when it carried
+	/// write-backs so later reads observe them while the pinned value keeps
+	/// its pre-write-back reads. The shape shared by SolConditional,
+	/// trySolShortCircuit, and the slot-mode conditional lowering.
+	std::shared_ptr<awst::Expression> pinIfWriteBacks(
+		LoweredExpression&& _low, awst::SourceLocation const& _loc)
+	{
+		bool const hadPost = !_low.effects.post.empty();
+		return emitSequencedOperand(
+			std::move(_low.effects), std::move(_low.value), hadPost, _loc);
+	}
+
 	/// A block that runs `_preStmts` (the operand's captured pre-statements),
 	/// assigns `_value` to `_resultTarget`, then runs `_postStmts` (the
 	/// operand's captured write-backs — gated WITH the operand, not left to
