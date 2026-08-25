@@ -1,6 +1,7 @@
 /// @file SolBinaryOperation.cpp — migrated from BinaryOperationBuilder.cpp.
 
 #include "builder/sol-types/SolcConstFold.h"
+#include "builder/AwstShorthand.h"
 #include "awst/NameGen.h"
 #include "builder/sol-ast/EffectScan.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -477,10 +478,7 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::buildSignedExp(
 
 	auto [pow2NStr, halfNStr] = builder::TypeCoercion::pow2NAndHalf(bits);
 
-	auto makeBiguintConst = [&](std::string const& val) {
-		auto c = awst::makeIntegerConstant(val, m_loc, awst::WType::biguintType());
-		return c;
-	};
+	auto makeBiguintConst = [&](std::string const& val) { return shorthand::biguintConst(val, m_loc); };
 
 	// Ensure base is biguint
 	if (_base->wtype == awst::WType::uint64Type())

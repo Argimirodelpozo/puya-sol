@@ -12,6 +12,7 @@
 /// transport; this is the offset-faithful view Yul arithmetic needs.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/AwstShorthand.h"
 #include "awst/NameGen.h"
 #include "builder/abi/AbiEncoderBuilder.h"
 #include "builder/sol-types/Arc4Defaults.h"
@@ -238,9 +239,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::evmCalldataWord(
 {
 	using namespace solidity::frontend;
 	auto const* wt = _value->wtype;
-	auto u64c = [&](uint64_t v) {
-		return awst::makeIntegerConstant(v, _loc, awst::WType::uint64Type());
-	};
+	auto u64c = [&](uint64_t v) { return shorthand::u64(v, _loc); };
 	auto const* intT = dynamic_cast<IntegerType const*>(_solLeaf);
 	if (intT && intT->isSigned() && wt == awst::WType::uint64Type())
 	{
@@ -480,7 +479,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::calldataDynOffset(
 	awst::SourceLocation const& _loc)
 {
 	using namespace solidity::frontend;
-	auto u64 = [&](uint64_t v) { return awst::makeIntegerConstant(v, _loc, awst::WType::uint64Type()); };
+	auto u64 = [&](uint64_t v) { return shorthand::u64(v, _loc); };
 	// headWord = btoi(extract3(__cd_blob, headPos+24, 8))  — low 8 bytes of the 32-byte head pointer.
 	auto headWord = awst::makeBtoi(awst::makeExtract3(
 		awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc),
@@ -504,7 +503,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::calldataDynLength(
 	awst::SourceLocation const& _loc)
 {
 	using namespace solidity::frontend;
-	auto u64 = [&](uint64_t v) { return awst::makeIntegerConstant(v, _loc, awst::WType::uint64Type()); };
+	auto u64 = [&](uint64_t v) { return shorthand::u64(v, _loc); };
 	if (auto const* array = dynamic_cast<ArrayType const*>(_solType);
 		array && !array->isDynamicallySized())
 		return awst::makeIntegerConstant(
@@ -575,15 +574,9 @@ void AssemblyBuilder::buildSyntheticCalldataBlob(
 {
 	using O = awst::UInt64BinaryOperator;
 
-	auto u64Const = [&](uint64_t v) {
-		return awst::makeIntegerConstant(v, _loc, awst::WType::uint64Type());
-	};
-	auto bytesVar = [&](std::string const& n) {
-		return awst::makeVarExpression(n, awst::WType::bytesType(), _loc);
-	};
-	auto u64Var = [&](std::string const& n) {
-		return awst::makeVarExpression(n, awst::WType::uint64Type(), _loc);
-	};
+	auto u64Const = [&](uint64_t v) { return shorthand::u64(v, _loc); };
+	auto bytesVar = [&](std::string const& n) { return shorthand::bytesVar(n, _loc); };
+	auto u64Var = [&](std::string const& n) { return shorthand::u64Var(n, _loc); };
 	auto bzeroOf = [&](std::shared_ptr<awst::Expression> n) {
 		return awst::makeBzero(std::move(n), _loc);
 	};

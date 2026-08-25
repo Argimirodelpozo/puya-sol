@@ -2,6 +2,7 @@
 /// Bitwise and shift operations: shl, shr, div, byte, signextend, buildPowerOf2.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/AwstShorthand.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/storage/StorageLayout.h"
 #include "builder/storage/StorageMapper.h"
@@ -36,7 +37,7 @@ BoxCount makeArrayBoxCount(
 	std::string const& _name, unsigned _elementSize,
 	awst::SourceLocation const& _loc)
 {
-	auto u64c = [&](uint64_t v) { return awst::makeIntegerConstant(v, _loc); };
+	auto u64c = [&](uint64_t v) { return shorthand::u64(v, _loc); };
 	static awst::WTuple s_boxLenTupleType(std::vector<awst::WType const*>{
 		awst::WType::uint64Type(), awst::WType::boolType()});
 	auto lenTuple = awst::makeBoxLen(
@@ -58,7 +59,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::tryRouteConstSlotLoad(
 	auto const* ic = dynamic_cast<awst::IntegerConstant const*>(_slot.get());
 	if (!ic)
 		return nullptr;
-	auto u64c = [&](uint64_t v) { return awst::makeIntegerConstant(v, _loc); };
+	auto u64c = [&](uint64_t v) { return shorthand::u64(v, _loc); };
 
 	auto it = m_slotRoutes.find(ic->value);
 	if (it != m_slotRoutes.end())
@@ -146,7 +147,7 @@ bool AssemblyBuilder::tryRouteConstSlotStore(
 	auto const* ic = dynamic_cast<awst::IntegerConstant const*>(_slot.get());
 	if (!ic)
 		return false;
-	auto u64c = [&](uint64_t v) { return awst::makeIntegerConstant(v, _loc); };
+	auto u64c = [&](uint64_t v) { return shorthand::u64(v, _loc); };
 	auto nameBytes = [&](std::string const& n) { return awst::makeUtf8BytesConstant(n, _loc); };
 
 	auto it = m_slotRoutes.find(ic->value);

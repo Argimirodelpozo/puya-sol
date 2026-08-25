@@ -2,6 +2,7 @@
 /// readMemSlot, padTo32Bytes, concatSlotsRT, storeResultToMemory — scratch-slot memory helpers.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/AwstShorthand.h"
 #include "awst/NameGen.h"
 
 #include <sstream>
@@ -139,12 +140,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDyn(
 	auto nm = [&](char const* t) {
 		return "__memrd_" + std::string(t) + "_" + std::to_string(uid);
 	};
-	auto u64v = [&](std::string const& n) {
-		return awst::makeVarExpression(n, awst::WType::uint64Type(), _loc);
-	};
-	auto bytesv = [&](std::string const& n) {
-		return awst::makeVarExpression(n, awst::WType::bytesType(), _loc);
-	};
+	auto u64v = [&](std::string const& n) { return shorthand::u64Var(n, _loc); };
+	auto bytesv = [&](std::string const& n) { return shorthand::bytesVar(n, _loc); };
 	_out.push_back(awst::makeAssignmentStatement(
 		u64v(nm("off")), offsetToUint64(std::move(_offset), _loc), _loc));
 	_out.push_back(awst::makeAssignmentStatement(
@@ -194,12 +191,8 @@ void AssemblyBuilder::writeMemRangeDyn(
 	auto nm = [&](char const* t) {
 		return "__memwr_" + std::string(t) + "_" + std::to_string(uid);
 	};
-	auto u64v = [&](std::string const& n) {
-		return awst::makeVarExpression(n, awst::WType::uint64Type(), _loc);
-	};
-	auto bytesv = [&](std::string const& n) {
-		return awst::makeVarExpression(n, awst::WType::bytesType(), _loc);
-	};
+	auto u64v = [&](std::string const& n) { return shorthand::u64Var(n, _loc); };
+	auto bytesv = [&](std::string const& n) { return shorthand::bytesVar(n, _loc); };
 	_out.push_back(awst::makeAssignmentStatement(
 		u64v(nm("dst")), offsetToUint64(std::move(_offset), _loc), _loc));
 	_out.push_back(awst::makeAssignmentStatement(

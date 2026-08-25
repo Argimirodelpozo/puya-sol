@@ -3,6 +3,7 @@
 /// EvmSlotLowering has resolved their storage word addresses.
 
 #include "builder/sol-ast/EvmSlotLowering.h"
+#include "builder/AwstShorthand.h"
 #include "builder/sol-ast/Context.h"
 #include "builder/storage/SlotHandleAccess.h"
 #include "builder/storage/SlotWordCodec.h"
@@ -580,15 +581,9 @@ std::shared_ptr<awst::Expression> EvmSlotLowering::readArrayValue(
 			auto bv = [&](std::string const& n) {
 				return awst::makeVarExpression(n, awst::WType::biguintType(), m_loc);
 			};
-			auto uv = [&](std::string const& n) {
-				return awst::makeVarExpression(n, awst::WType::uint64Type(), m_loc);
-			};
-			auto xv = [&](std::string const& n) {
-				return awst::makeVarExpression(n, awst::WType::bytesType(), m_loc);
-			};
-			auto u64c = [&](uint64_t v) {
-				return awst::makeIntegerConstant(v, m_loc);
-			};
+			auto uv = [&](std::string const& n) { return shorthand::u64Var(n, m_loc); };
+			auto xv = [&](std::string const& n) { return shorthand::bytesVar(n, m_loc); };
+			auto u64c = [&](uint64_t v) { return shorthand::u64(v, m_loc); };
 			auto toU64 = [&](std::shared_ptr<awst::Expression> v) {
 				return awst::makeBtoi(awst::makeExtractLastN(
 					awst::makeZeroExtendToN(awst::makeAsBytes(std::move(v), m_loc),
@@ -1162,15 +1157,9 @@ bool EvmSlotLowering::writeArrayValue(
 			auto bv = [&](std::string const& n) {
 				return awst::makeVarExpression(n, awst::WType::biguintType(), m_loc);
 			};
-			auto uv = [&](std::string const& n) {
-				return awst::makeVarExpression(n, awst::WType::uint64Type(), m_loc);
-			};
-			auto xv = [&](std::string const& n) {
-				return awst::makeVarExpression(n, awst::WType::bytesType(), m_loc);
-			};
-			auto u64c = [&](uint64_t v) {
-				return awst::makeIntegerConstant(v, m_loc);
-			};
+			auto uv = [&](std::string const& n) { return shorthand::u64Var(n, m_loc); };
+			auto xv = [&](std::string const& n) { return shorthand::bytesVar(n, m_loc); };
+			auto u64c = [&](uint64_t v) { return shorthand::u64(v, m_loc); };
 			auto toU64 = [&](std::shared_ptr<awst::Expression> v) {
 				return awst::makeBtoi(awst::makeExtractLastN(
 					awst::makeZeroExtendToN(awst::makeAsBytes(std::move(v), m_loc),

@@ -1,4 +1,5 @@
 #include "builder/sol-eb/BigUIntMathHelpers.h"
+#include "builder/AwstShorthand.h"
 #include "awst/NameGen.h"
 #include "builder/sol-types/TypeCoercion.h"
 
@@ -451,9 +452,7 @@ std::shared_ptr<awst::Expression> buildSignedArithmetic(
 	// 2^N (wrap modulus) and 2^(N-1) (sign-bit boundary).
 	auto [pow2NStr, halfNStr] = TypeCoercion::pow2NAndHalf(_bits);
 
-	auto makeBiguintConst = [&](std::string const& val) {
-		return awst::makeIntegerConstant(val, _loc, awst::WType::biguintType());
-	};
+	auto makeBiguintConst = [&](std::string const& val) { return shorthand::biguintConst(val, _loc); };
 
 	// Pin operands: the checked overflow assert below references each again, so a
 	// side-effecting operand (`x += f()`) must evaluate exactly once. Self-contained
@@ -586,10 +585,7 @@ std::shared_ptr<awst::Expression> buildIncDec(
 	{
 		auto [pow2NStr2, halfNStr2] = builder::TypeCoercion::pow2NAndHalf(_signedBits);
 
-		auto makeBConst = [&](std::string const& v) {
-			auto c = awst::makeIntegerConstant(v, _loc, awst::WType::biguintType());
-			return c;
-		};
+		auto makeBConst = [&](std::string const& v) { return shorthand::biguintConst(v, _loc); };
 
 		auto val = promoteToBiguint(std::move(_base), _loc);
 
@@ -652,9 +648,7 @@ std::shared_ptr<awst::Expression> buildIncDec(
 		// the biguint b- opcode REVERT at the boundary (uint64 max+1 overflows, 0-1 underflows).
 		// Compute in biguint: inc = v+1; dec = v + (2^N-1) [add max, not subtract 1, to dodge
 		// underflow]; then mod 2^N. Narrow back to uint64 for sub-word/uint64 backings.
-		auto makeBConst = [&](std::string const& v) {
-			return awst::makeIntegerConstant(v, _loc, awst::WType::biguintType());
-		};
+		auto makeBConst = [&](std::string const& v) { return shorthand::biguintConst(v, _loc); };
 		static const std::string pow2_256Str =
 			"115792089237316195423570985008687907853269984665640564039457584007913129639936";
 		bool nativeBack = _base->wtype != awst::WType::biguintType();

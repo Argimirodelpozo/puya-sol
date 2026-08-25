@@ -1,6 +1,7 @@
 /// @file SolUnaryOperation.cpp — unary operation translation.
 
 #include "Logger.h"
+#include "builder/AwstShorthand.h"
 #include "builder/sol-types/SolcConstFold.h"
 #include "awst/NameGen.h"
 #include "builder/sol-types/SolIntType.h"
@@ -83,10 +84,7 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 		// -x = (2^N - x) mod 2^N; overflow: x == 2^(N-1) i.e. INT_MIN
 		auto [pow2NStr, halfNStr] = intInfo->pow2NAndHalf();
 
-		auto makeBiguintConst = [&](std::string const& val) {
-			auto c = awst::makeIntegerConstant(val, m_loc, awst::WType::biguintType());
-			return c;
-		};
+		auto makeBiguintConst = [&](std::string const& val) { return shorthand::biguintConst(val, m_loc); };
 
 		auto operand = promoteToSignedBiguint(std::move(_operand), m_loc);
 

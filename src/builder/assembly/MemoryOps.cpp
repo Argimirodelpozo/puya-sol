@@ -3,6 +3,7 @@
 /// Uses scratch-slot-backed bytes blob for EVM memory simulation.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/AwstShorthand.h"
 #include "builder/abi/EvmAbiDecode.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -309,9 +310,7 @@ void AssemblyBuilder::writeMemWordDirect(
 	std::string slotN = "__blobw_slot_" + std::to_string(id);
 	std::string subN = "__blobw_sub_" + std::to_string(id);
 	std::string valN = "__blobw_val_" + std::to_string(id);
-	auto u64v = [&](std::string const& n) {
-		return awst::makeVarExpression(n, awst::WType::uint64Type(), _loc);
-	};
+	auto u64v = [&](std::string const& n) { return shorthand::u64Var(n, _loc); };
 	auto valR = [&]() { return awst::makeVarExpression(valN, awst::WType::bytesType(), _loc); };
 
 	auto physicalSlot = awst::makeUInt64BinOp(_offset, O::FloorDiv, ss(), _loc);

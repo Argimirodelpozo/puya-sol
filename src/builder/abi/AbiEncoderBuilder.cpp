@@ -2,6 +2,7 @@
 /// Handles abi.encode*, abi.decode — extracted from FunctionCallBuilder.
 
 #include "builder/abi/AbiEncoderBuilder.h"
+#include "builder/AwstShorthand.h"
 #include "Logger.h"
 #include "builder/storage/StorageMapper.h"
 #include "builder/abi/EvmAbiEncode.h"
@@ -376,12 +377,8 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 				if (elemSolType && elemSolType->category() == Type::Category::Bool)
 				{
 					auto uniq = std::to_string(_callNode.id()) + "_" + std::to_string(argIdx);
-					auto bytesVar = [&](std::string const& n) {
-						return awst::makeVarExpression(n, awst::WType::bytesType(), _loc);
-					};
-					auto u64Var = [&](std::string const& n) {
-						return awst::makeVarExpression(n, awst::WType::uint64Type(), _loc);
-					};
+					auto bytesVar = [&](std::string const& n) { return shorthand::bytesVar(n, _loc); };
+					auto u64Var = [&](std::string const& n) { return shorthand::u64Var(n, _loc); };
 					std::string src = "__pkd_src_" + uniq, out = "__pkd_out_" + uniq,
 						iN = "__pkd_i_" + uniq, nN = "__pkd_n_" + uniq;
 					auto& pre = _ctx.preEffects();
@@ -435,12 +432,8 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleEncodePacked(
 				{
 					// __pkd_src = body; loop i<n: out ||= pad32(elem i)
 					auto uniq = std::to_string(_callNode.id()) + "_" + std::to_string(argIdx);
-					auto bytesVar = [&](std::string const& n) {
-						return awst::makeVarExpression(n, awst::WType::bytesType(), _loc);
-					};
-					auto u64Var = [&](std::string const& n) {
-						return awst::makeVarExpression(n, awst::WType::uint64Type(), _loc);
-					};
+					auto bytesVar = [&](std::string const& n) { return shorthand::bytesVar(n, _loc); };
+					auto u64Var = [&](std::string const& n) { return shorthand::u64Var(n, _loc); };
 					std::string src = "__pkd_src_" + uniq, out = "__pkd_out_" + uniq,
 						iN = "__pkd_i_" + uniq, nN = "__pkd_n_" + uniq;
 					auto& pre = _ctx.preEffects();

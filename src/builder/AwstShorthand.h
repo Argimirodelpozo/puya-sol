@@ -33,4 +33,22 @@ inline std::shared_ptr<awst::Expression> add(
 		awst::UInt64BinaryOperator::Add, std::move(right), loc);
 }
 
+inline std::shared_ptr<awst::Expression> u64Var(
+	std::string const& name, awst::SourceLocation const& loc)
+{
+	return awst::makeVarExpression(name, awst::WType::uint64Type(), loc);
+}
+
+inline std::shared_ptr<awst::Expression> bytesVar(
+	std::string const& name, awst::SourceLocation const& loc)
+{
+	return awst::makeVarExpression(name, awst::WType::bytesType(), loc);
+}
+
+inline std::shared_ptr<awst::Expression> biguintConst(
+	std::string const& value, awst::SourceLocation const& loc)
+{
+	return awst::makeIntegerConstant(value, loc, awst::WType::biguintType());
+}
+
 } // namespace puyasol::builder::shorthand
