@@ -283,6 +283,16 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 	if (op != Token::Assign)
 	{
 		std::shared_ptr<awst::Expression> current = target;
+		// Direct element (`path.size()==1`): `target` is the write-shape
+		// PLACEHOLDER `__mb_direct` — never assigned. The compound read must
+		// fetch the element from its page like the nested branch does;
+		// decoding the placeholder read an uninitialized var (uint64 0) and
+		// `big[i] += d` died on `b< wanted bigint but got uint64`.
+		if (path.size() == 1)
+			current = awst::makeReinterpretCast(
+				awst::makeBoxExtract(makeBoxKey(), makeOffset(),
+					awst::makeIntegerConstant(elemSize, m_loc), m_loc),
+				elemArc4Type, m_loc);
 		if (!awst::structurallyEquivalent(current->wtype, expectedNative))
 			current = awst::makeARC4Decode(
 				std::move(current), expectedNative, m_loc);

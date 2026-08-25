@@ -4884,3 +4884,24 @@ def test_struct_field_cow_store_shared(harness):
     assert as_int(harness.call(app, "delNestedFresh(uint256)", 5).abi_return) == 0
     # delete zeroes ONLY the field; the sibling survives.
     assert as_int(harness.call(app, "delNestedSet(uint256)", 6).abi_return) == 5
+
+
+def test_multibox_direct_element_compound(harness):
+    """puyasolRegression/contracts/multibox_direct_compound.sol — NOT an o.g. test.
+
+    `big[i] op= v` on a >32KB multi-box array: the direct-element write shape
+    used the never-assigned `__mb_direct` placeholder as its target; the
+    compound branch DECODED the placeholder (an uninitialized uint64-0 var)
+    as the current value instead of reading the element's page. Signed
+    elements crashed (`b< wanted bigint but got uint64`); the fix reads
+    box_extract(page, offset) like the nested-path branch always did.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/multibox_direct_compound.sol",
+        fund_wei=120_000_000, postinit_budget_pool=14)
+    P = 1 << 256
+    def signed(v):
+        return v - P if v > P // 2 else v
+    assert signed(as_int(harness.call(app, "signedAdd()").abi_return)) == 95
+    assert signed(as_int(harness.call(app, "signedNeg()").abi_return)) == -58
+    assert as_int(harness.call(app, "unsignedMul()").abi_return) == 42
