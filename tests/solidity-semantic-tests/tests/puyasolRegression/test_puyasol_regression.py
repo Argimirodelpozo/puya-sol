@@ -4904,6 +4904,8 @@ def test_multibox_direct_element_compound(harness):
         return v - P if v > P // 2 else v
     assert signed(as_int(harness.call(app, "signedAdd()").abi_return)) == 95
     assert signed(as_int(harness.call(app, "signedNeg()").abi_return)) == -58
+    # plain narrow signed assign sign-extends (was 2^64-5 stored raw).
+    assert signed(as_int(harness.call(app, "plainNarrow()").abi_return)) == -5
     assert as_int(harness.call(app, "unsignedMul()").abi_return) == 42
 
 

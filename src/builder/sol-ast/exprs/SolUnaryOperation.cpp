@@ -347,17 +347,6 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 		return target;
 	};
 
-	// ARC4-typed write target + native new value: wrap with ARC4Encode (pairs makeWriteTarget).
-	auto maybeEncode = [&](std::shared_ptr<awst::Expression> writeTarget,
-		std::shared_ptr<awst::Expression> newValue) -> std::shared_ptr<awst::Expression>
-	{
-		auto const* targetType = writeTarget->wtype;
-		if (auto const* arc4 = dynamic_cast<awst::ARC4UIntN const*>(targetType))
-			if (newValue->wtype != arc4)
-				return awst::makeARC4Encode(std::move(newValue), arc4, m_loc);
-		return newValue;
-	};
-
 	// Boxed STRUCT FIELD inc/dec: a bare `field := v` assignment is rejected by puya once the struct is
 	// boxed (any 2nd function keeps the struct in a box). Rebuild the struct copy-on-write
 	// (box := struct-with-field-replaced) like SolAssignment's compound path.
@@ -400,9 +389,10 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				awst::makeVarExpression(pName, nvType, m_loc)));
 			return awst::makeVarExpression(pName, nvType, m_loc);
 		}
-		auto newValue = maybeEncode(writeTarget, makeNewValue(_operand));
+		auto store = eb::AssignmentHelper::preparePlainStore(
+			m_ctx, std::move(writeTarget), makeNewValue(_operand), m_loc);
 		return awst::makeAssignmentExpression(
-			std::move(writeTarget), std::move(newValue), m_loc, _operand->wtype);
+			std::move(store.target), std::move(store.value), m_loc, _operand->wtype);
 	}
 	else
 	{
@@ -422,10 +412,10 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleIncDec(
 				makeNewValue(tempVar)));
 			return tempVar;
 		}
-		auto newValue = maybeEncode(writeTarget, makeNewValue(tempVar));
-
-		auto incrStmt = awst::makeAssignmentStatement(std::move(writeTarget), std::move(newValue), m_loc);
-		m_ctx.preEffects().push_back(std::move(incrStmt));
+		auto store = eb::AssignmentHelper::preparePlainStore(
+			m_ctx, std::move(writeTarget), makeNewValue(tempVar), m_loc);
+		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+			std::move(store.target), std::move(store.value), m_loc));
 
 		return tempVar;
 	}
@@ -642,7 +632,12 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleDelete(
 		return _operand;
 	}
 
-	m_ctx.queuePostEffect(awst::makeAssignmentStatement(target, std::move(defaultVal), m_loc));
+	{
+		auto store = eb::AssignmentHelper::preparePlainStore(
+			m_ctx, std::move(target), std::move(defaultVal), m_loc);
+		m_ctx.queuePostEffect(awst::makeAssignmentStatement(
+			std::move(store.target), std::move(store.value), m_loc));
+	}
 	return _operand;
 }
 

@@ -73,6 +73,39 @@ public:
 		std::vector<std::pair<std::string, awst::WType const*>> fieldChain;
 	};
 
+	/// ARC4-encode `_value` for storage at `_target`'s wtype when needed:
+	/// structural-equivalence no-op, string→bytes, arc4 array element-width
+	/// widening, uint64→arc4.uintN narrowing, bytes→dynamic byte-array
+	/// header build, else plain ARC4Encode. Moved from SolAssignment
+	/// (m_assignment-independent) so ++/-- and delete share it.
+	static std::shared_ptr<awst::Expression> arc4EncodeForTarget(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _value,
+		std::shared_ptr<awst::Expression> const& _target,
+		awst::SourceLocation const& _loc);
+
+	/// Queue the lazy-root-box ensure for a partial write target (see
+	/// StorageMapper::makeEnsureRootBoxForWrite). Moved from SolAssignment.
+	static void ensureRootBoxPre(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> const& _target,
+		awst::SourceLocation const& _loc);
+
+	/// The plain-store preparation shared by generic assignment, ++/--, and
+	/// delete: writable target (peel StateGet/ARC4Decode chains), encode the
+	/// value at the target's type, ensure the lazy root box. Callers assemble
+	/// their own statement/expression from the pair.
+	struct PlainStore
+	{
+		std::shared_ptr<awst::Expression> target;
+		std::shared_ptr<awst::Expression> value;
+	};
+	static PlainStore preparePlainStore(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _target,
+		std::shared_ptr<awst::Expression> _value,
+		awst::SourceLocation const& _loc);
+
 	/// THE struct-field copy-on-write store — shared by SolAssignment
 	/// (`s.f = v`, `s.f op= v`, tuple destructure, `s.b[i] = v`) and
 	/// SolUnaryOperation (`s.f++`, `--s.f`). Encodes `_fieldValue` at the

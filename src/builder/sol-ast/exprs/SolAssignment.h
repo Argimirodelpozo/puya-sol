@@ -81,6 +81,29 @@ private:
 		std::string const& _fieldName,
 		std::shared_ptr<awst::Expression> _newValue);
 
+	/// The aggregate-root writers' shared VALUE pipeline: compound compute at
+	/// the leaf's native type (current decoded when needed, RHS widened),
+	/// then coerceForAssignment + signExtendSignedWiden. The multibox copy
+	/// used to skip the sign-extend — plain `big[i] = int8(-5)` stored the
+	/// raw 64-bit two's complement (2^64-5) into the int256 element.
+	std::shared_ptr<awst::Expression> computeAggregateStoreValue(
+		solidity::frontend::Token _op,
+		std::shared_ptr<awst::Expression> _current,
+		std::shared_ptr<awst::Expression> _rhs,
+		awst::WType const* _nativeW);
+
+	/// The boxed-path/offset-struct writers' shared TAIL: pin the computed
+	/// value, ARC4-encode it at the leaf type, replace the leaf inside the
+	/// root temp (post-effect), then run the site's root write-back
+	/// statement. Returns the pinned value (the assignment-expression
+	/// result); nullptr when `_value` is null.
+	std::shared_ptr<awst::Expression> emitAggregateLeafStore(
+		std::shared_ptr<awst::Expression> _target,
+		std::shared_ptr<awst::Expression> _value,
+		std::string const& _tempStem,
+		char const* _nameGenKey,
+		std::shared_ptr<awst::Statement> _rootWriteback);
+
 	/// Pre-buildExpr early-out handlers (each claims the shape or returns nullopt).
 
 	/// `tx = v` / `tx += v` for a transient state var; routes through TransientStorage.
@@ -187,16 +210,7 @@ private:
 		std::shared_ptr<awst::Expression> _value,
 		std::shared_ptr<awst::Expression> const& _target);
 
-	/// If target is ARC4-typed and value wtype differs, emit ARC4 encode
-	/// (with widening/narrowing handling).
-	std::shared_ptr<awst::Expression> applyArc4EncodeIfNeeded(
-		std::shared_ptr<awst::Expression> _value,
-		std::shared_ptr<awst::Expression> const& _target);
 
-	/// For dynamic-elem static arrays and per-entry mapping boxes, emit a
-	/// guarded box_put or box_create so the box exists before box_replace.
-	void maybePrePopulateBox(
-		std::shared_ptr<awst::Expression> const& _target);
 };
 
 } // namespace puyasol::builder::sol_ast

@@ -254,10 +254,10 @@ std::shared_ptr<awst::Expression> SolAssignment::emitGenericAssignment(
 {
 	_value = applyCompoundAssignment(_op, _target, std::move(_value));
 	_value = applyAssignmentTypeCoercion(std::move(_value), _target);
-	_target = awst::makeWritableTarget(std::move(_target));
-	_value = applyArc4EncodeIfNeeded(std::move(_value), _target);
-	maybePrePopulateBox(_target);
-	return awst::makeAssignmentExpression(std::move(_target), std::move(_value), m_loc);
+	auto store = eb::AssignmentHelper::preparePlainStore(
+		m_ctx, std::move(_target), std::move(_value), m_loc);
+	return awst::makeAssignmentExpression(
+		std::move(store.target), std::move(store.value), m_loc);
 }
 
 std::optional<std::shared_ptr<awst::Expression>>
@@ -1344,97 +1344,6 @@ SolAssignment::applyAssignmentTypeCoercion(
 		_value = awst::makeReinterpretCast(std::move(_value), _target->wtype, m_loc);
 	}
 	return _value;
-}
-
-std::shared_ptr<awst::Expression>
-SolAssignment::applyArc4EncodeIfNeeded(
-	std::shared_ptr<awst::Expression> _value,
-	std::shared_ptr<awst::Expression> const& _target)
-{
-	if (_value->wtype == _target->wtype) return _value;
-
-	bool const targetIsArc4 = builder::isArc4EncodedType(_target->wtype);
-	if (!targetIsArc4) return _value;
-
-	// Skip encode if types match structurally (TypeMapper may not intern pointers;
-	// double-encoding would corrupt an ARC4 aggregate).
-	bool sameShape = awst::structurallyEquivalent(
-		_value->wtype, _target->wtype);
-	if (sameShape) return _value;
-
-	_value = builder::TypeCoercion::stringToBytes(std::move(_value), m_loc);
-
-	// Array element-wise widening: arc4 array<intM> → arc4 array<intN> (M<N) has no
-	// puya codec. Pin source bytes to a temp and call the helper.
-	bool const sourceIsArc4Array =
-		_value->wtype->kind() == awst::WTypeKind::ARC4StaticArray
-		|| _value->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
-	bool const targetIsArc4Array =
-		_target->wtype->kind() == awst::WTypeKind::ARC4StaticArray
-		|| _target->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
-	if (sourceIsArc4Array && targetIsArc4Array)
-	{
-		std::string tmpName = "__widen_src_" + std::to_string(awst::NameGen::next("SolAssignment.s_widCounter"));
-		auto srcAsBytes = awst::makeAsBytes(_value, m_loc);
-		auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::bytesType(), m_loc);
-		m_ctx.preEffects().push_back(
-			awst::makeAssignmentStatement(tmpVar, std::move(srcAsBytes), m_loc));
-		auto const* sourceType = _value->wtype;
-		auto mkSrc = [&]() {
-			return awst::makeVarExpression(tmpName, awst::WType::bytesType(), m_loc);
-		};
-		std::shared_ptr<awst::Expression> widened;
-		if (_target->wtype->kind() == awst::WTypeKind::ARC4StaticArray)
-			widened = builder::tryWidenArc4StaticArrayInt(
-				sourceType, _target->wtype, mkSrc, m_loc);
-		else
-			widened = builder::tryWidenArc4DynamicArrayInt(
-				sourceType, _target->wtype, mkSrc,
-				[this](std::shared_ptr<awst::Statement> _s) {
-					m_ctx.preEffects().push_back(std::move(_s));
-				},
-				m_loc);
-		if (widened) return widened;
-	}
-
-	// Narrowing: uint64 → arc4.uintN (N < 64).
-	if (auto narrowed = builder::tryNarrowUInt64ToArc4UIntN(
-			_value, _target->wtype, m_loc))
-		return narrowed;
-
-	// bytes/string → dynamic ARC4 byte-array (arc4.string / arc4.dynamic_bytes / uint8[]):
-	// puya rejects makeARC4Encode(bytes, arc4.string) ("cannot encode bytes to (len+utf8[])").
-	// Build [uint16 len][raw bytes] directly and reinterpret.
-	// e.g. `string[] s; s[0] = "hi"` hits this path.
-	// (Inverse of the abi.encode string-element fix in encodeFromArc4Bytes.)
-	if (_target->wtype->kind() == awst::WTypeKind::ARC4DynamicArray
-		&& (_value->wtype == awst::WType::bytesType()
-			|| (_value->wtype && _value->wtype->kind() == awst::WTypeKind::Bytes)))
-	{
-		auto const* da = static_cast<awst::ARC4DynamicArray const*>(_target->wtype);
-		if (da->elementType()
-			&& ::puyasol::builder::computeEncodedElementSize(da->elementType()) == 1)
-		{
-			auto once = awst::makeEvalOnce(std::move(_value), m_loc);
-			auto header = awst::makeUInt16Bytes(awst::makeLen(once, m_loc), m_loc);
-			auto arc4Bytes = awst::makeConcat(std::move(header), once, m_loc);
-			return awst::makeReinterpretCast(std::move(arc4Bytes), _target->wtype, m_loc);
-		}
-	}
-
-	return awst::makeARC4Encode(std::move(_value), _target->wtype, m_loc);
-}
-
-void SolAssignment::maybePrePopulateBox(
-	std::shared_ptr<awst::Expression> const& _target)
-{
-	// Centralized: a PARTIAL element write into a lazily-created state-var or mapping-entry box needs
-	// the root box to exist first (else box_replace hits "no such box"). See
-	// StorageMapper::makeEnsureRootBoxForWrite (the single source of truth, shared with the push/pop
-	// path in SolArrayMethod and the mapping-entry field write in SolAssignmentStructField).
-	if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
-			m_ctx.typeMapper, _target, /*isResize=*/false, m_loc))
-		m_ctx.queuePreEffect(std::move(stmt));
 }
 
 } // namespace puyasol::builder::sol_ast

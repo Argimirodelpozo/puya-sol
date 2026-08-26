@@ -131,6 +131,54 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleStorage
 	return std::shared_ptr<awst::Expression>(voidExpr);
 }
 
+std::shared_ptr<awst::Expression> SolAssignment::computeAggregateStoreValue(
+	Token _op,
+	std::shared_ptr<awst::Expression> _current,
+	std::shared_ptr<awst::Expression> _rhs,
+	awst::WType const* _nativeW)
+{
+	if (_op != Token::Assign)
+	{
+		if (!awst::structurallyEquivalent(_current->wtype, _nativeW))
+			_current = awst::makeARC4Decode(
+				std::move(_current), _nativeW, m_loc);
+		_rhs = widenSignedCompoundRhs(std::move(_rhs));
+		_rhs = eb::AssignmentHelper::computeCompoundOrFallback(
+			m_ctx, _op, _op, m_assignment.leftHandSide().annotation().type,
+			std::move(_current), std::move(_rhs), _nativeW, m_loc);
+	}
+	_rhs = builder::TypeCoercion::coerceForAssignment(
+		std::move(_rhs), _nativeW, m_loc);
+	return builder::TypeCoercion::signExtendSignedWiden(
+		std::move(_rhs), m_assignment.rightHandSide().annotation().type,
+		m_assignment.leftHandSide().annotation().type, m_loc);
+}
+
+std::shared_ptr<awst::Expression> SolAssignment::emitAggregateLeafStore(
+	std::shared_ptr<awst::Expression> _target,
+	std::shared_ptr<awst::Expression> _value,
+	std::string const& _tempStem,
+	char const* _nameGenKey,
+	std::shared_ptr<awst::Statement> _rootWriteback)
+{
+	if (!_value)
+		return nullptr;
+	std::string valueName = _tempStem + std::to_string(
+		awst::NameGen::next(_nameGenKey));
+	auto const* valueW = _value->wtype;
+	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+		awst::makeVarExpression(valueName, valueW, m_loc),
+		std::move(_value), m_loc));
+	std::shared_ptr<awst::Expression> stored =
+		awst::makeVarExpression(valueName, valueW, m_loc);
+	if (!awst::structurallyEquivalent(stored->wtype, _target->wtype))
+		stored = awst::makeARC4Encode(std::move(stored), _target->wtype, m_loc);
+	m_ctx.postEffects().push_back(awst::makeAssignmentStatement(
+		std::move(_target), std::move(stored), m_loc));
+	m_ctx.postEffects().push_back(std::move(_rootWriteback));
+	return awst::makeVarExpression(valueName, valueW, m_loc);
+}
+
 std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBoxArrayWrite()
 {
 	Token const op = m_assignment.assignmentOperator();
@@ -280,29 +328,19 @@ std::optional<std::shared_ptr<awst::Expression>> SolAssignment::tryHandleMultiBo
 	auto rhs = buildExpr(m_assignment.rightHandSide());
 	auto* expectedNative = m_ctx.typeMapper.map(
 		m_assignment.leftHandSide().annotation().type);
-	if (op != Token::Assign)
-	{
-		std::shared_ptr<awst::Expression> current = target;
-		// Direct element (`path.size()==1`): `target` is the write-shape
-		// PLACEHOLDER `__mb_direct` — never assigned. The compound read must
-		// fetch the element from its page like the nested branch does;
-		// decoding the placeholder read an uninitialized var (uint64 0) and
-		// `big[i] += d` died on `b< wanted bigint but got uint64`.
-		if (path.size() == 1)
-			current = awst::makeReinterpretCast(
-				awst::makeBoxExtract(makeBoxKey(), makeOffset(),
-					awst::makeIntegerConstant(elemSize, m_loc), m_loc),
-				elemArc4Type, m_loc);
-		if (!awst::structurallyEquivalent(current->wtype, expectedNative))
-			current = awst::makeARC4Decode(
-				std::move(current), expectedNative, m_loc);
-		rhs = widenSignedCompoundRhs(std::move(rhs));
-		rhs = eb::AssignmentHelper::computeCompoundOrFallback(
-			m_ctx, op, op, m_assignment.leftHandSide().annotation().type,
-			std::move(current), std::move(rhs), expectedNative, m_loc);
-	}
-	rhs = builder::TypeCoercion::coerceForAssignment(
-		std::move(rhs), expectedNative, m_loc);
+	std::shared_ptr<awst::Expression> current = target;
+	// Direct element (`path.size()==1`): `target` is the write-shape
+	// PLACEHOLDER `__mb_direct` — never assigned. The compound read must
+	// fetch the element from its page like the nested branch does;
+	// decoding the placeholder read an uninitialized var (uint64 0) and
+	// `big[i] += d` died on `b< wanted bigint but got uint64`.
+	if (op != Token::Assign && path.size() == 1)
+		current = awst::makeReinterpretCast(
+			awst::makeBoxExtract(makeBoxKey(), makeOffset(),
+				awst::makeIntegerConstant(elemSize, m_loc), m_loc),
+			elemArc4Type, m_loc);
+	rhs = computeAggregateStoreValue(
+		op, std::move(current), std::move(rhs), expectedNative);
 
 	// Pin rhs to a temp so we can encode it for box_replace and also return it as the result.
 	std::string valVarName = "__mb_val_" + std::to_string(awst::NameGen::next("SolAssignmentEarlyOuts.s_mbVCounter"));
@@ -489,42 +527,20 @@ SolAssignment::tryHandleBoxedAggregatePathWrite()
 			std::move(target), ma->memberName(), fieldW, m_loc);
 	}
 
-	auto const* valueSol = m_assignment.leftHandSide().annotation().type;
-	auto const* nativeW = m_ctx.typeMapper.map(valueSol);
-	if (op != Token::Assign)
-	{
-		std::shared_ptr<awst::Expression> current = target;
-		if (!awst::structurallyEquivalent(current->wtype, nativeW))
-			current = awst::makeARC4Decode(
-				std::move(current), nativeW, m_loc);
-		rhs = widenSignedCompoundRhs(std::move(rhs));
-		rhs = eb::AssignmentHelper::computeCompoundOrFallback(
-			m_ctx, op, op, valueSol, std::move(current),
-			std::move(rhs), nativeW, m_loc);
-	}
-	rhs = builder::TypeCoercion::coerceForAssignment(
-		std::move(rhs), nativeW, m_loc);
-	rhs = builder::TypeCoercion::signExtendSignedWiden(
-		std::move(rhs), m_assignment.rightHandSide().annotation().type,
-		valueSol, m_loc);
-	if (!rhs)
+	auto const* nativeW = m_ctx.typeMapper.map(
+		m_assignment.leftHandSide().annotation().type);
+	rhs = computeAggregateStoreValue(op, target, std::move(rhs), nativeW);
+	auto result = emitAggregateLeafStore(
+		target, std::move(rhs),
+		"__boxref_value_", "SolAssignment.boxedArrayValue",
+		awst::makeExpressionStatement(
+			awst::makeAssignmentExpression(
+				makeBox(), awst::makeVarExpression(rootName, rootW, m_loc),
+				m_loc, rootW),
+			m_loc));
+	if (!result)
 		return std::nullopt;
-	std::string valueName = "__boxref_value_" + std::to_string(
-		awst::NameGen::next("SolAssignment.boxedArrayValue"));
-	auto const* valueW = rhs->wtype;
-	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(valueName, valueW, m_loc), std::move(rhs), m_loc));
-	std::shared_ptr<awst::Expression> stored =
-		awst::makeVarExpression(valueName, valueW, m_loc);
-	if (!awst::structurallyEquivalent(stored->wtype, target->wtype))
-		stored = awst::makeARC4Encode(std::move(stored), target->wtype, m_loc);
-	m_ctx.postEffects().push_back(awst::makeAssignmentStatement(
-		std::move(target), std::move(stored), m_loc));
-	m_ctx.postEffects().push_back(awst::makeExpressionStatement(
-		awst::makeAssignmentExpression(
-			makeBox(), awst::makeVarExpression(rootName, rootW, m_loc), m_loc, rootW),
-		m_loc));
-	return awst::makeVarExpression(valueName, valueW, m_loc);
+	return result;
 }
 
 std::optional<std::shared_ptr<awst::Expression>>
@@ -611,41 +627,19 @@ SolAssignment::tryHandleOffsetStructRefFieldWrite()
 			std::move(target), member->memberName(), fieldW, m_loc);
 	}
 
-	auto const* valueSol = m_assignment.leftHandSide().annotation().type;
-	auto const* nativeW = m_ctx.typeMapper.map(valueSol);
-	if (op != Token::Assign)
-	{
-		std::shared_ptr<awst::Expression> current = target;
-		if (!awst::structurallyEquivalent(current->wtype, nativeW))
-			current = awst::makeARC4Decode(
-				std::move(current), nativeW, m_loc);
-		rhs = widenSignedCompoundRhs(std::move(rhs));
-		rhs = eb::AssignmentHelper::computeCompoundOrFallback(
-			m_ctx, op, op, valueSol, std::move(current),
-			std::move(rhs), nativeW, m_loc);
-	}
-	rhs = builder::TypeCoercion::coerceForAssignment(
-		std::move(rhs), nativeW, m_loc);
-	rhs = builder::TypeCoercion::signExtendSignedWiden(
-		std::move(rhs), m_assignment.rightHandSide().annotation().type,
-		valueSol, m_loc);
-	if (!rhs)
+	auto const* nativeW = m_ctx.typeMapper.map(
+		m_assignment.leftHandSide().annotation().type);
+	rhs = computeAggregateStoreValue(op, target, std::move(rhs), nativeW);
+	auto result = emitAggregateLeafStore(
+		target, std::move(rhs),
+		"__osref_value_", "SolAssignment.offsetStructValue",
+		awst::makeExpressionStatement(
+			awst::makeBoxReplace(makeKey(), makeOffset(), awst::makeAsBytes(
+				awst::makeVarExpression(rootName, rootW, m_loc), m_loc), m_loc),
+			m_loc));
+	if (!result)
 		return std::nullopt;
-	std::string valueName = "__osref_value_" + std::to_string(
-		awst::NameGen::next("SolAssignment.offsetStructValue"));
-	auto const* valueW = rhs->wtype;
-	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
-		awst::makeVarExpression(valueName, valueW, m_loc), std::move(rhs), m_loc));
-	std::shared_ptr<awst::Expression> stored =
-		awst::makeVarExpression(valueName, valueW, m_loc);
-	if (!awst::structurallyEquivalent(stored->wtype, target->wtype))
-		stored = awst::makeARC4Encode(std::move(stored), target->wtype, m_loc);
-	m_ctx.postEffects().push_back(awst::makeAssignmentStatement(
-		std::move(target), std::move(stored), m_loc));
-	m_ctx.postEffects().push_back(awst::makeExpressionStatement(
-		awst::makeBoxReplace(makeKey(), makeOffset(), awst::makeAsBytes(
-			awst::makeVarExpression(rootName, rootW, m_loc), m_loc), m_loc), m_loc));
-	return awst::makeVarExpression(valueName, valueW, m_loc);
+	return result;
 }
 
 } // namespace puyasol::builder::sol_ast
