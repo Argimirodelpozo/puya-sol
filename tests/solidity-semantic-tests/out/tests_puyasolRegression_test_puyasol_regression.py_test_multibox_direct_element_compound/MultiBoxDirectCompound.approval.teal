@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/multibox_direct_compound.sol.MultiBoxDirectCompound.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 160 224 28800 32768
-    bytecblock 0x6269670000000000000000 0x151f7c75 0x756269670000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8
+    intcblock 32 1 0 160 224 28800 128 32768
+    bytecblock 0x6269670000000000000000 0x151f7c75 0x756269670000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x8000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 5 // "__ctor_pending"
+    bytec 6 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -32,27 +32,27 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@15
+    bnz main_after_if_else@19
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@15
-    pushbytess 0xe7413e45 0xb6eaa550 0x732c4372
+    bz main_after_if_else@19
+    pushbytess 0xe7413e45 0xb6eaa550 0x28d8a412 0x732c4372
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@9 main_switch_case_2@13
+    match main_switch_case_0@5 main_switch_case_1@9 main_switch_case_2@13 main_switch_case_3@17
 
-main_after_if_else@15:
+main_after_if_else@19:
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x376fab20 0xbd462c9a 0x2bf13970 // method "__postInit()void", method "signedAdd()uint256", method "signedNeg()uint256", method "unsignedMul()uint256"
+    pushbytess 0xbacc49e3 0x376fab20 0xbd462c9a 0xd005e04d 0x2bf13970 // method "__postInit()void", method "signedAdd()uint256", method "signedNeg()uint256", method "plainNarrow()uint256", method "unsignedMul()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@18 main_signedAdd_route@19 main_signedNeg_route@20 main_unsignedMul_route@21
+    match main___postInit_route@22 main_signedAdd_route@23 main_signedNeg_route@24 main_plainNarrow_route@25 main_unsignedMul_route@26
     err
 
-main_unsignedMul_route@21:
+main_unsignedMul_route@26:
     callsub unsignedMul
     bytec_1 // 0x151f7c75
     swap
@@ -61,7 +61,16 @@ main_unsignedMul_route@21:
     intc_1 // 1
     return
 
-main_signedNeg_route@20:
+main_plainNarrow_route@25:
+    callsub plainNarrow
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_signedNeg_route@24:
     callsub signedNeg
     bytec_1 // 0x151f7c75
     swap
@@ -70,7 +79,7 @@ main_signedNeg_route@20:
     intc_1 // 1
     return
 
-main_signedAdd_route@19:
+main_signedAdd_route@23:
     callsub signedAdd
     bytec_1 // 0x151f7c75
     swap
@@ -79,19 +88,19 @@ main_signedAdd_route@19:
     intc_1 // 1
     return
 
-main___postInit_route@18:
-    bytec 5 // "__ctor_pending"
+main___postInit_route@22:
+    bytec 6 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec 5 // "__ctor_pending"
+    bytec 6 // "__ctor_pending"
     intc_2 // 0
     app_global_put
     bytec_0 // 0x6269670000000000000000
-    intc 6 // 32768
+    intc 7 // 32768
     box_create
     pop
     pushbytes 0x6269670000000000000001
@@ -99,7 +108,7 @@ main___postInit_route@18:
     box_create
     pop
     bytec_2 // 0x756269670000000000000000
-    intc 6 // 32768
+    intc 7 // 32768
     box_create
     pop
     pushbytes 0x756269670000000000000001
@@ -109,7 +118,7 @@ main___postInit_route@18:
     intc_1 // 1
     return
 
-main_switch_case_2@13:
+main_switch_case_3@17:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -128,16 +137,48 @@ main_switch_case_2@13:
     intc_1 // 1
     return
 
+main_switch_case_2@13:
+    callsub __evm_npy
+    callsub plainNarrow
+    dup
+    intc_2 // 0
+    getbyte
+    intc 6 // 128
+    >=
+    bz main_ternary_false@15
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@16:
+    swap
+    dup
+    len
+    intc_0 // 32
+    swap
+    -
+    swap
+    replace3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@15:
+    intc_0 // 32
+    bzero
+    b main_ternary_merge@16
+
 main_switch_case_1@9:
     callsub __evm_npy
     callsub signedNeg
     dup
     intc_2 // 0
     getbyte
-    pushint 128
+    intc 6 // 128
     >=
     bz main_ternary_false@11
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@12:
     swap
@@ -166,10 +207,10 @@ main_switch_case_0@5:
     dup
     intc_2 // 0
     getbyte
-    pushint 128
+    intc 6 // 128
     >=
     bz main_ternary_false@7
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@8:
     swap
@@ -218,7 +259,7 @@ signedAdd_ternary_merge@3:
     intc_0 // 32
     box_extract
     dup
-    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     dup
@@ -229,9 +270,9 @@ signedAdd_ternary_merge@3:
     dup
     bytec 7 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     frame_dig 0
@@ -245,8 +286,18 @@ signedAdd_bool_merge@10:
     assert // signed arithmetic overflow
     bytec 7 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    pushbytes 0xff
+    b&
+    dup
+    pushbytes 0x80
+    b>=
+    bz signedAdd_ternary_false@12
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+
+signedAdd_ternary_merge@13:
     dup
     len
     intc_0 // 32
@@ -263,6 +314,9 @@ signedAdd_bool_merge@10:
     box_extract
     swap
     retsub
+
+signedAdd_ternary_false@12:
+    b signedAdd_ternary_merge@13
 
 signedAdd_bool_false@9:
     intc_2 // 0
@@ -298,7 +352,7 @@ signedNeg_ternary_merge@3:
     intc_0 // 32
     box_extract
     dup
-    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     dup
@@ -307,11 +361,11 @@ signedNeg_ternary_merge@3:
     !=
     bnz signedNeg_bool_true@8
     dup
-    bytec 8 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8
+    bytec 9 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_3 // 0x8000000000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
     !
     frame_dig 0
@@ -323,10 +377,20 @@ signedNeg_bool_true@8:
 
 signedNeg_bool_merge@10:
     assert // signed arithmetic overflow
-    bytec 8 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8
+    bytec 9 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff8
     b+
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
+    pushbytes 0xff
+    b&
+    dup
+    pushbytes 0x80
+    b>=
+    bz signedNeg_ternary_false@12
+    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff00
+    b+
+
+signedNeg_ternary_merge@13:
     dup
     len
     intc_0 // 32
@@ -344,6 +408,9 @@ signedNeg_bool_merge@10:
     swap
     retsub
 
+signedNeg_ternary_false@12:
+    b signedNeg_ternary_merge@13
+
 signedNeg_bool_false@9:
     intc_2 // 0
     b signedNeg_bool_merge@10
@@ -351,6 +418,33 @@ signedNeg_bool_false@9:
 signedNeg_ternary_false@2:
     intc_2 // 0
     b signedNeg_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/multibox_direct_compound.sol.MultiBoxDirectCompound.plainNarrow() -> bytes:
+plainNarrow:
+    txn GroupIndex
+    bz plainNarrow_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+plainNarrow_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // 0x6269670000000000000000
+    pushint 288
+    bytec 7 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
+    box_replace
+    bytec_0 // 0x6269670000000000000000
+    pushint 288
+    intc_0 // 32
+    box_extract
+    retsub
+
+plainNarrow_ternary_false@2:
+    intc_2 // 0
+    b plainNarrow_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/multibox_direct_compound.sol.MultiBoxDirectCompound.unsignedMul() -> bytes:
@@ -378,7 +472,7 @@ unsignedMul_ternary_merge@3:
     pushbytes 0x06
     b*
     dup
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     dup

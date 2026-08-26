@@ -343,14 +343,23 @@ deleteLast_ternary_merge@6:
     b-
     bytec_3 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    dup
+    dupn 2
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    dup
     pushbytes 0x010000000000000000
     b<
     assert // array index out of bounds
+    bytec_0 // "array"
+    box_len
+    bury 1
+    bnz deleteLast_after_if_else@8
+    bytec_0 // "array"
+    intc_2 // 2
+    box_create
+    pop
+
+deleteLast_after_if_else@8:
     pushint 8
     bzero
     swap
