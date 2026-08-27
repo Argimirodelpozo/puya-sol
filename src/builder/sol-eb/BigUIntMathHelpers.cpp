@@ -692,4 +692,74 @@ std::shared_ptr<awst::Expression> buildIncDec(
 	}
 }
 
+std::shared_ptr<awst::Expression> buildSignedNegate(
+	ContractContext& _ctx,
+	bool _isUnchecked,
+	unsigned _bits,
+	std::string const& _pow2NStr,
+	std::string const& _halfNStr,
+	int64_t _nodeId,
+	std::shared_ptr<awst::Expression> _operand,
+	awst::SourceLocation const& _loc)
+{
+	auto makeBiguintConst = [&](std::string const& val) { return shorthand::biguintConst(val, _loc); };
+
+	auto operand = std::move(_operand);
+
+	if (_bits < 256)
+	{
+		auto mask = awst::makeBigUIntBinOp(std::move(operand), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(_pow2NStr), _loc);
+		operand = std::move(mask);
+	}
+
+	if (!_isUnchecked)
+	{
+		auto cmp = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst(_halfNStr), _loc);
+
+		_ctx.queuePreExpression(awst::makeAssert(std::move(cmp), _loc, "signed negation overflow"), _loc);
+	}
+
+	// -x = (2^N - x) mod 2^N
+	std::shared_ptr<awst::Expression> negated;
+	if (_bits == 256)
+	{
+		std::string tmpName = "__neg_tmp_" + std::to_string(_nodeId);
+
+		auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::biguintType(), _loc);
+
+		auto initStmt = awst::makeAssignmentStatement(tmpVar, makeBiguintConst("0"), _loc);
+		_ctx.preEffects().push_back(std::move(initStmt));
+
+		auto isNonZero = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst("0"), _loc);
+
+		auto sub = awst::makeBigUIntBinOp(makeBiguintConst(_pow2NStr), awst::BigUIntBinaryOperator::Sub, operand, _loc);
+
+		auto mod = awst::makeBigUIntBinOp(std::move(sub), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(_pow2NStr), _loc);
+
+		auto assignTmp = awst::makeAssignmentStatement(tmpVar, std::move(mod), _loc);
+
+		auto ifBody = awst::makeBlock(_loc);
+		ifBody->body.push_back(std::move(assignTmp));
+
+		_ctx.preEffects().push_back(awst::makeIfElse(
+			std::move(isNonZero), std::move(ifBody), nullptr, _loc));
+
+		negated = tmpVar;
+	}
+	else
+	{
+		auto sub = awst::makeBigUIntBinOp(makeBiguintConst(_pow2NStr), awst::BigUIntBinaryOperator::Sub, std::move(operand), _loc);
+
+		auto mod = awst::makeBigUIntBinOp(std::move(sub), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(_pow2NStr), _loc);
+
+		negated = std::move(mod);
+	}
+
+	if (_bits <= 64)
+	{
+		return awst::makeBiguintToUInt64(std::move(negated), _loc);
+	}
+	return negated;
+}
+
 } // namespace puyasol::builder::eb

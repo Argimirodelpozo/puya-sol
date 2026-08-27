@@ -133,4 +133,21 @@ std::shared_ptr<awst::Expression> buildIncDec(
 	std::shared_ptr<awst::Expression> _base,
 	awst::SourceLocation const& _loc);
 
+/// Signed negation `-x` for intN on the sign-promoted biguint operand:
+/// (2^N - x) mod 2^N, with the INT_MIN guard queued as a pre-effect unless
+/// unchecked. N==256 takes the temp-var conditional shape (0 stays 0);
+/// N<=64 narrows back to uint64. Sibling of buildIncDec; SolUnaryOperation's
+/// negate keeps only the type sniffing and the unsigned/constant legs.
+/// `_nodeId` uniquifies the 256-bit temp; `_pow2NStr`/`_halfNStr` come from
+/// SolIntType::pow2NAndHalf().
+std::shared_ptr<awst::Expression> buildSignedNegate(
+	ContractContext& _ctx,
+	bool _isUnchecked,
+	unsigned _bits,
+	std::string const& _pow2NStr,
+	std::string const& _halfNStr,
+	int64_t _nodeId,
+	std::shared_ptr<awst::Expression> _operand,
+	awst::SourceLocation const& _loc);
+
 } // namespace puyasol::builder::eb

@@ -80,68 +80,12 @@ std::shared_ptr<awst::Expression> SolUnaryOperation::handleNegate(
 
 	if (intInfo && intInfo->isSigned)
 	{
-		unsigned bits = intInfo->bits;
 		// -x = (2^N - x) mod 2^N; overflow: x == 2^(N-1) i.e. INT_MIN
 		auto [pow2NStr, halfNStr] = intInfo->pow2NAndHalf();
-
-		auto makeBiguintConst = [&](std::string const& val) { return shorthand::biguintConst(val, m_loc); };
-
-		auto operand = promoteToSignedBiguint(std::move(_operand), m_loc);
-
-		if (bits < 256)
-		{
-			auto mask = awst::makeBigUIntBinOp(std::move(operand), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), m_loc);
-			operand = std::move(mask);
-		}
-
-		if (!m_scope.isUnchecked())
-		{
-			auto cmp = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst(halfNStr), m_loc);
-
-			m_ctx.queuePreExpression(awst::makeAssert(std::move(cmp), m_loc, "signed negation overflow"), m_loc);
-		}
-
-		// -x = (2^N - x) mod 2^N
-		std::shared_ptr<awst::Expression> negated;
-		if (bits == 256)
-		{
-			std::string tmpName = "__neg_tmp_" + std::to_string(m_unaryOp.id());
-
-			auto tmpVar = awst::makeVarExpression(tmpName, awst::WType::biguintType(), m_loc);
-
-			auto initStmt = awst::makeAssignmentStatement(tmpVar, makeBiguintConst("0"), m_loc);
-			m_ctx.preEffects().push_back(std::move(initStmt));
-
-			auto isNonZero = awst::makeNumericCompare(operand, awst::NumericComparison::Ne, makeBiguintConst("0"), m_loc);
-
-			auto sub = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, operand, m_loc);
-
-			auto mod = awst::makeBigUIntBinOp(std::move(sub), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), m_loc);
-
-			auto assignTmp = awst::makeAssignmentStatement(tmpVar, std::move(mod), m_loc);
-
-			auto ifBody = awst::makeBlock(m_loc);
-			ifBody->body.push_back(std::move(assignTmp));
-
-			m_ctx.preEffects().push_back(awst::makeIfElse(
-				std::move(isNonZero), std::move(ifBody), nullptr, m_loc));
-
-			negated = tmpVar;
-		}
-		else
-		{
-			auto sub = awst::makeBigUIntBinOp(makeBiguintConst(pow2NStr), awst::BigUIntBinaryOperator::Sub, std::move(operand), m_loc);
-
-			auto mod = awst::makeBigUIntBinOp(std::move(sub), awst::BigUIntBinaryOperator::Mod, makeBiguintConst(pow2NStr), m_loc);
-
-			negated = std::move(mod);
-		}
-
-		if (bits <= 64)
-		{
-			return awst::makeBiguintToUInt64(std::move(negated), m_loc);
-		}
-		return negated;
+		return eb::buildSignedNegate(
+			m_ctx, m_scope.isUnchecked(), intInfo->bits, pow2NStr, halfNStr,
+			m_unaryOp.id(),
+			promoteToSignedBiguint(std::move(_operand), m_loc), m_loc);
 	}
 
 	// biguint constant negation: two's complement 2^256 - value
