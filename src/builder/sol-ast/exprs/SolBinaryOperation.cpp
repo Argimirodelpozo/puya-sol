@@ -112,6 +112,136 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolShortCircuit()
 	return tempVar();
 }
 
+namespace
+{
+
+std::optional<eb::BuilderComparisonOp> comparisonOpFor(Token solOp)
+{
+	switch (solOp)
+	{
+	case Token::Equal:              return eb::BuilderComparisonOp::Eq;
+	case Token::NotEqual:           return eb::BuilderComparisonOp::Ne;
+	case Token::LessThan:           return eb::BuilderComparisonOp::Lt;
+	case Token::LessThanOrEqual:    return eb::BuilderComparisonOp::Lte;
+	case Token::GreaterThan:        return eb::BuilderComparisonOp::Gt;
+	case Token::GreaterThanOrEqual: return eb::BuilderComparisonOp::Gte;
+	default: return std::nullopt;
+	}
+}
+
+std::optional<eb::BuilderBinaryOp> binaryOpFor(Token solOp)
+{
+	switch (solOp)
+	{
+	case Token::Add: case Token::AssignAdd: return eb::BuilderBinaryOp::Add;
+	case Token::Sub: case Token::AssignSub: return eb::BuilderBinaryOp::Sub;
+	case Token::Mul: case Token::AssignMul: return eb::BuilderBinaryOp::Mult;
+	case Token::Div: case Token::AssignDiv: return eb::BuilderBinaryOp::FloorDiv;
+	case Token::Mod: case Token::AssignMod: return eb::BuilderBinaryOp::Mod;
+	case Token::Exp: return eb::BuilderBinaryOp::Pow;
+	case Token::SHL: case Token::AssignShl: return eb::BuilderBinaryOp::LShift;
+	case Token::SHR: case Token::SAR: case Token::AssignShr: case Token::AssignSar:
+		return eb::BuilderBinaryOp::RShift;
+	case Token::BitOr: case Token::AssignBitOr: return eb::BuilderBinaryOp::BitOr;
+	case Token::BitXor: case Token::AssignBitXor: return eb::BuilderBinaryOp::BitXor;
+	case Token::BitAnd: case Token::AssignBitAnd: return eb::BuilderBinaryOp::BitAnd;
+	default: return std::nullopt;
+	}
+}
+
+std::shared_ptr<awst::Expression> tryComparisonDispatch(
+	eb::ContractContext& ctx, eb::BuilderComparisonOp cmpOp,
+	Type const* leftSolType, Type const* rightSolType, Type const* commonSolType,
+	std::shared_ptr<awst::Expression> const& left,
+	std::shared_ptr<awst::Expression> const& right,
+	eb::InstanceBuilder& leftBuilder, eb::InstanceBuilder& rightBuilder,
+	awst::SourceLocation const& loc)
+{
+	// Drive operand conversion off solc's commonType: coerce both integer
+	// operands to the comparison's common type (canonicalising), so compare()
+	// gets uniform same-width canonical operands — one solc-driven point that
+	// replaces the per-operand sign-extension / narrowConstIfNegative inside
+	// compare(). Non-integer comparisons (address/bytes) keep their builders.
+	auto* cmpL = &leftBuilder;
+	auto* cmpR = &rightBuilder;
+	std::unique_ptr<eb::InstanceBuilder> clHold, crHold;
+	if (commonSolType && dynamic_cast<IntegerType const*>(commonSolType))
+	{
+		// Solc-convertibility tripwire: both operands must be
+		// solc-implicitly-convertible to the comparison's common type.
+		builder::TypeCoercion::assertImplicitlyConvertible(
+			leftSolType, commonSolType, loc, "binop common-type (cmp)");
+		builder::TypeCoercion::assertImplicitlyConvertible(
+			rightSolType, commonSolType, loc, "binop common-type (cmp)");
+		auto* commonW = ctx.typeMapper.map(commonSolType);
+		auto lv = builder::TypeCoercion::coerceToCommonInt(left, leftSolType, commonW, loc);
+		auto rv = builder::TypeCoercion::coerceToCommonInt(right, rightSolType, commonW, loc);
+		clHold = ctx.builderForInstance(commonSolType, lv);
+		crHold = ctx.builderForInstance(commonSolType, rv);
+		if (clHold && crHold) { cmpL = clHold.get(); cmpR = crHold.get(); }
+	}
+	auto result = cmpL->compare(*cmpR, cmpOp, loc);
+	if (result) return result->resolve();
+	return nullptr;
+}
+
+std::shared_ptr<awst::Expression> tryArithmeticDispatch(
+	eb::ContractContext& ctx, eb::BuilderBinaryOp builderOp,
+	Type const* leftSolType, Type const* rightSolType, Type const* commonSolType,
+	std::shared_ptr<awst::Expression> const& left,
+	std::shared_ptr<awst::Expression> const& right,
+	eb::InstanceBuilder& leftBuilder, eb::InstanceBuilder& rightBuilder,
+	awst::SourceLocation const& loc)
+{
+	// Drive operand conversion off solc's commonType (mirrors the comparison path): coerce BOTH
+	// integer operands to commonType, canonicalising — sign-extend a narrower SIGNED operand to
+	// the common width. Else `int128 & int16(-1)` ANDs the raw 16-bit value, not the sign-extended
+	// int128 (the D-residual from solc-todo.md opportunity D; the narrower-RIGHT case was active,
+	// not just latent). Shifts keep the left's own type and the right is the untouched shift
+	// amount, so skip them; a non-integer commonType keeps the bare left reinterpret.
+	auto* arithBuilder = &leftBuilder;
+	auto* arithRight = &rightBuilder;
+	std::unique_ptr<eb::InstanceBuilder> commonLeftHold, commonRightHold;
+	bool isShift = (builderOp == eb::BuilderBinaryOp::LShift
+		|| builderOp == eb::BuilderBinaryOp::RShift);
+	if (commonSolType && dynamic_cast<IntegerType const*>(commonSolType) && !isShift)
+	{
+		// Solc-convertibility tripwire. Pow excluded: solc's commonType
+		// for `**` is the BASE type — the exponent is legitimately not
+		// convertible to it.
+		if (builderOp != eb::BuilderBinaryOp::Pow)
+		{
+			builder::TypeCoercion::assertImplicitlyConvertible(
+				leftSolType, commonSolType, loc, "binop common-type (arith)");
+			builder::TypeCoercion::assertImplicitlyConvertible(
+				rightSolType, commonSolType, loc, "binop common-type (arith)");
+		}
+		auto* commonW = ctx.typeMapper.map(commonSolType);
+		if (commonSolType != leftSolType)
+		{
+			auto lv = builder::TypeCoercion::coerceToCommonInt(left, leftSolType, commonW, loc);
+			commonLeftHold = ctx.builderForInstance(commonSolType, lv);
+			if (commonLeftHold) arithBuilder = commonLeftHold.get();
+		}
+		if (commonSolType != rightSolType)
+		{
+			auto rv = builder::TypeCoercion::coerceToCommonInt(right, rightSolType, commonW, loc);
+			commonRightHold = ctx.builderForInstance(commonSolType, rv);
+			if (commonRightHold) arithRight = commonRightHold.get();
+		}
+	}
+	else if (commonSolType && commonSolType != leftSolType)
+	{
+		commonLeftHold = ctx.builderForInstance(commonSolType, left);
+		if (commonLeftHold) arithBuilder = commonLeftHold.get();
+	}
+	auto result = arithBuilder->binary_op(*arithRight, builderOp, loc);
+	if (result) return result->resolve();
+	return nullptr;
+}
+
+} // anonymous namespace
+
 std::shared_ptr<awst::Expression> SolBinaryOperation::trySolEbDispatch(
 	std::shared_ptr<awst::Expression> _left,
 	std::shared_ptr<awst::Expression> _right)
@@ -135,114 +265,17 @@ std::shared_ptr<awst::Expression> SolBinaryOperation::trySolEbDispatch(
 		rightBuilder = m_ctx.builderForInstance(leftSolType, _right);
 	if (!rightBuilder) return nullptr;
 
-	// Try comparison operators
-	eb::BuilderComparisonOp cmpOp;
-	bool hasCmpOp = true;
-	switch (solOp)
-	{
-	case Token::Equal:              cmpOp = eb::BuilderComparisonOp::Eq; break;
-	case Token::NotEqual:           cmpOp = eb::BuilderComparisonOp::Ne; break;
-	case Token::LessThan:           cmpOp = eb::BuilderComparisonOp::Lt; break;
-	case Token::LessThanOrEqual:    cmpOp = eb::BuilderComparisonOp::Lte; break;
-	case Token::GreaterThan:        cmpOp = eb::BuilderComparisonOp::Gt; break;
-	case Token::GreaterThanOrEqual: cmpOp = eb::BuilderComparisonOp::Gte; break;
-	default: hasCmpOp = false; break;
-	}
-	if (hasCmpOp)
-	{
-		// Drive operand conversion off solc's commonType: coerce both integer
-		// operands to the comparison's common type (canonicalising), so compare()
-		// gets uniform same-width canonical operands — one solc-driven point that
-		// replaces the per-operand sign-extension / narrowConstIfNegative inside
-		// compare(). Non-integer comparisons (address/bytes) keep their builders.
-		auto* cmpL = leftBuilder.get();
-		auto* cmpR = rightBuilder.get();
-		std::unique_ptr<eb::InstanceBuilder> clHold, crHold;
-		if (commonSolType && dynamic_cast<IntegerType const*>(commonSolType))
-		{
-			// Solc-convertibility tripwire: both operands must be
-			// solc-implicitly-convertible to the comparison's common type.
-			builder::TypeCoercion::assertImplicitlyConvertible(
-				leftSolType, commonSolType, m_loc, "binop common-type (cmp)");
-			builder::TypeCoercion::assertImplicitlyConvertible(
-				rightSolType, commonSolType, m_loc, "binop common-type (cmp)");
-			auto* commonW = m_ctx.typeMapper.map(commonSolType);
-			auto lv = builder::TypeCoercion::coerceToCommonInt(_left, leftSolType, commonW, m_loc);
-			auto rv = builder::TypeCoercion::coerceToCommonInt(_right, rightSolType, commonW, m_loc);
-			clHold = m_ctx.builderForInstance(commonSolType, lv);
-			crHold = m_ctx.builderForInstance(commonSolType, rv);
-			if (clHold && crHold) { cmpL = clHold.get(); cmpR = crHold.get(); }
-		}
-		auto result = cmpL->compare(*cmpR, cmpOp, m_loc);
-		if (result) return result->resolve();
-	}
+	if (auto cmpOp = comparisonOpFor(solOp))
+		if (auto result = tryComparisonDispatch(m_ctx, *cmpOp,
+				leftSolType, rightSolType, commonSolType,
+				_left, _right, *leftBuilder, *rightBuilder, m_loc))
+			return result;
 
-	// Try arithmetic/bitwise operators
-	eb::BuilderBinaryOp builderOp;
-	bool hasBinOp = true;
-	switch (solOp)
-	{
-	case Token::Add: case Token::AssignAdd: builderOp = eb::BuilderBinaryOp::Add; break;
-	case Token::Sub: case Token::AssignSub: builderOp = eb::BuilderBinaryOp::Sub; break;
-	case Token::Mul: case Token::AssignMul: builderOp = eb::BuilderBinaryOp::Mult; break;
-	case Token::Div: case Token::AssignDiv: builderOp = eb::BuilderBinaryOp::FloorDiv; break;
-	case Token::Mod: case Token::AssignMod: builderOp = eb::BuilderBinaryOp::Mod; break;
-	case Token::Exp: builderOp = eb::BuilderBinaryOp::Pow; break;
-	case Token::SHL: case Token::AssignShl: builderOp = eb::BuilderBinaryOp::LShift; break;
-	case Token::SHR: case Token::SAR: case Token::AssignShr: case Token::AssignSar:
-		builderOp = eb::BuilderBinaryOp::RShift; break;
-	case Token::BitOr: case Token::AssignBitOr: builderOp = eb::BuilderBinaryOp::BitOr; break;
-	case Token::BitXor: case Token::AssignBitXor: builderOp = eb::BuilderBinaryOp::BitXor; break;
-	case Token::BitAnd: case Token::AssignBitAnd: builderOp = eb::BuilderBinaryOp::BitAnd; break;
-	default: hasBinOp = false; break;
-	}
-	if (hasBinOp)
-	{
-		// Drive operand conversion off solc's commonType (mirrors the comparison path): coerce BOTH
-		// integer operands to commonType, canonicalising — sign-extend a narrower SIGNED operand to
-		// the common width. Else `int128 & int16(-1)` ANDs the raw 16-bit value, not the sign-extended
-		// int128 (the D-residual from solc-todo.md opportunity D; the narrower-RIGHT case was active,
-		// not just latent). Shifts keep the left's own type and the right is the untouched shift
-		// amount, so skip them; a non-integer commonType keeps the bare left reinterpret.
-		auto* arithBuilder = leftBuilder.get();
-		auto* arithRight = rightBuilder.get();
-		std::unique_ptr<eb::InstanceBuilder> commonLeftHold, commonRightHold;
-		bool isShift = (builderOp == eb::BuilderBinaryOp::LShift
-			|| builderOp == eb::BuilderBinaryOp::RShift);
-		if (commonSolType && dynamic_cast<IntegerType const*>(commonSolType) && !isShift)
-		{
-			// Solc-convertibility tripwire. Pow excluded: solc's commonType
-			// for `**` is the BASE type — the exponent is legitimately not
-			// convertible to it.
-			if (builderOp != eb::BuilderBinaryOp::Pow)
-			{
-				builder::TypeCoercion::assertImplicitlyConvertible(
-					leftSolType, commonSolType, m_loc, "binop common-type (arith)");
-				builder::TypeCoercion::assertImplicitlyConvertible(
-					rightSolType, commonSolType, m_loc, "binop common-type (arith)");
-			}
-			auto* commonW = m_ctx.typeMapper.map(commonSolType);
-			if (commonSolType != leftSolType)
-			{
-				auto lv = builder::TypeCoercion::coerceToCommonInt(_left, leftSolType, commonW, m_loc);
-				commonLeftHold = m_ctx.builderForInstance(commonSolType, lv);
-				if (commonLeftHold) arithBuilder = commonLeftHold.get();
-			}
-			if (commonSolType != rightSolType)
-			{
-				auto rv = builder::TypeCoercion::coerceToCommonInt(_right, rightSolType, commonW, m_loc);
-				commonRightHold = m_ctx.builderForInstance(commonSolType, rv);
-				if (commonRightHold) arithRight = commonRightHold.get();
-			}
-		}
-		else if (commonSolType && commonSolType != leftSolType)
-		{
-			commonLeftHold = m_ctx.builderForInstance(commonSolType, _left);
-			if (commonLeftHold) arithBuilder = commonLeftHold.get();
-		}
-		auto result = arithBuilder->binary_op(*arithRight, builderOp, m_loc);
-		if (result) return result->resolve();
-	}
+	if (auto builderOp = binaryOpFor(solOp))
+		if (auto result = tryArithmeticDispatch(m_ctx, *builderOp,
+				leftSolType, rightSolType, commonSolType,
+				_left, _right, *leftBuilder, *rightBuilder, m_loc))
+			return result;
 
 	return nullptr;
 }
