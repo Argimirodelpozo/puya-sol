@@ -379,6 +379,55 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildIdentifier(
 
 // ─── Function call translation ──────────────────────────────────────────────
 
+namespace
+{
+
+// Unrecognized/arity-broken opcode: log the hard error, return a zero stub.
+std::shared_ptr<awst::Expression> unsupportedBuiltinError(
+	std::string const& funcName, awst::SourceLocation const& loc)
+{
+	Logger::instance().error(
+		"unsupported Yul builtin function `" + funcName + "`: no AVM translation "
+		"exists, so it would be stubbed as 0 — a silent wrong value.", loc
+	);
+	auto fallbackZero = awst::makeZero(loc, awst::WType::biguintType());
+	return fallbackZero;
+}
+
+// difficulty == prevrandao post-Paris (same EVM opcode); one lowering.
+std::shared_ptr<awst::Expression> buildRandaoSeed(
+	TypeMapper& typeMapper, EvmFeature feature, awst::SourceLocation const& loc)
+{
+	EvmFeaturePolicy::report(feature, typeMapper.profile(), loc);
+	// Round - 2, clamped: uint64 Sub panics on underflow and the first
+	// rounds of a fresh chain (create at round 1) would hard-panic.
+	auto round = awst::makeGlobal(
+		std::string("Round"), awst::WType::uint64Type(), loc);
+	auto isEarly = awst::makeNumericCompare(
+		awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), loc),
+		awst::NumericComparison::Lt,
+		awst::makeIntegerConstant("2", loc), loc);
+	auto prevRound = awst::makeConditional(
+		std::move(isEarly),
+		awst::makeZero(loc),
+		awst::makeUInt64BinOp(
+			std::move(round), awst::UInt64BinaryOperator::Sub,
+			awst::makeIntegerConstant("2", loc), loc),
+		awst::WType::uint64Type(), loc);
+	return awst::makeAsBiguint(awst::makeBlock(
+		"BlkSeed", std::move(prevRound), awst::WType::bytesType(), loc), loc);
+}
+
+// AVM has a flat per-txn fee; no EIP-1559 or blob pricing.
+std::shared_ptr<awst::Expression> buildFeeZero(
+	TypeMapper& typeMapper, EvmFeature feature, awst::SourceLocation const& loc)
+{
+	EvmFeaturePolicy::report(feature, typeMapper.profile(), loc);
+	return awst::makeZero(loc, awst::WType::biguintType());
+}
+
+} // anonymous namespace
+
 std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	solidity::yul::FunctionCall const& _call
 )
@@ -485,6 +534,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 		{"sar", &AssemblyBuilder::handleSar}, {"tload", &AssemblyBuilder::handleTload},
 		{"sload", &AssemblyBuilder::handleSload}, {"calldataload", &AssemblyBuilder::handleCalldataload},
 		{"keccak256", &AssemblyBuilder::handleKeccak256},
+		{"extcodesize", &AssemblyBuilder::handleExtcodesize},
+		{"balance", &AssemblyBuilder::handleBalance},
+		{"clz", &AssemblyBuilder::handleClz},
+		{"returndatacopy", &AssemblyBuilder::handleReturndatacopy},
+		{"calldatacopy", &AssemblyBuilder::handleCalldatacopy},
 	};
 	if (auto it = kArgsBuiltins.find(funcName); it != kArgsBuiltins.end())
 		return (this->*(it->second))(args, loc);
@@ -494,316 +548,359 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	static std::unordered_map<std::string_view, NullaryHandler> const kNullaryBuiltins = {
 		{"gas", &AssemblyBuilder::handleGas}, {"timestamp", &AssemblyBuilder::handleTimestamp},
 		{"returndatasize", &AssemblyBuilder::handleReturndatasize},
+		{"address", &AssemblyBuilder::handleAddress},
+		{"origin", &AssemblyBuilder::handleOrigin},
+		{"caller", &AssemblyBuilder::handleCaller},
+		{"blockhash", &AssemblyBuilder::handleBlockhash},
+		{"blobhash", &AssemblyBuilder::handleBlobhash},
+		{"difficulty", &AssemblyBuilder::handleDifficulty},
+		{"prevrandao", &AssemblyBuilder::handlePrevrandao},
+		{"number", &AssemblyBuilder::handleNumber},
+		{"selfbalance", &AssemblyBuilder::handleSelfbalance},
+		{"coinbase", &AssemblyBuilder::handleCoinbase},
+		{"gasprice", &AssemblyBuilder::handleGasprice},
+		{"basefee", &AssemblyBuilder::handleBasefee},
+		{"blobbasefee", &AssemblyBuilder::handleBlobbasefee},
+		{"chainid", &AssemblyBuilder::handleChainid},
+		{"gaslimit", &AssemblyBuilder::handleGaslimit},
+		{"codesize", &AssemblyBuilder::handleCodesize},
+		{"extcodehash", &AssemblyBuilder::handleExtcodehash},
+		{"pop", &AssemblyBuilder::handlePop},
+		{"tstore", &AssemblyBuilder::handleTstoreExpr},
+		{"delegatecall", &AssemblyBuilder::handleDelegatecall},
+		{"create2", &AssemblyBuilder::handleCreate2},
+		{"calldatasize", &AssemblyBuilder::handleCalldatasize},
 	};
 	if (auto it = kNullaryBuiltins.find(funcName); it != kNullaryBuiltins.end())
 		return (this->*(it->second))(loc);
-	if (funcName == "extcodesize" && args.size() == 1)
-	{
-		// Resolve the compiler's contract-value address to an application and
-		// query only small metadata. Fetching AppApprovalProgram before taking
-		// `len` fails for programs larger than AVM's stack byte-value limit.
-		// High-level `address.code.length` calls this same shared lowering.
-		auto addrBytes = awst::makeAsBytes(ensureBiguint(args[0], loc), loc);
-		auto appId = awst::makeAsApplication(
-			awst::makeWord32ToUInt64(std::move(addrBytes), loc), loc);
 
-		Logger::instance().warning(
-			"`extcodesize(addr)` resolves the app id from the address's last 8 "
-			"bytes (this compiler's contract-value convention). It returns zero "
-			"for a missing application and the allocated AVM program capacity "
-			"for an existing one; AVM cannot observe an oversized program's exact "
-			"byte length without materialising it.", loc);
+	// HARD ERROR — an unrecognized opcode stubbed as 0 is a silent wrong value.
+	// Fail loudly so every future gap surfaces at compile time.
+	return unsupportedBuiltinError(funcName, loc);
+}
 
-		return AppCodeSizeLowering::lower(
-			m_typeMapper, std::move(appId), loc, m_pendingStatements);
-	}
-	if (funcName == "extcodehash")
-	{
-		// extcodehash(addr) → HARD ERROR. On EVM this is keccak256 of the
-		// account's code. AVM can only fetch the CURRENT app's approval
-		// program; an arbitrary address can't be dereferenced to its app
-		// bytes. The old stub used a fragile `addr > 100` heuristic to guess
-		// "is this address(this)?" and otherwise returned keccak256("") / 0 —
-		// a wrong-but-deterministic hash that would corrupt any commitment or
-		// identity check. Refuse rather than emit a wrong hash. (For the
-		// genuine self case, use the high-level `address(this).codehash`,
-		// which is computed correctly via app_params_get on the current app.)
-		Logger::instance().error(
-			"`extcodehash(addr)` is not supported on AVM — an arbitrary address "
-			"can't be dereferenced to its code, so the old stub guessed via an "
-			"`addr > 100` heuristic and otherwise returned a wrong-but-"
-			"deterministic hash. Use the high-level `address(this).codehash` for "
-			"the current app's own code hash.", loc);
-		auto zero = awst::makeZero(loc, awst::WType::biguintType());
-		return zero;
-	}
-	if (funcName == "address")
-	{
-		// address() → global CurrentApplicationAddress, cast to biguint
-		auto addr = awst::makeGlobal("CurrentApplicationAddress", awst::WType::bytesType(), loc);
+// ─── Special-builtin handlers (buildFunctionCall table rows) ────────────────
 
-		auto cast = awst::makeAsBiguint(std::move(addr), loc);
-		return cast;
-	}
-	if (funcName == "origin")
-	{
-		EvmFeaturePolicy::report(
-			EvmFeature::TxOrigin, m_typeMapper.profile(), loc);
-		// Stub so AWST building completes; the error aborts before any TEAL.
-		auto sender = awst::makeTxn("Sender", awst::WType::bytesType(), loc);
-		return awst::makeAsBiguint(std::move(sender), loc);
-	}
-	if (funcName == "caller")
-	{
-		// caller() (EVM CALLER = msg.sender).  At an EVM ABI boundary all
-		// addresses occupy one 160-bit namespace, including ambient identities;
-		// match high-level msg.sender and canonical calldata addresses.
-		auto sender = awst::makeTxn("Sender", awst::WType::bytesType(), loc);
-		if (m_typeMapper.profile().contractAbi == ContractAbi::Evm)
-			sender = awst::makeExtractLastN(std::move(sender), 20, loc);
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleExtcodesize(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc)
+{
+	// Arity mismatch keeps the pre-table behavior: cascade to the
+	// unsupported-builtin hard error.
+	if (_args.size() != 1)
+		return unsupportedBuiltinError("extcodesize", _loc);
 
-		auto cast = awst::makeAsBiguint(std::move(sender), loc);
-		return cast;
-	}
-	if (funcName == "blockhash")
-	{
-		EvmFeaturePolicy::report(
-			EvmFeature::BlockHash, m_typeMapper.profile(), loc);
-		// Stub so AWST building completes; the error aborts the build first.
-		return awst::makeZero(loc, awst::WType::biguintType());
-	}
-	if (funcName == "blobhash")
-	{
-		EvmFeaturePolicy::report(
-			EvmFeature::BlobHash, m_typeMapper.profile(), loc);
-		return awst::makeZero(loc, awst::WType::biguintType());
-	}
-	// difficulty == prevrandao post-Paris (same EVM opcode); one lowering.
-	if (funcName == "difficulty" || funcName == "prevrandao")
-	{
-		EvmFeaturePolicy::report(
-			funcName == "difficulty" ? EvmFeature::BlockDifficulty
-				: EvmFeature::BlockPrevrandao,
-			m_typeMapper.profile(), loc);
-		// Round - 2, clamped: uint64 Sub panics on underflow and the first
-		// rounds of a fresh chain (create at round 1) would hard-panic.
-		auto round = awst::makeGlobal(
-			std::string("Round"), awst::WType::uint64Type(), loc);
-		auto isEarly = awst::makeNumericCompare(
-			awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), loc),
-			awst::NumericComparison::Lt,
-			awst::makeIntegerConstant("2", loc), loc);
-		auto prevRound = awst::makeConditional(
-			std::move(isEarly),
-			awst::makeZero(loc),
-			awst::makeUInt64BinOp(
-				std::move(round), awst::UInt64BinaryOperator::Sub,
-				awst::makeIntegerConstant("2", loc), loc),
-			awst::WType::uint64Type(), loc);
-		return awst::makeAsBiguint(awst::makeBlock(
-			"BlkSeed", std::move(prevRound), awst::WType::bytesType(), loc), loc);
-	}
-	if (funcName == "number")
-	{
-		// number() → global Round (block-number equivalent), a uint64. Return it
-		// as uint64; the consumer coerces via ensureBiguint only when it needs a
-		// biguint (match at consumption, not at exit — same as selfbalance/clz).
-		return awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), loc);
-	}
-	if (funcName == "balance")
-	{
-		// balance(addr) → AVM `balance` opcode on the 32-byte account derived
-		// from addr (left-zero-padded to 32 bytes). uint64 result, same as
-		// selfbalance (microAlgo balances fit uint64); the consumer coerces via
-		// ensureBiguint only when it needs a biguint. NOTE: this is the AVM
-		// account balance in microAlgos (NOT EVM wei), and the account must be
-		// available to the txn — an arbitrary EVM address (e.g. balance(0))
-		// maps to an unfunded/unavailable AVM account, so only addresses the
-		// txn references (incl. address()/self) read meaningfully.
-		if (!checkArity(args, 1, "balance", loc, "address"))
-			return awst::makeZero(loc, awst::WType::uint64Type());
-		auto acct = padTo32Bytes(ensureBiguint(args[0], loc), loc);
-		auto bal = awst::makeIntrinsicCall("balance", awst::WType::uint64Type(), loc);
-		bal->stackArgs.push_back(std::move(acct));
-		return bal;
-	}
-	if (funcName == "selfbalance")
-	{
-		// Yul selfbalance() returns the balance of the executing contract.
-		// Map to AVM `balance(global CurrentApplicationAddress)`, which is a
-		// uint64 — microAlgo balances always fit uint64. Return it as uint64
-		// rather than widening to biguint: the consumer coerces via
-		// ensureBiguint only when it needs a biguint (same natural-type
-		// convention as clz / the comparison handlers).
-		auto appAddr = awst::makeGlobal(std::string("CurrentApplicationAddress"), awst::WType::bytesType(), loc);
-		auto bal = awst::makeIntrinsicCall("balance", awst::WType::uint64Type(), loc);
-		bal->stackArgs.push_back(std::move(appAddr));
-		return bal;
-	}
-	if (funcName == "coinbase")
-	{
-		EvmFeaturePolicy::report(
-			EvmFeature::BlockCoinbase, m_typeMapper.profile(), loc);
-		if (!m_typeMapper.profile().evmCoinbase)
-			return awst::makeZero(loc, awst::WType::biguintType());
-		auto const& hex = *m_typeMapper.profile().evmCoinbase;
-		// Mirrors SolIntrinsicAccess's decoder exactly — case-insensitive, so
-		// a future profile producer that skips CliOptions' lowercasing cannot
-		// make the asm and Solidity paths emit different addresses.
-		auto nibble = [](char c) -> uint8_t {
-			if (c >= '0' && c <= '9') return static_cast<uint8_t>(c - '0');
-			return static_cast<uint8_t>(std::tolower(
-				static_cast<unsigned char>(c)) - 'a' + 10);
-		};
-		std::vector<uint8_t> bytes(20);
-		for (size_t i = 0; i < bytes.size(); ++i)
-			bytes[i] = static_cast<uint8_t>(
-				(nibble(hex[2 * i]) << 4) | nibble(hex[2 * i + 1]));
-		return awst::makeAsBiguint(
-			awst::makeBytesConstant(std::move(bytes), loc), loc);
-	}
-	if (funcName == "gasprice")
-	{
-		EvmFeaturePolicy::report(
-			EvmFeature::TxGasPrice, m_typeMapper.profile(), loc);
-		return awst::makeTxn("Fee", awst::WType::uint64Type(), loc);
-	}
-	if (funcName == "basefee" || funcName == "blobbasefee")
-	{
-		EvmFeaturePolicy::report(
-			funcName == "basefee" ? EvmFeature::BlockBaseFee
-				: EvmFeature::BlockBlobBaseFee,
-			m_typeMapper.profile(), loc);
-		return awst::makeZero(loc, awst::WType::biguintType());
-	}
-	if (funcName == "chainid")
-	{
-		EvmFeaturePolicy::report(
-			EvmFeature::BlockChainId, m_typeMapper.profile(), loc);
-		if (m_typeMapper.profile().evmChainId)
-			return awst::makeIntegerConstant(
-				*m_typeMapper.profile().evmChainId, loc,
-				awst::WType::biguintType());
-		return awst::makeAsBiguint(awst::makeGlobal(
-			"GenesisHash", awst::WType::bytesType(), loc), loc);
-	}
-	if (funcName == "gaslimit")
-	{
-		EvmFeaturePolicy::report(
-			EvmFeature::BlockGasLimit, m_typeMapper.profile(), loc);
-		if (m_typeMapper.profile().evmBlockGasLimit)
-			return awst::makeIntegerConstant(
-				*m_typeMapper.profile().evmBlockGasLimit, loc,
-				awst::WType::biguintType());
-		// Total pooled app-call budget (GroupSize x MaxAppProgramCost=700):
-		// constant within an execution, like EVM's block-level value — NOT the
-		// shrinking OpcodeBudget remainder, which two reads would disagree on.
-		return awst::makeUInt64BinOp(
-			awst::makeGlobal("GroupSize", awst::WType::uint64Type(), loc),
-			awst::UInt64BinaryOperator::Mult,
-			awst::makeIntegerConstant("700", loc), loc);
-	}
-	if (funcName == "codesize")
-	{
-		// codesize() → HARD ERROR. EVM codesize() is the deployed contract's
-		// bytecode length; the AVM has no opcode exposing the TEAL program
-		// size, so the old stub returned a sentinel 50 — a silent wrong value
-		// that makes codesize-based length checks pass on a fabricated number.
-		// Refuse rather than invent a length (same hard-error policy as
-		// extcodesize / blockhash / delegatecall for unsupported EVM features).
-		Logger::instance().error(
-			"`codesize()` is not supported on AVM — there is no opcode exposing "
-			"the deployed program's byte length, so the old stub returned a "
-			"fabricated 50. Refuse rather than emit a silent wrong value.", loc);
-		// Stub so AWST building completes; the error aborts the build first.
-		return awst::makeZero(loc, awst::WType::biguintType());
-	}
-	if (funcName == "clz")
-	{
-		// clz(x) = count leading zeros (256-bit): 256 - bitlen(x). EIP-7939.
-		// AVM's `bitlen` reads its arg (uint64 / biguint / bytes) as a
-		// big-endian integer and returns the significant-bit count (0 for 0),
-		// so no width conversion of the operand is needed. The result is in
-		// [0,256] (256 only when x==0); it fits uint64 but NOT uint8, and all
-		// assembly operands are 256-bit so 256-bitlen never underflows.
-		// Returning uint64 (the natural type for a small result, like the
-		// comparison ops return bool) is the same single stack word and lets
-		// consumers coerce via ensureBiguint only when they need a biguint.
-		if (args.empty())
-		{
-			Logger::instance().warning("clz() called with no args", loc);
-			return awst::makeIntegerConstant(static_cast<uint64_t>(256), loc);
-		}
-		auto x = args[0];
-		auto bitlen = awst::makeIntrinsicCall("bitlen", awst::WType::uint64Type(), loc);
-		bitlen->stackArgs.push_back(std::move(x));
-		auto c256 = awst::makeIntegerConstant(static_cast<uint64_t>(256), loc);
-		return awst::makeUInt64BinOp(std::move(c256), awst::UInt64BinaryOperator::Sub, std::move(bitlen), loc);
-	}
-	if (funcName == "returndatacopy")
-	{
-		// returndatacopy(destOffset, offset, size): copy the last inner txn's
-		// log (itxn LastLog) into memory. Void op — emit the copy as a pending
-		// statement and yield void.
-		emitReturndatacopy(args, loc, m_pendingStatements);
-		return awst::makeVoidConstant(loc);
-	}
-	if (funcName == "pop")
-	{
-		// pop(x) — discard value, no-op
-		return awst::makeVoidConstant(loc);
-	}
-	if (funcName == "tstore")
-	{
-		// tstore in expression context — should be a statement
-		Logger::instance().warning("tstore() in expression context, treating as no-op", loc);
-		return awst::makeVoidConstant(loc);
-	}
-	// Check for user-defined assembly function — inline in expression context
-	auto asmIt = m_asmFunctions.find(funcName);
-	if (asmIt != m_asmFunctions.end())
-	{
-		auto const& funcDef = *asmIt->second;
+	// Resolve the compiler's contract-value address to an application and
+	// query only small metadata. Fetching AppApprovalProgram before taking
+	// `len` fails for programs larger than AVM's stack byte-value limit.
+	// High-level `address.code.length` calls this same shared lowering.
+	auto addrBytes = awst::makeAsBytes(ensureBiguint(_args[0], _loc), _loc);
+	auto appId = awst::makeAsApplication(
+		awst::makeWord32ToUInt64(std::move(addrBytes), _loc), _loc);
 
-		// Inline the function body into a local vector, then append to
-		// m_pendingStatements. Using a local avoids aliasing issues when
-		// nested inlining drains m_pendingStatements inside handleUserFunctionCall.
-		std::vector<std::shared_ptr<awst::Statement>> inlinedStmts;
-		auto ret = handleUserFunctionCall(funcName, args, loc, inlinedStmts);
-		for (auto& s: inlinedStmts)
-			m_pendingStatements.push_back(std::move(s));
+	Logger::instance().warning(
+		"`extcodesize(addr)` resolves the app id from the address's last 8 "
+		"bytes (this compiler's contract-value convention). It returns zero "
+		"for a missing application and the allocated AVM program capacity "
+		"for an existing one; AVM cannot observe an oversized program's exact "
+		"byte length without materialising it.", _loc);
 
-		// Subroutine-dispatched single-return: use the returned fresh temp
-		// (avoids recursion aliasing). Inlined calls return nullptr — read the
-		// function's first return variable, which the inlined body assigned.
-		if (ret)
-			return ret;
-		if (!funcDef.returnVariables.empty())
-		{
-			std::string retName = funcDef.returnVariables[0].name.str();
-			auto retVar = awst::makeVarExpression(retName, awst::WType::biguintType(), loc);
-			return retVar;
-		}
+	return AppCodeSizeLowering::lower(
+		m_typeMapper, std::move(appId), _loc, m_pendingStatements);
+}
 
-		return awst::makeVoidConstant(loc);
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleExtcodehash(
+	awst::SourceLocation const& _loc)
+{
+	// extcodehash(addr) → HARD ERROR. On EVM this is keccak256 of the
+	// account's code. AVM can only fetch the CURRENT app's approval
+	// program; an arbitrary address can't be dereferenced to its app
+	// bytes. The old stub used a fragile `addr > 100` heuristic to guess
+	// "is this address(this)?" and otherwise returned keccak256("") / 0 —
+	// a wrong-but-deterministic hash that would corrupt any commitment or
+	// identity check. Refuse rather than emit a wrong hash. (For the
+	// genuine self case, use the high-level `address(this).codehash`,
+	// which is computed correctly via app_params_get on the current app.)
+	Logger::instance().error(
+		"`extcodehash(addr)` is not supported on AVM — an arbitrary address "
+		"can't be dereferenced to its code, so the old stub guessed via an "
+		"`addr > 100` heuristic and otherwise returned a wrong-but-"
+		"deterministic hash. Use the high-level `address(this).codehash` for "
+		"the current app's own code hash.", _loc);
+	auto zero = awst::makeZero(_loc, awst::WType::biguintType());
+	return zero;
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleAddress(
+	awst::SourceLocation const& _loc)
+{
+	// address() → global CurrentApplicationAddress, cast to biguint
+	auto addr = awst::makeGlobal("CurrentApplicationAddress", awst::WType::bytesType(), _loc);
+
+	auto cast = awst::makeAsBiguint(std::move(addr), _loc);
+	return cast;
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleOrigin(
+	awst::SourceLocation const& _loc)
+{
+	EvmFeaturePolicy::report(
+		EvmFeature::TxOrigin, m_typeMapper.profile(), _loc);
+	// Stub so AWST building completes; the error aborts before any TEAL.
+	auto sender = awst::makeTxn("Sender", awst::WType::bytesType(), _loc);
+	return awst::makeAsBiguint(std::move(sender), _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleCaller(
+	awst::SourceLocation const& _loc)
+{
+	// caller() (EVM CALLER = msg.sender).  At an EVM ABI boundary all
+	// addresses occupy one 160-bit namespace, including ambient identities;
+	// match high-level msg.sender and canonical calldata addresses.
+	auto sender = awst::makeTxn("Sender", awst::WType::bytesType(), _loc);
+	if (m_typeMapper.profile().contractAbi == ContractAbi::Evm)
+		sender = awst::makeExtractLastN(std::move(sender), 20, _loc);
+
+	auto cast = awst::makeAsBiguint(std::move(sender), _loc);
+	return cast;
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleBlockhash(
+	awst::SourceLocation const& _loc)
+{
+	EvmFeaturePolicy::report(
+		EvmFeature::BlockHash, m_typeMapper.profile(), _loc);
+	// Stub so AWST building completes; the error aborts the build first.
+	return awst::makeZero(_loc, awst::WType::biguintType());
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleBlobhash(
+	awst::SourceLocation const& _loc)
+{
+	EvmFeaturePolicy::report(
+		EvmFeature::BlobHash, m_typeMapper.profile(), _loc);
+	return awst::makeZero(_loc, awst::WType::biguintType());
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleDifficulty(
+	awst::SourceLocation const& _loc)
+{
+	return buildRandaoSeed(m_typeMapper, EvmFeature::BlockDifficulty, _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handlePrevrandao(
+	awst::SourceLocation const& _loc)
+{
+	return buildRandaoSeed(m_typeMapper, EvmFeature::BlockPrevrandao, _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleNumber(
+	awst::SourceLocation const& _loc)
+{
+	// number() → global Round (block-number equivalent), a uint64. Return it
+	// as uint64; the consumer coerces via ensureBiguint only when it needs a
+	// biguint (match at consumption, not at exit — same as selfbalance/clz).
+	return awst::makeGlobal(std::string("Round"), awst::WType::uint64Type(), _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleBalance(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc)
+{
+	// balance(addr) → AVM `balance` opcode on the 32-byte account derived
+	// from addr (left-zero-padded to 32 bytes). uint64 result, same as
+	// selfbalance (microAlgo balances fit uint64); the consumer coerces via
+	// ensureBiguint only when it needs a biguint. NOTE: this is the AVM
+	// account balance in microAlgos (NOT EVM wei), and the account must be
+	// available to the txn — an arbitrary EVM address (e.g. balance(0))
+	// maps to an unfunded/unavailable AVM account, so only addresses the
+	// txn references (incl. address()/self) read meaningfully.
+	if (!checkArity(_args, 1, "balance", _loc, "address"))
+		return awst::makeZero(_loc, awst::WType::uint64Type());
+	auto acct = padTo32Bytes(ensureBiguint(_args[0], _loc), _loc);
+	auto bal = awst::makeIntrinsicCall("balance", awst::WType::uint64Type(), _loc);
+	bal->stackArgs.push_back(std::move(acct));
+	return bal;
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleSelfbalance(
+	awst::SourceLocation const& _loc)
+{
+	// Yul selfbalance() returns the balance of the executing contract.
+	// Map to AVM `balance(global CurrentApplicationAddress)`, which is a
+	// uint64 — microAlgo balances always fit uint64. Return it as uint64
+	// rather than widening to biguint: the consumer coerces via
+	// ensureBiguint only when it needs a biguint (same natural-type
+	// convention as clz / the comparison handlers).
+	auto appAddr = awst::makeGlobal(std::string("CurrentApplicationAddress"), awst::WType::bytesType(), _loc);
+	auto bal = awst::makeIntrinsicCall("balance", awst::WType::uint64Type(), _loc);
+	bal->stackArgs.push_back(std::move(appAddr));
+	return bal;
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleCoinbase(
+	awst::SourceLocation const& _loc)
+{
+	EvmFeaturePolicy::report(
+		EvmFeature::BlockCoinbase, m_typeMapper.profile(), _loc);
+	if (!m_typeMapper.profile().evmCoinbase)
+		return awst::makeZero(_loc, awst::WType::biguintType());
+	auto const& hex = *m_typeMapper.profile().evmCoinbase;
+	// Mirrors SolIntrinsicAccess's decoder exactly — case-insensitive, so
+	// a future profile producer that skips CliOptions' lowercasing cannot
+	// make the asm and Solidity paths emit different addresses.
+	auto nibble = [](char c) -> uint8_t {
+		if (c >= '0' && c <= '9') return static_cast<uint8_t>(c - '0');
+		return static_cast<uint8_t>(std::tolower(
+			static_cast<unsigned char>(c)) - 'a' + 10);
+	};
+	std::vector<uint8_t> bytes(20);
+	for (size_t i = 0; i < bytes.size(); ++i)
+		bytes[i] = static_cast<uint8_t>(
+			(nibble(hex[2 * i]) << 4) | nibble(hex[2 * i + 1]));
+	return awst::makeAsBiguint(
+		awst::makeBytesConstant(std::move(bytes), _loc), _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleGasprice(
+	awst::SourceLocation const& _loc)
+{
+	EvmFeaturePolicy::report(
+		EvmFeature::TxGasPrice, m_typeMapper.profile(), _loc);
+	return awst::makeTxn("Fee", awst::WType::uint64Type(), _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleBasefee(
+	awst::SourceLocation const& _loc)
+{
+	return buildFeeZero(m_typeMapper, EvmFeature::BlockBaseFee, _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleBlobbasefee(
+	awst::SourceLocation const& _loc)
+{
+	return buildFeeZero(m_typeMapper, EvmFeature::BlockBlobBaseFee, _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleChainid(
+	awst::SourceLocation const& _loc)
+{
+	EvmFeaturePolicy::report(
+		EvmFeature::BlockChainId, m_typeMapper.profile(), _loc);
+	if (m_typeMapper.profile().evmChainId)
+		return awst::makeIntegerConstant(
+			*m_typeMapper.profile().evmChainId, _loc,
+			awst::WType::biguintType());
+	return awst::makeAsBiguint(awst::makeGlobal(
+		"GenesisHash", awst::WType::bytesType(), _loc), _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleGaslimit(
+	awst::SourceLocation const& _loc)
+{
+	EvmFeaturePolicy::report(
+		EvmFeature::BlockGasLimit, m_typeMapper.profile(), _loc);
+	if (m_typeMapper.profile().evmBlockGasLimit)
+		return awst::makeIntegerConstant(
+			*m_typeMapper.profile().evmBlockGasLimit, _loc,
+			awst::WType::biguintType());
+	// Total pooled app-call budget (GroupSize x MaxAppProgramCost=700):
+	// constant within an execution, like EVM's block-level value — NOT the
+	// shrinking OpcodeBudget remainder, which two reads would disagree on.
+	return awst::makeUInt64BinOp(
+		awst::makeGlobal("GroupSize", awst::WType::uint64Type(), _loc),
+		awst::UInt64BinaryOperator::Mult,
+		awst::makeIntegerConstant("700", _loc), _loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleCodesize(
+	awst::SourceLocation const& _loc)
+{
+	// codesize() → HARD ERROR. EVM codesize() is the deployed contract's
+	// bytecode length; the AVM has no opcode exposing the TEAL program
+	// size, so the old stub returned a sentinel 50 — a silent wrong value
+	// that makes codesize-based length checks pass on a fabricated number.
+	// Refuse rather than invent a length (same hard-error policy as
+	// extcodesize / blockhash / delegatecall for unsupported EVM features).
+	Logger::instance().error(
+		"`codesize()` is not supported on AVM — there is no opcode exposing "
+		"the deployed program's byte length, so the old stub returned a "
+		"fabricated 50. Refuse rather than emit a silent wrong value.", _loc);
+	// Stub so AWST building completes; the error aborts the build first.
+	return awst::makeZero(_loc, awst::WType::biguintType());
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleClz(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc)
+{
+	// clz(x) = count leading zeros (256-bit): 256 - bitlen(x). EIP-7939.
+	// AVM's `bitlen` reads its arg (uint64 / biguint / bytes) as a
+	// big-endian integer and returns the significant-bit count (0 for 0),
+	// so no width conversion of the operand is needed. The result is in
+	// [0,256] (256 only when x==0); it fits uint64 but NOT uint8, and all
+	// assembly operands are 256-bit so 256-bitlen never underflows.
+	// Returning uint64 (the natural type for a small result, like the
+	// comparison ops return bool) is the same single stack word and lets
+	// consumers coerce via ensureBiguint only when they need a biguint.
+	if (_args.empty())
+	{
+		Logger::instance().warning("clz() called with no args", _loc);
+		return awst::makeIntegerConstant(static_cast<uint64_t>(256), _loc);
 	}
+	auto x = _args[0];
+	auto bitlen = awst::makeIntrinsicCall("bitlen", awst::WType::uint64Type(), _loc);
+	bitlen->stackArgs.push_back(std::move(x));
+	auto c256 = awst::makeIntegerConstant(static_cast<uint64_t>(256), _loc);
+	return awst::makeUInt64BinOp(std::move(c256), awst::UInt64BinaryOperator::Sub, std::move(bitlen), _loc);
+}
 
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleReturndatacopy(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc)
+{
+	// returndatacopy(destOffset, offset, size): copy the last inner txn's
+	// log (itxn LastLog) into memory. Void op — emit the copy as a pending
+	// statement and yield void.
+	emitReturndatacopy(_args, _loc, m_pendingStatements);
+	return awst::makeVoidConstant(_loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handlePop(
+	awst::SourceLocation const& _loc)
+{
+	// pop(x) — discard value, no-op
+	return awst::makeVoidConstant(_loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleTstoreExpr(
+	awst::SourceLocation const& _loc)
+{
+	// tstore in expression context — should be a statement
+	Logger::instance().warning("tstore() in expression context, treating as no-op", _loc);
+	return awst::makeVoidConstant(_loc);
+}
+
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleDelegatecall(
+	awst::SourceLocation const& _loc)
+{
 	// delegatecall → HARD ERROR. delegatecall runs another contract's code in
 	// the caller's storage context, which has no AVM equivalent; returning 1
 	// (success) would silently no-op the delegated call. Matches the hard error
 	// on high-level `.delegatecall(...)`.
-	if (funcName == "delegatecall")
-	{
-		Logger::instance().error(
-			"`delegatecall(...)` in inline assembly is not supported on AVM. It "
-			"runs another contract's code in the caller's storage context, which "
-			"has no AVM equivalent; stubbing it as success (1) would silently "
-			"no-op the delegated call. This matches the hard error on high-level "
-			"`.delegatecall(...)`.", loc);
-		auto one = awst::makeOne(loc, awst::WType::biguintType());
-		return one;
-	}
+	Logger::instance().error(
+		"`delegatecall(...)` in inline assembly is not supported on AVM. It "
+		"runs another contract's code in the caller's storage context, which "
+		"has no AVM equivalent; stubbing it as success (1) would silently "
+		"no-op the delegated call. This matches the hard error on high-level "
+		"`.delegatecall(...)`.", _loc);
+	auto one = awst::makeOne(_loc, awst::WType::biguintType());
+	return one;
+}
 
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleCreate2(
+	awst::SourceLocation const& _loc)
+{
 	// create2(value, offset, size, salt) → hard error. CREATE2 derives a
 	// deterministic contract address from salt + initcode hash; the AVM has
 	// no such opcode — contracts are apps whose IDs are assigned sequentially
@@ -811,82 +908,74 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::buildFunctionCall(
 	// pre-compute. Silently returning a zero address would produce
 	// wrong-semantic code (callers depending on the predicted address would
 	// misbehave), so refuse to compile rather than stub.
-	if (funcName == "create2")
-	{
-		Logger::instance().error(
-			"`create2(...)` is not supported on AVM. CREATE2's deterministic "
-			"address derivation (salt + initcode hash) has no AVM equivalent — "
-			"app IDs are assigned sequentially by the chain at inner-app-create "
-			"time, so an address can't be pre-computed from a salt. Use "
-			"high-level `new C(...)` (lowered to an inner app-create txn) if you "
-			"don't need address prediction; CREATE2-style counterfactual "
-			"deployment can't be honored.",
-			loc
-		);
-		// Return a valid stub so AWST building completes and the error above is
-		// surfaced cleanly at the end (matches the delegatecall hard-error path).
-		auto zero = awst::makeZero(loc, awst::WType::biguintType());
-		return zero;
-	}
+	Logger::instance().error(
+		"`create2(...)` is not supported on AVM. CREATE2's deterministic "
+		"address derivation (salt + initcode hash) has no AVM equivalent — "
+		"app IDs are assigned sequentially by the chain at inner-app-create "
+		"time, so an address can't be pre-computed from a salt. Use "
+		"high-level `new C(...)` (lowered to an inner app-create txn) if you "
+		"don't need address prediction; CREATE2-style counterfactual "
+		"deployment can't be honored.",
+		_loc
+	);
+	// Return a valid stub so AWST building completes and the error above is
+	// surfaced cleanly at the end (matches the delegatecall hard-error path).
+	auto zero = awst::makeZero(_loc, awst::WType::biguintType());
+	return zero;
+}
 
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldatasize(
+	awst::SourceLocation const& _loc)
+{
 	// calldatasize() — when the synthetic blob is built, return its
 	// runtime length; otherwise stub to 0 (AVM doesn't have raw calldata
 	// in the EVM sense, so the legacy stub keeps existing tests working).
-	if (funcName == "calldatasize")
+	if (m_useSyntheticCalldata)
 	{
-		if (m_useSyntheticCalldata)
-		{
-			auto blob = awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), loc);
-			return awst::makeLen(std::move(blob), loc);
-		}
-		Logger::instance().warning("calldatasize() has no AVM equivalent, returning 0", loc);
-		auto zero = awst::makeZero(loc, awst::WType::biguintType());
-		return zero;
+		auto blob = awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc);
+		return awst::makeLen(std::move(blob), _loc);
 	}
+	Logger::instance().warning("calldatasize() has no AVM equivalent, returning 0", _loc);
+	auto zero = awst::makeZero(_loc, awst::WType::biguintType());
+	return zero;
+}
 
+std::shared_ptr<awst::Expression> AssemblyBuilder::handleCalldatacopy(
+	std::vector<std::shared_ptr<awst::Expression>> const& _args,
+	awst::SourceLocation const& _loc)
+{
 	// calldatacopy(destOffset, offset, size) — when the synthetic blob is
 	// available, copy `size` bytes from `__cd_blob[offset..offset+size]`
 	// into the memory blob at destOffset. Otherwise stub as no-op.
-	if (funcName == "calldatacopy")
+	if (m_useSyntheticCalldata && _args.size() == 3)
 	{
-		if (m_useSyntheticCalldata && args.size() == 3)
-		{
-			// EVM calldatacopy ZERO-PADS past calldatasize (same convention as
-			// the calldataload fix above): extract3(blob ++ bzero(sz),
-			// min(off,len), sz) — real bytes then appended zeros.
-			auto blob = awst::makeEvalOnce(
-				awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), loc), loc);
-			auto srcOff = awst::makeEvalOnce(offsetToUint64(args[1], loc), loc);
-			auto sz = awst::makeEvalOnce(offsetToUint64(args[2], loc), loc);
-			auto len = awst::makeLen(blob, loc);
-			auto safeOff = awst::makeConditional(
-				awst::makeNumericCompare(srcOff, awst::NumericComparison::Lt, len, loc),
-				srcOff, awst::makeLen(blob, loc), awst::WType::uint64Type(), loc);
-			auto padded = awst::makeConcat(blob, awst::makeBzero(sz, loc), loc);
-			auto extractCall = awst::makeExtract3(
-				std::move(padded), std::move(safeOff), sz, loc);
-			// Write via the slot-routed length-driven primitive (M7): destOff
-			// ≥ SLOT_SIZE lands in the right slot instead of clobbering slot 0.
-			// Expression-context: route through m_pendingStatements (drained
-			// at the outer statement boundary).
-			writeMemWordDyn(args[0], std::move(extractCall), loc, m_pendingStatements);
-			auto zero = awst::makeZero(loc, awst::WType::biguintType());
-			return zero;
-		}
-		Logger::instance().warning("calldatacopy() has no AVM equivalent (skipped)", loc);
-		auto zero = awst::makeZero(loc, awst::WType::biguintType());
+		// EVM calldatacopy ZERO-PADS past calldatasize (same convention as
+		// the calldataload fix above): extract3(blob ++ bzero(sz),
+		// min(off,len), sz) — real bytes then appended zeros.
+		auto blob = awst::makeEvalOnce(
+			awst::makeVarExpression(CD_BLOB_VAR, awst::WType::bytesType(), _loc), _loc);
+		auto srcOff = awst::makeEvalOnce(offsetToUint64(_args[1], _loc), _loc);
+		auto sz = awst::makeEvalOnce(offsetToUint64(_args[2], _loc), _loc);
+		auto len = awst::makeLen(blob, _loc);
+		auto safeOff = awst::makeConditional(
+			awst::makeNumericCompare(srcOff, awst::NumericComparison::Lt, len, _loc),
+			srcOff, awst::makeLen(blob, _loc), awst::WType::uint64Type(), _loc);
+		auto padded = awst::makeConcat(blob, awst::makeBzero(sz, _loc), _loc);
+		auto extractCall = awst::makeExtract3(
+			std::move(padded), std::move(safeOff), sz, _loc);
+		// Write via the slot-routed length-driven primitive (M7): destOff
+		// ≥ SLOT_SIZE lands in the right slot instead of clobbering slot 0.
+		// Expression-context: route through m_pendingStatements (drained
+		// at the outer statement boundary).
+		writeMemWordDyn(_args[0], std::move(extractCall), _loc, m_pendingStatements);
+		auto zero = awst::makeZero(_loc, awst::WType::biguintType());
 		return zero;
 	}
-
-	// HARD ERROR — an unrecognized opcode stubbed as 0 is a silent wrong value.
-	// Fail loudly so every future gap surfaces at compile time.
-	Logger::instance().error(
-		"unsupported Yul builtin function `" + funcName + "`: no AVM translation "
-		"exists, so it would be stubbed as 0 — a silent wrong value.", loc
-	);
-	auto fallbackZero = awst::makeZero(loc, awst::WType::biguintType());
-	return fallbackZero;
+	Logger::instance().warning("calldatacopy() has no AVM equivalent (skipped)", _loc);
+	auto zero = awst::makeZero(_loc, awst::WType::biguintType());
+	return zero;
 }
+
 
 // ─── Builtin handlers ───────────────────────────────────────────────────────
 

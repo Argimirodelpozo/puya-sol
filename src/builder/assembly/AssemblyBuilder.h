@@ -525,6 +525,49 @@ private:
 		awst::SourceLocation const& _loc
 	);
 
+	// ── Special builtins (buildFunctionCall dispatch tables) ────────────
+	// One handler per table row; hard-error stubs and mocked environment
+	// values live here too so buildFunctionCall stays a pure dispatcher.
+	// Arg-consuming rows of kArgsBuiltins:
+	std::shared_ptr<awst::Expression> handleExtcodesize(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleBalance(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleClz(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleReturndatacopy(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleCalldatacopy(
+		std::vector<std::shared_ptr<awst::Expression>> const& _args,
+		awst::SourceLocation const& _loc);
+	// Nullary rows of kNullaryBuiltins (args ignored by the EVM builtin):
+	std::shared_ptr<awst::Expression> handleAddress(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleOrigin(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleCaller(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleBlockhash(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleBlobhash(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleDifficulty(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handlePrevrandao(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleNumber(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleSelfbalance(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleCoinbase(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleGasprice(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleBasefee(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleBlobbasefee(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleChainid(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleGaslimit(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleCodesize(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleExtcodehash(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handlePop(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleTstoreExpr(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleDelegatecall(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleCreate2(awst::SourceLocation const& _loc);
+	std::shared_ptr<awst::Expression> handleCalldatasize(awst::SourceLocation const& _loc);
+
 	/// Yul div(a, b): unsigned integer floor division (biguint).
 	std::shared_ptr<awst::Expression> handleDiv(
 		std::vector<std::shared_ptr<awst::Expression>> const& _args,
