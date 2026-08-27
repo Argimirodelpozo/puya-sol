@@ -23,10 +23,38 @@ bool isByteArray(awst::WType const* _w, unsigned _size)
 	auto const* elem = dynamic_cast<awst::ARC4UIntN const*>(sa->elementType());
 	return elem && elem->n() == 8 && sa->arraySize() == static_cast<int64_t>(_size);
 }
+
+/// arc4 byte[K] with 0 < K < _size (a byte array in a WIDER window, e.g. the
+/// external fn-ptr byte[12] inside solc's 24-byte share). K out via _kOut.
+bool isNarrowByteArray(awst::WType const* _w, unsigned _size, unsigned& _kOut)
+{
+	auto const* nb = dynamic_cast<awst::ARC4StaticArray const*>(_w);
+	if (!nb || nb->arraySize() <= 0
+		|| static_cast<unsigned>(nb->arraySize()) >= _size)
+		return false;
+	auto const* e = dynamic_cast<awst::ARC4UIntN const*>(nb->elementType());
+	if (!e || e->n() != 8)
+		return false;
+	_kOut = static_cast<unsigned>(nb->arraySize());
+	return true;
+}
+
+/// arc4.address (byte[32] alias) packed into a <=32-byte window.
+bool isArc4Address(awst::WType const* _w, unsigned _size)
+{
+	return _w && _w->name() == "address"
+		&& dynamic_cast<awst::ARC4StaticArray const*>(_w) && _size <= 32;
+}
 } // namespace
 
-std::shared_ptr<awst::Expression> SlotWordCodec::nativeToPackedBytes(
-	std::shared_ptr<awst::Expression> _value,
+namespace
+{
+
+/// Scalar / word-convention arms of nativeToPackedBytes (uint64, bool,
+/// application, biguint, account, arc4 bool, arc4.uintN). nullptr = not this
+/// family; byte-shaped values fall through to tryPackByteShaped.
+std::shared_ptr<awst::Expression> tryPackScalarWord(
+	std::shared_ptr<awst::Expression>& _value,
 	awst::WType const* _wtype,
 	unsigned _size,
 	awst::SourceLocation const& _loc)
@@ -56,7 +84,7 @@ std::shared_ptr<awst::Expression> SlotWordCodec::nativeToPackedBytes(
 		// is exactly the backend crash this arm removes.
 		auto asU64 = awst::makeReinterpretCast(
 			std::move(_value), awst::WType::uint64Type(), _loc);
-		return nativeToPackedBytes(std::move(asU64),
+		return SlotWordCodec::nativeToPackedBytes(std::move(asU64),
 			awst::WType::uint64Type(), _size, _loc);
 	}
 	if (_wtype == awst::WType::biguintType())
@@ -91,6 +119,17 @@ std::shared_ptr<awst::Expression> SlotWordCodec::nativeToPackedBytes(
 		return awst::makeExtract(std::move(padded),
 			static_cast<int>(32 - _size), static_cast<int>(_size), _loc);
 	}
+	return nullptr;
+}
+
+/// Byte-shaped arms of nativeToPackedBytes (bytes[N], arc4 byte arrays,
+/// arc4.address) — the LEFT-aligned / trailing-truncation conventions.
+std::shared_ptr<awst::Expression> tryPackByteShaped(
+	std::shared_ptr<awst::Expression>& _value,
+	awst::WType const* _wtype,
+	unsigned _size,
+	awst::SourceLocation const& _loc)
+{
 	if (auto const* bw = dynamic_cast<awst::BytesWType const*>(_wtype);
 		bw && bw->length().has_value()
 		&& static_cast<unsigned>(*bw->length()) < _size)
@@ -107,22 +146,16 @@ std::shared_ptr<awst::Expression> SlotWordCodec::nativeToPackedBytes(
 		return awst::makeAsBytes(std::move(_value), _loc);   // bytes[N]: raw N bytes
 	if (isByteArray(_wtype, _size))
 		return awst::makeAsBytes(std::move(_value), _loc);   // arc4 byte[N]: raw N bytes
-	if (auto const* nb = dynamic_cast<awst::ARC4StaticArray const*>(_wtype);
-		nb && nb->arraySize() > 0
-		&& static_cast<unsigned>(nb->arraySize()) < _size
-		&& [&]{ auto const* e = dynamic_cast<awst::ARC4UIntN const*>(
-			nb->elementType()); return e && e->n() == 8; }())
+	if (unsigned k = 0; isNarrowByteArray(_wtype, _size, k))
 	{
 		// byte[K] value in a WIDER window: LEFT-aligned, trailing zeros
 		// (matches the BytesWType arm — one convention for both labels of
 		// the same fn-ptr handle).
 		return awst::makeConcat(
 			awst::makeAsBytes(std::move(_value), _loc),
-			awst::makeBzero(static_cast<int>(
-				_size - static_cast<unsigned>(nb->arraySize())), _loc), _loc);
+			awst::makeBzero(static_cast<int>(_size - k), _loc), _loc);
 	}
-	if (_wtype && _wtype->name() == "address"
-		&& dynamic_cast<awst::ARC4StaticArray const*>(_wtype) && _size <= 32)
+	if (isArc4Address(_wtype, _size))
 	{
 		// arc4.address (byte[32] alias) in a PACKED slot: the EVM packs an
 		// address as its 20 bytes, and this mode's convention stores the
@@ -133,6 +166,21 @@ std::shared_ptr<awst::Expression> SlotWordCodec::nativeToPackedBytes(
 		return awst::makeExtract(awst::makeAsBytes(std::move(_value), _loc),
 			static_cast<int>(32 - _size), static_cast<int>(_size), _loc);
 	}
+	return nullptr;
+}
+
+} // namespace
+
+std::shared_ptr<awst::Expression> SlotWordCodec::nativeToPackedBytes(
+	std::shared_ptr<awst::Expression> _value,
+	awst::WType const* _wtype,
+	unsigned _size,
+	awst::SourceLocation const& _loc)
+{
+	if (auto packed = tryPackScalarWord(_value, _wtype, _size, _loc))
+		return packed;
+	if (auto packed = tryPackByteShaped(_value, _wtype, _size, _loc))
+		return packed;
 
 	Logger::instance().error(
 		"unsupported type '" + std::string(_wtype ? _wtype->name() : "<null>")
@@ -140,8 +188,14 @@ std::shared_ptr<awst::Expression> SlotWordCodec::nativeToPackedBytes(
 	return awst::makeBytesConstant(std::vector<uint8_t>(_size, 0), _loc);
 }
 
-std::shared_ptr<awst::Expression> SlotWordCodec::packedBytesToNative(
-	std::shared_ptr<awst::Expression> _raw,
+namespace
+{
+
+/// Scalar / word-convention arms of packedBytesToNative — mirrors
+/// tryPackScalarWord (unpack rung order kept verbatim: uint64/bool, biguint,
+/// account, application, arc4 bool, arc4.uintN).
+std::shared_ptr<awst::Expression> tryUnpackScalarWord(
+	std::shared_ptr<awst::Expression>& _raw,
 	awst::WType const* _wtype,
 	solidity::frontend::Type const* _solType,
 	unsigned _size,
@@ -184,7 +238,7 @@ std::shared_ptr<awst::Expression> SlotWordCodec::packedBytesToNative(
 	if (_wtype == awst::WType::applicationType())
 	{
 		// mirror of the encode arm: low 8 bytes hold the uint64 app id
-		auto u64 = packedBytesToNative(std::move(_raw),
+		auto u64 = SlotWordCodec::packedBytesToNative(std::move(_raw),
 			awst::WType::uint64Type(), nullptr, _size, _loc);
 		return awst::makeReinterpretCast(std::move(u64),
 			awst::WType::applicationType(), _loc);
@@ -208,6 +262,16 @@ std::shared_ptr<awst::Expression> SlotWordCodec::packedBytesToNative(
 				static_cast<int>(_size - backing), static_cast<int>(backing), _loc);
 		return awst::makeReinterpretCast(std::move(b), _wtype, _loc);
 	}
+	return nullptr;
+}
+
+/// Byte-shaped arms of packedBytesToNative — mirrors tryPackByteShaped.
+std::shared_ptr<awst::Expression> tryUnpackByteShaped(
+	std::shared_ptr<awst::Expression>& _raw,
+	awst::WType const* _wtype,
+	unsigned _size,
+	awst::SourceLocation const& _loc)
+{
 	if (auto const* bw = dynamic_cast<awst::BytesWType const*>(_wtype);
 		bw && bw->length().has_value()
 		&& static_cast<unsigned>(*bw->length()) < _size)
@@ -218,21 +282,29 @@ std::shared_ptr<awst::Expression> SlotWordCodec::packedBytesToNative(
 		return awst::makeReinterpretCast(std::move(_raw), _wtype, _loc);
 	if (isByteArray(_wtype, _size))
 		return awst::makeReinterpretCast(std::move(_raw), _wtype, _loc);
-	if (auto const* nb = dynamic_cast<awst::ARC4StaticArray const*>(_wtype);
-		nb && nb->arraySize() > 0
-		&& static_cast<unsigned>(nb->arraySize()) < _size
-		&& [&]{ auto const* e = dynamic_cast<awst::ARC4UIntN const*>(
-			nb->elementType()); return e && e->n() == 8; }())
-	{
-		unsigned k = static_cast<unsigned>(nb->arraySize());
+	if (unsigned k = 0; isNarrowByteArray(_wtype, _size, k))
 		return awst::makeReinterpretCast(
 			awst::makeExtract(std::move(_raw), 0, static_cast<int>(k), _loc),
 			_wtype, _loc);
-	}
-	if (_wtype && _wtype->name() == "address"
-		&& dynamic_cast<awst::ARC4StaticArray const*>(_wtype) && _size <= 32)
+	if (isArc4Address(_wtype, _size))
 		return awst::makeReinterpretCast(
 			awst::makeLeftPad(std::move(_raw), 32 - _size, _loc), _wtype, _loc);
+	return nullptr;
+}
+
+} // namespace
+
+std::shared_ptr<awst::Expression> SlotWordCodec::packedBytesToNative(
+	std::shared_ptr<awst::Expression> _raw,
+	awst::WType const* _wtype,
+	solidity::frontend::Type const* _solType,
+	unsigned _size,
+	awst::SourceLocation const& _loc)
+{
+	if (auto native = tryUnpackScalarWord(_raw, _wtype, _solType, _size, _loc))
+		return native;
+	if (auto native = tryUnpackByteShaped(_raw, _wtype, _size, _loc))
+		return native;
 
 	Logger::instance().error(
 		"unsupported type '" + std::string(_wtype ? _wtype->name() : "<null>")

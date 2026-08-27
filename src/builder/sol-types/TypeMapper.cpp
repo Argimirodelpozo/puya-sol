@@ -64,6 +64,89 @@ bool reachesStructBeingMapped(
 }
 }
 
+namespace
+{
+using namespace solidity::frontend;
+
+/// Array / StringLiteral category: string, bytes, or ARC4 array of the
+/// width-preserving ARC4 element type.
+awst::WType const* mapArrayCategory(TypeMapper& _tm, Type const* _solType)
+{
+	auto const* arrType = dynamic_cast<ArrayType const*>(_solType);
+	if (!arrType)
+		return awst::WType::stringType();
+	if (arrType->isString())
+		return awst::WType::stringType();
+	if (arrType->isByteArrayOrString())
+		return awst::WType::bytesType();
+	// mapSolTypeToARC4 preserves exact bit widths (avoids uint8→uint64→arc4.uint64).
+	awst::WType const* arc4ElemType = _tm.mapSolTypeToARC4(arrType->baseType());
+	if (!arrType->isDynamicallySized())
+	{
+		int64_t len = static_cast<int64_t>(arrType->length());
+		return _tm.createType<awst::ARC4StaticArray>(arc4ElemType, len);
+	}
+	return _tm.createType<awst::ARC4DynamicArray>(arc4ElemType);
+}
+
+awst::WType const* mapRationalCategory(TypeMapper& _tm, Type const* _solType)
+{
+	auto const* ratType = dynamic_cast<RationalNumberType const*>(_solType);
+	if (!ratType)
+		return awst::WType::biguintType();
+	auto const* mobileType = ratType->mobileType();
+	if (mobileType)
+		return _tm.map(mobileType);
+	return awst::WType::biguintType();
+}
+
+awst::WType const* mapTupleCategory(TypeMapper& _tm, Type const* _solType)
+{
+	auto const* tupleType = dynamic_cast<TupleType const*>(_solType);
+	if (!tupleType)
+		return nullptr;
+	if (tupleType->components().empty())
+	{
+		// Empty tuple = void (e.g. return type of void function call)
+		return awst::WType::voidType();
+	}
+	std::vector<awst::WType const*> types;
+	for (auto const& comp: tupleType->components())
+		types.push_back(_tm.map(comp));
+	return _tm.createType<awst::WTuple>(std::move(types));
+}
+
+awst::WType const* mapFunctionCategory(TypeMapper& _tm, Type const* _solType)
+{
+	auto const* funcType = dynamic_cast<FunctionType const*>(_solType);
+	// External/DelegateCall carries appId + routing selector. The opt-in
+	// selector mode adds the Solidity selector as a separate field.
+	if (isExternalFunctionPointer(funcType))
+		return _tm.createType<awst::BytesWType>(
+			externalFunctionPointerWidth(_tm.profile()));
+	return awst::WType::uint64Type();
+}
+
+/// Meta-types carry no runtime value — type(X), modules, abi/block/msg magic,
+/// modifiers, inaccessible-dynamic; real ops route through dedicated paths — and
+/// array slices (`x[a:b]`) are modeled as bytes. Both keep the bytes fallback.
+/// Any OTHER unmapped, value-carrying type reaching here would silently become
+/// bytes and diverge from EVM, so refuse to compile (was a silent warning).
+awst::WType const* mapFallbackCategory(Type const* _solType, std::string const& _typeStr)
+{
+	auto const cat = _solType->category();
+	if (cat == Type::Category::TypeType || cat == Type::Category::Modifier
+		|| cat == Type::Category::Magic || cat == Type::Category::Module
+		|| cat == Type::Category::InaccessibleDynamic
+		|| cat == Type::Category::ArraySlice)
+		return awst::WType::bytesType();
+	Logger::instance().error(
+		"unsupported type '" + _typeStr + "' — no AVM mapping; refusing a "
+		"silent bytes fallback (would diverge from EVM semantics)");
+	return awst::WType::bytesType(); // keep building until the error aborts
+}
+} // namespace
+
 awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 {
 	using namespace solidity::frontend;
@@ -113,33 +196,8 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 
 	case Type::Category::StringLiteral:
 	case Type::Category::Array:
-	{
-		auto const* arrType = dynamic_cast<ArrayType const*>(_solType);
-		if (arrType)
-		{
-			if (arrType->isString())
-				result = awst::WType::stringType();
-			else if (arrType->isByteArrayOrString())
-				result = awst::WType::bytesType();
-			else
-			{
-						// mapSolTypeToARC4 preserves exact bit widths (avoids uint8→uint64→arc4.uint64).
-				awst::WType const* arc4ElemType = mapSolTypeToARC4(arrType->baseType());
-				if (!arrType->isDynamicallySized())
-				{
-					int64_t len = static_cast<int64_t>(arrType->length());
-					result = createType<awst::ARC4StaticArray>(arc4ElemType, len);
-				}
-				else
-				{
-					result = createType<awst::ARC4DynamicArray>(arc4ElemType);
-				}
-			}
-		}
-		else
-			result = awst::WType::stringType();
+		result = mapArrayCategory(*this, _solType);
 		break;
-	}
 
 	case Type::Category::Struct:
 	{
@@ -172,77 +230,20 @@ awst::WType const* TypeMapper::map(solidity::frontend::Type const* _solType)
 		break;
 
 	case Type::Category::RationalNumber:
-	{
-		auto const* ratType = dynamic_cast<RationalNumberType const*>(_solType);
-		if (ratType)
-		{
-			auto const* mobileType = ratType->mobileType();
-			if (mobileType)
-				result = map(mobileType);
-			else
-				result = awst::WType::biguintType();
-		}
-		else
-			result = awst::WType::biguintType();
+		result = mapRationalCategory(*this, _solType);
 		break;
-	}
 
 	case Type::Category::Tuple:
-	{
-		auto const* tupleType = dynamic_cast<TupleType const*>(_solType);
-		if (tupleType)
-		{
-			if (tupleType->components().empty())
-			{
-				// Empty tuple = void (e.g. return type of void function call)
-				result = awst::WType::voidType();
-			}
-			else
-			{
-				std::vector<awst::WType const*> types;
-				for (auto const& comp: tupleType->components())
-					types.push_back(map(comp));
-				result = createType<awst::WTuple>(std::move(types));
-			}
-		}
+		result = mapTupleCategory(*this, _solType);
 		break;
-	}
 
 	case Type::Category::Function:
-	{
-		auto const* funcType = dynamic_cast<FunctionType const*>(_solType);
-		// External/DelegateCall carries appId + routing selector. The opt-in
-		// selector mode adds the Solidity selector as a separate field.
-		if (isExternalFunctionPointer(funcType))
-			result = createType<awst::BytesWType>(
-				externalFunctionPointerWidth(m_profile));
-		else
-			result = awst::WType::uint64Type();
+		result = mapFunctionCategory(*this, _solType);
 		break;
-	}
 
 	default:
-	{
-		// Meta-types carry no runtime value — type(X), modules, abi/block/msg magic,
-		// modifiers, inaccessible-dynamic; real ops route through dedicated paths — and
-		// array slices (`x[a:b]`) are modeled as bytes. Both keep the bytes fallback.
-		// Any OTHER unmapped, value-carrying type reaching here would silently become
-		// bytes and diverge from EVM, so refuse to compile (was a silent warning).
-		auto const cat = _solType->category();
-		if (cat == Type::Category::TypeType || cat == Type::Category::Modifier
-			|| cat == Type::Category::Magic || cat == Type::Category::Module
-			|| cat == Type::Category::InaccessibleDynamic
-			|| cat == Type::Category::ArraySlice)
-			result = awst::WType::bytesType();
-		else
-		{
-			Logger::instance().error(
-				"unsupported type '" + typeStr + "' — no AVM mapping; refusing a "
-				"silent bytes fallback (would diverge from EVM semantics)");
-			result = awst::WType::bytesType(); // keep building until the error aborts
-		}
+		result = mapFallbackCategory(_solType, typeStr);
 		break;
-	}
 	}
 
 	if (result)
