@@ -19,6 +19,78 @@ namespace puyasol::builder::sol_ast
 
 using namespace solidity::frontend;
 
+namespace
+{
+
+// type(uintN).max / type(uintN).min, type(EnumType).max / .min.
+// Returns nullptr for other type arguments (matches the fallthrough).
+std::shared_ptr<awst::Expression> buildTypeBounds(
+	std::string const& member, Type const* typeArg,
+	awst::SourceLocation const& loc)
+{
+	if (auto const* intType = dynamic_cast<IntegerType const*>(typeArg))
+	{
+		// solc already computes both bounds as a 256-bit two's-complement u256
+		// (min() = s2u(minValue()), max() = the signed/unsigned max). Route through
+		// the shared canonicaliser for the right slot width + wtype — replaces the
+		// hand-rolled TC math that had to stay in lockstep with SolLiteral.
+		solidity::u256 tc = (member == "max") ? intType->max() : intType->min();
+		return builder::TypeCoercion::canonicalIntConstant(tc, intType->numBits(), loc);
+	}
+
+	if (auto const* enumType = dynamic_cast<EnumType const*>(typeArg))
+	{
+		auto e = awst::makeIntegerConstant((member == "max")
+			? std::to_string(enumType->numberOfMembers() - 1)
+			: std::string("0"), loc);
+		return e;
+	}
+	return nullptr;
+}
+
+// type(I).interfaceId uses solc's EIP-165 value under --evm-selectors.
+// Compatibility mode XORs ARC-4 MethodConstants so interface IDs remain
+// consistent with the selector values exposed by that mode.
+std::shared_ptr<awst::Expression> buildInterfaceId(
+	eb::ContractContext& ctx, Type const* typeArg,
+	awst::WType const* targetType, awst::SourceLocation const& loc)
+{
+	if (auto const* contractType = dynamic_cast<ContractType const*>(typeArg))
+	{
+		if (builder::SelectorSemantics::enabled(ctx.typeMapper))
+			return awst::makeBytesConstant(
+				builder::SolcFacts::interfaceId(
+					contractType->contractDefinition()),
+				loc, awst::BytesEncoding::Base16, targetType);
+
+		std::shared_ptr<awst::Expression> acc;
+		// interfaceFunctionList(false) = own functions only, no inherited (mirrors solc).
+		for (auto const& it: contractType->contractDefinition().interfaceFunctionList(false))
+		{
+			// ARC-4 selector so the XOR matches the XOR of f.selector values.
+			auto const* fd = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
+				&it.second->declaration());
+			auto sig = fd
+				? eb::InnerCallHandlers::buildMethodSelector(ctx, fd)
+				: it.second->externalSignature();
+			auto sel = awst::makeMethodConstant(
+				sig, awst::WType::bytesType(), loc);
+			if (!acc)
+				acc = std::move(sel);
+			else
+				acc = awst::makeBytesBinOp(
+					std::move(acc), awst::BytesBinaryOperator::BitXor,
+					std::move(sel), loc);
+		}
+		if (acc)
+			return awst::makeReinterpretCast(std::move(acc), targetType, loc);
+	}
+	return awst::makeBytesConstant(
+		{0, 0, 0, 0}, loc, awst::BytesEncoding::Base16, targetType);
+}
+
+} // anonymous namespace
+
 std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 {
 	std::string member = memberName();
@@ -31,28 +103,9 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 	else if (auto const* typeType = dynamic_cast<TypeType const*>(baseType))
 		typeArg = typeType->actualType();
 
-	// type(uintN).max / type(uintN).min
 	if (member == "max" || member == "min")
-	{
-		if (auto const* intType = dynamic_cast<IntegerType const*>(typeArg))
-		{
-			// solc already computes both bounds as a 256-bit two's-complement u256
-			// (min() = s2u(minValue()), max() = the signed/unsigned max). Route through
-			// the shared canonicaliser for the right slot width + wtype — replaces the
-			// hand-rolled TC math that had to stay in lockstep with SolLiteral.
-			solidity::u256 tc = (member == "max") ? intType->max() : intType->min();
-			return builder::TypeCoercion::canonicalIntConstant(tc, intType->numBits(), m_loc);
-		}
-
-		// type(EnumType).max / .min
-		if (auto const* enumType = dynamic_cast<EnumType const*>(typeArg))
-		{
-			auto e = awst::makeIntegerConstant((member == "max")
-				? std::to_string(enumType->numberOfMembers() - 1)
-				: std::string("0"), m_loc);
-			return e;
-		}
-	}
+		if (auto bounds = buildTypeBounds(member, typeArg, m_loc))
+			return bounds;
 
 	// type(C).name → contract name as string
 	if (member == "name" && typeArg)
@@ -78,45 +131,10 @@ std::shared_ptr<awst::Expression> SolMetaTypeAccess::toAwst()
 		return awst::makeBytesConstant({}, m_loc);
 	}
 
-	// type(I).interfaceId uses solc's EIP-165 value under --evm-selectors.
-	// Compatibility mode XORs ARC-4 MethodConstants so interface IDs remain
-	// consistent with the selector values exposed by that mode.
 	if (member == "interfaceId")
-	{
-		auto* targetType = m_ctx.typeMapper.map(m_memberAccess.annotation().type);
-		if (auto const* contractType = dynamic_cast<ContractType const*>(typeArg))
-		{
-			if (builder::SelectorSemantics::enabled(m_ctx.typeMapper))
-				return awst::makeBytesConstant(
-					builder::SolcFacts::interfaceId(
-						contractType->contractDefinition()),
-					m_loc, awst::BytesEncoding::Base16, targetType);
-
-			std::shared_ptr<awst::Expression> acc;
-			// interfaceFunctionList(false) = own functions only, no inherited (mirrors solc).
-			for (auto const& it: contractType->contractDefinition().interfaceFunctionList(false))
-			{
-				// ARC-4 selector so the XOR matches the XOR of f.selector values.
-				auto const* fd = dynamic_cast<solidity::frontend::FunctionDefinition const*>(
-					&it.second->declaration());
-				auto sig = fd
-					? eb::InnerCallHandlers::buildMethodSelector(m_ctx, fd)
-					: it.second->externalSignature();
-				auto sel = awst::makeMethodConstant(
-					sig, awst::WType::bytesType(), m_loc);
-				if (!acc)
-					acc = std::move(sel);
-				else
-					acc = awst::makeBytesBinOp(
-						std::move(acc), awst::BytesBinaryOperator::BitXor,
-						std::move(sel), m_loc);
-			}
-			if (acc)
-				return awst::makeReinterpretCast(std::move(acc), targetType, m_loc);
-		}
-		return awst::makeBytesConstant(
-			{0, 0, 0, 0}, m_loc, awst::BytesEncoding::Base16, targetType);
-	}
+		return buildInterfaceId(
+			m_ctx, typeArg,
+			m_ctx.typeMapper.map(m_memberAccess.annotation().type), m_loc);
 
 	return nullptr;
 }
