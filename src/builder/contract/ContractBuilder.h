@@ -411,6 +411,46 @@ private:
 	/// If buildApprovalProgram detects box writes in the constructor,
 	/// it populates this with an auto-generated __postInit method.
 	/// Synthesise the deferred-constructor `__postInit` method (PostInitBuilder.cpp).
+	// ── buildApprovalProgram phases (ApprovalProgramBuilder.cpp) ────────
+	void emitSlotModeStateVarInit(
+		solidity::frontend::VariableDeclaration const& _var,
+		std::vector<std::shared_ptr<awst::Statement>>& targetBody,
+		awst::SourceLocation const& loc);
+	void emitStateVarInitFor(
+		solidity::frontend::ContractDefinition const& base,
+		std::vector<std::shared_ptr<awst::Statement>>& targetBody,
+		std::set<int64_t>& stateVarInitialized,
+		awst::SourceLocation const& loc);
+	void collectBoxArrayVars(
+		solidity::frontend::ContractDefinition const& _contract,
+		awst::SourceLocation const& loc);
+	void emitCtorParamDecode(
+		solidity::frontend::FunctionDefinition const& _constructor,
+		std::shared_ptr<awst::Block> const& createBlock,
+		bool needsPostInit,
+		awst::SourceLocation const& loc);
+	std::map<solidity::frontend::ContractDefinition const*,
+		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const*>
+	collectExplicitBaseArgs(
+		solidity::frontend::ContractDefinition const& _contract);
+	void bindBaseCtorArgs(
+		solidity::frontend::FunctionDefinition const& baseCtor,
+		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const& args,
+		std::shared_ptr<awst::Block> const& createBlock);
+	void emitInlineCtorPath(
+		solidity::frontend::ContractDefinition const& _contract,
+		solidity::frontend::FunctionDefinition const* constructor,
+		awst::ContractMethod& method,
+		std::shared_ptr<awst::Block> const& createBlock,
+		std::map<solidity::frontend::ContractDefinition const*,
+			std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const*>
+			const& explicitBaseArgs,
+		std::set<int64_t>& stateVarInitialized);
+	void emitTransientBlobInit(
+		awst::Block& body, awst::SourceLocation const& loc);
+	void emitMemoryBlobInit(
+		awst::Block& body, awst::SourceLocation const& loc);
+
 	void buildPostInitMethod(
 		solidity::frontend::ContractDefinition const& _contract,
 		std::string const& _contractName,
