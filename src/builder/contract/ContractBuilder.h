@@ -108,6 +108,9 @@ void inlineModifiers(
 
 /// Builds an AWST Contract from a Solidity ContractDefinition (approval/clear programs,
 /// ARC4 methods, modifier inlining, super-call resolution, __postInit generation).
+struct SignedReturnInfo;
+struct UnsignedMaskInfo;
+
 class ContractBuilder
 {
 public:
@@ -269,6 +272,46 @@ private:
 		std::string const& _nameOverride = "",
 		bool _asInternalCopy = false
 	);
+
+	// ── buildFunction phases (FunctionBuilder.cpp) ──────────────────────
+	// SignedReturnInfo/UnsignedMaskInfo are defined in ReturnRewriter.h
+	// (forward-declared above the class).
+	void buildMethodSignature(
+		awst::ContractMethod& method,
+		solidity::frontend::FunctionDefinition const& _func,
+		std::string const& _contractName,
+		std::string const& _nameOverride,
+		std::set<int64_t> const& asmSlotParamIds);
+	void computeMethodReturnType(
+		awst::ContractMethod& method,
+		solidity::frontend::FunctionDefinition const& _func,
+		bool funcHasInlineAssembly,
+		std::vector<SignedReturnInfo>& signedReturns,
+		std::vector<UnsignedMaskInfo>& unsignedMasks);
+	void setupBodyParamContext(
+		awst::ContractMethod const& method,
+		solidity::frontend::FunctionDefinition const& _func);
+	void registerBodyRefParams(
+		solidity::frontend::FunctionDefinition const& _func,
+		std::set<int64_t> const& asmSlotParamIds);
+	void prependNamedReturnInits(
+		awst::ContractMethod& method,
+		solidity::frontend::FunctionDefinition const& _func);
+	void synthesizeImplicitReturn(
+		awst::ContractMethod& method,
+		solidity::frontend::FunctionDefinition const& _func,
+		bool encodeReturnsAtBuildTime,
+		std::vector<ReturnWireElem> const& returnPlan,
+		bool funcHasInlineAssembly);
+	void prependAbiEntryChecks(
+		awst::ContractMethod& method,
+		solidity::frontend::FunctionDefinition const& _func);
+	void prependEnsureBudget(
+		awst::ContractMethod& method,
+		solidity::frontend::FunctionDefinition const& _func);
+	void maybePrependNonPayable(
+		awst::ContractMethod& method,
+		solidity::frontend::FunctionDefinition const& _func);
 
 	/// Build an ARC4 method config for a public/external function.
 	std::optional<awst::ARC4MethodConfig> buildARC4Config(
