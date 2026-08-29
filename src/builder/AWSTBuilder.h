@@ -94,6 +94,50 @@ private:
 		std::string const& _qualifiedName,
 		std::string const& _subroutineId,
 		std::string const& _libraryName);
+
+	// ── buildFreestandingSubroutine phases ──────────────────────────────
+	void buildFreestandingParams(
+		solidity::frontend::FunctionDefinition const& _func,
+		std::string const& _sourceFile,
+		awst::Subroutine& sub,
+		std::set<size_t> const& slotParams,
+		std::set<size_t>& mappingStorageParams,
+		std::set<size_t>& blobAggParams,
+		std::set<size_t>& evmSlotRefParams);
+	void collectFreestandingAugmentedParams(
+		solidity::frontend::FunctionDefinition const& _func,
+		std::set<size_t> const& mappingStorageParams,
+		std::set<size_t> const& blobAggParams,
+		std::vector<size_t>& storageParamIndices,
+		std::vector<size_t>& memoryRefParamIndices);
+	void computeFreestandingReturnType(
+		solidity::frontend::FunctionDefinition const& _func,
+		awst::Subroutine& sub,
+		std::vector<size_t> const& storageParamIndices,
+		std::vector<size_t> const& memoryRefParamIndices);
+	void registerFreestandingParamContext(
+		solidity::frontend::FunctionDefinition const& _func,
+		sol_ast::FunctionContext& fnCtx,
+		awst::Subroutine const& sub,
+		std::set<size_t> const& slotParams,
+		std::set<size_t> const& mappingStorageParams,
+		std::set<size_t> const& blobAggParams,
+		std::set<size_t> const& evmSlotRefParams);
+	void registerFreestandingReturnParams(
+		solidity::frontend::FunctionDefinition const& _func,
+		sol_ast::FunctionContext& fnCtx,
+		std::set<size_t> const& blobAggParams);
+	void prependFreestandingReturnInits(
+		solidity::frontend::FunctionDefinition const& _func,
+		awst::Subroutine& sub,
+		awst::SourceLocation const& loc);
+	void synthesizeFreestandingImplicitReturn(
+		solidity::frontend::FunctionDefinition const& _func,
+		awst::Subroutine& sub,
+		sol_ast::FunctionContext& fnCtx,
+		std::vector<size_t> const& storageParamIndices,
+		std::vector<size_t> const& memoryRefParamIndices,
+		awst::SourceLocation const& loc);
 };
 
 } // namespace puyasol::builder

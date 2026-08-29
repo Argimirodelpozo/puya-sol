@@ -238,44 +238,19 @@ void AWSTBuilder::translateFreeFunctions(
 	}
 }
 
-std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
+/// buildFreestandingSubroutine phase: params — mapping storage refs become
+/// bytes (runtime key prefix), slot-mode storage refs biguint slot handles,
+/// >4KB memory aggregates uint64 blob offsets.
+void AWSTBuilder::buildFreestandingParams(
 	solidity::frontend::FunctionDefinition const& _func,
 	std::string const& _sourceFile,
-	std::string const& _qualifiedName,
-	std::string const& _subroutineId,
-	std::string const& _libraryName)
+	awst::Subroutine& sub,
+	std::set<size_t> const& slotParams,
+	std::set<size_t>& mappingStorageParams,
+	std::set<size_t>& blobAggParams,
+	std::set<size_t>& evmSlotRefParams)
 {
-	auto sub = std::make_shared<awst::Subroutine>();
-	sub->inlineOpt = false; // Prevent puya from inlining large subroutines
-
-	// EIP-1967 admin-slot uses lowered in this body attach to the contracts
-	// whose call graphs reach this function, not to whichever contract builds
-	// first (BuildArtifacts::noteErc1967AdminUse).
-	struct FreestandingIdGuard
-	{
-		BuildArtifacts& artifacts;
-		~FreestandingIdGuard() { artifacts.currentFreestandingFunctionId = -1; }
-	} freestandingIdGuard{m_session.artifacts};
-	m_session.artifacts.currentFreestandingFunctionId = _func.id();
-
-	awst::SourceLocation loc = m_session.sourceMap.toAwstLoc(
-		_sourceFile, _func.location());
-
-	sub->sourceLocation = loc;
-	sub->id = _subroutineId;
-	sub->name = _qualifiedName;
-
-	// Documentation
-	if (_func.documentation())
-		sub->documentation.description = *_func.documentation()->text();
-
 	// Parameters — mapping storage refs become bytes (runtime key prefix).
-	std::set<size_t> mappingStorageParams;
-	std::set<size_t> blobAggParams;
-	std::set<size_t> evmSlotRefParams;
-	// Struct storage-ref params used via `.slot` in asm (solady storage libs):
-	// travel as a box-key handle so `s.slot` resolves (see SolInlineAssembly).
-	auto slotParams = structRefParamsUsedAsAsmSlot(_func);
 	for (size_t pi = 0; pi < _func.parameters().size(); ++pi)
 	{
 		auto const& param = _func.parameters()[pi];
@@ -315,13 +290,23 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		}
 		else
 			arg.wtype = m_session.typeMapper.map(param->type());
-		sub->args.push_back(std::move(arg));
+		sub.args.push_back(std::move(arg));
 	}
 
+}
+
+/// buildFreestandingSubroutine phase: collect the storage/memory param
+/// indices whose post-call values thread back through the augmented return.
+void AWSTBuilder::collectFreestandingAugmentedParams(
+	solidity::frontend::FunctionDefinition const& _func,
+	std::set<size_t> const& mappingStorageParams,
+	std::set<size_t> const& blobAggParams,
+	std::vector<size_t>& storageParamIndices,
+	std::vector<size_t>& memoryRefParamIndices)
+{
 	// Storage-ref params: augment return so callers can write the modified
 	// value back. Mapping refs excluded (shared box key, no write-back).
 	// Private functions excluded: puya threads their mutable args internally.
-	std::vector<size_t> storageParamIndices;
 	bool isMutating = _func.stateMutability() != solidity::frontend::StateMutability::View
 		&& _func.stateMutability() != solidity::frontend::StateMutability::Pure;
 	bool isPrivate = _func.visibility() == solidity::frontend::Visibility::Private;
@@ -340,7 +325,6 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	// private functions, bytes/string/mapping, and read-only params. The
 	// read-only skip matters: Honk.Proof (14KB) would blow the AVM 4096B
 	// per-stack-element cap if included unconditionally.
-	std::vector<size_t> memoryRefParamIndices;
 	if (!isPrivate && _func.isImplemented())
 	{
 		auto isMemRefType = [](solidity::frontend::Type const* t) {
@@ -360,6 +344,16 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		});
 	}
 
+}
+
+/// buildFreestandingSubroutine phase: return type, augmented with
+/// storage/memory param types for write-back.
+void AWSTBuilder::computeFreestandingReturnType(
+	solidity::frontend::FunctionDefinition const& _func,
+	awst::Subroutine& sub,
+	std::vector<size_t> const& storageParamIndices,
+	std::vector<size_t> const& memoryRefParamIndices)
+{
 	// Return type — augmented with storage/memory param types for write-back.
 	auto const& returnParams = _func.returnParameters();
 	{
@@ -379,37 +373,32 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				types.push_back(rpW);
 		}
 		for (size_t idx: storageParamIndices)
-			types.push_back(sub->args[idx].wtype);
+			types.push_back(sub.args[idx].wtype);
 		for (size_t idx: memoryRefParamIndices)
-			types.push_back(sub->args[idx].wtype);
+			types.push_back(sub.args[idx].wtype);
 
 		if (types.empty())
-			sub->returnType = awst::WType::voidType();
+			sub.returnType = awst::WType::voidType();
 		else if (types.size() == 1)
-			sub->returnType = types[0];
+			sub.returnType = types[0];
 		else
-			sub->returnType = m_session.typeMapper.createType<awst::WTuple>(std::move(types));
+			sub.returnType = m_session.typeMapper.createType<awst::WTuple>(std::move(types));
 	}
 
-	sub->pure = _func.stateMutability() == solidity::frontend::StateMutability::Pure;
+}
 
-	// Build body. ContractContext stores overloadedNames as const& — must
-	// pass a long-lived object (a temporary `{}` would dangle → SIGSEGV).
-	static std::unordered_set<std::string> const EMPTY_OVERLOAD_NAMES;
-	eb::ContractContext exprBuilder(
-		m_session.typeMapper, *m_storageMapper, _sourceFile, _libraryName,
-		EMPTY_OVERLOAD_NAMES, m_functionSymbols, m_session.functionPointers
-	);
-	exprBuilder.selectorContracts = m_selectorContracts;
-
-	sol_ast::TranslationContext tr{exprBuilder, m_session.typeMapper, _sourceFile};
-	auto trGuard = exprBuilder.pushScopeRaii(&tr);
-	sol_ast::FunctionContext fnCtx{tr, {}, sub->returnType, {}};
-	fnCtx.callableId = _func.id();
-	for (auto const& rp: _func.returnParameters())
-		fnCtx.returnSolTypes.push_back(rp->type());
-	auto fnGuard = exprBuilder.pushScopeRaii(&fnCtx);
-
+/// buildFreestandingSubroutine phase: register param context on the
+/// FunctionContext (mapping-key params, slot handles, asm param/bit-width
+/// context, box-key struct params).
+void AWSTBuilder::registerFreestandingParamContext(
+	solidity::frontend::FunctionDefinition const& _func,
+	sol_ast::FunctionContext& fnCtx,
+	awst::Subroutine const& sub,
+	std::set<size_t> const& slotParams,
+	std::set<size_t> const& mappingStorageParams,
+	std::set<size_t> const& blobAggParams,
+	std::set<size_t> const& evmSlotRefParams)
+{
 	// Register mapping-storage-ref params (must be after FunctionContext push;
 	// setMappingKeyParam writes into nearestFunction(currentScope)).
 	for (size_t idx: mappingStorageParams)
@@ -459,15 +448,21 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				bitWidths[rp->name()] = it->bits;
 		}
 		fnCtx.params = paramContext;
-		fnCtx.returnType = sub->returnType;
+		fnCtx.returnType = sub.returnType;
 		fnCtx.paramBitWidths = bitWidths;
 		fnCtx.boxKeyStructParams = std::move(boxKeyStructParams);
 	}
 
-	// Construct the function-body block context for the body.
-	auto blk = sol_ast::BlockContext::top(fnCtx);
-	auto blkGuard = exprBuilder.pushScopeRaii(&blk);
+}
 
+/// buildFreestandingSubroutine phase: register storage/blob return params
+/// and blob param offsets on the FunctionContext.
+void AWSTBuilder::registerFreestandingReturnParams(
+	solidity::frontend::FunctionDefinition const& _func,
+	sol_ast::FunctionContext& fnCtx,
+	std::set<size_t> const& blobAggParams)
+{
+	auto const& returnParams = _func.returnParameters();
 	// Register mapping storage-ref return params (e.g. `returns (mapping(K=>V) storage r)`):
 	// r[k] box-accesses using r's runtime bytes value as the holder prefix.
 	// Slot mode: named storage returns are biguint slot handles instead.
@@ -503,56 +498,16 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		fnCtx.setBlobAggregate(param->id(), pname);
 	}
 
-	// Promote memory aggregates used as asm-pointers (bytes/string buffers in
-	// internal/library functions, e.g. OZ Strings.toString) to blob-backed before
-	// body translation — the contract-method path does this in ContractBuilder's
-	// buildBlock; the free/library path builds the body directly, so mark here too.
-	markAssemblyAggregates(fnCtx, _func.body());
+}
 
-	// --evm-memory-layout: spill asm-pointer memory params (the LIBRARY path —
-	// Morpho's MarketParamsLib.id(), Solady's LibString helpers, ...).
-	std::vector<std::shared_ptr<awst::Statement>> asmParamSpills;
-	emitAsmParamSpills(m_session.typeMapper, fnCtx, _func.body(), _sourceFile,
-		asmParamSpills);
-
-	sub->body = sol_ast::buildBlock(blk, _func.body());
-	if (!asmParamSpills.empty())
-		sub->body->body.insert(sub->body->body.begin(),
-			std::make_move_iterator(asmParamSpills.begin()),
-			std::make_move_iterator(asmParamSpills.end()));
-
-	// Inline modifier bodies. currentContract=null (no virtual-override resolution).
-	if (!_func.modifiers().empty())
-	{
-		std::vector<solidity::frontend::VariableDeclaration const*> namedReturnList;
-		for (auto const& rp: returnParams)
-			if (!rp->name().empty())
-				namedReturnList.push_back(rp.get());
-
-		std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyList;
-		for (size_t idx: mappingStorageParams)
-			mappingKeyList.push_back(_func.parameters()[idx].get());
-		for (auto const& rp: returnParams)
-		{
-			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-				&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
-				&& !rp->name().empty())
-			{
-				mappingKeyList.push_back(rp.get());
-			}
-		}
-
-		std::vector<solidity::frontend::VariableDeclaration const*> blobAggList;
-		for (size_t idx: blobAggParams)
-			blobAggList.push_back(_func.parameters()[idx].get());
-
-		fnCtx.namedReturns = std::move(namedReturnList);
-		fnCtx.mappingKeyParams = std::move(mappingKeyList);
-		fnCtx.blobAggParams = std::move(blobAggList);
-		fnCtx.currentContract = nullptr;
-		inlineModifiers(fnCtx, _func, sub->body);
-	}
-
+/// buildFreestandingSubroutine phase: zero-initialize named return variables
+/// (Solidity implicit init) + blob-backed memory-return FMP binds/bumps.
+void AWSTBuilder::prependFreestandingReturnInits(
+	solidity::frontend::FunctionDefinition const& _func,
+	awst::Subroutine& sub,
+	awst::SourceLocation const& loc)
+{
+	auto const& returnParams = _func.returnParameters();
 	// Zero-initialize named return variables (Solidity implicit init).
 	{
 		std::vector<std::shared_ptr<awst::Statement>> inits;
@@ -640,28 +595,39 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 
 		if (!inits.empty())
 		{
-			sub->body->body.insert(
-				sub->body->body.begin(),
+			sub.body->body.insert(
+				sub.body->body.begin(),
 				std::make_move_iterator(inits.begin()),
 				std::make_move_iterator(inits.end())
 			);
 		}
 	}
 
+}
+
+namespace
+{
+/// buildFreestandingSubroutine phase: augment every return statement with
+/// the storage/memory-ref param values (flat tuple; bare type for void+1).
+void augmentFreestandingReturns(
+	awst::Subroutine& sub,
+	std::vector<size_t> const& storageParamIndices,
+	std::vector<size_t> const& memoryRefParamIndices)
+{
 	// Augment return statements to include storage/memory-ref param values.
 	if (!storageParamIndices.empty() || !memoryRefParamIndices.empty())
 	{
-		// sub->returnType is WTuple (multi-augmented) or a bare type (void+1 aug arg).
+		// sub.returnType is WTuple (multi-augmented) or a bare type (void+1 aug arg).
 		// TupleExpression with a non-WTuple wtype is invalid AWST — branch on shape.
 		bool returnIsTuple =
-			(dynamic_cast<awst::WTuple const*>(sub->returnType) != nullptr);
+			(dynamic_cast<awst::WTuple const*>(sub.returnType) != nullptr);
 		size_t totalAugmented = storageParamIndices.size() + memoryRefParamIndices.size();
 
 		// forEachReturnStatement covers ALL nesting (if/else, nested blocks,
 		// loops, switch) — the old hand-rolled walk recursed only IfElse, so
 		// an early `return` inside a loop kept its unaugmented value (the
 		// FunctionBuilder twin had the same gap).
-		forEachReturnStatement(sub->body->body, [&](awst::ReturnStatement& ret) {
+		forEachReturnStatement(sub.body->body, [&](awst::ReturnStatement& ret) {
 			if (!returnIsTuple)
 			{
 				// Bare return type: one augmented arg. Only handle bare
@@ -672,14 +638,14 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 						? storageParamIndices[0]
 						: memoryRefParamIndices[0];
 					ret.value = awst::makeVarExpression(
-						sub->args[idx].name, sub->args[idx].wtype,
+						sub.args[idx].name, sub.args[idx].wtype,
 						ret.sourceLocation);
 				}
 				// else: leave as-is; puya boundary will report the mismatch.
 			}
 			else
 			{
-				auto tuple = awst::makeTupleExpression(sub->returnType, ret.sourceLocation);
+				auto tuple = awst::makeTupleExpression(sub.returnType, ret.sourceLocation);
 				if (ret.value)
 				{
 					// Flatten existing tuple items (WTuple is flat;
@@ -697,14 +663,14 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				for (size_t idx: storageParamIndices)
 				{
 					auto pv = awst::makeVarExpression(
-						sub->args[idx].name, sub->args[idx].wtype,
+						sub.args[idx].name, sub.args[idx].wtype,
 						ret.sourceLocation);
 					tuple->items.push_back(std::move(pv));
 				}
 				for (size_t idx: memoryRefParamIndices)
 				{
 					auto pv = awst::makeVarExpression(
-						sub->args[idx].name, sub->args[idx].wtype,
+						sub.args[idx].name, sub.args[idx].wtype,
 						ret.sourceLocation);
 					tuple->items.push_back(std::move(pv));
 				}
@@ -713,24 +679,25 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 		});
 	}
 
-	// Synthesize body for assembly-only library functions with known semantics.
-	if (sub->body->body.empty() && _func.name() == "efficientKeccak256"
-		&& _func.parameters().size() == 2)
-	{
-		auto varA = awst::makeVarExpression(_func.parameters()[0]->name(), m_session.typeMapper.map(_func.parameters()[0]->type()), loc);
-		auto varB = awst::makeVarExpression(_func.parameters()[1]->name(), m_session.typeMapper.map(_func.parameters()[1]->type()), loc);
-		auto concat = awst::makeConcat(std::move(varA), std::move(varB), loc);
-		auto hash = awst::makeKeccak256(std::move(concat), loc);
-		auto cast = awst::makeReinterpretCast(std::move(hash), sub->returnType, loc);
-		auto ret = awst::makeReturnStatement(std::move(cast), loc);
-		sub->body->body.push_back(std::move(ret));
-	}
+}
+} // anonymous namespace
 
+/// buildFreestandingSubroutine phase: synthesize the implicit fall-through
+/// return (augmented args / named values / default zero).
+void AWSTBuilder::synthesizeFreestandingImplicitReturn(
+	solidity::frontend::FunctionDefinition const& _func,
+	awst::Subroutine& sub,
+	sol_ast::FunctionContext& fnCtx,
+	std::vector<size_t> const& storageParamIndices,
+	std::vector<size_t> const& memoryRefParamIndices,
+	awst::SourceLocation const& loc)
+{
+	auto const& returnParams = _func.returnParameters();
 	// Synthesize implicit return on fall-through:
 	//  1. Void + augmentation → return augmented args.
 	//  2. Named returns → return named values.
 	//  3. Otherwise → makeDefaultValue(returnType).
-	if (!awst::blockAlwaysTerminates(*sub->body)
+	if (!awst::blockAlwaysTerminates(*sub.body)
 		&& (!returnParams.empty() || !storageParamIndices.empty()
 			|| !memoryRefParamIndices.empty()))
 	{
@@ -749,24 +716,24 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				size_t idx = !storageParamIndices.empty()
 					? storageParamIndices[0]
 					: memoryRefParamIndices[0];
-				implicitReturn->value = awst::makeVarExpression(sub->args[idx].name, sub->args[idx].wtype, loc);
+				implicitReturn->value = awst::makeVarExpression(sub.args[idx].name, sub.args[idx].wtype, loc);
 			}
 			else
 			{
-				auto tuple = awst::makeTupleExpression(sub->returnType, loc);
+				auto tuple = awst::makeTupleExpression(sub.returnType, loc);
 				for (size_t idx: storageParamIndices)
-					tuple->items.push_back(awst::makeVarExpression(sub->args[idx].name, sub->args[idx].wtype, loc));
+					tuple->items.push_back(awst::makeVarExpression(sub.args[idx].name, sub.args[idx].wtype, loc));
 				for (size_t idx: memoryRefParamIndices)
-					tuple->items.push_back(awst::makeVarExpression(sub->args[idx].name, sub->args[idx].wtype, loc));
+					tuple->items.push_back(awst::makeVarExpression(sub.args[idx].name, sub.args[idx].wtype, loc));
 				implicitReturn->value = std::move(tuple);
 			}
-			sub->body->body.push_back(std::move(implicitReturn));
+			sub.body->body.push_back(std::move(implicitReturn));
 		}
 		else if (hasNamedReturns)
 		{
 			auto implicitReturn = awst::makeReturnStatement(nullptr, loc);
 
-			// Include augmented args after named-return values to match sub->returnType.
+			// Include augmented args after named-return values to match sub.returnType.
 			if (returnParams.size() == 1 && totalAugmented2 == 0
 				&& returnParams[0]->referenceLocation()
 					== solidity::frontend::VariableDeclaration::Location::Memory
@@ -780,7 +747,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 					"__blobagg_off_" + std::to_string(returnParams[0]->id()),
 					loc, reads);
 				for (auto& st: reads)
-					sub->body->body.push_back(std::move(st));
+					sub.body->body.push_back(std::move(st));
 			}
 			else if (returnParams.size() == 1 && totalAugmented2 == 0)
 			{
@@ -827,7 +794,7 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 							"__blobagg_off_" + std::to_string(rp->id()),
 							loc, reads);
 						for (auto& st: reads)
-							sub->body->body.push_back(std::move(st));
+							sub.body->body.push_back(std::move(st));
 						tuple->items.push_back(std::move(value));
 					}
 					else
@@ -835,23 +802,173 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 				}
 				for (size_t idx: storageParamIndices)
 					tuple->items.push_back(awst::makeVarExpression(
-						sub->args[idx].name, sub->args[idx].wtype, loc));
+						sub.args[idx].name, sub.args[idx].wtype, loc));
 				for (size_t idx: memoryRefParamIndices)
 					tuple->items.push_back(awst::makeVarExpression(
-						sub->args[idx].name, sub->args[idx].wtype, loc));
-				tuple->wtype = sub->returnType;
+						sub.args[idx].name, sub.args[idx].wtype, loc));
+				tuple->wtype = sub.returnType;
 				implicitReturn->value = std::move(tuple);
 			}
 
-			sub->body->body.push_back(std::move(implicitReturn));
+			sub.body->body.push_back(std::move(implicitReturn));
 		}
 		else
 		{
 			// No named returns: return zero default value.
-			auto defReturn = awst::makeReturnStatement(StorageMapper::makeDefaultValue(sub->returnType, loc), loc);
-			sub->body->body.push_back(std::move(defReturn));
+			auto defReturn = awst::makeReturnStatement(StorageMapper::makeDefaultValue(sub.returnType, loc), loc);
+			sub.body->body.push_back(std::move(defReturn));
 		}
 	}
+
+}
+
+std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
+	solidity::frontend::FunctionDefinition const& _func,
+	std::string const& _sourceFile,
+	std::string const& _qualifiedName,
+	std::string const& _subroutineId,
+	std::string const& _libraryName)
+{
+	auto sub = std::make_shared<awst::Subroutine>();
+	sub->inlineOpt = false; // Prevent puya from inlining large subroutines
+
+	// EIP-1967 admin-slot uses lowered in this body attach to the contracts
+	// whose call graphs reach this function, not to whichever contract builds
+	// first (BuildArtifacts::noteErc1967AdminUse).
+	struct FreestandingIdGuard
+	{
+		BuildArtifacts& artifacts;
+		~FreestandingIdGuard() { artifacts.currentFreestandingFunctionId = -1; }
+	} freestandingIdGuard{m_session.artifacts};
+	m_session.artifacts.currentFreestandingFunctionId = _func.id();
+
+	awst::SourceLocation loc = m_session.sourceMap.toAwstLoc(
+		_sourceFile, _func.location());
+
+	sub->sourceLocation = loc;
+	sub->id = _subroutineId;
+	sub->name = _qualifiedName;
+
+	// Documentation
+	if (_func.documentation())
+		sub->documentation.description = *_func.documentation()->text();
+
+	// Struct storage-ref params used via `.slot` in asm (solady storage libs):
+	// travel as a box-key handle so `s.slot` resolves (see SolInlineAssembly).
+	auto slotParams = structRefParamsUsedAsAsmSlot(_func);
+
+	std::set<size_t> mappingStorageParams;
+	std::set<size_t> blobAggParams;
+	std::set<size_t> evmSlotRefParams;
+	buildFreestandingParams(_func, _sourceFile, *sub, slotParams,
+		mappingStorageParams, blobAggParams, evmSlotRefParams);
+
+	std::vector<size_t> storageParamIndices;
+	std::vector<size_t> memoryRefParamIndices;
+	collectFreestandingAugmentedParams(_func, mappingStorageParams,
+		blobAggParams, storageParamIndices, memoryRefParamIndices);
+
+	computeFreestandingReturnType(
+		_func, *sub, storageParamIndices, memoryRefParamIndices);
+
+	sub->pure = _func.stateMutability() == solidity::frontend::StateMutability::Pure;
+
+	// Build body. ContractContext stores overloadedNames as const& — must
+	// pass a long-lived object (a temporary `{}` would dangle → SIGSEGV).
+	static std::unordered_set<std::string> const EMPTY_OVERLOAD_NAMES;
+	eb::ContractContext exprBuilder(
+		m_session.typeMapper, *m_storageMapper, _sourceFile, _libraryName,
+		EMPTY_OVERLOAD_NAMES, m_functionSymbols, m_session.functionPointers
+	);
+	exprBuilder.selectorContracts = m_selectorContracts;
+
+	sol_ast::TranslationContext tr{exprBuilder, m_session.typeMapper, _sourceFile};
+	auto trGuard = exprBuilder.pushScopeRaii(&tr);
+	sol_ast::FunctionContext fnCtx{tr, {}, sub->returnType, {}};
+	fnCtx.callableId = _func.id();
+	for (auto const& rp: _func.returnParameters())
+		fnCtx.returnSolTypes.push_back(rp->type());
+	auto fnGuard = exprBuilder.pushScopeRaii(&fnCtx);
+
+	registerFreestandingParamContext(_func, fnCtx, *sub, slotParams,
+		mappingStorageParams, blobAggParams, evmSlotRefParams);
+
+	// Construct the function-body block context for the body.
+	auto blk = sol_ast::BlockContext::top(fnCtx);
+	auto blkGuard = exprBuilder.pushScopeRaii(&blk);
+
+	registerFreestandingReturnParams(_func, fnCtx, blobAggParams);
+
+	// Promote memory aggregates used as asm-pointers (bytes/string buffers in
+	// internal/library functions, e.g. OZ Strings.toString) to blob-backed before
+	// body translation — the contract-method path does this in ContractBuilder's
+	// buildBlock; the free/library path builds the body directly, so mark here too.
+	markAssemblyAggregates(fnCtx, _func.body());
+
+	// --evm-memory-layout: spill asm-pointer memory params (the LIBRARY path —
+	// Morpho's MarketParamsLib.id(), Solady's LibString helpers, ...).
+	std::vector<std::shared_ptr<awst::Statement>> asmParamSpills;
+	emitAsmParamSpills(m_session.typeMapper, fnCtx, _func.body(), _sourceFile,
+		asmParamSpills);
+
+	sub->body = sol_ast::buildBlock(blk, _func.body());
+	if (!asmParamSpills.empty())
+		sub->body->body.insert(sub->body->body.begin(),
+			std::make_move_iterator(asmParamSpills.begin()),
+			std::make_move_iterator(asmParamSpills.end()));
+
+	// Inline modifier bodies. currentContract=null (no virtual-override resolution).
+	if (!_func.modifiers().empty())
+	{
+		auto const& returnParams = _func.returnParameters();
+		std::vector<solidity::frontend::VariableDeclaration const*> namedReturnList;
+		for (auto const& rp: returnParams)
+			if (!rp->name().empty())
+				namedReturnList.push_back(rp.get());
+
+		std::vector<solidity::frontend::VariableDeclaration const*> mappingKeyList;
+		for (size_t idx: mappingStorageParams)
+			mappingKeyList.push_back(_func.parameters()[idx].get());
+		for (auto const& rp: returnParams)
+		{
+			if (rp->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+				&& dynamic_cast<solidity::frontend::MappingType const*>(rp->type())
+				&& !rp->name().empty())
+			{
+				mappingKeyList.push_back(rp.get());
+			}
+		}
+
+		std::vector<solidity::frontend::VariableDeclaration const*> blobAggList;
+		for (size_t idx: blobAggParams)
+			blobAggList.push_back(_func.parameters()[idx].get());
+
+		fnCtx.namedReturns = std::move(namedReturnList);
+		fnCtx.mappingKeyParams = std::move(mappingKeyList);
+		fnCtx.blobAggParams = std::move(blobAggList);
+		fnCtx.currentContract = nullptr;
+		inlineModifiers(fnCtx, _func, sub->body);
+	}
+
+	prependFreestandingReturnInits(_func, *sub, loc);
+
+	augmentFreestandingReturns(*sub, storageParamIndices, memoryRefParamIndices);
+
+	// Synthesize body for assembly-only library functions with known semantics.
+	if (sub->body->body.empty() && _func.name() == "efficientKeccak256"
+		&& _func.parameters().size() == 2)
+	{
+		auto varA = awst::makeVarExpression(_func.parameters()[0]->name(), m_session.typeMapper.map(_func.parameters()[0]->type()), loc);
+		auto varB = awst::makeVarExpression(_func.parameters()[1]->name(), m_session.typeMapper.map(_func.parameters()[1]->type()), loc);
+		auto concat = awst::makeConcat(std::move(varA), std::move(varB), loc);
+		auto hash = awst::makeKeccak256(std::move(concat), loc);
+		auto cast = awst::makeReinterpretCast(std::move(hash), sub->returnType, loc);
+		auto ret = awst::makeReturnStatement(std::move(cast), loc);
+		sub->body->body.push_back(std::move(ret));
+	}
+
+	synthesizeFreestandingImplicitReturn(
+		_func, *sub, fnCtx, storageParamIndices, memoryRefParamIndices, loc);
 
 	// 1967 slot constants surviving in a library/free body escaped into
 	// runtime data flow (the OZ StorageSlot shape) — warn here; contract
