@@ -14,6 +14,29 @@ public:
 	std::shared_ptr<awst::Expression> toAwst() override;
 
 private:
+	// ── toAwst base-shape rungs (SolArrayMethod.cpp) ────────────────────
+	std::shared_ptr<awst::Expression> buildSlotModeBytesPushPop(
+		std::string const& memberName,
+		solidity::frontend::Expression const& baseExpr,
+		solidity::frontend::ArrayType const* arrT);
+	std::shared_ptr<awst::Expression> buildSlotModeArrayPushPop(
+		std::string const& memberName,
+		solidity::frontend::Expression const& baseExpr,
+		solidity::frontend::ArrayType const* arrT);
+	std::shared_ptr<awst::Expression> tryBoxedElementPushPop(
+		std::string const& memberName,
+		solidity::frontend::Expression const& baseExpr);
+	std::shared_ptr<awst::Expression> tryStoragePointerPushPop(
+		std::string const& memberName,
+		solidity::frontend::Expression const& baseExpr);
+	std::shared_ptr<awst::Expression> tryStateBytesPushPop(
+		std::string const& memberName,
+		solidity::frontend::VariableDeclaration const& _varDecl);
+	std::shared_ptr<awst::Expression> tryChainedFieldPushPop(
+		std::string const& memberName,
+		solidity::frontend::Expression const& baseExpr,
+		solidity::frontend::MemberAccess const& innerMA);
+
 	/// Handle push/pop on box-backed dynamic arrays.
 	std::shared_ptr<awst::Expression> handleBoxArray(
 		std::string const& _memberName,
