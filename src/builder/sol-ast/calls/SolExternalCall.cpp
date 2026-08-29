@@ -3,6 +3,7 @@
 /// Migrated from FunctionCallBuilder.cpp lines 3662-4084.
 
 #include "builder/sol-ast/calls/SolExternalCall.h"
+#include "builder/AwstShorthand.h"
 #include "builder/SolcFacts.h"
 #include "builder/abi/EvmAbiDecode.h"
 #include "builder/itxn/InnerCallHandlers.h"
@@ -82,19 +83,12 @@ std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
 
 	// `this` (CurrentApplicationAddress) is a hash, not \x00*24+app_id;
 	// use CurrentApplicationID directly.
-	if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_addrExpr.get()))
+	if (builder::shorthand::isCurrentAppAddressGlobal(_addrExpr.get()))
 	{
-		if (intrinsic->opCode == "global" && !intrinsic->immediates.empty())
-		{
-			auto const* imm = std::get_if<std::string>(&intrinsic->immediates[0]);
-			if (imm && *imm == "CurrentApplicationAddress")
-			{
-				auto appId = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), m_loc);
+		auto appId = awst::makeGlobal(std::string("CurrentApplicationID"), awst::WType::uint64Type(), m_loc);
 
-				auto cast = awst::makeAsApplication(std::move(appId), m_loc);
-				return cast;
-			}
-		}
+		auto cast = awst::makeAsApplication(std::move(appId), m_loc);
+		return cast;
 	}
 
 	std::shared_ptr<awst::Expression> bytesExpr = std::move(_addrExpr);

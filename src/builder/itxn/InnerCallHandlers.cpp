@@ -3,6 +3,7 @@
 /// and precompile routing.
 
 #include "builder/itxn/InnerCallHandlers.h"
+#include "builder/AwstShorthand.h"
 #include "awst/NameGen.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/abi/AbiEncoderBuilder.h"
@@ -530,15 +531,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
 namespace
 {
 /// Receiver lowers to `global CurrentApplicationAddress` — a self-call.
-bool isCurrentAppAddressReceiver(awst::Expression const* receiver)
-{
-	if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(receiver))
-		if (intrinsic->opCode == "global" && !intrinsic->immediates.empty())
-			if (auto const* imm = std::get_if<std::string>(&intrinsic->immediates[0]);
-				imm && *imm == "CurrentApplicationAddress")
-				return true;
-	return false;
-}
+constexpr auto isCurrentAppAddressReceiver = shorthand::isCurrentAppAddressGlobal;
 } // anonymous namespace
 
 InnerCallHandlers::SelfEncodeForm InnerCallHandlers::parseSelfEncodeForm(

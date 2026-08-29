@@ -9,6 +9,8 @@
 
 #include "awst/Node.h"
 
+#include <variant>
+
 namespace puyasol::builder::shorthand
 {
 
@@ -49,6 +51,19 @@ inline std::shared_ptr<awst::Expression> biguintConst(
 	std::string const& value, awst::SourceLocation const& loc)
 {
 	return awst::makeIntegerConstant(value, loc, awst::WType::biguintType());
+}
+
+/// The compiler's self-address convention: the expression is exactly
+/// `global CurrentApplicationAddress`. Receivers/bases matching this lower
+/// self-calls to direct callsubs / CurrentApplicationID lookups.
+/// (Previously ~6 per-file copies of the same IntrinsicCall sniff.)
+inline bool isCurrentAppAddressGlobal(awst::Expression const* _e)
+{
+	auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(_e);
+	return ic && ic->opCode == "global"
+		&& !ic->immediates.empty()
+		&& std::holds_alternative<std::string>(ic->immediates[0])
+		&& std::get<std::string>(ic->immediates[0]) == "CurrentApplicationAddress";
 }
 
 } // namespace puyasol::builder::shorthand

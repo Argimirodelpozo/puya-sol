@@ -3,6 +3,7 @@
 /// Migrated from MemberAccessBuilder.cpp lines 476-555.
 
 #include "builder/sol-ast/members/SolLengthAccess.h"
+#include "builder/AwstShorthand.h"
 #include "Logger.h"
 #include "builder/builtin/AppCodeSizeLowering.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
@@ -82,12 +83,7 @@ std::shared_ptr<awst::Expression> buildCodeSizeLength(
 
 	auto address = ctx.buildExpr(addressExpr);
 	std::shared_ptr<awst::Expression> application;
-	if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(address.get());
-		intrinsic && intrinsic->opCode == "global"
-		&& !intrinsic->immediates.empty()
-		&& std::holds_alternative<std::string>(intrinsic->immediates[0])
-		&& std::get<std::string>(intrinsic->immediates[0])
-			== "CurrentApplicationAddress")
+	if (builder::shorthand::isCurrentAppAddressGlobal(address.get()))
 	{
 		application = awst::makeAsApplication(
 			awst::makeGlobal("CurrentApplicationID",

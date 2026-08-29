@@ -5,6 +5,7 @@
 ///   - handleStaticCallPrecompile (0x01..0x09 precompiles)
 
 #include "builder/itxn/InnerCallHandlers.h"
+#include "builder/AwstShorthand.h"
 #include "builder/EvmFeaturePolicy.h"
 #include "builder/SolcFacts.h"
 #include "awst/NameGen.h"
@@ -48,16 +49,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEncodeCall(
 
 	// If receiver is CurrentApplicationAddress (i.e. `this`), emit a direct
 	// subroutine call — AVM rejects inner txns to self.
-	bool isSelfCall = false;
-	if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
-	{
-		if (intrinsic->opCode == "global" && !intrinsic->immediates.empty())
-		{
-			auto const* imm = std::get_if<std::string>(&intrinsic->immediates[0]);
-			if (imm && *imm == "CurrentApplicationAddress")
-				isSelfCall = true;
-		}
-	}
+	bool isSelfCall = shorthand::isCurrentAppAddressGlobal(_receiver.get());
 
 	if (isSelfCall)
 	{

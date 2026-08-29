@@ -3,6 +3,7 @@
 /// Registry shape: one handler per member; unknown members warn and return empty bytes.
 
 #include "builder/sol-ast/members/SolAddressProperty.h"
+#include "builder/AwstShorthand.h"
 #include "awst/NameGen.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -33,14 +34,7 @@ solidity::frontend::Literal const* literalNumberArg(
 }
 
 // Built base lowers to `global CurrentApplicationAddress`?
-bool isCurrentAppAddress(awst::Expression const* addrExpr)
-{
-	auto const* ic = dynamic_cast<awst::IntrinsicCall const*>(addrExpr);
-	return ic && ic->opCode == "global"
-		&& !ic->immediates.empty()
-		&& std::holds_alternative<std::string>(ic->immediates[0])
-		&& std::get<std::string>(ic->immediates[0]) == "CurrentApplicationAddress";
-}
+constexpr auto isCurrentAppAddress = builder::shorthand::isCurrentAppAddressGlobal;
 
 std::shared_ptr<awst::Expression> buildAddressCode(
 	eb::ContractContext& ctx, Context& scope,
