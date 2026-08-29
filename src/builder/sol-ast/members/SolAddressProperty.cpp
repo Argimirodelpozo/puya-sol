@@ -1,7 +1,6 @@
 /// @file SolAddressProperty.cpp
 /// address.code → app_params_get AppApprovalProgram.
-/// Registry shape: one handler per member; unknown members warn and
-/// return empty bytes.
+/// Registry shape: one handler per member; unknown members warn and return empty bytes.
 
 #include "builder/sol-ast/members/SolAddressProperty.h"
 #include "awst/NameGen.h"

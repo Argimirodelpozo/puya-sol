@@ -114,10 +114,7 @@ std::shared_ptr<awst::Expression> arc4UintCodec(
 // Each builds the getter's readExpr for one variable shape; pure extractions
 // from the per-var lambda (same emission order).
 
-/// Slot-mode getter: walk the declared type over the getter args (mapping
-/// keys / array indices) to the leaf's slot address and read it there — the
-/// slot-mode twin of the box-model branches. Returns nullptr after warning
-/// when the shape is unsupported (caller skips the getter).
+/// Slot-mode getter: walk the declared type over the getter args (mapping keys / array indices) to the leaf's slot address and read …
 std::shared_ptr<awst::Expression> buildSlotModeGetterRead(
 	eb::ContractContext& exprBuilder,
 	TypeMapper& tm,
@@ -345,8 +342,7 @@ std::shared_ptr<awst::Expression> buildConstantGetterRead(
 	return readExpr;
 }
 
-/// Simple state variable (no keys/indices): read from storage; struct
-/// getters project each field (sign-extending signed sub-word fields).
+/// Simple state variable (no keys/indices): read from storage; struct getters project each field (sign-extending signed sub-word …
 std::shared_ptr<awst::Expression> buildSimpleGetterRead(
 	TypeMapper& tm,
 	StorageMapper& sm,
@@ -408,8 +404,7 @@ std::shared_ptr<awst::Expression> buildSimpleGetterRead(
 	return readExpr;
 }
 
-/// Flat array getter(i): IndexExpression into the packed ARC4 array slot
-/// (not a sha256 key); struct elements decompose into the field tuple.
+/// Flat array getter(i): IndexExpression into the packed ARC4 array slot (not a sha256 key); struct elements decompose into the …
 std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 	TypeMapper& tm,
 	StorageMapper& sm,
@@ -466,11 +461,7 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 	return readExpr;
 }
 
-/// Keyed getter (mapping / array-of-mapping / mapping-of-array): classify
-/// the args outer-to-inner (K…K I…I, mirroring SolIndexAccess's
-/// handleMappingAccess key derivation), read via per-layer hash with
-/// array-level bounds asserts, index into any inner array dims, and project
-/// struct values into their public-accessor field tuple.
+/// Keyed getter (mapping / array-of-mapping / mapping-of-array): classify the args outer-to-inner (K…K I…I, mirroring …
 std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 	TypeMapper& tm,
 	StorageMapper& sm,
@@ -744,9 +735,7 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 	return readExpr;
 }
 
-/// ABI param validation for getter key params (sub-64-bit mapping keys) —
-/// reuses buildABIEntryChecks (same as the router), inserted BEFORE key
-/// derivation. Sub-64-bit mapping keys otherwise alias wrong slots.
+/// ABI param validation for getter key params (sub-64-bit mapping keys) — reuses buildABIEntryChecks (same as the router), inserted …
 void prependGetterAbiChecks(
 	solidity::frontend::ContractDefinition const& _contract,
 	solidity::frontend::TypePointers const& solParamTypes,
@@ -784,10 +773,7 @@ void prependGetterAbiChecks(
 
 }
 
-/// Remap biguint getter params to ARC4UIntN at the key's DECLARED width
-/// (not a blanket 256): explicit functions publish declared bits for
-/// >64-bit params, and cross-contract callers derive selector + encoding
-/// from the getter's solc FunctionType.
+/// Remap biguint getter params to ARC4UIntN at the key's DECLARED width (not a blanket 256): explicit functions publish declared …
 void remapGetterParamsToArc4(
 	TypeMapper& tm,
 	awst::ContractMethod& getter,
@@ -836,9 +822,7 @@ void remapGetterParamsToArc4(
 
 }
 
-/// Remap a biguint getter return to ARC4UIntN so the ABI selector says
-/// "uintN" not "uint512" (puya's router would otherwise publish a selector
-/// nobody computes). Unsigned: declared width; signed: canonical 256-bit TC.
+/// Remap a biguint getter return to ARC4UIntN so the ABI selector says "uintN" not "uint512" (puya's router would otherwise publish …
 void remapGetterReturnToArc4(
 	TypeMapper& tm,
 	awst::ContractMethod& getter,

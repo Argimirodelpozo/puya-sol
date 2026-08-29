@@ -1,7 +1,6 @@
 /// @file SolIntrinsicAccess.cpp
 /// msg.sender, block.timestamp, block.prevrandao, block.difficulty, etc.
-/// Registry shape: exact (base, member) rows dispatch to one handler each;
-/// a handler returning nullptr falls through to IntrinsicMapper.
+/// Registry shape: exact (base, member) rows dispatch to one handler each; a handler returning nullptr falls through to …
 
 #include "builder/sol-ast/members/SolIntrinsicAccess.h"
 #include "builder/contract/RouterConditions.h"

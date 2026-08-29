@@ -78,11 +78,7 @@ private:
 		awst::SourceLocation const& _loc);
 
 	/// .call{value:V}(rawBytes) → inner app call; splits [selector, rest] as ApplicationArgs.
-	/// The three abi.encode* self-call forms, normalised: fnName + optional
-	/// full signature string (encodeWithSignature), optional referenced
-	/// FunctionDefinition (encodeCall/encodeWithSelector), the expression
-	/// that identifies the target (still evaluated for effects on a
-	/// successful rewrite), and the method args.
+	/// The three abi.encode* self-call forms, normalised: fnName + optional full signature string (encodeWithSignature), optional …
 	struct SelfEncodeForm
 	{
 		std::string fnName;
@@ -104,8 +100,7 @@ private:
 		std::string const& encodeName,
 		awst::SourceLocation const& _loc);
 
-	/// `.call/.staticcall(data)` router (self-call rewrites, visible
-	/// encoders, precompiles, self fallback, empty-data folds, raw data).
+	/// `.call/.staticcall(data)` router (self-call rewrites, visible encoders, precompiles, self fallback, empty-data folds, raw data).
 	static std::unique_ptr<InstanceBuilder> handleCallWithData(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,

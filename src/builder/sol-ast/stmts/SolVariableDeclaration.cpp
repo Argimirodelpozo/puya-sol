@@ -121,11 +121,7 @@ bool SolVariableDeclaration::trySlotModeStoragePointer(
 	return false;
 }
 
-/// Build the initializer value (fn-ptr target tracking, slot-mode storage →
-/// memory materialisation, NewArray fixed-size upgrade, declared-type
-/// conversion) — or the default value when there is no initializer.
-/// `type`/`target->wtype` may be upgraded in place; `earlyExit` = a logged
-/// error already ended the declaration.
+/// Build the initializer value (fn-ptr target tracking, slot-mode storage → memory materialisation, NewArray fixed-size upgrade, …
 std::shared_ptr<awst::Expression> SolVariableDeclaration::buildInitValue(
 	VariableDeclaration const& decl,
 	Expression const* initialValue,
@@ -582,9 +578,7 @@ bool SolVariableDeclaration::tryAsmAggregateInit(
 	return false;
 }
 
-/// Default binding: `target = value`, with the fresh-memory FMP bump for
-/// uninitialised `T memory t;` (blob-backed >4KB locals bind the offset
-/// var and skip the oversized value assignment).
+/// Default binding: `target = value`, with the fresh-memory FMP bump for uninitialised `T memory t;` (blob-backed >4KB locals bind …
 void SolVariableDeclaration::emitDefaultDeclaration(
 	VariableDeclaration const& decl,
 	std::shared_ptr<awst::Expression> target,
@@ -638,10 +632,7 @@ void SolVariableDeclaration::emitDefaultDeclaration(
 	result.push_back(assign);
 }
 
-/// Tuple destructuring `(a, b) = expr;`: RHS must evaluate once —
-/// SingleEvaluation is inlined per-consumer in AWST JSON, causing puya to
-/// re-emit the call for each TupleItemExpression. Assign RHS to a synthetic
-/// temp and extract items from it. (polymarket-experiment 271d85851)
+/// Tuple destructuring `(a, b) = expr;`: RHS must evaluate once — SingleEvaluation is inlined per-consumer in AWST JSON, causing …
 void SolVariableDeclaration::buildTupleDestructuring(
 	Expression const* initialValue,
 	std::vector<std::shared_ptr<awst::Statement>>& result)

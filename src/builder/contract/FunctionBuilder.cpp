@@ -383,8 +383,7 @@ void insertDeferredDecodes(
 
 } // anonymous namespace
 
-/// buildFunction phase: name/cref, args (with storage/blob wtype overrides),
-/// and the companion offset params for offset-convention struct refs.
+/// buildFunction phase: name/cref, args (with storage/blob wtype overrides), and the companion offset params for offset-convention …
 void ContractBuilder::buildMethodSignature(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& _func,
@@ -465,8 +464,7 @@ void ContractBuilder::buildMethodSignature(
 
 }
 
-/// buildFunction phase: return type mapping (single or tuple), collecting the
-/// ABI-boundary signed/unsigned mask plans for rewriteARC4Returns.
+/// buildFunction phase: return type mapping (single or tuple), collecting the ABI-boundary signed/unsigned mask plans for …
 void ContractBuilder::computeMethodReturnType(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& _func,
@@ -562,8 +560,7 @@ void ContractBuilder::computeMethodReturnType(
 
 }
 
-/// buildFunction phase: seed the assembly-translation function context from
-/// the (ARC4-remapped) method args plus sub-64-bit widths and return types.
+/// buildFunction phase: seed the assembly-translation function context from the (ARC4-remapped) method args plus sub-64-bit widths …
 void ContractBuilder::setupBodyParamContext(
 	awst::ContractMethod const& method,
 	solidity::frontend::FunctionDefinition const& _func)
@@ -597,9 +594,7 @@ void ContractBuilder::setupBodyParamContext(
 
 }
 
-/// buildFunction phase: register named returns, mapping-storage-ref params,
-/// slot-handle params, and blob-backed memory params on the function context
-/// so the body build resolves them.
+/// buildFunction phase: register named returns, mapping-storage-ref params, slot-handle params, and blob-backed memory params on …
 void ContractBuilder::registerBodyRefParams(
 	solidity::frontend::FunctionDefinition const& _func,
 	std::set<int64_t> const& asmSlotParamIds)
@@ -669,8 +664,7 @@ void ContractBuilder::registerBodyRefParams(
 
 }
 
-/// buildFunction phase: zero-init named return vars (Solidity implicit init)
-/// and bump the free-memory pointer for memory-typed returns.
+/// buildFunction phase: zero-init named return vars (Solidity implicit init) and bump the free-memory pointer for memory-typed …
 void ContractBuilder::prependNamedReturnInits(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& _func)
@@ -759,9 +753,7 @@ void ContractBuilder::prependNamedReturnInits(
 
 }
 
-/// buildFunction phase: synthesize the implicit return (named vars or default
-/// zero) when the body can fall off the end, including build-time wire
-/// encoding and the enum range assert.
+/// buildFunction phase: synthesize the implicit return (named vars or default zero) when the body can fall off the end, including …
 void ContractBuilder::synthesizeImplicitReturn(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& _func,
@@ -951,8 +943,7 @@ void ContractBuilder::prependEnsureBudget(
 
 }
 
-/// buildFunction phase: non-payable group assert (skipped for internal/
-/// private and receive()).
+/// buildFunction phase: non-payable group assert (skipped for internal/ private and receive()).
 void ContractBuilder::maybePrependNonPayable(
 	awst::ContractMethod& method,
 	solidity::frontend::FunctionDefinition const& _func)

@@ -24,8 +24,7 @@ bool isByteArray(awst::WType const* _w, unsigned _size)
 	return elem && elem->n() == 8 && sa->arraySize() == static_cast<int64_t>(_size);
 }
 
-/// arc4 byte[K] with 0 < K < _size (a byte array in a WIDER window, e.g. the
-/// external fn-ptr byte[12] inside solc's 24-byte share). K out via _kOut.
+/// arc4 byte[K] with 0 < K < _size (a byte array in a WIDER window, e.g.
 bool isNarrowByteArray(awst::WType const* _w, unsigned _size, unsigned& _kOut)
 {
 	auto const* nb = dynamic_cast<awst::ARC4StaticArray const*>(_w);
@@ -50,9 +49,7 @@ bool isArc4Address(awst::WType const* _w, unsigned _size)
 namespace
 {
 
-/// Scalar / word-convention arms of nativeToPackedBytes (uint64, bool,
-/// application, biguint, account, arc4 bool, arc4.uintN). nullptr = not this
-/// family; byte-shaped values fall through to tryPackByteShaped.
+/// Scalar / word-convention arms of nativeToPackedBytes (uint64, bool, application, biguint, account, arc4 bool, arc4.uintN).
 std::shared_ptr<awst::Expression> tryPackScalarWord(
 	std::shared_ptr<awst::Expression>& _value,
 	awst::WType const* _wtype,
@@ -122,8 +119,7 @@ std::shared_ptr<awst::Expression> tryPackScalarWord(
 	return nullptr;
 }
 
-/// Byte-shaped arms of nativeToPackedBytes (bytes[N], arc4 byte arrays,
-/// arc4.address) — the LEFT-aligned / trailing-truncation conventions.
+/// Byte-shaped arms of nativeToPackedBytes (bytes[N], arc4 byte arrays, arc4.address) — the LEFT-aligned / trailing-truncation …
 std::shared_ptr<awst::Expression> tryPackByteShaped(
 	std::shared_ptr<awst::Expression>& _value,
 	awst::WType const* _wtype,
@@ -191,9 +187,7 @@ std::shared_ptr<awst::Expression> SlotWordCodec::nativeToPackedBytes(
 namespace
 {
 
-/// Scalar / word-convention arms of packedBytesToNative — mirrors
-/// tryPackScalarWord (unpack rung order kept verbatim: uint64/bool, biguint,
-/// account, application, arc4 bool, arc4.uintN).
+/// Scalar / word-convention arms of packedBytesToNative — mirrors tryPackScalarWord (unpack rung order kept verbatim: uint64/bool, …
 std::shared_ptr<awst::Expression> tryUnpackScalarWord(
 	std::shared_ptr<awst::Expression>& _raw,
 	awst::WType const* _wtype,

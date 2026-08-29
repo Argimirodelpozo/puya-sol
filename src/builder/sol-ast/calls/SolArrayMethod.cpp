@@ -52,9 +52,7 @@ Expression const* peelBytesCastBase(Expression const& baseExpr)
 }
 } // anonymous namespace
 
-/// Slot-mode bytes/string push/pop via whole-value read-modify-write: the
-/// short↔long form transitions already live in __evm_bytes_read/write, so
-/// appending a byte or shrinking by one needs no new runtime.
+/// Slot-mode bytes/string push/pop via whole-value read-modify-write: the short↔long form transitions already live in …
 std::shared_ptr<awst::Expression> SolArrayMethod::buildSlotModeBytesPushPop(
 	std::string const& memberName,
 	Expression const& baseExpr,
@@ -135,9 +133,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::buildSlotModeBytesPushPop(
 	return awst::makeZero(m_loc, awst::WType::biguintType());
 }
 
-/// Slot-mode dynamic-array push/pop: length-word RMW at the root slot +
-/// element write at keccak256(slot32)+addressing. Pop ZEROES the vacated
-/// element (EVM semantics), so push() never needs to.
+/// Slot-mode dynamic-array push/pop: length-word RMW at the root slot + element write at keccak256(slot32)+addressing.
 std::shared_ptr<awst::Expression> SolArrayMethod::buildSlotModeArrayPushPop(
 	std::string const& memberName,
 	Expression const& baseExpr,
@@ -270,10 +266,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::buildSlotModeArrayPushPop(
 	return awst::makeZero(m_loc, awst::WType::biguintType());
 }
 
-/// `m[k].push()/.pop()`: IndexAccess base lowers to BoxValueExpression
-/// (wrapped in StateGet when read). Unwrap and emit ArrayExtend/ArrayPop on
-/// the raw BoxValueExpression so puya's ARC4 dyn-array codegen handles box
-/// storage. nullptr = shape not applicable (falls through).
+/// `m[k].push()/.pop()`: IndexAccess base lowers to BoxValueExpression (wrapped in StateGet when read).
 std::shared_ptr<awst::Expression> SolArrayMethod::tryBoxedElementPushPop(
 	std::string const& memberName,
 	Expression const& baseExpr)
@@ -363,8 +356,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryBoxedElementPushPop(
 	return nullptr;
 }
 
-/// Storage-pointer alias / mapping-key-param arrays: push/pop through the
-/// aliased BOX (runtime key). nullptr = not applicable.
+/// Storage-pointer alias / mapping-key-param arrays: push/pop through the aliased BOX (runtime key).
 std::shared_ptr<awst::Expression> SolArrayMethod::tryStoragePointerPushPop(
 	std::string const& memberName,
 	Expression const& baseExpr)
@@ -538,8 +530,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryStoragePointerPushPop(
 	return nullptr;
 }
 
-/// bytes/string STATE VAR push/pop: concat-based push / read+substring+write
-/// pop (box_del+box_put for exact-size box rewrite). nullptr = not applicable.
+/// bytes/string STATE VAR push/pop: concat-based push / read+substring+write pop (box_del+box_put for exact-size box rewrite).
 std::shared_ptr<awst::Expression> SolArrayMethod::tryStateBytesPushPop(
 	std::string const& memberName,
 	solidity::frontend::VariableDeclaration const& _varDecl)
@@ -676,10 +667,7 @@ std::shared_ptr<awst::Expression> SolArrayMethod::tryStateBytesPushPop(
 	return nullptr;
 }
 
-/// Chained storage path (`m[k].field.push()`, `arr[i].field.push()`, etc.):
-/// unwrap StateGet and emit ArrayExtend/ArrayPop. Only fires when
-/// handleStructFieldArrayMethod (simple Identifier case) didn't match.
-/// nullptr = not applicable.
+/// Chained storage path (`m[k].field.push()`, `arr[i].field.push()`, etc.): unwrap StateGet and emit ArrayExtend/ArrayPop.
 std::shared_ptr<awst::Expression> SolArrayMethod::tryChainedFieldPushPop(
 	std::string const& memberName,
 	Expression const& baseExpr,

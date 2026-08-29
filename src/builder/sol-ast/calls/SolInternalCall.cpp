@@ -154,9 +154,7 @@ awst::WType const* SolInternalCall::returnTypeFrom(FunctionDefinition const* _fu
 namespace
 {
 
-/// Any-rank array element path (`a[i][j]...`) rooted in an Identifier whose
-/// declaration is an array — the shape whose root box key + byte offset the
-/// struct-ref handle model passes.
+/// Any-rank array element path (`a[i][j]...`) rooted in an Identifier whose declaration is an array — the shape whose root box key …
 struct BoxedArrayPath
 {
 	Identifier const* root = nullptr;
@@ -204,11 +202,7 @@ std::shared_ptr<awst::Expression> boxedArrayKey(
 	return nullptr;
 }
 
-/// Aliasing guard: same variable in >1 arg position → puya rejects
-/// ("mutable values cannot be passed more than once", e.g. `s.concat(s)`).
-/// Break alias with Copy only when safe: valid iff NONE of the aliased params
-/// are mutated by the callee (e.g. stringutils' concat). If mutated, EVM
-/// aliasing is live → leave the puya error rather than silently wrong-lower.
+/// Aliasing guard: same variable in >1 arg position → puya rejects ("mutable values cannot be passed more than once", e.g.
 void applyAliasingGuard(
 	awst::SubroutineCallExpression& call,
 	FunctionDefinition const* _funcDef,
@@ -257,12 +251,7 @@ void applyAliasingGuard(
 	}
 }
 
-/// Storage write-back scope: AWSTBuilder augments non-private, non-pure/view
-/// library/free functions to thread the modified storage arg back as
-/// `WTuple(R, T)` (or bare `T` when R is void). Contract methods are
-/// NOT augmented (direct storage access). Collect storage param indices
-/// (mapping-type refs handled separately; order must match
-/// AWSTBuilder.cpp:388-403 — source-order parameters()).
+/// Storage write-back scope: AWSTBuilder augments non-private, non-pure/view library/free functions to thread the modified storage …
 std::vector<size_t> collectStorageWriteBackParams(
 	eb::ContractContext& ctx,
 	FunctionDefinition const* _funcDef,
@@ -308,11 +297,7 @@ std::vector<size_t> collectStorageWriteBackParams(
 	return storageParamIndices;
 }
 
-/// Memory-ref params: same library/free scope; `pure` NOT excluded
-/// (Solidity pure can mutate memory). Callee returns post-call value
-/// as extra tuple slot; write back to caller local. Order must match
-/// AWSTBuilder.cpp memoryRefParamIndices (storage first, then memory),
-/// same use-def filter (only mutated params augmented).
+/// Memory-ref params: same library/free scope; `pure` NOT excluded (Solidity pure can mutate memory).
 std::vector<size_t> collectMemoryWriteBackParams(
 	FunctionDefinition const* _funcDef,
 	size_t argCount,
@@ -355,9 +340,7 @@ std::vector<size_t> collectMemoryWriteBackParams(
 	return memoryRefParamIndices;
 }
 
-/// Per-storage-arg root tracing. Each storage arg may resolve to a
-/// different root (one might be `box.field`, another `appState`,
-/// another a plain stack value with no resolvable root).
+/// Per-storage-arg root tracing.
 struct StorageRoot {
 	size_t paramIdx = 0;
 	std::shared_ptr<awst::BoxValueExpression> rootBox;
@@ -401,11 +384,7 @@ std::vector<StorageRoot> traceStorageRoots(
 	return roots;
 }
 
-/// Rebuild the complete ARC4 struct path copy-on-write for a `box.field...`
-/// storage arg. The old implementation spelled out one field and rejected
-/// depth > 1, even though AssignmentHelper already implements the recursive
-/// structural operation used by ordinary nested assignments. Returns nullptr
-/// (after the fail-loud error) when the path can't be rebuilt.
+/// Rebuild the complete ARC4 struct path copy-on-write for a `box.field...` storage arg.
 std::shared_ptr<awst::Expression> rebuildFieldPathWriteValue(
 	eb::ContractContext& ctx,
 	StorageRoot const& sr,
@@ -457,10 +436,7 @@ std::shared_ptr<awst::Expression> rebuildFieldPathWriteValue(
 	return nullptr;
 }
 
-/// Unpack the augmented `(r..., sp..., mp...)` return: stash the call in a
-/// temp, rebuild the original return value, write each resolved storage root
-/// back (post-effects), and write memory-ref args back to caller locals.
-/// Returns the rebuilt original-return expression.
+/// Unpack the augmented `(r..., sp..., mp...)` return: stash the call in a temp, rebuild the original return value, write each …
 std::shared_ptr<awst::Expression> emitAugmentedCallWriteBacks(
 	eb::ContractContext& ctx,
 	std::shared_ptr<awst::SubroutineCallExpression> const& call,

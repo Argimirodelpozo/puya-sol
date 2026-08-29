@@ -28,11 +28,7 @@
 namespace puyasol::builder
 {
 
-/// buildApprovalProgram phase: slot-mode state-var init — the slot space
-/// zero-initialises for free (absent box = 0); only explicit initializers
-/// need a write. Immutables keep their named cells and never reach here.
-/// Caller guards evmStorageLayout + !immutable + !transient; every path
-/// fully handles the var.
+/// buildApprovalProgram phase: slot-mode state-var init — the slot space zero-initialises for free (absent box = 0); only explicit …
 void ContractBuilder::emitSlotModeStateVarInit(
 	solidity::frontend::VariableDeclaration const& _var,
 	std::vector<std::shared_ptr<awst::Statement>>& targetBody,
@@ -125,9 +121,7 @@ void ContractBuilder::emitSlotModeStateVarInit(
 	return;
 }
 
-/// buildApprovalProgram phase: state variable initialization for one
-/// contract level. Identity is the declaration; distinct private base
-/// variables may share a name (the dedup set spans all emission sites).
+/// buildApprovalProgram phase: state variable initialization for one contract level.
 void ContractBuilder::emitStateVarInitFor(
 	solidity::frontend::ContractDefinition const& base,
 	std::vector<std::shared_ptr<awst::Statement>>& targetBody,
@@ -285,9 +279,7 @@ void ContractBuilder::emitStateVarInitFor(
 	}
 }
 
-/// buildApprovalProgram phase: collect box-stored array/bytes vars for
-/// box_create in __postInit (m_boxArrayVars). Caller gates on the box
-/// model (--evm-storage-layout has no named boxes).
+/// buildApprovalProgram phase: collect box-stored array/bytes vars for box_create in __postInit (m_boxArrayVars).
 void ContractBuilder::collectBoxArrayVars(
 	solidity::frontend::ContractDefinition const& _contract,
 	awst::SourceLocation const& loc)
@@ -356,8 +348,7 @@ void ContractBuilder::collectBoxArrayVars(
 	});
 }
 
-/// buildApprovalProgram phase: decode constructor params from
-/// ApplicationArgs into the create block (EVM single-blob or ARC4 per-slot).
+/// buildApprovalProgram phase: decode constructor params from ApplicationArgs into the create block (EVM single-blob or ARC4 …
 void ContractBuilder::emitCtorParamDecode(
 	solidity::frontend::FunctionDefinition const& _constructor,
 	std::shared_ptr<awst::Block> const& createBlock,
@@ -488,9 +479,7 @@ void ContractBuilder::emitCtorParamDecode(
 
 }
 
-/// buildApprovalProgram phase: solc pre-populates baseConstructorArguments
-/// (InheritanceSpecifier or ModifierInvocation → args) — no manual MRO walk
-/// needed.
+/// buildApprovalProgram phase: solc pre-populates baseConstructorArguments (InheritanceSpecifier or ModifierInvocation → args) — no …
 std::map<solidity::frontend::ContractDefinition const*,
 	std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const*>
 ContractBuilder::collectExplicitBaseArgs(
@@ -514,12 +503,7 @@ ContractBuilder::collectExplicitBaseArgs(
 	return explicitBaseArgs;
 }
 
-/// buildApprovalProgram phase: bind one base constructor's explicit args to
-/// its params in the create block — slot-mode storage refs bind the slot,
-/// box-model storage refs register a StorageAlias, value args assign after
-/// implicit conversion (draining build pre-statements first). Shared
-/// verbatim by the direct-base (Phase 1) and transitive (Phase 2) walks,
-/// which previously duplicated this loop.
+/// buildApprovalProgram phase: bind one base constructor's explicit args to its params in the create block — slot-mode storage refs …
 void ContractBuilder::bindBaseCtorArgs(
 	solidity::frontend::FunctionDefinition const& baseCtor,
 	std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression>> const& args,
@@ -584,8 +568,7 @@ void ContractBuilder::bindBaseCtorArgs(
 	}
 }
 
-/// buildApprovalProgram phase: the no-postInit path — inline base ctor
-/// bodies + the main ctor into the bool-returning approval program.
+/// buildApprovalProgram phase: the no-postInit path — inline base ctor bodies + the main ctor into the bool-returning approval …
 void ContractBuilder::emitInlineCtorPath(
 	solidity::frontend::ContractDefinition const& _contract,
 	solidity::frontend::FunctionDefinition const* constructor,
@@ -752,11 +735,7 @@ void ContractBuilder::emitInlineCtorPath(
 	m_functionCtx->returnType = savedReturnType;
 }
 
-/// buildApprovalProgram phase: init the transient-storage blob (transient
-/// scratch slot) BEFORE the create/dispatch split so the ctor body can use
-/// tload/tstore (create branch returns early). Per-txn scratch bzero
-/// matches EIP-1153; writes persist across callsub. Size = declared
-/// transient vars (packed), minimum SLOT_SIZE for asm tload/tstore.
+/// buildApprovalProgram phase: init the transient-storage blob (transient scratch slot) BEFORE the create/dispatch split so the …
 void ContractBuilder::emitTransientBlobInit(
 	awst::Block& body, awst::SourceLocation const& loc)
 {
@@ -776,11 +755,7 @@ void ContractBuilder::emitTransientBlobInit(
 
 }
 
-/// buildApprovalProgram phase: init EVM memory blobs BEFORE the
-/// create/dispatch split so ctor body's `T memory t;` locals (FMP bumps on
-/// slot 0) see a valid blob. Uninitialised scratch reads as uint64 0 — must
-/// bzero every slot per call; the free memory pointer at 0x40 is seeded
-/// 0x80.
+/// buildApprovalProgram phase: init EVM memory blobs BEFORE the create/dispatch split so ctor body's `T memory t;` locals (FMP …
 void ContractBuilder::emitMemoryBlobInit(
 	awst::Block& body, awst::SourceLocation const& loc)
 {

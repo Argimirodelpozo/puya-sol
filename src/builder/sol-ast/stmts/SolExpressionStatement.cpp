@@ -153,14 +153,7 @@ void synthesizeBareReturnValue(BlockContext& blk, Return const& node,
 	}
 }
 
-/// `return <void expression>;` in a function with NO return values —
-/// legal Solidity, and the shape forwarding wrappers use
-/// (`return ctf.safeTransferFrom(…)` in Polymarket's NegRiskAdapter).
-/// The expression must be EXECUTED as a statement: carrying it as the
-/// return VALUE hands puya an inner-txn result handle where a stack
-/// value belongs — "itxn_group_idx cannot be mapped to AVM stack type",
-/// which reads as an unsupported feature and is really just a
-/// misplaced expression.
+/// `return <void expression>;` in a function with NO return values — legal Solidity, and the shape forwarding wrappers use (`return …
 bool tryVoidExprReturn(BlockContext& blk, Return const& node,
 	awst::SourceLocation const& loc,
 	std::vector<std::shared_ptr<awst::Statement>>& result)
@@ -181,10 +174,7 @@ bool tryVoidExprReturn(BlockContext& blk, Return const& node,
 	return true;
 }
 
-/// --evm-storage-layout: `return <storage expr>` in a function declared
-/// `returns (T storage)` returns the biguint slot; multi-value returns with
-/// storage components build component-wise. Returns true when the return was
-/// consumed (including error early-outs, already logged).
+/// --evm-storage-layout: `return <storage expr>` in a function declared `returns (T storage)` returns the biguint slot; multi-value …
 bool trySlotStorageReturn(BlockContext& blk, Return const& node,
 	awst::SourceLocation const& loc,
 	std::shared_ptr<awst::ReturnStatement>& stmt,
@@ -275,10 +265,6 @@ bool trySlotStorageReturn(BlockContext& blk, Return const& node,
 }
 
 /// Box-keyed mapping-of-struct storage-ref RETURN, e.g.
-/// `_getPool(id) -> Pool.State storage { return _pools[id]; }`. Return the
-/// bytes box-key prefix of the indexed element (not its struct value); the
-/// caller binds the result as a struct-storage-ref (SolVariableDeclaration),
-/// and the return type is bytes (FunctionBuilder / mapReturnType).
 bool tryBoxKeyedRefReturn(BlockContext& blk, Return const& node,
 	awst::SourceLocation const& loc,
 	std::shared_ptr<awst::ReturnStatement>& stmt,
@@ -335,8 +321,7 @@ void convertSingleReturnValue(BlockContext& blk, Return const& node,
 			std::move(stmt.value), loc);
 }
 
-/// Multi-value declared return: coerce each tuple component to its declared
-/// type (through a ternary's arms too).
+/// Multi-value declared return: coerce each tuple component to its declared type (through a ternary's arms too).
 void convertTupleReturnValue(BlockContext& blk, Return const& node,
 	awst::SourceLocation const& loc,
 	std::vector<ASTPointer<VariableDeclaration>> const& retParams,
@@ -404,8 +389,7 @@ void convertTupleReturnValue(BlockContext& blk, Return const& node,
 	}
 }
 
-/// Enum range validation on return: EVM panics (0x21) on invalid enum
-/// return values.
+/// Enum range validation on return: EVM panics (0x21) on invalid enum return values.
 void maybeAppendEnumReturnAssert(BlockContext& blk, Return const& node,
 	awst::SourceLocation const& loc, awst::ReturnStatement& stmt,
 	std::vector<std::shared_ptr<awst::Statement>>& result)

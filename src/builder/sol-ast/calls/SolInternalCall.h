@@ -38,8 +38,7 @@ private:
 		bool _isUsingForCall);
 
 	// ── buildSubroutineCall phases ──────────────────────────────────────
-	/// Storage-ref-pointer result: reconstitute IndexExpression (or pass
-	/// through slot handles / bytes box-key returns).
+	/// Storage-ref-pointer result: reconstitute IndexExpression (or pass through slot handles / bytes box-key returns).
 	std::shared_ptr<awst::Expression> wrapStorageRefResult(
 		std::shared_ptr<awst::Expression> _result,
 		solidity::frontend::FunctionDefinition const* _funcDef);
@@ -52,8 +51,7 @@ private:
 	/// Box-key prefix for a mapping/storage-ref argument.
 	std::shared_ptr<awst::Expression> extractMappingKeyPrefix(
 		solidity::frontend::Expression const& argExpr);
-	/// Build all call args (using-for receiver first) with EVM left-to-right
-	/// effect sequencing.
+	/// Build all call args (using-for receiver first) with EVM left-to-right effect sequencing.
 	void buildSequencedArgs(
 		std::shared_ptr<awst::SubroutineCallExpression> const& call,
 		solidity::frontend::FunctionDefinition const* _funcDef,

@@ -68,8 +68,7 @@ namespace
 {
 using namespace solidity::frontend;
 
-/// Array / StringLiteral category: string, bytes, or ARC4 array of the
-/// width-preserving ARC4 element type.
+/// Array / StringLiteral category: string, bytes, or ARC4 array of the width-preserving ARC4 element type.
 awst::WType const* mapArrayCategory(TypeMapper& _tm, Type const* _solType)
 {
 	auto const* arrType = dynamic_cast<ArrayType const*>(_solType);
@@ -127,11 +126,7 @@ awst::WType const* mapFunctionCategory(TypeMapper& _tm, Type const* _solType)
 	return awst::WType::uint64Type();
 }
 
-/// Meta-types carry no runtime value — type(X), modules, abi/block/msg magic,
-/// modifiers, inaccessible-dynamic; real ops route through dedicated paths — and
-/// array slices (`x[a:b]`) are modeled as bytes. Both keep the bytes fallback.
-/// Any OTHER unmapped, value-carrying type reaching here would silently become
-/// bytes and diverge from EVM, so refuse to compile (was a silent warning).
+/// Meta-types carry no runtime value — type(X), modules, abi/block/msg magic, modifiers, inaccessible-dynamic; real ops route …
 awst::WType const* mapFallbackCategory(Type const* _solType, std::string const& _typeStr)
 {
 	auto const cat = _solType->category();

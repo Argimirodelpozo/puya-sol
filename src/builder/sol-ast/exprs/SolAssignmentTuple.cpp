@@ -47,11 +47,7 @@ std::shared_ptr<awst::Expression> SolAssignment::buildTupleWithUpdatedField(
 	return tuple;
 }
 
-/// Tuple-returning call RHS (`(a,b) = f()`): cache in a temp so each
-/// TupleItem reads from the cached tuple — without snapshotting, each
-/// TupleItemExpression carries a fresh SubroutineCallExpression and puya
-/// re-emits the call once per element. (Analogue of the literal
-/// `(a(),b())` snapshot in pinLiteralTupleRhs.)
+/// Tuple-returning call RHS (`(a,b) = f()`): cache in a temp so each TupleItem reads from the cached tuple — without snapshotting, …
 std::shared_ptr<awst::Expression> SolAssignment::snapshotTupleCallRhs(
 	std::shared_ptr<awst::Expression> _value)
 {
@@ -167,8 +163,7 @@ std::shared_ptr<awst::Expression> SolAssignment::pinLiteralTupleRhs(
 	return _value;
 }
 
-/// Storage-pointer / slot-struct tuple component: compile-time alias rebind
-/// (or the slot-handle re-point / slot-level struct copy in slot mode).
+/// Storage-pointer / slot-struct tuple component: compile-time alias rebind (or the slot-handle re-point / slot-level struct copy …
 SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
 	size_t i,
 	std::shared_ptr<awst::Expression> const& item,
@@ -336,8 +331,7 @@ SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
 	return TupleComponentAction::NotApplicable;
 }
 
-/// Coerce one tuple component's value to the target's wtype (string↔bytes
-/// reinterpret, numeric casts, ARC4 widen/narrow/encode).
+/// Coerce one tuple component's value to the target's wtype (string↔bytes reinterpret, numeric casts, ARC4 widen/narrow/encode).
 void SolAssignment::coerceTupleComponentValue(
 	std::shared_ptr<awst::Expression> const& assignTarget,
 	std::shared_ptr<awst::Expression>& assignValue)
@@ -435,9 +429,7 @@ void SolAssignment::coerceTupleComponentValue(
 
 }
 
-/// Emit one tuple component's write (post-effects; GroupMark closes the
-/// component's statement group even on early returns). Returns false only
-/// for the slot-mode storage-pointer error abort.
+/// Emit one tuple component's write (post-effects; GroupMark closes the component's statement group even on early returns).
 bool SolAssignment::emitTupleComponentWrite(
 	size_t i,
 	std::shared_ptr<awst::Expression> const& itemIn,

@@ -54,8 +54,7 @@ SolInlineAssembly::SolInlineAssembly(
 namespace
 {
 
-/// toAwst scan: constant values referenced from Yul (skipping cyclic
-/// constant chains, which ConstantEvaluator would recurse into).
+/// toAwst scan: constant values referenced from Yul (skipping cyclic constant chains, which ConstantEvaluator would recurse into).
 std::map<std::string, std::string> collectAsmConstants(
 	InlineAssembly const& node)
 {
@@ -83,10 +82,7 @@ std::map<std::string, std::string> collectAsmConstants(
 	return constants;
 }
 
-/// toAwst scan: local storage aliases (`uint256[] storage x = a;` keeps the
-/// initializer in the VariableDeclarationStatement, so walk the scope block
-/// for each .slot local) and struct-MEMBER array aliases
-/// (`uint256[] storage x = s.x;` → (s decl, "x")).
+/// toAwst scan: local storage aliases (`uint256[] storage x = a;` keeps the initializer in the VariableDeclarationStatement, so …
 void collectStorageLocalAliases(
 	InlineAssembly const& node,
 	std::map<std::string, VariableDeclaration const*>& storageLocalAliases,
@@ -147,12 +143,7 @@ void collectStorageLocalAliases(
 	}
 }
 
-/// toAwst scan: box-keyed struct storage pointers surfaced via `.slot` (a
-/// struct-in-box alias such as `TickInfo storage info = self.ticks[tick]`).
-/// Distinct from storageSlotVars (numeric EVM slots) — keyed on the dotted
-/// yul name; resolved from the storage-alias registry, independent of the
-/// state-var StorageLayout (these live in a box, not an EVM slot, and appear
-/// in library functions that reference no state variable).
+/// toAwst scan: box-keyed struct storage pointers surfaced via `.slot` (a struct-in-box alias such as `TickInfo storage info = …
 std::map<std::string, AssemblyBuilder::BoxKeyedSlot> collectBoxKeyedStructSlots(
 	BlockContext& blk, InlineAssembly const& node)
 {
@@ -178,11 +169,7 @@ std::map<std::string, AssemblyBuilder::BoxKeyedSlot> collectBoxKeyedStructSlots(
 	return boxKeyedStructSlots;
 }
 
-/// toAwst scan: `sstore(v.slot, value)` where `v` is a scalar app-global
-/// state var — route the write to `v`'s own app-global state (so a later
-/// high-level read of `v` sees it) instead of the generic __dyn_storage
-/// blob. Strictly full-width uint256 app-global scalars; packed sub-word
-/// vars and structs keep the numeric-slot path.
+/// toAwst scan: `sstore(v.slot, value)` where `v` is a scalar app-global state var — route the write to `v`'s own app-global state …
 std::map<std::string, AssemblyBuilder::StateVarSlot> collectStateVarSlots(
 	BlockContext& blk, InlineAssembly const& node)
 {
@@ -211,10 +198,7 @@ std::map<std::string, AssemblyBuilder::StateVarSlot> collectStateVarSlots(
 	return stateVarSlots;
 }
 
-/// toAwst scan: struct-storage-ref locals bound from storage-ref-returning
-/// functions (modelled as biguint slot handles), and — in slot mode — EVERY
-/// storage-located local/param (`x.slot` reads the biguint local, `.offset`
-/// is 0).
+/// toAwst scan: struct-storage-ref locals bound from storage-ref-returning functions (modelled as biguint slot handles), and — in …
 std::map<std::string, std::string> collectStructRefSlotLocals(
 	BlockContext& blk, InlineAssembly const& node,
 	std::map<std::string, VariableDeclaration const*> const& storageLocalAliases,
@@ -271,14 +255,7 @@ std::map<std::string, std::string> collectStructRefSlotLocals(
 	return structRefSlotLocals;
 }
 
-/// toAwst scan: compile-time slot routes + layout-derived slot/offset
-/// constants (StorageLayout of the current or declaring contract).
-/// Layout-scan piece: compile-time slot routes — connect CONSTANT-slot asm
-/// sload/sstore to the named vars' real storage (see
-/// AssemblyBuilder::SlotRoute). Scalars route to their app-global; a dynamic
-/// array's root slot is its LENGTH and its keccak256(root) data region maps
-/// slot K+i -> element i. The keccak runs HERE, in the compiler (zero
-/// opcodes) — routing is constant comparison.
+/// toAwst scan: compile-time slot routes + layout-derived slot/offset constants (StorageLayout of the current or declaring contract).
 void registerStateVarSlotRoutes(
 	BlockContext& blk, ContractDefinition const& contractDef,
 	StorageLayout const& layout,
@@ -337,10 +314,7 @@ void registerStateVarSlotRoutes(
 
 }
 
-/// Layout-scan piece: struct-member array aliases —
-/// `uint256[] storage x = s.x; sstore(x.slot, L)`. Resolve x.slot to
-/// slot(s) + storageOffsetsOfMember(x) and route it to the member array
-/// INSIDE s's box. The constant is registered ONLY together with its route.
+/// Layout-scan piece: struct-member array aliases — `uint256[] storage x = s.x; sstore(x.slot, L)`.
 void registerMemberArrayRoutes(
 	BlockContext& blk, InlineAssembly const& node,
 	StorageLayout const& layout,
@@ -401,9 +375,7 @@ void registerMemberArrayRoutes(
 
 }
 
-/// Layout-scan piece: per-ref slot/offset constants (following local storage
-/// aliases to the underlying state var; transient vars resolve through
-/// TransientStorage's own slot namespace).
+/// Layout-scan piece: per-ref slot/offset constants (following local storage aliases to the underlying state var; transient vars …
 void registerLayoutConstants(
 	BlockContext& blk, InlineAssembly const& node,
 	StorageLayout const& layout,
@@ -538,9 +510,7 @@ void collectSlotRoutesAndLayoutConstants(
 		blk, node, *layout, storageLocalAliases, constants, storageSlotVars);
 }
 
-/// toAwst scan: augmented param list (external refs join the function's own
-/// params), sub-64-bit widths, blob-offset vars, calldata pointer name sets,
-/// and signed-local bit widths.
+/// toAwst scan: augmented param list (external refs join the function's own params), sub-64-bit widths, blob-offset vars, calldata …
 std::vector<std::pair<std::string, awst::WType const*>> collectAugmentedParams(
 	BlockContext& blk, InlineAssembly const& node,
 	std::function<std::string(solidity::frontend::VariableDeclaration const&)> const& declNameFn,

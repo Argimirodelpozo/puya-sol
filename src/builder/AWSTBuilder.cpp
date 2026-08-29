@@ -238,9 +238,7 @@ void AWSTBuilder::translateFreeFunctions(
 	}
 }
 
-/// buildFreestandingSubroutine phase: params — mapping storage refs become
-/// bytes (runtime key prefix), slot-mode storage refs biguint slot handles,
-/// >4KB memory aggregates uint64 blob offsets.
+/// buildFreestandingSubroutine phase: params — mapping storage refs become bytes (runtime key prefix), slot-mode storage refs …
 void AWSTBuilder::buildFreestandingParams(
 	solidity::frontend::FunctionDefinition const& _func,
 	std::string const& _sourceFile,
@@ -295,8 +293,7 @@ void AWSTBuilder::buildFreestandingParams(
 
 }
 
-/// buildFreestandingSubroutine phase: collect the storage/memory param
-/// indices whose post-call values thread back through the augmented return.
+/// buildFreestandingSubroutine phase: collect the storage/memory param indices whose post-call values thread back through the …
 void AWSTBuilder::collectFreestandingAugmentedParams(
 	solidity::frontend::FunctionDefinition const& _func,
 	std::set<size_t> const& mappingStorageParams,
@@ -346,8 +343,7 @@ void AWSTBuilder::collectFreestandingAugmentedParams(
 
 }
 
-/// buildFreestandingSubroutine phase: return type, augmented with
-/// storage/memory param types for write-back.
+/// buildFreestandingSubroutine phase: return type, augmented with storage/memory param types for write-back.
 void AWSTBuilder::computeFreestandingReturnType(
 	solidity::frontend::FunctionDefinition const& _func,
 	awst::Subroutine& sub,
@@ -387,9 +383,7 @@ void AWSTBuilder::computeFreestandingReturnType(
 
 }
 
-/// buildFreestandingSubroutine phase: register param context on the
-/// FunctionContext (mapping-key params, slot handles, asm param/bit-width
-/// context, box-key struct params).
+/// buildFreestandingSubroutine phase: register param context on the FunctionContext (mapping-key params, slot handles, asm …
 void AWSTBuilder::registerFreestandingParamContext(
 	solidity::frontend::FunctionDefinition const& _func,
 	sol_ast::FunctionContext& fnCtx,
@@ -455,8 +449,7 @@ void AWSTBuilder::registerFreestandingParamContext(
 
 }
 
-/// buildFreestandingSubroutine phase: register storage/blob return params
-/// and blob param offsets on the FunctionContext.
+/// buildFreestandingSubroutine phase: register storage/blob return params and blob param offsets on the FunctionContext.
 void AWSTBuilder::registerFreestandingReturnParams(
 	solidity::frontend::FunctionDefinition const& _func,
 	sol_ast::FunctionContext& fnCtx,
@@ -500,8 +493,7 @@ void AWSTBuilder::registerFreestandingReturnParams(
 
 }
 
-/// buildFreestandingSubroutine phase: zero-initialize named return variables
-/// (Solidity implicit init) + blob-backed memory-return FMP binds/bumps.
+/// buildFreestandingSubroutine phase: zero-initialize named return variables (Solidity implicit init) + blob-backed memory-return …
 void AWSTBuilder::prependFreestandingReturnInits(
 	solidity::frontend::FunctionDefinition const& _func,
 	awst::Subroutine& sub,
@@ -607,8 +599,7 @@ void AWSTBuilder::prependFreestandingReturnInits(
 
 namespace
 {
-/// buildFreestandingSubroutine phase: augment every return statement with
-/// the storage/memory-ref param values (flat tuple; bare type for void+1).
+/// buildFreestandingSubroutine phase: augment every return statement with the storage/memory-ref param values (flat tuple; bare …
 void augmentFreestandingReturns(
 	awst::Subroutine& sub,
 	std::vector<size_t> const& storageParamIndices,
@@ -682,8 +673,7 @@ void augmentFreestandingReturns(
 }
 } // anonymous namespace
 
-/// buildFreestandingSubroutine phase: synthesize the implicit fall-through
-/// return (augmented args / named values / default zero).
+/// buildFreestandingSubroutine phase: synthesize the implicit fall-through return (augmented args / named values / default zero).
 void AWSTBuilder::synthesizeFreestandingImplicitReturn(
 	solidity::frontend::FunctionDefinition const& _func,
 	awst::Subroutine& sub,

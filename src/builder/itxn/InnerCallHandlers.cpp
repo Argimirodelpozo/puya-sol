@@ -530,7 +530,6 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
 namespace
 {
 /// Receiver lowers to `global CurrentApplicationAddress` — a self-call.
-/// (This sniff appeared inline three times in the call-with-data branch.)
 bool isCurrentAppAddressReceiver(awst::Expression const* receiver)
 {
 	if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(receiver))
@@ -626,9 +625,7 @@ InnerCallHandlers::SelfEncodeForm InnerCallHandlers::parseSelfEncodeForm(
 	return form;
 }
 
-/// Resolve the SAME-signature implemented method on `this` for a parsed
-/// self-encode form (exact canonical-signature match, then exact-overload
-/// match on the referenced function, then the name+arity fallback).
+/// Resolve the SAME-signature implemented method on `this` for a parsed self-encode form (exact canonical-signature match, then …
 solidity::frontend::FunctionDefinition const* InnerCallHandlers::resolveSelfCallOverload(
 	ContractContext& _ctx,
 	SelfEncodeForm const& form)
@@ -710,8 +707,7 @@ solidity::frontend::FunctionDefinition const* InnerCallHandlers::resolveSelfCall
 	return target;
 }
 
-/// Emit the direct-callsub rewrite for a resolved self-call target and wrap
-/// the result as the EVM `(bool, bytes)` tuple.
+/// Emit the direct-callsub rewrite for a resolved self-call target and wrap the result as the EVM `(bool, bytes)` tuple.
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::emitDirectSelfCall(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionDefinition const& targetFunc,
@@ -828,10 +824,7 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::emitDirectSelfCall(
 			makeBoolBytesTuple(true, std::move(dataBytes), _loc));
 }
 
-/// `.call/.staticcall(data)` with a data argument — the encoded-call router:
-/// self-call direct rewrites (encodeWithSignature/Selector/Call), visible-
-/// encoder transports, precompiles, the self fallback route, empty-data
-/// folds, and the raw-data inner app call.
+/// `.call/.staticcall(data)` with a data argument — the encoded-call router: self-call direct rewrites …
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
