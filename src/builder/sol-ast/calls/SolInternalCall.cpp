@@ -3,6 +3,7 @@
 /// Migrated from FunctionCallBuilder.cpp lines 3324-4390.
 
 #include "builder/sol-ast/calls/SolInternalCall.h"
+#include "builder/sol-types/RefParamPassing.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/sol-ast/MappingPrefix.h"
@@ -320,11 +321,7 @@ std::vector<size_t> collectMemoryWriteBackParams(
 	if (_funcDef && _funcDef->isImplemented()
 		&& ((calleeIsLibrary && !calleeIsPrivate) || calleeIsFree || calleeIsInternalMethod))
 	{
-		auto isMemRefType = [](Type const* t) {
-			if (auto const* arr = dynamic_cast<ArrayType const*>(t))
-				return !arr->isByteArrayOrString();
-			return dynamic_cast<StructType const*>(t) != nullptr;
-		};
+		auto isMemRefType = builder::isMemoryRefWriteBackType;
 		for (size_t pi = 0; pi < _funcDef->parameters().size() && pi < argCount; ++pi)
 		{
 			auto const& p = _funcDef->parameters()[pi];
@@ -614,35 +611,20 @@ void SolInternalCall::collectSubroutineParamTypes(
 	std::set<size_t>& mappingStorageParamIndices,
 	std::set<size_t>& evmSlotRefParamIndices)
 {
-	// Struct storage-ref params used via `.slot` in asm travel as a box-key
-	// handle (mirror buildFreestandingSubroutine); pass the arg's box key.
+	// The shared travel rule (RefParamPassing.h) — MUST classify exactly as
+	// FunctionBuilder/AWSTBuilder did on the callee side, or args mismatch.
 	auto slotParams = builder::structRefParamsUsedAsAsmSlot(_funcDef);
 	for (size_t pi = 0; pi < _funcDef.parameters().size(); ++pi)
 	{
 		auto const& param = _funcDef.parameters()[pi];
-		if (m_ctx.typeMapper.profile().evmStorageLayout
-			&& param->referenceLocation() == VariableDeclaration::Location::Storage)
-		{
-			// --evm-storage-layout: pass the biguint slot of the argument.
-			paramTypes.push_back(awst::WType::biguintType());
+		auto passing = builder::classifyRefParamPassing(
+			m_ctx.typeMapper, *param, slotParams.count(pi) != 0);
+		paramTypes.push_back(
+			builder::refParamWType(passing, m_ctx.typeMapper, *param));
+		if (passing == builder::RefParamPassing::SlotHandle)
 			evmSlotRefParamIndices.insert(pi);
-		}
-		else if (param->referenceLocation() == VariableDeclaration::Location::Storage
-			&& (builder::isBoxKeyedStorageRef(
-					param->type(), m_ctx.typeMapper.analysis())
-				|| slotParams.count(pi))) // widened: plain structs + asm .slot refs
-		{
-			paramTypes.push_back(awst::WType::bytesType());
+		else if (passing == builder::RefParamPassing::BoxKeyPrefix)
 			mappingStorageParamIndices.insert(pi);
-		}
-		else if (param->referenceLocation() == VariableDeclaration::Location::Memory
-			&& builder::memoryUsesBlob(m_ctx.typeMapper.map(param->type())))
-			// Blob-backed (>4KB) memory aggregate: the callee receives the
-			// uint64 base offset (pointer model), not the struct value. The
-			// argument `p` resolves to its offset local (SolIdentifier).
-			paramTypes.push_back(awst::WType::uint64Type());
-		else
-			paramTypes.push_back(m_ctx.typeMapper.map(param->type()));
 	}
 }
 

@@ -263,17 +263,8 @@ void ContractBuilder::buildModifierChain(
 					== solidity::frontend::VariableDeclaration::Location::Storage)
 				{
 					m_exprBuilder->appendEffectsTo(modBody->body);
-					sol_ast::StorageAlias alias = [&]() -> sol_ast::StorageAlias {
-						if (dynamic_cast<awst::BytesConstant const*>(argExpr.get()))
-							return sol_ast::StorageAlias::mappingHolder(std::move(argExpr));
-						if (dynamic_cast<awst::IndexExpression const*>(argExpr.get()))
-							return sol_ast::StorageAlias::indexedPath(std::move(argExpr));
-						if (dynamic_cast<awst::FieldExpression const*>(argExpr.get()))
-							return sol_ast::StorageAlias::fieldPath(std::move(argExpr));
-						if (dynamic_cast<awst::TupleItemExpression const*>(argExpr.get()))
-							return sol_ast::StorageAlias::tupleSlice(std::move(argExpr));
-						return sol_ast::StorageAlias::stateRead(std::move(argExpr));
-					}();
+					sol_ast::StorageAlias alias =
+						sol_ast::StorageAlias::classify(std::move(argExpr));
 					m_tr->setStorageAlias(param->id(), std::move(alias));
 					remappedDeclIds.push_back(param->id());
 					continue;

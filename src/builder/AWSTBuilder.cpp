@@ -1,6 +1,7 @@
 #include <unordered_set>
 #include "builder/SourceLocConvert.h"
 #include "builder/AWSTBuilder.h"
+#include "builder/sol-types/RefParamPassing.h"
 #include "builder/storage/EvmLayoutMode.h"
 #include "builder/sol-types/SolIntType.h"
 #include "awst/Termination.h"
@@ -259,35 +260,19 @@ void AWSTBuilder::buildFreestandingParams(
 		arg.sourceLocation = m_session.sourceMap.toAwstLoc(
 			_sourceFile, param->location());
 
-		// Mapping storage refs (including array-of-mapping): callee receives
-		// the caller's box key prefix as bytes so `m[k]` hashes against the
-		// caller's storage var, not the param name. Without widening,
-		// array-of-mapping params encode as their own "state var" and box
-		// keys diverge from the auto-getter's reads.
-		if (m_session.profile.evmStorageLayout
-			&& param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
+		// Slot handle / box-key prefix (so `m[k]` hashes against the CALLER's
+		// storage var, not the param name) / blob offset / value — the shared
+		// travel rule (RefParamPassing.h).
+		auto passing = classifyRefParamPassing(
+			m_session.typeMapper, *param, slotParams.count(pi) != 0);
+		arg.wtype = refParamWType(passing, m_session.typeMapper, *param);
+		switch (passing)
 		{
-			// --evm-storage-layout: every storage ref IS a biguint slot handle;
-			// writes go straight to the slot space (no box keys, no write-back).
-			arg.wtype = awst::WType::biguintType();
-			evmSlotRefParams.insert(pi);
+		case RefParamPassing::SlotHandle: evmSlotRefParams.insert(pi); break;
+		case RefParamPassing::BoxKeyPrefix: mappingStorageParams.insert(pi); break;
+		case RefParamPassing::BlobOffset: blobAggParams.insert(pi); break;
+		case RefParamPassing::Value: break;
 		}
-		else if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-			&& (isBoxKeyedStorageRef(param->type(), m_session.analysis)
-				|| slotParams.count(pi))) // widened: plain structs + asm .slot refs
-		{
-			arg.wtype = awst::WType::bytesType();
-			mappingStorageParams.insert(pi);
-		}
-		else if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-			&& memoryUsesBlob(m_session.typeMapper.map(param->type())))
-		{
-			// Memory aggregate >4KB → passed as uint64 base offset (pointer model).
-			arg.wtype = awst::WType::uint64Type();
-			blobAggParams.insert(pi);
-		}
-		else
-			arg.wtype = m_session.typeMapper.map(param->type());
 		sub.args.push_back(std::move(arg));
 	}
 
@@ -324,11 +309,7 @@ void AWSTBuilder::collectFreestandingAugmentedParams(
 	// per-stack-element cap if included unconditionally.
 	if (!isPrivate && _func.isImplemented())
 	{
-		auto isMemRefType = [](solidity::frontend::Type const* t) {
-			if (auto const* arr = dynamic_cast<solidity::frontend::ArrayType const*>(t))
-				return !arr->isByteArrayOrString();
-			return dynamic_cast<solidity::frontend::StructType const*>(t) != nullptr;
-		};
+		auto isMemRefType = isMemoryRefWriteBackType;
 		auto const& mutations = m_session.analysis.parameterMutations(
 			nullptr, _func);
 		memoryRefParamIndices = collectParamIndices(_func, [&](size_t pi) {

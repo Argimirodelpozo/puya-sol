@@ -81,6 +81,22 @@ struct StorageAlias
 		{ return {Kind::FieldPath, std::move(_e)}; }
 	static StorageAlias tupleSlice(std::shared_ptr<awst::Expression> _e)
 		{ return {Kind::TupleSlice, std::move(_e)}; }
+
+	/// The ONE shape→Kind ladder for binding a built argument as a storage
+	/// alias (base-ctor args, modifier args, __postInit args — previously
+	/// four verbatim lambda copies that could drift independently).
+	static StorageAlias classify(std::shared_ptr<awst::Expression> _e)
+	{
+		if (dynamic_cast<awst::BytesConstant const*>(_e.get()))
+			return mappingHolder(std::move(_e));
+		if (dynamic_cast<awst::IndexExpression const*>(_e.get()))
+			return indexedPath(std::move(_e));
+		if (dynamic_cast<awst::FieldExpression const*>(_e.get()))
+			return fieldPath(std::move(_e));
+		if (dynamic_cast<awst::TupleItemExpression const*>(_e.get()))
+			return tupleSlice(std::move(_e));
+		return stateRead(std::move(_e));
+	}
 };
 
 /// Flat translation-time scope state owned by TranslationContext. All

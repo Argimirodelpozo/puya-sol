@@ -8,6 +8,7 @@
 #include "builder/SelectorSemantics.h"
 #include "builder/sol-intrinsics/IntrinsicMapper.h"
 #include "builder/sol-types/TypeMapper.h"
+#include <algorithm>
 #include <cctype>
 #include <vector>
 
@@ -131,15 +132,8 @@ std::shared_ptr<awst::Expression> buildBlockCoinbase(
 	std::vector<uint8_t> value(32, 0);
 	if (profile.evmCoinbase)
 	{
-		auto nibble = [](char c) -> uint8_t {
-			if (c >= '0' && c <= '9') return static_cast<uint8_t>(c - '0');
-			return static_cast<uint8_t>(std::tolower(
-				static_cast<unsigned char>(c)) - 'a' + 10);
-		};
-		for (size_t i = 0; i < 20; ++i)
-			value[12 + i] = static_cast<uint8_t>(
-				(nibble((*profile.evmCoinbase)[2 * i]) << 4)
-				| nibble((*profile.evmCoinbase)[2 * i + 1]));
+		auto b20 = builder::decodeEvmCoinbase20(*profile.evmCoinbase);
+		std::copy(b20.begin(), b20.end(), value.begin() + 12);
 	}
 	return awst::makeAsAccount(
 		awst::makeBytesConstant(std::move(value), loc), loc);

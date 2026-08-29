@@ -14,6 +14,7 @@
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/itxn/CallResolver.h"
 #include "builder/sol-types/OverloadSuffix.h"
+#include "builder/sol-types/RefParamPassing.h"
 #include "builder/sol-types/SolIntType.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"
@@ -74,10 +75,7 @@ void augmentMethodForMutatedMemoryParams(
 	// targets — the analogue of library/free fns, which buildFreestandingSubroutine augments.
 	if (func.visibility() != Visibility::Internal) return;
 
-	auto isMemRefType = [](Type const* t) {
-		if (auto const* arr = dynamic_cast<ArrayType const*>(t)) return !arr->isByteArrayOrString();
-		return dynamic_cast<StructType const*>(t) != nullptr;
-	};
+	auto isMemRefType = isMemoryRefWriteBackType;
 	auto const& mutations = typeMapper.analysis().parameterMutations(
 		mostDerived, func);
 
@@ -426,21 +424,12 @@ void ContractBuilder::buildMethodSignature(
 		else
 			arg.name = param->name();
 		arg.sourceLocation = makeLoc(param->location());
-		arg.wtype = m_typeMapper.map(param->type());
-		// --evm-storage-layout: a storage ref IS a biguint slot number.
-		if (m_typeMapper.profile().evmStorageLayout
-			&& param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage)
-			arg.wtype = awst::WType::biguintType();
-		else if (param->referenceLocation()
-				== solidity::frontend::VariableDeclaration::Location::Storage
-			&& (isBoxKeyedStorageRef(param->type(), m_typeMapper.analysis())
-				|| asmSlotParamIds.count(param->id())))
-			arg.wtype = awst::WType::bytesType();
-		// Memory aggregate >4KB: pass as uint64 base offset (blob pointer model).
-		// Callee re-registers via setBlobAggParams so p.field[i] hits blob word access.
-		if (param->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Memory
-			&& memoryUsesBlob(arg.wtype))
-			arg.wtype = awst::WType::uint64Type();
+		// Slot handle / box-key prefix / blob offset / value — the shared
+		// travel rule (RefParamPassing.h); call sites classify identically.
+		arg.wtype = refParamWType(
+			classifyRefParamPassing(
+				m_typeMapper, *param, asmSlotParamIds.count(param->id()) != 0),
+			m_typeMapper, *param);
 		method.args.push_back(std::move(arg));
 		paramIndex++;
 	}

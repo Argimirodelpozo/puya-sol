@@ -745,19 +745,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleCoinbase(
 		EvmFeature::BlockCoinbase, m_typeMapper.profile(), _loc);
 	if (!m_typeMapper.profile().evmCoinbase)
 		return awst::makeZero(_loc, awst::WType::biguintType());
-	auto const& hex = *m_typeMapper.profile().evmCoinbase;
-	// Mirrors SolIntrinsicAccess's decoder exactly — case-insensitive, so
-	// a future profile producer that skips CliOptions' lowercasing cannot
-	// make the asm and Solidity paths emit different addresses.
-	auto nibble = [](char c) -> uint8_t {
-		if (c >= '0' && c <= '9') return static_cast<uint8_t>(c - '0');
-		return static_cast<uint8_t>(std::tolower(
-			static_cast<unsigned char>(c)) - 'a' + 10);
-	};
-	std::vector<uint8_t> bytes(20);
-	for (size_t i = 0; i < bytes.size(); ++i)
-		bytes[i] = static_cast<uint8_t>(
-			(nibble(hex[2 * i]) << 4) | nibble(hex[2 * i + 1]));
+	auto bytes = decodeEvmCoinbase20(*m_typeMapper.profile().evmCoinbase);
 	return awst::makeAsBiguint(
 		awst::makeBytesConstant(std::move(bytes), _loc), _loc);
 }
