@@ -527,6 +527,491 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleDelegatecall(
 
 // ── Top-level dispatcher ──
 
+namespace
+{
+/// Receiver lowers to `global CurrentApplicationAddress` — a self-call.
+/// (This sniff appeared inline three times in the call-with-data branch.)
+bool isCurrentAppAddressReceiver(awst::Expression const* receiver)
+{
+	if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(receiver))
+		if (intrinsic->opCode == "global" && !intrinsic->immediates.empty())
+			if (auto const* imm = std::get_if<std::string>(&intrinsic->immediates[0]);
+				imm && *imm == "CurrentApplicationAddress")
+				return true;
+	return false;
+}
+} // anonymous namespace
+
+InnerCallHandlers::SelfEncodeForm InnerCallHandlers::parseSelfEncodeForm(
+	solidity::frontend::FunctionCall const& encCall,
+	solidity::frontend::MemberAccess const* encMA)
+{
+	using namespace solidity::frontend;
+	auto const* encCallExpr = &encCall;
+	SelfEncodeForm form;
+	auto& fnName = form.fnName;
+	auto& sigString = form.sigString;
+	auto& refFunc = form.refFunc;
+	auto& targetIdentityExpr = form.targetIdentityExpr;
+	auto& resolvedArgs = form.resolvedArgs;
+	// Both recognised shapes lower to a direct InstanceMethodTarget:
+	//   address(this).call(abi.encodeWithSignature("fn(types)", args...))
+	//   address(this).call(abi.encodeWithSelector(this.fn.selector, args...))
+	// Arg normalisation across the three encode forms:
+	//   encodeWithSignature("fn(types)", a, b, …) → args spread at indices 1..
+	//   encodeWithSelector(this.fn.selector, a, b, …) → args spread at indices 1..
+	//   encodeCall(C.fn, (a, b, …)) → args as a TUPLE in index 1 (or a single value)
+	if (encMA && encMA->memberName() == "encodeWithSignature"
+		&& !encCallExpr->arguments().empty())
+	{
+		if (auto const* sigLit = dynamic_cast<Literal const*>(encCallExpr->arguments()[0].get()))
+		{
+			sigString = sigLit->value();
+			auto parenPos = sigString.find('(');
+			if (parenPos != std::string::npos)
+				fnName = sigString.substr(0, parenPos);
+		}
+		for (size_t i = 1; i < encCallExpr->arguments().size(); ++i)
+			resolvedArgs.push_back(encCallExpr->arguments()[i]);
+	}
+	else if (encMA && encMA->memberName() == "encodeWithSelector"
+		&& !encCallExpr->arguments().empty())
+	{
+		targetIdentityExpr = encCallExpr->arguments()[0].get();
+		// `this.fn.selector` = MemberAccess("selector", MemberAccess("fn", this)).
+		if (auto const* selMA = dynamic_cast<MemberAccess const*>(encCallExpr->arguments()[0].get()))
+			if (selMA->memberName() == "selector")
+				if (auto const* fnMA = dynamic_cast<MemberAccess const*>(&selMA->expression()))
+				{
+					fnName = fnMA->memberName();
+					refFunc = dynamic_cast<FunctionDefinition const*>(
+						fnMA->annotation().referencedDeclaration);
+				}
+		for (size_t i = 1; i < encCallExpr->arguments().size(); ++i)
+			resolvedArgs.push_back(encCallExpr->arguments()[i]);
+	}
+	else if (encMA && encMA->memberName() == "encodeCall"
+		&& !encCallExpr->arguments().empty())
+	{
+		targetIdentityExpr = encCallExpr->arguments()[0].get();
+		// encodeCall(Contract.fn, (args…)): the fn ref names the exact
+		// function; resolve the same-signature method on `this` by id
+		// (inherited/overridden impl + its return type). Args are a
+		// tuple in index 1.
+		auto const* fref = encCallExpr->arguments()[0].get();
+		if (auto const* m = dynamic_cast<MemberAccess const*>(fref))
+		{
+			fnName = m->memberName();
+			refFunc = dynamic_cast<FunctionDefinition const*>(
+				m->annotation().referencedDeclaration);
+		}
+		else if (auto const* id = dynamic_cast<Identifier const*>(fref))
+		{
+			fnName = id->name();
+			refFunc = dynamic_cast<FunctionDefinition const*>(
+				id->annotation().referencedDeclaration);
+		}
+		if (encCallExpr->arguments().size() >= 2)
+		{
+			auto const& argsExpr = *encCallExpr->arguments()[1];
+			if (auto const* tup = dynamic_cast<TupleExpression const*>(&argsExpr))
+			{
+				for (auto const& comp : tup->components())
+					if (comp) resolvedArgs.push_back(comp);
+			}
+			else
+				resolvedArgs.push_back(encCallExpr->arguments()[1]);
+		}
+	}
+	return form;
+}
+
+/// Resolve the SAME-signature implemented method on `this` for a parsed
+/// self-encode form (exact canonical-signature match, then exact-overload
+/// match on the referenced function, then the name+arity fallback).
+solidity::frontend::FunctionDefinition const* InnerCallHandlers::resolveSelfCallOverload(
+	ContractContext& _ctx,
+	SelfEncodeForm const& form)
+{
+	using namespace solidity::frontend;
+	auto const& fnName = form.fnName;
+	auto const& sigString = form.sigString;
+	auto const* refFunc = form.refFunc;
+	auto const& resolvedArgs = form.resolvedArgs;
+	size_t nArgs = resolvedArgs.size();
+	FunctionDefinition const* target = nullptr;
+	// Resolve the SAME-signature implemented method on `this`
+	// (the fn ref may point at an interface/base declaration;
+	// dispatch wants the concrete impl by name + full sig).
+	auto sameSig = [&](FunctionDefinition const* a, FunctionDefinition const* b) {
+		if (a->parameters().size() != b->parameters().size())
+			return false;
+		for (size_t k = 0; k < a->parameters().size(); ++k)
+			if (solTypeToArc4ParamName(_ctx, a->parameters()[k]->type())
+				!= solTypeToArc4ParamName(_ctx, b->parameters()[k]->type()))
+				return false;
+		return true;
+	};
+	if (_ctx.currentContract)
+	{
+		if (!sigString.empty())
+		{
+			// encodeWithSignature("f(uint256)", ...): match the
+			// candidate whose CANONICAL ARC4 signature equals the
+			// given string exactly — so `f(uint256)` binds
+			// f(uint256), not the first same-arity `f(bool)`.
+			// Exact-only (no alias normalisation): a non-match
+			// simply falls through to the name+arity behaviour,
+			// so this can only fix a wrong bind, never regress.
+			forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
+			{
+				if (target) return;
+				if (!func->isImplemented() || func->name() != fnName)
+					return;
+				std::string got = fnName + "(";
+				for (size_t k = 0; k < func->parameters().size(); ++k)
+				{
+					if (k) got += ",";
+					got += solTypeToArc4ParamName(_ctx, func->parameters()[k]->type());
+				}
+				got += ")";
+				if (got == sigString)
+					target = func;
+			});
+		}
+		if (!target && refFunc)
+		{
+			// Exact overload known (encodeCall/encodeWithSelector
+			// name a specific function): match name + full param
+			// signature, not just arity — an f(uint256) ref must
+			// not bind f(bool). Resolves the same-signature impl
+			// on `this` (the ref may point at an interface/base).
+			forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
+			{
+				if (target) return;
+				if (func->isImplemented() && func->name() == fnName
+					&& sameSig(func, refFunc))
+					target = func;
+			});
+		}
+		// Fallback: name + arity. Unchanged behaviour, and the
+		// only option for encodeWithSignature (its raw string
+		// sig can't be canonicalised reliably — `uint` vs
+		// `uint256`, etc.); ambiguity there is inherent.
+		if (!target)
+			forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
+			{
+				if (target) return;
+				if (func->isImplemented() && func->name() == fnName
+					&& func->parameters().size() == nArgs)
+					target = func;
+			});
+	}
+	return target;
+}
+
+/// Emit the direct-callsub rewrite for a resolved self-call target and wrap
+/// the result as the EVM `(bool, bytes)` tuple.
+std::unique_ptr<InstanceBuilder> InnerCallHandlers::emitDirectSelfCall(
+	ContractContext& _ctx,
+	solidity::frontend::FunctionDefinition const& targetFunc,
+	SelfEncodeForm const& form,
+	std::string const& encodeName,
+	awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+	auto const* target = &targetFunc;
+	auto const& fnName = form.fnName;
+	auto const* targetIdentityExpr = form.targetIdentityExpr;
+	auto const& resolvedArgs = form.resolvedArgs;
+		if (targetIdentityExpr)
+			_ctx.evaluateForEffects(*targetIdentityExpr, _loc);
+		// AVM rejects self inner-txn calls; rewrite to direct callsub.
+		// Revert isolation differs: reverts propagate instead of
+		// being caught as success=false.
+		Logger::instance().warning(
+			"`address(this).call(abi." + encodeName +
+			"(...))` self-call rewritten to direct `" + fnName +
+			"(...)` invocation. AVM doesn't support self inner-txn "
+			"calls; revert-isolation semantics may differ.",
+			_loc);
+
+		std::string targetName =
+			CallResolver::resolveMethodName(_ctx, *target);
+		size_t nReturns = target->returnParameters().size();
+		auto pushResolvedArgs = [&](auto& call)
+		{
+			for (size_t i = 0; i < resolvedArgs.size(); ++i)
+			{
+				auto const& argument = resolvedArgs[i];
+				auto value = _ctx.buildExpr(*argument);
+				if (value && i < target->parameters().size())
+					value = sol_ast::EvmSlotLowering::materializeRefValue(
+						_ctx, std::move(value),
+						argument->annotation().type,
+						_ctx.typeMapper.map(
+							target->parameters()[i]->type()),
+						_loc);
+				if (i < target->parameters().size())
+				{
+					auto const* parameterType = target->parameters()[i]->type();
+					auto const* parameterWType = _ctx.typeMapper.map(parameterType);
+					value = builder::ConversionPlan{
+						argument->annotation().type,
+						parameterType,
+						parameterWType,
+						builder::ConversionPlan::Context::Argument}.emit(
+							std::move(value), _loc);
+				}
+				awst::pushCallArg(call->args, std::move(value));
+			}
+		};
+		if (nReturns == 0)
+		{
+			auto call = awst::makeSubroutineCall(
+				awst::InstanceMethodTarget{targetName},
+				awst::WType::voidType(), _loc);
+			pushResolvedArgs(call);
+			auto stmt = awst::makeExpressionStatement(call, _loc);
+			_ctx.preEffects().push_back(std::move(stmt));
+			return std::make_unique<GenericResultBuilder>(_ctx,
+				makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc));
+		}
+		if (nReturns == 1)
+		{
+			auto* retType = _ctx.typeMapper.map(target->returnParameters()[0]->type());
+			if (!retType) retType = awst::WType::voidType();
+			auto call = awst::makeSubroutineCall(
+				awst::InstanceMethodTarget{targetName},
+				retType, _loc);
+			pushResolvedArgs(call);
+			auto dataBytes = AbiEncoderBuilder::encodeValuesAsEvmAbi(
+				_ctx, {target->returnParameters()[0]->type()},
+				{std::move(call)}, _loc);
+			return std::make_unique<GenericResultBuilder>(_ctx,
+				makeBoolBytesTuple(true, std::move(dataBytes), _loc));
+		}
+
+		// Multi-return: cache the call once, then let the recursive
+		// canonical encoder lay out all static/dynamic return values.
+		std::vector<awst::WType const*> tupleTypes;
+		std::vector<solidity::frontend::Type const*> returnTypes;
+		for (auto const& ret : target->returnParameters())
+		{
+			auto* pt = _ctx.typeMapper.map(ret->type());
+			tupleTypes.push_back(pt ? pt : awst::WType::voidType());
+			returnTypes.push_back(ret->type());
+		}
+		auto* tupleTypeOwned = _ctx.typeMapper.createType<awst::WTuple>(
+			std::move(tupleTypes));
+		auto call = awst::makeSubroutineCall(
+			awst::InstanceMethodTarget{targetName},
+			tupleTypeOwned, _loc);
+		pushResolvedArgs(call);
+		// Intentionally RAW makeSingleEvaluation, not makeEvalOnce: the fresh
+		// SE id is IDENTITY-FORCING — it prevents two attrs-equal calls from
+		// merging (see sol-ast-audit) — so the wrap must be unconditional;
+		// makeEvalOnce's skip-leaf contract must never apply here.
+		auto cachedCall = awst::makeSingleEvaluation(
+			std::move(call), tupleTypeOwned, awst::nextSingleEvalId(), _loc);
+
+		std::vector<std::shared_ptr<awst::Expression>> values;
+		for (size_t i = 0; i < nReturns; ++i)
+		{
+			auto* itemType = tupleTypeOwned->types()[i];
+			auto item = awst::makeTupleItem(cachedCall, static_cast<int>(i), itemType, _loc);
+			values.push_back(std::move(item));
+		}
+		auto dataBytes = AbiEncoderBuilder::encodeValuesAsEvmAbi(
+			_ctx, returnTypes, std::move(values), _loc);
+		return std::make_unique<GenericResultBuilder>(_ctx,
+			makeBoolBytesTuple(true, std::move(dataBytes), _loc));
+}
+
+/// `.call/.staticcall(data)` with a data argument — the encoded-call router:
+/// self-call direct rewrites (encodeWithSignature/Selector/Call), visible-
+/// encoder transports, precompiles, the self fallback route, empty-data
+/// folds, and the raw-data inner app call.
+std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _receiver,
+	std::string const& _memberName,
+	solidity::frontend::FunctionCall const& _callNode,
+	std::shared_ptr<awst::Expression> _callValue,
+	solidity::frontend::Expression const& _baseExpr,
+	awst::SourceLocation const& _loc)
+{
+	using namespace solidity::frontend;
+
+	if (_memberName == "staticcall")
+		EvmFeaturePolicy::report(
+			EvmFeature::StaticCall, _ctx.typeMapper.profile(), _loc);
+	auto const& dataArg = *_callNode.arguments()[0];
+
+	// {value:} needs an inner PaymentTxn grouped with a real inner app call.
+	// Self-calls rewrite to a direct callsub (no inner txn to attach it to)
+	// and precompiles have no account to pay — fail loud, don't drop value.
+	if (_callValue)
+	{
+		bool selfReceiver = isCurrentAppAddressReceiver(_receiver.get());
+		if (selfReceiver || detectPrecompileAddress(_baseExpr))
+		{
+			Logger::instance().error(
+				std::string("`.call{value: ...}(data)` to ")
+					+ (selfReceiver ? "the contract itself" : "a precompile address")
+					+ " is not supported on AVM: the value payment cannot be "
+					  "attached (self-calls lower to a direct subroutine call; "
+					  "precompiles have no account). Split into a separate "
+					  "transfer + call.", _loc);
+			_ctx.buildExpr(dataArg);
+			return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
+		}
+	}
+
+	// Self-call with abi.encodeWithSignature/WithSelector: resolve to a
+	// direct subroutine call (mirrors handleCallWithEncodeCall self-call
+	// path; avoids fallback stub for contracts without a fallback).
+	if (isCurrentAppAddressReceiver(_receiver.get()))
+	{
+		if (auto const* encCallExpr = dynamic_cast<FunctionCall const*>(&dataArg))
+		{
+			auto const* encMA = dynamic_cast<MemberAccess const*>(&encCallExpr->expression());
+			bool recognised = encMA && !encCallExpr->arguments().empty()
+				&& (encMA->memberName() == "encodeWithSignature"
+					|| encMA->memberName() == "encodeWithSelector"
+					|| encMA->memberName() == "encodeCall");
+			if (recognised)
+			{
+				auto form = parseSelfEncodeForm(*encCallExpr, encMA);
+				if (!form.fnName.empty())
+					if (auto const* target = resolveSelfCallOverload(_ctx, form))
+						return emitDirectSelfCall(
+							_ctx, *target, form, encMA->memberName(), _loc);
+			}
+		}
+	}
+
+	if (auto const* encodeCallExpr = dynamic_cast<FunctionCall const*>(&dataArg))
+	{
+		auto const* encodeMA = dynamic_cast<MemberAccess const*>(&encodeCallExpr->expression());
+		if (encodeMA && encodeMA->memberName() == "encodeCall" && encodeCallExpr->arguments().size() >= 2)
+		{
+			auto result = handleCallWithEncodeCall(_ctx, _receiver, *encodeCallExpr, _callValue, _loc);
+			if (result) return result;
+		}
+		// .call(abi.encodeWithSignature/WithSelector(...)): encoder visible at call site —
+		// preserve the declared argument types while adapting the byte blob to
+		// the selected contract-entry transport.
+		if (encodeMA
+			&& (encodeMA->memberName() == "encodeWithSignature"
+				|| encodeMA->memberName() == "encodeWithSelector")
+			&& !encodeCallExpr->arguments().empty())
+		{
+			auto result = handleCallWithSignatureArgs(
+				_ctx, _receiver, *encodeCallExpr,
+				encodeMA->memberName() == "encodeWithSignature", _callValue, _loc);
+			if (result) return result;
+		}
+	}
+
+	// .call(data) to known precompile address → route like .staticcall
+	if (auto precompileAddr = detectPrecompileAddress(_baseExpr))
+	{
+		auto inputData = _ctx.buildExpr(dataArg);
+		auto result = handleStaticCallPrecompile(_ctx, *precompileAddr, std::move(inputData), _loc);
+		if (result) return result;
+	}
+	// Non-encodeCall self-call: an exact route exists — non-selector data
+	// reaches the fallback in the approval program, so call __fallback
+	// directly. Not an UnknownLowLevelCall: the target is proven (self).
+	bool isSelfCall = isCurrentAppAddressReceiver(_receiver.get());
+
+	if (isSelfCall)
+	{
+		auto dataExpr = _ctx.buildExpr(dataArg);
+		if (dataExpr->wtype == awst::WType::stringType())
+		{
+			auto cast = awst::makeAsBytes(std::move(dataExpr), _loc);
+			dataExpr = std::move(cast);
+		}
+
+		// Only route to __fallback if the contract defines one; otherwise
+		// an InstanceMethodTarget{"__fallback"} would be unresolvable.
+		solidity::frontend::FunctionDefinition const* fallbackFunc = nullptr;
+		if (_ctx.currentContract)
+		{
+			forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
+			{
+				if (fallbackFunc) return;
+				if (func->isImplemented() && func->isFallback())
+					fallbackFunc = func;
+			});
+		}
+
+		if (!fallbackFunc)
+		{
+			return std::make_unique<GenericResultBuilder>(_ctx,
+				makeBoolBytesTupleEmpty(_loc));
+		}
+
+		bool fallbackTakesBytes = fallbackFunc->parameters().size() == 1;
+		bool fallbackReturnsBytes = !fallbackFunc->returnParameters().empty();
+
+		auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{"__fallback"}, fallbackReturnsBytes ? awst::WType::bytesType() : awst::WType::voidType(), _loc);
+		if (fallbackTakesBytes)
+			awst::pushCallArg(call->args, dataExpr);
+
+		// Spill bytes-returning fallback result to a temp.
+		if (fallbackReturnsBytes)
+		{
+			std::string tmpName = "__fallback_ret_" + std::to_string((awst::NameGen::next("InnerCallHandlers.s_tmpCounter") + 1));
+			auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
+			auto assign = awst::makeAssignmentStatement(tmpTarget, std::move(call), _loc);
+			_ctx.preEffects().push_back(std::move(assign));
+
+			auto retRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
+			return std::make_unique<GenericResultBuilder>(_ctx,
+				makeBoolBytesTuple(true, std::move(retRead), _loc));
+		}
+
+		auto stmt = awst::makeExpressionStatement(call, _loc);
+		_ctx.preEffects().push_back(std::move(stmt));
+
+		return std::make_unique<GenericResultBuilder>(_ctx,
+			makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc));
+	}
+
+	// Non-self raw .call(data) → inner app call; splits [selector, rest].
+	// Empty calls are only exactly decidable for the literal zero address;
+	// other addresses need open-world account/code state that AVM does not expose.
+	auto dataExpr = _ctx.buildExpr(dataArg);
+	auto isEmptyConst = [](awst::Expression const* e) {
+		// Unwrap ReinterpretCast (string→bytes, etc.) to inspect the inner.
+		while (auto const* rc = dynamic_cast<awst::ReinterpretCast const*>(e))
+			e = rc->expr.get();
+		if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(e))
+			return bc->value.empty();
+		if (auto const* sc = dynamic_cast<awst::StringConstant const*>(e))
+			return sc->value.empty();
+		return false;
+	};
+	if (isEmptyConst(dataExpr.get()))
+	{
+		// Empty data + {value:} = plain transfer (EVM: invokes receive()).
+		if (_callValue)
+			return handleCallWithValue(_ctx, std::move(_receiver), std::move(_callValue), _loc);
+		if (isLiteralZeroAddress(_baseExpr))
+			return std::make_unique<GenericResultBuilder>(_ctx,
+				makeBoolBytesTupleEmpty(_loc));
+		EvmFeaturePolicy::report(
+			EvmFeature::UnknownLowLevelCall,
+			_ctx.typeMapper.profile(), _loc);
+		return std::make_unique<GenericResultBuilder>(_ctx,
+			makeBoolBytesTuple(
+				false, awst::makeBytesConstant({}, _loc), _loc));
+	}
+	return handleCallWithRawData(_ctx, _receiver, std::move(dataExpr), std::move(_callValue), _loc);}
+
 std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
@@ -567,444 +1052,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::tryHandleAddressCall(
 	// staticcalls, self-calls, encodeCall/encodeWithSignature typed routing all come along for free.)
 	// solc rejects {value:} on staticcall, so _callValue here implies _memberName == "call".
 	if ((_memberName == "call" || _memberName == "staticcall") && !_callNode.arguments().empty())
-	{
-		if (_memberName == "staticcall")
-			EvmFeaturePolicy::report(
-				EvmFeature::StaticCall, _ctx.typeMapper.profile(), _loc);
-		auto const& dataArg = *_callNode.arguments()[0];
-
-		// {value:} needs an inner PaymentTxn grouped with a real inner app call.
-		// Self-calls rewrite to a direct callsub (no inner txn to attach it to)
-		// and precompiles have no account to pay — fail loud, don't drop value.
-		if (_callValue)
-		{
-			bool selfReceiver = false;
-			if (auto const* intr = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
-				if (intr->opCode == "global" && !intr->immediates.empty())
-					if (auto const* im = std::get_if<std::string>(&intr->immediates[0]);
-						im && *im == "CurrentApplicationAddress")
-						selfReceiver = true;
-			if (selfReceiver || detectPrecompileAddress(_baseExpr))
-			{
-				Logger::instance().error(
-					std::string("`.call{value: ...}(data)` to ")
-						+ (selfReceiver ? "the contract itself" : "a precompile address")
-						+ " is not supported on AVM: the value payment cannot be "
-						  "attached (self-calls lower to a direct subroutine call; "
-						  "precompiles have no account). Split into a separate "
-						  "transfer + call.", _loc);
-				_ctx.buildExpr(dataArg);
-				return std::make_unique<GenericResultBuilder>(_ctx, makeBoolBytesTupleEmpty(_loc));
-			}
-		}
-
-		// Self-call with abi.encodeWithSignature/WithSelector: resolve to a
-		// direct subroutine call (mirrors handleCallWithEncodeCall self-call
-		// path; avoids fallback stub for contracts without a fallback).
-		{
-			bool isSelfCallEwS = false;
-			if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
-				if (intrinsic->opCode == "global" && !intrinsic->immediates.empty())
-					if (auto const* imm = std::get_if<std::string>(&intrinsic->immediates[0]); imm && *imm == "CurrentApplicationAddress")
-						isSelfCallEwS = true;
-
-			if (isSelfCallEwS)
-			{
-				if (auto const* encCallExpr = dynamic_cast<FunctionCall const*>(&dataArg))
-				{
-					auto const* encMA = dynamic_cast<MemberAccess const*>(&encCallExpr->expression());
-					// Both recognised shapes lower to a direct InstanceMethodTarget:
-					//   address(this).call(abi.encodeWithSignature("fn(types)", args...))
-					//   address(this).call(abi.encodeWithSelector(this.fn.selector, args...))
-					std::string fnName;
-					// Full signature string from encodeWithSignature ("fn(types)")
-					// — carries the param types for exact overload matching.
-					std::string sigString;
-					// Referenced FunctionDefinition when the encode form names a
-					// SPECIFIC function (encodeCall/encodeWithSelector) — resolves
-					// the exact overload directly instead of name+arity.
-					FunctionDefinition const* refFunc = nullptr;
-					// Expression used only to identify the target. A successful direct
-					// rewrite must still evaluate it before the encoded arguments.
-					Expression const* targetIdentityExpr = nullptr;
-					// Method args, normalised across the three encode forms:
-					//   encodeWithSignature("fn(types)", a, b, …) → args spread at indices 1..
-					//   encodeWithSelector(this.fn.selector, a, b, …) → args spread at indices 1..
-					//   encodeCall(C.fn, (a, b, …)) → args as a TUPLE in index 1 (or a single value)
-					std::vector<ASTPointer<Expression const>> resolvedArgs;
-					if (encMA && encMA->memberName() == "encodeWithSignature"
-						&& !encCallExpr->arguments().empty())
-					{
-						if (auto const* sigLit = dynamic_cast<Literal const*>(encCallExpr->arguments()[0].get()))
-						{
-							sigString = sigLit->value();
-							auto parenPos = sigString.find('(');
-							if (parenPos != std::string::npos)
-								fnName = sigString.substr(0, parenPos);
-						}
-						for (size_t i = 1; i < encCallExpr->arguments().size(); ++i)
-							resolvedArgs.push_back(encCallExpr->arguments()[i]);
-					}
-					else if (encMA && encMA->memberName() == "encodeWithSelector"
-						&& !encCallExpr->arguments().empty())
-					{
-						targetIdentityExpr = encCallExpr->arguments()[0].get();
-						// `this.fn.selector` = MemberAccess("selector", MemberAccess("fn", this)).
-						if (auto const* selMA = dynamic_cast<MemberAccess const*>(encCallExpr->arguments()[0].get()))
-							if (selMA->memberName() == "selector")
-								if (auto const* fnMA = dynamic_cast<MemberAccess const*>(&selMA->expression()))
-								{
-									fnName = fnMA->memberName();
-									refFunc = dynamic_cast<FunctionDefinition const*>(
-										fnMA->annotation().referencedDeclaration);
-								}
-						for (size_t i = 1; i < encCallExpr->arguments().size(); ++i)
-							resolvedArgs.push_back(encCallExpr->arguments()[i]);
-					}
-					else if (encMA && encMA->memberName() == "encodeCall"
-						&& !encCallExpr->arguments().empty())
-					{
-						targetIdentityExpr = encCallExpr->arguments()[0].get();
-						// encodeCall(Contract.fn, (args…)): the fn ref names the exact
-						// function; resolve the same-signature method on `this` by id
-						// (inherited/overridden impl + its return type). Args are a
-						// tuple in index 1.
-						auto const* fref = encCallExpr->arguments()[0].get();
-						if (auto const* m = dynamic_cast<MemberAccess const*>(fref))
-						{
-							fnName = m->memberName();
-							refFunc = dynamic_cast<FunctionDefinition const*>(
-								m->annotation().referencedDeclaration);
-						}
-						else if (auto const* id = dynamic_cast<Identifier const*>(fref))
-						{
-							fnName = id->name();
-							refFunc = dynamic_cast<FunctionDefinition const*>(
-								id->annotation().referencedDeclaration);
-						}
-						if (encCallExpr->arguments().size() >= 2)
-						{
-							auto const& argsExpr = *encCallExpr->arguments()[1];
-							if (auto const* tup = dynamic_cast<TupleExpression const*>(&argsExpr))
-							{
-								for (auto const& comp : tup->components())
-									if (comp) resolvedArgs.push_back(comp);
-							}
-							else
-								resolvedArgs.push_back(encCallExpr->arguments()[1]);
-						}
-					}
-					if (!fnName.empty())
-					{
-						size_t nArgs = resolvedArgs.size();
-						FunctionDefinition const* target = nullptr;
-						// Resolve the SAME-signature implemented method on `this`
-						// (the fn ref may point at an interface/base declaration;
-						// dispatch wants the concrete impl by name + full sig).
-						auto sameSig = [&](FunctionDefinition const* a, FunctionDefinition const* b) {
-							if (a->parameters().size() != b->parameters().size())
-								return false;
-							for (size_t k = 0; k < a->parameters().size(); ++k)
-								if (solTypeToArc4ParamName(_ctx, a->parameters()[k]->type())
-									!= solTypeToArc4ParamName(_ctx, b->parameters()[k]->type()))
-									return false;
-							return true;
-						};
-						if (_ctx.currentContract)
-						{
-							if (!sigString.empty())
-							{
-								// encodeWithSignature("f(uint256)", ...): match the
-								// candidate whose CANONICAL ARC4 signature equals the
-								// given string exactly — so `f(uint256)` binds
-								// f(uint256), not the first same-arity `f(bool)`.
-								// Exact-only (no alias normalisation): a non-match
-								// simply falls through to the name+arity behaviour,
-								// so this can only fix a wrong bind, never regress.
-								forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
-								{
-									if (target) return;
-									if (!func->isImplemented() || func->name() != fnName)
-										return;
-									std::string got = fnName + "(";
-									for (size_t k = 0; k < func->parameters().size(); ++k)
-									{
-										if (k) got += ",";
-										got += solTypeToArc4ParamName(_ctx, func->parameters()[k]->type());
-									}
-									got += ")";
-									if (got == sigString)
-										target = func;
-								});
-							}
-							if (!target && refFunc)
-							{
-								// Exact overload known (encodeCall/encodeWithSelector
-								// name a specific function): match name + full param
-								// signature, not just arity — an f(uint256) ref must
-								// not bind f(bool). Resolves the same-signature impl
-								// on `this` (the ref may point at an interface/base).
-								forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
-								{
-									if (target) return;
-									if (func->isImplemented() && func->name() == fnName
-										&& sameSig(func, refFunc))
-										target = func;
-								});
-							}
-							// Fallback: name + arity. Unchanged behaviour, and the
-							// only option for encodeWithSignature (its raw string
-							// sig can't be canonicalised reliably — `uint` vs
-							// `uint256`, etc.); ambiguity there is inherent.
-							if (!target)
-								forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
-								{
-									if (target) return;
-									if (func->isImplemented() && func->name() == fnName
-										&& func->parameters().size() == nArgs)
-										target = func;
-								});
-						}
-						if (target)
-						{
-							if (targetIdentityExpr)
-								_ctx.evaluateForEffects(*targetIdentityExpr, _loc);
-							// AVM rejects self inner-txn calls; rewrite to direct callsub.
-							// Revert isolation differs: reverts propagate instead of
-							// being caught as success=false.
-							Logger::instance().warning(
-								"`address(this).call(abi." + encMA->memberName() +
-								"(...))` self-call rewritten to direct `" + fnName +
-								"(...)` invocation. AVM doesn't support self inner-txn "
-								"calls; revert-isolation semantics may differ.",
-								_loc);
-
-							std::string targetName =
-								CallResolver::resolveMethodName(_ctx, *target);
-							size_t nReturns = target->returnParameters().size();
-							auto pushResolvedArgs = [&](auto& call)
-							{
-								for (size_t i = 0; i < resolvedArgs.size(); ++i)
-								{
-									auto const& argument = resolvedArgs[i];
-									auto value = _ctx.buildExpr(*argument);
-									if (value && i < target->parameters().size())
-										value = sol_ast::EvmSlotLowering::materializeRefValue(
-											_ctx, std::move(value),
-											argument->annotation().type,
-											_ctx.typeMapper.map(
-												target->parameters()[i]->type()),
-											_loc);
-									if (i < target->parameters().size())
-									{
-										auto const* parameterType = target->parameters()[i]->type();
-										auto const* parameterWType = _ctx.typeMapper.map(parameterType);
-										value = builder::ConversionPlan{
-											argument->annotation().type,
-											parameterType,
-											parameterWType,
-											builder::ConversionPlan::Context::Argument}.emit(
-												std::move(value), _loc);
-									}
-									awst::pushCallArg(call->args, std::move(value));
-								}
-							};
-							if (nReturns == 0)
-							{
-								auto call = awst::makeSubroutineCall(
-									awst::InstanceMethodTarget{targetName},
-									awst::WType::voidType(), _loc);
-								pushResolvedArgs(call);
-								auto stmt = awst::makeExpressionStatement(call, _loc);
-								_ctx.preEffects().push_back(std::move(stmt));
-								return std::make_unique<GenericResultBuilder>(_ctx,
-									makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc));
-							}
-							if (nReturns == 1)
-							{
-								auto* retType = _ctx.typeMapper.map(target->returnParameters()[0]->type());
-								if (!retType) retType = awst::WType::voidType();
-								auto call = awst::makeSubroutineCall(
-									awst::InstanceMethodTarget{targetName},
-									retType, _loc);
-								pushResolvedArgs(call);
-								auto dataBytes = AbiEncoderBuilder::encodeValuesAsEvmAbi(
-									_ctx, {target->returnParameters()[0]->type()},
-									{std::move(call)}, _loc);
-								return std::make_unique<GenericResultBuilder>(_ctx,
-									makeBoolBytesTuple(true, std::move(dataBytes), _loc));
-							}
-
-							// Multi-return: cache the call once, then let the recursive
-							// canonical encoder lay out all static/dynamic return values.
-							std::vector<awst::WType const*> tupleTypes;
-							std::vector<solidity::frontend::Type const*> returnTypes;
-							for (auto const& ret : target->returnParameters())
-							{
-								auto* pt = _ctx.typeMapper.map(ret->type());
-								tupleTypes.push_back(pt ? pt : awst::WType::voidType());
-								returnTypes.push_back(ret->type());
-							}
-							auto* tupleTypeOwned = _ctx.typeMapper.createType<awst::WTuple>(
-								std::move(tupleTypes));
-							auto call = awst::makeSubroutineCall(
-								awst::InstanceMethodTarget{targetName},
-								tupleTypeOwned, _loc);
-							pushResolvedArgs(call);
-							// Intentionally RAW makeSingleEvaluation, not makeEvalOnce: the fresh
-							// SE id is IDENTITY-FORCING — it prevents two attrs-equal calls from
-							// merging (see sol-ast-audit) — so the wrap must be unconditional;
-							// makeEvalOnce's skip-leaf contract must never apply here.
-							auto cachedCall = awst::makeSingleEvaluation(
-								std::move(call), tupleTypeOwned, awst::nextSingleEvalId(), _loc);
-
-							std::vector<std::shared_ptr<awst::Expression>> values;
-							for (size_t i = 0; i < nReturns; ++i)
-							{
-								auto* itemType = tupleTypeOwned->types()[i];
-								auto item = awst::makeTupleItem(cachedCall, static_cast<int>(i), itemType, _loc);
-								values.push_back(std::move(item));
-							}
-							auto dataBytes = AbiEncoderBuilder::encodeValuesAsEvmAbi(
-								_ctx, returnTypes, std::move(values), _loc);
-							return std::make_unique<GenericResultBuilder>(_ctx,
-								makeBoolBytesTuple(true, std::move(dataBytes), _loc));
-						}
-					}
-				}
-			}
-		}
-
-		if (auto const* encodeCallExpr = dynamic_cast<FunctionCall const*>(&dataArg))
-		{
-			auto const* encodeMA = dynamic_cast<MemberAccess const*>(&encodeCallExpr->expression());
-			if (encodeMA && encodeMA->memberName() == "encodeCall" && encodeCallExpr->arguments().size() >= 2)
-			{
-				auto result = handleCallWithEncodeCall(_ctx, _receiver, *encodeCallExpr, _callValue, _loc);
-				if (result) return result;
-			}
-			// .call(abi.encodeWithSignature/WithSelector(...)): encoder visible at call site —
-			// preserve the declared argument types while adapting the byte blob to
-			// the selected contract-entry transport.
-			if (encodeMA
-				&& (encodeMA->memberName() == "encodeWithSignature"
-					|| encodeMA->memberName() == "encodeWithSelector")
-				&& !encodeCallExpr->arguments().empty())
-			{
-				auto result = handleCallWithSignatureArgs(
-					_ctx, _receiver, *encodeCallExpr,
-					encodeMA->memberName() == "encodeWithSignature", _callValue, _loc);
-				if (result) return result;
-			}
-		}
-
-		// .call(data) to known precompile address → route like .staticcall
-		if (auto precompileAddr = detectPrecompileAddress(_baseExpr))
-		{
-			auto inputData = _ctx.buildExpr(dataArg);
-			auto result = handleStaticCallPrecompile(_ctx, *precompileAddr, std::move(inputData), _loc);
-			if (result) return result;
-		}
-		// Non-encodeCall self-call: an exact route exists — non-selector data
-		// reaches the fallback in the approval program, so call __fallback
-		// directly. Not an UnknownLowLevelCall: the target is proven (self).
-		bool isSelfCall = false;
-		if (auto const* intrinsic = dynamic_cast<awst::IntrinsicCall const*>(_receiver.get()))
-		{
-			if (intrinsic->opCode == "global" && !intrinsic->immediates.empty())
-			{
-				auto const* imm = std::get_if<std::string>(&intrinsic->immediates[0]);
-				if (imm && *imm == "CurrentApplicationAddress")
-					isSelfCall = true;
-			}
-		}
-
-		if (isSelfCall)
-		{
-			auto dataExpr = _ctx.buildExpr(dataArg);
-			if (dataExpr->wtype == awst::WType::stringType())
-			{
-				auto cast = awst::makeAsBytes(std::move(dataExpr), _loc);
-				dataExpr = std::move(cast);
-			}
-
-			// Only route to __fallback if the contract defines one; otherwise
-			// an InstanceMethodTarget{"__fallback"} would be unresolvable.
-			solidity::frontend::FunctionDefinition const* fallbackFunc = nullptr;
-			if (_ctx.currentContract)
-			{
-				forEachDefinedFunction(*_ctx.currentContract, [&](auto const* func)
-				{
-					if (fallbackFunc) return;
-					if (func->isImplemented() && func->isFallback())
-						fallbackFunc = func;
-				});
-			}
-
-			if (!fallbackFunc)
-			{
-				return std::make_unique<GenericResultBuilder>(_ctx,
-					makeBoolBytesTupleEmpty(_loc));
-			}
-
-			bool fallbackTakesBytes = fallbackFunc->parameters().size() == 1;
-			bool fallbackReturnsBytes = !fallbackFunc->returnParameters().empty();
-
-			auto call = awst::makeSubroutineCall(awst::InstanceMethodTarget{"__fallback"}, fallbackReturnsBytes ? awst::WType::bytesType() : awst::WType::voidType(), _loc);
-			if (fallbackTakesBytes)
-				awst::pushCallArg(call->args, dataExpr);
-
-			// Spill bytes-returning fallback result to a temp.
-			if (fallbackReturnsBytes)
-			{
-				std::string tmpName = "__fallback_ret_" + std::to_string((awst::NameGen::next("InnerCallHandlers.s_tmpCounter") + 1));
-				auto tmpTarget = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
-				auto assign = awst::makeAssignmentStatement(tmpTarget, std::move(call), _loc);
-				_ctx.preEffects().push_back(std::move(assign));
-
-				auto retRead = awst::makeVarExpression(tmpName, awst::WType::bytesType(), _loc);
-				return std::make_unique<GenericResultBuilder>(_ctx,
-					makeBoolBytesTuple(true, std::move(retRead), _loc));
-			}
-
-			auto stmt = awst::makeExpressionStatement(call, _loc);
-			_ctx.preEffects().push_back(std::move(stmt));
-
-			return std::make_unique<GenericResultBuilder>(_ctx,
-				makeBoolBytesTuple(true, awst::makeBytesConstant({}, _loc), _loc));
-		}
-
-		// Non-self raw .call(data) → inner app call; splits [selector, rest].
-		// Empty calls are only exactly decidable for the literal zero address;
-		// other addresses need open-world account/code state that AVM does not expose.
-		auto dataExpr = _ctx.buildExpr(dataArg);
-		auto isEmptyConst = [](awst::Expression const* e) {
-			// Unwrap ReinterpretCast (string→bytes, etc.) to inspect the inner.
-			while (auto const* rc = dynamic_cast<awst::ReinterpretCast const*>(e))
-				e = rc->expr.get();
-			if (auto const* bc = dynamic_cast<awst::BytesConstant const*>(e))
-				return bc->value.empty();
-			if (auto const* sc = dynamic_cast<awst::StringConstant const*>(e))
-				return sc->value.empty();
-			return false;
-		};
-		if (isEmptyConst(dataExpr.get()))
-		{
-			// Empty data + {value:} = plain transfer (EVM: invokes receive()).
-			if (_callValue)
-				return handleCallWithValue(_ctx, std::move(_receiver), std::move(_callValue), _loc);
-			if (isLiteralZeroAddress(_baseExpr))
-				return std::make_unique<GenericResultBuilder>(_ctx,
-					makeBoolBytesTupleEmpty(_loc));
-			EvmFeaturePolicy::report(
-				EvmFeature::UnknownLowLevelCall,
-				_ctx.typeMapper.profile(), _loc);
-			return std::make_unique<GenericResultBuilder>(_ctx,
-				makeBoolBytesTuple(
-					false, awst::makeBytesConstant({}, _loc), _loc));
-		}
-		return handleCallWithRawData(_ctx, _receiver, std::move(dataExpr), std::move(_callValue), _loc);
-	}
+		return handleCallWithData(
+			_ctx, std::move(_receiver), _memberName, _callNode,
+			std::move(_callValue), _baseExpr, _loc);
 
 	if (_memberName == "staticcall")
 	{

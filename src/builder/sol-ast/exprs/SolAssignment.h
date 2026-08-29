@@ -56,6 +56,28 @@ private:
 		std::shared_ptr<awst::Expression> _value,
 		solidity::frontend::TupleExpression const* _sourceLhs = nullptr);
 
+	// ── handleTupleAssignment pieces (SolAssignmentTuple.cpp) ───────────
+	enum class TupleComponentAction { NotApplicable, Handled, Abort };
+	std::shared_ptr<awst::Expression> snapshotTupleCallRhs(
+		std::shared_ptr<awst::Expression> _value);
+	std::shared_ptr<awst::Expression> pinLiteralTupleRhs(
+		std::shared_ptr<awst::Expression> _value,
+		solidity::frontend::TupleExpression const* _sourceLhs);
+	TupleComponentAction tryStoragePointerComponent(
+		size_t i,
+		std::shared_ptr<awst::Expression> const& item,
+		std::shared_ptr<awst::Expression> const& _value,
+		solidity::frontend::TupleExpression const* _sourceLhs);
+	void coerceTupleComponentValue(
+		std::shared_ptr<awst::Expression> const& assignTarget,
+		std::shared_ptr<awst::Expression>& assignValue);
+	bool emitTupleComponentWrite(
+		size_t i,
+		std::shared_ptr<awst::Expression> const& itemIn,
+		std::shared_ptr<awst::Expression> const& _value,
+		solidity::frontend::TupleExpression const* _sourceLhs,
+		std::vector<size_t>& componentGroupEnds);
+
 	std::shared_ptr<awst::Expression> handleBytesElementAssignment(
 		awst::IndexExpression const* _indexExpr,
 		std::shared_ptr<awst::Expression> _value);

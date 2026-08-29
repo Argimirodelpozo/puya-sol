@@ -78,6 +78,43 @@ private:
 		awst::SourceLocation const& _loc);
 
 	/// .call{value:V}(rawBytes) → inner app call; splits [selector, rest] as ApplicationArgs.
+	/// The three abi.encode* self-call forms, normalised: fnName + optional
+	/// full signature string (encodeWithSignature), optional referenced
+	/// FunctionDefinition (encodeCall/encodeWithSelector), the expression
+	/// that identifies the target (still evaluated for effects on a
+	/// successful rewrite), and the method args.
+	struct SelfEncodeForm
+	{
+		std::string fnName;
+		std::string sigString;
+		solidity::frontend::FunctionDefinition const* refFunc = nullptr;
+		solidity::frontend::Expression const* targetIdentityExpr = nullptr;
+		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> resolvedArgs;
+	};
+	static SelfEncodeForm parseSelfEncodeForm(
+		solidity::frontend::FunctionCall const& encCall,
+		solidity::frontend::MemberAccess const* encMA);
+	static solidity::frontend::FunctionDefinition const* resolveSelfCallOverload(
+		ContractContext& _ctx,
+		SelfEncodeForm const& form);
+	static std::unique_ptr<InstanceBuilder> emitDirectSelfCall(
+		ContractContext& _ctx,
+		solidity::frontend::FunctionDefinition const& targetFunc,
+		SelfEncodeForm const& form,
+		std::string const& encodeName,
+		awst::SourceLocation const& _loc);
+
+	/// `.call/.staticcall(data)` router (self-call rewrites, visible
+	/// encoders, precompiles, self fallback, empty-data folds, raw data).
+	static std::unique_ptr<InstanceBuilder> handleCallWithData(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _receiver,
+		std::string const& _memberName,
+		solidity::frontend::FunctionCall const& _callNode,
+		std::shared_ptr<awst::Expression> _callValue,
+		solidity::frontend::Expression const& _baseExpr,
+		awst::SourceLocation const& _loc);
+
 	static std::unique_ptr<InstanceBuilder> handleCallWithRawData(
 		ContractContext& _ctx,
 		std::shared_ptr<awst::Expression> _receiver,

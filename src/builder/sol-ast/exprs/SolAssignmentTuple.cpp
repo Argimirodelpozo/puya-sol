@@ -47,18 +47,14 @@ std::shared_ptr<awst::Expression> SolAssignment::buildTupleWithUpdatedField(
 	return tuple;
 }
 
-std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
-	std::shared_ptr<awst::Expression> _target,
-	std::shared_ptr<awst::Expression> _value,
-	solidity::frontend::TupleExpression const* _sourceLhs)
+/// Tuple-returning call RHS (`(a,b) = f()`): cache in a temp so each
+/// TupleItem reads from the cached tuple — without snapshotting, each
+/// TupleItemExpression carries a fresh SubroutineCallExpression and puya
+/// re-emits the call once per element. (Analogue of the literal
+/// `(a(),b())` snapshot in pinLiteralTupleRhs.)
+std::shared_ptr<awst::Expression> SolAssignment::snapshotTupleCallRhs(
+	std::shared_ptr<awst::Expression> _value)
 {
-	auto const* tupleTarget = dynamic_cast<awst::TupleExpression const*>(_target.get());
-	auto const& items = tupleTarget->items;
-
-	// Tuple-returning call RHS (`(a,b) = f()`): without snapshotting, each
-	// TupleItemExpression carries a fresh SubroutineCallExpression and puya
-	// re-emits the call once per element. Cache in a temp so each TupleItem
-	// reads from the cached tuple. (Analogue of the literal `(a(),b())` snapshot below.)
 	if (dynamic_cast<awst::SubroutineCallExpression const*>(_value.get())
 		|| dynamic_cast<awst::SubmitInnerTransaction const*>(_value.get()))
 	{
@@ -74,7 +70,13 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 			_value = awst::makeVarExpression(tmpName, tupleWtype, srcLoc);
 		}
 	}
+	return _value;
+}
 
+std::shared_ptr<awst::Expression> SolAssignment::pinLiteralTupleRhs(
+	std::shared_ptr<awst::Expression> _value,
+	solidity::frontend::TupleExpression const* _sourceLhs)
+{
 	// Literal tuple RHS: materialise the WHOLE right-hand side into temps
 	// before any store — solc's rule, no conditions in it
 	// (IRGeneratorForStatements::visit(Assignment) accepts the RHS before it
@@ -162,6 +164,423 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 		_value = std::move(newTuple);
 	}
 
+	return _value;
+}
+
+/// Storage-pointer / slot-struct tuple component: compile-time alias rebind
+/// (or the slot-handle re-point / slot-level struct copy in slot mode).
+SolAssignment::TupleComponentAction SolAssignment::tryStoragePointerComponent(
+	size_t i,
+	std::shared_ptr<awst::Expression> const& item,
+	std::shared_ptr<awst::Expression> const& _value,
+	solidity::frontend::TupleExpression const* _sourceLhs)
+{
+	(void) item;
+	// Storage-pointer in tuple `(m, v) = (m2, 21)`: the AWST target resolves
+	// to the current alias (not a runtime lvalue). Update compile-time alias
+	// and skip the assignment; mirrors the simple `m = m2` path.
+	if (_sourceLhs && i < _sourceLhs->components().size())
+	{
+		auto const& comp = _sourceLhs->components()[i];
+		if (comp)
+		{
+			auto const* lhsIdent = dynamic_cast<solidity::frontend::Identifier const*>(comp.get());
+			auto const* lhsDecl = lhsIdent ? dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+				lhsIdent->annotation().referencedDeclaration) : nullptr;
+			if (lhsDecl
+				&& lhsDecl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
+				&& !lhsDecl->isStateVariable())
+			{
+				// Slot mode: the local IS a runtime biguint slot handle, so a
+				// tuple component re-points it with an ordinary assignment —
+				// the compile-time alias below never fires there (slot-handle
+				// reads don't consult the alias map), which silently dropped
+				// `(a, b, c) = g()` rebinds of storage-ref returns.
+				if (m_ctx.typeMapper.profile().evmStorageLayout)
+				{
+					auto const* valueTuple2 =
+						dynamic_cast<awst::WTuple const*>(_value->wtype);
+					auto const* compW = (valueTuple2 && i < valueTuple2->types().size())
+						? valueTuple2->types()[i] : nullptr;
+					if (compW == awst::WType::biguintType())
+					{
+						// This post-effect joins the other component writes in
+						// the scoped frame and is reversed with them below.
+						m_ctx.postEffects().push_back(
+							awst::makeAssignmentStatement(
+								awst::makeVarExpression(lhsDecl->name(),
+									awst::WType::biguintType(), m_loc),
+								awst::makeTupleItem(_value, static_cast<int>(i),
+									compW, m_loc),
+								m_loc));
+						return TupleComponentAction::Handled;
+					}
+					Logger::instance().error(
+						"--evm-storage-layout: tuple component for storage "
+						"pointer '" + lhsDecl->name()
+						+ "' is not a slot handle", m_loc);
+					return TupleComponentAction::Abort;
+				}
+				// Prefer the RHS tuple's i-th item directly: it carries the
+				// BoxValueExpression/AppStateExpression needed for downstream
+				// mapping-key resolution (TupleItemExpression slice loses that).
+				std::shared_ptr<awst::Expression> aliasExpr;
+				if (auto const* rhsTuple = dynamic_cast<awst::TupleExpression const*>(_value.get()))
+				{
+					if (i < rhsTuple->items.size())
+						aliasExpr = rhsTuple->items[i];
+				}
+				if (!aliasExpr)
+				{
+					auto const* valueTuple = dynamic_cast<awst::WTuple const*>(_value->wtype);
+					auto sliceType = (valueTuple && i < valueTuple->types().size())
+						? valueTuple->types()[i] : item->wtype;
+					auto slice = awst::makeTupleItem(_value, static_cast<int>(i), sliceType, m_loc);
+					aliasExpr = slice;
+				}
+				bool wrappedStateRead = false;
+				if (awst::isRawStorageRead(aliasExpr.get()))
+				{
+					aliasExpr = StorageMapper::makeStateGetWithDefault(aliasExpr, aliasExpr->wtype, m_loc);
+					wrappedStateRead = true;
+				}
+				// Slice may be a raw state expression or a TupleItemExpression fallback.
+				auto alias = wrappedStateRead
+					|| dynamic_cast<awst::StateGet const*>(aliasExpr.get())
+					? StorageAlias::stateRead(std::move(aliasExpr))
+					: StorageAlias::tupleSlice(std::move(aliasExpr));
+				// Same compile-time-only rebind hazard as the scalar
+				// form — fail loud inside conditional regions.
+				if (m_ctx.conditionalDepth > 0)
+					Logger::instance().error(
+						"storage-pointer reassignment inside a "
+						"conditionally-executed block is not supported "
+						"(compile-time rebind would apply unconditionally "
+						"to all following uses).", m_loc);
+				m_scope.setStorageAlias(lhsDecl->id(), std::move(alias));
+				return TupleComponentAction::Handled;
+			}
+
+			// Slot mode, storage STRUCT ← storage STRUCT component: emit a
+			// slot-level copy with POINTER semantics — no snapshot. The tail
+			// reversal below then orders components right-to-left, which is
+			// exactly Solidity's storage-tuple quirk: `(x, y) = (y, x)` is
+			// `y = x; x = y` (swap_in_storage_overwrite pins it).
+			if (m_ctx.typeMapper.profile().evmStorageLayout)
+			{
+				auto const* lst = dynamic_cast<solidity::frontend::StructType const*>(
+					comp->annotation().type);
+				auto const* rhsTupExpr = dynamic_cast<solidity::frontend::TupleExpression const*>(
+					&m_assignment.rightHandSide());
+				solidity::frontend::Expression const* rcomp =
+					(rhsTupExpr && i < rhsTupExpr->components().size()
+						&& rhsTupExpr->components()[i])
+					? rhsTupExpr->components()[i].get() : nullptr;
+				auto const* rst = rcomp ? dynamic_cast<solidity::frontend::StructType const*>(
+					rcomp->annotation().type) : nullptr;
+				if (lst && rst
+					&& &lst->structDefinition() == &rst->structDefinition()
+					&& lst->storageSize() <= 64
+					&& EvmSlotLowering::isStorageStateRef(*comp)
+					&& EvmSlotLowering::isStorageStateRef(*rcomp))
+				{
+					EvmSlotLowering low(m_ctx, m_scope, m_loc);
+					auto la = low.resolve(*comp);
+					auto ra = low.resolve(*rcomp);
+					if (la && ra)
+					{
+						unsigned slots = static_cast<unsigned>(lst->storageSize());
+						// NAMED pins, not EvalOnce: the copy spans several
+						// statements and the tail reversal reorders them —
+						// cross-statement SingleEvaluation reuse is the
+						// known SE-dominance hazard.
+						int swpId = awst::NameGen::next("SolAssignmentTuple.swp");
+						std::string lname = "__swp_l_" + std::to_string(swpId);
+						std::string rname = "__swp_r_" + std::to_string(swpId);
+						m_ctx.preEffects().push_back(
+							awst::makeAssignmentStatement(
+								awst::makeVarExpression(lname,
+									awst::WType::biguintType(), m_loc),
+								la->slot, m_loc));
+						m_ctx.preEffects().push_back(
+							awst::makeAssignmentStatement(
+								awst::makeVarExpression(rname,
+									awst::WType::biguintType(), m_loc),
+								ra->slot, m_loc));
+						auto lslot = awst::makeVarExpression(
+							lname, awst::WType::biguintType(), m_loc);
+						auto rslot = awst::makeVarExpression(
+							rname, awst::WType::biguintType(), m_loc);
+						for (unsigned j = 0; j < slots; ++j)
+						{
+							auto jc = [&]() {
+								return awst::makeIntegerConstant(
+									j, m_loc, awst::WType::biguintType());
+							};
+							auto dst = awst::makeBigUIntBinOp(lslot,
+								awst::BigUIntBinaryOperator::Add, jc(), m_loc);
+							auto src = awst::makeBigUIntBinOp(rslot,
+								awst::BigUIntBinaryOperator::Add, jc(), m_loc);
+							m_ctx.postEffects().push_back(
+								builder::SlotHandleAccess::writeSlot(std::move(dst),
+									builder::SlotHandleAccess::readSlot(
+										std::move(src), m_loc), m_loc));
+						}
+						return TupleComponentAction::Handled;
+					}
+				}
+			}
+		}
+	}
+
+	return TupleComponentAction::NotApplicable;
+}
+
+/// Coerce one tuple component's value to the target's wtype (string↔bytes
+/// reinterpret, numeric casts, ARC4 widen/narrow/encode).
+void SolAssignment::coerceTupleComponentValue(
+	std::shared_ptr<awst::Expression> const& assignTarget,
+	std::shared_ptr<awst::Expression>& assignValue)
+{
+	// Coerce string↔bytes
+	if (assignTarget->wtype != assignValue->wtype)
+	{
+		bool srcIsStringOrBytes = assignValue->wtype == awst::WType::stringType()
+			|| assignValue->wtype == awst::WType::bytesType()
+			|| (assignValue->wtype && assignValue->wtype->kind() == awst::WTypeKind::Bytes);
+		bool tgtIsStringOrBytes = assignTarget->wtype == awst::WType::stringType()
+			|| assignTarget->wtype == awst::WType::bytesType()
+			|| (assignTarget->wtype && assignTarget->wtype->kind() == awst::WTypeKind::Bytes);
+		if (srcIsStringOrBytes && tgtIsStringOrBytes)
+		{
+			auto cast = awst::makeReinterpretCast(std::move(assignValue), assignTarget->wtype, m_loc);
+			assignValue = std::move(cast);
+		}
+		else
+		{
+			assignValue = builder::TypeCoercion::implicitNumericCast(
+				std::move(assignValue), assignTarget->wtype, m_loc);
+		}
+	}
+	if (assignTarget->wtype != assignValue->wtype)
+	{
+		bool const targetIsArc4 =
+			builder::isArc4EncodedType(assignTarget->wtype);
+		if (targetIsArc4)
+		{
+			assignValue = builder::TypeCoercion::stringToBytes(std::move(assignValue), m_loc);
+			bool handled = false;
+			// ARC4 array element widening (intM → intN, M<N): pin source bytes to
+			// a temp (helper reads them multiple times).
+			bool const sourceIsArc4Array =
+				assignValue->wtype->kind() == awst::WTypeKind::ARC4StaticArray
+				|| assignValue->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
+			bool const targetIsArc4Array =
+				assignTarget->wtype->kind() == awst::WTypeKind::ARC4StaticArray
+				|| assignTarget->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
+			if (sourceIsArc4Array && targetIsArc4Array)
+			{
+				std::string tmpName = "__widen_src_h_" + std::to_string(awst::NameGen::next("SolAssignmentTuple.s_widCounter"));
+				auto srcAsBytes = awst::makeAsBytes(assignValue, m_loc);
+				auto tmpVar = awst::makeVarExpression(
+					tmpName, awst::WType::bytesType(), m_loc);
+				m_ctx.preEffects().push_back(
+					awst::makeAssignmentStatement(tmpVar, std::move(srcAsBytes), m_loc));
+				auto const* sourceType = assignValue->wtype;
+				auto mkSrc = [&]() {
+					return awst::makeVarExpression(
+						tmpName, awst::WType::bytesType(), m_loc);
+				};
+				std::shared_ptr<awst::Expression> widened;
+				if (assignTarget->wtype->kind() == awst::WTypeKind::ARC4StaticArray)
+				{
+					widened = builder::tryWidenArc4StaticArrayInt(
+						sourceType, assignTarget->wtype, mkSrc, m_loc);
+				}
+				else
+				{
+					widened = builder::tryWidenArc4DynamicArrayInt(
+						sourceType, assignTarget->wtype, mkSrc,
+						[this](std::shared_ptr<awst::Statement> _s) {
+							m_ctx.preEffects().push_back(std::move(_s));
+						},
+						m_loc);
+				}
+				if (widened)
+				{
+					assignValue = std::move(widened);
+					handled = true;
+				}
+			}
+			// Narrowing: uint64 → arc4.uintN where N < 64.
+			if (!handled)
+			{
+				if (auto narrowed = builder::tryNarrowUInt64ToArc4UIntN(
+						assignValue, assignTarget->wtype, m_loc))
+				{
+					assignValue = std::move(narrowed);
+					handled = true;
+				}
+			}
+			if (!handled)
+			{
+				auto encode = awst::makeARC4Encode(std::move(assignValue), assignTarget->wtype, m_loc);
+				assignValue = std::move(encode);
+			}
+		}
+		else
+			assignValue = builder::TypeCoercion::implicitNumericCast(
+				std::move(assignValue), assignTarget->wtype, m_loc);
+	}
+
+}
+
+/// Emit one tuple component's write (post-effects; GroupMark closes the
+/// component's statement group even on early returns). Returns false only
+/// for the slot-mode storage-pointer error abort.
+bool SolAssignment::emitTupleComponentWrite(
+	size_t i,
+	std::shared_ptr<awst::Expression> const& itemIn,
+	std::shared_ptr<awst::Expression> const& _value,
+	solidity::frontend::TupleExpression const* _sourceLhs,
+	std::vector<size_t>& componentGroupEnds)
+{
+	struct GroupMark
+	{
+		std::vector<size_t>& ends;
+		eb::ContractContext& ctx;
+		~GroupMark() { ends.push_back(ctx.postEffects().size()); }
+	} groupMark{componentGroupEnds, m_ctx};
+	auto item = itemIn;
+
+	// Skip null placeholders (empty-name VarExpression for gaps like `(,,a)`)
+	if (auto const* varExpr = dynamic_cast<awst::VarExpression const*>(item.get()))
+		if (varExpr->name.empty())
+			return true;
+
+	switch (tryStoragePointerComponent(i, item, _value, _sourceLhs))
+	{
+	case TupleComponentAction::Handled: return true;
+	case TupleComponentAction::Abort: return false;
+	case TupleComponentAction::NotApplicable: break;
+	}
+
+	// Use value tuple's element type (not the target's)
+	auto const* valueTuple = dynamic_cast<awst::WTuple const*>(_value->wtype);
+	auto const* itemWtype = (valueTuple && i < valueTuple->types().size())
+		? valueTuple->types()[i] : item->wtype;
+	auto itemExpr = awst::makeTupleItem(_value, static_cast<int>(i), itemWtype, m_loc);
+
+	auto assignTarget = item;
+	if (auto const* decodeExpr = dynamic_cast<awst::ARC4Decode const*>(item.get()))
+		assignTarget = decodeExpr->value;
+	assignTarget = awst::unwrapStateGet(std::move(assignTarget));
+
+	std::shared_ptr<awst::Expression> assignValue = std::move(itemExpr);
+	coerceTupleComponentValue(assignTarget, assignValue);
+
+	// ARC4Struct field: COW via struct field handler.
+	if (auto const* fieldExpr = dynamic_cast<awst::FieldExpression const*>(assignTarget.get()))
+	{
+		auto const* structType = dynamic_cast<awst::ARC4Struct const*>(fieldExpr->base->wtype);
+		if (!structType)
+			if (auto const* sg = dynamic_cast<awst::StateGet const*>(fieldExpr->base.get()))
+				structType = dynamic_cast<awst::ARC4Struct const*>(sg->field->wtype);
+
+		if (structType)
+		{
+			// _emitAsStatement=true: helper queues the COW store. Without this,
+			// `(s.a, s.b) = f()` computed f() but never wrote the fields
+			// (previously mis-attributed to a puya DCE bug; see [[uros-multireturn-struct-destructure-dce]]).
+			auto result = handleStructFieldAssignment(
+				fieldExpr, std::move(assignValue), assignTarget, /*_emitAsStatement=*/true);
+			if (result) return true;
+		}
+	}
+
+	if (assignTarget->wtype != assignValue->wtype
+		&& assignTarget->wtype->kind() == awst::WTypeKind::ARC4StaticArray)
+	{
+		auto enc = awst::makeARC4Encode(std::move(assignValue), assignTarget->wtype, m_loc);
+		assignValue = std::move(enc);
+	}
+
+	// Nested tuple: recursively destructure instead of a direct assignment.
+	if (dynamic_cast<awst::TupleExpression const*>(assignTarget.get()))
+	{
+		handleTupleAssignment(assignTarget, std::move(assignValue));
+		return true;
+	}
+
+	// Transient var: route through TransientStorage (scratch-slot blob);
+	// an AssignmentExpression targeting a ReinterpretCast isn't an lvalue in puya.
+	if (_sourceLhs && m_ctx.transientStorage
+		&& i < _sourceLhs->components().size() && _sourceLhs->components()[i])
+	{
+		if (auto const* srcIdent = dynamic_cast<solidity::frontend::Identifier const*>(
+				_sourceLhs->components()[i].get()))
+		{
+			auto const* srcDecl = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
+				srcIdent->annotation().referencedDeclaration);
+			if (srcDecl && srcDecl->isStateVariable()
+				&& srcDecl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient
+				&& m_ctx.transientStorage->isTransient(*srcDecl))
+			{
+				auto* varType = m_ctx.typeMapper.map(srcDecl->type());
+				auto coerced = builder::TypeCoercion::coerceForAssignment(
+					std::move(assignValue), varType, m_loc);
+				auto stmt = m_ctx.transientStorage->buildWrite(*srcDecl, coerced, m_loc);
+				if (stmt)
+					m_ctx.postEffects().push_back(std::move(stmt));
+				return true;
+			}
+		}
+	}
+
+	// --evm-storage-layout: a storage element/field has no AWST lvalue —
+	// building the LHS lowered it to a __storage_read CALL, which then sat
+	// in the assignment's TARGET position and puya rejected the whole AWST
+	// ("deserialization failed: 'SubroutineCallExpression'", 9 fixtures).
+	// Route these through the slot writer exactly like the scalar path in
+	// SolAssignment does.
+	if (m_ctx.typeMapper.profile().evmStorageLayout && _sourceLhs
+		&& i < _sourceLhs->components().size() && _sourceLhs->components()[i])
+	{
+		auto const& lhsComp = *_sourceLhs->components()[i];
+		auto const* compType = lhsComp.annotation().type;
+		if (compType && EvmSlotLowering::isStorageStateRef(lhsComp))
+		{
+			EvmSlotLowering low(m_ctx, m_scope, m_loc);
+			if (auto addr = low.resolve(lhsComp))
+			{
+				std::vector<std::shared_ptr<awst::Statement>> slotOut;
+				if (low.writeAny(*addr, compType, assignValue, slotOut))
+				{
+					for (auto& st: slotOut)
+						m_ctx.postEffects().push_back(std::move(st));
+					return true;
+				}
+			}
+		}
+	}
+	auto e = awst::makeAssignmentExpression(
+		std::move(assignTarget), std::move(assignValue), m_loc);
+	m_ctx.queuePostExpression(e, m_loc);
+	return true;
+}
+
+std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
+	std::shared_ptr<awst::Expression> _target,
+	std::shared_ptr<awst::Expression> _value,
+	solidity::frontend::TupleExpression const* _sourceLhs)
+{
+	auto const* tupleTarget = dynamic_cast<awst::TupleExpression const*>(_target.get());
+	auto const& items = tupleTarget->items;
+
+	_value = snapshotTupleCallRhs(std::move(_value));
+
+	_value = pinLiteralTupleRhs(std::move(_value), _sourceLhs);
+
 	// Build tuple writes in their own structural effect frame. Only the writes
 	// produced by this destructure are reversed; unrelated parent effects never
 	// participate in snapshot/tail arithmetic.
@@ -169,374 +588,15 @@ std::shared_ptr<awst::Expression> SolAssignment::handleTupleAssignment(
 	// componentGroupEnds records where each component's contribution ends, so the
 	// right-to-left reversal below can flip COMPONENTS without scrambling the
 	// statements inside one. Recorded by a scope guard because the loop body
-	// `continue`s from several places.
+	// exits from several places (emitTupleComponentWrite).
 	std::vector<size_t> componentGroupEnds;
 	auto writes = m_ctx.lowerOperand([&]() -> bool {
-	for (size_t i = 0; i < items.size(); ++i)
-	{
-		struct GroupMark
-		{
-			std::vector<size_t>& ends;
-			eb::ContractContext& ctx;
-			~GroupMark() { ends.push_back(ctx.postEffects().size()); }
-		} groupMark{componentGroupEnds, m_ctx};
-		auto item = items[i];
-
-		// Skip null placeholders (empty-name VarExpression for gaps like `(,,a)`)
-		if (auto const* varExpr = dynamic_cast<awst::VarExpression const*>(item.get()))
-			if (varExpr->name.empty())
-				continue;
-
-		// Storage-pointer in tuple `(m, v) = (m2, 21)`: the AWST target resolves
-		// to the current alias (not a runtime lvalue). Update compile-time alias
-		// and skip the assignment; mirrors the simple `m = m2` path.
-		if (_sourceLhs && i < _sourceLhs->components().size())
-		{
-			auto const& comp = _sourceLhs->components()[i];
-			if (comp)
-			{
-				auto const* lhsIdent = dynamic_cast<solidity::frontend::Identifier const*>(comp.get());
-				auto const* lhsDecl = lhsIdent ? dynamic_cast<solidity::frontend::VariableDeclaration const*>(
-					lhsIdent->annotation().referencedDeclaration) : nullptr;
-				if (lhsDecl
-					&& lhsDecl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Storage
-					&& !lhsDecl->isStateVariable())
-				{
-					// Slot mode: the local IS a runtime biguint slot handle, so a
-					// tuple component re-points it with an ordinary assignment —
-					// the compile-time alias below never fires there (slot-handle
-					// reads don't consult the alias map), which silently dropped
-					// `(a, b, c) = g()` rebinds of storage-ref returns.
-					if (m_ctx.typeMapper.profile().evmStorageLayout)
-					{
-						auto const* valueTuple2 =
-							dynamic_cast<awst::WTuple const*>(_value->wtype);
-						auto const* compW = (valueTuple2 && i < valueTuple2->types().size())
-							? valueTuple2->types()[i] : nullptr;
-						if (compW == awst::WType::biguintType())
-						{
-							// This post-effect joins the other component writes in
-							// the scoped frame and is reversed with them below.
-							m_ctx.postEffects().push_back(
-								awst::makeAssignmentStatement(
-									awst::makeVarExpression(lhsDecl->name(),
-										awst::WType::biguintType(), m_loc),
-									awst::makeTupleItem(_value, static_cast<int>(i),
-										compW, m_loc),
-									m_loc));
-							continue;
-						}
-						Logger::instance().error(
-							"--evm-storage-layout: tuple component for storage "
-							"pointer '" + lhsDecl->name()
-							+ "' is not a slot handle", m_loc);
-						return false;
-					}
-					// Prefer the RHS tuple's i-th item directly: it carries the
-					// BoxValueExpression/AppStateExpression needed for downstream
-					// mapping-key resolution (TupleItemExpression slice loses that).
-					std::shared_ptr<awst::Expression> aliasExpr;
-					if (auto const* rhsTuple = dynamic_cast<awst::TupleExpression const*>(_value.get()))
-					{
-						if (i < rhsTuple->items.size())
-							aliasExpr = rhsTuple->items[i];
-					}
-					if (!aliasExpr)
-					{
-						auto const* valueTuple = dynamic_cast<awst::WTuple const*>(_value->wtype);
-						auto sliceType = (valueTuple && i < valueTuple->types().size())
-							? valueTuple->types()[i] : item->wtype;
-						auto slice = awst::makeTupleItem(_value, static_cast<int>(i), sliceType, m_loc);
-						aliasExpr = slice;
-					}
-					bool wrappedStateRead = false;
-					if (awst::isRawStorageRead(aliasExpr.get()))
-					{
-						aliasExpr = StorageMapper::makeStateGetWithDefault(aliasExpr, aliasExpr->wtype, m_loc);
-						wrappedStateRead = true;
-					}
-					// Slice may be a raw state expression or a TupleItemExpression fallback.
-					auto alias = wrappedStateRead
-						|| dynamic_cast<awst::StateGet const*>(aliasExpr.get())
-						? StorageAlias::stateRead(std::move(aliasExpr))
-						: StorageAlias::tupleSlice(std::move(aliasExpr));
-					// Same compile-time-only rebind hazard as the scalar
-					// form — fail loud inside conditional regions.
-					if (m_ctx.conditionalDepth > 0)
-						Logger::instance().error(
-							"storage-pointer reassignment inside a "
-							"conditionally-executed block is not supported "
-							"(compile-time rebind would apply unconditionally "
-							"to all following uses).", m_loc);
-					m_scope.setStorageAlias(lhsDecl->id(), std::move(alias));
-					continue;
-				}
-
-				// Slot mode, storage STRUCT ← storage STRUCT component: emit a
-				// slot-level copy with POINTER semantics — no snapshot. The tail
-				// reversal below then orders components right-to-left, which is
-				// exactly Solidity's storage-tuple quirk: `(x, y) = (y, x)` is
-				// `y = x; x = y` (swap_in_storage_overwrite pins it).
-				if (m_ctx.typeMapper.profile().evmStorageLayout)
-				{
-					auto const* lst = dynamic_cast<solidity::frontend::StructType const*>(
-						comp->annotation().type);
-					auto const* rhsTupExpr = dynamic_cast<solidity::frontend::TupleExpression const*>(
-						&m_assignment.rightHandSide());
-					solidity::frontend::Expression const* rcomp =
-						(rhsTupExpr && i < rhsTupExpr->components().size()
-							&& rhsTupExpr->components()[i])
-						? rhsTupExpr->components()[i].get() : nullptr;
-					auto const* rst = rcomp ? dynamic_cast<solidity::frontend::StructType const*>(
-						rcomp->annotation().type) : nullptr;
-					if (lst && rst
-						&& &lst->structDefinition() == &rst->structDefinition()
-						&& lst->storageSize() <= 64
-						&& EvmSlotLowering::isStorageStateRef(*comp)
-						&& EvmSlotLowering::isStorageStateRef(*rcomp))
-					{
-						EvmSlotLowering low(m_ctx, m_scope, m_loc);
-						auto la = low.resolve(*comp);
-						auto ra = low.resolve(*rcomp);
-						if (la && ra)
-						{
-							unsigned slots = static_cast<unsigned>(lst->storageSize());
-							// NAMED pins, not EvalOnce: the copy spans several
-							// statements and the tail reversal reorders them —
-							// cross-statement SingleEvaluation reuse is the
-							// known SE-dominance hazard.
-							int swpId = awst::NameGen::next("SolAssignmentTuple.swp");
-							std::string lname = "__swp_l_" + std::to_string(swpId);
-							std::string rname = "__swp_r_" + std::to_string(swpId);
-							m_ctx.preEffects().push_back(
-								awst::makeAssignmentStatement(
-									awst::makeVarExpression(lname,
-										awst::WType::biguintType(), m_loc),
-									la->slot, m_loc));
-							m_ctx.preEffects().push_back(
-								awst::makeAssignmentStatement(
-									awst::makeVarExpression(rname,
-										awst::WType::biguintType(), m_loc),
-									ra->slot, m_loc));
-							auto lslot = awst::makeVarExpression(
-								lname, awst::WType::biguintType(), m_loc);
-							auto rslot = awst::makeVarExpression(
-								rname, awst::WType::biguintType(), m_loc);
-							for (unsigned j = 0; j < slots; ++j)
-							{
-								auto jc = [&]() {
-									return awst::makeIntegerConstant(
-										j, m_loc, awst::WType::biguintType());
-								};
-								auto dst = awst::makeBigUIntBinOp(lslot,
-									awst::BigUIntBinaryOperator::Add, jc(), m_loc);
-								auto src = awst::makeBigUIntBinOp(rslot,
-									awst::BigUIntBinaryOperator::Add, jc(), m_loc);
-								m_ctx.postEffects().push_back(
-									builder::SlotHandleAccess::writeSlot(std::move(dst),
-										builder::SlotHandleAccess::readSlot(
-											std::move(src), m_loc), m_loc));
-							}
-							continue;
-						}
-					}
-				}
-			}
-		}
-
-		// Use value tuple's element type (not the target's)
-		auto const* valueTuple = dynamic_cast<awst::WTuple const*>(_value->wtype);
-		auto const* itemWtype = (valueTuple && i < valueTuple->types().size())
-			? valueTuple->types()[i] : item->wtype;
-		auto itemExpr = awst::makeTupleItem(_value, static_cast<int>(i), itemWtype, m_loc);
-
-		auto assignTarget = item;
-		if (auto const* decodeExpr = dynamic_cast<awst::ARC4Decode const*>(item.get()))
-			assignTarget = decodeExpr->value;
-		assignTarget = awst::unwrapStateGet(std::move(assignTarget));
-
-		std::shared_ptr<awst::Expression> assignValue = std::move(itemExpr);
-		// Coerce string↔bytes
-		if (assignTarget->wtype != assignValue->wtype)
-		{
-			bool srcIsStringOrBytes = assignValue->wtype == awst::WType::stringType()
-				|| assignValue->wtype == awst::WType::bytesType()
-				|| (assignValue->wtype && assignValue->wtype->kind() == awst::WTypeKind::Bytes);
-			bool tgtIsStringOrBytes = assignTarget->wtype == awst::WType::stringType()
-				|| assignTarget->wtype == awst::WType::bytesType()
-				|| (assignTarget->wtype && assignTarget->wtype->kind() == awst::WTypeKind::Bytes);
-			if (srcIsStringOrBytes && tgtIsStringOrBytes)
-			{
-				auto cast = awst::makeReinterpretCast(std::move(assignValue), assignTarget->wtype, m_loc);
-				assignValue = std::move(cast);
-			}
-			else
-			{
-				assignValue = builder::TypeCoercion::implicitNumericCast(
-					std::move(assignValue), assignTarget->wtype, m_loc);
-			}
-		}
-		if (assignTarget->wtype != assignValue->wtype)
-		{
-			bool const targetIsArc4 =
-				builder::isArc4EncodedType(assignTarget->wtype);
-			if (targetIsArc4)
-			{
-				assignValue = builder::TypeCoercion::stringToBytes(std::move(assignValue), m_loc);
-				bool handled = false;
-				// ARC4 array element widening (intM → intN, M<N): pin source bytes to
-				// a temp (helper reads them multiple times).
-				bool const sourceIsArc4Array =
-					assignValue->wtype->kind() == awst::WTypeKind::ARC4StaticArray
-					|| assignValue->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
-				bool const targetIsArc4Array =
-					assignTarget->wtype->kind() == awst::WTypeKind::ARC4StaticArray
-					|| assignTarget->wtype->kind() == awst::WTypeKind::ARC4DynamicArray;
-				if (sourceIsArc4Array && targetIsArc4Array)
-				{
-					std::string tmpName = "__widen_src_h_" + std::to_string(awst::NameGen::next("SolAssignmentTuple.s_widCounter"));
-					auto srcAsBytes = awst::makeAsBytes(assignValue, m_loc);
-					auto tmpVar = awst::makeVarExpression(
-						tmpName, awst::WType::bytesType(), m_loc);
-					m_ctx.preEffects().push_back(
-						awst::makeAssignmentStatement(tmpVar, std::move(srcAsBytes), m_loc));
-					auto const* sourceType = assignValue->wtype;
-					auto mkSrc = [&]() {
-						return awst::makeVarExpression(
-							tmpName, awst::WType::bytesType(), m_loc);
-					};
-					std::shared_ptr<awst::Expression> widened;
-					if (assignTarget->wtype->kind() == awst::WTypeKind::ARC4StaticArray)
-					{
-						widened = builder::tryWidenArc4StaticArrayInt(
-							sourceType, assignTarget->wtype, mkSrc, m_loc);
-					}
-					else
-					{
-						widened = builder::tryWidenArc4DynamicArrayInt(
-							sourceType, assignTarget->wtype, mkSrc,
-							[this](std::shared_ptr<awst::Statement> _s) {
-								m_ctx.preEffects().push_back(std::move(_s));
-							},
-							m_loc);
-					}
-					if (widened)
-					{
-						assignValue = std::move(widened);
-						handled = true;
-					}
-				}
-				// Narrowing: uint64 → arc4.uintN where N < 64.
-				if (!handled)
-				{
-					if (auto narrowed = builder::tryNarrowUInt64ToArc4UIntN(
-							assignValue, assignTarget->wtype, m_loc))
-					{
-						assignValue = std::move(narrowed);
-						handled = true;
-					}
-				}
-				if (!handled)
-				{
-					auto encode = awst::makeARC4Encode(std::move(assignValue), assignTarget->wtype, m_loc);
-					assignValue = std::move(encode);
-				}
-			}
-			else
-				assignValue = builder::TypeCoercion::implicitNumericCast(
-					std::move(assignValue), assignTarget->wtype, m_loc);
-		}
-
-		// ARC4Struct field: COW via struct field handler.
-		if (auto const* fieldExpr = dynamic_cast<awst::FieldExpression const*>(assignTarget.get()))
-		{
-			auto const* structType = dynamic_cast<awst::ARC4Struct const*>(fieldExpr->base->wtype);
-			if (!structType)
-				if (auto const* sg = dynamic_cast<awst::StateGet const*>(fieldExpr->base.get()))
-					structType = dynamic_cast<awst::ARC4Struct const*>(sg->field->wtype);
-
-			if (structType)
-			{
-				// _emitAsStatement=true: helper queues the COW store. Without this,
-				// `(s.a, s.b) = f()` computed f() but never wrote the fields
-				// (previously mis-attributed to a puya DCE bug; see [[uros-multireturn-struct-destructure-dce]]).
-				auto result = handleStructFieldAssignment(
-					fieldExpr, std::move(assignValue), assignTarget, /*_emitAsStatement=*/true);
-				if (result) continue;
-			}
-		}
-
-		if (assignTarget->wtype != assignValue->wtype
-			&& assignTarget->wtype->kind() == awst::WTypeKind::ARC4StaticArray)
-		{
-			auto enc = awst::makeARC4Encode(std::move(assignValue), assignTarget->wtype, m_loc);
-			assignValue = std::move(enc);
-		}
-
-		// Nested tuple: recursively destructure instead of a direct assignment.
-		if (dynamic_cast<awst::TupleExpression const*>(assignTarget.get()))
-		{
-			handleTupleAssignment(assignTarget, std::move(assignValue));
-			continue;
-		}
-
-		// Transient var: route through TransientStorage (scratch-slot blob);
-		// an AssignmentExpression targeting a ReinterpretCast isn't an lvalue in puya.
-		if (_sourceLhs && m_ctx.transientStorage
-			&& i < _sourceLhs->components().size() && _sourceLhs->components()[i])
-		{
-			if (auto const* srcIdent = dynamic_cast<solidity::frontend::Identifier const*>(
-					_sourceLhs->components()[i].get()))
-			{
-				auto const* srcDecl = dynamic_cast<solidity::frontend::VariableDeclaration const*>(
-					srcIdent->annotation().referencedDeclaration);
-				if (srcDecl && srcDecl->isStateVariable()
-					&& srcDecl->referenceLocation() == solidity::frontend::VariableDeclaration::Location::Transient
-					&& m_ctx.transientStorage->isTransient(*srcDecl))
-				{
-					auto* varType = m_ctx.typeMapper.map(srcDecl->type());
-					auto coerced = builder::TypeCoercion::coerceForAssignment(
-						std::move(assignValue), varType, m_loc);
-					auto stmt = m_ctx.transientStorage->buildWrite(*srcDecl, coerced, m_loc);
-					if (stmt)
-						m_ctx.postEffects().push_back(std::move(stmt));
-					continue;
-				}
-			}
-		}
-
-		// --evm-storage-layout: a storage element/field has no AWST lvalue —
-		// building the LHS lowered it to a __storage_read CALL, which then sat
-		// in the assignment's TARGET position and puya rejected the whole AWST
-		// ("deserialization failed: 'SubroutineCallExpression'", 9 fixtures).
-		// Route these through the slot writer exactly like the scalar path in
-		// SolAssignment does.
-		if (m_ctx.typeMapper.profile().evmStorageLayout && _sourceLhs
-			&& i < _sourceLhs->components().size() && _sourceLhs->components()[i])
-		{
-			auto const& lhsComp = *_sourceLhs->components()[i];
-			auto const* compType = lhsComp.annotation().type;
-			if (compType && EvmSlotLowering::isStorageStateRef(lhsComp))
-			{
-				EvmSlotLowering low(m_ctx, m_scope, m_loc);
-				if (auto addr = low.resolve(lhsComp))
-				{
-					std::vector<std::shared_ptr<awst::Statement>> slotOut;
-					if (low.writeAny(*addr, compType, assignValue, slotOut))
-					{
-						for (auto& st: slotOut)
-							m_ctx.postEffects().push_back(std::move(st));
-						continue;
-					}
-				}
-			}
-		}
-		auto e = awst::makeAssignmentExpression(
-			std::move(assignTarget), std::move(assignValue), m_loc);
-		m_ctx.queuePostExpression(e, m_loc);
-	}
-	return true;
-	}, false);
+		for (size_t i = 0; i < items.size(); ++i)
+			if (!emitTupleComponentWrite(
+					i, items[i], _value, _sourceLhs, componentGroupEnds))
+				return false;
+		return true;
+		}, false);
 	if (!writes.value)
 		return nullptr;
 
