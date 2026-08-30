@@ -240,6 +240,104 @@ std::vector<EvmRoute> collectEvmRoutes(
 	return routes;
 }
 
+/// Group key for a route's return tail: canonical Solidity return signature
+/// + the method's wire return WType identity (createType canonicalizes, so
+/// pointer equality is type equality).
+std::string evmRetTailKey(EvmRoute const& route)
+{
+	std::string key;
+	for (auto const* type: route.function->returnParameterTypes())
+		key += type->canonicalName() + ",";
+	key += "#";
+	key += std::to_string(
+		reinterpret_cast<uintptr_t>(route.method->returnType));
+	return key;
+}
+
+/// Synthesize shared per-return-shape encode+log tails (`__evm_ret<i>`) —
+/// each arm's EVM-encode + carrier-log epilogue, outlined once per distinct
+/// (return signature, wire type) used by 2+ routes. Same economics as
+/// __evm_decw; the arm keeps its own `return 1` (program exit). Routes whose
+/// key has no tail (singletons, non-tuple multi-returns) keep the inline
+/// epilogue.
+std::map<std::string, std::string> synthesizeEvmReturnTails(
+	TypeMapper& typeMapper,
+	awst::Contract& contract,
+	std::vector<EvmRoute> const& probeRoutes,
+	awst::SourceLocation const& loc)
+{
+	struct TailSpec
+	{
+		std::vector<Type const*> returnTypes;
+		awst::WType const* retW = nullptr;
+		int uses = 0;
+	};
+	std::map<std::string, TailSpec> groups;
+	for (auto const& route: probeRoutes)
+	{
+		auto& spec = groups[evmRetTailKey(route)];
+		if (spec.uses == 0)
+		{
+			spec.returnTypes = route.function->returnParameterTypes();
+			spec.retW = route.method->returnType;
+		}
+		spec.uses++;
+	}
+
+	std::map<std::string, std::string> tailByKey;
+	if (contract.methods.empty())
+		return tailByKey;
+	std::string cref = contract.methods.front().cref;
+	int index = 0;
+	for (auto& [key, spec]: groups)
+	{
+		if (spec.uses < 2)
+			continue;
+		if (spec.returnTypes.size() > 1
+			&& !dynamic_cast<awst::WTuple const*>(spec.retW))
+			continue;   // unexpected wire shape — keep those arms inline
+
+		std::string name = "__evm_ret" + std::to_string(index++);
+		awst::ContractMethod sub;
+		sub.sourceLocation = loc;
+		sub.cref = cref;
+		sub.memberName = name;
+		sub.returnType = awst::WType::voidType();
+		sub.arc4MethodConfig = std::nullopt;
+		auto body = awst::makeBlock(loc);
+		std::vector<std::shared_ptr<awst::Expression>> returnValues;
+		if (!spec.returnTypes.empty())
+		{
+			awst::SubroutineArgument arg;
+			arg.name = "__v";
+			arg.wtype = spec.retW;
+			arg.sourceLocation = loc;
+			sub.args.push_back(std::move(arg));
+			auto v = [&]() {
+				return awst::makeVarExpression("__v", spec.retW, loc);
+			};
+			if (spec.returnTypes.size() == 1)
+				returnValues.push_back(v());
+			else
+			{
+				auto const* tuple = dynamic_cast<awst::WTuple const*>(spec.retW);
+				for (size_t i = 0; i < spec.returnTypes.size(); ++i)
+					returnValues.push_back(awst::makeTupleItem(
+						v(), static_cast<int>(i), tuple->types()[i], loc));
+			}
+		}
+		auto encoded = abi::encodeEvmAbi(
+			typeMapper, spec.returnTypes, std::move(returnValues), loc,
+			body->body);
+		emitReturnLog(std::move(encoded), loc, body->body);
+		body->body.push_back(awst::makeReturnStatement(nullptr, loc));
+		sub.body = std::move(body);
+		contract.methods.push_back(std::move(sub));
+		tailByKey[key] = name;
+	}
+	return tailByKey;
+}
+
 /// Emit one guarded dispatch arm for an EVM route into `sink`:
 ///   OnCompletion==NoOp && NumAppArgs==2 && Args[0]==keccak4(signature)
 ///   -> non-payable check, EVM-decode Args[1], call, EVM-encode + return log.
@@ -252,6 +350,7 @@ std::vector<EvmRoute> collectEvmRoutes(
 std::shared_ptr<awst::Block> buildEvmArmBody(
 	TypeMapper& typeMapper,
 	EvmRoute const& route,
+	std::map<std::string, std::string> const& retTails,
 	awst::SourceLocation const& loc)
 {
 	auto const& paramTypes = route.function->parameterTypes();
@@ -303,6 +402,31 @@ std::shared_ptr<awst::Block> buildEvmArmBody(
 		awst::pushCallArg(call->args, std::move(value));
 	}
 
+	// Shared tail: `callsub __evm_ret<i>` replaces the inline encode+log
+	// epilogue for return shapes used by 2+ arms.
+	if (auto tailIt = retTails.find(evmRetTailKey(route));
+		tailIt != retTails.end())
+	{
+		auto tailCall = awst::makeSubroutineCall(
+			awst::InstanceMethodTarget{tailIt->second},
+			awst::WType::voidType(), loc);
+		if (returnTypes.empty())
+		{
+			body->body.push_back(awst::makeExpressionStatement(call, loc));
+			body->body.push_back(
+				awst::makeExpressionStatement(std::move(tailCall), loc));
+		}
+		else
+		{
+			awst::pushCallArg(tailCall->args, call);
+			body->body.push_back(
+				awst::makeExpressionStatement(std::move(tailCall), loc));
+		}
+		body->body.push_back(
+			awst::makeReturnStatement(awst::makeTrue(loc), loc));
+		return body;
+	}
+
 	std::vector<std::shared_ptr<awst::Expression>> returnValues;
 	if (returnTypes.empty())
 	{
@@ -334,6 +458,7 @@ std::shared_ptr<awst::Block> buildEvmArmBody(
 void emitEvmArmSwitch(
 	TypeMapper& typeMapper,
 	std::vector<EvmRoute> const& routes,
+	std::map<std::string, std::string> const& retTails,
 	std::vector<std::shared_ptr<awst::Statement>>& sink,
 	awst::SourceLocation const& loc)
 {
@@ -346,7 +471,7 @@ void emitEvmArmSwitch(
 		switchNode->cases.emplace_back(
 			awst::makeBytesConstant(route.selector, loc,
 				awst::BytesEncoding::Base16, awst::WType::bytesType()),
-			buildEvmArmBody(typeMapper, route, loc));
+			buildEvmArmBody(typeMapper, route, retTails, loc));
 	auto guarded = awst::makeBlock(loc);
 	guarded->body.push_back(std::move(switchNode));
 	auto condition = awst::makeBoolBinOp(
@@ -370,6 +495,15 @@ void ContractBuilder::emitEvmEntryDispatch(
 	// ContractMethod pointers, and appending methods afterwards could
 	// reallocate the vector under them.
 	synthesizeEvmEntryHelpers(contract, loc);
+	// Probe pass (quiet) just to group return shapes; the tail subs it
+	// appends would invalidate route pointers, so the REAL collect follows.
+	std::map<std::string, std::string> retTails;
+	{
+		auto probe = collectEvmRoutes(
+			contractDefinition, contract, m_overloadedNames, loc,
+			/*quiet=*/true, nullptr);
+		retTails = synthesizeEvmReturnTails(m_typeMapper, contract, probe, loc);
+	}
 	auto routes = collectEvmRoutes(
 		contractDefinition, contract, m_overloadedNames, loc, /*quiet=*/false);
 	// The methods remain ordinary callable subroutines, but are no longer
@@ -448,7 +582,7 @@ void ContractBuilder::emitEvmEntryDispatch(
 			std::move(condition), std::move(body), nullptr, loc));
 	}
 
-	emitEvmArmSwitch(m_typeMapper, routes, approval.body->body, loc);
+	emitEvmArmSwitch(m_typeMapper, routes, retTails, approval.body->body, loc);
 
 	// Unmatched non-empty calldata selects fallback(). Reconstruct exactly the
 	// Solidity byte stream from the AVM carrier split: selector ++ ABI body.
@@ -529,10 +663,17 @@ void ContractBuilder::emitEvmCompatRoutes(
 	// Helpers go in BEFORE route collection (pointer stability, see
 	// emitEvmEntryDispatch); puya strips them when no arm ends up calling.
 	synthesizeEvmEntryHelpers(contract, loc);
+	std::map<std::string, std::string> retTails;
+	{
+		auto probe = collectEvmRoutes(
+			contractDefinition, contract, m_overloadedNames, loc,
+			/*quiet=*/true, &m_typeMapper.analysis());
+		retTails = synthesizeEvmReturnTails(m_typeMapper, contract, probe, loc);
+	}
 	auto routes = collectEvmRoutes(
 		contractDefinition, contract, m_overloadedNames, loc, /*quiet=*/true,
 		&m_typeMapper.analysis());
-	emitEvmArmSwitch(m_typeMapper, routes, approval.body->body, loc);
+	emitEvmArmSwitch(m_typeMapper, routes, retTails, approval.body->body, loc);
 }
 
 } // namespace puyasol::builder
