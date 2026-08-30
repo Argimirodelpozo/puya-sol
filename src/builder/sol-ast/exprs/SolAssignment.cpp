@@ -280,14 +280,22 @@ SolAssignment::tryHandlePushAssignRewrite(Token _op)
 std::optional<std::shared_ptr<awst::Expression>>
 SolAssignment::tryHandleBlobAggregateWrite()
 {
-	// Writes into a blob-backed aggregate: scalar leaves (`a[i]=v`, `p.f.x=v`)
-	// and struct/array-valued copies (`p.w1 = bytesToG1Point(...)`).
-	if (m_assignment.assignmentOperator() != Token::Assign)
-		return std::nullopt;
+	// Writes into a blob-backed aggregate: scalar leaves (`a[i]=v`, `p.f.x=v`),
+	// compound scalar leaves (`p.a[i] += v`), and struct/array-valued copies
+	// (`p.w1 = bytesToG1Point(...)`).
+	auto const op = m_assignment.assignmentOperator();
 	auto const& lhs = m_assignment.leftHandSide();
 	auto const* lhsType = lhs.annotation().type;
 	if (!lhsType)
 		return std::nullopt;
+	// bytes/string ELEMENT compound keeps the (pre-existing) generic-path
+	// behavior: its packed 1-byte layout has no word reader here.
+	if (op != Token::Assign)
+		if (auto const* index = dynamic_cast<IndexAccess const*>(&lhs))
+			if (auto const* bytesArray = dynamic_cast<ArrayType const*>(
+					index->baseExpression().annotation().type);
+				bytesArray && bytesArray->isByteArrayOrString())
+				return std::nullopt;
 	auto off = SolIndexAccess::resolveBlobOffset(m_ctx, m_scope, lhs, m_loc);
 	if (!off)
 		return std::nullopt;
@@ -297,8 +305,33 @@ SolAssignment::tryHandleBlobAggregateWrite()
 	// reference-child allocation.  This replaces the former flat 32-byte copy
 	// and the scalar-everything-is-biguint shortcut.
 	auto const* lhsW = m_ctx.typeMapper.map(lhsType);
+	std::shared_ptr<awst::Expression> rhsValue;
+	if (op != Token::Assign)
+	{
+		// Compound: the generic path's target would be the blob READ — not an
+		// lvalue (puya: "unsupported assignment target"). Pin the resolved
+		// offset once, read the current leaf, combine (same helper and
+		// current-before-RHS order as the generic compound path), and fall
+		// through to the shared writer.
+		std::string offName = "__blobrmw_off_" + std::to_string(m_assignment.id());
+		m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
+			awst::makeVarExpression(offName, awst::WType::uint64Type(), m_loc),
+			std::move(off), m_loc));
+		auto offRef = [&]() {
+			return awst::makeVarExpression(
+				offName, awst::WType::uint64Type(), m_loc);
+		};
+		auto current = builder::materializeEvmMemoryValue(
+			m_ctx.typeMapper, lhsType, lhsW, offRef(), m_loc,
+			m_ctx.preEffects());
+		rhsValue = applyCompoundAssignment(
+			op, current, buildExpr(m_assignment.rightHandSide()));
+		off = offRef();
+	}
+	else
+		rhsValue = buildExpr(m_assignment.rightHandSide());
 	auto value = builder::TypeCoercion::coerceForAssignment(
-		buildExpr(m_assignment.rightHandSide()), lhsW, m_loc);
+		std::move(rhsValue), lhsW, m_loc);
 	std::string valueName = "__blobassign_v_" + std::to_string(m_assignment.id());
 	m_ctx.preEffects().push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(valueName, lhsW, m_loc), std::move(value), m_loc));

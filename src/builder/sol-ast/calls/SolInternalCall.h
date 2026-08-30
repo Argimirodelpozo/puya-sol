@@ -47,7 +47,8 @@ private:
 		solidity::frontend::FunctionDefinition const& _funcDef,
 		std::vector<awst::WType const*>& paramTypes,
 		std::set<size_t>& mappingStorageParamIndices,
-		std::set<size_t>& evmSlotRefParamIndices);
+		std::set<size_t>& evmSlotRefParamIndices,
+		std::set<size_t>& blobOffsetParamIndices);
 	/// Box-key prefix for a mapping/storage-ref argument.
 	std::shared_ptr<awst::Expression> extractMappingKeyPrefix(
 		solidity::frontend::Expression const& argExpr);
@@ -58,7 +59,8 @@ private:
 		bool _isUsingForCall,
 		std::vector<awst::WType const*> const& paramTypes,
 		std::set<size_t> const& mappingStorageParamIndices,
-		std::set<size_t> const& evmSlotRefParamIndices);
+		std::set<size_t> const& evmSlotRefParamIndices,
+		std::set<size_t> const& blobOffsetParamIndices);
 	/// Companion byte offset for an offset-convention struct-ref argument.
 	std::shared_ptr<awst::Expression> offsetForArg(
 		solidity::frontend::Expression const* argExpr);

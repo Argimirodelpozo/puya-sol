@@ -4946,3 +4946,21 @@ def test_nested_mapping_prefix_consistency(harness):
     assert as_int(harness.call(app, "nestedWriteVia(uint256)", 3).abi_return) == 33
     assert harness.call(app, "aliasDirect(uint256)", 4).abi_return == [44, 44]
     assert as_int(harness.call(app, "aliasParam(uint256)", 5).abi_return) == 55
+
+
+def test_blob_param_writeback_and_compound(harness):
+    """puyasolRegression/contracts/blob_param_writeback.sol — NOT an o.g. test.
+
+    Two blob-model (>4KB memory) fixes. (1) A mutated blob param passed to a
+    library fn made the CALLER add a write-back tuple slot the callee
+    (correctly) never returns — bare puya AssertionError at the call site;
+    the caller now mirrors AWSTBuilder's blob exclusion. (2) Compound
+    assignment on a blob leaf fell through to the generic path, whose target
+    is the blob READ — puya "unsupported assignment target"; compounds now
+    pin the offset and read-modify-write through the blob writer.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/blob_param_writeback.sol")
+    assert as_int(harness.call(app, "libWrite(uint256)", 41).abi_return) == 41
+    assert as_int(harness.call(app, "compoundLeaf(uint256)", 10).abi_return) == 15
+    assert as_int(harness.call(app, "libCompound(uint256)", 7).abi_return) == 8

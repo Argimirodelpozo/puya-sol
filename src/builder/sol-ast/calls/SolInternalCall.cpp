@@ -4,6 +4,7 @@
 
 #include "builder/sol-ast/calls/SolInternalCall.h"
 #include "builder/sol-types/RefParamPassing.h"
+#include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/ProgramAnalysis.h"
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/sol-ast/MappingPrefix.h"
@@ -300,6 +301,7 @@ std::vector<size_t> collectStorageWriteBackParams(
 
 /// Memory-ref params: same library/free scope; `pure` NOT excluded (Solidity pure can mutate memory).
 std::vector<size_t> collectMemoryWriteBackParams(
+	eb::ContractContext& _ctx,
 	FunctionDefinition const* _funcDef,
 	size_t argCount,
 	ParameterMutationSummary const* mutations)
@@ -331,6 +333,15 @@ std::vector<size_t> collectMemoryWriteBackParams(
 				continue;
 			if (!mutations || !mutations->mutates(pi))
 				continue;  // read-only — callee didn't augment it either
+			// Blob-backed (>4KB) aggregate: a LIBRARY/FREE callee writes
+			// through the shared blob and does NOT thread it back
+			// (AWSTBuilder excludes it) — expecting a tuple slot here made
+			// `L.f(bigStruct)` die on a bare puya AssertionError. Internal
+			// contract methods DO thread the offset (FunctionBuilder); keep
+			// that pairing.
+			if (!calleeIsInternalMethod
+				&& builder::memoryUsesBlob(_ctx.typeMapper.map(p->type())))
+				continue;
 			memoryRefParamIndices.push_back(pi);
 		}
 	}
@@ -609,7 +620,8 @@ void SolInternalCall::collectSubroutineParamTypes(
 	FunctionDefinition const& _funcDef,
 	std::vector<awst::WType const*>& paramTypes,
 	std::set<size_t>& mappingStorageParamIndices,
-	std::set<size_t>& evmSlotRefParamIndices)
+	std::set<size_t>& evmSlotRefParamIndices,
+	std::set<size_t>& blobOffsetParamIndices)
 {
 	// The shared travel rule (RefParamPassing.h) — MUST classify exactly as
 	// FunctionBuilder/AWSTBuilder did on the callee side, or args mismatch.
@@ -625,6 +637,8 @@ void SolInternalCall::collectSubroutineParamTypes(
 			evmSlotRefParamIndices.insert(pi);
 		else if (passing == builder::RefParamPassing::BoxKeyPrefix)
 			mappingStorageParamIndices.insert(pi);
+		else if (passing == builder::RefParamPassing::BlobOffset)
+			blobOffsetParamIndices.insert(pi);
 	}
 }
 
@@ -717,7 +731,8 @@ void SolInternalCall::buildSequencedArgs(
 	bool _isUsingForCall,
 	std::vector<awst::WType const*> const& paramTypes,
 	std::set<size_t> const& mappingStorageParamIndices,
-	std::set<size_t> const& evmSlotRefParamIndices)
+	std::set<size_t> const& evmSlotRefParamIndices,
+	std::set<size_t> const& blobOffsetParamIndices)
 {
 	// Args evaluate left-to-right on EVM (verified vs 0.8.20 + py-evm), with
 	// each arg's write-backs landing before the NEXT arg — and before the call
@@ -742,6 +757,10 @@ void SolInternalCall::buildSequencedArgs(
 				}
 				if (mappingStorageParamIndices.count(0))
 					return extractMappingKeyPrefix(memberAccess->expression());
+				if (blobOffsetParamIndices.count(0))
+					if (auto off = SolIndexAccess::resolveBlobOffset(
+							m_ctx, m_scope, memberAccess->expression(), m_loc))
+						return off;
 				auto v = buildExpr(memberAccess->expression());
 				if (!paramTypes.empty())
 					v = builder::TypeCoercion::implicitNumericCast(
@@ -771,6 +790,15 @@ void SolInternalCall::buildSequencedArgs(
 			}
 			if (mappingStorageParamIndices.count(paramIdx))
 				return extractMappingKeyPrefix(*sortedArgs[i]);
+			// Blob param (>4KB memory aggregate): the callee takes the uint64
+			// base offset (pointer model). Building the VALUE materialized the
+			// whole struct and fed an ARC4Struct into the uint64 param —
+			// silent garbage. Resolve the pointer instead; an unresolvable
+			// shape falls through to the value build (loud type mismatch).
+			if (blobOffsetParamIndices.count(paramIdx))
+				if (auto off = SolIndexAccess::resolveBlobOffset(
+						m_ctx, m_scope, *sortedArgs[i], m_loc))
+					return off;
 			auto v = buildExpr(*sortedArgs[i]);
 			// Slot mode: a storage-ref arg bound to a VALUE (memory) param
 			// materializes here — the slot handle can't coerce to the value
@@ -969,13 +997,16 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	std::vector<awst::WType const*> paramTypes;
 	std::set<size_t> mappingStorageParamIndices;
 	std::set<size_t> evmSlotRefParamIndices;
+	std::set<size_t> blobOffsetParamIndices;
 	if (_funcDef)
 		collectSubroutineParamTypes(
-			*_funcDef, paramTypes, mappingStorageParamIndices, evmSlotRefParamIndices);
+			*_funcDef, paramTypes, mappingStorageParamIndices,
+			evmSlotRefParamIndices, blobOffsetParamIndices);
 
 	buildSequencedArgs(
 		call, _funcDef, _isUsingForCall, paramTypes,
-		mappingStorageParamIndices, evmSlotRefParamIndices);
+		mappingStorageParamIndices, evmSlotRefParamIndices,
+		blobOffsetParamIndices);
 
 	if (_funcDef)
 		appendStructRefOffsetArgs(call, *_funcDef, _isUsingForCall);
@@ -986,7 +1017,7 @@ std::shared_ptr<awst::Expression> SolInternalCall::buildSubroutineCall(
 	auto storageParamIndices = collectStorageWriteBackParams(
 		m_ctx, _funcDef, call->args.size());
 	auto memoryRefParamIndices = collectMemoryWriteBackParams(
-		_funcDef, call->args.size(), mutations);
+		m_ctx, _funcDef, call->args.size(), mutations);
 
 	if (!storageParamIndices.empty() || !memoryRefParamIndices.empty())
 	{
