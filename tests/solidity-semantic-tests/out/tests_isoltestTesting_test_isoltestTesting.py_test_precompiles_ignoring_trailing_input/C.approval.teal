@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 96
-    bytecblock 0x 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+    bytecblock 0x 0x151f7c75 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
     pushint 4096
     bzero
     dup
@@ -117,8 +117,6 @@ main_ecRecover_route@12:
 
 main_switch_case_2@7:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     intc_2 // 0
     callsub __evm_decw
     dup
@@ -126,6 +124,9 @@ main_switch_case_2@7:
     intc_0 // 32
     <=
     assert // overflow
+    intc_0 // 32
+    bzero
+    swap
     dig 1
     b|
     intc_0 // 32
@@ -144,7 +145,7 @@ main_switch_case_2@7:
     intc_0 // 32
     <=
     assert // overflow
-    dig 3
+    uncover 3
     b|
     cover 2
     concat
@@ -152,43 +153,12 @@ main_switch_case_2@7:
     concat
     callsub ecMul
     pop
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
 main_switch_case_1@6:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     intc_2 // 0
     callsub __evm_decw
     dup
@@ -196,6 +166,9 @@ main_switch_case_1@6:
     intc_0 // 32
     <=
     assert // overflow
+    intc_0 // 32
+    bzero
+    swap
     dig 1
     b|
     intc_0 // 32
@@ -223,7 +196,7 @@ main_switch_case_1@6:
     intc_0 // 32
     <=
     assert // overflow
-    dig 4
+    uncover 4
     b|
     uncover 3
     uncover 3
@@ -234,43 +207,12 @@ main_switch_case_1@6:
     concat
     callsub ecAdd
     pop
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
 main_switch_case_0@5:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     intc_2 // 0
     callsub __evm_decw
     dup
@@ -278,6 +220,9 @@ main_switch_case_0@5:
     intc_0 // 32
     <=
     assert // overflow
+    intc_0 // 32
+    bzero
+    swap
     dig 1
     b|
     intc_0 // 32
@@ -305,7 +250,7 @@ main_switch_case_0@5:
     intc_0 // 32
     <=
     assert // overflow
-    dig 4
+    uncover 4
     b|
     uncover 3
     uncover 3
@@ -316,36 +261,7 @@ main_switch_case_0@5:
     concat
     callsub ecRecover
     pop
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
@@ -428,7 +344,7 @@ ecRecover_and_contd@8:
     b!=
     bz ecRecover_after_if_else@13
     frame_dig 3
-    bytec_3 // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+    bytec_2 // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
     b<
     bz ecRecover_after_if_else@13
     frame_dig 1
@@ -439,7 +355,7 @@ ecRecover_and_contd@8:
     b!=
     bz ecRecover_after_if_else@13
     frame_dig 4
-    bytec_3 // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+    bytec_2 // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
     b<
     bz ecRecover_after_if_else@13
     frame_dig 1
@@ -624,4 +540,42 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol.C.__evm_ret0(__v: bytes) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    frame_dig -1
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
     retsub

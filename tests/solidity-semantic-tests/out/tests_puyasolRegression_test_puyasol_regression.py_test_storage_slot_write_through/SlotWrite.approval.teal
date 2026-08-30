@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_slot_write_through.sol.SlotWrite.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 24 65535
-    bytecblock 0x 0x151f7c75 "a" "c" "d" 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 "__ctor_pending"
+    intcblock 1 32 0 24 65535
+    bytecblock 0x 0x151f7c75 "a" "c" "d" "__ctor_pending" 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     pushint 4096
     bzero
     dup
@@ -24,10 +24,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 6 // "__ctor_pending"
-    intc_1 // 1
+    bytec 5 // "__ctor_pending"
+    intc_0 // 1
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -58,7 +58,7 @@ main_lenA_route@25:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_getC_route@24:
@@ -73,7 +73,7 @@ main_getC_route@24:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_getA_route@23:
@@ -88,7 +88,7 @@ main_getA_route@23:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_readA_route@22:
@@ -103,7 +103,7 @@ main_readA_route@22:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_getD_route@21:
@@ -118,7 +118,7 @@ main_getD_route@21:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_setDViaLib_route@20:
@@ -134,7 +134,7 @@ main_setDViaLib_route@20:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
     callsub setDViaLib
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_setC_route@19:
@@ -150,7 +150,7 @@ main_setC_route@19:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
     callsub setC
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_setA_route@18:
@@ -166,18 +166,18 @@ main_setA_route@18:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
     callsub setA
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main___postInit_route@17:
-    bytec 6 // "__ctor_pending"
+    bytec 5 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec 6 // "__ctor_pending"
+    bytec 5 // "__ctor_pending"
     intc_2 // 0
     app_global_put
     bytec_3 // "c"
@@ -190,31 +190,31 @@ main___postInit_route@17:
     bytec 4 // "d"
     bytec_0 // 0x
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_switch_case_7@12:
     callsub __evm_npy
-    intc_0 // 32
+    intc_1 // 32
     bzero
     callsub lenA
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_switch_case_6@11:
     callsub __evm_npy
-    intc_0 // 32
+    intc_1 // 32
     bzero
     callsub getC
     dup
@@ -226,142 +226,49 @@ main_switch_case_6@11:
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     swap
-    intc_0 // 32
+    intc_1 // 32
     %
-    intc_0 // 32
+    intc_1 // 32
     swap
     -
-    intc_0 // 32
+    intc_1 // 32
     %
     bzero
     uncover 2
     swap
     concat
     concat
-    bytec 5 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    bytec 6 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_switch_case_5@10:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub getA
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec 5 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret1
+    intc_0 // 1
     return
 
 main_switch_case_4@9:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub readA
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec 5 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret1
+    intc_0 // 1
     return
 
 main_switch_case_3@8:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub getD
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec 5 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret1
+    intc_0 // 1
     return
 
 main_switch_case_2@7:
@@ -376,7 +283,7 @@ main_switch_case_2@7:
     intc_3 // 24
     extract_uint64
     dup
-    intc_0 // 32
+    intc_1 // 32
     %
     !
     assert // unaligned EVM ABI offset
@@ -394,7 +301,7 @@ main_switch_case_2@7:
     <=
     assert // EVM ABI byte sequence exceeds ARC4 uint16 length
     swap
-    intc_0 // 32
+    intc_1 // 32
     +
     dup
     dig 2
@@ -410,7 +317,7 @@ main_switch_case_2@7:
     callsub setDViaLib
     bytec_1 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_switch_case_1@6:
@@ -425,7 +332,7 @@ main_switch_case_1@6:
     intc_3 // 24
     extract_uint64
     dup
-    intc_0 // 32
+    intc_1 // 32
     %
     !
     assert // unaligned EVM ABI offset
@@ -443,7 +350,7 @@ main_switch_case_1@6:
     <=
     assert // EVM ABI byte sequence exceeds ARC4 uint16 length
     swap
-    intc_0 // 32
+    intc_1 // 32
     +
     dup
     dig 2
@@ -459,7 +366,7 @@ main_switch_case_1@6:
     callsub setC
     bytec_1 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_switch_case_0@5:
@@ -474,7 +381,7 @@ main_switch_case_0@5:
     intc_3 // 24
     extract_uint64
     dup
-    intc_0 // 32
+    intc_1 // 32
     %
     !
     assert // unaligned EVM ABI offset
@@ -492,7 +399,7 @@ main_switch_case_0@5:
     <=
     assert // EVM ABI byte sequence exceeds ARC4 uint16 length
     swap
-    intc_0 // 32
+    intc_1 // 32
     +
     dup
     dig 2
@@ -508,7 +415,7 @@ main_switch_case_0@5:
     callsub setA
     bytec_1 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -525,7 +432,7 @@ setA:
     txn GroupIndex
     bz setA_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -548,7 +455,7 @@ setC:
     txn GroupIndex
     bz setC_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -574,7 +481,7 @@ setDViaLib:
     txn GroupIndex
     bz setDViaLib_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -604,7 +511,7 @@ getD:
     txn GroupIndex
     bz getD_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -629,7 +536,7 @@ readA:
     txn GroupIndex
     bz readA_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -654,7 +561,7 @@ getA:
     txn GroupIndex
     bz getA_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -679,7 +586,7 @@ getC:
     txn GroupIndex
     bz getC_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -701,7 +608,7 @@ lenA:
     txn GroupIndex
     bz lenA_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -716,7 +623,7 @@ lenA_ternary_merge@3:
     select
     len
     itob
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     retsub
@@ -731,7 +638,7 @@ __evm_npy:
     txn GroupIndex
     bz __evm_npy_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -749,7 +656,7 @@ __evm_npy_ternary_false@2:
 __evm_decw:
     proto 1 1
     frame_dig -1
-    intc_0 // 32
+    intc_1 // 32
     +
     txna ApplicationArgs 1
     len
@@ -757,6 +664,44 @@ __evm_decw:
     assert // EVM ABI decode out of bounds
     txna ApplicationArgs 1
     frame_dig -1
-    intc_0 // 32
+    intc_1 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_slot_write_through.sol.SlotWrite.__evm_ret1(__v: bytes) -> void:
+__evm_ret1:
+    proto 1 0
+    intc_1 // 32
+    bzero
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    frame_dig -1
+    swap
+    concat
+    concat
+    bytec 6 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
     retsub

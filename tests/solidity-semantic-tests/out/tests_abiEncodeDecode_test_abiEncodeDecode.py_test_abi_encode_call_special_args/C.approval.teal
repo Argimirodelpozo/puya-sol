@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
-    bytecblock 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x 0x1af93581 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x10da340f 0xa0a2a599 0x88ce8eb6 0x795d221f 0x2e346852 0x7f9c7280 0x0a326c0c00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000 0x432672b2000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
+    intcblock 1 32 0 2
+    bytecblock 0x151f7c75 0x 0x1af93581 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x10da340f 0xa0a2a599 0x88ce8eb6 0x795d221f 0x2e346852 0x7f9c7280 0x0a326c0c00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000 0x432672b2000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
     pushint 4096
     bzero
     dup
@@ -27,7 +27,7 @@ main:
     pushbytes "sideEffectRan"
     intc_2 // 0
     app_global_put
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -37,7 +37,7 @@ main_after_if_else@2:
     intc_3 // 2
     ==
     bz main_after_if_else@19
-    bytec_3 // 0x1af93581
+    bytec_2 // 0x1af93581
     pushbytess 0x0a326c0c 0x432672b2 0x7d3f72d4 0xe1d1ef83 0x91c0c3fc 0x965fae3c 0xaf5b0af9 0x3b403d1b 0x3d3df1f1
     txna ApplicationArgs 0
     match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@10 main_switch_case_3@11 main_switch_case_4@12 main_switch_case_5@13 main_switch_case_6@14 main_switch_case_7@15 main_switch_case_8@16 main_switch_case_9@17
@@ -49,12 +49,12 @@ main_after_if_else@19:
     txn ApplicationID
     assert
     pushbytess 0x22b2fda0 0xb6e08150 0x2e5fdc8c // method "fNoArgs()void", method "fArray(uint256[])void", method "fUint(uint256,uint256)(uint256,uint256)"
-    bytec 5 // method "fSignatureFromLiteralNoArgs()byte[]"
-    bytec 6 // method "fPointerNoArgs()byte[]"
-    bytec 7 // method "fSignatureFromLiteralArray()byte[]"
-    bytec 8 // method "fPointerArray()byte[]"
-    bytec 9 // method "fSignatureFromLiteralUint()byte[]"
-    bytec 10 // method "fPointerUint()byte[]"
+    bytec 4 // method "fSignatureFromLiteralNoArgs()byte[]"
+    bytec 5 // method "fPointerNoArgs()byte[]"
+    bytec 6 // method "fSignatureFromLiteralArray()byte[]"
+    bytec 7 // method "fPointerArray()byte[]"
+    bytec 8 // method "fSignatureFromLiteralUint()byte[]"
+    bytec 9 // method "fPointerUint()byte[]"
     pushbytes 0xb2fd8e38 // method "assertConsistentSelectors()void"
     txna ApplicationArgs 0
     match main_fNoArgs_route@22 main_fArray_route@23 main_fUint_route@24 main_fSignatureFromLiteralNoArgs_route@25 main_fPointerNoArgs_route@26 main_fSignatureFromLiteralArray_route@27 main_fPointerArray_route@28 main_fSignatureFromLiteralUint_route@29 main_fPointerUint_route@30 main_assertConsistentSelectors_route@31
@@ -62,7 +62,7 @@ main_after_if_else@19:
 
 main_assertConsistentSelectors_route@31:
     callsub assertConsistentSelectors
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_fPointerUint_route@30:
@@ -77,7 +77,7 @@ main_fPointerUint_route@30:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_fSignatureFromLiteralUint_route@29:
@@ -92,7 +92,7 @@ main_fSignatureFromLiteralUint_route@29:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_fPointerArray_route@28:
@@ -107,7 +107,7 @@ main_fPointerArray_route@28:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_fSignatureFromLiteralArray_route@27:
@@ -122,7 +122,7 @@ main_fSignatureFromLiteralArray_route@27:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_fPointerNoArgs_route@26:
@@ -137,7 +137,7 @@ main_fPointerNoArgs_route@26:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_fSignatureFromLiteralNoArgs_route@25:
@@ -152,20 +152,20 @@ main_fSignatureFromLiteralNoArgs_route@25:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_fUint_route@24:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub fUint
@@ -174,7 +174,7 @@ main_fUint_route@24:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_fArray_route@23:
@@ -182,7 +182,7 @@ main_fArray_route@23:
     dup
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    intc_0 // 32
+    intc_1 // 32
     *
     intc_3 // 2
     +
@@ -192,12 +192,12 @@ main_fArray_route@23:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     callsub fArray
     pop
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_fNoArgs_route@22:
     callsub fNoArgs
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_switch_case_9@17:
@@ -205,248 +205,62 @@ main_switch_case_9@17:
     callsub assertConsistentSelectors
     bytec_0 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_switch_case_8@16:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub fPointerUint
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret1
+    intc_0 // 1
     return
 
 main_switch_case_7@15:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub fSignatureFromLiteralUint
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret1
+    intc_0 // 1
     return
 
 main_switch_case_6@14:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub fPointerArray
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret1
+    intc_0 // 1
     return
 
 main_switch_case_5@13:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub fSignatureFromLiteralArray
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret1
+    intc_0 // 1
     return
 
 main_switch_case_4@12:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub fPointerNoArgs
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret1
+    intc_0 // 1
     return
 
 main_switch_case_3@11:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub fSignatureFromLiteralNoArgs
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret1
+    intc_0 // 1
     return
 
 main_switch_case_2@10:
     callsub __evm_npy
-    intc_0 // 32
+    intc_1 // 32
     bzero
     intc_2 // 0
     callsub __evm_decw
-    intc_0 // 32
+    intc_1 // 32
     callsub __evm_decw
     dig 1
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     swap
@@ -454,7 +268,7 @@ main_switch_case_2@10:
     b|
     dig 1
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     swap
@@ -466,24 +280,24 @@ main_switch_case_2@10:
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     cover 2
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     concat
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_switch_case_1@6:
@@ -492,13 +306,13 @@ main_switch_case_1@6:
     callsub __evm_decw
     dup
     extract 0 24
-    bytec_2 // 0x
+    bytec_1 // 0x
     b==
     assert // EVM ABI offset exceeds uint64
     pushint 24
     extract_uint64
     dup
-    intc_0 // 32
+    intc_1 // 32
     %
     !
     assert // unaligned EVM ABI offset
@@ -506,7 +320,7 @@ main_switch_case_1@6:
     callsub __evm_decw
     dup
     extract 0 24
-    bytec_2 // 0x
+    bytec_1 // 0x
     b==
     assert // EVM ABI array length exceeds uint64
     pushint 24
@@ -518,7 +332,7 @@ main_switch_case_1@6:
     assert // EVM ABI array exceeds ARC4 uint16 length
     pushbytes 0x0000
     swap
-    intc_0 // 32
+    intc_1 // 32
     +
     intc_2 // 0
 
@@ -528,17 +342,17 @@ main_while_top@7:
     <
     bz main_after_while@9
     dup
-    intc_0 // 32
+    intc_1 // 32
     *
     dig 2
     +
     callsub __evm_decw
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x0001
@@ -561,7 +375,7 @@ main_while_top@7:
     swap
     concat
     cover 2
-    intc_1 // 1
+    intc_0 // 1
     +
     b main_while_top@7
 
@@ -571,7 +385,7 @@ main_after_while@9:
     pop
     bytec_0 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_switch_case_0@5:
@@ -579,7 +393,7 @@ main_switch_case_0@5:
     callsub fNoArgs
     bytec_0 // 0x151f7c75
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -588,7 +402,7 @@ fNoArgs:
     txn GroupIndex
     bz fNoArgs_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -608,7 +422,7 @@ fArray:
     txn GroupIndex
     bz fArray_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -629,7 +443,7 @@ fUint:
     txn GroupIndex
     bz fUint_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -650,13 +464,13 @@ fSignatureFromLiteralNoArgs:
     txn NumAppArgs
     bz fSignatureFromLiteralNoArgs_after_if_else@6
     txna ApplicationArgs 0
-    bytec 5 // method "fSignatureFromLiteralNoArgs()byte[]"
+    bytec 4 // method "fSignatureFromLiteralNoArgs()byte[]"
     ==
     bz fSignatureFromLiteralNoArgs_after_if_else@6
     txn GroupIndex
     bz fSignatureFromLiteralNoArgs_ternary_false@4
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -665,7 +479,7 @@ fSignatureFromLiteralNoArgs_ternary_merge@5:
     assert // not payable
 
 fSignatureFromLiteralNoArgs_after_if_else@6:
-    bytec_3 // 0x1af93581
+    bytec_2 // 0x1af93581
     retsub
 
 fSignatureFromLiteralNoArgs_ternary_false@4:
@@ -678,13 +492,13 @@ fPointerNoArgs:
     txn NumAppArgs
     bz fPointerNoArgs_after_if_else@6
     txna ApplicationArgs 0
-    bytec 6 // method "fPointerNoArgs()byte[]"
+    bytec 5 // method "fPointerNoArgs()byte[]"
     ==
     bz fPointerNoArgs_after_if_else@6
     txn GroupIndex
     bz fPointerNoArgs_ternary_false@4
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -693,7 +507,7 @@ fPointerNoArgs_ternary_merge@5:
     assert // not payable
 
 fPointerNoArgs_after_if_else@6:
-    bytec_3 // 0x1af93581
+    bytec_2 // 0x1af93581
     retsub
 
 fPointerNoArgs_ternary_false@4:
@@ -706,13 +520,13 @@ fSignatureFromLiteralArray:
     txn NumAppArgs
     bz fSignatureFromLiteralArray_after_if_else@6
     txna ApplicationArgs 0
-    bytec 7 // method "fSignatureFromLiteralArray()byte[]"
+    bytec 6 // method "fSignatureFromLiteralArray()byte[]"
     ==
     bz fSignatureFromLiteralArray_after_if_else@6
     txn GroupIndex
     bz fSignatureFromLiteralArray_ternary_false@4
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -721,7 +535,7 @@ fSignatureFromLiteralArray_ternary_merge@5:
     assert // not payable
 
 fSignatureFromLiteralArray_after_if_else@6:
-    bytec_2 // 0x
+    bytec_1 // 0x
     intc_2 // 0
 
 fSignatureFromLiteralArray_while_top@7:
@@ -729,33 +543,33 @@ fSignatureFromLiteralArray_while_top@7:
     intc_2 // 0
     <
     bz fSignatureFromLiteralArray_after_while@9
-    intc_0 // 32
+    intc_1 // 32
     bzero
     dig 1
-    intc_0 // 32
+    intc_1 // 32
     *
-    bytec_2 // 0x
+    bytec_1 // 0x
     swap
-    intc_0 // 32
+    intc_1 // 32
     extract3 // on error: index access is out of bounds
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     uncover 2
     swap
     concat
     swap
-    intc_1 // 1
+    intc_0 // 1
     +
     b fSignatureFromLiteralArray_while_top@7
 
 fSignatureFromLiteralArray_after_while@9:
     pop
-    bytec 11 // 0x0a326c0c00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    bytec 10 // 0x0a326c0c00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
     swap
     concat
     retsub
@@ -770,13 +584,13 @@ fPointerArray:
     txn NumAppArgs
     bz fPointerArray_after_if_else@6
     txna ApplicationArgs 0
-    bytec 8 // method "fPointerArray()byte[]"
+    bytec 7 // method "fPointerArray()byte[]"
     ==
     bz fPointerArray_after_if_else@6
     txn GroupIndex
     bz fPointerArray_ternary_false@4
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -785,7 +599,7 @@ fPointerArray_ternary_merge@5:
     assert // not payable
 
 fPointerArray_after_if_else@6:
-    bytec_2 // 0x
+    bytec_1 // 0x
     intc_2 // 0
 
 fPointerArray_while_top@7:
@@ -793,33 +607,33 @@ fPointerArray_while_top@7:
     intc_2 // 0
     <
     bz fPointerArray_after_while@9
-    intc_0 // 32
+    intc_1 // 32
     bzero
     dig 1
-    intc_0 // 32
+    intc_1 // 32
     *
-    bytec_2 // 0x
+    bytec_1 // 0x
     swap
-    intc_0 // 32
+    intc_1 // 32
     extract3 // on error: index access is out of bounds
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     uncover 2
     swap
     concat
     swap
-    intc_1 // 1
+    intc_0 // 1
     +
     b fPointerArray_while_top@7
 
 fPointerArray_after_while@9:
     pop
-    bytec 11 // 0x0a326c0c00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
+    bytec 10 // 0x0a326c0c00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000000
     swap
     concat
     retsub
@@ -834,13 +648,13 @@ fSignatureFromLiteralUint:
     txn NumAppArgs
     bz fSignatureFromLiteralUint_after_if_else@6
     txna ApplicationArgs 0
-    bytec 9 // method "fSignatureFromLiteralUint()byte[]"
+    bytec 8 // method "fSignatureFromLiteralUint()byte[]"
     ==
     bz fSignatureFromLiteralUint_after_if_else@6
     txn GroupIndex
     bz fSignatureFromLiteralUint_ternary_false@4
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -849,7 +663,7 @@ fSignatureFromLiteralUint_ternary_merge@5:
     assert // not payable
 
 fSignatureFromLiteralUint_after_if_else@6:
-    bytec 12 // 0x432672b2000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
+    bytec 11 // 0x432672b2000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
     retsub
 
 fSignatureFromLiteralUint_ternary_false@4:
@@ -862,13 +676,13 @@ fPointerUint:
     txn NumAppArgs
     bz fPointerUint_after_if_else@6
     txna ApplicationArgs 0
-    bytec 10 // method "fPointerUint()byte[]"
+    bytec 9 // method "fPointerUint()byte[]"
     ==
     bz fPointerUint_after_if_else@6
     txn GroupIndex
     bz fPointerUint_ternary_false@4
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -877,7 +691,7 @@ fPointerUint_ternary_merge@5:
     assert // not payable
 
 fPointerUint_after_if_else@6:
-    bytec 12 // 0x432672b2000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
+    bytec 11 // 0x432672b2000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
     retsub
 
 fPointerUint_ternary_false@4:
@@ -890,7 +704,7 @@ assertConsistentSelectors:
     txn GroupIndex
     bz assertConsistentSelectors_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -904,7 +718,7 @@ assertConsistentSelectors_ternary_merge@3:
     ==
     dup
     bnz assertConsistentSelectors_after_if_else@5
-    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec_3 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 assertConsistentSelectors_after_if_else@5:
@@ -916,7 +730,7 @@ assertConsistentSelectors_after_if_else@5:
     ==
     dup
     bnz assertConsistentSelectors_after_if_else@7
-    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec_3 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 assertConsistentSelectors_after_if_else@7:
@@ -928,7 +742,7 @@ assertConsistentSelectors_after_if_else@7:
     ==
     dup
     bnz assertConsistentSelectors_after_if_else@9
-    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec_3 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 assertConsistentSelectors_after_if_else@9:
@@ -945,7 +759,7 @@ __evm_npy:
     txn GroupIndex
     bz __evm_npy_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -963,7 +777,7 @@ __evm_npy_ternary_false@2:
 __evm_decw:
     proto 1 1
     frame_dig -1
-    intc_0 // 32
+    intc_1 // 32
     +
     txna ApplicationArgs 1
     len
@@ -971,6 +785,44 @@ __evm_decw:
     assert // EVM ABI decode out of bounds
     txna ApplicationArgs 1
     frame_dig -1
-    intc_0 // 32
+    intc_1 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_special_args.sol.C.__evm_ret1(__v: bytes) -> void:
+__evm_ret1:
+    proto 1 0
+    intc_1 // 32
+    bzero
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    frame_dig -1
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
     retsub

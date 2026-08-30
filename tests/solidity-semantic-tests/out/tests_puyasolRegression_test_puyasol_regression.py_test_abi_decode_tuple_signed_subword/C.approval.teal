@@ -212,13 +212,10 @@ main_switch_case_4@45:
     bzero
     ==
     assert // invalid EVM ABI unsigned integer padding
-    intc_0 // 32
-    bzero
-    swap
     pushint 24
     extract_uint64
-    dig 2
-    uncover 4
+    dig 1
+    uncover 3
     concat
     dup
     len
@@ -231,22 +228,11 @@ main_switch_case_4@45:
     pushint 16
     <=
     assert // overflow
-    uncover 3
+    uncover 2
     b|
     swap
     callsub id2u
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_3 // 1
     return
 
@@ -301,30 +287,16 @@ main_ternary_merge@41:
 main_ternary_merge@44:
     ==
     assert // invalid EVM ABI signed integer padding
-    intc_0 // 32
-    bzero
+    pushint 24
+    extract_uint64
     swap
     pushint 24
     extract_uint64
     uncover 2
     pushint 24
     extract_uint64
-    uncover 3
-    pushint 24
-    extract_uint64
     callsub id3
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_3 // 1
     return
 
@@ -370,14 +342,11 @@ main_switch_case_2@31:
 main_ternary_merge@34:
     ==
     assert // invalid EVM ABI signed integer padding
-    intc_0 // 32
-    bzero
-    swap
     pushint 24
     extract_uint64
-    uncover 2
+    swap
     dup
-    uncover 4
+    uncover 3
     concat
     dup
     len
@@ -393,18 +362,7 @@ main_ternary_merge@34:
     b|
     swap
     callsub id2
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_3 // 1
     return
 
@@ -2209,4 +2167,25 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/abi_decode_tuple_signed.sol.C.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
     retsub

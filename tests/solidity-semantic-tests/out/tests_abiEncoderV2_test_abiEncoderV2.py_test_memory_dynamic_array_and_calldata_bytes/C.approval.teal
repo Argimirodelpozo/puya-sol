@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_bytes.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1 24 65535
-    bytecblock 0x 0x3788be3a 0x151f7c75 0x0000 0x0001 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    bytecblock 0x 0x3788be3a 0x151f7c75 0x0000 0x0001
     pushint 4096
     bzero
     dup
@@ -246,46 +246,13 @@ main_after_while@12:
     len
     <=
     assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
     txna ApplicationArgs 1
-    uncover 2
-    uncover 3
-    extract3
-    uncover 2
     swap
+    uncover 2
+    extract3
     callsub g
     pop
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec 5 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_2 // 1
     return
 
@@ -407,46 +374,13 @@ main_after_while@8:
     len
     <=
     assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
     txna ApplicationArgs 1
-    uncover 2
-    uncover 3
-    extract3
-    uncover 2
     swap
+    uncover 2
+    extract3
     callsub f
     pop
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec 5 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_2 // 1
     return
 
@@ -637,4 +571,42 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/memory_dynamic_array_and_calldata_bytes.sol.C.__evm_ret0(__v: bytes) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    frame_dig -1
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
     retsub

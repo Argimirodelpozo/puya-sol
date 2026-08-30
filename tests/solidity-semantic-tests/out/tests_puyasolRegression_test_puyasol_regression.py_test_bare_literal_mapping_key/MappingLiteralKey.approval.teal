@@ -150,44 +150,18 @@ main_switch_case_2@7:
 
 main_switch_case_1@6:
     callsub __evm_npy
-    intc_1 // 32
-    bzero
     intc_2 // 0
     callsub __evm_decw
     extract 0 32
     callsub ttlVia
-    itob
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
 main_switch_case_0@5:
     callsub __evm_npy
-    intc_1 // 32
-    bzero
     callsub ttlLit
-    itob
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
@@ -315,4 +289,25 @@ __evm_decw:
     frame_dig -1
     intc_1 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/mapping_literal_key.sol.MappingLiteralKey.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_1 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     retsub

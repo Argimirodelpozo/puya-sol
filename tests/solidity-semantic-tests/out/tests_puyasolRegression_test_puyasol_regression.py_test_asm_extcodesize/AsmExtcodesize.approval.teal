@@ -684,42 +684,15 @@ main_switch_case_1@6:
     bzero
     ==
     assert // invalid EVM ABI address padding
-    intc_2 // 32
-    bzero
-    swap
     callsub eoaHasNoCode
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
 main_switch_case_0@5:
     callsub __evm_npy
-    intc_2 // 32
-    bzero
     callsub contractHasCode
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
@@ -855,3 +828,24 @@ __evm_npy_ternary_merge@3:
 __evm_npy_ternary_false@2:
     intc_0 // 0
     b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_extcodesize.sol.AsmExtcodesize.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub

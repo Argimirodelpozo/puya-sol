@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/bytes_to_fixed_bytes_simple.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 16 65535
+    intcblock 1 0 32 24 65535
     bytecblock 0x151f7c75 0x "__ctor_pending" "s" "sLong"
     pushint 4096
     bzero
@@ -142,7 +142,7 @@ main___postInit_route@14:
     intc_1 // 0
     app_global_put
     bytec_3 // "s"
-    intc_3 // 16
+    pushint 16
     box_create
     pop
     bytec_3 // "s"
@@ -167,7 +167,7 @@ main_switch_case_4@9:
     bytec_1 // 0x
     b==
     assert // EVM ABI offset exceeds uint64
-    pushint 24
+    intc_3 // 24
     extract_uint64
     dup
     intc_2 // 32
@@ -181,7 +181,7 @@ main_switch_case_4@9:
     bytec_1 // 0x
     b==
     assert // EVM ABI length exceeds uint64
-    pushint 24
+    intc_3 // 24
     extract_uint64
     dup
     intc 4 // 65535
@@ -202,7 +202,7 @@ main_switch_case_4@9:
     uncover 2
     extract3
     callsub fromSlice
-    pushint 24
+    intc_3 // 24
     bzero
     concat
     bytec_0 // 0x151f7c75
@@ -225,13 +225,7 @@ main_switch_case_3@8:
 main_switch_case_2@7:
     callsub __evm_npy
     callsub fromStorage
-    intc_3 // 16
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
@@ -244,7 +238,7 @@ main_switch_case_1@6:
     bytec_1 // 0x
     b==
     assert // EVM ABI offset exceeds uint64
-    pushint 24
+    intc_3 // 24
     extract_uint64
     dup
     intc_2 // 32
@@ -258,7 +252,7 @@ main_switch_case_1@6:
     bytec_1 // 0x
     b==
     assert // EVM ABI length exceeds uint64
-    pushint 24
+    intc_3 // 24
     extract_uint64
     dup
     intc 4 // 65535
@@ -279,13 +273,7 @@ main_switch_case_1@6:
     uncover 2
     extract3
     callsub fromCalldata
-    intc_3 // 16
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
@@ -298,7 +286,7 @@ main_switch_case_0@5:
     bytec_1 // 0x
     b==
     assert // EVM ABI offset exceeds uint64
-    pushint 24
+    intc_3 // 24
     extract_uint64
     dup
     intc_2 // 32
@@ -312,7 +300,7 @@ main_switch_case_0@5:
     bytec_1 // 0x
     b==
     assert // EVM ABI length exceeds uint64
-    pushint 24
+    intc_3 // 24
     extract_uint64
     dup
     intc 4 // 65535
@@ -333,13 +321,7 @@ main_switch_case_0@5:
     uncover 2
     extract3
     callsub fromMemory
-    intc_3 // 16
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
@@ -357,7 +339,7 @@ fromMemory:
 fromMemory_ternary_merge@3:
     !
     assert // not payable
-    intc_3 // 16
+    pushint 16
     bzero
     frame_dig -1
     swap
@@ -383,7 +365,7 @@ fromCalldata:
 fromCalldata_ternary_merge@3:
     !
     assert // not payable
-    intc_3 // 16
+    pushint 16
     bzero
     frame_dig -1
     swap
@@ -411,7 +393,7 @@ fromStorage_ternary_merge@3:
     bytec_3 // "s"
     box_get
     assert // box exists
-    intc_3 // 16
+    pushint 16
     bzero
     concat
     extract 0 16
@@ -507,4 +489,19 @@ __evm_decw:
     frame_dig -1
     intc_2 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/bytes_to_fixed_bytes_simple.sol.C.__evm_ret0(__v: bytes) -> void:
+__evm_ret0:
+    proto 1 0
+    pushint 16
+    bzero
+    frame_dig -1
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     retsub

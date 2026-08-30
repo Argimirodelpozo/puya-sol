@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/call_function_returning_nothing_via_pointer.sol.test.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x151f7c75 "flag" 0x10b04df6 0x00
+    bytecblock "flag" 0x151f7c75 0x10b04df6 0x00
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "flag"
+    bytec_0 // "flag"
     intc_1 // 0
     app_global_put
     intc_0 // 1
@@ -59,7 +59,7 @@ main_flag_route@14:
     intc_1 // 0
     uncover 2
     setbit
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -72,7 +72,7 @@ main_f_route@13:
     intc_1 // 0
     uncover 2
     setbit
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -86,48 +86,22 @@ main_f0_route@12:
 
 main_switch_case_2@7:
     callsub __evm_npy
-    intc_2 // 32
-    bzero
     callsub flag
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
 main_switch_case_1@6:
     callsub __evm_npy
-    intc_2 // 32
-    bzero
     callsub f
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
 main_switch_case_0@5:
     callsub __evm_npy
     callsub f0
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     log
     intc_0 // 1
     return
@@ -153,7 +127,7 @@ f0_ternary_merge@5:
     assert // not payable
 
 f0_after_if_else@6:
-    bytec_1 // "flag"
+    bytec_0 // "flag"
     intc_0 // 1
     app_global_put
     retsub
@@ -177,7 +151,7 @@ f_ternary_merge@3:
     assert // not payable
     callsub f0
     intc_1 // 0
-    bytec_1 // "flag"
+    bytec_0 // "flag"
     app_global_get_ex
     intc_1 // 0
     cover 2
@@ -202,7 +176,7 @@ flag_ternary_merge@3:
     !
     assert // not payable
     intc_1 // 0
-    bytec_1 // "flag"
+    bytec_0 // "flag"
     app_global_get_ex
     intc_1 // 0
     cover 2
@@ -231,3 +205,24 @@ __evm_npy_ternary_merge@3:
 __evm_npy_ternary_false@2:
     intc_1 // 0
     b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/call_function_returning_nothing_via_pointer.sol.test.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub

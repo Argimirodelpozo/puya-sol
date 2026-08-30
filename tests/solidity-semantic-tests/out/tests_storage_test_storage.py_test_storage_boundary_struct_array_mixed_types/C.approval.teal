@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_struct_array_mixed_types.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 8 31 704
-    bytecblock 0x01 0x00 0x02 0x03 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x04 0x14 0x08 0x0c 0x10 0x18 0x1c 0x20 0x24 "__ctor_pending" 0x0a 0x010000000000000000000000000000000000000000000000000000000000000000 "s:" 0x0100000000000000000000000000000000
+    bytecblock 0x01 0x02 0x03 0x00 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 0x04 0x14 0x08 0x0c 0x10 0x18 0x1c 0x20 0x24 "__ctor_pending" 0x0a 0x010000000000000000000000000000000000000000000000000000000000000000 "s:" 0x0100000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -32,16 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@20
+    bnz main_after_if_else@14
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@20
+    bz main_after_if_else@14
     pushbytess 0xd0abf37f 0xdac1393e 0x3c1c94ec 0x62c94fe4 0x61fce144 0xc98fcb58 0x0d53a196 0x0221974e
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@14 main_switch_case_7@18
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11 main_switch_case_7@12
 
-main_after_if_else@20:
+main_after_if_else@14:
     txn OnCompletion
     !
     assert
@@ -49,10 +49,10 @@ main_after_if_else@20:
     assert
     pushbytess 0xbacc49e3 0x3edce88b 0x6c7cd03f 0x94ed5782 0xe4dbdd11 0xcaad2bd6 0x8650af45 0xb394d493 0xc67bf355 // method "__postInit()void", method "fillBoundaryArray()void", method "deleteBoundaryArray()void", method "copyFromBoundary()void", method "copyToBoundary()void", method "fillDestArray()void", method "boundaryArray()(uint256,uint128,uint64,byte[32],bool)[10]", method "destArray()(uint256,uint128,uint64,byte[32],bool)[10]", method "canaryValue()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@23 main_fillBoundaryArray_route@24 main_deleteBoundaryArray_route@25 main_copyFromBoundary_route@26 main_copyToBoundary_route@27 main_fillDestArray_route@28 main_boundaryArray_route@29 main_destArray_route@30 main_canaryValue_route@31
+    match main___postInit_route@17 main_fillBoundaryArray_route@18 main_deleteBoundaryArray_route@19 main_copyFromBoundary_route@20 main_copyToBoundary_route@21 main_fillDestArray_route@22 main_boundaryArray_route@23 main_destArray_route@24 main_canaryValue_route@25
     err
 
-main_canaryValue_route@31:
+main_canaryValue_route@25:
     callsub canaryValue
     bytec 5 // 0x151f7c75
     swap
@@ -61,7 +61,7 @@ main_canaryValue_route@31:
     pushint 1
     return
 
-main_destArray_route@30:
+main_destArray_route@24:
     callsub destArray
     bytec 5 // 0x151f7c75
     swap
@@ -70,7 +70,7 @@ main_destArray_route@30:
     pushint 1
     return
 
-main_boundaryArray_route@29:
+main_boundaryArray_route@23:
     callsub boundaryArray
     bytec 5 // 0x151f7c75
     swap
@@ -79,32 +79,32 @@ main_boundaryArray_route@29:
     pushint 1
     return
 
-main_fillDestArray_route@28:
+main_fillDestArray_route@22:
     callsub fillDestArray
     pushint 1
     return
 
-main_copyToBoundary_route@27:
+main_copyToBoundary_route@21:
     callsub copyToBoundary
     pushint 1
     return
 
-main_copyFromBoundary_route@26:
+main_copyFromBoundary_route@20:
     callsub copyFromBoundary
     pushint 1
     return
 
-main_deleteBoundaryArray_route@25:
+main_deleteBoundaryArray_route@19:
     callsub deleteBoundaryArray
     pushint 1
     return
 
-main_fillBoundaryArray_route@24:
+main_fillBoundaryArray_route@18:
     callsub fillBoundaryArray
     pushint 1
     return
 
-main___postInit_route@23:
+main___postInit_route@17:
     bytec 15 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -121,7 +121,7 @@ main___postInit_route@23:
     pushint 1
     return
 
-main_switch_case_7@18:
+main_switch_case_7@12:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -140,189 +140,19 @@ main_switch_case_7@18:
     pushint 1
     return
 
-main_switch_case_6@14:
+main_switch_case_6@11:
     callsub __evm_npy
-    pushbytes 0x
-    intc_1 // 0
-
-main_while_top@15:
-    dup
-    pushint 10
-    <
-    bz main_after_while@17
-    intc_0 // 32
-    bzero
     callsub destArray
-    dig 2
-    pushint 89
-    *
-    pushint 89
-    extract3 // on error: index access is out of bounds
-    dup
-    extract 0 32
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 1
-    extract 32 16
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 1
-    extract 48 8
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 1
-    extract 56 32
-    concat
-    swap
-    intc 4 // 704
-    getbit
-    bytec_1 // 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    intc_1 // 0
-    getbit
-    itob
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    uncover 2
-    swap
-    concat
-    swap
-    pushint 1
-    +
-    b main_while_top@15
-
-main_after_while@17:
+    callsub __evm_ret1
     pop
-    bytec 5 // 0x151f7c75
-    swap
-    concat
-    log
     pushint 1
     return
 
 main_switch_case_5@10:
     callsub __evm_npy
-    pushbytes 0x
-    intc_1 // 0
-
-main_while_top@11:
-    dup
-    pushint 10
-    <
-    bz main_after_while@13
-    intc_0 // 32
-    bzero
     callsub boundaryArray
-    dig 2
-    pushint 89
-    *
-    pushint 89
-    extract3 // on error: index access is out of bounds
-    dup
-    extract 0 32
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 1
-    extract 32 16
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 1
-    extract 48 8
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 1
-    extract 56 32
-    concat
-    swap
-    intc 4 // 704
-    getbit
-    bytec_1 // 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    intc_1 // 0
-    getbit
-    itob
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    uncover 2
-    swap
-    concat
-    swap
-    pushint 1
-    +
-    b main_while_top@11
-
-main_after_while@13:
+    callsub __evm_ret1
     pop
-    bytec 5 // 0x151f7c75
-    swap
-    concat
-    log
     pushint 1
     return
 
@@ -651,12 +481,12 @@ fillBoundaryArray_while_top@4:
     replace2 8
     callsub __storage_write
     dup
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 2
     extract 56 32
     callsub __storage_write
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -672,7 +502,7 @@ fillBoundaryArray_while_top@4:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -720,12 +550,12 @@ deleteBoundaryArray_ternary_merge@3:
     pushbytes 0x
     callsub __storage_write
     dup
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     pushbytes 0x
     callsub __storage_write
     dup
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     pushbytes 0x
     callsub __storage_write
@@ -956,7 +786,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 4
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 3
@@ -969,7 +799,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 5
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 4
@@ -1009,7 +839,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 8
@@ -1022,7 +852,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 8
@@ -1062,7 +892,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 12
@@ -1075,7 +905,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 12
@@ -1115,7 +945,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 16
@@ -1128,7 +958,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 16
@@ -1168,7 +998,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 20
@@ -1181,7 +1011,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 20
@@ -1221,7 +1051,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 24
@@ -1234,7 +1064,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 24
@@ -1274,7 +1104,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 28
@@ -1287,7 +1117,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 28
@@ -1327,7 +1157,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 32
@@ -1340,7 +1170,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 32
@@ -1380,7 +1210,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 36
@@ -1393,7 +1223,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 36
@@ -1433,7 +1263,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 40
@@ -1446,7 +1276,7 @@ copyFromBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 40
@@ -1471,7 +1301,7 @@ copyFromBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1497,7 +1327,7 @@ copyFromBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1523,7 +1353,7 @@ copyFromBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1549,7 +1379,7 @@ copyFromBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1575,7 +1405,7 @@ copyFromBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1601,7 +1431,7 @@ copyFromBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1627,7 +1457,7 @@ copyFromBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1653,7 +1483,7 @@ copyFromBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1679,7 +1509,7 @@ copyFromBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1705,7 +1535,7 @@ copyFromBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1798,13 +1628,13 @@ copyFromBoundary_ternary_merge@3:
     swap
     callsub __storage_write
     dig 4
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 2
     extract 56 32
     callsub __storage_write
     dig 4
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -1820,7 +1650,7 @@ copyFromBoundary_ternary_merge@3:
     uncover 3
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1888,13 +1718,13 @@ copyFromBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -1910,7 +1740,7 @@ copyFromBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -1978,13 +1808,13 @@ copyFromBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -2000,7 +1830,7 @@ copyFromBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -2069,13 +1899,13 @@ copyFromBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -2091,7 +1921,7 @@ copyFromBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -2160,13 +1990,13 @@ copyFromBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -2182,7 +2012,7 @@ copyFromBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -2251,13 +2081,13 @@ copyFromBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -2273,7 +2103,7 @@ copyFromBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -2342,13 +2172,13 @@ copyFromBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -2364,7 +2194,7 @@ copyFromBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -2433,13 +2263,13 @@ copyFromBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -2455,7 +2285,7 @@ copyFromBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -2524,13 +2354,13 @@ copyFromBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -2546,7 +2376,7 @@ copyFromBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -2615,13 +2445,13 @@ copyFromBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -2637,7 +2467,7 @@ copyFromBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -2695,7 +2525,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 4
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 3
@@ -2708,7 +2538,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 5
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 4
@@ -2748,7 +2578,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 8
@@ -2761,7 +2591,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 8
@@ -2801,7 +2631,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 12
@@ -2814,7 +2644,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 12
@@ -2854,7 +2684,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 16
@@ -2867,7 +2697,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 16
@@ -2907,7 +2737,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 20
@@ -2920,7 +2750,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 20
@@ -2960,7 +2790,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 24
@@ -2973,7 +2803,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 24
@@ -3013,7 +2843,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 28
@@ -3026,7 +2856,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 28
@@ -3066,7 +2896,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 32
@@ -3079,7 +2909,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 32
@@ -3119,7 +2949,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 36
@@ -3132,7 +2962,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 36
@@ -3172,7 +3002,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 40
@@ -3185,7 +3015,7 @@ copyToBoundary_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 40
@@ -3210,7 +3040,7 @@ copyToBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3236,7 +3066,7 @@ copyToBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3262,7 +3092,7 @@ copyToBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3288,7 +3118,7 @@ copyToBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3314,7 +3144,7 @@ copyToBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3340,7 +3170,7 @@ copyToBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3366,7 +3196,7 @@ copyToBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3392,7 +3222,7 @@ copyToBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3418,7 +3248,7 @@ copyToBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3444,7 +3274,7 @@ copyToBoundary_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3537,13 +3367,13 @@ copyToBoundary_ternary_merge@3:
     swap
     callsub __storage_write
     dig 4
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 2
     extract 56 32
     callsub __storage_write
     dig 4
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -3559,7 +3389,7 @@ copyToBoundary_ternary_merge@3:
     uncover 3
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3627,13 +3457,13 @@ copyToBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -3649,7 +3479,7 @@ copyToBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3717,13 +3547,13 @@ copyToBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -3739,7 +3569,7 @@ copyToBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3808,13 +3638,13 @@ copyToBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -3830,7 +3660,7 @@ copyToBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3899,13 +3729,13 @@ copyToBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -3921,7 +3751,7 @@ copyToBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -3990,13 +3820,13 @@ copyToBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -4012,7 +3842,7 @@ copyToBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -4081,13 +3911,13 @@ copyToBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -4103,7 +3933,7 @@ copyToBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -4172,13 +4002,13 @@ copyToBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -4194,7 +4024,7 @@ copyToBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -4263,13 +4093,13 @@ copyToBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -4285,7 +4115,7 @@ copyToBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -4354,13 +4184,13 @@ copyToBoundary_ternary_merge@3:
     replace2 8
     callsub __storage_write
     dig 1
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 1
     extract 56 32
     callsub __storage_write
     swap
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -4376,7 +4206,7 @@ copyToBoundary_ternary_merge@3:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -4577,12 +4407,12 @@ fillDestArray_while_top@4:
     replace2 8
     callsub __storage_write
     dup
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     dig 2
     extract 56 32
     callsub __storage_write
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     dup
     callsub __storage_read
@@ -4598,7 +4428,7 @@ fillDestArray_while_top@4:
     uncover 2
     intc 4 // 704
     getbit
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -4676,7 +4506,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 3
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 3
@@ -4689,7 +4519,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 4
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 4
@@ -4729,7 +4559,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 8
@@ -4742,7 +4572,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 8
@@ -4782,7 +4612,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 12
@@ -4795,7 +4625,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 12
@@ -4835,7 +4665,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 16
@@ -4848,7 +4678,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 16
@@ -4888,7 +4718,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 20
@@ -4901,7 +4731,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 20
@@ -4941,7 +4771,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 24
@@ -4954,7 +4784,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 24
@@ -4994,7 +4824,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 28
@@ -5007,7 +4837,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 28
@@ -5047,7 +4877,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 32
@@ -5060,7 +4890,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 32
@@ -5100,7 +4930,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 36
@@ -5113,7 +4943,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 36
@@ -5153,7 +4983,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 40
@@ -5166,7 +4996,7 @@ boundaryArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     uncover 40
@@ -5191,7 +5021,7 @@ boundaryArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -5217,7 +5047,7 @@ boundaryArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -5243,7 +5073,7 @@ boundaryArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -5269,7 +5099,7 @@ boundaryArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -5295,7 +5125,7 @@ boundaryArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -5321,7 +5151,7 @@ boundaryArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -5347,7 +5177,7 @@ boundaryArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -5373,7 +5203,7 @@ boundaryArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -5399,7 +5229,7 @@ boundaryArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -5425,7 +5255,7 @@ boundaryArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -5516,7 +5346,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 3
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 3
@@ -5529,7 +5359,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 4
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 4
@@ -5569,7 +5399,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 8
@@ -5582,7 +5412,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 8
@@ -5622,7 +5452,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 12
@@ -5635,7 +5465,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 12
@@ -5675,7 +5505,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 16
@@ -5688,7 +5518,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 16
@@ -5728,7 +5558,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 20
@@ -5741,7 +5571,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 20
@@ -5781,7 +5611,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 24
@@ -5794,7 +5624,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 24
@@ -5834,7 +5664,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 28
@@ -5847,7 +5677,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 28
@@ -5887,7 +5717,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 32
@@ -5900,7 +5730,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 32
@@ -5940,7 +5770,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 36
@@ -5953,7 +5783,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     dig 36
@@ -5993,7 +5823,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     dig 2
-    bytec_2 // 0x02
+    bytec_1 // 0x02
     b+
     callsub __storage_read
     dig 40
@@ -6006,7 +5836,7 @@ destArray_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 3
-    bytec_3 // 0x03
+    bytec_2 // 0x03
     b+
     callsub __storage_read
     uncover 40
@@ -6031,7 +5861,7 @@ destArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -6057,7 +5887,7 @@ destArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -6083,7 +5913,7 @@ destArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -6109,7 +5939,7 @@ destArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -6135,7 +5965,7 @@ destArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -6161,7 +5991,7 @@ destArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -6187,7 +6017,7 @@ destArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -6213,7 +6043,7 @@ destArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -6239,7 +6069,7 @@ destArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -6265,7 +6095,7 @@ destArray_ternary_merge@3:
     getbyte
     intc_1 // 0
     !=
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -6350,3 +6180,99 @@ __evm_npy_ternary_merge@3:
 __evm_npy_ternary_false@2:
     intc_1 // 0
     b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_struct_array_mixed_types.sol.C.__evm_ret1(__v: bytes) -> bytes:
+__evm_ret1:
+    proto 1 1
+    pushbytes 0x
+    intc_1 // 0
+
+__evm_ret1_while_top@1:
+    dup
+    pushint 10
+    <
+    bz __evm_ret1_after_while@3
+    intc_0 // 32
+    bzero
+    dig 1
+    pushint 89
+    *
+    frame_dig -1
+    swap
+    pushint 89
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 32
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    extract 32 16
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 48 8
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 56 32
+    concat
+    swap
+    intc 4 // 704
+    getbit
+    bytec_3 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    intc_1 // 0
+    getbit
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    uncover 2
+    swap
+    concat
+    swap
+    pushint 1
+    +
+    b __evm_ret1_while_top@1
+
+__evm_ret1_after_while@3:
+    pop
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    frame_dig -1
+    retsub

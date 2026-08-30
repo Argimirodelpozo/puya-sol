@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2
-    bytecblock 0x151f7c75 "data" "__ctor_pending" 0x00
+    bytecblock "data" 0x151f7c75 "__ctor_pending" 0x00
     pushbytes ""
     pushint 4096
     bzero
@@ -100,7 +100,7 @@ main_sendMessage_route@21:
     concat
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -114,7 +114,7 @@ main_checkIfDataIsEmpty_route@20:
     intc_0 // 0
     uncover 2
     setbit
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -128,7 +128,7 @@ main_set_route@19:
     intc_0 // 0
     uncover 2
     setbit
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -147,7 +147,7 @@ main___postInit_route@18:
     bytec_2 // "__ctor_pending"
     intc_0 // 0
     app_global_put
-    bytec_1 // "data"
+    bytec_0 // "data"
     intc_0 // 0
     box_create
     pop
@@ -200,7 +200,7 @@ main_switch_case_2@7:
     concat
     concat
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -209,41 +209,15 @@ main_switch_case_2@7:
 
 main_switch_case_1@6:
     callsub __evm_npy
-    intc_2 // 32
-    bzero
     callsub checkIfDataIsEmpty
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
 main_switch_case_0@5:
     callsub __evm_npy
-    intc_2 // 32
-    bzero
     callsub set
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
@@ -389,10 +363,10 @@ set_ternary_merge@52:
     concat
 
 set_ternary_merge@54:
-    bytec_1 // "data"
+    bytec_0 // "data"
     box_del
     pop
-    bytec_1 // "data"
+    bytec_0 // "data"
     swap
     box_put
     intc_1 // 1
@@ -500,7 +474,7 @@ checkIfDataIsEmpty:
 checkIfDataIsEmpty_ternary_merge@3:
     !
     assert // not payable
-    bytec_1 // "data"
+    bytec_0 // "data"
     box_len
     pop
     itob
@@ -677,10 +651,10 @@ __fallback_ternary_merge@52:
     concat
 
 __fallback_ternary_merge@54:
-    bytec_1 // "data"
+    bytec_0 // "data"
     box_del
     pop
-    bytec_1 // "data"
+    bytec_0 // "data"
     swap
     box_put
     retsub
@@ -792,3 +766,24 @@ __evm_npy_ternary_merge@3:
 __evm_npy_ternary_false@2:
     intc_0 // 0
     b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/copy_from_calldata_removes_bytes_data.sol.c.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub

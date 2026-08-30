@@ -32,16 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@20
+    bnz main_after_if_else@14
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@20
+    bz main_after_if_else@14
     pushbytess 0xd0abf37f 0xdac1393e 0x3c1c94ec 0x62c94fe4 0x61fce144 0xc98fcb58 0x0d53a196 0x0221974e
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@14 main_switch_case_7@18
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11 main_switch_case_7@12
 
-main_after_if_else@20:
+main_after_if_else@14:
     txn OnCompletion
     !
     assert
@@ -49,10 +49,10 @@ main_after_if_else@20:
     assert
     pushbytess 0xbacc49e3 0x3edce88b 0x6c7cd03f 0x94ed5782 0xe4dbdd11 0xcaad2bd6 0x4d54d1bf 0x0c5a0f10 0xc67bf355 // method "__postInit()void", method "fillBoundaryArray()void", method "deleteBoundaryArray()void", method "copyFromBoundary()void", method "copyToBoundary()void", method "fillDestArray()void", method "boundaryArray()(uint64,uint64,uint64,uint64)[10]", method "destArray()(uint64,uint64,uint64,uint64)[10]", method "canaryValue()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@23 main_fillBoundaryArray_route@24 main_deleteBoundaryArray_route@25 main_copyFromBoundary_route@26 main_copyToBoundary_route@27 main_fillDestArray_route@28 main_boundaryArray_route@29 main_destArray_route@30 main_canaryValue_route@31
+    match main___postInit_route@17 main_fillBoundaryArray_route@18 main_deleteBoundaryArray_route@19 main_copyFromBoundary_route@20 main_copyToBoundary_route@21 main_fillDestArray_route@22 main_boundaryArray_route@23 main_destArray_route@24 main_canaryValue_route@25
     err
 
-main_canaryValue_route@31:
+main_canaryValue_route@25:
     callsub canaryValue
     bytec_2 // 0x151f7c75
     swap
@@ -61,7 +61,7 @@ main_canaryValue_route@31:
     intc_2 // 1
     return
 
-main_destArray_route@30:
+main_destArray_route@24:
     callsub destArray
     bytec_2 // 0x151f7c75
     swap
@@ -70,7 +70,7 @@ main_destArray_route@30:
     intc_2 // 1
     return
 
-main_boundaryArray_route@29:
+main_boundaryArray_route@23:
     callsub boundaryArray
     bytec_2 // 0x151f7c75
     swap
@@ -79,32 +79,32 @@ main_boundaryArray_route@29:
     intc_2 // 1
     return
 
-main_fillDestArray_route@28:
+main_fillDestArray_route@22:
     callsub fillDestArray
     intc_2 // 1
     return
 
-main_copyToBoundary_route@27:
+main_copyToBoundary_route@21:
     callsub copyToBoundary
     intc_2 // 1
     return
 
-main_copyFromBoundary_route@26:
+main_copyFromBoundary_route@20:
     callsub copyFromBoundary
     intc_2 // 1
     return
 
-main_deleteBoundaryArray_route@25:
+main_deleteBoundaryArray_route@19:
     callsub deleteBoundaryArray
     intc_2 // 1
     return
 
-main_fillBoundaryArray_route@24:
+main_fillBoundaryArray_route@18:
     callsub fillBoundaryArray
     intc_2 // 1
     return
 
-main___postInit_route@23:
+main___postInit_route@17:
     bytec 12 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -121,7 +121,7 @@ main___postInit_route@23:
     intc_2 // 1
     return
 
-main_switch_case_7@18:
+main_switch_case_7@12:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -140,167 +140,19 @@ main_switch_case_7@18:
     intc_2 // 1
     return
 
-main_switch_case_6@14:
+main_switch_case_6@11:
     callsub __evm_npy
-    bytec_1 // 0x
-    intc_3 // 0
-
-main_while_top@15:
-    dup
-    pushint 10
-    <
-    bz main_after_while@17
-    intc_0 // 32
-    bzero
     callsub destArray
-    dig 2
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    dup
-    extract 0 8
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 1
-    extract 8 8
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 1
-    extract 16 8
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    swap
-    extract 24 8
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    uncover 2
-    swap
-    concat
-    swap
-    intc_2 // 1
-    +
-    b main_while_top@15
-
-main_after_while@17:
+    callsub __evm_ret1
     pop
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
     intc_2 // 1
     return
 
 main_switch_case_5@10:
     callsub __evm_npy
-    bytec_1 // 0x
-    intc_3 // 0
-
-main_while_top@11:
-    dup
-    pushint 10
-    <
-    bz main_after_while@13
-    intc_0 // 32
-    bzero
     callsub boundaryArray
-    dig 2
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    dup
-    extract 0 8
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 1
-    extract 8 8
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    dig 1
-    extract 16 8
-    dig 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    swap
-    extract 24 8
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    concat
-    uncover 2
-    swap
-    concat
-    swap
-    intc_2 // 1
-    +
-    b main_while_top@11
-
-main_after_while@13:
+    callsub __evm_ret1
     pop
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
     intc_2 // 1
     return
 
@@ -4518,3 +4370,88 @@ __evm_npy_ternary_merge@3:
 __evm_npy_ternary_false@2:
     intc_3 // 0
     b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_struct_array_packed.sol.C.__evm_ret1(__v: bytes) -> bytes:
+__evm_ret1:
+    proto 1 1
+    bytec_1 // 0x
+    intc_3 // 0
+
+__evm_ret1_while_top@1:
+    dup
+    pushint 10
+    <
+    bz __evm_ret1_after_while@3
+    intc_0 // 32
+    bzero
+    dig 1
+    intc_0 // 32
+    *
+    frame_dig -1
+    swap
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dup
+    extract 0 8
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 1
+    extract 8 8
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 1
+    extract 16 8
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    swap
+    extract 24 8
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    uncover 2
+    swap
+    concat
+    swap
+    intc_2 // 1
+    +
+    b __evm_ret1_while_top@1
+
+__evm_ret1_after_while@3:
+    pop
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    frame_dig -1
+    retsub

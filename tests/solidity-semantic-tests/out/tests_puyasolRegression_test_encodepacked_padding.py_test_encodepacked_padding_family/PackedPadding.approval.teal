@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
-    bytecblock 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x 0xfffffffffffffffe 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000003
+    intcblock 1 32 0 2
+    bytecblock 0x151f7c75 0x 0xfffffffffffffffe 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000003
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -61,7 +61,7 @@ main_packedSignedArray_route@26:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_packedScalars_route@25:
@@ -76,7 +76,7 @@ main_packedScalars_route@25:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_packedFixedBool_route@24:
@@ -91,7 +91,7 @@ main_packedFixedBool_route@24:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_packedDynBool_route@23:
@@ -106,7 +106,7 @@ main_packedDynBool_route@23:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_packedDynBytes8_route@22:
@@ -121,7 +121,7 @@ main_packedDynBytes8_route@22:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_packedFixedBytes8_route@21:
@@ -136,7 +136,7 @@ main_packedFixedBytes8_route@21:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_packedFixedU32_route@20:
@@ -151,7 +151,7 @@ main_packedFixedU32_route@20:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_bandMixed_route@19:
@@ -160,7 +160,7 @@ main_bandMixed_route@19:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_cmpMixed_route@18:
@@ -169,7 +169,7 @@ main_cmpMixed_route@18:
     intc_2 // 0
     uncover 4
     setbit
-    intc_1 // 1
+    intc_0 // 1
     uncover 3
     setbit
     intc_3 // 2
@@ -179,273 +179,56 @@ main_cmpMixed_route@18:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_switch_case_8@13:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub packedSignedArray
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret0
+    intc_0 // 1
     return
 
 main_switch_case_7@12:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub packedScalars
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret0
+    intc_0 // 1
     return
 
 main_switch_case_6@11:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub packedFixedBool
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret0
+    intc_0 // 1
     return
 
 main_switch_case_5@10:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub packedDynBool
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret0
+    intc_0 // 1
     return
 
 main_switch_case_4@9:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub packedDynBytes8
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret0
+    intc_0 // 1
     return
 
 main_switch_case_3@8:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub packedFixedBytes8
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret0
+    intc_0 // 1
     return
 
 main_switch_case_2@7:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub packedFixedU32
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_1 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
-    intc_1 // 1
+    callsub __evm_ret0
+    intc_0 // 1
     return
 
 main_switch_case_1@6:
@@ -458,12 +241,12 @@ main_switch_case_1@6:
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 main_switch_case_0@5:
     callsub __evm_npy
-    intc_0 // 32
+    intc_1 // 32
     bzero
     callsub cmpMixed
     uncover 2
@@ -473,9 +256,9 @@ main_switch_case_0@5:
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     uncover 2
     itob
@@ -484,9 +267,9 @@ main_switch_case_0@5:
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     concat
     swap
@@ -496,16 +279,16 @@ main_switch_case_0@5:
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     concat
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_0 // 1
     return
 
 
@@ -514,14 +297,14 @@ cmpMixed:
     txn GroupIndex
     bz cmpMixed_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 cmpMixed_ternary_merge@3:
     !
     assert // not payable
-    intc_1 // 1
+    intc_0 // 1
     dup
     intc_2 // 0
     retsub
@@ -536,7 +319,7 @@ bandMixed:
     txn GroupIndex
     bz bandMixed_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -556,7 +339,7 @@ packedFixedU32:
     txn GroupIndex
     bz packedFixedU32_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -576,7 +359,7 @@ packedFixedBytes8:
     txn GroupIndex
     bz packedFixedBytes8_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -596,14 +379,14 @@ packedDynBytes8:
     txn GroupIndex
     bz packedDynBytes8_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 packedDynBytes8_ternary_merge@3:
     !
     assert // not payable
-    bytec_2 // 0x
+    bytec_1 // 0x
     intc_2 // 0
 
 packedDynBytes8_while_top@4:
@@ -627,7 +410,7 @@ packedDynBytes8_while_top@4:
     swap
     concat
     swap
-    intc_1 // 1
+    intc_0 // 1
     +
     b packedDynBytes8_while_top@4
 
@@ -645,14 +428,14 @@ packedDynBool:
     txn GroupIndex
     bz packedDynBool_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 packedDynBool_ternary_merge@3:
     !
     assert // not payable
-    bytec_2 // 0x
+    bytec_1 // 0x
     intc_2 // 0
 
 packedDynBool_while_top@4:
@@ -660,7 +443,7 @@ packedDynBool_while_top@4:
     pushint 3
     <
     bz packedDynBool_after_while@6
-    intc_0 // 32
+    intc_1 // 32
     bzero
     pushint 16
     dig 2
@@ -672,15 +455,15 @@ packedDynBool_while_top@4:
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     uncover 2
     swap
     concat
     swap
-    intc_1 // 1
+    intc_0 // 1
     +
     b packedDynBool_while_top@4
 
@@ -698,7 +481,7 @@ packedFixedBool:
     txn GroupIndex
     bz packedFixedBool_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -718,7 +501,7 @@ packedScalars:
     txn GroupIndex
     bz packedScalars_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -738,45 +521,45 @@ packedSignedArray:
     txn GroupIndex
     bz packedSignedArray_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
 packedSignedArray_ternary_merge@3:
     !
     assert // not payable
-    bytec_3 // 0xfffffffffffffffe
+    bytec_2 // 0xfffffffffffffffe
     intc_2 // 0
     getbyte
     pushint 128
     >=
     bz packedSignedArray_ternary_false@5
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 packedSignedArray_ternary_merge@6:
-    bytec_3 // 0xfffffffffffffffe
+    bytec_2 // 0xfffffffffffffffe
     replace2 24
-    bytec 5 // 0x0000000000000003
+    bytec 4 // 0x0000000000000003
     intc_2 // 0
     getbyte
     pushint 128
     >=
     bz packedSignedArray_ternary_false@8
-    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 packedSignedArray_ternary_merge@9:
-    bytec 5 // 0x0000000000000003
+    bytec 4 // 0x0000000000000003
     replace2 24
     concat
     retsub
 
 packedSignedArray_ternary_false@8:
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b packedSignedArray_ternary_merge@9
 
 packedSignedArray_ternary_false@5:
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b packedSignedArray_ternary_merge@6
 
@@ -790,7 +573,7 @@ __evm_npy:
     txn GroupIndex
     bz __evm_npy_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -802,3 +585,41 @@ __evm_npy_ternary_merge@3:
 __evm_npy_ternary_false@2:
     intc_2 // 0
     b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.__evm_ret0(__v: bytes) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_1 // 32
+    bzero
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    frame_dig -1
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    retsub

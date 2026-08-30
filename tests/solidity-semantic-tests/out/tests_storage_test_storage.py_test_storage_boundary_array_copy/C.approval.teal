@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_copy.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 10
+    intcblock 32 1 0 256
     bytecblock 0x 0x05 0x01 0x02 0x03 0x04 0x06 0x07 0x08 0x09 0x151f7c75 "__ctor_pending" 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
     pushint 4096
     bzero
@@ -32,16 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@17
+    bnz main_after_if_else@11
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@17
+    bz main_after_if_else@11
     pushbytess 0xbd998fea 0x5a2cbcfa 0xfd99b1b2 0x0c55699c 0xa56dfe4a
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@12
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9
 
-main_after_if_else@17:
+main_after_if_else@11:
     txn OnCompletion
     !
     assert
@@ -49,10 +49,10 @@ main_after_if_else@17:
     assert
     pushbytess 0xbacc49e3 0x10e80557 0x651bee14 0x17692d47 0x3e40144f 0xc8f1c998 // method "__postInit()void", method "copyXToY()void", method "clearX()void", method "copyYToX()void", method "x()uint256[10]", method "y()uint256[10]"
     txna ApplicationArgs 0
-    match main___postInit_route@20 main_copyXToY_route@21 main_clearX_route@22 main_copyYToX_route@23 main_x_route@24 main_y_route@25
+    match main___postInit_route@14 main_copyXToY_route@15 main_clearX_route@16 main_copyYToX_route@17 main_x_route@18 main_y_route@19
     err
 
-main_y_route@25:
+main_y_route@19:
     callsub y
     bytec 10 // 0x151f7c75
     swap
@@ -61,7 +61,7 @@ main_y_route@25:
     intc_1 // 1
     return
 
-main_x_route@24:
+main_x_route@18:
     callsub x
     bytec 10 // 0x151f7c75
     swap
@@ -70,22 +70,22 @@ main_x_route@24:
     intc_1 // 1
     return
 
-main_copyYToX_route@23:
+main_copyYToX_route@17:
     callsub copyYToX
     intc_1 // 1
     return
 
-main_clearX_route@22:
+main_clearX_route@16:
     callsub clearX
     intc_1 // 1
     return
 
-main_copyXToY_route@21:
+main_copyXToY_route@15:
     callsub copyXToY
     intc_1 // 1
     return
 
-main___postInit_route@20:
+main___postInit_route@14:
     bytec 11 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -147,87 +147,19 @@ main___postInit_route@20:
     intc_1 // 1
     return
 
-main_switch_case_4@12:
+main_switch_case_4@9:
     callsub __evm_npy
-    bytec_0 // 0x
-    intc_2 // 0
-
-main_while_top@13:
-    dup
-    intc_3 // 10
-    <
-    bz main_after_while@15
-    intc_0 // 32
-    bzero
     callsub y
-    dig 2
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 2
-    swap
-    concat
-    swap
-    intc_1 // 1
-    +
-    b main_while_top@13
-
-main_after_while@15:
+    callsub __evm_ret1
     pop
-    bytec 10 // 0x151f7c75
-    swap
-    concat
-    log
     intc_1 // 1
     return
 
 main_switch_case_3@8:
     callsub __evm_npy
-    bytec_0 // 0x
-    intc_2 // 0
-
-main_while_top@9:
-    dup
-    intc_3 // 10
-    <
-    bz main_after_while@11
-    intc_0 // 32
-    bzero
     callsub x
-    dig 2
-    intc_0 // 32
-    *
-    intc_0 // 32
-    extract3 // on error: index access is out of bounds
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    uncover 2
-    swap
-    concat
-    swap
-    intc_1 // 1
-    +
-    b main_while_top@9
-
-main_after_while@11:
+    callsub __evm_ret1
     pop
-    bytec 10 // 0x151f7c75
-    swap
-    concat
-    log
     intc_1 // 1
     return
 
@@ -565,7 +497,7 @@ copyXToY_ternary_merge@3:
     bytec 8 // 0x08
     b+
     dig 1
-    pushint 256
+    intc_3 // 256
     intc_0 // 32
     extract3 // on error: index access is out of bounds
     dig 3
@@ -876,7 +808,7 @@ copyYToX_ternary_merge@3:
     bytec 8 // 0x08
     b+
     dig 1
-    pushint 256
+    intc_3 // 256
     intc_0 // 32
     extract3 // on error: index access is out of bounds
     dig 3
@@ -1242,3 +1174,48 @@ __evm_npy_ternary_merge@3:
 __evm_npy_ternary_false@2:
     intc_2 // 0
     b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_copy.sol.C.__evm_ret1(__v: bytes) -> bytes:
+__evm_ret1:
+    proto 1 1
+    bytec_0 // 0x
+    intc_2 // 0
+
+__evm_ret1_while_top@1:
+    dup
+    pushint 10
+    <
+    bz __evm_ret1_after_while@3
+    intc_0 // 32
+    bzero
+    dig 1
+    intc_0 // 32
+    *
+    frame_dig -1
+    swap
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    intc_1 // 1
+    +
+    b __evm_ret1_while_top@1
+
+__evm_ret1_after_while@3:
+    pop
+    bytec 10 // 0x151f7c75
+    swap
+    concat
+    log
+    frame_dig -1
+    retsub

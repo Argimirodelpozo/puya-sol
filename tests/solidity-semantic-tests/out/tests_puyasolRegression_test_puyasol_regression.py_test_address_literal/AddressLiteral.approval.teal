@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/address_literal.sol.AddressLiteral.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 20
+    intcblock 1 0 32 12
     bytecblock 0x151f7c75 "router" 0x0000000000000000000000000000000000000000000000000000000000000000 0x00
     pushint 4096
     bzero
@@ -65,7 +65,7 @@ main_setRouter_route@23:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     callsub setRouter
@@ -79,7 +79,7 @@ main_pick_route@22:
     intc_0 // 1
     ==
     assert // invalid number of bytes for arc4.bool
-    intc_2 // 0
+    intc_1 // 0
     getbit
     callsub pick
     bytec_0 // 0x151f7c75
@@ -93,12 +93,12 @@ main_eqDead_route@21:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     callsub eqDead
     bytec_3 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_0 // 0x151f7c75
@@ -130,12 +130,12 @@ main_isRouter_route@18:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     callsub isRouter
     bytec_3 // 0x00
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec_0 // 0x151f7c75
@@ -156,36 +156,18 @@ main_getRouter_route@17:
 
 main_switch_case_7@12:
     callsub __evm_npy
-    intc_1 // 32
-    bzero
     callsub router
-    dup
-    len
-    intc_3 // 20
-    -
-    intc_3 // 20
-    extract3
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
 main_switch_case_6@11:
     callsub __evm_npy
-    intc_2 // 0
+    intc_1 // 0
     callsub __evm_decw
     dup
     extract 0 12
-    pushint 12
+    intc_3 // 12
     bzero
     ==
     assert // invalid EVM ABI address padding
@@ -197,170 +179,69 @@ main_switch_case_6@11:
 
 main_switch_case_5@10:
     callsub __evm_npy
-    intc_2 // 0
+    intc_1 // 0
     callsub __evm_decw
     dup
     pushbytes 0x01
     b<=
     assert // invalid EVM ABI bool
-    intc_1 // 32
-    bzero
-    swap
     pushint 24
     extract_uint64
-    intc_2 // 0
+    intc_1 // 0
     !=
     callsub pick
-    dup
-    len
-    intc_3 // 20
-    -
-    intc_3 // 20
-    extract3
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
 main_switch_case_4@9:
     callsub __evm_npy
-    intc_2 // 0
+    intc_1 // 0
     callsub __evm_decw
     dup
     extract 0 12
-    pushint 12
+    intc_3 // 12
     bzero
     ==
     assert // invalid EVM ABI address padding
-    intc_1 // 32
-    bzero
-    swap
     callsub eqDead
-    itob
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_0 // 1
     return
 
 main_switch_case_3@8:
     callsub __evm_npy
-    intc_1 // 32
-    bzero
     callsub dead
-    dup
-    len
-    intc_3 // 20
-    -
-    intc_3 // 20
-    extract3
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
 main_switch_case_2@7:
     callsub __evm_npy
-    intc_1 // 32
-    bzero
     callsub localLit
-    dup
-    len
-    intc_3 // 20
-    -
-    intc_3 // 20
-    extract3
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
 main_switch_case_1@6:
     callsub __evm_npy
-    intc_2 // 0
+    intc_1 // 0
     callsub __evm_decw
     dup
     extract 0 12
-    pushint 12
+    intc_3 // 12
     bzero
     ==
     assert // invalid EVM ABI address padding
-    intc_1 // 32
-    bzero
-    swap
     callsub isRouter
-    itob
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_0 // 1
     return
 
 main_switch_case_0@5:
     callsub __evm_npy
-    intc_1 // 32
-    bzero
     callsub getRouter
-    dup
-    len
-    intc_3 // 20
-    -
-    intc_3 // 20
-    extract3
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
@@ -377,7 +258,7 @@ getRouter:
 getRouter_ternary_merge@3:
     !
     assert // not payable
-    intc_2 // 0
+    intc_1 // 0
     bytec_1 // "router"
     app_global_get_ex
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -386,7 +267,7 @@ getRouter_ternary_merge@3:
     retsub
 
 getRouter_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b getRouter_ternary_merge@3
 
 
@@ -403,7 +284,7 @@ isRouter:
 isRouter_ternary_merge@3:
     !
     assert // not payable
-    intc_2 // 0
+    intc_1 // 0
     bytec_1 // "router"
     app_global_get_ex
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -414,7 +295,7 @@ isRouter_ternary_merge@3:
     retsub
 
 isRouter_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b isRouter_ternary_merge@3
 
 
@@ -434,7 +315,7 @@ localLit_ternary_merge@3:
     retsub
 
 localLit_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b localLit_ternary_merge@3
 
 
@@ -454,7 +335,7 @@ dead_ternary_merge@3:
     retsub
 
 dead_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b dead_ternary_merge@3
 
 
@@ -477,7 +358,7 @@ eqDead_ternary_merge@3:
     retsub
 
 eqDead_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b eqDead_ternary_merge@3
 
 
@@ -508,7 +389,7 @@ pick_ternary_false@5:
     retsub
 
 pick_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b pick_ternary_merge@3
 
 
@@ -531,7 +412,7 @@ setRouter_ternary_merge@3:
     retsub
 
 setRouter_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b setRouter_ternary_merge@3
 
 
@@ -547,7 +428,7 @@ router:
 router_ternary_merge@3:
     !
     assert // not payable
-    intc_2 // 0
+    intc_1 // 0
     bytec_1 // "router"
     app_global_get_ex
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -556,7 +437,7 @@ router_ternary_merge@3:
     retsub
 
 router_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b router_ternary_merge@3
 
 
@@ -575,7 +456,7 @@ __evm_npy_ternary_merge@3:
     retsub
 
 __evm_npy_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b __evm_npy_ternary_merge@3
 
 
@@ -583,7 +464,7 @@ __evm_npy_ternary_false@2:
 __evm_decw:
     proto 1 1
     frame_dig -1
-    intc_1 // 32
+    intc_2 // 32
     +
     txna ApplicationArgs 1
     len
@@ -591,6 +472,54 @@ __evm_decw:
     assert // EVM ABI decode out of bounds
     txna ApplicationArgs 1
     frame_dig -1
-    intc_1 // 32
+    intc_2 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/address_literal.sol.AddressLiteral.__evm_ret0(__v: bytes) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    len
+    pushint 20
+    -
+    frame_dig -1
+    swap
+    pushint 20
+    extract3
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/address_literal.sol.AddressLiteral.__evm_ret1(__v: uint64) -> void:
+__evm_ret1:
+    proto 1 0
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     retsub

@@ -396,8 +396,6 @@ main_switch_case_18@32:
 
 main_switch_case_17@31:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     intc_2 // 0
     callsub __evm_decw
     dup
@@ -405,33 +403,16 @@ main_switch_case_17@31:
     intc_0 // 32
     <=
     assert // overflow
-    dig 1
+    intc_0 // 32
+    bzero
     b|
     callsub addrs
-    dup
-    len
-    pushint 20
-    -
-    pushint 20
-    extract3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_1 // 1
     return
 
 main_switch_case_16@30:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     intc_2 // 0
     callsub __evm_decw
     dup
@@ -439,21 +420,11 @@ main_switch_case_16@30:
     intc_0 // 32
     <=
     assert // overflow
-    dig 1
+    intc_0 // 32
+    bzero
     b|
     callsub smalls
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret2
     intc_1 // 1
     return
 
@@ -467,27 +438,8 @@ main_switch_case_15@29:
     bzero
     ==
     assert // invalid EVM ABI address padding
-    intc_0 // 32
-    bzero
-    swap
     callsub simple
-    dup
-    len
-    pushint 20
-    -
-    pushint 20
-    extract3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_1 // 1
     return
 
@@ -509,30 +461,12 @@ main_switch_case_14@28:
     bzero
     ==
     assert // invalid EVM ABI address padding
-    intc_0 // 32
-    bzero
-    uncover 2
+    swap
     pushint 24
     extract_uint64
-    uncover 2
-    callsub peers
-    dup
-    len
-    pushint 20
-    -
-    pushint 20
-    extract3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
     swap
-    concat
-    log
+    callsub peers
+    callsub __evm_ret1
     intc_1 // 1
     return
 
@@ -597,8 +531,6 @@ main_switch_case_12@26:
 
 main_switch_case_11@25:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     intc_2 // 0
     callsub __evm_decw
     dup
@@ -606,33 +538,16 @@ main_switch_case_11@25:
     intc_0 // 32
     <=
     assert // overflow
-    dig 1
+    intc_0 // 32
+    bzero
     b|
     callsub addrAt
-    dup
-    len
-    pushint 20
-    -
-    pushint 20
-    extract3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_1 // 1
     return
 
 main_switch_case_10@24:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     intc_2 // 0
     callsub __evm_decw
     dup
@@ -640,21 +555,11 @@ main_switch_case_10@24:
     intc_0 // 32
     <=
     assert // overflow
-    dig 1
+    intc_0 // 32
+    bzero
     b|
     callsub smallAt
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret2
     intc_1 // 1
     return
 
@@ -951,30 +856,12 @@ main_switch_case_2@7:
     bzero
     ==
     assert // invalid EVM ABI address padding
-    intc_0 // 32
-    bzero
-    uncover 2
+    swap
     pushint 24
     extract_uint64
-    uncover 2
-    callsub peerOf
-    dup
-    len
-    pushint 20
-    -
-    pushint 20
-    extract3
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
     swap
-    concat
-    log
+    callsub peerOf
+    callsub __evm_ret1
     intc_1 // 1
     return
 
@@ -1868,4 +1755,52 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/slot_packed_dispatch.sol.SlotPackedDispatch.__evm_ret1(__v: bytes) -> void:
+__evm_ret1:
+    proto 1 0
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    len
+    pushint 20
+    -
+    frame_dig -1
+    swap
+    pushint 20
+    extract3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/slot_packed_dispatch.sol.SlotPackedDispatch.__evm_ret2(__v: uint64) -> void:
+__evm_ret2:
+    proto 1 0
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     retsub

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/string_concat_wtype.sol.StringConcatWType.approval_program() -> uint64:
 main:
     intcblock 32 1 0 24 65535
-    bytecblock 0x 0x151f7c75 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 "x" "nm"
+    bytecblock 0x 0x151f7c75 "x" "nm" 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     pushint 4096
     bzero
     dup
@@ -24,10 +24,10 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "x"
+    bytec_2 // "x"
     txna ApplicationArgs 0
     concat
-    bytec 4 // "nm"
+    bytec_3 // "nm"
     swap
     app_global_put
     intc_1 // 1
@@ -233,39 +233,8 @@ main_viaLocal_route@16:
 
 main_switch_case_6@11:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     callsub nm
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_1 // 1
     return
 
@@ -308,43 +277,12 @@ main_switch_case_5@10:
     len
     <=
     assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
     txna ApplicationArgs 1
+    swap
     uncover 2
-    uncover 3
     extract3
     callsub toBytes
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
@@ -387,43 +325,12 @@ main_switch_case_4@9:
     len
     <=
     assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
     txna ApplicationArgs 1
+    swap
     uncover 2
-    uncover 3
     extract3
     callsub bcat
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
@@ -563,47 +470,16 @@ main_switch_case_2@7:
     len
     <=
     assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
-    txna ApplicationArgs 1
-    uncover 4
-    uncover 5
-    extract3
     txna ApplicationArgs 1
     uncover 3
     uncover 4
+    extract3
+    txna ApplicationArgs 1
+    uncover 2
+    uncover 3
     extract3
     callsub chained
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_1 // 1
     return
 
@@ -646,43 +522,12 @@ main_switch_case_1@6:
     len
     <=
     assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
     txna ApplicationArgs 1
+    swap
     uncover 2
-    uncover 3
     extract3
     callsub direct
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_1 // 1
     return
 
@@ -725,43 +570,12 @@ main_switch_case_0@5:
     len
     <=
     assert // EVM ABI decode out of bounds
-    intc_0 // 32
-    bzero
     txna ApplicationArgs 1
+    swap
     uncover 2
-    uncover 3
     extract3
     callsub viaLocal
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    swap
-    intc_0 // 32
-    %
-    intc_0 // 32
-    swap
-    -
-    intc_0 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec_2 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_1 // 1
     return
 
@@ -779,7 +593,7 @@ viaLocal:
 viaLocal_ternary_merge@3:
     !
     assert // not payable
-    bytec_3 // "x"
+    bytec_2 // "x"
     frame_dig -1
     concat
     retsub
@@ -928,7 +742,7 @@ nm_ternary_merge@3:
     !
     assert // not payable
     intc_2 // 0
-    bytec 4 // "nm"
+    bytec_3 // "nm"
     app_global_get_ex
     bytec_0 // 0x
     cover 2
@@ -973,4 +787,80 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/string_concat_wtype.sol.StringConcatWType.__evm_ret0(__v: bytes) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    frame_dig -1
+    swap
+    concat
+    concat
+    bytec 4 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/string_concat_wtype.sol.StringConcatWType.__evm_ret1(__v: bytes) -> void:
+__evm_ret1:
+    proto 1 0
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    frame_dig -1
+    swap
+    concat
+    concat
+    bytec 4 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
     retsub

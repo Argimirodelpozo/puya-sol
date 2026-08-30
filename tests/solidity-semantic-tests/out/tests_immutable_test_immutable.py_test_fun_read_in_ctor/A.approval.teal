@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/fun_read_in_ctor.sol.A.approval_program() -> uint64:
 main:
     intcblock 0 1 32 255
-    bytecblock 0x151f7c75 "a" "x" 0xe25c1ad5
+    bytecblock "a" "x" 0x151f7c75 0xe25c1ad5
     pushint 4096
     bzero
     dup
@@ -24,17 +24,17 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "a"
+    bytec_0 // "a"
     intc_0 // 0
     app_global_put
-    bytec_2 // "x"
+    bytec_1 // "x"
     intc_0 // 0
     app_global_put
-    bytec_1 // "a"
+    bytec_0 // "a"
     pushint 3
     app_global_put
     callsub readA
-    bytec_2 // "x"
+    bytec_1 // "x"
     swap
     app_global_put
     intc_1 // 1
@@ -66,7 +66,7 @@ main_after_if_else@8:
 main_readA_route@12:
     callsub readA
     itob
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -76,7 +76,7 @@ main_readA_route@12:
 main_readX_route@11:
     callsub readX
     itob
-    bytec_0 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -85,41 +85,15 @@ main_readX_route@11:
 
 main_switch_case_1@6:
     callsub __evm_npy
-    intc_2 // 32
-    bzero
     callsub readA
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
 main_switch_case_0@5:
     callsub __evm_npy
-    intc_2 // 32
-    bzero
     callsub readX
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
@@ -137,7 +111,7 @@ readX_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
-    bytec_2 // "x"
+    bytec_1 // "x"
     app_global_get_ex
     intc_0 // 0
     cover 2
@@ -172,7 +146,7 @@ readA_ternary_merge@5:
 
 readA_after_if_else@6:
     intc_0 // 0
-    bytec_1 // "a"
+    bytec_0 // "a"
     app_global_get_ex
     intc_0 // 0
     cover 2
@@ -203,3 +177,24 @@ __evm_npy_ternary_merge@3:
 __evm_npy_ternary_false@2:
     intc_0 // 0
     b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/fun_read_in_ctor.sol.A.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub

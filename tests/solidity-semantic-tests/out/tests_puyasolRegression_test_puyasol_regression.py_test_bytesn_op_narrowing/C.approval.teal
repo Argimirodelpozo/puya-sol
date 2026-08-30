@@ -228,8 +228,6 @@ main_switch_case_5@10:
 
 main_switch_case_4@9:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     intc_2 // 0
     callsub __evm_decw
     intc_0 // 32
@@ -239,37 +237,25 @@ main_switch_case_4@9:
     intc_0 // 32
     <=
     assert // overflow
-    swap
-    dig 2
-    b|
+    intc_0 // 32
+    bzero
+    uncover 2
     dig 1
+    b|
+    dig 2
     len
     intc_0 // 32
     <=
     assert // overflow
-    swap
-    dig 2
+    cover 2
     b|
     callsub narrowXor
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
 main_switch_case_3@8:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     intc_2 // 0
     callsub __evm_decw
     intc_0 // 32
@@ -279,37 +265,25 @@ main_switch_case_3@8:
     intc_0 // 32
     <=
     assert // overflow
-    swap
-    dig 2
-    b|
+    intc_0 // 32
+    bzero
+    uncover 2
     dig 1
+    b|
+    dig 2
     len
     intc_0 // 32
     <=
     assert // overflow
-    swap
-    dig 2
+    cover 2
     b|
     callsub narrowOr
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
 main_switch_case_2@7:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     intc_2 // 0
     callsub __evm_decw
     intc_0 // 32
@@ -319,37 +293,25 @@ main_switch_case_2@7:
     intc_0 // 32
     <=
     assert // overflow
-    swap
-    dig 2
-    b|
+    intc_0 // 32
+    bzero
+    uncover 2
     dig 1
+    b|
+    dig 2
     len
     intc_0 // 32
     <=
     assert // overflow
-    swap
-    dig 2
+    cover 2
     b|
     callsub narrowAnd
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
 main_switch_case_1@6:
     callsub __evm_npy
-    intc_0 // 32
-    bzero
     intc_2 // 0
     callsub __evm_decw
     intc_0 // 32
@@ -359,30 +321,20 @@ main_switch_case_1@6:
     intc_0 // 32
     <=
     assert // overflow
-    swap
-    dig 2
-    b|
+    intc_0 // 32
+    bzero
+    uncover 2
     dig 1
+    b|
+    dig 2
     len
     intc_0 // 32
     <=
     assert // overflow
-    swap
-    dig 2
+    cover 2
     b|
     callsub truncShiftHuge
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
@@ -396,11 +348,9 @@ main_switch_case_0@5:
     bzero
     ==
     assert // invalid EVM ABI unsigned integer padding
-    intc_0 // 32
-    bzero
     intc_2 // 0
     callsub __evm_decw
-    uncover 2
+    swap
     pushint 24
     extract_uint64
     dig 1
@@ -408,23 +358,13 @@ main_switch_case_0@5:
     intc_0 // 32
     <=
     assert // overflow
-    swap
-    dig 2
+    intc_0 // 32
+    bzero
+    uncover 2
     b|
     swap
     callsub truncShift
-    itob
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_1 // 1
     return
 
@@ -834,4 +774,25 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/bytesn_op_narrowing.sol.C.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     retsub

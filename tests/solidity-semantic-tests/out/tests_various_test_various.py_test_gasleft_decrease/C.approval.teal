@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/gasleft_decrease.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
-    bytecblock 0x151f7c75 "v" 0x 0x00 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytecblock "v" 0x151f7c75 0x 0x00 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "v"
+    bytec_0 // "v"
     bytec_2 // 0x
     app_global_put
     intc_0 // 1
@@ -58,7 +58,7 @@ main_g_route@12:
     intc_1 // 0
     uncover 2
     setbit
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -71,7 +71,7 @@ main_f_route@11:
     intc_1 // 0
     uncover 2
     setbit
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -80,41 +80,15 @@ main_f_route@11:
 
 main_switch_case_1@6:
     callsub __evm_npy
-    intc_2 // 32
-    bzero
     callsub g
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
 main_switch_case_0@5:
     callsub __evm_npy
-    intc_2 // 32
-    bzero
     callsub f
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
@@ -134,7 +108,7 @@ f_ternary_merge@3:
     global OpcodeBudget
     itob
     intc_1 // 0
-    bytec_1 // "v"
+    bytec_0 // "v"
     app_global_get_ex
     bytec_2 // 0x
     cover 2
@@ -145,7 +119,7 @@ f_ternary_merge@3:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bytec_1 // "v"
+    bytec_0 // "v"
     swap
     app_global_put
     global OpcodeBudget
@@ -215,3 +189,24 @@ __evm_npy_ternary_merge@3:
 __evm_npy_ternary_false@2:
     intc_1 // 0
     b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/gasleft_decrease.sol.C.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub

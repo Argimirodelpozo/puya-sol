@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/msg_sig.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 28
+    intcblock 1 0
     bytecblock 0x151f7c75
     pushint 4096
     bzero
@@ -70,26 +70,14 @@ main_f_route@11:
 main_switch_case_1@6:
     callsub __evm_npy
     callsub g
-    intc_2 // 28
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
 main_switch_case_0@5:
     callsub __evm_npy
     callsub f
-    intc_2 // 28
-    bzero
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
+    callsub __evm_ret0
     intc_0 // 1
     return
 
@@ -151,3 +139,18 @@ __evm_npy_ternary_merge@3:
 __evm_npy_ternary_false@2:
     intc_1 // 0
     b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/msg_sig.sol.C.__evm_ret0(__v: bytes) -> void:
+__evm_ret0:
+    proto 1 0
+    pushint 28
+    bzero
+    frame_dig -1
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/invalid_encoding_for_storage_byte_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 8
-    bytecblock "x" 0x151f7c75 "y" 0x 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 "__ctor_pending" "abc" "1234567890123456789012345678901234567"
+    intcblock 1 0 32 8
+    bytecblock "x" 0x151f7c75 "y" 0x "__ctor_pending" "abc" "1234567890123456789012345678901234567"
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 5 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -209,7 +209,7 @@ main_ternary_merge@78:
     return
 
 main_ternary_false@77:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@78
 
 main_invalidateXShort_route@25:
@@ -240,29 +240,29 @@ main_ternary_merge@83:
     return
 
 main_ternary_false@82:
-    intc_2 // 0
+    intc_1 // 0
     b main_ternary_merge@83
 
 main___postInit_route@24:
-    bytec 5 // "__ctor_pending"
+    bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec 5 // "__ctor_pending"
-    intc_2 // 0
+    bytec 4 // "__ctor_pending"
+    intc_1 // 0
     app_global_put
     bytec_0 // "x"
     pushint 3
     box_create
     pop
     bytec_0 // "x"
-    bytec 6 // "abc"
+    bytec 5 // "abc"
     box_put
     bytec_2 // "y"
-    intc_2 // 0
+    intc_1 // 0
     box_create
     pop
     intc_0 // 1
@@ -270,77 +270,15 @@ main___postInit_route@24:
 
 main_switch_case_14@19:
     callsub __evm_npy
-    intc_1 // 32
-    bzero
     callsub y
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    swap
-    intc_1 // 32
-    %
-    intc_1 // 32
-    swap
-    -
-    intc_1 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec 4 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_0 // 1
     return
 
 main_switch_case_13@18:
     callsub __evm_npy
-    intc_1 // 32
-    bzero
     callsub x
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    swap
-    intc_1 // 32
-    %
-    intc_1 // 32
-    swap
-    -
-    intc_1 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec 4 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_0 // 1
     return
 
@@ -431,115 +369,22 @@ main_switch_case_3@8:
 
 main_switch_case_2@7:
     callsub __evm_npy
-    intc_1 // 32
-    bzero
     callsub copyToMemory
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    swap
-    intc_1 // 32
-    %
-    intc_1 // 32
-    swap
-    -
-    intc_1 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec 4 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_0 // 1
     return
 
 main_switch_case_1@6:
     callsub __evm_npy
-    intc_1 // 32
-    bzero
     callsub abiEncodePacked
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    swap
-    intc_1 // 32
-    %
-    intc_1 // 32
-    swap
-    -
-    intc_1 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec 4 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_0 // 1
     return
 
 main_switch_case_0@5:
     callsub __evm_npy
-    intc_1 // 32
-    bzero
     callsub abiEncode
-    dup
-    len
-    dup
-    itob
-    uncover 3
-    swap
-    concat
-    dup
-    len
-    intc_1 // 32
-    -
-    intc_1 // 32
-    extract3
-    swap
-    intc_1 // 32
-    %
-    intc_1 // 32
-    swap
-    -
-    intc_1 // 32
-    %
-    bzero
-    uncover 2
-    swap
-    concat
-    concat
-    bytec 4 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
-    swap
-    concat
-    log
+    callsub __evm_ret1
     intc_0 // 1
     return
 
@@ -601,22 +446,22 @@ __storage_write_else_body@2:
     retsub
 
 __storage_write_else_body@4:
-    intc_1 // 32
+    intc_2 // 32
     bzero
     dup
     frame_dig -2
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
     pushbytes "s:"
     swap
     concat
     dup
-    intc_1 // 32
+    intc_2 // 32
     box_create
     pop
     swap
@@ -624,11 +469,11 @@ __storage_write_else_body@4:
     concat
     dup
     len
-    intc_1 // 32
+    intc_2 // 32
     -
-    intc_1 // 32
+    intc_2 // 32
     extract3
-    intc_2 // 0
+    intc_1 // 0
     swap
     box_replace
     retsub
@@ -652,7 +497,7 @@ abiEncode_ternary_merge@3:
     retsub
 
 abiEncode_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b abiEncode_ternary_merge@3
 
 
@@ -674,7 +519,7 @@ abiEncodePacked_ternary_merge@3:
     retsub
 
 abiEncodePacked_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b abiEncodePacked_ternary_merge@3
 
 
@@ -696,7 +541,7 @@ copyToMemory_ternary_merge@3:
     retsub
 
 copyToMemory_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b copyToMemory_ternary_merge@3
 
 
@@ -713,13 +558,13 @@ indexAccess_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "x"
-    intc_2 // 0
+    intc_1 // 0
     intc_0 // 1
     box_extract
     retsub
 
 indexAccess_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b indexAccess_ternary_merge@3
 
 
@@ -744,7 +589,7 @@ assignTo_ternary_merge@3:
     retsub
 
 assignTo_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b assignTo_ternary_merge@3
 
 
@@ -764,12 +609,12 @@ assignToLong_ternary_merge@3:
     box_del
     pop
     bytec_0 // "x"
-    bytec 7 // "1234567890123456789012345678901234567"
+    bytec 6 // "1234567890123456789012345678901234567"
     box_put
     retsub
 
 assignToLong_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b assignToLong_ternary_merge@3
 
 
@@ -797,7 +642,7 @@ copyToStorage_ternary_merge@3:
     retsub
 
 copyToStorage_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b copyToStorage_ternary_merge@3
 
 
@@ -817,18 +662,18 @@ copyFromStorageShort_ternary_merge@3:
     box_del
     pop
     bytec_2 // "y"
-    bytec 6 // "abc"
+    bytec 5 // "abc"
     box_put
     bytec_0 // "x"
     box_del
     pop
     bytec_0 // "x"
-    bytec 6 // "abc"
+    bytec 5 // "abc"
     box_put
     retsub
 
 copyFromStorageShort_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b copyFromStorageShort_ternary_merge@3
 
 
@@ -848,18 +693,18 @@ copyFromStorageLong_ternary_merge@3:
     box_del
     pop
     bytec_2 // "y"
-    bytec 7 // "1234567890123456789012345678901234567"
+    bytec 6 // "1234567890123456789012345678901234567"
     box_put
     bytec_0 // "x"
     box_del
     pop
     bytec_0 // "x"
-    bytec 7 // "1234567890123456789012345678901234567"
+    bytec 6 // "1234567890123456789012345678901234567"
     box_put
     retsub
 
 copyFromStorageLong_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b copyFromStorageLong_ternary_merge@3
 
 
@@ -881,7 +726,7 @@ arrayPop_ternary_merge@3:
     intc_0 // 1
     -
     bytec_0 // "x"
-    intc_2 // 0
+    intc_1 // 0
     uncover 2
     box_extract
     bytec_0 // "x"
@@ -893,7 +738,7 @@ arrayPop_ternary_merge@3:
     retsub
 
 arrayPop_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b arrayPop_ternary_merge@3
 
 
@@ -923,7 +768,7 @@ arrayPush_ternary_merge@3:
     retsub
 
 arrayPush_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b arrayPush_ternary_merge@3
 
 
@@ -953,7 +798,7 @@ arrayPushEmpty_ternary_merge@3:
     retsub
 
 arrayPushEmpty_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b arrayPushEmpty_ternary_merge@3
 
 
@@ -978,7 +823,7 @@ del_ternary_merge@3:
     retsub
 
 del_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b del_ternary_merge@3
 
 
@@ -1000,7 +845,7 @@ x_ternary_merge@3:
     retsub
 
 x_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b x_ternary_merge@3
 
 
@@ -1022,7 +867,7 @@ y_ternary_merge@3:
     retsub
 
 y_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b y_ternary_merge@3
 
 
@@ -1041,5 +886,43 @@ __evm_npy_ternary_merge@3:
     retsub
 
 __evm_npy_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/invalid_encoding_for_storage_byte_array.sol.C.__evm_ret1(__v: bytes) -> void:
+__evm_ret1:
+    proto 1 0
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    swap
+    intc_2 // 32
+    %
+    intc_2 // 32
+    swap
+    -
+    intc_2 // 32
+    %
+    bzero
+    frame_dig -1
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    retsub
