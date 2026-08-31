@@ -3,7 +3,6 @@
 #include "builder/sol-eb/SolBoolBuilder.h"
 #include "builder/sol-eb/SolAddressBuilder.h"
 #include "builder/sol-eb/SolArrayBuilder.h"
-#include "builder/sol-eb/SolStringBuilder.h"
 #include "builder/sol-eb/SolStructBuilder.h"
 #include "builder/sol-eb/SolEnumBuilder.h"
 #include "builder/sol-eb/SolFixedBytesBuilder.h"
@@ -47,9 +46,10 @@ BuilderRegistry::BuilderRegistry()
 		return std::make_unique<SolArrayBuilder>(ctx, arrType, std::move(expr));
 	});
 
-	registerInstance(Cat::StringLiteral, [](ContractContext& ctx, solidity::frontend::Type const* solType, std::shared_ptr<awst::Expression> expr) -> std::unique_ptr<InstanceBuilder> {
-		return std::make_unique<SolStringBuilder>(ctx, solType, std::move(expr));
-	});
+	// No Cat::StringLiteral builder: solc's type checker rejects every
+	// expression that could reach one (string ==/!=, string-literal bool
+	// contexts), and REAL string/bytes values are Array-category (handled by
+	// SolArrayBuilder). tryBuildInstance's nullptr falls through by design.
 
 	registerInstance(Cat::Struct, [](ContractContext& ctx, solidity::frontend::Type const* solType, std::shared_ptr<awst::Expression> expr) -> std::unique_ptr<InstanceBuilder> {
 		auto const* structType = dynamic_cast<solidity::frontend::StructType const*>(solType);

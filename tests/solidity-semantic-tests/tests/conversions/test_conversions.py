@@ -581,3 +581,71 @@ def test_abi_encode_dynamic_element_arrays(harness):
     assert s[0] == "foo" and s[1] == "barbaz" and as_int(s[2]) == 2, s
     b = harness.call(app, "rtBytesArr()").abi_return
     assert as_int(b[0]) == 2 and as_int(b[1]) == 3 and bytes(b[2]) == b"\xee", b
+
+
+def test_explicit_conversion_matrix(harness):
+    """conversions/contracts/explicit_conversion_matrix.sol — NOT an o.g.
+    semantic test; coverage lane for calls/SolTypeConversion.cpp (enum casts,
+    int<->bytesN at every carrier tier, narrowing masks, address/contract
+    casts, bytesN resize)."""
+    app = harness.compile_and_deploy(
+        "conversions/contracts/explicit_conversion_matrix.sol")
+    P = 1 << 256
+
+    assert as_int(harness.call(
+        app, "enumRoundTrip(uint8)", 2).abi_return) == 2
+    r = harness.call(app, "enumRoundTrip(uint8)", 9, expect_revert=True)
+    assert r.reverted  # out-of-range uint -> enum panics
+
+    b1, b4, b8, b16, b32 = harness.call(app, "intToBytesTiers()").abi_return
+    assert bytes(b1) == bytes.fromhex("ab")
+    assert bytes(b4) == bytes.fromhex("deadbeef")
+    assert bytes(b8) == bytes.fromhex("1122334455667788")
+    assert bytes(b16) == (2 ** 100 + 7).to_bytes(16, "big")
+    assert bytes(b32) == (2 ** 200 + 9).to_bytes(32, "big")
+
+    a, b = harness.call(app, "bytesToIntTiers(bytes4,bytes32)",
+                        bytes.fromhex("deadbeef"),
+                        (2 ** 200 + 9).to_bytes(32, "big")).abi_return
+    assert (as_int(a), as_int(b)) == (0xDEADBEEF, 2 ** 200 + 9)
+
+    wide = 2 ** 220 + 0xFFEE_DDCC_BBAA_9988_7766
+    u8, u32, u64, u128 = (as_int(x) for x in harness.call(
+        app, "narrowingMasks(uint256)", wide).abi_return)
+    assert (u8, u32, u64, u128) == (
+        wide & 0xFF, wide & 0xFFFFFFFF,
+        wide & (2 ** 64 - 1), wide & (2 ** 128 - 1))
+
+    def signed(v):
+        return v - P if v > P // 2 else v
+    n, w = harness.call(
+        app, "signedNarrowWiden(int256)", -300).abi_return
+    # int8(-300) truncates to the low byte: -300 & 0xFF = 0xD4 = -44 (signed
+    # returns travel as 256-bit two's complement on the wire).
+    assert signed(as_int(n)) == -44
+    assert signed(as_int(w)) == -44
+
+    from algosdk.encoding import decode_address
+    acct = harness.localnet.account.address
+    as_i, back, self_addr = harness.call(
+        app, "addressCasts(address)", acct).abi_return
+    low20 = int.from_bytes(decode_address(acct)[-20:], "big")
+    # address -> uint160 keeps the 160-bit (low-20) identity; casting back
+    # stays inside that namespace.
+    assert as_int(as_i) == low20
+    def addr_bytes(v):
+        return decode_address(v) if isinstance(v, str) else bytes(v)[-32:]
+    assert addr_bytes(back)[-20:] == decode_address(acct)[-20:]
+    # contract -> address is the app's own ESCROW account (the address(this)
+    # canon real contracts key state on).
+    from algosdk.logic import get_application_address
+    assert addr_bytes(self_addr) == decode_address(
+        get_application_address(app.app_id))
+    # contract-typed returns wire-encode as the same escrow account.
+    got = harness.call(app, "contractCast()").abi_return
+    assert addr_bytes(got) == decode_address(get_application_address(app.app_id))
+
+    b2, b8w = harness.call(
+        app, "bytesNResize(bytes4)", bytes.fromhex("deadbeef")).abi_return
+    assert bytes(b2) == bytes.fromhex("dead")
+    assert bytes(b8w) == bytes.fromhex("deadbeef00000000")

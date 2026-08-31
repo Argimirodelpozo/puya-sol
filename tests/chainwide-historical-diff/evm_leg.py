@@ -312,10 +312,14 @@ def main():
         solcx.set_solc_version(solc_version)
     print(f"[evm] compiler oracle: solc {solc_version}")
     mf = case.get("multifile")
-    settings = {"evmVersion": "paris",
-                "outputSelection": {"*": {"*": ["abi", "evm.bytecode.object",
+    # "paris" exists only from solc 0.8.18; older oracles reject it outright
+    # ("Invalid EVM version requested"), so let them use their own era default.
+    _patch = int(solc_version.rsplit(".", 1)[1])
+    settings = {"outputSelection": {"*": {"*": ["abi", "evm.bytecode.object",
                                                "evm.bytecode.linkReferences",
                                                "storageLayout"]}}}
+    if _patch >= 18:
+        settings["evmVersion"] = "paris"
     if mf:
         # Real file tree + the verification's own remappings — solc consumes
         # both natively via standard-json.

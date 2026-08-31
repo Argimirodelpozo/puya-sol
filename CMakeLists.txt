@@ -127,7 +127,6 @@ set(SOURCES
 	src/builder/sol-eb/SolArrayBuilder.cpp
 	src/builder/sol-eb/SolBoolBuilder.cpp
 	src/builder/sol-eb/SolIntegerBuilder.cpp
-	src/builder/sol-eb/SolStringBuilder.cpp
 	src/builder/sol-eb/SolStructBuilder.cpp
 	src/builder/sol-eb/SolAddressBuilder.cpp
 	src/builder/sol-eb/SolEnumBuilder.cpp
