@@ -5000,3 +5000,87 @@ def test_blob_param_writeback_and_compound(harness):
     assert as_int(harness.call(app, "libWrite(uint256)", 41).abi_return) == 41
     assert as_int(harness.call(app, "compoundLeaf(uint256)", 10).abi_return) == 15
     assert as_int(harness.call(app, "libCompound(uint256)", 7).abi_return) == 8
+
+
+def test_modifier_semantics_matrix(harness):
+    """puyasolRegression/contracts/modifier_semantics_matrix.sol — NOT o.g.
+
+    Solc-equivalence audit, modifier pass: every value below is LOCKED to the
+    legacy solc 0.8.28 + py-evm oracle (unoptimized, cancun). Cells: body
+    `return` still runs the post-_; epilogue (m1=72); a modifier return
+    before _; skips the body but outer epilogues run and named returns keep
+    defaults (m2=132/0); multiple _; re-run the body even after it returned
+    (m3=9596); epilogue runs after an explicit return (m6 stash=111); each
+    modifier's arg evaluates on scope ENTRY seeing earlier modifiers' writes
+    (m4=12); ctor modifiers wrap (374); same modifier stacks (m8=922).
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/modifier_semantics_matrix.sol")
+
+    def trace():
+        return as_int(harness.call(app, "trace()").abi_return)
+
+    assert as_int(harness.call(app, "ctorTrace()").abi_return) == 374
+    r = harness.call(app, "m1()")
+    assert (trace(), as_int(r.abi_return)) == (72, 99)
+    harness.call(app, "reset()")
+    r = harness.call(app, "m2()")
+    assert (trace(), as_int(r.abi_return)) == (132, 0)
+    harness.call(app, "reset()")
+    harness.call(app, "m3()")
+    assert trace() == 9596
+    harness.call(app, "reset()")
+    r = harness.call(app, "m6(uint256)", 41)
+    assert as_int(harness.call(app, "stash()").abi_return) == 111
+    assert as_int(r.abi_return) == 42
+    harness.call(app, "reset()")
+    harness.call(app, "m4()")
+    assert trace() == 12
+    harness.call(app, "reset()")
+    harness.call(app, "m8()")
+    assert trace() == 922
+
+
+def test_type_semantics_matrix(harness):
+    """puyasolRegression/contracts/type_semantics_matrix.sol — NOT o.g.
+
+    Solc-equivalence audit, types pass: values LOCKED to the legacy solc
+    0.8.28 + py-evm oracle. Rational-literal folding is EXACT unbounded
+    arithmetic ((0.1+0.2)*10 == 3, 2**800/2**790 == 1024); type(T).min/max
+    on sub-word ints and enums; type(C).name; literal mobile types (array
+    literal -> uint16, ternary arm 2**200 exact); the internal fn-type
+    mutability lattice (pure widens to view).
+    """
+    P = 1 << 256
+
+    def sgn(v):
+        v = as_int(v)
+        return v - P if v > P // 2 else v
+
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/type_semantics_matrix.sol")
+    assert [sgn(x) for x in harness.call(app, "rats()").abi_return] == [
+        3, 1024, 4, -3, 3, 15]
+    assert [sgn(x) for x in harness.call(app, "minmax()").abi_return] == [
+        255, -(1 << 55), (1 << 55) - 1, 0, 2]
+    assert harness.call(app, "cname()").abi_return == "TypeProbe"
+    assert [as_int(x) for x in
+            harness.call(app, "mobile(bool)", True).abi_return] == [300, 1]
+    assert [as_int(x) for x in
+            harness.call(app, "mobile(bool)", False).abi_return] == [
+        300, 1 << 200]
+    assert as_int(harness.call(app, "lattice()").abi_return) == 42
+
+
+def test_udvt_basics(harness):
+    """puyasolRegression/contracts/udvt_basics.sol — NOT o.g.
+
+    User-defined value types: wrap/unwrap round-trip, library ops via
+    using-for, storage round-trip through the public getter. Oracle-locked.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/udvt_basics.sol")
+    assert as_int(harness.call(
+        app, "roundtrip(uint128)", 123456789).abi_return) == 123456789
+    harness.call(app, "addStore(uint128,uint128)", 1000, 2345)
+    assert as_int(harness.call(app, "stored()").abi_return) == 3345
