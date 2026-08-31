@@ -210,16 +210,18 @@ def test_destructuring_assignment(harness):
     r = harness.call(app, "f(bytes)", b"abcde")
     assert as_int(r.abi_return) == 0
 
-def test_different_call_type_transient(harness):  # fails BY POLICY — see docstring
+@pytest.mark.xfail(reason="by-design AVM divergence: testDelegate() needs real delegatecall semantics (fail-loud hard error per feedback-delegatecall-hard-error) and testStatic() expects `false` from a staticcall into a state-writing function, which the AVM cannot produce (no read-only call context — the inner call succeeds)", strict=False)
+def test_different_call_type_transient(harness):
     """various/contracts/different_call_type_transient.sol
 
-    Permanently red, and precisely why: testDelegate() needs real delegatecall
-    semantics (fail-loud by design — see feedback-delegatecall-hard-error), and
-    testStatic() expects `false` from a staticcall to a state-writing function,
-    which the AVM adaptation cannot produce (no read-only enforcement; the
-    inner call succeeds). Neither is a routing problem: the keccak-selector
-    transport that used to err inside the callee's ARC-4 router is fixed and
-    covered by test_lowlevel_call_evm_calldata.
+    xfailed (user call 2026-08-31): both failing legs are by-design, not open
+    bugs. testDelegate() needs real delegatecall semantics (fail-loud by
+    design — see feedback-delegatecall-hard-error), and testStatic() expects
+    `false` from a staticcall to a state-writing function, which the AVM
+    adaptation cannot produce (no read-only enforcement; the inner call
+    succeeds). Neither is a routing problem: the keccak-selector transport
+    that used to err inside the callee's ARC-4 router is fixed and covered by
+    test_lowlevel_call_evm_calldata.
     """
     app = harness.compile_and_deploy('various/contracts/different_call_type_transient.sol')
     r = harness.call(app, 'testDelegate()')
