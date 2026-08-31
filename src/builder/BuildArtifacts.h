@@ -8,7 +8,13 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
+
+namespace solidity::frontend
+{
+class Type;
+}
 
 namespace puyasol::builder
 {
@@ -17,6 +23,13 @@ namespace puyasol::builder
 struct BuildArtifacts
 {
 	std::vector<std::shared_ptr<awst::Subroutine>> pendingYulSubroutines;
+	/// --evm-storage-layout: RECURSIVE struct types (S{S[] x}) cannot inline
+	/// their delete — clearing recurses through a per-type runtime subroutine
+	/// instead. Canonical type identifier -> unit-global SubroutineID target;
+	/// entries whose bodies are not yet synthesized sit in the pending queue
+	/// (drained by EvmSlotLowering into pendingYulSubroutines).
+	std::map<std::string, std::string> evmClearSubs;
+	std::vector<std::pair<std::string, solidity::frontend::Type const*>> pendingEvmClearSubs;
 	std::set<std::string> childContracts;
 	bool needsRipemd160 = false;
 	/// An EIP-1967 admin-slot use was lowered while translating the CURRENT
@@ -45,6 +58,8 @@ struct BuildArtifacts
 	void clear()
 	{
 		pendingYulSubroutines.clear();
+		evmClearSubs.clear();
+		pendingEvmClearSubs.clear();
 		childContracts.clear();
 		needsRipemd160 = false;
 		usesErc1967Admin = false;

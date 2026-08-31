@@ -28,6 +28,12 @@ struct SlotWordCodec
 		unsigned _size,
 		awst::SourceLocation const& _loc);
 
+	/// BYTE-shaped native (bytes[N] / arc4 byte[K]): its packed form is
+	/// LEFT-aligned in its window, so callers packing a whole-word canonical
+	/// must pack to the element's WINDOW size, not 32 — a 32-wide pack parks
+	/// the bytes at the word's high end where no leaf window reads them.
+	static bool isByteShaped(awst::WType const* _wtype);
+
 	/// `size` packed bytes → value of `wtype`. `solType` supplies signedness:
 	/// sub-64 signed → 64-bit-TC uint64 cells; 64<bits<256 signed → canonical
 	/// 256-bit-TC biguint. Unknown types: loud error + nullptr.

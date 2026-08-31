@@ -167,6 +167,19 @@ std::shared_ptr<awst::Expression> tryPackByteShaped(
 
 } // namespace
 
+bool SlotWordCodec::isByteShaped(awst::WType const* _wtype)
+{
+	if (auto const* bw = dynamic_cast<awst::BytesWType const*>(_wtype))
+		return bw->length().has_value();
+	if (_wtype && _wtype->name() == "address")
+		return false;   // arc4.address packs to the word/account convention
+	auto const* sa = dynamic_cast<awst::ARC4StaticArray const*>(_wtype);
+	if (!sa || sa->arraySize() <= 0)
+		return false;
+	auto const* e = dynamic_cast<awst::ARC4UIntN const*>(sa->elementType());
+	return e && e->n() == 8;
+}
+
 std::shared_ptr<awst::Expression> SlotWordCodec::nativeToPackedBytes(
 	std::shared_ptr<awst::Expression> _value,
 	awst::WType const* _wtype,

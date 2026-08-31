@@ -856,8 +856,15 @@ SolAssignment::tryHandleEvmStorageWrite()
 		auto current = low.readValue(*addr);
 		value = applyCompoundAssignment(op, current, std::move(value));
 	}
-
 	value = low.coerceToNative(std::move(value), *addr);
+	if (op == Token::Assign && value)
+		// Plain assign of a NARROWER signed value: re-fill the sign bits the
+		// zero-extending carrier drops (the slot-handle write path and every
+		// compound site already do; this leaf path stored 2^64-5 raw). AFTER
+		// coerceToNative — the widen picks its tier from the value's carrier.
+		value = builder::TypeCoercion::signExtendSignedWiden(
+			std::move(value), m_assignment.rightHandSide().annotation().type,
+			addr->solType, m_loc);
 	if (!value)
 		return std::nullopt;
 

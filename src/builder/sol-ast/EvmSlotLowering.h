@@ -112,6 +112,9 @@ public:
 	std::shared_ptr<awst::Expression> readAny(
 		Addr const& _a, solidity::frontend::Type const* _t);
 
+	/// RECURSIVE struct types clear through a per-type runtime subroutine
+	/// (registered in BuildArtifacts, emitted as a unit-global root); the
+	/// wrapper synthesizes any bodies registered during this emission.
 	bool clearAggregate(
 		Addr const& _a,
 		solidity::frontend::Type const* _t,
@@ -215,9 +218,21 @@ private:
 
 	std::shared_ptr<awst::Expression> biguintConst(std::string const& _v);
 
+	bool clearAggregateImpl(
+		Addr const& _a,
+		solidity::frontend::Type const* _t,
+		std::vector<std::shared_ptr<awst::Statement>>& _out);
+
+	/// Build the queued per-type clear subroutines (BuildArtifacts) into
+	/// pendingYulSubroutines. Runs only when no clear emission is in flight.
+	void synthesizePendingClearSubs();
+
 	eb::ContractContext& m_ctx;
 	Context& m_scope;
 	awst::SourceLocation m_loc;
+	/// Struct type identifiers on the active clearAggregate emission path —
+	/// re-entering one means a recursive type.
+	std::vector<std::string> m_clearTypeStack;
 };
 
 } // namespace puyasol::builder::sol_ast

@@ -4,6 +4,7 @@
 
 #include "builder/sol-ast/EvmSlotLowering.h"
 #include "builder/AwstShorthand.h"
+#include "builder/BuildArtifacts.h"
 #include "builder/sol-ast/Context.h"
 #include "builder/storage/SlotHandleAccess.h"
 #include "builder/storage/SlotWordCodec.h"
@@ -17,6 +18,8 @@
 // forward-declare them now.
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/ast/Types.h>
+
+#include <algorithm>
 
 namespace puyasol::builder::sol_ast
 {
@@ -901,6 +904,49 @@ bool EvmSlotLowering::clearAggregate(
 	Type const* _t,
 	std::vector<std::shared_ptr<awst::Statement>>& _out)
 {
+	bool ok = clearAggregateImpl(_a, _t, _out);
+	if (m_clearTypeStack.empty())
+		synthesizePendingClearSubs();
+	return ok;
+}
+
+void EvmSlotLowering::synthesizePendingClearSubs()
+{
+	auto& arts = m_ctx.typeMapper.artifacts();
+	while (!arts.pendingEvmClearSubs.empty())
+	{
+		auto [target, t] = arts.pendingEvmClearSubs.back();
+		arts.pendingEvmClearSubs.pop_back();
+		Addr a;
+		a.slot = awst::makeVarExpression(
+			"__slot", awst::WType::biguintType(), m_loc);
+		a.solType = t;
+		a.wtype = m_ctx.typeMapper.map(t);
+		std::vector<std::shared_ptr<awst::Statement>> body;
+		// Empty stack: the first entry emits the real body; the nested
+		// self-reference hits the guard and becomes the recursive call.
+		if (!clearAggregateImpl(a, t, body))
+			continue;
+		body.push_back(awst::makeReturnStatement(nullptr, m_loc));
+		std::vector<awst::SubroutineArgument> args;
+		awst::SubroutineArgument sa;
+		sa.name = "__slot";
+		sa.wtype = awst::WType::biguintType();
+		sa.sourceLocation = m_loc;
+		args.push_back(sa);
+		auto blk = awst::makeBlock(m_loc);
+		blk->body = std::move(body);
+		arts.pendingYulSubroutines.push_back(awst::makeSubroutine(
+			target, target, std::move(args), awst::WType::voidType(),
+			std::move(blk), /*pure=*/false, m_loc));
+	}
+}
+
+bool EvmSlotLowering::clearAggregateImpl(
+	Addr const& _a,
+	Type const* _t,
+	std::vector<std::shared_ptr<awst::Statement>>& _out)
+{
 	if (!_t)
 		return false;
 	if (isBytesLike(_t))
@@ -961,7 +1007,7 @@ bool EvmSlotLowering::clearAggregate(
 					ea.solType = et;
 					ea.wtype = m_ctx.typeMapper.map(et);
 					std::vector<std::shared_ptr<awst::Statement>> body;
-					if (!clearAggregate(ea, et, body))
+					if (!clearAggregateImpl(ea, et, body))
 						return false;
 					body.push_back(awst::makeAssignmentStatement(bv(ivar),
 						awst::makeBigUIntBinOp(bv(ivar),
@@ -1040,14 +1086,44 @@ bool EvmSlotLowering::clearAggregate(
 					awst::WType::biguintType()), m_loc);
 			ea.solType = elemType;
 			ea.wtype = m_ctx.typeMapper.map(elemType);
-			if (!clearAggregate(ea, elemType, _out))
+			if (!clearAggregateImpl(ea, elemType, _out))
 				return false;
 		}
 		return true;
 	}
 	if (auto const* st = dynamic_cast<StructType const*>(_t))
 	{
-		std::string bs = "__evmcl_"
+		// A struct on the active emission path again = recursive type
+		// (S{S[] x}); inlining would never terminate. Route through a
+		// per-type runtime subroutine — the data is finite, so runtime
+		// recursion bottoms out where EVM's clear functions do.
+		std::string typeId = st->richIdentifier();
+		if (std::find(m_clearTypeStack.begin(), m_clearTypeStack.end(), typeId)
+			!= m_clearTypeStack.end())
+		{
+			auto& arts = m_ctx.typeMapper.artifacts();
+			auto [it, fresh] = arts.evmClearSubs.try_emplace(typeId,
+				"__puyasol___evm_clear_"
+					+ std::to_string(arts.evmClearSubs.size()));
+			if (fresh)
+				arts.pendingEvmClearSubs.emplace_back(it->second, _t);
+			auto call = awst::makeSubroutineCall(
+				awst::SubroutineID{it->second}, awst::WType::voidType(), m_loc);
+			awst::pushCallArg(call->args, "__slot", _a.slot);
+			_out.push_back(awst::makeExpressionStatement(std::move(call), m_loc));
+			return true;
+		}
+		m_clearTypeStack.push_back(typeId);
+		struct StackPop
+		{
+			std::vector<std::string>& s;
+			~StackPop() { s.pop_back(); }
+		} popper{m_clearTypeStack};
+		// Distinct prefix from the fixed-array branch: NameGen counters are
+		// PER-KEY, so sharing "__evmcl_" made both emit __evmcl_0 in one
+		// function — the member clear clobbered the struct's pinned base and
+		// the span zeroing shifted one slot up (slot 0 kept its value).
+		std::string bs = "__evmcls_"
 			+ std::to_string(awst::NameGen::next("EvmSlotLowering.clrS"));
 		_out.push_back(awst::makeAssignmentStatement(
 			awst::makeVarExpression(bs, awst::WType::biguintType(), m_loc),
@@ -1093,7 +1169,7 @@ bool EvmSlotLowering::clearAggregate(
 						awst::WType::biguintType()), m_loc));
 			fa.solType = mt;
 			fa.wtype = m_ctx.typeMapper.map(mt);
-			if (!clearAggregate(fa, mt, _out))
+			if (!clearAggregateImpl(fa, mt, _out))
 				return false;
 		}
 		for (solidity::u256 j = 0; j < span; ++j)
@@ -1439,6 +1515,12 @@ bool EvmSlotLowering::writeArrayValue(
 	}
 	auto l = SlotHandleAccess::layoutFor(elemType);
 	auto const* nativeW = m_ctx.typeMapper.map(elemType);
+	// Byte-shaped canonical (bytesN, fn-ptr byte[12] handles) = packed to the
+	// element WINDOW as biguint. Packing into a full 32-byte word LEFT-aligned
+	// parked bytes22 (and the fn-ptr handle) at the word's HIGH end while
+	// every leaf window reads the LOW `size` bytes — elements read back zero
+	// (fn-ptrs: the selector where the app id belongs).
+	unsigned const packSize = SlotWordCodec::isByteShaped(nativeW) ? l.size : 32;
 	for (unsigned j = 0; j < len; ++j)
 	{
 		auto ev = elemAt(j);
@@ -1446,7 +1528,7 @@ bool EvmSlotLowering::writeArrayValue(
 		if (nat->wtype != nativeW)
 			nat = awst::makeARC4Decode(std::move(nat), nativeW, m_loc);
 		auto canonical = awst::makeAsBiguint(
-			SlotWordCodec::nativeToPackedBytes(std::move(nat), nativeW, 32, m_loc),
+			SlotWordCodec::nativeToPackedBytes(std::move(nat), nativeW, packSize, m_loc),
 			m_loc);
 		SlotHandleAccess::writeScalarElem(_out, baseVar(),
 			awst::makeIntegerConstant(static_cast<uint64_t>(j), m_loc,

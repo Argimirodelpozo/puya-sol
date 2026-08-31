@@ -3836,6 +3836,26 @@ def test_evm_layout_runtime_for_modifier_assembly_only(harness):
     assert as_int(got) == 1
 
 
+def test_evm_layout_recursive_struct_delete(harness):
+    """delete on a RECURSIVE struct (S{S[] x}) cannot inline its clear — the
+    emission recursed forever (segfault). It now routes through a per-type
+    runtime subroutine; populated nested elements must actually be zeroed."""
+    arts = harness.compile(
+        "puyasolRegression/contracts/recursive_struct_slot_delete.sol",
+        extra_args=_EVM_LAYOUT)
+    app = harness.deploy(arts, extra_funding_microalgos=30_000_000)
+    harness.call(app, "seed()", extra_fee=20_000)
+    assert tuple(
+        as_int(x) for x in harness.call(app, "read()").abi_return) == (7, 1, 3)
+    harness.call(app, "wipe()", extra_fee=20_000)
+    assert tuple(
+        as_int(x) for x in harness.call(app, "read()").abi_return) == (0, 0, 0)
+    # a re-grown element must come back zeroed, not read stale data
+    harness.call(app, "seed()", extra_fee=20_000)
+    assert tuple(
+        as_int(x) for x in harness.call(app, "read()").abi_return) == (7, 1, 3)
+
+
 def test_extended_evm_memory_does_not_overlap_transient_scratch(harness):
     """Memory configurations larger than the default five blobs must skip the
     fixed transient/flash-accounting scratch range 5..15."""

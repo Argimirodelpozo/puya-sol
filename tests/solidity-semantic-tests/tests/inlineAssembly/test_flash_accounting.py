@@ -16,7 +16,7 @@ from algosdk.atomic_transaction_composer import (
 )
 
 from framework import as_int
-from framework.call import _resolve_method
+from framework.call import _populate_group_resources_progressively, _resolve_method
 
 
 def _run_group(harness, app, calls):
@@ -44,6 +44,9 @@ def _run_group(harness, app, calls):
             method_args=list(args),
             note=os.urandom(8),  # keep otherwise-identical app calls distinct
         )
+    # Slot mode backs storage with boxes — discover and attach refs the way
+    # framework.call does (a raw group carries none; default mode is a no-op).
+    atc = _populate_group_resources_progressively(atc, algod, "flash-group")
     try:
         atc.execute(algod, 6)
         return True, ""
