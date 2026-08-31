@@ -1,0 +1,301 @@
+{
+    "name": "TransparentUpgradeableProxy",
+    "structs": {},
+    "methods": [
+        {
+            "name": "__postInit",
+            "args": [
+                {
+                    "type": "address",
+                    "name": "_logic"
+                },
+                {
+                    "type": "address",
+                    "name": "initialOwner"
+                },
+                {
+                    "type": "byte[]",
+                    "name": "_data"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [
+                {
+                    "name": "AdminChanged",
+                    "args": [
+                        {
+                            "type": "address",
+                            "name": "previousAdmin"
+                        },
+                        {
+                            "type": "address",
+                            "name": "newAdmin"
+                        }
+                    ]
+                }
+            ],
+            "recommendations": {}
+        },
+        {
+            "name": "__fallback",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "desc": " @dev Fallback function that delegates calls to the address returned by `_implementation()`. Will run if no other\n function in the contract matches the call data.",
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "__erc1967_update",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "UpdateApplication"
+                ]
+            },
+            "readonly": false,
+            "events": [
+                {
+                    "name": "Upgraded",
+                    "args": [
+                        {
+                            "type": "address",
+                            "name": "implementation"
+                        }
+                    ]
+                }
+            ],
+            "recommendations": {}
+        }
+    ],
+    "arcs": [
+        22,
+        28
+    ],
+    "desc": " @dev This contract implements a proxy that is upgradeable through an associated {ProxyAdmin} instance.\n To avoid https://medium.com/nomic-labs-blog/malicious-backdoors-in-ethereum-proxies-62629adf3357[proxy selector\n clashing], which can potentially be used in an attack, this contract uses the\n https://blog.openzeppelin.com/the-transparent-proxy-pattern/[transparent proxy pattern]. This pattern implies two\n things that go hand in hand:\n 1. If any account other than the admin calls the proxy, the call will be forwarded to the implementation, even if\n that call matches the {ITransparentUpgradeableProxy-upgradeToAndCall} function exposed by the proxy itself.\n 2. If the admin calls the proxy, it can call the `upgradeToAndCall` function but any other call won't be forwarded to\n the implementation. If the admin tries to call a function on the implementation it will fail with an error indicating\n the proxy admin cannot fallback to the target implementation.\n These properties mean that the admin account can only be used for upgrading the proxy, so it's best if it's a\n dedicated account that is not used for anything else. This will avoid headaches due to sudden errors when trying to\n call a function from the proxy implementation. For this reason, the proxy deploys an instance of {ProxyAdmin} and\n allows upgrades only if they come through it. You should think of the `ProxyAdmin` instance as the administrative\n interface of the proxy, including the ability to change who can trigger upgrades by transferring ownership.\n NOTE: The real interface of this proxy is that defined in `ITransparentUpgradeableProxy`. This contract does not\n inherit from that interface, and instead `upgradeToAndCall` is implicitly implemented using a custom dispatch\n mechanism in `_fallback`. Consequently, the compiler will not produce an ABI for this contract. This is necessary to\n fully implement transparency without decoding reverts caused by selector clashes between the proxy and the\n implementation.\n NOTE: This proxy does not inherit from {Context} deliberately. The {ProxyAdmin} of this contract won't send a\n meta-transaction in any way, and any other meta-transaction setup should be made in the implementation contract.\n IMPORTANT: This contract avoids unnecessary storage reads by setting the admin only during construction as an\n immutable variable, preventing any changes thereafter. However, the admin slot defined in ERC-1967 can still be\n overwritten by the implementation logic pointed to by this proxy. In such cases, the contract may end up in an\n undesirable state where the admin slot is different from the actual admin. Relying on the value of the admin slot\n is generally fine if the implementation is trusted.\n WARNING: It is not recommended to extend this contract to add additional external functions. If you do so, the\n compiler will not check that there are no selector conflicts, due to the note above. A selector clash between any new\n function and the functions declared in {ITransparentUpgradeableProxy} will be resolved in favor of the new one. This\n could render the `upgradeToAndCall` function inaccessible, preventing upgradeability and compromising transparency.",
+    "networks": {},
+    "state": {
+        "schema": {
+            "global": {
+                "ints": 1,
+                "bytes": 2
+            },
+            "local": {
+                "ints": 0,
+                "bytes": 0
+            }
+        },
+        "keys": {
+            "global": {
+                "_admin": {
+                    "keyType": "AVMString",
+                    "valueType": "address",
+                    "key": "X2FkbWlu"
+                },
+                "__ctor_pending": {
+                    "keyType": "AVMString",
+                    "valueType": "AVMUint64",
+                    "key": "X19jdG9yX3BlbmRpbmc="
+                },
+                "__erc1967_admin": {
+                    "keyType": "AVMString",
+                    "valueType": "AVMBytes",
+                    "key": "X19lcmMxOTY3X2FkbWlu"
+                }
+            },
+            "local": {},
+            "box": {}
+        },
+        "maps": {
+            "global": {},
+            "local": {},
+            "box": {}
+        }
+    },
+    "bareActions": {
+        "create": [],
+        "call": []
+    },
+    "sourceInfo": {
+        "approval": {
+            "sourceInfo": [
+                {
+                    "pc": [
+                        549
+                    ],
+                    "errorMessage": "ERC-1967 upgrade has no in-contract lowering: the AVM upgrade is a native UpdateApplication transaction submitted by the admin with the new compiled program (see proxy.md)"
+                },
+                {
+                    "pc": [
+                        513
+                    ],
+                    "errorMessage": "ERC-1967: update sender is not the proxy admin"
+                },
+                {
+                    "pc": [
+                        934
+                    ],
+                    "errorMessage": "EVM ABI byte sequence exceeds ARC4 uint16 length"
+                },
+                {
+                    "pc": [
+                        865,
+                        885,
+                        912,
+                        940
+                    ],
+                    "errorMessage": "EVM ABI decode out of bounds"
+                },
+                {
+                    "pc": [
+                        925
+                    ],
+                    "errorMessage": "EVM ABI length exceeds uint64"
+                },
+                {
+                    "pc": [
+                        897
+                    ],
+                    "errorMessage": "EVM ABI offset exceeds uint64"
+                },
+                {
+                    "pc": [
+                        656
+                    ],
+                    "errorMessage": "ProxyDeniedAdminAccess"
+                },
+                {
+                    "pc": [
+                        293
+                    ],
+                    "errorMessage": "__postInit already called"
+                },
+                {
+                    "pc": [
+                        299
+                    ],
+                    "errorMessage": "__postInit callable only by the app creator"
+                },
+                {
+                    "pc": [
+                        879
+                    ],
+                    "errorMessage": "invalid EVM ABI address padding"
+                },
+                {
+                    "pc": [
+                        279
+                    ],
+                    "errorMessage": "invalid array length header"
+                },
+                {
+                    "pc": [
+                        287
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.dynamic_array<arc4.uint8>"
+                },
+                {
+                    "pc": [
+                        265,
+                        273
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.static_array<arc4.uint8, 32>"
+                },
+                {
+                    "pc": [
+                        1039
+                    ],
+                    "errorMessage": "proxy delegation has no AVM lowering: the proxy and its implementation collapse to ONE updatable application \u2014 deploy the implementation contract (see proxy.md)"
+                },
+                {
+                    "pc": [
+                        854
+                    ],
+                    "errorMessage": "slice: start > end"
+                },
+                {
+                    "pc": [
+                        904
+                    ],
+                    "errorMessage": "unaligned EVM ABI offset"
+                }
+            ],
+            "pcOffsetMethod": "none"
+        },
+        "clear": {
+            "sourceInfo": [],
+            "pcOffsetMethod": "none"
+        }
+    },
+    "source": {
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDEyCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvcHV5YXNvbFJlZ3Jlc3Npb24vY29udHJhY3RzL3RyYW5zcGFyZW50X3Byb3h5X3VuaXQuc29sLlRyYW5zcGFyZW50VXBncmFkZWFibGVQcm94eS5hcHByb3ZhbF9wcm9ncmFtKCkgLT4gdWludDY0OgptYWluOgogICAgaW50Y2Jsb2NrIDAgMzIgMSAyNCAxMDAwMDAwCiAgICBieXRlY2Jsb2NrIDB4ICJfX2N0b3JfcGVuZGluZyIgIl9hZG1pbiIgIl9fZXJjMTk2N19hZG1pbiIgMHgwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIFRNUExfQVBQUk9WQUxfUHJveHlBZG1pbiBUTVBMX0NMRUFSX1Byb3h5QWRtaW4KICAgIGludGNfMCAvLyAwCiAgICBkdXAKICAgIGJ5dGVjXzAgLy8gIiIKICAgIHB1c2hpbnQgNDA5NgogICAgYnplcm8KICAgIGR1cAogICAgc3RvcmUgNQogICAgZHVwCiAgICBzdG9yZSAwCiAgICBkdXAKICAgIHN0b3JlIDEKICAgIGR1cAogICAgc3RvcmUgMgogICAgZHVwCiAgICBzdG9yZSAzCiAgICBzdG9yZSA0CiAgICBsb2FkIDAKICAgIHB1c2hieXRlcyAweDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwODAKICAgIHJlcGxhY2UyIDY0CiAgICBzdG9yZSAwCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYm56IG1haW5fYWZ0ZXJfaWZfZWxzZUAyCiAgICBieXRlY18xIC8vICJfX2N0b3JfcGVuZGluZyIKICAgIGludGNfMiAvLyAxCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgaW50Y18yIC8vIDEKICAgIHJldHVybgoKbWFpbl9hZnRlcl9pZl9lbHNlQDI6CiAgICB0eG4gTnVtQXBwQXJncwogICAgYm56IG1haW5fYWZ0ZXJfaWZfZWxzZUA1CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBibnogbWFpbl9hZnRlcl9pZl9lbHNlQDUKICAgIGNhbGxzdWIgX19mYWxsYmFjawogICAgaW50Y18yIC8vIDEKICAgIHJldHVybgoKbWFpbl9hZnRlcl9pZl9lbHNlQDU6CiAgICBwdXNoYnl0ZXMgMHg2N2FlNzA0MiAvLyBtZXRob2QgIl9fZXJjMTk2N191cGRhdGUoKXZvaWQiCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAwCiAgICBtYXRjaCBtYWluX19fZXJjMTk2N191cGRhdGVfcm91dGVAMTAKICAgIHR4biBPbkNvbXBsZXRpb24KICAgICEKICAgIGFzc2VydAogICAgdHhuIEFwcGxpY2F0aW9uSUQKICAgIGJ6IG1haW5fYWZ0ZXJfaWZfZWxzZUAxNwogICAgcHVzaGJ5dGVzcyAweDNmZTlhZjNlIDB4MWJmOTg4MmIgLy8gbWV0aG9kICJfX3Bvc3RJbml0KGFkZHJlc3MsYWRkcmVzcyxieXRlW10pdm9pZCIsIG1ldGhvZCAiX19mYWxsYmFjaygpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fX19wb3N0SW5pdF9yb3V0ZUAxMyBtYWluX19fZmFsbGJhY2tfcm91dGVAMTQKCm1haW5fYWZ0ZXJfaWZfZWxzZUAxNzoKICAgIGludGNfMCAvLyAwCiAgICBidXJ5IDEKCm1haW5fYWZ0ZXJfaW5saW5lZF8vaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvcHV5YXNvbFJlZ3Jlc3Npb24vY29udHJhY3RzL3RyYW5zcGFyZW50X3Byb3h5X3VuaXQuc29sLlRyYW5zcGFyZW50VXBncmFkZWFibGVQcm94eS5fX3B1eWFfYXJjNF9yb3V0ZXJfX0AxODoKICAgIGR1cAogICAgYm56IG1haW5fYWZ0ZXJfaWZfZWxzZUA4CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBibnogbWFpbl9hZnRlcl9pZl9lbHNlQDgKICAgIGNhbGxzdWIgX19mYWxsYmFjawogICAgaW50Y18yIC8vIDEKICAgIGJ1cnkgMQoKbWFpbl9hZnRlcl9pZl9lbHNlQDg6CiAgICByZXR1cm4KCm1haW5fX19mYWxsYmFja19yb3V0ZUAxNDoKICAgIGNhbGxzdWIgX19mYWxsYmFjawogICAgaW50Y18yIC8vIDEKICAgIGJ1cnkgMQogICAgYiBtYWluX2FmdGVyX2lubGluZWRfL2hvbWUvYXJnaS9BbGdvcmFuZEZvdW5kYXRpb24vU2lkZVByb2plY3RzL3B1eWEtc29sL3B1eWEtc29sL3Rlc3RzL3NvbGlkaXR5LXNlbWFudGljLXRlc3RzL3Rlc3RzL3B1eWFzb2xSZWdyZXNzaW9uL2NvbnRyYWN0cy90cmFuc3BhcmVudF9wcm94eV91bml0LnNvbC5UcmFuc3BhcmVudFVwZ3JhZGVhYmxlUHJveHkuX19wdXlhX2FyYzRfcm91dGVyX19AMTgKCm1haW5fX19wb3N0SW5pdF9yb3V0ZUAxMzoKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDEKICAgIGR1cAogICAgbGVuCiAgICBpbnRjXzEgLy8gMzIKICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQuc3RhdGljX2FycmF5PGFyYzQudWludDgsIDMyPgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgogICAgZHVwCiAgICBsZW4KICAgIGludGNfMSAvLyAzMgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC5zdGF0aWNfYXJyYXk8YXJjNC51aW50OCwgMzI+CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAzCiAgICBkdXAKICAgIGludGNfMCAvLyAwCiAgICBleHRyYWN0X3VpbnQxNiAvLyBvbiBlcnJvcjogaW52YWxpZCBhcnJheSBsZW5ndGggaGVhZGVyCiAgICBwdXNoaW50IDIKICAgICsKICAgIGRpZyAxCiAgICBsZW4KICAgID09CiAgICBhc3NlcnQgLy8gaW52YWxpZCBudW1iZXIgb2YgYnl0ZXMgZm9yIGFyYzQuZHluYW1pY19hcnJheTxhcmM0LnVpbnQ4PgogICAgZXh0cmFjdCAyIDAKICAgIGJ5dGVjXzEgLy8gIl9fY3Rvcl9wZW5kaW5nIgogICAgYXBwX2dsb2JhbF9nZXQKICAgIGFzc2VydCAvLyBfX3Bvc3RJbml0IGFscmVhZHkgY2FsbGVkCiAgICB0eG4gU2VuZGVyCiAgICBnbG9iYWwgQ3JlYXRvckFkZHJlc3MKICAgID09CiAgICBhc3NlcnQgLy8gX19wb3N0SW5pdCBjYWxsYWJsZSBvbmx5IGJ5IHRoZSBhcHAgY3JlYXRvcgogICAgYnl0ZWNfMSAvLyAiX19jdG9yX3BlbmRpbmciCiAgICBpbnRjXzAgLy8gMAogICAgYXBwX2dsb2JhbF9wdXQKICAgIGJ5dGVjXzIgLy8gIl9hZG1pbiIKICAgIGJ5dGVjIDQgLy8gYWRkciBBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBWTVIRktRCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgdW5jb3ZlciAyCiAgICBzd2FwCiAgICBjYWxsc3ViIEVSQzE5NjdVdGlscy51cGdyYWRlVG9BbmRDYWxsCiAgICBpdHhuX2JlZ2luCiAgICBieXRlYyA1IC8vIFRNUExfQVBQUk9WQUxfUHJveHlBZG1pbgogICAgYnl0ZWMgNiAvLyBUTVBMX0NMRUFSX1Byb3h5QWRtaW4KICAgIHB1c2hpbnQgNgogICAgaXR4bl9maWVsZCBUeXBlRW51bQogICAgcHVzaGludCAxNgogICAgaXR4bl9maWVsZCBHbG9iYWxOdW1VaW50CiAgICBwdXNoaW50IDE2CiAgICBpdHhuX2ZpZWxkIEdsb2JhbE51bUJ5dGVTbGljZQogICAgaW50Y18wIC8vIDAKICAgIGl0eG5fZmllbGQgRmVlCiAgICBwdXNoaW50IDMKICAgIGl0eG5fZmllbGQgRXh0cmFQcm9ncmFtUGFnZXMKICAgIGl0eG5fZmllbGQgQ2xlYXJTdGF0ZVByb2dyYW0KICAgIGl0eG5fZmllbGQgQXBwcm92YWxQcm9ncmFtCiAgICBkdXAKICAgIGl0eG5fZmllbGQgQXBwbGljYXRpb25BcmdzCiAgICBpdHhuX3N1Ym1pdAogICAgaXR4biBDcmVhdGVkQXBwbGljYXRpb25JRAogICAgYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwogICAgcG9wCiAgICBpdHhuX2JlZ2luCiAgICBpbnRjXzIgLy8gMQogICAgaXR4bl9maWVsZCBUeXBlRW51bQogICAgaXR4bl9maWVsZCBSZWNlaXZlcgogICAgaW50Y18wIC8vIDAKICAgIGl0eG5fZmllbGQgRmVlCiAgICBpbnRjIDQgLy8gMTAwMDAwMAogICAgaXR4bl9maWVsZCBBbW91bnQKICAgIGl0eG5fc3VibWl0CiAgICBpdHhuX2JlZ2luCiAgICBieXRlYyA1IC8vIFRNUExfQVBQUk9WQUxfUHJveHlBZG1pbgogICAgYnl0ZWMgNiAvLyBUTVBMX0NMRUFSX1Byb3h5QWRtaW4KICAgIHB1c2hpbnQgNgogICAgaXR4bl9maWVsZCBUeXBlRW51bQogICAgcHVzaGludCAxNgogICAgaXR4bl9maWVsZCBHbG9iYWxOdW1VaW50CiAgICBwdXNoaW50IDE2CiAgICBpdHhuX2ZpZWxkIEdsb2JhbE51bUJ5dGVTbGljZQogICAgaW50Y18wIC8vIDAKICAgIGl0eG5fZmllbGQgRmVlCiAgICBwdXNoaW50IDMKICAgIGl0eG5fZmllbGQgRXh0cmFQcm9ncmFtUGFnZXMKICAgIGl0eG5fZmllbGQgQ2xlYXJTdGF0ZVByb2dyYW0KICAgIGl0eG5fZmllbGQgQXBwcm92YWxQcm9ncmFtCiAgICBpdHhuX2ZpZWxkIEFwcGxpY2F0aW9uQXJncwogICAgaXR4bl9zdWJtaXQKICAgIGl0eG4gQ3JlYXRlZEFwcGxpY2F0aW9uSUQKICAgIGR1cAogICAgYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwogICAgcG9wCiAgICBpdHhuX2JlZ2luCiAgICBpbnRjXzIgLy8gMQogICAgaXR4bl9maWVsZCBUeXBlRW51bQogICAgaXR4bl9maWVsZCBSZWNlaXZlcgogICAgaW50Y18wIC8vIDAKICAgIGl0eG5fZmllbGQgRmVlCiAgICBpbnRjIDQgLy8gMTAwMDAwMAogICAgaXR4bl9maWVsZCBBbW91bnQKICAgIGl0eG5fc3VibWl0CiAgICBpbnRjXzMgLy8gMjQKICAgIGJ6ZXJvCiAgICBzd2FwCiAgICBpdG9iCiAgICBjb25jYXQKICAgIGJ5dGVjXzIgLy8gIl9hZG1pbiIKICAgIGRpZyAxCiAgICBhcHBfZ2xvYmFsX3B1dAogICAgY2FsbHN1YiBFUkMxOTY3VXRpbHMuY2hhbmdlQWRtaW4KICAgIGludGNfMiAvLyAxCiAgICBidXJ5IDEKICAgIGIgbWFpbl9hZnRlcl9pbmxpbmVkXy9ob21lL2FyZ2kvQWxnb3JhbmRGb3VuZGF0aW9uL1NpZGVQcm9qZWN0cy9wdXlhLXNvbC9wdXlhLXNvbC90ZXN0cy9zb2xpZGl0eS1zZW1hbnRpYy10ZXN0cy90ZXN0cy9wdXlhc29sUmVncmVzc2lvbi9jb250cmFjdHMvdHJhbnNwYXJlbnRfcHJveHlfdW5pdC5zb2wuVHJhbnNwYXJlbnRVcGdyYWRlYWJsZVByb3h5Ll9fcHV5YV9hcmM0X3JvdXRlcl9fQDE4CgptYWluX19fZXJjMTk2N191cGRhdGVfcm91dGVAMTA6CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICBwdXNoaW50IDQgLy8gVXBkYXRlQXBwbGljYXRpb24KICAgID09CiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgJiYKICAgIGFzc2VydAogICAgaW50Y18wIC8vIDAKICAgIGJ5dGVjXzMgLy8gIl9fZXJjMTk2N19hZG1pbiIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBieXRlY18wIC8vIDB4CiAgICBjb3ZlciAyCiAgICBzZWxlY3QKICAgIGR1cAogICAgYnVyeSA0CiAgICB0eG4gU2VuZGVyCiAgICBiPT0KICAgIGR1cAogICAgYm56IG1haW5fYWZ0ZXJfaWZfZWxzZUAzMQogICAgZGlnIDMKICAgIGJ5dGVjXzAgLy8gMHgKICAgIGIhPQogICAgYnogbWFpbl9hZnRlcl9pZl9lbHNlQDMxCiAgICBkaWcgMwogICAgcHVzaGJ5dGVzIDB4ZmZmZmZmZmZmZmZmZmZmZgogICAgYjw9CiAgICBieiBtYWluX2FmdGVyX2lmX2Vsc2VAMzEKICAgIHBvcAogICAgaW50Y18xIC8vIDMyCiAgICBiemVybwogICAgZGlnIDMKICAgIGNvbmNhdAogICAgZHVwCiAgICBsZW4KICAgIGludGNfMSAvLyAzMgogICAgLQogICAgaW50Y18xIC8vIDMyCiAgICBleHRyYWN0MwogICAgaW50Y18zIC8vIDI0CiAgICBleHRyYWN0X3VpbnQ2NAogICAgYXBwX3BhcmFtc19nZXQgQXBwQWRkcmVzcwogICAgc3dhcAogICAgYnVyeSAzCiAgICBieiBtYWluX2Jvb2xfZmFsc2VAMjkKICAgIGRpZyAxCiAgICB0eG4gU2VuZGVyCiAgICBiPT0KICAgIGJ6IG1haW5fYm9vbF9mYWxzZUAyOQogICAgaW50Y18yIC8vIDEKCm1haW5fYWZ0ZXJfaWZfZWxzZUAzMToKICAgIGFzc2VydCAvLyBFUkMtMTk2NzogdXBkYXRlIHNlbmRlciBpcyBub3QgdGhlIHByb3h5IGFkbWluCiAgICBpbnRjXzMgLy8gMjQKICAgIGJ6ZXJvCiAgICBnbG9iYWwgQ3VycmVudEFwcGxpY2F0aW9uSUQKICAgIGl0b2IKICAgIGNvbmNhdAogICAgcHVzaGJ5dGVzIDB4MGVjYjJmMzEgLy8gbWV0aG9kICJVcGdyYWRlZChhZGRyZXNzKSIKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzIgLy8gMQogICAgYnVyeSAxCiAgICBiIG1haW5fYWZ0ZXJfaW5saW5lZF8vaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvcHV5YXNvbFJlZ3Jlc3Npb24vY29udHJhY3RzL3RyYW5zcGFyZW50X3Byb3h5X3VuaXQuc29sLlRyYW5zcGFyZW50VXBncmFkZWFibGVQcm94eS5fX3B1eWFfYXJjNF9yb3V0ZXJfX0AxOAoKbWFpbl9ib29sX2ZhbHNlQDI5OgogICAgaW50Y18wIC8vIDAKICAgIGIgbWFpbl9hZnRlcl9pZl9lbHNlQDMxCgoKLy8gX19zb2xmbl80OTAoKSAtPiBieXRlczoKRVJDMTk2N1V0aWxzLmdldEltcGxlbWVudGF0aW9uOgogICAgaW50Y18zIC8vIDI0CiAgICBiemVybwogICAgZ2xvYmFsIEN1cnJlbnRBcHBsaWNhdGlvbklECiAgICBpdG9iCiAgICBjb25jYXQKICAgIHJldHN1YgoKCi8vIF9fc29sZm5fNTUzKG5ld0ltcGxlbWVudGF0aW9uOiBieXRlcywgZGF0YTogYnl0ZXMpIC0+IHZvaWQ6CkVSQzE5NjdVdGlscy51cGdyYWRlVG9BbmRDYWxsOgogICAgcHJvdG8gMiAwCiAgICBlcnIgLy8gRVJDLTE5NjcgdXBncmFkZSBoYXMgbm8gaW4tY29udHJhY3QgbG93ZXJpbmc6IHRoZSBBVk0gdXBncmFkZSBpcyBhIG5hdGl2ZSBVcGRhdGVBcHBsaWNhdGlvbiB0cmFuc2FjdGlvbiBzdWJtaXR0ZWQgYnkgdGhlIGFkbWluIHdpdGggdGhlIG5ldyBjb21waWxlZCBwcm9ncmFtIChzZWUgcHJveHkubWQpCgoKLy8gX19zb2xmbl81NzAoKSAtPiBieXRlczoKRVJDMTk2N1V0aWxzLmdldEFkbWluOgogICAgaW50Y18xIC8vIDMyCiAgICBiemVybwogICAgaW50Y18wIC8vIDAKICAgIGJ5dGVjXzMgLy8gIl9fZXJjMTk2N19hZG1pbiIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBieXRlY18wIC8vIDB4CiAgICBjb3ZlciAyCiAgICBzZWxlY3QKICAgIGNvbmNhdAogICAgZHVwCiAgICBsZW4KICAgIGludGNfMSAvLyAzMgogICAgLQogICAgaW50Y18xIC8vIDMyCiAgICBleHRyYWN0MwogICAgcmV0c3ViCgoKLy8gX19zb2xmbl82MDEobmV3QWRtaW46IGJ5dGVzKSAtPiB2b2lkOgpFUkMxOTY3VXRpbHMuX3NldEFkbWluOgogICAgcHJvdG8gMSAwCiAgICBieXRlY18zIC8vICJfX2VyYzE5NjdfYWRtaW4iCiAgICBmcmFtZV9kaWcgLTEKICAgIGFwcF9nbG9iYWxfcHV0CiAgICByZXRzdWIKCgovLyBfX3NvbGZuXzYyMChuZXdBZG1pbjogYnl0ZXMpIC0+IHZvaWQ6CkVSQzE5NjdVdGlscy5jaGFuZ2VBZG1pbjoKICAgIHByb3RvIDEgMAogICAgY2FsbHN1YiBFUkMxOTY3VXRpbHMuZ2V0QWRtaW4KICAgIGZyYW1lX2RpZyAtMQogICAgY29uY2F0CiAgICBwdXNoYnl0ZXMgMHgyY2VkNWZkNyAvLyBtZXRob2QgIkFkbWluQ2hhbmdlZChhZGRyZXNzLGFkZHJlc3MpIgogICAgc3dhcAogICAgY29uY2F0CiAgICBsb2cKICAgIGZyYW1lX2RpZyAtMQogICAgY2FsbHN1YiBFUkMxOTY3VXRpbHMuX3NldEFkbWluCiAgICByZXRzdWIKCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvcHV5YXNvbFJlZ3Jlc3Npb24vY29udHJhY3RzL3RyYW5zcGFyZW50X3Byb3h5X3VuaXQuc29sLlRyYW5zcGFyZW50VXBncmFkZWFibGVQcm94eS5fX2ZhbGxiYWNrKCkgLT4gdm9pZDoKX19mYWxsYmFjazoKICAgIHByb3RvIDAgMAogICAgdHhuIFNlbmRlcgogICAgaW50Y18wIC8vIDAKICAgIGJ5dGVjXzIgLy8gIl9hZG1pbiIKICAgIGFwcF9nbG9iYWxfZ2V0X2V4CiAgICBieXRlYyA0IC8vIDB4MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMAogICAgY292ZXIgMgogICAgc2VsZWN0CiAgICBkdXAKICAgIGNvdmVyIDIKICAgID09CiAgICBibnogX19mYWxsYmFja19pZl9ib2R5QDQKICAgIGdsb2JhbCBDYWxsZXJBcHBsaWNhdGlvbklECiAgICBieiBfX2ZhbGxiYWNrX2Vsc2VfYm9keUA1OAogICAgaW50Y18zIC8vIDI0CiAgICBiemVybwogICAgZ2xvYmFsIENhbGxlckFwcGxpY2F0aW9uSUQKICAgIGl0b2IKICAgIGNvbmNhdAogICAgZnJhbWVfZGlnIDAKICAgID09CiAgICBieiBfX2ZhbGxiYWNrX2Vsc2VfYm9keUA1OAoKX19mYWxsYmFja19pZl9ib2R5QDQ6CiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAwCiAgICBwdXNoYnl0ZXMgMHg1NzlkYmI0ZCAvLyBtZXRob2QgInVwZ3JhZGVUb0FuZENhbGwoYWRkcmVzcyxieXRlW10pdm9pZCIKICAgICE9CiAgICBieiBfX2ZhbGxiYWNrX2Vsc2VfYm9keUA2CiAgICBwdXNoYnl0ZXMgMHg5NDg1N2ExMCAvLyBtZXRob2QgIlByb3h5RGVuaWVkQWRtaW5BY2Nlc3MoKSIKICAgIGxvZwogICAgZXJyIC8vIFByb3h5RGVuaWVkQWRtaW5BY2Nlc3MKCl9fZmFsbGJhY2tfZWxzZV9ib2R5QDY6CiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDU2CiAgICB0eG4gTnVtQXBwQXJncwogICAgYnogX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDkKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKCl9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUAxMDoKICAgIHR4biBOdW1BcHBBcmdzCiAgICBpbnRjXzIgLy8gMQogICAgPgogICAgYnogX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDEyCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyAxCgpfX2ZhbGxiYWNrX3Rlcm5hcnlfbWVyZ2VAMTM6CiAgICBjb25jYXQKICAgIHR4biBOdW1BcHBBcmdzCiAgICBwdXNoaW50IDIKICAgID4KICAgIGJ6IF9fZmFsbGJhY2tfdGVybmFyeV9mYWxzZUAxNQogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMgoKX19mYWxsYmFja190ZXJuYXJ5X21lcmdlQDE2OgogICAgY29uY2F0CiAgICB0eG4gTnVtQXBwQXJncwogICAgcHVzaGludCAzCiAgICA+CiAgICBieiBfX2ZhbGxiYWNrX3Rlcm5hcnlfZmFsc2VAMTgKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDMKCl9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUAxOToKICAgIGNvbmNhdAogICAgdHhuIE51bUFwcEFyZ3MKICAgIHB1c2hpbnQgNAogICAgPgogICAgYnogX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDIxCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyA0CgpfX2ZhbGxiYWNrX3Rlcm5hcnlfbWVyZ2VAMjI6CiAgICBjb25jYXQKICAgIHR4biBOdW1BcHBBcmdzCiAgICBwdXNoaW50IDUKICAgID4KICAgIGJ6IF9fZmFsbGJhY2tfdGVybmFyeV9mYWxzZUAyNAogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgNQoKX19mYWxsYmFja190ZXJuYXJ5X21lcmdlQDI1OgogICAgY29uY2F0CiAgICB0eG4gTnVtQXBwQXJncwogICAgcHVzaGludCA2CiAgICA+CiAgICBieiBfX2ZhbGxiYWNrX3Rlcm5hcnlfZmFsc2VAMjcKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDYKCl9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUAyODoKICAgIGNvbmNhdAogICAgdHhuIE51bUFwcEFyZ3MKICAgIHB1c2hpbnQgNwogICAgPgogICAgYnogX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDMwCiAgICB0eG5hIEFwcGxpY2F0aW9uQXJncyA3CgpfX2ZhbGxiYWNrX3Rlcm5hcnlfbWVyZ2VAMzE6CiAgICBjb25jYXQKICAgIHR4biBOdW1BcHBBcmdzCiAgICBwdXNoaW50IDgKICAgID4KICAgIGJ6IF9fZmFsbGJhY2tfdGVybmFyeV9mYWxzZUAzMwogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgOAoKX19mYWxsYmFja190ZXJuYXJ5X21lcmdlQDM0OgogICAgY29uY2F0CiAgICB0eG4gTnVtQXBwQXJncwogICAgcHVzaGludCA5CiAgICA+CiAgICBieiBfX2ZhbGxiYWNrX3Rlcm5hcnlfZmFsc2VAMzYKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDkKCl9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUAzNzoKICAgIGNvbmNhdAogICAgdHhuIE51bUFwcEFyZ3MKICAgIHB1c2hpbnQgMTAKICAgID4KICAgIGJ6IF9fZmFsbGJhY2tfdGVybmFyeV9mYWxzZUAzOQogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMTAKCl9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUA0MDoKICAgIGNvbmNhdAogICAgdHhuIE51bUFwcEFyZ3MKICAgIHB1c2hpbnQgMTEKICAgID4KICAgIGJ6IF9fZmFsbGJhY2tfdGVybmFyeV9mYWxzZUA0MgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMTEKCl9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUA0MzoKICAgIGNvbmNhdAogICAgdHhuIE51bUFwcEFyZ3MKICAgIHB1c2hpbnQgMTIKICAgID4KICAgIGJ6IF9fZmFsbGJhY2tfdGVybmFyeV9mYWxzZUA0NQogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMTIKCl9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUA0NjoKICAgIGNvbmNhdAogICAgdHhuIE51bUFwcEFyZ3MKICAgIHB1c2hpbnQgMTMKICAgID4KICAgIGJ6IF9fZmFsbGJhY2tfdGVybmFyeV9mYWxzZUA0OAogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMTMKCl9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUA0OToKICAgIGNvbmNhdAogICAgdHhuIE51bUFwcEFyZ3MKICAgIHB1c2hpbnQgMTQKICAgID4KICAgIGJ6IF9fZmFsbGJhY2tfdGVybmFyeV9mYWxzZUA1MQogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMTQKCl9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUA1MjoKICAgIGNvbmNhdAogICAgdHhuIE51bUFwcEFyZ3MKICAgIHB1c2hpbnQgMTUKICAgID4KICAgIGJ6IF9fZmFsbGJhY2tfdGVybmFyeV9mYWxzZUA1NAogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMTUKCl9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUA1NToKICAgIGNvbmNhdAoKX19mYWxsYmFja190ZXJuYXJ5X21lcmdlQDU3OgogICAgZHVwCiAgICBsZW4KICAgIHB1c2hpbnQgNAogICAgPj0KICAgIGFzc2VydCAvLyBzbGljZTogc3RhcnQgPiBlbmQKICAgIGR1cAogICAgZXh0cmFjdCA0IDAKICAgIGR1cAogICAgbGVuCiAgICBpbnRjXzEgLy8gMzIKICAgIGRpZyAxCiAgICA8PQogICAgYXNzZXJ0IC8vIEVWTSBBQkkgZGVjb2RlIG91dCBvZiBib3VuZHMKICAgIGRpZyAyCiAgICBleHRyYWN0IDQgMzIKICAgIGR1cAogICAgZXh0cmFjdCAwIDEyCiAgICBwdXNoaW50IDEyCiAgICBiemVybwogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIEVWTSBBQkkgYWRkcmVzcyBwYWRkaW5nCiAgICBwdXNoaW50IDY0CiAgICBkaWcgMgogICAgPD0KICAgIGFzc2VydCAvLyBFVk0gQUJJIGRlY29kZSBvdXQgb2YgYm91bmRzCiAgICB1bmNvdmVyIDMKICAgIGV4dHJhY3QgMzYgMzIKICAgIGR1cAogICAgZXh0cmFjdCAwIDI0CiAgICBieXRlY18wIC8vIDB4CiAgICBiPT0KICAgIGFzc2VydCAvLyBFVk0gQUJJIG9mZnNldCBleGNlZWRzIHVpbnQ2NAogICAgaW50Y18zIC8vIDI0CiAgICBleHRyYWN0X3VpbnQ2NAogICAgZHVwCiAgICBpbnRjXzEgLy8gMzIKICAgICUKICAgICEKICAgIGFzc2VydCAvLyB1bmFsaWduZWQgRVZNIEFCSSBvZmZzZXQKICAgIGR1cAogICAgaW50Y18xIC8vIDMyCiAgICArCiAgICBkdXAKICAgIGRpZyA0CiAgICA8PQogICAgYXNzZXJ0IC8vIEVWTSBBQkkgZGVjb2RlIG91dCBvZiBib3VuZHMKICAgIGRpZyA0CiAgICB1bmNvdmVyIDIKICAgIGludGNfMSAvLyAzMgogICAgZXh0cmFjdDMKICAgIGR1cAogICAgZXh0cmFjdCAwIDI0CiAgICBieXRlY18wIC8vIDB4CiAgICBiPT0KICAgIGFzc2VydCAvLyBFVk0gQUJJIGxlbmd0aCBleGNlZWRzIHVpbnQ2NAogICAgaW50Y18zIC8vIDI0CiAgICBleHRyYWN0X3VpbnQ2NAogICAgZHVwCiAgICBwdXNoaW50IDY1NTM1CiAgICA8PQogICAgYXNzZXJ0IC8vIEVWTSBBQkkgYnl0ZSBzZXF1ZW5jZSBleGNlZWRzIEFSQzQgdWludDE2IGxlbmd0aAogICAgZHVwMgogICAgKwogICAgdW5jb3ZlciA0CiAgICA8PQogICAgYXNzZXJ0IC8vIEVWTSBBQkkgZGVjb2RlIG91dCBvZiBib3VuZHMKICAgIHVuY292ZXIgMwogICAgY292ZXIgMgogICAgZXh0cmFjdDMKICAgIGNhbGxzdWIgRVJDMTk2N1V0aWxzLnVwZ3JhZGVUb0FuZENhbGwKICAgIHJldHN1YgoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDU0OgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUA1NQoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDUxOgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUA1MgoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDQ4OgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUA0OQoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDQ1OgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUA0NgoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDQyOgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUA0MwoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDM5OgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUA0MAoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDM2OgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUAzNwoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDMzOgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUAzNAoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDMwOgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUAzMQoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDI3OgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUAyOAoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDI0OgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUAyNQoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDIxOgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUAyMgoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDE4OgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUAxOQoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDE1OgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUAxNgoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDEyOgogICAgaW50Y18wIC8vIDAKICAgIGJ6ZXJvCiAgICBiIF9fZmFsbGJhY2tfdGVybmFyeV9tZXJnZUAxMwoKX19mYWxsYmFja190ZXJuYXJ5X2ZhbHNlQDk6CiAgICBpbnRjXzAgLy8gMAogICAgYnplcm8KICAgIGIgX19mYWxsYmFja190ZXJuYXJ5X21lcmdlQDEwCgpfX2ZhbGxiYWNrX3Rlcm5hcnlfZmFsc2VANTY6CiAgICBpbnRjXzAgLy8gMAogICAgYnplcm8KICAgIGIgX19mYWxsYmFja190ZXJuYXJ5X21lcmdlQDU3CgpfX2ZhbGxiYWNrX2Vsc2VfYm9keUA1ODoKICAgIGNhbGxzdWIgRVJDMTk2N1V0aWxzLmdldEltcGxlbWVudGF0aW9uCiAgICBwb3AKICAgIGVyciAvLyBwcm94eSBkZWxlZ2F0aW9uIGhhcyBubyBBVk0gbG93ZXJpbmc6IHRoZSBwcm94eSBhbmQgaXRzIGltcGxlbWVudGF0aW9uIGNvbGxhcHNlIHRvIE9ORSB1cGRhdGFibGUgYXBwbGljYXRpb24g4oCUIGRlcGxveSB0aGUgaW1wbGVtZW50YXRpb24gY29udHJhY3QgKHNlZSBwcm94eS5tZCkK",
+        "clear": "I3ByYWdtYSB2ZXJzaW9uIDEyCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvcHV5YXNvbFJlZ3Jlc3Npb24vY29udHJhY3RzL3RyYW5zcGFyZW50X3Byb3h5X3VuaXQuc29sLlRyYW5zcGFyZW50VXBncmFkZWFibGVQcm94eS5jbGVhcl9zdGF0ZV9wcm9ncmFtKCkgLT4gdWludDY0OgptYWluOgogICAgcHVzaGludCAxCiAgICByZXR1cm4K"
+    },
+    "byteCode": {
+        "approval": "DCAFACABGMCEPSYHAA5fX2N0b3JfcGVuZGluZwZfYWRtaW4PX19lcmMxOTY3X2FkbWluIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgIo4qUDHAYCKOKlAxwiSSiBgCCvSTUFSTUASTUBSTUCSTUDNQQ0AIAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBcQDUAMRhAAAUpJGckQzEbQAAKMRlAAAWIAZ4kQ4AEZ65wQjYaAI4BAOkxGRREMRhBABWCAgQ/6a8+BBv5iCs2GgCOAgAcABMiRQFJQAALMRlAAAaIAWIkRQFDiAFbJEUBQv/nNhoBSRUjEkQ2GgJJFSMSRDYaA0kiWYECCEsBFRJEVwIAKWREMQAyCRJEKSJnKicEZ08CTIgA6bEnBScGgQayEIEQsjSBELI1IrIBgQOyOLIfsh5JshqztD1yCEixJLIQsgcisgEhBLIIs7EnBScGgQayEIEQsjSBELI1IrIBgQOyOLIfsh6yGrO0PUlyCEixJLIQsgcisgEhBLIIsyWvTBZQKksBZ4gAlCRFAUL/ODEZgQQSMRgQRCIrZShOAk1JRQQxAKhJQAA2SwMoqUEAL0sDgAj//////////6ZBAB9II69LA1BJFSMJI1glW3IITEUDQQAfSwExAKhBABckRCWvMggWUIAEDssvMUxQsCRFAUL+0iJC/+YlrzIIFlCJigIAACOvIitlKE4CTVBJFSMJI1iJigEAK4v/Z4mKAQCI/+GL/1CABCztX9dMULCL/4j/4YmKAAAxACIqZScETgJNSU4CEkAAETINQQGbJa8yDRZQiwASQQGPNhoAgARXnbtNE0EACIAElIV6ELAAMRtBAXAxG0EBZjYaADEbJA1BAVc2GgFQMRuBAg1BAUY2GgJQMRuBAw1BATU2GgNQMRuBBA1BASQ2GgRQMRuBBQ1BARM2GgVQMRuBBg1BAQI2GgZQMRuBBw1BAPE2GgdQMRuBCA1BAOA2GghQMRuBCQ1BAM82GglQMRuBCg1BAL42GgpQMRuBCw1BAK02GgtQMRuBDA1BAJw2GgxQMRuBDQ1BAIs2Gg1QMRuBDg1BAHo2Gg5QMRuBDw1BAGk2Gg9QSRWBBA9ESVcEAEkVI0sBDkRLAlcEIElXAAyBDK8SRIFASwIORE8DVyQgSVcAGCioRCVbSSMYFERJIwhJSwQOREsETwIjWElXABgoqEQlW0mB//8DDkRKCE8EDkRPA04CWIj+bYkir0L/lSKvQv+EIq9C/3Mir0L/YiKvQv9RIq9C/0Air0L/LyKvQv8eIq9C/w0ir0L+/CKvQv7rIq9C/toir0L+ySKvQv64Iq9C/qcir0L+mCKvQv9GiP4NSAA=",
+        "clear": "DIEBQw=="
+    },
+    "compilerInfo": {
+        "compiler": "puya",
+        "compilerVersion": {
+            "major": 5,
+            "minor": 10,
+            "patch": 0
+        }
+    },
+    "events": [
+        {
+            "name": "AdminChanged",
+            "args": [
+                {
+                    "type": "address",
+                    "name": "previousAdmin"
+                },
+                {
+                    "type": "address",
+                    "name": "newAdmin"
+                }
+            ]
+        },
+        {
+            "name": "Upgraded",
+            "args": [
+                {
+                    "type": "address",
+                    "name": "implementation"
+                }
+            ]
+        }
+    ],
+    "templateVariables": {
+        "APPROVAL_ProxyAdmin": {
+            "type": "AVMBytes",
+            "value": "AijipQMc"
+        },
+        "CLEAR_ProxyAdmin": {
+            "type": "AVMBytes",
+            "value": "AijipQMc"
+        }
+    }
+}

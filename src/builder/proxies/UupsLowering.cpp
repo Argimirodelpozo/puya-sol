@@ -25,6 +25,12 @@ bool inUupsBase(solidity::frontend::FunctionDefinition const& _func)
 UupsFold UupsLowering::classify(
 	solidity::frontend::FunctionDefinition const& _func)
 {
+	// OZ Proxy's delegation core (transparent/1967 proxies inherit it).
+	if (auto const* scope =
+			dynamic_cast<solidity::frontend::ContractDefinition const*>(
+				_func.scope());
+		scope && scope->name() == "Proxy" && _func.name() == "_delegate")
+		return UupsFold::TrapDelegate;
 	if (!inUupsBase(_func))
 		return UupsFold::None;
 	auto const& name = _func.name();
@@ -49,13 +55,20 @@ std::shared_ptr<awst::Block> UupsLowering::foldedBody(
 	UupsFold _fold, awst::SourceLocation const& _loc)
 {
 	auto body = awst::makeBlock(_loc);
+	// assert(false) is terminal to puya — no return after a trap.
 	if (_fold == UupsFold::Trap)
-		// assert(false) is terminal to puya — no return after it.
 		body->body.push_back(awst::makeExpressionStatement(
 			awst::makeAssert(awst::makeFalse(_loc), _loc,
 				"UUPS upgradeToAndCall has no in-contract lowering: the AVM "
 				"upgrade is a native UpdateApplication transaction gated by "
 				"_authorizeUpgrade (see proxy.md)"),
+			_loc));
+	else if (_fold == UupsFold::TrapDelegate)
+		body->body.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(awst::makeFalse(_loc), _loc,
+				"proxy delegation has no AVM lowering: the proxy and its "
+				"implementation collapse to ONE updatable application — "
+				"deploy the implementation contract (see proxy.md)"),
 			_loc));
 	else
 		body->body.push_back(awst::makeReturnStatement(nullptr, _loc));

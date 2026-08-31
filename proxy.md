@@ -131,7 +131,20 @@ is identical to §1. The admin check that transparent proxies do in the
 fallback becomes the update-branch sender check.
 
 **Replay: ✅** (same as §1 — CCTP v2's `AdminUpgradableProxy` is this
-pattern). **Compile: 🔶** subsumed by §1.
+pattern). **Compile: ✅** — implementations were always §1's case (the
+machinery lives in the proxy, not the impl); the residual gap was that a
+unit CONTAINING the OZ proxy contracts died on the fallback's asm
+delegatecall. `Proxy._delegate` now folds to an honest trap
+(`UupsLowering::TrapDelegate`), so the whole trio
+(ERC1967Proxy/TransparentUpgradeableProxy/ProxyAdmin) compiles; deploying
+a proxy at runtime (factory path) fails loud with the doctrine message
+rather than silently no-oping. The ProxyAdmin topology lives in §1's gate
+(contract-form admin: the sender is the admin app's escrow driving an
+inner UpdateApplication). Guard:
+`puyasolRegression/test_transparent_proxy.py` over a flattened OZ v5
+closure. Not lowered (future, shared with §5): `new ERC1967Proxy(impl,
+data)` as a CHILD-APP CREATE of the implementation — needs runtime
+program cloning (app_params_get AppApprovalProgram), the clones path.
 
 ---
 

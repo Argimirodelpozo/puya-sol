@@ -1,0 +1,115 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/transparent_proxy_unit.sol.ERC1967Proxy.approval_program() -> uint64:
+main:
+    intcblock 1 0
+    bytecblock "__ctor_pending"
+    pushbytes ""
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_0 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn NumAppArgs
+    bnz main_after_if_else@5
+    txn OnCompletion
+    bnz main_after_if_else@5
+
+main_if_body@4:
+    callsub ERC1967Utils.getImplementation
+    pop
+    err // proxy delegation has no AVM lowering: the proxy and its implementation collapse to ONE updatable application — deploy the implementation contract (see proxy.md)
+
+main_after_if_else@5:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    bz main_after_if_else@15
+    pushbytess 0xb4b677d2 0x1bf9882b // method "__postInit(address,byte[])void", method "__fallback()void"
+    txna ApplicationArgs 0
+    match main___postInit_route@11 main_if_body@4
+
+main_after_if_else@15:
+    intc_1 // 0
+    bury 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/transparent_proxy_unit.sol.ERC1967Proxy.__puya_arc4_router__@16:
+    dup
+    bnz main_after_if_else@8
+    txn OnCompletion
+    bz main_if_body@4
+
+main_after_if_else@8:
+    return
+
+main___postInit_route@11:
+    txna ApplicationArgs 1
+    dup
+    len
+    pushint 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    bytec_0 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_0 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    callsub ERC1967Utils.upgradeToAndCall
+    intc_0 // 1
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/transparent_proxy_unit.sol.ERC1967Proxy.__puya_arc4_router__@16
+
+
+// __solfn_490() -> bytes:
+ERC1967Utils.getImplementation:
+    pushint 24
+    bzero
+    global CurrentApplicationID
+    itob
+    concat
+    retsub
+
+
+// __solfn_553(newImplementation: bytes, data: bytes) -> void:
+ERC1967Utils.upgradeToAndCall:
+    proto 2 0
+    err // ERC-1967 upgrade has no in-contract lowering: the AVM upgrade is a native UpdateApplication transaction submitted by the admin with the new compiled program (see proxy.md)

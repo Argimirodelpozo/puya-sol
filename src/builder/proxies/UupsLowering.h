@@ -37,6 +37,13 @@ enum class UupsFold
 	EmptyBody,
 	/// upgradeTo(AndCall) / _upgradeToAndCallUUPS: body → runtime trap.
 	Trap,
+	/// OZ Proxy._delegate (the delegation core every OZ proxy inherits —
+	/// ERC1967Proxy, TransparentUpgradeableProxy): body → runtime trap. The
+	/// proxy/implementation pair collapses to ONE updatable app (proxy.md
+	/// §1/§2); a standalone proxy contract has nothing to delegate to, and
+	/// folding here lets units CONTAINING proxy contracts compile instead of
+	/// hard-erroring on the fallback's asm delegatecall.
+	TrapDelegate,
 };
 
 class UupsLowering
