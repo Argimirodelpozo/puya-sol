@@ -28,18 +28,20 @@ main:
 
 main_after_if_else@2:
     txn NumAppArgs
-    bnz main_after_if_else@4
+    bnz main_after_if_else@5
+    txn OnCompletion
+    bnz main_after_if_else@5
     bytec_0 // 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000a6e6f5f7265636569766500000000000000000000000000000000000000000000
     log
     err // no_receive
 
-main_after_if_else@4:
+main_after_if_else@5:
     pushbytes 0xc599eb05 // method "__receive()void"
     txna ApplicationArgs 0
-    match main___receive_route@6
+    match main___receive_route@7
     err
 
-main___receive_route@6:
+main___receive_route@7:
     txn OnCompletion
     !
     txn ApplicationID

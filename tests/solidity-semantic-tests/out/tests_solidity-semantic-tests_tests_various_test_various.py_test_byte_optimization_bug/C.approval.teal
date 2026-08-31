@@ -4,9 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/byte_optimization_bug.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
-    intc_2 // 0
-    bytec_0 // ""
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -43,7 +41,6 @@ main_after_if_else@2:
 main_g_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -63,7 +60,7 @@ main_ternary_merge@13:
     intc_0 // 32
     bzero
     dup
-    dig 3
+    uncover 2
     concat
     dup
     len
@@ -74,7 +71,7 @@ main_ternary_merge@13:
     extract 31 1
     load 0
     store 0
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -82,7 +79,7 @@ main_ternary_merge@13:
     <=
     assert // overflow
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -96,7 +93,6 @@ main_ternary_false@12:
 main_f_route@5:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -113,29 +109,28 @@ main_ternary_merge@19:
     assert // not payable
     load 0
     store 0
+    dup
+    pushbytes 0x20
+    b<
+    bz main_ternary_false@21
     intc_3 // 8
     bzero
-    dig 2
+    swap
     concat
     dup
     len
     intc_3 // 8
     -
     extract_uint64
-    dup
-    bury 2
-    intc_0 // 32
-    <
-    bz main_ternary_false@21
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000001f
-    dig 1
+    swap
     intc_1 // 1
     extract3
 
 main_ternary_merge@22:
     load 0
     store 0
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -145,7 +140,7 @@ main_ternary_merge@22:
     intc_0 // 32
     bzero
     b|
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -153,7 +148,8 @@ main_ternary_merge@22:
     return
 
 main_ternary_false@21:
-    bytec_0 // 0x
+    pop
+    pushbytes 0x
     b main_ternary_merge@22
 
 main_ternary_false@18:

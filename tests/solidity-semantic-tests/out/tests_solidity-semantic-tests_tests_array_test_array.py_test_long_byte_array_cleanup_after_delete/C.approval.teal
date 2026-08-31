@@ -4,9 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "testArray" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75 "__ctor_pending" "s:" 0x0000000000000000000000000000000000000000000000000000000000000000
-    intc_2 // 0
-    dup
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "testArray" 0x151f7c75 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "__ctor_pending" 0x4fa0465e "s:" 0x0000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -34,150 +32,56 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@10
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@10
+    pushbytess 0x2d72361b 0xf460473e 0xe9cafac2 0x0221974e
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8
+
+main_after_if_else@10:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x4fa0465e 0xa3e4ca32 0xc81142a1 0x2bbf0199 0x58d0419e 0xc67bf355 // method "__postInit()void", method "getArrayDataAreaSlot()uint256", method "getCanarySlot()uint256", method "checkSlots()(uint256,uint256,uint256,uint256,uint256)", method "fillArray()void", method "deleteArray()void", method "canaryValue()uint256"
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    bytec 5 // method "getArrayDataAreaSlot()uint256"
+    pushbytess 0xa3e4ca32 0xc81142a1 0x2bbf0199 0x58d0419e 0xc67bf355 // method "getCanarySlot()uint256", method "checkSlots()(uint256,uint256,uint256,uint256,uint256)", method "fillArray()void", method "deleteArray()void", method "canaryValue()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_getArrayDataAreaSlot_route@6 main_getCanarySlot_route@7 main_checkSlots_route@8 main_fillArray_route@9 main_deleteArray_route@10 main_canaryValue_route@11
+    match main___postInit_route@13 main_getArrayDataAreaSlot_route@14 main_getCanarySlot_route@15 main_checkSlots_route@16 main_fillArray_route@17 main_deleteArray_route@18 main_canaryValue_route@19
     err
 
-main_canaryValue_route@11:
-    txn GroupIndex
-    bz main_ternary_false@17
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@18:
-    !
-    assert // not payable
-    callsub getCanary
-    callsub __storage_read
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_3 // 0x151f7c75
+main_canaryValue_route@19:
+    callsub canaryValue
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@17:
-    intc_2 // 0
-    b main_ternary_merge@18
-
-main_deleteArray_route@10:
-    txn GroupIndex
-    bz main_ternary_false@22
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@23:
-    !
-    assert // not payable
-    bytec_1 // "testArray"
-    box_del
-    pop
-    bytec_1 // "testArray"
-    pushbytes 0x
-    box_put
+main_deleteArray_route@18:
+    callsub deleteArray
     intc_1 // 1
     return
 
-main_ternary_false@22:
-    intc_2 // 0
-    b main_ternary_merge@23
-
-main_fillArray_route@9:
-    txn GroupIndex
-    bz main_ternary_false@27
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@28:
-    !
-    assert // not payable
-    intc_2 // 0
-    itob
-    bury 1
-
-main_while_top@29:
-    pushint 96
-    itob
-    dig 1
-    b>
-    bz main_after_inlined___puyasol___storage_write@45
-    bytec_1 // "testArray"
-    box_get
-    assert // box exists
-    intc_3 // 8
-    bzero
-    intc_1 // 1
-    itob
-    dig 3
-    dup
-    cover 4
-    b+
-    dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    pushint 255
-    &
-    itob
-    extract 7 1
-    concat
-    bytec_1 // "testArray"
-    box_del
-    pop
-    bytec_1 // "testArray"
-    swap
-    box_put
-    pushbytes 0x01
-    b+
-    dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    bury 1
-    b main_while_top@29
-
-main_after_inlined___puyasol___storage_write@45:
+main_fillArray_route@17:
+    callsub fillArray
     intc_1 // 1
     return
 
-main_ternary_false@27:
-    intc_2 // 0
-    b main_ternary_merge@28
-
-main_checkSlots_route@8:
+main_checkSlots_route@16:
     txn GroupIndex
-    bz main_ternary_false@35
+    bz main_ternary_false@31
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@36:
+main_ternary_merge@32:
     !
     assert // not payable
     callsub getArrayDataAreaSlot
@@ -270,68 +174,43 @@ main_ternary_merge@36:
     concat
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@35:
+main_ternary_false@31:
     intc_2 // 0
-    b main_ternary_merge@36
+    b main_ternary_merge@32
 
-main_getCanarySlot_route@7:
-    txn GroupIndex
-    bz main_ternary_false@40
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@41:
-    !
-    assert // not payable
-    callsub getArrayDataAreaSlot
-    pushint 3
-    itob
-    b+
-    dup
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_3 // 0x151f7c75
+main_getCanarySlot_route@15:
+    callsub getCanarySlot
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@40:
-    intc_2 // 0
-    b main_ternary_merge@41
-
-main_getArrayDataAreaSlot_route@6:
+main_getArrayDataAreaSlot_route@14:
     callsub getArrayDataAreaSlot
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main___postInit_route@5:
+main___postInit_route@13:
     bytec 4 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
     bytec 4 // "__ctor_pending"
     intc_2 // 0
     app_global_put
@@ -339,23 +218,26 @@ main___postInit_route@5:
     intc_2 // 0
     box_create
     pop
-    callsub getCanary
+    callsub __solfn_13
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bury 3
     pushbytes 0x
     b==
-    bz main_else_body@44
+    bz main_else_body@35
+    pop
     bytec_1 // "testArray"
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    app_global_put
-    b main_after_inlined___puyasol___storage_write@45
+    pushint 18446744073709551615
+    box_resize
 
-main_else_body@44:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.__storage_write@36:
+    intc_1 // 1
+    return
+
+main_else_body@35:
     intc_0 // 32
     bzero
-    dig 2
+    swap
     concat
     dup
     len
@@ -363,7 +245,7 @@ main_else_body@44:
     -
     intc_0 // 32
     extract3
-    bytec 5 // "s:"
+    bytec 6 // "s:"
     swap
     concat
     dup
@@ -371,12 +253,66 @@ main_else_body@44:
     box_create
     pop
     intc_2 // 0
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     box_replace
-    b main_after_inlined___puyasol___storage_write@45
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.__storage_write@36
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub canaryValue
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    callsub deleteArray
+    bytec_2 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub fillArray
+    bytec_2 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub getCanarySlot
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
 
-// __puyasol___storage_read(__slot: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.__storage_read(__slot: bytes) -> bytes:
 __storage_read:
     proto 1 1
     frame_dig -1
@@ -387,17 +323,10 @@ __storage_read:
     pushbytes 0x
     b==
     bz __storage_read_else_body@2
-    intc_0 // 32
-    bzero
     bytec_1 // "testArray"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    box_len
+    assert // box exists
+    itob
     retsub
 
 __storage_read_else_body@2:
@@ -411,7 +340,7 @@ __storage_read_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec 5 // "s:"
+    bytec 6 // "s:"
     swap
     concat
     dup
@@ -424,12 +353,12 @@ __storage_read_else_body@2:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.getCanary() -> bytes:
-getCanary:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.__solfn_13() -> bytes:
+__solfn_13:
     load 0
     store 0
     load 0
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     store 0
     load 0
@@ -440,20 +369,28 @@ getCanary:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.getArrayDataAreaSlot() -> bytes:
 getArrayDataAreaSlot:
+    txn NumAppArgs
+    bz getArrayDataAreaSlot_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 5 // method "getArrayDataAreaSlot()uint256"
+    ==
+    bz getArrayDataAreaSlot_after_if_else@6
     txn GroupIndex
-    bz getArrayDataAreaSlot_ternary_false@2
+    bz getArrayDataAreaSlot_ternary_false@4
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-getArrayDataAreaSlot_ternary_merge@3:
+getArrayDataAreaSlot_ternary_merge@5:
     !
     assert // not payable
+
+getArrayDataAreaSlot_after_if_else@6:
     load 0
     store 0
     load 0
-    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x0000000000000000000000000000000000000000000000000000000000000000
     replace2 0
     store 0
     load 0
@@ -461,6 +398,182 @@ getArrayDataAreaSlot_ternary_merge@3:
     pushbytes 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
     retsub
 
-getArrayDataAreaSlot_ternary_false@2:
+getArrayDataAreaSlot_ternary_false@4:
     intc_2 // 0
-    b getArrayDataAreaSlot_ternary_merge@3
+    b getArrayDataAreaSlot_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.getCanarySlot() -> bytes:
+getCanarySlot:
+    txn GroupIndex
+    bz getCanarySlot_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getCanarySlot_ternary_merge@3:
+    !
+    assert // not payable
+    callsub getArrayDataAreaSlot
+    pushint 3
+    itob
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+getCanarySlot_ternary_false@2:
+    intc_2 // 0
+    b getCanarySlot_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.fillArray() -> void:
+fillArray:
+    proto 0 0
+    txn GroupIndex
+    bz fillArray_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+fillArray_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+
+fillArray_while_top@4:
+    pushint 96
+    itob
+    dig 1
+    b>
+    bz fillArray_after_while@6
+    bytec_1 // "testArray"
+    box_get
+    assert // box exists
+    intc_3 // 8
+    bzero
+    intc_1 // 1
+    itob
+    dig 3
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 255
+    &
+    itob
+    extract 7 1
+    concat
+    bytec_1 // "testArray"
+    box_del
+    pop
+    bytec_1 // "testArray"
+    swap
+    box_put
+    pushbytes 0x01
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b fillArray_while_top@4
+
+fillArray_after_while@6:
+    retsub
+
+fillArray_ternary_false@2:
+    intc_2 // 0
+    b fillArray_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.deleteArray() -> void:
+deleteArray:
+    txn GroupIndex
+    bz deleteArray_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+deleteArray_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "testArray"
+    box_del
+    pop
+    bytec_1 // "testArray"
+    pushbytes 0x
+    box_put
+    retsub
+
+deleteArray_ternary_false@2:
+    intc_2 // 0
+    b deleteArray_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.canaryValue() -> bytes:
+canaryValue:
+    txn GroupIndex
+    bz canaryValue_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+canaryValue_ternary_merge@3:
+    !
+    assert // not payable
+    callsub __solfn_13
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+canaryValue_ternary_false@2:
+    intc_2 // 0
+    b canaryValue_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/long_byte_array_cleanup_after_delete.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

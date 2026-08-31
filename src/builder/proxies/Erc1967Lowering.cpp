@@ -3,8 +3,12 @@
 
 #include "builder/proxies/Erc1967Lowering.h"
 
+#include "builder/BuildArtifacts.h"
+#include "builder/sol-types/TypeCoercion.h"
 #include "awst/Visit.h"
 #include "Logger.h"
+
+#include <libsolidity/ast/AST.h>
 
 namespace puyasol::builder::proxies
 {
@@ -87,6 +91,98 @@ std::shared_ptr<awst::Expression> senderAsBiguint(awst::SourceLocation const& _l
 }
 
 } // namespace
+
+std::shared_ptr<awst::Statement> Erc1967Lowering::upgradedEvent(
+	awst::SourceLocation const& _loc)
+{
+	return upgradedEventStatement(_loc);
+}
+
+Erc1967Lowering::UtilsFold Erc1967Lowering::classifyUtilsFunction(
+	solidity::frontend::FunctionDefinition const& _func)
+{
+	auto const* scope = dynamic_cast<solidity::frontend::ContractDefinition const*>(
+		_func.scope());
+	if (!scope || !scope->isLibrary() || scope->name() != "ERC1967Utils")
+		return UtilsFold::None;
+	auto const& name = _func.name();
+	if (name == "getImplementation")
+		return UtilsFold::ImplementationLoad;
+	if (name == "getAdmin")
+		return UtilsFold::AdminLoad;
+	if (name == "_setAdmin")
+		return UtilsFold::AdminStore;
+	if (name == "_setImplementation" || name == "upgradeToAndCall")
+		return UtilsFold::TrapImplementation;
+	if (name == "getBeacon" || name == "_setBeacon"
+		|| name == "upgradeBeaconToAndCall")
+		return UtilsFold::TrapBeacon;
+	return UtilsFold::None;
+}
+
+std::shared_ptr<awst::Block> Erc1967Lowering::utilsFoldBody(
+	UtilsFold _fold,
+	awst::WType const* _returnType,
+	std::vector<awst::SubroutineArgument> const& _args,
+	BuildArtifacts& _artifacts,
+	awst::SourceLocation const& _loc)
+{
+	auto body = awst::makeBlock(_loc);
+	auto returnDefault = [&] {
+		body->body.push_back(awst::makeReturnStatement(
+			_returnType == awst::WType::voidType()
+				? nullptr
+				: TypeCoercion::makeDefaultValue(_returnType, _loc),
+			_loc));
+	};
+	switch (_fold)
+	{
+	case UtilsFold::ImplementationLoad:
+		body->body.push_back(awst::makeReturnStatement(
+			awst::makeReinterpretCast(
+				ownIdentityBytes(_loc), _returnType, _loc),
+			_loc));
+		break;
+	case UtilsFold::AdminLoad:
+		_artifacts.noteErc1967AdminUse();
+		body->body.push_back(awst::makeReturnStatement(
+			awst::makeReinterpretCast(
+				awst::makeLeftPadToN(
+					awst::makeAsBytes(adminLoad(_loc), _loc), 32, _loc),
+				_returnType, _loc),
+			_loc));
+		break;
+	case UtilsFold::AdminStore:
+	{
+		_artifacts.noteErc1967AdminUse();
+		std::shared_ptr<awst::Expression> value = _args.empty()
+			? std::shared_ptr<awst::Expression>(
+				awst::makeBiguintConstant("0", _loc))
+			: std::shared_ptr<awst::Expression>(awst::makeAsBiguint(
+				awst::makeReinterpretCast(
+					awst::makeVarExpression(
+						_args[0].name, _args[0].wtype, _loc),
+					awst::WType::bytesType(), _loc),
+				_loc));
+		adminStore(std::move(value), _loc, body->body);
+		returnDefault();
+		break;
+	}
+	case UtilsFold::TrapImplementation:
+	case UtilsFold::TrapBeacon:
+		// assert(false) is terminal to puya — no return after it.
+		body->body.push_back(trapStatement(
+			_fold == UtilsFold::TrapImplementation
+				? Erc1967Slot::Implementation
+				: Erc1967Slot::Beacon,
+			/*_isStore=*/true, _loc));
+		break;
+	case UtilsFold::None:
+		returnDefault();
+		break;
+	}
+	return body;
+}
 
 Erc1967Slot Erc1967Lowering::classify(awst::Expression const* _slotExpr)
 {

@@ -13,6 +13,7 @@
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/itxn/CallResolver.h"
+#include "builder/proxies/UupsLowering.h"
 #include "builder/sol-types/OverloadSuffix.h"
 #include "builder/sol-types/RefParamPassing.h"
 #include "builder/sol-types/SolIntType.h"
@@ -1044,7 +1045,16 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		m_functionCtx->frameIsProgram =
 			_func.visibility() == solidity::frontend::Visibility::Internal
 			|| _func.visibility() == solidity::frontend::Visibility::Private;
-		method.body = buildBlock(_func.body());
+		// UUPS recognized-idiom folds (proxy.md §3): the OZ UUPSUpgradeable
+		// context checks pass and the in-contract upgrade path traps; the
+		// real bodies would drag delegatecall + escaped-1967-slot storage
+		// into the demand graph.
+		if (auto fold = proxies::UupsLowering::classify(_func);
+			fold != proxies::UupsFold::None)
+			method.body = proxies::UupsLowering::foldedBody(
+				fold, method.sourceLocation);
+		else
+			method.body = buildBlock(_func.body());
 		m_functionCtx->inConstructor = false;
 		m_functionCtx->callableId = 0;
 		m_functionCtx->frameIsProgram = false;

@@ -1,0 +1,375 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dowhile_braceless.sol.DoWhileBraceless.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 3
+    bytecblock 0x151f7c75 "n" 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_1 // "n"
+    bytec_2 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@10
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@10
+    pushbytess 0x2f96126e 0x8c8abbb2 0x32851fe4 0x2e52d606
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8
+
+main_after_if_else@10:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x515df0a3 0x21e91346 0x842b72fb 0x962f3a43 // method "bracelessSideEffectCond()uint256", method "bracelessSimple()uint256", method "bracelessReturn(uint256)uint256", method "n()uint256"
+    txna ApplicationArgs 0
+    match main_bracelessSideEffectCond_route@13 main_bracelessSimple_route@14 main_bracelessReturn_route@15 main_n_route@16
+    err
+
+main_n_route@16:
+    callsub n
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bracelessReturn_route@15:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub bracelessReturn
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bracelessSimple_route@14:
+    callsub bracelessSimple
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bracelessSideEffectCond_route@13:
+    callsub bracelessSideEffectCond
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub n
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    callsub bracelessReturn
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub bracelessSimple
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub bracelessSideEffectCond
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dowhile_braceless.sol.DoWhileBraceless.bracelessSideEffectCond() -> bytes:
+bracelessSideEffectCond:
+    txn GroupIndex
+    bz bracelessSideEffectCond_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+bracelessSideEffectCond_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_2 // 0x
+
+bracelessSideEffectCond_while_top@4:
+    pushbytes 0x0a
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    intc_2 // 0
+    bytec_1 // "n"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
+    pushbytes 0x01
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_1 // "n"
+    dig 1
+    app_global_put
+    intc_3 // 3
+    itob
+    b<
+    bnz bracelessSideEffectCond_after_if_else@7
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+bracelessSideEffectCond_after_if_else@7:
+    b bracelessSideEffectCond_while_top@4
+
+bracelessSideEffectCond_ternary_false@2:
+    intc_2 // 0
+    b bracelessSideEffectCond_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dowhile_braceless.sol.DoWhileBraceless.bracelessSimple() -> bytes:
+bracelessSimple:
+    txn GroupIndex
+    bz bracelessSimple_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+bracelessSimple_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+
+bracelessSimple_while_top@4:
+    pushbytes 0x01
+    b+
+    dupn 2
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    intc_3 // 3
+    itob
+    b<
+    bnz bracelessSimple_after_if_else@7
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+bracelessSimple_after_if_else@7:
+    b bracelessSimple_while_top@4
+
+bracelessSimple_ternary_false@2:
+    intc_2 // 0
+    b bracelessSimple_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dowhile_braceless.sol.DoWhileBraceless.bracelessReturn(__arc4_x: bytes) -> bytes:
+bracelessReturn:
+    proto 1 1
+    txn GroupIndex
+    bz bracelessReturn_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+bracelessReturn_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 1
+    itob
+    frame_dig -1
+    b+
+    dup
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+bracelessReturn_ternary_false@2:
+    intc_2 // 0
+    b bracelessReturn_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dowhile_braceless.sol.DoWhileBraceless.n() -> bytes:
+n:
+    txn GroupIndex
+    bz n_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+n_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_1 // "n"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+n_ternary_false@2:
+    intc_2 // 0
+    b n_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dowhile_braceless.sol.DoWhileBraceless.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

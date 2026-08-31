@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/for_loop_continue.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
+    intcblock 1 32
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x01
-    intc_1 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -52,58 +50,52 @@ main_ternary_merge@9:
     !
     assert // not payable
     bytec_1 // 0x
-    bury 1
     load 0
     store 0
     bytec_1 // 0x
-    bury 2
 
 main_while_top@10:
-    dig 1
+    dup
     pushbytes 0x0a
     b<
     bz main_after_while@15
-    dig 1
+    dup
     pushbytes 0x02
     b%
     bytec_1 // 0x
     b==
     bz main_after_if_else@14
-    dig 1
     bytec_2 // 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 2
     b main_while_top@10
 
 main_after_if_else@14:
-    dup
+    swap
     bytec_2 // 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 1
-    dig 1
+    swap
     bytec_2 // 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 2
     b main_while_top@10
 
 main_after_while@15:
+    pop
     load 0
     store 0
-    dup
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     pushbytes 0x151f7c75
@@ -114,5 +106,5 @@ main_after_while@15:
     return
 
 main_ternary_false@8:
-    intc_1 // 0
+    pushint 0
     b main_ternary_merge@9

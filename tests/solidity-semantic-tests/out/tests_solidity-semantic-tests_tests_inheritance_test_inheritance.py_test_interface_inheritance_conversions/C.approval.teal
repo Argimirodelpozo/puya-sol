@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/interface_inheritance_conversions.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 32 1 0
     bytecblock 0x151f7c75
     pushint 4096
     bzero
@@ -24,10 +24,21 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@12
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@12
+    pushbytess 0x069562cc 0xd65a6843 0x0df9b488 0xc15998c4 0xd05832eb 0x7503a613
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10
+
+main_after_if_else@12:
     txn OnCompletion
     !
     assert
@@ -35,149 +46,199 @@ main_after_if_else@2:
     assert
     pushbytess 0xe9e76f25 0xecb66829 0x9a55e4c8 0x53cd411f 0xb4e2b703 0xa31afe56 // method "parentFun()uint256", method "subAFun()uint256", method "subBFun()uint256", method "convertParent()uint256", method "convertSubA()(uint256,uint256)", method "convertSubB()(uint256,uint256)"
     txna ApplicationArgs 0
-    match main_parentFun_route@5 main_subAFun_route@6 main_subBFun_route@7 main_convertParent_route@8 main_convertSubA_route@9 main_convertSubB_route@10
+    match main_parentFun_route@15 main_subAFun_route@16 main_subBFun_route@17 main_convertParent_route@18 main_convertSubA_route@19 main_convertSubB_route@20
     err
 
-main_convertSubB_route@10:
-    txn GroupIndex
-    bz main_ternary_false@16
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@17:
-    !
-    assert // not payable
-    callsub parentFun
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    callsub subBFun
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    uncover 2
-    b|
+main_convertSubB_route@20:
+    callsub convertSubB
     concat
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@16:
-    intc_2 // 0
-    b main_ternary_merge@17
-
-main_convertSubA_route@9:
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    callsub parentFun
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    callsub subAFun
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    uncover 2
-    b|
+main_convertSubA_route@19:
+    callsub convertSubA
     concat
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@21:
-    intc_2 // 0
-    b main_ternary_merge@22
-
-main_convertParent_route@8:
-    txn GroupIndex
-    bz main_ternary_false@26
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@27:
-    !
-    assert // not payable
-    callsub parentFun
-    dup
-    len
-    intc_1 // 32
-    <=
-    assert // overflow
-    intc_1 // 32
-    bzero
-    b|
+main_convertParent_route@18:
+    callsub convertParent
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@26:
-    intc_2 // 0
-    b main_ternary_merge@27
-
-main_subBFun_route@7:
+main_subBFun_route@17:
     callsub subBFun
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_subAFun_route@6:
+main_subAFun_route@16:
     callsub subAFun
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_parentFun_route@5:
+main_parentFun_route@15:
     callsub parentFun
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub convertSubB
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub convertSubA
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub convertParent
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub subBFun
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub subAFun
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub parentFun
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
     return
 
 
@@ -186,7 +247,7 @@ parentFun:
     txn GroupIndex
     bz parentFun_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -206,7 +267,7 @@ subAFun:
     txn GroupIndex
     bz subAFun_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -226,7 +287,7 @@ subBFun:
     txn GroupIndex
     bz subBFun_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
@@ -239,3 +300,126 @@ subBFun_ternary_merge@3:
 subBFun_ternary_false@2:
     intc_2 // 0
     b subBFun_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/interface_inheritance_conversions.sol.C.convertParent() -> bytes:
+convertParent:
+    txn GroupIndex
+    bz convertParent_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+convertParent_ternary_merge@3:
+    !
+    assert // not payable
+    callsub parentFun
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+convertParent_ternary_false@2:
+    intc_2 // 0
+    b convertParent_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/interface_inheritance_conversions.sol.C.convertSubA() -> bytes, bytes:
+convertSubA:
+    txn GroupIndex
+    bz convertSubA_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+convertSubA_ternary_merge@3:
+    !
+    assert // not payable
+    callsub parentFun
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    callsub subAFun
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    retsub
+
+convertSubA_ternary_false@2:
+    intc_2 // 0
+    b convertSubA_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/interface_inheritance_conversions.sol.C.convertSubB() -> bytes, bytes:
+convertSubB:
+    txn GroupIndex
+    bz convertSubB_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+convertSubB_ternary_merge@3:
+    !
+    assert // not payable
+    callsub parentFun
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    callsub subBFun
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    retsub
+
+convertSubB_ternary_false@2:
+    intc_2 // 0
+    b convertSubB_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/interface_inheritance_conversions.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

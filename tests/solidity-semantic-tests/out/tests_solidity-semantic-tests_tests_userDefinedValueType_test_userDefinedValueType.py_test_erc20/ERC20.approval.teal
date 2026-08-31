@@ -4,10 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x "_allowances" 0x151f7c7580 "_balances" 0x0000000000000000000000000000000000000000000000000000000000000000 "_totalSupply" "__ctor_pending" 0x151f7c75 0x28918861 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000
-    intc_2 // 0
-    dupn 8
-    bytec_0 // ""
+    bytecblock 0x151f7c75 0x "_allowances" 0x00 "_balances" 0x0000000000000000000000000000000000000000000000000000000000000000 "_totalSupply" "__ctor_pending" 0x28918861 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -27,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 6 // "__ctor_pending"
+    bytec 7 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -35,446 +32,256 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@14
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@14
+    pushbytess 0x18160ddd 0x70a08231 0xdd62ed3e 0xa9059cbb 0x095ea7b3 0x23b872dd 0x39509351 0xa457c2d7
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11 main_switch_case_7@12
+
+main_after_if_else@14:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x79fab465 0x83bad7cc 0x5d854d0e 0x198c9820 0xfafb6a08 0x6df41f6d 0xe99cc979 0x7eb6db4c // method "__postInit()void", method "totalSupply()uint256", method "balanceOf(address)uint256", method "allowance(address,address)uint256", method "transfer(address,uint256)bool", method "approve(address,uint256)bool", method "transferFrom(address,address,uint256)bool", method "increaseAllowance(address,uint256)bool", method "decreaseAllowance(address,uint256)bool"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_totalSupply_route@6 main_balanceOf_route@7 main_allowance_route@8 main_transfer_route@9 main_approve_route@10 main_transferFrom_route@11 main_increaseAllowance_route@12 main_decreaseAllowance_route@13
+    match main___postInit_route@17 main_totalSupply_route@18 main_balanceOf_route@19 main_allowance_route@20 main_transfer_route@21 main_approve_route@22 main_transferFrom_route@23 main_increaseAllowance_route@24 main_decreaseAllowance_route@25
     err
 
-main_decreaseAllowance_route@13:
+main_decreaseAllowance_route@25:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 10
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@19
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@20:
-    !
-    assert // not payable
-    txn Sender
-    dup
-    bytec_1 // "_allowances"
-    concat
-    sha256
-    dig 5
-    dup
+    callsub decreaseAllowance
+    bytec_3 // 0x00
+    intc_2 // 0
     uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
     concat
-    sha256
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dig 11
-    callsub FixedMath.sub
-    callsub _approve
-    bytec_2 // 0x151f7c7580
     log
     intc_1 // 1
     return
 
-main_ternary_false@19:
-    intc_2 // 0
-    b main_ternary_merge@20
-
-main_increaseAllowance_route@12:
+main_increaseAllowance_route@24:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 11
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@24
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@25:
-    !
-    assert // not payable
-    txn Sender
-    dup
-    bytec_1 // "_allowances"
-    concat
-    sha256
-    dig 5
-    dup
+    callsub increaseAllowance
+    bytec_3 // 0x00
+    intc_2 // 0
     uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
     concat
-    sha256
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dig 12
-    callsub FixedMath.add
-    callsub _approve
-    bytec_2 // 0x151f7c7580
     log
     intc_1 // 1
     return
 
-main_ternary_false@24:
-    intc_2 // 0
-    b main_ternary_merge@25
-
-main_transferFrom_route@11:
+main_transferFrom_route@23:
     txna ApplicationArgs 1
     dup
-    bury 7
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 3
     dup
-    bury 9
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@29
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@30:
-    !
-    assert // not payable
-    dig 5
-    dup
-    dig 4
-    dig 10
-    dup
-    cover 4
-    callsub _transfer
-    txn Sender
-    dup
-    dig 2
-    bytec_1 // "_allowances"
+    callsub transferFrom
+    bytec_3 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
     concat
-    sha256
-    concat
-    sha256
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    uncover 3
-    callsub FixedMath.sub
-    callsub _approve
-    bytec_2 // 0x151f7c7580
     log
     intc_1 // 1
     return
 
-main_ternary_false@29:
-    intc_2 // 0
-    b main_ternary_merge@30
-
-main_approve_route@10:
+main_approve_route@22:
     txna ApplicationArgs 1
     dup
-    bury 5
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 9
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@34
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@35:
-    !
-    assert // not payable
-    txn Sender
-    dig 4
-    dig 9
-    callsub _approve
-    bytec_2 // 0x151f7c7580
+    callsub approve
+    bytec_3 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@34:
-    intc_2 // 0
-    b main_ternary_merge@35
-
-main_transfer_route@9:
+main_transfer_route@21:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 9
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@39
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@40:
-    !
-    assert // not payable
-    txn Sender
-    dig 3
-    dig 9
-    callsub _transfer
-    bytec_2 // 0x151f7c7580
+    callsub transfer
+    bytec_3 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@39:
-    intc_2 // 0
-    b main_ternary_merge@40
-
-main_allowance_route@8:
+main_allowance_route@20:
     txna ApplicationArgs 1
     dup
-    bury 6
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 5
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@44
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@45:
-    !
-    assert // not payable
-    dig 4
-    bytec_1 // "_allowances"
-    concat
-    sha256
-    dig 4
-    swap
-    concat
-    sha256
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x151f7c75
+    callsub allowance
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@44:
-    intc_2 // 0
-    b main_ternary_merge@45
-
-main_balanceOf_route@7:
+main_balanceOf_route@19:
     txna ApplicationArgs 1
     dup
-    bury 6
     len
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
-    txn GroupIndex
-    bz main_ternary_false@49
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@50:
-    !
-    assert // not payable
-    dig 4
-    bytec_3 // "_balances"
-    concat
-    sha256
-    box_get
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x151f7c75
+    callsub balanceOf
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@49:
-    intc_2 // 0
-    b main_ternary_merge@50
-
-main_totalSupply_route@6:
-    txn GroupIndex
-    bz main_ternary_false@54
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@55:
-    !
-    assert // not payable
-    intc_2 // 0
-    bytec 5 // "_totalSupply"
-    app_global_get_ex
-    assert // check _totalSupply exists
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x151f7c75
+main_totalSupply_route@18:
+    callsub totalSupply
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@54:
-    intc_2 // 0
-    b main_ternary_merge@55
-
-main___postInit_route@5:
-    bytec 6 // "__ctor_pending"
+main___postInit_route@17:
+    bytec 7 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec 6 // "__ctor_pending"
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec 7 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_3 // "_balances"
+    bytec 4 // "_balances"
     intc_3 // 2
     box_create
     pop
-    bytec_1 // "_allowances"
+    bytec_2 // "_allowances"
     intc_3 // 2
     box_create
     pop
-    bytec 5 // "_totalSupply"
-    bytec_0 // 0x
+    bytec 6 // "_totalSupply"
+    bytec_1 // 0x
     app_global_put
     txn Sender
     dup
-    bury 8
     pushint 20
     itob
-    bury 3
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    swap
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     dup
-    bury 2
-    bnz main_after_if_else@58
+    bnz main_after_if_else@31
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000001f45524332303a206d696e7420746f20746865207a65726f206164647265737300
     log
 
-main_after_if_else@58:
-    dup
+main_after_if_else@31:
     assert // ERC20: mint to the zero address
     intc_2 // 0
-    bytec 5 // "_totalSupply"
+    bytec 6 // "_totalSupply"
     app_global_get_ex
-    assert // check _totalSupply exists
-    dig 2
-    dup
+    bytec_1 // 0x
     cover 2
+    select
+    dig 1
     callsub FixedMath.add
-    bytec 5 // "_totalSupply"
+    bytec 6 // "_totalSupply"
     swap
     app_global_put
-    dig 7
-    dup
-    cover 2
-    bytec_3 // "_balances"
+    dig 1
+    bytec 4 // "_balances"
     concat
     sha256
     dup
     box_get
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 2
     select
     uncover 2
@@ -483,7 +290,7 @@ main_after_if_else@58:
     box_del
     pop
     box_put
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     swap
     concat
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000014
@@ -495,8 +302,168 @@ main_after_if_else@58:
     intc_1 // 1
     return
 
+main_switch_case_7@12:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_arga
+    intc_0 // 32
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub decreaseAllowance
+    callsub __evm_ret0
+    intc_1 // 1
+    return
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.FixedMath.add(a: bytes, b: bytes) -> bytes:
+main_switch_case_6@11:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_arga
+    intc_0 // 32
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub increaseAllowance
+    callsub __evm_ret0
+    intc_1 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_arga
+    intc_0 // 32
+    callsub __evm_arga
+    pushint 64
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub transferFrom
+    callsub __evm_ret0
+    intc_1 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_arga
+    intc_0 // 32
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub approve
+    callsub __evm_ret0
+    intc_1 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_arga
+    intc_0 // 32
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub transfer
+    callsub __evm_ret0
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    intc_2 // 0
+    callsub __evm_arga
+    intc_0 // 32
+    callsub __evm_arga
+    callsub allowance
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    intc_2 // 0
+    callsub __evm_arga
+    callsub balanceOf
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub totalSupply
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// __solfn_29(a: bytes, b: bytes) -> bytes:
 FixedMath.add:
     proto 2 1
     frame_dig -2
@@ -509,7 +476,7 @@ FixedMath.add:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.FixedMath.sub(a: bytes, b: bytes) -> bytes:
+// __solfn_55(a: bytes, b: bytes) -> bytes:
 FixedMath.sub:
     proto 2 1
     frame_dig -2
@@ -530,27 +497,305 @@ FixedMath.sub:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20._transfer(from: bytes, to: bytes, value: bytes) -> void:
-_transfer:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.totalSupply() -> bytes:
+totalSupply:
+    txn GroupIndex
+    bz totalSupply_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+totalSupply_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec 6 // "_totalSupply"
+    app_global_get_ex
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+totalSupply_ternary_false@2:
+    intc_2 // 0
+    b totalSupply_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.balanceOf(owner: bytes) -> bytes:
+balanceOf:
+    proto 1 1
+    txn GroupIndex
+    bz balanceOf_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+balanceOf_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    bytec 4 // "_balances"
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+balanceOf_ternary_false@2:
+    intc_2 // 0
+    b balanceOf_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.allowance(owner: bytes, spender: bytes) -> bytes:
+allowance:
+    proto 2 1
+    txn GroupIndex
+    bz allowance_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+allowance_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    bytec_2 // "_allowances"
+    concat
+    sha256
+    frame_dig -1
+    swap
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+allowance_ternary_false@2:
+    intc_2 // 0
+    b allowance_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.transfer(to: bytes, __arc4_value: bytes) -> uint64:
+transfer:
+    proto 2 1
+    txn GroupIndex
+    bz transfer_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+transfer_ternary_merge@3:
+    !
+    assert // not payable
+    txn Sender
+    frame_dig -2
+    frame_dig -1
+    callsub __solfn_326
+    intc_1 // 1
+    retsub
+
+transfer_ternary_false@2:
+    intc_2 // 0
+    b transfer_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.approve(spender: bytes, __arc4_value: bytes) -> uint64:
+approve:
+    proto 2 1
+    txn GroupIndex
+    bz approve_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+approve_ternary_merge@3:
+    !
+    assert // not payable
+    txn Sender
+    frame_dig -2
+    frame_dig -1
+    callsub __solfn_463
+    intc_1 // 1
+    retsub
+
+approve_ternary_false@2:
+    intc_2 // 0
+    b approve_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.transferFrom(from: bytes, to: bytes, __arc4_value: bytes) -> uint64:
+transferFrom:
+    proto 3 1
+    txn GroupIndex
+    bz transferFrom_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+transferFrom_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -3
+    frame_dig -2
+    frame_dig -1
+    callsub __solfn_326
+    txn Sender
+    dup
+    frame_dig -3
+    bytec_2 // "_allowances"
+    concat
+    sha256
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    frame_dig -1
+    callsub FixedMath.sub
+    frame_dig -3
+    cover 2
+    callsub __solfn_463
+    intc_1 // 1
+    retsub
+
+transferFrom_ternary_false@2:
+    intc_2 // 0
+    b transferFrom_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.increaseAllowance(spender: bytes, __arc4_addedValue: bytes) -> uint64:
+increaseAllowance:
+    proto 2 1
+    txn GroupIndex
+    bz increaseAllowance_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+increaseAllowance_ternary_merge@3:
+    !
+    assert // not payable
+    txn Sender
+    dup
+    bytec_2 // "_allowances"
+    concat
+    sha256
+    frame_dig -2
+    swap
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    frame_dig -1
+    callsub FixedMath.add
+    frame_dig -2
+    swap
+    callsub __solfn_463
+    intc_1 // 1
+    retsub
+
+increaseAllowance_ternary_false@2:
+    intc_2 // 0
+    b increaseAllowance_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.decreaseAllowance(spender: bytes, __arc4_subtractedValue: bytes) -> uint64:
+decreaseAllowance:
+    proto 2 1
+    txn GroupIndex
+    bz decreaseAllowance_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+decreaseAllowance_ternary_merge@3:
+    !
+    assert // not payable
+    txn Sender
+    dup
+    bytec_2 // "_allowances"
+    concat
+    sha256
+    frame_dig -2
+    swap
+    concat
+    sha256
+    box_get
+    bytec_1 // 0x
+    cover 2
+    select
+    frame_dig -1
+    callsub FixedMath.sub
+    frame_dig -2
+    swap
+    callsub __solfn_463
+    intc_1 // 1
+    retsub
+
+decreaseAllowance_ternary_false@2:
+    intc_2 // 0
+    b decreaseAllowance_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.__solfn_326(from: bytes, to: bytes, value: bytes) -> void:
+__solfn_326:
     proto 3 0
     frame_dig -2
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     dup
-    bnz _transfer_after_if_else@2
+    bnz __solfn_326_after_if_else@2
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002345524332303a207472616e7366657220746f20746865207a65726f20616464726573730000000000000000000000000000000000000000000000000000000000
     log
 
-_transfer_after_if_else@2:
-    frame_dig 0
+__solfn_326_after_if_else@2:
     assert // ERC20: transfer to the zero address
     frame_dig -3
-    bytec_3 // "_balances"
+    bytec 4 // "_balances"
     concat
     sha256
     dup
     box_get
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 2
     select
     frame_dig -1
@@ -560,12 +805,12 @@ _transfer_after_if_else@2:
     pop
     box_put
     frame_dig -2
-    bytec_3 // "_balances"
+    bytec 4 // "_balances"
     concat
     sha256
     dup
     box_get
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 2
     select
     frame_dig -1
@@ -595,35 +840,31 @@ _transfer_after_if_else@2:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20._approve(owner: bytes, spender: bytes, value: bytes) -> void:
-_approve:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.__solfn_463(owner: bytes, spender: bytes, value: bytes) -> void:
+__solfn_463:
     proto 3 0
-    bytec_0 // ""
     frame_dig -3
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     dup
-    bnz _approve_after_if_else@2
+    bnz __solfn_463_after_if_else@2
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002445524332303a20617070726f76652066726f6d20746865207a65726f206164647265737300000000000000000000000000000000000000000000000000000000
     log
 
-_approve_after_if_else@2:
-    frame_dig 1
+__solfn_463_after_if_else@2:
     assert // ERC20: approve from the zero address
     frame_dig -2
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     !=
     dup
-    frame_bury 0
-    bnz _approve_after_if_else@4
+    bnz __solfn_463_after_if_else@4
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000002245524332303a20617070726f766520746f20746865207a65726f2061646472657373000000000000000000000000000000000000000000000000000000000000
     log
 
-_approve_after_if_else@4:
-    frame_dig 0
+__solfn_463_after_if_else@4:
     assert // ERC20: approve to the zero address
     frame_dig -3
-    bytec_1 // "_allowances"
+    bytec_2 // "_allowances"
     concat
     sha256
     frame_dig -2
@@ -650,6 +891,77 @@ _approve_after_if_else@4:
     swap
     concat
     pushbytes 0x18e09461 // method "Approval(address,address,uint256)"
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.__evm_decw(__off: uint64) -> bytes:
+__evm_decw:
+    proto 1 1
+    frame_dig -1
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    frame_dig -1
+    intc_0 // 32
+    extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.__evm_arga(__off: uint64) -> bytes:
+__evm_arga:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/erc20.sol.ERC20.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
     swap
     concat
     log

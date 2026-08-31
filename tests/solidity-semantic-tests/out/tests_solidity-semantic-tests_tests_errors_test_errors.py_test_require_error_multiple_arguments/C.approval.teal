@@ -28,49 +28,91 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@8
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@8
+    pushbytess 0x26121ff0 0xe2179b8e
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6
+
+main_after_if_else@8:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x2d4970c7 0xf2b65f27 // method "f()void", method "g()void"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6
+    match f g
     err
 
-main_g_route@6:
-    txn GroupIndex
-    bz main_ternary_false@12
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
+main_switch_case_1@6:
+    callsub __evm_npy
+    b g
 
-main_ternary_merge@13:
-    !
-    assert // not payable
-    pushbytes 0x11945000000000000000000000000000000000000000000000000000000000000000000400420000000000000000000000000000000000000000000000000000000000000006000466697665
-    log
-    err // CustomError
+main_switch_case_0@5:
+    callsub __evm_npy
+    b f
 
-main_ternary_false@12:
-    intc_1 // 0
-    b main_ternary_merge@13
 
-main_f_route@5:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_multiple_arguments.sol.C.f() -> void:
+f:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz f_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+f_ternary_merge@3:
     !
     assert // not payable
     pushbytes 0x11945000000000000000000000000000000000000000000000000000000000000000000100420000000000000000000000000000000000000000000000000000000000000003000374776f
     log
     err // CustomError
 
-main_ternary_false@17:
+f_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@18
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_multiple_arguments.sol.C.g() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x11945000000000000000000000000000000000000000000000000000000000000000000400420000000000000000000000000000000000000000000000000000000000000006000466697665
+    log
+    err // CustomError
+
+g_ternary_false@2:
+    intc_1 // 0
+    b g_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/require_error_multiple_arguments.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

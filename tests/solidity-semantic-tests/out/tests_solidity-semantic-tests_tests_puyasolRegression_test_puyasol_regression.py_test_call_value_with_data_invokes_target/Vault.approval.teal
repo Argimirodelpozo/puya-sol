@@ -1,0 +1,245 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/call_value_with_data.sol.Vault.approval_program() -> uint64:
+main:
+    intcblock 1 32 0
+    bytecblock 0x 0x151f7c75 "deposits" "got"
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_2 // "deposits"
+    bytec_0 // 0x
+    app_global_put
+    bytec_3 // "got"
+    bytec_0 // 0x
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    pushbytess 0xd0e30db0 0x323a5e0b 0xde2111e2
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
+
+main_after_if_else@9:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x92e03b1c 0xfe2a0f0f 0x9456342a // method "deposit()void", method "deposits()uint256", method "got()uint256"
+    txna ApplicationArgs 0
+    match main_deposit_route@12 main_deposits_route@13 main_got_route@14
+    err
+
+main_got_route@14:
+    callsub got
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_deposits_route@13:
+    callsub deposits
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_deposit_route@12:
+    callsub deposit
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub got
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub deposits
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub deposit
+    bytec_1 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/call_value_with_data.sol.Vault.deposit() -> void:
+deposit:
+    intc_2 // 0
+    bytec_2 // "deposits"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    pushbytes 0x01
+    b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_2 // "deposits"
+    swap
+    app_global_put
+    txn GroupIndex
+    bz deposit_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+deposit_ternary_merge@3:
+    itob
+    bytec_3 // "got"
+    swap
+    app_global_put
+    retsub
+
+deposit_ternary_false@2:
+    intc_2 // 0
+    b deposit_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/call_value_with_data.sol.Vault.deposits() -> bytes:
+deposits:
+    txn GroupIndex
+    bz deposits_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+deposits_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_2 // "deposits"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+deposits_ternary_false@2:
+    intc_2 // 0
+    b deposits_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/call_value_with_data.sol.Vault.got() -> bytes:
+got:
+    txn GroupIndex
+    bz got_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+got_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_3 // "got"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+got_ternary_false@2:
+    intc_2 // 0
+    b got_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/call_value_with_data.sol.Vault.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/contracts/invalidStoredInConstructor.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1
+    intcblock 1 0
     bytecblock "storedFn"
     pushint 4096
     bzero
@@ -25,41 +25,79 @@ main:
     txn ApplicationID
     bnz main_after_if_else@4
     bytec_0 // "storedFn"
-    intc_0 // 0
+    intc_1 // 0
     app_global_put
     pushbytes "flag"
-    intc_1 // 1
+    intc_0 // 1
     app_global_put
     bytec_0 // "storedFn"
-    intc_0 // 0
+    intc_1 // 0
     app_global_put
     err // invalid function pointer
 
 main_after_if_else@4:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    pushbytes 0x26121ff0
+    txna ApplicationArgs 0
+    match main_switch_case_0@7
+
+main_after_if_else@9:
     pushbytes 0x2d4970c7 // method "f()void"
     txna ApplicationArgs 0
-    match main_f_route@6
+    match main_f_route@11
     err
 
-main_f_route@6:
+main_f_route@11:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
+    callsub f
+    intc_0 // 1
+    return
+
+main_switch_case_0@7:
     txn GroupIndex
-    bz main_ternary_false@10
+    bz main_ternary_false@16
     txn GroupIndex
-    intc_1 // 1
+    intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@11:
+main_ternary_merge@17:
     !
     assert // not payable
-    intc_1 // 1
+    callsub f
+    pushbytes 0x151f7c75
+    log
+    intc_0 // 1
     return
 
-main_ternary_false@10:
-    intc_0 // 0
-    b main_ternary_merge@11
+main_ternary_false@16:
+    intc_1 // 0
+    b main_ternary_merge@17
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/uninitializedFunctionPointer/contracts/invalidStoredInConstructor.sol.C.f() -> void:
+f:
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+f_ternary_false@2:
+    intc_1 // 0
+    b f_ternary_merge@3

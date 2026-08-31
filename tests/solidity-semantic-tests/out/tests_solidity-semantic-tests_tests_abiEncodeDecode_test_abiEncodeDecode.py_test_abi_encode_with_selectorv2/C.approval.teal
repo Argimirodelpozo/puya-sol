@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_with_selectorv2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 32
+    bytecblock 0x151f7c75 0x12345678000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000036162630000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -28,104 +29,289 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@11
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@11
+    pushbytess 0xa5850475 0xc27fc305 0x9942ec6f 0xaaf05f3d 0xc3f90202
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9
+
+main_after_if_else@11:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x329c8739 0x3f35ad11 0x12d76492 0xce183000 0x6be4a9d9 // method "f0()byte[]", method "f1()byte[]", method "f2()byte[]", method "f3()byte[]", method "f4()byte[]"
     txna ApplicationArgs 0
-    match main_f0_route@5 main_f1_route@6 main_f2_route@7 main_f3_route@8 main_f4_route@9
+    match main_f0_route@14 main_f1_route@15 main_f2_route@16 main_f3_route@17 main_f4_route@18
     err
 
-main_f4_route@9:
-    txn GroupIndex
-    bz main_ternary_false@15
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@16:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75009212345678ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0042000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000012345670024123400264c6f72656d20697073756d20646f6c6f722073697420657468657265756d2e2e2e2e2e2e2e2e
+main_f4_route@18:
+    callsub f4
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@15:
-    intc_1 // 0
-    b main_ternary_merge@16
-
-main_f3_route@8:
-    txn GroupIndex
-    bz main_ternary_false@20
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@21:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75002412345678ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+main_f3_route@17:
+    callsub f3
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@20:
-    intc_1 // 0
-    b main_ternary_merge@21
-
-main_f2_route@7:
-    txn GroupIndex
-    bz main_ternary_false@25
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@31:
-    !
-    assert // not payable
-    pushbytes 0x151f7c750009123456780003616263
+main_f2_route@16:
+    callsub f2
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@25:
-    intc_1 // 0
-    b main_ternary_merge@31
-
-main_f1_route@6:
-    txn GroupIndex
-    bz main_ternary_false@30
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@31
-
-main_ternary_false@30:
-    intc_1 // 0
-    b main_ternary_merge@31
-
-main_f0_route@5:
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75000412345678
+main_f1_route@15:
+    callsub f1
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@35:
+main_f0_route@14:
+    callsub f0
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    callsub f4
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    callsub f3
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    callsub f2
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub f1
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub f0
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_with_selectorv2.sol.C.f0() -> bytes:
+f0:
+    txn GroupIndex
+    bz f0_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f0_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x12345678
+    retsub
+
+f0_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@36
+    b f0_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_with_selectorv2.sol.C.f1() -> bytes:
+f1:
+    txn GroupIndex
+    bz f1_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f1_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // 0x12345678000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000036162630000000000000000000000000000000000000000000000000000000000
+    retsub
+
+f1_ternary_false@2:
+    intc_1 // 0
+    b f1_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_with_selectorv2.sol.C.f2() -> bytes:
+f2:
+    txn GroupIndex
+    bz f2_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f2_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // 0x12345678000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000036162630000000000000000000000000000000000000000000000000000000000
+    retsub
+
+f2_ternary_false@2:
+    intc_1 // 0
+    b f2_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_with_selectorv2.sol.C.f3() -> bytes:
+f3:
+    txn GroupIndex
+    bz f3_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f3_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x12345678ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    retsub
+
+f3_ternary_false@2:
+    intc_1 // 0
+    b f3_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_with_selectorv2.sol.C.f4() -> bytes:
+f4:
+    txn GroupIndex
+    bz f4_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f4_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x12345678ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000000000000000000012345670000000000000000000000000000000000000000000000000000000000000060000000000000000000000000000000000000000000000000000000000000123400000000000000000000000000000000000000000000000000000000000000264c6f72656d20697073756d20646f6c6f722073697420657468657265756d2e2e2e2e2e2e2e2e0000000000000000000000000000000000000000000000000000
+    retsub
+
+f4_ternary_false@2:
+    intc_1 // 0
+    b f4_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_with_selectorv2.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_with_selectorv2.sol.C.__evm_ret0(__v: bytes) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    swap
+    intc_2 // 32
+    %
+    intc_2 // 32
+    swap
+    -
+    intc_2 // 32
+    %
+    bzero
+    frame_dig -1
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    retsub

@@ -5,7 +5,6 @@
 main:
     intcblock 32 1 0
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0x151f7c75 0x
-    intc_2 // 0
     pushint 4096
     bzero
     dup
@@ -42,7 +41,6 @@ main_after_if_else@2:
 main_f2_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -59,8 +57,7 @@ main_ternary_merge@13:
     assert // not payable
     load 0
     store 0
-    dup
-    callsub __yul_recursive_multireturn_sumrec
+    callsub __yul_RecursiveMultiReturn_21_asm_19_sumrec
     load 0
     store 0
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
@@ -87,7 +84,6 @@ main_ternary_false@12:
 main_f_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_0 // 32
     ==
@@ -104,8 +100,7 @@ main_ternary_merge@18:
     assert // not payable
     load 0
     store 0
-    dup
-    callsub __yul_recursive_multireturn_rec
+    callsub __yul_RecursiveMultiReturn_12_asm_10_rec
     load 0
     store 0
     swap
@@ -144,22 +139,22 @@ main_ternary_false@17:
     b main_ternary_merge@18
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/recursive_multireturn.sol.recursive_multireturn::__yul_rec(x: bytes) -> bytes, bytes:
-__yul_recursive_multireturn_rec:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/recursive_multireturn.sol.RecursiveMultiReturn_12_asm_10::__yul_rec(x: bytes) -> bytes, bytes:
+__yul_RecursiveMultiReturn_12_asm_10_rec:
     proto 1 2
     bytec_1 // 0x01
     frame_dig -1
     bytec_3 // 0x
     b>
-    bnz __yul_recursive_multireturn_rec_if_body@1
+    bnz __yul_RecursiveMultiReturn_12_asm_10_rec_if_body@1
     frame_dig -1
 
-__yul_recursive_multireturn_rec_after_if_else@2:
+__yul_RecursiveMultiReturn_12_asm_10_rec_after_if_else@2:
     frame_dig 0
     uncover 2
     retsub
 
-__yul_recursive_multireturn_rec_if_body@1:
+__yul_RecursiveMultiReturn_12_asm_10_rec_if_body@1:
     frame_dig -1
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -167,7 +162,7 @@ __yul_recursive_multireturn_rec_if_body@1:
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    callsub __yul_recursive_multireturn_rec
+    callsub __yul_RecursiveMultiReturn_12_asm_10_rec
     frame_dig -1
     uncover 2
     b+
@@ -179,20 +174,20 @@ __yul_recursive_multireturn_rec_if_body@1:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     frame_bury 0
-    b __yul_recursive_multireturn_rec_after_if_else@2
+    b __yul_RecursiveMultiReturn_12_asm_10_rec_after_if_else@2
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/recursive_multireturn.sol.recursive_multireturn::__yul_sumrec(x: bytes) -> bytes:
-__yul_recursive_multireturn_sumrec:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/recursive_multireturn.sol.RecursiveMultiReturn_21_asm_19::__yul_sumrec(x: bytes) -> bytes:
+__yul_RecursiveMultiReturn_21_asm_19_sumrec:
     proto 1 1
     frame_dig -1
     bytec_3 // 0x
     b>
-    bnz __yul_recursive_multireturn_sumrec_if_body@1
+    bnz __yul_RecursiveMultiReturn_21_asm_19_sumrec_if_body@1
     frame_dig -1
     retsub
 
-__yul_recursive_multireturn_sumrec_if_body@1:
+__yul_RecursiveMultiReturn_21_asm_19_sumrec_if_body@1:
     frame_dig -1
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
@@ -200,7 +195,7 @@ __yul_recursive_multireturn_sumrec_if_body@1:
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    callsub __yul_recursive_multireturn_sumrec
+    callsub __yul_RecursiveMultiReturn_21_asm_19_sumrec
     frame_dig -1
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000

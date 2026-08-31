@@ -1,0 +1,544 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_struct_slot_delete.sol.RecurClear.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 8
+    bytecblock 0x 0x01 0x151f7c75 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:" 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e564
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    pushbytess 0x7d94792a 0xb13b4f2d 0x57de26a4
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
+
+main_after_if_else@9:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x100b7c32 0xaa036bec 0x7e43be00 // method "seed()void", method "wipe()void", method "read()(uint256,uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_seed_route@12 main_wipe_route@13 main_read_route@14
+    err
+
+main_read_route@14:
+    callsub read
+    cover 2
+    concat
+    swap
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_wipe_route@13:
+    callsub wipe
+    intc_1 // 1
+    return
+
+main_seed_route@12:
+    callsub seed
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub read
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub wipe
+    bytec_2 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub seed
+    bytec_2 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    intc_2 // 0
+    dup
+    bytec_0 // ""
+    frame_dig -1
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    bytec 5 // 0x010000
+    b<
+    bz __storage_read_else_body@4
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    frame_bury 2
+    pushint 64
+    /
+    itob
+    bytec 6 // "p:"
+    swap
+    concat
+    dup
+    frame_bury 1
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 2
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    frame_dig 1
+    swap
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+__storage_read_after_if_else@3:
+    bytec_0 // 0x
+    frame_bury 0
+    retsub
+
+__storage_read_else_body@4:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 7 // "s:"
+    swap
+    concat
+    dup
+    frame_bury 0
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 0
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    frame_dig -2
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    bytec 5 // 0x010000
+    b<
+    bz __storage_write_else_body@2
+    intc_3 // 8
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    pushint 64
+    /
+    itob
+    bytec 6 // "p:"
+    swap
+    concat
+    dup
+    pushint 2048
+    box_create
+    pop
+    swap
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    box_replace
+    retsub
+
+__storage_write_else_body@2:
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 7 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_2 // 0
+    swap
+    box_replace
+    retsub
+
+
+// __puyasol___evm_clear_0(__slot: bytes) -> void:
+__puyasol___evm_clear_0:
+    proto 1 0
+    frame_dig -1
+    callsub __storage_read
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    keccak256
+    bytec_0 // 0x
+
+__puyasol___evm_clear_0_while_top@1:
+    dup
+    dig 3
+    b<
+    bz __puyasol___evm_clear_0_after_while@3
+    dup
+    pushbytes 0x02
+    b*
+    dig 2
+    b+
+    callsub __puyasol___evm_clear_0
+    bytec_1 // 0x01
+    b+
+    b __puyasol___evm_clear_0_while_top@1
+
+__puyasol___evm_clear_0_after_while@3:
+    frame_dig -1
+    bytec_0 // 0x
+    callsub __storage_write
+    frame_dig -1
+    bytec_0 // 0x
+    callsub __storage_write
+    frame_dig -1
+    bytec_1 // 0x01
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_struct_slot_delete.sol.RecurClear.seed() -> void:
+seed:
+    txn GroupIndex
+    bz seed_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+seed_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 7
+    itob
+    bytec_1 // 0x01
+    swap
+    callsub __storage_write
+    bytec_0 // 0x
+    callsub __storage_read
+    bytec_1 // 0x01
+    b+
+    bytec_0 // 0x
+    swap
+    callsub __storage_write
+    intc_2 // 0
+    itob
+    bytec_0 // 0x
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    pushint 3
+    itob
+    bytec 8 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e564
+    swap
+    callsub __storage_write
+    bytec_0 // 0x
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    bytec_3 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    callsub __storage_read
+    bytec_1 // 0x01
+    b+
+    bytec_3 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    swap
+    callsub __storage_write
+    bytec_0 // 0x
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    bytec_3 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    callsub __storage_read
+    b<
+    assert // array index out of bounds
+    pushint 9
+    itob
+    pushbytes 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61da
+    swap
+    callsub __storage_write
+    retsub
+
+seed_ternary_false@2:
+    intc_2 // 0
+    b seed_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_struct_slot_delete.sol.RecurClear.wipe() -> void:
+wipe:
+    proto 0 0
+    txn GroupIndex
+    bz wipe_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+wipe_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // 0x
+    callsub __storage_read
+    bytec_0 // 0x
+
+wipe_while_top@4:
+    dup
+    dig 2
+    b<
+    bz wipe_after_while@6
+    dup
+    pushbytes 0x02
+    b*
+    bytec_3 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    b+
+    callsub __puyasol___evm_clear_0
+    bytec_1 // 0x01
+    b+
+    b wipe_while_top@4
+
+wipe_after_while@6:
+    bytec_0 // 0x
+    dup
+    callsub __storage_write
+    bytec_0 // 0x
+    dup
+    callsub __storage_write
+    bytec_1 // 0x01
+    bytec_0 // 0x
+    callsub __storage_write
+    retsub
+
+wipe_ternary_false@2:
+    intc_2 // 0
+    b wipe_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_struct_slot_delete.sol.RecurClear.read() -> bytes, bytes, bytes:
+read:
+    txn GroupIndex
+    bz read_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+read_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // 0x
+    callsub __storage_read
+    intc_2 // 0
+    itob
+    dup
+    cover 2
+    b>
+    bz read_else_body@5
+    bytec_0 // 0x
+    callsub __storage_read
+    b<
+    assert // array index out of bounds
+    bytec 8 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e564
+    callsub __storage_read
+
+read_after_if_else@6:
+    bytec_1 // 0x01
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    bytec_0 // 0x
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    uncover 3
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    b|
+    retsub
+
+read_else_body@5:
+    b read_after_if_else@6
+
+read_ternary_false@2:
+    intc_2 // 0
+    b read_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_struct_slot_delete.sol.RecurClear.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

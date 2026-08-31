@@ -3,6 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/difficulty.sol.C.approval_program() -> uint64:
 main:
+    intcblock 1 2 0 32
     pushint 4096
     bzero
     dup
@@ -22,7 +23,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    pushint 1
+    intc_0 // 1
     return
 
 main_after_if_else@2:
@@ -40,7 +41,7 @@ main_f_route@4:
     txn GroupIndex
     bz main_ternary_false@8
     txn GroupIndex
-    pushint 1
+    intc_0 // 1
     -
     gtxns Amount
 
@@ -49,13 +50,39 @@ main_ternary_merge@9:
     assert // not payable
     load 0
     store 0
+    global Round
+    intc_1 // 2
+    <
+    bz main_ternary_false@11
+    intc_2 // 0
+
+main_ternary_merge@12:
+    block BlkSeed
     load 0
     store 0
-    pushbytes 0x151f7c75000000000000000000000000000000000000000000000000000000000bebc200
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_3 // 32
+    <=
+    assert // overflow
+    intc_3 // 32
+    bzero
+    b|
+    pushbytes 0x151f7c75
+    swap
+    concat
     log
-    pushint 1
+    intc_0 // 1
     return
 
+main_ternary_false@11:
+    global Round
+    intc_1 // 2
+    -
+    b main_ternary_merge@12
+
 main_ternary_false@8:
-    pushint 0
+    intc_2 // 0
     b main_ternary_merge@9

@@ -20,6 +20,7 @@
 #include "builder/BuildArtifacts.h"
 #include "Logger.h"
 #include "builder/proxies/Erc1967Lowering.h"
+#include "builder/proxies/UupsLowering.h"
 
 #include <libsolidity/ast/ASTVisitor.h>
 
@@ -849,6 +850,31 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 			proxies::Erc1967Lowering::adminStateDefinition(loc));
 		contract->methods.push_back(
 			proxies::Erc1967Lowering::updateGateMethod(contract->id, loc));
+	}
+
+	// UUPS (proxy.md §3): a concrete contract inheriting OZ UUPSUpgradeable
+	// with an implemented _authorizeUpgrade gets the native update gate —
+	// the hook's translated method (modifiers inlined) is the permission
+	// check, run inside the UpdateApplication txn.
+	if (proxies::UupsLowering::isUupsImplementation(_contract))
+	{
+		// A modifier'd hook builds as a chain: `_authorizeUpgrade__mod0_<n>`
+		// is the entry that runs the modifiers (onlyOwner and friends) before
+		// the body — prefer it over the bare-body name.
+		awst::ContractMethod const* hook = nullptr;
+		for (auto const& method: contract->methods)
+		{
+			if (method.memberName == "_authorizeUpgrade")
+				hook = &method;
+			if (method.memberName.rfind("_authorizeUpgrade__mod0", 0) == 0)
+			{
+				hook = &method;
+				break;
+			}
+		}
+		if (hook)
+			contract->methods.push_back(proxies::UupsLowering::updateGateMethod(
+				contract->id, *hook, contract->approvalProgram.sourceLocation));
 	}
 
 	return contract;

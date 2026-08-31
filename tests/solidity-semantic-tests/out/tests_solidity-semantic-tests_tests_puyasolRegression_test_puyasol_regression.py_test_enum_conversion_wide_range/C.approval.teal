@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/enum_conversion_wide_range.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 8 0 255
+    intcblock 1 0 32 8 255 128
     bytecblock 0x151f7c75 0x02
-    intc_2 // 0
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -31,54 +29,35 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@19
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@19
+    pushbytess 0x0f85a116 0x7e357c86 0x8f72d887 0x3706c020
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@9 main_switch_case_2@13 main_switch_case_3@14
+
+main_after_if_else@19:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x15e5e8ca 0x5738a367 0x3f7248d6 0x4317403b // method "fromI136(uint136)uint64", method "fromI200(uint200)uint64", method "fromU256(uint256)uint64", method "fromI16(uint64)uint64"
     txna ApplicationArgs 0
-    match main_fromI136_route@5 main_fromI200_route@6 main_fromU256_route@7 main_fromI16_route@8
+    match main_fromI136_route@22 main_fromI200_route@23 main_fromU256_route@24 main_fromI16_route@25
     err
 
-main_fromI16_route@8:
+main_fromI16_route@25:
     txna ApplicationArgs 1
     dup
     len
-    intc_1 // 8
+    intc_3 // 8
     ==
     assert // invalid number of bytes for arc4.uint64
     btoi
-    bury 1
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    dup
-    pushint 32767
-    <=
-    bnz main_bool_true@17
-    dup
-    pushint 18446744073709518848
-    >=
-    bz main_bool_false@18
-
-main_bool_true@17:
-    intc_0 // 1
-
-main_bool_merge@19:
-    assert // ABI validation
-    dupn 2
-    pushint 2
-    <
-    assert // enum out of range
-    intc_3 // 255
-    &
+    callsub fromI16
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -87,48 +66,14 @@ main_bool_merge@19:
     intc_0 // 1
     return
 
-main_bool_false@18:
-    intc_2 // 0
-    b main_bool_merge@19
-
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
-
-main_fromU256_route@7:
+main_fromU256_route@24:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
-    pushint 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@23
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@24:
-    !
-    assert // not payable
-    dig 1
-    dup
-    bytec_1 // 0x02
-    b<
-    assert // enum out of range
-    intc_1 // 8
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    intc_3 // 255
-    &
+    callsub fromU256
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -137,54 +82,14 @@ main_ternary_merge@24:
     intc_0 // 1
     return
 
-main_ternary_false@23:
-    intc_2 // 0
-    b main_ternary_merge@24
-
-main_fromI200_route@6:
+main_fromI200_route@23:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     pushint 25
     ==
     assert // invalid number of bytes for arc4.uint200
-    txn GroupIndex
-    bz main_ternary_false@28
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@29:
-    !
-    assert // not payable
-    dig 1
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffff
-    b&
-    dup
-    pushbytes 0x80000000000000000000000000000000000000000000000000
-    b>=
-    bz main_ternary_false@31
-    pushbytes 0xffffffffffffff00000000000000000000000000000000000000000000000000
-    b+
-
-main_ternary_merge@32:
-    dup
-    bytec_1 // 0x02
-    b<
-    assert // enum out of range
-    intc_1 // 8
-    bzero
-    swap
-    concat
-    dup
-    len
-    intc_1 // 8
-    -
-    extract_uint64
-    intc_3 // 255
-    &
+    callsub fromI200
     itob
     bytec_0 // 0x151f7c75
     swap
@@ -193,68 +98,387 @@ main_ternary_merge@32:
     intc_0 // 1
     return
 
-main_ternary_false@31:
-    b main_ternary_merge@32
-
-main_ternary_false@28:
-    intc_2 // 0
-    b main_ternary_merge@29
-
-main_fromI136_route@5:
+main_fromI136_route@22:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     pushint 17
     ==
     assert // invalid number of bytes for arc4.uint136
+    callsub fromI136
+    itob
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_3@14:
+    callsub __evm_npy
+    intc_1 // 0
+    callsub __evm_decw
+    dupn 2
+    extract 0 30
+    swap
+    pushint 30
+    getbyte
+    intc 5 // 128
+    >=
+    bz main_ternary_false@16
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+main_ternary_merge@17:
+    ==
+    assert // invalid EVM ABI signed integer padding
+    pushint 24
+    extract_uint64
+    callsub fromI16
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_ternary_false@16:
+    pushint 30
+    bzero
+    b main_ternary_merge@17
+
+main_switch_case_2@13:
+    callsub __evm_npy
+    intc_1 // 0
+    callsub __evm_decw
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    callsub fromU256
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_1@9:
+    callsub __evm_npy
+    intc_1 // 0
+    callsub __evm_decw
+    dupn 2
+    extract 0 7
+    swap
+    pushint 7
+    getbyte
+    intc 5 // 128
+    >=
+    bz main_ternary_false@11
+    pushbytes 0xffffffffffffff
+
+main_ternary_merge@12:
+    ==
+    assert // invalid EVM ABI signed integer padding
+    pushint 25
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    pushint 25
+    -
+    pushint 25
+    extract3
+    dup
+    len
+    pushint 25
+    <=
+    assert // overflow
+    b|
+    callsub fromI200
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_ternary_false@11:
+    pushint 7
+    bzero
+    b main_ternary_merge@12
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_1 // 0
+    callsub __evm_decw
+    dupn 2
+    extract 0 15
+    swap
+    pushint 15
+    getbyte
+    intc 5 // 128
+    >=
+    bz main_ternary_false@7
+    pushbytes 0xffffffffffffffffffffffffffffff
+
+main_ternary_merge@8:
+    ==
+    assert // invalid EVM ABI signed integer padding
+    pushint 17
+    bzero
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    pushint 17
+    -
+    pushint 17
+    extract3
+    dup
+    len
+    pushint 17
+    <=
+    assert // overflow
+    b|
+    callsub fromI136
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_ternary_false@7:
+    pushint 15
+    bzero
+    b main_ternary_merge@8
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/enum_conversion_wide_range.sol.C.fromI136(__arc4_x: bytes) -> uint64:
+fromI136:
+    proto 1 1
     txn GroupIndex
-    bz main_ternary_false@36
+    bz fromI136_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@37:
+fromI136_ternary_merge@3:
     !
     assert // not payable
-    dig 1
+    frame_dig -1
     pushbytes 0xffffffffffffffffffffffffffffffffff
     b&
     dup
     pushbytes 0x8000000000000000000000000000000000
     b>=
-    bz main_ternary_false@39
+    bz fromI136_ternary_false@5
     pushbytes 0xffffffffffffffffffffffffffffff0000000000000000000000000000000000
     b+
 
-main_ternary_merge@40:
+fromI136_ternary_merge@6:
     dup
     bytec_1 // 0x02
     b<
     assert // enum out of range
-    intc_1 // 8
+    intc_3 // 8
     bzero
     swap
     concat
     dup
     len
-    intc_1 // 8
+    intc_3 // 8
     -
     extract_uint64
-    intc_3 // 255
+    intc 4 // 255
     &
+    retsub
+
+fromI136_ternary_false@5:
+    b fromI136_ternary_merge@6
+
+fromI136_ternary_false@2:
+    intc_1 // 0
+    b fromI136_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/enum_conversion_wide_range.sol.C.fromI200(__arc4_x: bytes) -> uint64:
+fromI200:
+    proto 1 1
+    txn GroupIndex
+    bz fromI200_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fromI200_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffff
+    b&
+    dup
+    pushbytes 0x80000000000000000000000000000000000000000000000000
+    b>=
+    bz fromI200_ternary_false@5
+    pushbytes 0xffffffffffffff00000000000000000000000000000000000000000000000000
+    b+
+
+fromI200_ternary_merge@6:
+    dup
+    bytec_1 // 0x02
+    b<
+    assert // enum out of range
+    intc_3 // 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc 4 // 255
+    &
+    retsub
+
+fromI200_ternary_false@5:
+    b fromI200_ternary_merge@6
+
+fromI200_ternary_false@2:
+    intc_1 // 0
+    b fromI200_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/enum_conversion_wide_range.sol.C.fromU256(__arc4_x: bytes) -> uint64:
+fromU256:
+    proto 1 1
+    txn GroupIndex
+    bz fromU256_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fromU256_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    bytec_1 // 0x02
+    b<
+    assert // enum out of range
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    intc 4 // 255
+    &
+    retsub
+
+fromU256_ternary_false@2:
+    intc_1 // 0
+    b fromU256_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/enum_conversion_wide_range.sol.C.fromI16(x: uint64) -> uint64:
+fromI16:
+    proto 1 1
+    txn GroupIndex
+    bz fromI16_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fromI16_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    pushint 32767
+    <=
+    bnz fromI16_bool_true@5
+    frame_dig -1
+    pushint 18446744073709518848
+    >=
+    bz fromI16_bool_false@6
+
+fromI16_bool_true@5:
+    intc_0 // 1
+
+fromI16_bool_merge@7:
+    assert // ABI validation
+    frame_dig -1
+    pushint 2
+    <
+    assert // enum out of range
+    frame_dig -1
+    intc 4 // 255
+    &
+    retsub
+
+fromI16_bool_false@6:
+    intc_1 // 0
+    b fromI16_bool_merge@7
+
+fromI16_ternary_false@2:
+    intc_1 // 0
+    b fromI16_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/enum_conversion_wide_range.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/enum_conversion_wide_range.sol.C.__evm_decw(__off: uint64) -> bytes:
+__evm_decw:
+    proto 1 1
+    frame_dig -1
+    intc_2 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    frame_dig -1
+    intc_2 // 32
+    extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/enum_conversion_wide_range.sol.C.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_2 // 32
+    bzero
+    frame_dig -1
     itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
     bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
-    return
-
-main_ternary_false@39:
-    b main_ternary_merge@40
-
-main_ternary_false@36:
-    intc_2 // 0
-    b main_ternary_merge@37
+    retsub

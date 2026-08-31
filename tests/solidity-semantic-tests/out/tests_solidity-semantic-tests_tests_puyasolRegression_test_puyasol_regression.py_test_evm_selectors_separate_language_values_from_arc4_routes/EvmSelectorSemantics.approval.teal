@@ -1,0 +1,1679 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.approval_program() -> uint64:
+main:
+    intcblock 1 32 0 4096 20480 4064
+    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000024 0xa7043bd9 0x76542536 0x77575e33 0xe13cf0f0 0x67adad22 0x5923cdaa 0xa64d0cd4 0x01eb435e 0x09dac9d7 0x8cf53067 0xd207632b 0xcc18591a 0x01e1efa5 0x49f0dfa3 0x4ceb18f5 0x11bfb764 0xe3f88c1e 0xb628d01a 0x890c45f7 0xabdb4af2 0x984a74b0 0x5042f554 0x83d99a37 0x1da899a8 0xefd3cee0 0x4d80421b 0xf8ef89f2 0x8b8cda79 0xa7043bd900000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x00000000
+    intc_2 // 0
+    pushbytes ""
+    dup
+    intc_3 // 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@17
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@17
+    bytec_2 // 0xa7043bd9
+    bytec 4 // 0x77575e33
+    bytec 5 // 0xe13cf0f0
+    bytec 6 // 0x67adad22
+    bytec 7 // 0x5923cdaa
+    bytec 8 // 0xa64d0cd4
+    bytec 9 // 0x01eb435e
+    bytec 10 // 0x09dac9d7
+    bytec 11 // 0x8cf53067
+    bytec 12 // 0xd207632b
+    bytec 13 // 0xcc18591a
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11 main_switch_case_7@12 main_switch_case_8@13 main_switch_case_9@14 main_switch_case_10@15
+
+main_after_if_else@17:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    bytec 14 // method "alpha(uint256)bool"
+    bytec 15 // method "noReturn(byte[32])void"
+    bytec 16 // method "functionSelector()byte[4]"
+    bytec 17 // method "eventSelector()byte[32]"
+    bytec 18 // method "errorSelector()byte[4]"
+    bytec 19 // method "interfaceId()byte[4]"
+    bytec 20 // method "encodedCallSelector()byte[4]"
+    bytec 21 // method "encodedSignatureSelector()byte[4]"
+    bytec 22 // method "pointerSelector()byte[4]"
+    bytec 23 // method "pointerCall(uint256)bool"
+    bytec_3 // method "innerMsgSig()byte[4]"
+    bytec 24 // method "outerMsgSig()byte[4]"
+    bytec 25 // method "directMsgSig()byte[4]"
+    bytec 26 // method "assemblyMsgSig(uint256)byte[4]"
+    txna ApplicationArgs 0
+    match main_alpha_route@20 main_noReturn_route@21 main_functionSelector_route@22 main_eventSelector_route@23 main_errorSelector_route@24 main_interfaceId_route@25 main_encodedCallSelector_route@26 main_encodedSignatureSelector_route@27 main_pointerSelector_route@28 main_pointerCall_route@29 main_innerMsgSig_route@30 main_outerMsgSig_route@31 main_directMsgSig_route@32 main_assemblyMsgSig_route@33
+    err
+
+main_assemblyMsgSig_route@33:
+    txna ApplicationArgs 1
+    dup
+    bury 4
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@39
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@40:
+    !
+    assert // not payable
+    load 0
+    store 0
+    txn NumAppArgs
+    bz main_ternary_false@42
+    txna ApplicationArgs 0
+
+main_ternary_merge@43:
+    dup
+    bytec 14 // method "alpha(uint256)bool"
+    ==
+    bz main_ternary_false@45
+    pop
+    bytec_2 // 0xa7043bd9
+
+main_ternary_merge@85:
+    intc_1 // 32
+    bzero
+    dup
+    dig 5
+    dup
+    cover 2
+    dig 1
+    b|
+    uncover 4
+    swap
+    concat
+    dup
+    uncover 2
+    concat
+    cover 2
+    pushint 8
+    bzero
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    uncover 2
+    len
+    dup
+    cover 2
+    <
+    bz main_ternary_false@87
+    pop
+
+main_ternary_merge@88:
+    intc_1 // 32
+    extract3
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    extract 0 4
+    load 0
+    store 0
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@87:
+    bury 1
+    b main_ternary_merge@88
+
+main_ternary_false@45:
+    dup
+    bytec 15 // method "noReturn(byte[32])void"
+    ==
+    bz main_ternary_false@47
+    pop
+    bytec 4 // 0x77575e33
+
+main_ternary_merge@84:
+    b main_ternary_merge@85
+
+main_ternary_false@47:
+    dup
+    bytec 16 // method "functionSelector()byte[4]"
+    ==
+    bz main_ternary_false@49
+    pop
+    bytec 5 // 0xe13cf0f0
+
+main_ternary_merge@83:
+    b main_ternary_merge@85
+
+main_ternary_false@49:
+    dup
+    bytec 17 // method "eventSelector()byte[32]"
+    ==
+    bz main_ternary_false@51
+    pop
+    bytec 6 // 0x67adad22
+
+main_ternary_merge@82:
+    b main_ternary_merge@84
+
+main_ternary_false@51:
+    dup
+    bytec 18 // method "errorSelector()byte[4]"
+    ==
+    bz main_ternary_false@53
+    pop
+    bytec 7 // 0x5923cdaa
+
+main_ternary_merge@81:
+    b main_ternary_merge@83
+
+main_ternary_false@53:
+    dup
+    bytec 19 // method "interfaceId()byte[4]"
+    ==
+    bz main_ternary_false@55
+    pop
+    bytec 8 // 0xa64d0cd4
+
+main_ternary_merge@80:
+    b main_ternary_merge@82
+
+main_ternary_false@55:
+    dup
+    bytec 20 // method "encodedCallSelector()byte[4]"
+    ==
+    bz main_ternary_false@57
+    pop
+    bytec 27 // 0x4d80421b
+
+main_ternary_merge@79:
+    b main_ternary_merge@81
+
+main_ternary_false@57:
+    dup
+    bytec 21 // method "encodedSignatureSelector()byte[4]"
+    ==
+    bz main_ternary_false@59
+    pop
+    bytec 28 // 0xf8ef89f2
+
+main_ternary_merge@78:
+    b main_ternary_merge@80
+
+main_ternary_false@59:
+    dup
+    bytec 22 // method "pointerSelector()byte[4]"
+    ==
+    bz main_ternary_false@61
+    pop
+    bytec 9 // 0x01eb435e
+
+main_ternary_merge@77:
+    b main_ternary_merge@79
+
+main_ternary_false@61:
+    dup
+    bytec 23 // method "pointerCall(uint256)bool"
+    ==
+    bz main_ternary_false@63
+    pop
+    bytec 10 // 0x09dac9d7
+
+main_ternary_merge@76:
+    b main_ternary_merge@78
+
+main_ternary_false@63:
+    dup
+    bytec_3 // method "innerMsgSig()byte[4]"
+    ==
+    bz main_ternary_false@65
+    pop
+    bytec 11 // 0x8cf53067
+
+main_ternary_merge@75:
+    b main_ternary_merge@77
+
+main_ternary_false@65:
+    dup
+    bytec 24 // method "outerMsgSig()byte[4]"
+    ==
+    bz main_ternary_false@67
+    pop
+    bytec 12 // 0xd207632b
+
+main_ternary_merge@74:
+    b main_ternary_merge@76
+
+main_ternary_false@67:
+    dup
+    bytec 25 // method "directMsgSig()byte[4]"
+    ==
+    bz main_ternary_false@69
+    pop
+    bytec 13 // 0xcc18591a
+
+main_ternary_merge@73:
+    b main_ternary_merge@75
+
+main_ternary_false@69:
+    dup
+    bytec 26 // method "assemblyMsgSig(uint256)byte[4]"
+    ==
+    bz main_ternary_false@71
+    pop
+    bytec 29 // 0x8b8cda79
+    b main_ternary_merge@74
+
+main_ternary_false@71:
+    b main_ternary_merge@73
+
+main_ternary_false@42:
+    pushint 4
+    bzero
+    b main_ternary_merge@43
+
+main_ternary_false@39:
+    intc_2 // 0
+    b main_ternary_merge@40
+
+main_directMsgSig_route@32:
+    callsub directMsgSig
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_outerMsgSig_route@31:
+    callsub outerMsgSig
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_innerMsgSig_route@30:
+    callsub innerMsgSig
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_pointerCall_route@29:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub pointerCall
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_pointerSelector_route@28:
+    callsub pointerSelector
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_encodedSignatureSelector_route@27:
+    txn GroupIndex
+    bz main_ternary_false@102
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@103:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    load 0
+    pushint 88
+    extract_uint64
+    dupn 2
+    intc_1 // 32
+    +
+    dup
+    bury 5
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_3 // 4096
+    /
+    swap
+    intc_3 // 4096
+    %
+    dup
+    cover 2
+    pushint 24
+    bzero
+    swap
+    intc 5 // 4064
+    <=
+    bz main_else_body@105
+    swap
+    dup
+    loads
+    uncover 3
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000024
+    replace3
+    stores
+
+main_after_if_else@106:
+    load 0
+    dig 2
+    pushint 96
+    +
+    itob
+    uncover 2
+    swap
+    concat
+    replace2 64
+    store 0
+    intc_2 // 0
+
+main_while_top@107:
+    dup
+    pushint 36
+    <
+    bz main_after_while@112
+    dig 3
+    dig 1
+    dup
+    cover 2
+    +
+    dup
+    intc_1 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_3 // 4096
+    /
+    cover 3
+    intc_3 // 4096
+    %
+    dup
+    cover 4
+    bytec 30 // 0xa7043bd900000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000000
+    uncover 2
+    intc_1 // 32
+    extract3
+    swap
+    intc 5 // 4064
+    <=
+    bz main_else_body@110
+    uncover 2
+    dup
+    loads
+    uncover 4
+    uncover 3
+    replace3
+    stores
+
+main_after_if_else@111:
+    intc_1 // 32
+    +
+    b main_while_top@107
+
+main_else_body@110:
+    uncover 2
+    dup
+    loads
+    intc_3 // 4096
+    uncover 5
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_0 // 1
+    +
+    dup
+    loads
+    intc_1 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@111
+
+main_after_while@112:
+    pop
+    load 0
+    store 0
+    pushint 8
+    bzero
+    swap
+    itob
+    pushbytes 0x20
+    b+
+    bytec 31 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dupn 2
+    intc_1 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    intc_3 // 4096
+    %
+    dup
+    cover 2
+    intc_3 // 4096
+    swap
+    -
+    dup
+    cover 2
+    intc_1 // 32
+    >=
+    bz main_ternary_false@114
+    bury 1
+    intc_3 // 4096
+    /
+    loads
+    swap
+    intc_1 // 32
+    extract3
+
+main_ternary_merge@132:
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    extract 0 4
+    load 0
+    store 0
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@114:
+    intc_3 // 4096
+    /
+    dup
+    loads
+    uncover 3
+    dig 3
+    extract3
+    swap
+    intc_0 // 1
+    +
+    loads
+    intc_1 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@132
+
+main_else_body@105:
+    swap
+    dup
+    loads
+    intc_3 // 4096
+    uncover 4
+    dup
+    cover 2
+    -
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000024
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_0 // 1
+    +
+    dup
+    loads
+    intc_1 // 32
+    dig 3
+    -
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000024
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@106
+
+main_ternary_false@102:
+    intc_2 // 0
+    b main_ternary_merge@103
+
+main_encodedCallSelector_route@26:
+    txn GroupIndex
+    bz main_ternary_false@119
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@120:
+    !
+    assert // not payable
+    intc_1 // 32
+    bzero
+    load 0
+    pushint 88
+    extract_uint64
+    dupn 2
+    intc_1 // 32
+    +
+    dup
+    bury 6
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_3 // 4096
+    /
+    swap
+    intc_3 // 4096
+    %
+    dup
+    cover 2
+    pushint 24
+    bzero
+    swap
+    intc 5 // 4064
+    <=
+    bz main_else_body@122
+    swap
+    dup
+    loads
+    uncover 3
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000024
+    replace3
+    stores
+
+main_after_if_else@123:
+    load 0
+    dig 2
+    pushint 96
+    +
+    itob
+    uncover 2
+    swap
+    concat
+    replace2 64
+    store 0
+    intc_2 // 0
+
+main_while_top@124:
+    dup
+    pushint 36
+    <
+    bz main_after_while@129
+    dig 4
+    dig 1
+    dup
+    cover 2
+    +
+    dup
+    intc_1 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_3 // 4096
+    /
+    cover 3
+    intc_3 // 4096
+    %
+    dup
+    cover 4
+    bytec 30 // 0xa7043bd900000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000000
+    uncover 2
+    intc_1 // 32
+    extract3
+    swap
+    intc 5 // 4064
+    <=
+    bz main_else_body@127
+    uncover 2
+    dup
+    loads
+    uncover 4
+    uncover 3
+    replace3
+    stores
+
+main_after_if_else@128:
+    intc_1 // 32
+    +
+    b main_while_top@124
+
+main_else_body@127:
+    uncover 2
+    dup
+    loads
+    intc_3 // 4096
+    uncover 5
+    dup
+    cover 2
+    -
+    dig 4
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_0 // 1
+    +
+    dup
+    loads
+    intc_1 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@128
+
+main_after_while@129:
+    pop
+    load 0
+    store 0
+    pushint 8
+    bzero
+    swap
+    itob
+    pushbytes 0x20
+    b+
+    bytec 31 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dupn 2
+    intc_1 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    intc_3 // 4096
+    %
+    dup
+    cover 2
+    intc_3 // 4096
+    swap
+    -
+    dup
+    cover 2
+    intc_1 // 32
+    >=
+    bz main_ternary_false@131
+    bury 1
+    intc_3 // 4096
+    /
+    loads
+    swap
+    intc_1 // 32
+    extract3
+    b main_ternary_merge@132
+
+main_ternary_false@131:
+    intc_3 // 4096
+    /
+    dup
+    loads
+    uncover 3
+    dig 3
+    extract3
+    swap
+    intc_0 // 1
+    +
+    loads
+    intc_1 // 32
+    uncover 3
+    -
+    intc_2 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@132
+
+main_else_body@122:
+    swap
+    dup
+    loads
+    intc_3 // 4096
+    uncover 4
+    dup
+    cover 2
+    -
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000024
+    intc_2 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_0 // 1
+    +
+    dup
+    loads
+    intc_1 // 32
+    dig 3
+    -
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000024
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@123
+
+main_ternary_false@119:
+    intc_2 // 0
+    b main_ternary_merge@120
+
+main_interfaceId_route@25:
+    callsub interfaceId
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_errorSelector_route@24:
+    callsub errorSelector
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_eventSelector_route@23:
+    callsub eventSelector
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_functionSelector_route@22:
+    callsub functionSelector
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_noReturn_route@21:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub noReturn
+    intc_0 // 1
+    return
+
+main_alpha_route@20:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub alpha
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_10@15:
+    callsub __evm_npy
+    callsub directMsgSig
+    callsub __evm_ret1
+    intc_0 // 1
+    return
+
+main_switch_case_9@14:
+    callsub __evm_npy
+    callsub outerMsgSig
+    callsub __evm_ret1
+    intc_0 // 1
+    return
+
+main_switch_case_8@13:
+    callsub __evm_npy
+    callsub innerMsgSig
+    callsub __evm_ret1
+    intc_0 // 1
+    return
+
+main_switch_case_7@12:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    callsub pointerCall
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_6@11:
+    callsub __evm_npy
+    callsub pointerSelector
+    callsub __evm_ret1
+    intc_0 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    callsub interfaceId
+    callsub __evm_ret1
+    intc_0 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    callsub errorSelector
+    callsub __evm_ret1
+    intc_0 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    callsub eventSelector
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    callsub functionSelector
+    callsub __evm_ret1
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    extract 0 32
+    callsub noReturn
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    callsub alpha
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.alpha(__arc4_value: bytes) -> uint64:
+alpha:
+    proto 1 1
+    txn GroupIndex
+    bz alpha_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+alpha_ternary_merge@3:
+    !
+    assert // not payable
+    pushint 7
+    itob
+    frame_dig -1
+    b==
+    retsub
+
+alpha_ternary_false@2:
+    intc_2 // 0
+    b alpha_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.noReturn(_param0: bytes) -> void:
+noReturn:
+    proto 1 0
+    txn GroupIndex
+    bz noReturn_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+noReturn_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+noReturn_ternary_false@2:
+    intc_2 // 0
+    b noReturn_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.functionSelector() -> bytes:
+functionSelector:
+    txn GroupIndex
+    bz functionSelector_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+functionSelector_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_2 // 0xa7043bd9
+    retsub
+
+functionSelector_ternary_false@2:
+    intc_2 // 0
+    b functionSelector_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.eventSelector() -> bytes:
+eventSelector:
+    txn GroupIndex
+    bz eventSelector_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+eventSelector_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0xd643c01d22702743c4086499fc0fb9fe5e06272216181007be2387d3f1680d1e
+    retsub
+
+eventSelector_ternary_false@2:
+    intc_2 // 0
+    b eventSelector_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.errorSelector() -> bytes:
+errorSelector:
+    txn GroupIndex
+    bz errorSelector_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+errorSelector_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x1167d8fb
+    retsub
+
+errorSelector_ternary_false@2:
+    intc_2 // 0
+    b errorSelector_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.interfaceId() -> bytes:
+interfaceId:
+    txn GroupIndex
+    bz interfaceId_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+interfaceId_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0xd05365ea
+    retsub
+
+interfaceId_ternary_false@2:
+    intc_2 // 0
+    b interfaceId_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.pointerSelector() -> bytes:
+pointerSelector:
+    txn GroupIndex
+    bz pointerSelector_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pointerSelector_ternary_merge@3:
+    !
+    assert // not payable
+    global CurrentApplicationID
+    itob
+    pushbytes 0xa7043bd901e1efa5
+    concat
+    extract 8 4
+    retsub
+
+pointerSelector_ternary_false@2:
+    intc_2 // 0
+    b pointerSelector_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.pointerCall(__arc4_value: bytes) -> uint64:
+pointerCall:
+    proto 1 1
+    txn GroupIndex
+    bz pointerCall_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pointerCall_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub alpha
+    retsub
+
+pointerCall_ternary_false@2:
+    intc_2 // 0
+    b pointerCall_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.innerMsgSig() -> bytes:
+innerMsgSig:
+    txn NumAppArgs
+    bz innerMsgSig_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_3 // method "innerMsgSig()byte[4]"
+    ==
+    bz innerMsgSig_after_if_else@6
+    txn GroupIndex
+    bz innerMsgSig_ternary_false@4
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+innerMsgSig_ternary_merge@5:
+    !
+    assert // not payable
+
+innerMsgSig_after_if_else@6:
+    txn NumAppArgs
+    bz innerMsgSig_ternary_false@8
+    txna ApplicationArgs 0
+
+innerMsgSig_ternary_merge@9:
+    dup
+    bytec 14 // method "alpha(uint256)bool"
+    ==
+    bz innerMsgSig_ternary_false@11
+    pop
+    bytec_2 // 0xa7043bd9
+
+innerMsgSig_ternary_merge@51:
+    retsub
+
+innerMsgSig_ternary_false@11:
+    dup
+    bytec 15 // method "noReturn(byte[32])void"
+    ==
+    bz innerMsgSig_ternary_false@13
+    pop
+    bytec 4 // 0x77575e33
+
+innerMsgSig_ternary_merge@50:
+    retsub
+
+innerMsgSig_ternary_false@13:
+    dup
+    bytec 16 // method "functionSelector()byte[4]"
+    ==
+    bz innerMsgSig_ternary_false@15
+    pop
+    bytec 5 // 0xe13cf0f0
+
+innerMsgSig_ternary_merge@49:
+    b innerMsgSig_ternary_merge@51
+
+innerMsgSig_ternary_false@15:
+    dup
+    bytec 17 // method "eventSelector()byte[32]"
+    ==
+    bz innerMsgSig_ternary_false@17
+    pop
+    bytec 6 // 0x67adad22
+
+innerMsgSig_ternary_merge@48:
+    b innerMsgSig_ternary_merge@50
+
+innerMsgSig_ternary_false@17:
+    dup
+    bytec 18 // method "errorSelector()byte[4]"
+    ==
+    bz innerMsgSig_ternary_false@19
+    pop
+    bytec 7 // 0x5923cdaa
+
+innerMsgSig_ternary_merge@47:
+    b innerMsgSig_ternary_merge@49
+
+innerMsgSig_ternary_false@19:
+    dup
+    bytec 19 // method "interfaceId()byte[4]"
+    ==
+    bz innerMsgSig_ternary_false@21
+    pop
+    bytec 8 // 0xa64d0cd4
+
+innerMsgSig_ternary_merge@46:
+    b innerMsgSig_ternary_merge@48
+
+innerMsgSig_ternary_false@21:
+    dup
+    bytec 20 // method "encodedCallSelector()byte[4]"
+    ==
+    bz innerMsgSig_ternary_false@23
+    pop
+    bytec 27 // 0x4d80421b
+
+innerMsgSig_ternary_merge@45:
+    b innerMsgSig_ternary_merge@47
+
+innerMsgSig_ternary_false@23:
+    dup
+    bytec 21 // method "encodedSignatureSelector()byte[4]"
+    ==
+    bz innerMsgSig_ternary_false@25
+    pop
+    bytec 28 // 0xf8ef89f2
+
+innerMsgSig_ternary_merge@44:
+    b innerMsgSig_ternary_merge@46
+
+innerMsgSig_ternary_false@25:
+    dup
+    bytec 22 // method "pointerSelector()byte[4]"
+    ==
+    bz innerMsgSig_ternary_false@27
+    pop
+    bytec 9 // 0x01eb435e
+
+innerMsgSig_ternary_merge@43:
+    b innerMsgSig_ternary_merge@45
+
+innerMsgSig_ternary_false@27:
+    dup
+    bytec 23 // method "pointerCall(uint256)bool"
+    ==
+    bz innerMsgSig_ternary_false@29
+    pop
+    bytec 10 // 0x09dac9d7
+
+innerMsgSig_ternary_merge@42:
+    b innerMsgSig_ternary_merge@44
+
+innerMsgSig_ternary_false@29:
+    dup
+    bytec_3 // method "innerMsgSig()byte[4]"
+    ==
+    bz innerMsgSig_ternary_false@31
+    pop
+    bytec 11 // 0x8cf53067
+
+innerMsgSig_ternary_merge@41:
+    b innerMsgSig_ternary_merge@43
+
+innerMsgSig_ternary_false@31:
+    dup
+    bytec 24 // method "outerMsgSig()byte[4]"
+    ==
+    bz innerMsgSig_ternary_false@33
+    pop
+    bytec 12 // 0xd207632b
+
+innerMsgSig_ternary_merge@40:
+    b innerMsgSig_ternary_merge@42
+
+innerMsgSig_ternary_false@33:
+    dup
+    bytec 25 // method "directMsgSig()byte[4]"
+    ==
+    bz innerMsgSig_ternary_false@35
+    pop
+    bytec 13 // 0xcc18591a
+
+innerMsgSig_ternary_merge@39:
+    b innerMsgSig_ternary_merge@41
+
+innerMsgSig_ternary_false@35:
+    dup
+    bytec 26 // method "assemblyMsgSig(uint256)byte[4]"
+    ==
+    bz innerMsgSig_ternary_false@37
+    pop
+    bytec 29 // 0x8b8cda79
+    b innerMsgSig_ternary_merge@40
+
+innerMsgSig_ternary_false@37:
+    b innerMsgSig_ternary_merge@39
+
+innerMsgSig_ternary_false@8:
+    bytec 32 // 0x00000000
+    b innerMsgSig_ternary_merge@9
+
+innerMsgSig_ternary_false@4:
+    intc_2 // 0
+    b innerMsgSig_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.outerMsgSig() -> bytes:
+outerMsgSig:
+    txn GroupIndex
+    bz outerMsgSig_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+outerMsgSig_ternary_merge@3:
+    !
+    assert // not payable
+    callsub innerMsgSig
+    retsub
+
+outerMsgSig_ternary_false@2:
+    intc_2 // 0
+    b outerMsgSig_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.directMsgSig() -> bytes:
+directMsgSig:
+    txn GroupIndex
+    bz directMsgSig_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+directMsgSig_ternary_merge@3:
+    !
+    assert // not payable
+    txn NumAppArgs
+    bz directMsgSig_ternary_false@5
+    txna ApplicationArgs 0
+
+directMsgSig_ternary_merge@6:
+    dup
+    bytec 14 // method "alpha(uint256)bool"
+    ==
+    bz directMsgSig_ternary_false@8
+    pop
+    bytec_2 // 0xa7043bd9
+
+directMsgSig_ternary_merge@48:
+    retsub
+
+directMsgSig_ternary_false@8:
+    dup
+    bytec 15 // method "noReturn(byte[32])void"
+    ==
+    bz directMsgSig_ternary_false@10
+    pop
+    bytec 4 // 0x77575e33
+
+directMsgSig_ternary_merge@47:
+    retsub
+
+directMsgSig_ternary_false@10:
+    dup
+    bytec 16 // method "functionSelector()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@12
+    pop
+    bytec 5 // 0xe13cf0f0
+
+directMsgSig_ternary_merge@46:
+    b directMsgSig_ternary_merge@48
+
+directMsgSig_ternary_false@12:
+    dup
+    bytec 17 // method "eventSelector()byte[32]"
+    ==
+    bz directMsgSig_ternary_false@14
+    pop
+    bytec 6 // 0x67adad22
+
+directMsgSig_ternary_merge@45:
+    b directMsgSig_ternary_merge@47
+
+directMsgSig_ternary_false@14:
+    dup
+    bytec 18 // method "errorSelector()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@16
+    pop
+    bytec 7 // 0x5923cdaa
+
+directMsgSig_ternary_merge@44:
+    b directMsgSig_ternary_merge@46
+
+directMsgSig_ternary_false@16:
+    dup
+    bytec 19 // method "interfaceId()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@18
+    pop
+    bytec 8 // 0xa64d0cd4
+
+directMsgSig_ternary_merge@43:
+    b directMsgSig_ternary_merge@45
+
+directMsgSig_ternary_false@18:
+    dup
+    bytec 20 // method "encodedCallSelector()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@20
+    pop
+    bytec 27 // 0x4d80421b
+
+directMsgSig_ternary_merge@42:
+    b directMsgSig_ternary_merge@44
+
+directMsgSig_ternary_false@20:
+    dup
+    bytec 21 // method "encodedSignatureSelector()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@22
+    pop
+    bytec 28 // 0xf8ef89f2
+
+directMsgSig_ternary_merge@41:
+    b directMsgSig_ternary_merge@43
+
+directMsgSig_ternary_false@22:
+    dup
+    bytec 22 // method "pointerSelector()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@24
+    pop
+    bytec 9 // 0x01eb435e
+
+directMsgSig_ternary_merge@40:
+    b directMsgSig_ternary_merge@42
+
+directMsgSig_ternary_false@24:
+    dup
+    bytec 23 // method "pointerCall(uint256)bool"
+    ==
+    bz directMsgSig_ternary_false@26
+    pop
+    bytec 10 // 0x09dac9d7
+
+directMsgSig_ternary_merge@39:
+    b directMsgSig_ternary_merge@41
+
+directMsgSig_ternary_false@26:
+    dup
+    bytec_3 // method "innerMsgSig()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@28
+    pop
+    bytec 11 // 0x8cf53067
+
+directMsgSig_ternary_merge@38:
+    b directMsgSig_ternary_merge@40
+
+directMsgSig_ternary_false@28:
+    dup
+    bytec 24 // method "outerMsgSig()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@30
+    pop
+    bytec 12 // 0xd207632b
+
+directMsgSig_ternary_merge@37:
+    b directMsgSig_ternary_merge@39
+
+directMsgSig_ternary_false@30:
+    dup
+    bytec 25 // method "directMsgSig()byte[4]"
+    ==
+    bz directMsgSig_ternary_false@32
+    pop
+    bytec 13 // 0xcc18591a
+
+directMsgSig_ternary_merge@36:
+    b directMsgSig_ternary_merge@38
+
+directMsgSig_ternary_false@32:
+    dup
+    bytec 26 // method "assemblyMsgSig(uint256)byte[4]"
+    ==
+    bz directMsgSig_ternary_false@34
+    pop
+    bytec 29 // 0x8b8cda79
+    b directMsgSig_ternary_merge@37
+
+directMsgSig_ternary_false@34:
+    b directMsgSig_ternary_merge@36
+
+directMsgSig_ternary_false@5:
+    bytec 32 // 0x00000000
+    b directMsgSig_ternary_merge@6
+
+directMsgSig_ternary_false@2:
+    intc_2 // 0
+    b directMsgSig_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.__evm_decw(__off: uint64) -> bytes:
+__evm_decw:
+    proto 1 1
+    frame_dig -1
+    intc_1 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    frame_dig -1
+    intc_1 // 32
+    extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_1 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_selector_semantics.sol.EvmSelectorSemantics.__evm_ret1(__v: bytes) -> void:
+__evm_ret1:
+    proto 1 0
+    pushint 28
+    bzero
+    frame_dig -1
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub

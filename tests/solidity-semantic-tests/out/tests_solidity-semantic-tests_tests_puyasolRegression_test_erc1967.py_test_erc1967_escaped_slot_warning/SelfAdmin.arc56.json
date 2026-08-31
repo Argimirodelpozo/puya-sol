@@ -1,0 +1,181 @@
+{
+    "name": "SelfAdmin",
+    "structs": {},
+    "methods": [
+        {
+            "name": "admin",
+            "args": [],
+            "returns": {
+                "type": "address"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": true,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "initAdminApp",
+            "args": [
+                {
+                    "type": "uint256",
+                    "name": "__arc4_appId"
+                }
+            ],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "initAdminSelf",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "NoOp"
+                ]
+            },
+            "readonly": false,
+            "events": [],
+            "recommendations": {}
+        },
+        {
+            "name": "__erc1967_update",
+            "args": [],
+            "returns": {
+                "type": "void"
+            },
+            "actions": {
+                "create": [],
+                "call": [
+                    "UpdateApplication"
+                ]
+            },
+            "readonly": false,
+            "events": [
+                {
+                    "name": "Upgraded",
+                    "args": [
+                        {
+                            "type": "address",
+                            "name": "implementation"
+                        }
+                    ]
+                }
+            ],
+            "recommendations": {}
+        }
+    ],
+    "arcs": [
+        22,
+        28
+    ],
+    "networks": {},
+    "state": {
+        "schema": {
+            "global": {
+                "ints": 0,
+                "bytes": 1
+            },
+            "local": {
+                "ints": 0,
+                "bytes": 0
+            }
+        },
+        "keys": {
+            "global": {
+                "__erc1967_admin": {
+                    "keyType": "AVMString",
+                    "valueType": "AVMBytes",
+                    "key": "X19lcmMxOTY3X2FkbWlu"
+                }
+            },
+            "local": {},
+            "box": {}
+        },
+        "maps": {
+            "global": {},
+            "local": {},
+            "box": {}
+        }
+    },
+    "bareActions": {
+        "create": [],
+        "call": []
+    },
+    "sourceInfo": {
+        "approval": {
+            "sourceInfo": [
+                {
+                    "pc": [
+                        346
+                    ],
+                    "errorMessage": "ERC-1967: update sender is not the proxy admin"
+                },
+                {
+                    "pc": [
+                        184
+                    ],
+                    "errorMessage": "invalid number of bytes for arc4.uint256"
+                },
+                {
+                    "pc": [
+                        157,
+                        197,
+                        227
+                    ],
+                    "errorMessage": "not payable"
+                }
+            ],
+            "pcOffsetMethod": "none"
+        },
+        "clear": {
+            "sourceInfo": [],
+            "pcOffsetMethod": "none"
+        }
+    },
+    "source": {
+        "approval": "I3ByYWdtYSB2ZXJzaW9uIDEyCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvcHV5YXNvbFJlZ3Jlc3Npb24vY29udHJhY3RzL2VyYzE5Njdfc2xvdF9mbG93LnNvbC5TZWxmQWRtaW4uYXBwcm92YWxfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIGludGNibG9jayAxIDAgMzIgMjQKICAgIGJ5dGVjYmxvY2sgIl9fZXJjMTk2N19hZG1pbiIgMHgKICAgIGludGNfMSAvLyAwCiAgICBkdXAKICAgIHB1c2hpbnQgNDA5NgogICAgYnplcm8KICAgIGR1cAogICAgc3RvcmUgNQogICAgZHVwCiAgICBzdG9yZSAwCiAgICBkdXAKICAgIHN0b3JlIDEKICAgIGR1cAogICAgc3RvcmUgMgogICAgZHVwCiAgICBzdG9yZSAzCiAgICBzdG9yZSA0CiAgICBsb2FkIDAKICAgIHB1c2hieXRlcyAweDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwODAKICAgIHJlcGxhY2UyIDY0CiAgICBzdG9yZSAwCiAgICB0eG4gQXBwbGljYXRpb25JRAogICAgYm56IG1haW5fYWZ0ZXJfaWZfZWxzZUAyCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2FmdGVyX2lmX2Vsc2VAMjoKICAgIHB1c2hieXRlcyAweDY3YWU3MDQyIC8vIG1ldGhvZCAiX19lcmMxOTY3X3VwZGF0ZSgpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fX19lcmMxOTY3X3VwZGF0ZV9yb3V0ZUA0CiAgICB0eG4gT25Db21wbGV0aW9uCiAgICAhCiAgICBhc3NlcnQKICAgIHR4biBBcHBsaWNhdGlvbklECiAgICBhc3NlcnQKICAgIHB1c2hieXRlc3MgMHgwYTRmYjZiMyAweDZmZmY0NGViIDB4MDc4MjNiNDMgLy8gbWV0aG9kICJhZG1pbigpYWRkcmVzcyIsIG1ldGhvZCAiaW5pdEFkbWluQXBwKHVpbnQyNTYpdm9pZCIsIG1ldGhvZCAiaW5pdEFkbWluU2VsZigpdm9pZCIKICAgIHR4bmEgQXBwbGljYXRpb25BcmdzIDAKICAgIG1hdGNoIG1haW5fYWRtaW5fcm91dGVANyBtYWluX2luaXRBZG1pbkFwcF9yb3V0ZUA4IG1haW5faW5pdEFkbWluU2VsZl9yb3V0ZUA5CiAgICBlcnIKCm1haW5faW5pdEFkbWluU2VsZl9yb3V0ZUA5OgogICAgdHhuIEdyb3VwSW5kZXgKICAgIGJ6IG1haW5fdGVybmFyeV9mYWxzZUAxNQogICAgdHhuIEdyb3VwSW5kZXgKICAgIGludGNfMCAvLyAxCiAgICAtCiAgICBndHhucyBBbW91bnQKCm1haW5fdGVybmFyeV9tZXJnZUAxNjoKICAgICEKICAgIGFzc2VydCAvLyBub3QgcGF5YWJsZQogICAgZ2xvYmFsIEN1cnJlbnRBcHBsaWNhdGlvbkFkZHJlc3MKICAgIGxvYWQgMAogICAgc3RvcmUgMAogICAgYnl0ZWNfMCAvLyAiX19lcmMxOTY3X2FkbWluIgogICAgc3dhcAogICAgYXBwX2dsb2JhbF9wdXQKICAgIGxvYWQgMAogICAgc3RvcmUgMAogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl90ZXJuYXJ5X2ZhbHNlQDE1OgogICAgaW50Y18xIC8vIDAKICAgIGIgbWFpbl90ZXJuYXJ5X21lcmdlQDE2CgptYWluX2luaXRBZG1pbkFwcF9yb3V0ZUA4OgogICAgdHhuYSBBcHBsaWNhdGlvbkFyZ3MgMQogICAgZHVwCiAgICBsZW4KICAgIGludGNfMiAvLyAzMgogICAgPT0KICAgIGFzc2VydCAvLyBpbnZhbGlkIG51bWJlciBvZiBieXRlcyBmb3IgYXJjNC51aW50MjU2CiAgICB0eG4gR3JvdXBJbmRleAogICAgYnogbWFpbl90ZXJuYXJ5X2ZhbHNlQDIwCiAgICB0eG4gR3JvdXBJbmRleAogICAgaW50Y18wIC8vIDEKICAgIC0KICAgIGd0eG5zIEFtb3VudAoKbWFpbl90ZXJuYXJ5X21lcmdlQDIxOgogICAgIQogICAgYXNzZXJ0IC8vIG5vdCBwYXlhYmxlCiAgICBsb2FkIDAKICAgIHN0b3JlIDAKICAgIGJ5dGVjXzAgLy8gIl9fZXJjMTk2N19hZG1pbiIKICAgIHN3YXAKICAgIGFwcF9nbG9iYWxfcHV0CiAgICBsb2FkIDAKICAgIHN0b3JlIDAKICAgIGludGNfMCAvLyAxCiAgICByZXR1cm4KCm1haW5fdGVybmFyeV9mYWxzZUAyMDoKICAgIGludGNfMSAvLyAwCiAgICBiIG1haW5fdGVybmFyeV9tZXJnZUAyMQoKbWFpbl9hZG1pbl9yb3V0ZUA3OgogICAgdHhuIEdyb3VwSW5kZXgKICAgIGJ6IG1haW5fdGVybmFyeV9mYWxzZUAyNQogICAgdHhuIEdyb3VwSW5kZXgKICAgIGludGNfMCAvLyAxCiAgICAtCiAgICBndHhucyBBbW91bnQKCm1haW5fdGVybmFyeV9tZXJnZUAyNjoKICAgICEKICAgIGFzc2VydCAvLyBub3QgcGF5YWJsZQogICAgbG9hZCAwCiAgICBzdG9yZSAwCiAgICBpbnRjXzIgLy8gMzIKICAgIGJ6ZXJvCiAgICBpbnRjXzEgLy8gMAogICAgYnl0ZWNfMCAvLyAiX19lcmMxOTY3X2FkbWluIgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIGJ5dGVjXzEgLy8gMHgKICAgIGNvdmVyIDIKICAgIHNlbGVjdAogICAgY29uY2F0CiAgICBkdXAKICAgIGxlbgogICAgaW50Y18yIC8vIDMyCiAgICAtCiAgICBpbnRjXzIgLy8gMzIKICAgIGV4dHJhY3QzCiAgICBsb2FkIDAKICAgIHN0b3JlIDAKICAgIHB1c2hieXRlcyAweDE1MWY3Yzc1CiAgICBzd2FwCiAgICBjb25jYXQKICAgIGxvZwogICAgaW50Y18wIC8vIDEKICAgIHJldHVybgoKbWFpbl90ZXJuYXJ5X2ZhbHNlQDI1OgogICAgaW50Y18xIC8vIDAKICAgIGIgbWFpbl90ZXJuYXJ5X21lcmdlQDI2CgptYWluX19fZXJjMTk2N191cGRhdGVfcm91dGVANDoKICAgIHR4biBPbkNvbXBsZXRpb24KICAgIHB1c2hpbnQgNCAvLyBVcGRhdGVBcHBsaWNhdGlvbgogICAgPT0KICAgIHR4biBBcHBsaWNhdGlvbklECiAgICAmJgogICAgYXNzZXJ0CiAgICBpbnRjXzEgLy8gMAogICAgYnl0ZWNfMCAvLyAiX19lcmMxOTY3X2FkbWluIgogICAgYXBwX2dsb2JhbF9nZXRfZXgKICAgIGJ5dGVjXzEgLy8gMHgKICAgIGNvdmVyIDIKICAgIHNlbGVjdAogICAgZHVwCiAgICBidXJ5IDMKICAgIHR4biBTZW5kZXIKICAgIGI9PQogICAgZHVwCiAgICBibnogbWFpbl9hZnRlcl9pZl9lbHNlQDM2CiAgICBkaWcgMgogICAgYnl0ZWNfMSAvLyAweAogICAgYiE9CiAgICBieiBtYWluX2FmdGVyX2lmX2Vsc2VAMzYKICAgIGRpZyAyCiAgICBwdXNoYnl0ZXMgMHhmZmZmZmZmZmZmZmZmZmZmCiAgICBiPD0KICAgIGJ6IG1haW5fYWZ0ZXJfaWZfZWxzZUAzNgogICAgcG9wCiAgICBpbnRjXzIgLy8gMzIKICAgIGJ6ZXJvCiAgICBkaWcgMgogICAgY29uY2F0CiAgICBkdXAKICAgIGxlbgogICAgaW50Y18yIC8vIDMyCiAgICAtCiAgICBpbnRjXzIgLy8gMzIKICAgIGV4dHJhY3QzCiAgICBpbnRjXzMgLy8gMjQKICAgIGV4dHJhY3RfdWludDY0CiAgICBhcHBfcGFyYW1zX2dldCBBcHBBZGRyZXNzCiAgICBzd2FwCiAgICBidXJ5IDIKICAgIGJ6IG1haW5fYm9vbF9mYWxzZUAzNAogICAgZHVwCiAgICB0eG4gU2VuZGVyCiAgICBiPT0KICAgIGJ6IG1haW5fYm9vbF9mYWxzZUAzNAogICAgaW50Y18wIC8vIDEKCm1haW5fYWZ0ZXJfaWZfZWxzZUAzNjoKICAgIGFzc2VydCAvLyBFUkMtMTk2NzogdXBkYXRlIHNlbmRlciBpcyBub3QgdGhlIHByb3h5IGFkbWluCiAgICBpbnRjXzMgLy8gMjQKICAgIGJ6ZXJvCiAgICBnbG9iYWwgQ3VycmVudEFwcGxpY2F0aW9uSUQKICAgIGl0b2IKICAgIGNvbmNhdAogICAgcHVzaGJ5dGVzIDB4MGVjYjJmMzEgLy8gbWV0aG9kICJVcGdyYWRlZChhZGRyZXNzKSIKICAgIHN3YXAKICAgIGNvbmNhdAogICAgbG9nCiAgICBpbnRjXzAgLy8gMQogICAgcmV0dXJuCgptYWluX2Jvb2xfZmFsc2VAMzQ6CiAgICBpbnRjXzEgLy8gMAogICAgYiBtYWluX2FmdGVyX2lmX2Vsc2VAMzYK",
+        "clear": "I3ByYWdtYSB2ZXJzaW9uIDEyCiNwcmFnbWEgdHlwZXRyYWNrIGZhbHNlCgovLyAvaG9tZS9hcmdpL0FsZ29yYW5kRm91bmRhdGlvbi9TaWRlUHJvamVjdHMvcHV5YS1zb2wvcHV5YS1zb2wvdGVzdHMvc29saWRpdHktc2VtYW50aWMtdGVzdHMvdGVzdHMvcHV5YXNvbFJlZ3Jlc3Npb24vY29udHJhY3RzL2VyYzE5Njdfc2xvdF9mbG93LnNvbC5TZWxmQWRtaW4uY2xlYXJfc3RhdGVfcHJvZ3JhbSgpIC0+IHVpbnQ2NDoKbWFpbjoKICAgIHB1c2hpbnQgMQogICAgcmV0dXJuCg=="
+    },
+    "byteCode": {
+        "approval": "DCAEAQAgGCYCD19fZXJjMTk2N19hZG1pbgAjSYGAIK9JNQVJNQBJNQFJNQJJNQM1BDQAgCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgFxANQAxGEAAAiJDgARnrnBCNhoAjgEAnjEZFEQxGESCAwQKT7azBG//ROsEB4I7QzYaAI4DAEcAIQABADEWQQAXMRYiCTgIFEQyCjQANQAoTGc0ADUAIkMjQv/rNhoBSRUkEkQxFkEAFTEWIgk4CBRENAA1AChMZzQANQAiQyNC/+0xFkEAKzEWIgk4CBRENAA1ACSvIyhlKU4CTVBJFSQJJFg0ADUAgAQVH3x1TFCwIkMjQv/XMRmBBBIxGBBEIyhlKU4CTUlFAzEAqElAADVLAimpQQAuSwKACP//////////pkEAHkgkr0sCUEkVJAkkWCVbcghMRQJBABpJMQCoQQATIkQlrzIIFlCABA7LLzFMULAiQyNC/+o=",
+        "clear": "DIEBQw=="
+    },
+    "compilerInfo": {
+        "compiler": "puya",
+        "compilerVersion": {
+            "major": 5,
+            "minor": 10,
+            "patch": 0
+        }
+    },
+    "events": [
+        {
+            "name": "Upgraded",
+            "args": [
+                {
+                    "type": "address",
+                    "name": "implementation"
+                }
+            ]
+        }
+    ],
+    "templateVariables": {}
+}

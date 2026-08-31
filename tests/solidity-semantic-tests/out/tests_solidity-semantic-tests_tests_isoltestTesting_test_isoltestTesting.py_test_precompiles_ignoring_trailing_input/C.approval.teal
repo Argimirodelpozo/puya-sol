@@ -3,11 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 128 27
-    bytecblock 0x151f7c75
-    intc_1 // 0
-    dup
-    pushbytes ""
+    intcblock 32 1 0 96
+    bytecblock 0x 0x151f7c75 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
     pushint 4096
     bzero
     dup
@@ -27,10 +24,21 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    pushbytess 0x9981eab3 0xaaba93fb 0xf4aebdbd
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
+
+main_after_if_else@9:
     txn OnCompletion
     !
     assert
@@ -38,132 +46,325 @@ main_after_if_else@2:
     assert
     pushbytess 0xd2d56d08 0x25852b35 0x93d3a521 // method "ecRecover(uint256[4])byte[]", method "ecAdd(uint256[4])byte[]", method "ecMul(uint256[3])byte[]"
     txna ApplicationArgs 0
-    match main_ecRecover_route@5 main_ecAdd_route@6 main_ecMul_route@7
+    match main_ecRecover_route@12 main_ecAdd_route@13 main_ecMul_route@14
     err
 
-main_ecMul_route@7:
+main_ecMul_route@14:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
-    pushint 96
+    intc_3 // 96
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 3>
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    dig 2
-    dup
-    extract 0 64
-    swap
-    extract 64 32
-    ec_scalar_mul BN254g1
+    callsub ecMul
+    pop
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@13:
-    intc_1 // 0
-    b main_ternary_merge@14
-
-main_ecAdd_route@6:
+main_ecAdd_route@13:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
-    intc_2 // 128
+    pushint 128
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
-    dig 2
-    dup
-    extract 0 64
-    swap
-    extract 64 64
-    ec_add BN254g1
+    callsub ecAdd
+    pop
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@18:
-    intc_1 // 0
-    b main_ternary_merge@19
-
-main_ecRecover_route@5:
+main_ecRecover_route@12:
     txna ApplicationArgs 1
     dup
-    bury 4
     len
-    intc_2 // 128
+    pushint 128
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 4>
+    callsub ecRecover
+    pop
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 32
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    pushint 64
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    b|
+    cover 2
+    concat
+    swap
+    concat
+    callsub ecMul
+    pop
+    callsub __evm_ret0
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 32
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    pushint 64
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    intc_3 // 96
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    callsub ecAdd
+    pop
+    callsub __evm_ret0
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    intc_0 // 32
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    pushint 64
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    intc_3 // 96
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 4
+    b|
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    callsub ecRecover
+    pop
+    callsub __evm_ret0
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol.C.ecRecover(input: bytes) -> bytes, bytes:
+ecRecover:
+    proto 1 2
+    intc_2 // 0
+    dupn 4
+    bytec_0 // ""
     txn GroupIndex
-    bz main_ternary_false@23
+    bz ecRecover_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+ecRecover_ternary_merge@3:
     !
     assert // not payable
-    dig 2
+    bytec_0 // 0x
+    frame_bury 1
+    intc_2 // 0
+
+ecRecover_while_top@4:
     dup
-    extract 0 32
-    bury 3
+    pushint 4
+    <
+    bz ecRecover_after_while@6
+    intc_0 // 32
+    bzero
+    dig 1
+    intc_0 // 32
+    *
+    frame_dig -1
+    swap
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    frame_dig 1
+    swap
+    concat
+    frame_bury 1
+    intc_1 // 1
+    +
+    b ecRecover_while_top@4
+
+ecRecover_after_while@6:
+    pop
+    frame_dig 1
+    dup
     pushint 63
     getbyte
+    frame_bury 5
+    bytec_0 // 0x
+    frame_bury 0
+    extract 32 32
     dup
-    bury 2
-    intc_3 // 27
-    >=
-    bz main_ternary_false@26
-    dup
-    intc_3 // 27
-    -
+    frame_bury 2
+    pushbytes 0x1b
+    b==
+    bnz ecRecover_and_contd@8
+    frame_dig 2
+    pushbytes 0x1c
+    b==
+    bz ecRecover_after_if_else@13
 
-main_ternary_merge@27:
-    dig 3
-    dup
+ecRecover_and_contd@8:
+    frame_dig 1
     extract 64 32
-    swap
+    dup
+    frame_bury 3
+    bytec_0 // 0x
+    b!=
+    bz ecRecover_after_if_else@13
+    frame_dig 3
+    bytec_2 // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+    b<
+    bz ecRecover_after_if_else@13
+    frame_dig 1
     extract 96 32
-    dig 4
-    cover 3
+    dup
+    frame_bury 4
+    bytec_0 // 0x
+    b!=
+    bz ecRecover_after_if_else@13
+    frame_dig 4
+    bytec_2 // 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
+    b<
+    bz ecRecover_after_if_else@13
+    frame_dig 1
+    extract 0 32
+    frame_dig 5
+    pushint 27
+    -
+    frame_dig 3
+    frame_dig 4
     ecdsa_pk_recover Secp256k1
     pushint 12
     bzero
@@ -172,23 +373,209 @@ main_ternary_merge@27:
     keccak256
     extract 12 20
     concat
+    frame_bury 0
+
+ecRecover_after_if_else@13:
+    frame_dig 0
+    frame_dig -1
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+ecRecover_ternary_false@2:
+    intc_2 // 0
+    b ecRecover_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol.C.ecAdd(input: bytes) -> bytes, bytes:
+ecAdd:
+    proto 1 2
+    txn GroupIndex
+    bz ecAdd_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+ecAdd_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // 0x
+    intc_2 // 0
+
+ecAdd_while_top@4:
+    dup
+    pushint 4
+    <
+    bz ecAdd_after_while@6
+    intc_0 // 32
+    bzero
+    dig 1
+    intc_0 // 32
+    *
+    frame_dig -1
+    swap
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    concat
     dup
     len
-    itob
-    extract 6 2
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
     swap
     concat
-    bytec_0 // 0x151f7c75
+    swap
+    intc_1 // 1
+    +
+    b ecAdd_while_top@4
+
+ecAdd_after_while@6:
+    pop
+    dup
+    extract 0 64
+    swap
+    extract 64 64
+    ec_add BN254g1
+    frame_dig -1
+    retsub
+
+ecAdd_ternary_false@2:
+    intc_2 // 0
+    b ecAdd_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol.C.ecMul(input: bytes) -> bytes, bytes:
+ecMul:
+    proto 1 2
+    txn GroupIndex
+    bz ecMul_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+ecMul_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // 0x
+    intc_2 // 0
+
+ecMul_while_top@4:
+    dup
+    pushint 3
+    <
+    bz ecMul_after_while@6
+    intc_0 // 32
+    bzero
+    dig 1
+    intc_0 // 32
+    *
+    frame_dig -1
+    swap
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    intc_1 // 1
+    +
+    b ecMul_while_top@4
+
+ecMul_after_while@6:
+    pop
+    dup
+    extract 0 64
+    swap
+    extract 64 32
+    ec_scalar_mul BN254g1
+    frame_dig -1
+    retsub
+
+ecMul_ternary_false@2:
+    intc_2 // 0
+    b ecMul_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol.C.__evm_decw(__off: uint64) -> bytes:
+__evm_decw:
+    proto 1 1
+    frame_dig -1
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    frame_dig -1
+    intc_0 // 32
+    extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol.C.__evm_ret0(__v: bytes) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    frame_dig -1
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
     log
-    intc_0 // 1
-    return
-
-main_ternary_false@26:
-    intc_1 // 0
-    b main_ternary_merge@27
-
-main_ternary_false@23:
-    intc_1 // 0
-    b main_ternary_merge@24
+    retsub

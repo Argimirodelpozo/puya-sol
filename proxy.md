@@ -154,7 +154,26 @@ by `onlyProxy`/`notDelegated` checks via the immutable `__self` address.
   feature: "your `_authorizeUpgrade` is your update gate."
 
 **Replay: ✅** mechanically identical to §1 (the latch patch IS the UUPS
-artifact). **Compile: 🔶** — §1 plus the `_authorizeUpgrade` mapping.
+artifact). **Compile: ✅** (`src/builder/proxies/UupsLowering`). Recognized-
+idiom folds over the OZ artifacts, by defining-contract name:
+- `UUPSUpgradeable._checkProxy/_checkNotDelegated` → no-op (checks pass);
+  `upgradeTo(AndCall)/_upgradeToAndCallUUPS` → runtime trap. Trapping the
+  upgrade family also cuts UUPSUpgradeable's poison out of the demand graph
+  (the rescue-mode delegatecall, the ERC-1822 staticcall probe).
+- `ERC1967Utils` FUNCTION-level folds (`Erc1967Lowering::classifyUtilsFunction`)
+  close the escaped-slot gap for OZ v5's `StorageSlot.getAddressSlot(SLOT)`
+  shape: `getImplementation` → own identity, `getAdmin/_setAdmin` → the
+  synthesized admin global (arming the §1 gate), setters/beacon → traps.
+- A concrete contract inheriting `UUPSUpgradeable` with an implemented
+  `_authorizeUpgrade` gets `__uups_update()` — an UpdateApplication-only
+  ABI method that calls the hook (its inlined modifiers ARE the permission
+  check) and emits ARC-28 `Upgraded(address)`. "Your `_authorizeUpgrade` is
+  your update gate", exactly as designed above.
+Guard: `puyasolRegression/test_uups.py` over a flattened OZ v5 closure
+(business logic + proxiableUUID work, upgradeToAndCall traps, stranger/bare
+updates rejected, owner updates natively with state preserved). Deployed
+proof: **FBTC (Base) replays 197/200 with zero divergences** under
+`--evm-layout` — a live UUPS implementation compiling verbatim.
 
 ---
 

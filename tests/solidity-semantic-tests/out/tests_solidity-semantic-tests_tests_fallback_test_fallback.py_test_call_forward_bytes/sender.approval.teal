@@ -3,12 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.approval_program() -> uint64:
 main:
-    intcblock 0 1 4 6
-    bytecblock "savedData" 0x "__ctor_pending" "rec" 0x151f7c7580 TMPL_APPROVAL_receiver TMPL_CLEAR_receiver
-    intc_0 // 0
-    dup
-    bytec_1 // ""
-    dupn 3
+    intcblock 0 1 32 4
+    bytecblock "savedData" 0x151f7c75 0x "__ctor_pending" "rec" 0x0000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_receiver TMPL_CLEAR_receiver
+    bytec_2 // ""
     pushint 4096
     bzero
     dup
@@ -28,213 +25,111 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
     txn NumAppArgs
-    bnz main_after_if_else@4
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    pushbytess 0xd264e05e 0x52efea6e 0x3c6bb436
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
+
+main_after_if_else@9:
+    txn NumAppArgs
+    bnz main_after_if_else@12
+    txn OnCompletion
+    bnz main_after_if_else@12
     callsub __fallback
     intc_1 // 1
     return
 
-main_after_if_else@4:
-    intc_0 // 0
-    bury 4
+main_after_if_else@12:
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_switch_case_next@14
+    bz main_after_if_else@25
     pushbytess 0xbacc49e3 0x1bf9882b 0x0d0be52f 0xf321bc3d 0x70b65ae3 // method "__postInit()void", method "__fallback()void", method "forward()bool", method "clear()bool", method "val()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@9 main___fallback_route@10 main_forward_route@11 main_clear_route@12 main_val_route@13
+    match main___postInit_route@18 main___fallback_route@19 main_forward_route@20 main_clear_route@21 main_val_route@22
 
-main_switch_case_next@14:
-    dig 3
-    bury 3
-    dig 2
-    bnz main_after_if_else@6
+main_after_if_else@25:
+    intc_0 // 0
+    bury 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@26:
+    dup
+    bnz main_after_if_else@15
+    txn OnCompletion
+    bnz main_after_if_else@15
     callsub __fallback
     intc_1 // 1
-    bury 3
+    bury 1
 
-main_after_if_else@6:
-    dig 2
+main_after_if_else@15:
     return
 
-main_val_route@13:
-    txn GroupIndex
-    bz main_ternary_false@19
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@20:
-    !
-    assert // not payable
-    itxn_begin
-    intc_0 // 0
-    bytec_3 // "rec"
-    app_global_get_ex
-    assert // check rec exists
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    pushbytes 0xc473430e // method "received()uint256"
-    itxn_field ApplicationArgs
-    itxn_submit
-    itxn LastLog
-    extract 4 0
-    dup
-    len
-    pushint 32
-    <=
-    assert // overflow
-    pushint 32
-    bzero
-    b|
-    pushbytes 0x151f7c75
+main_val_route@22:
+    callsub val
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
-    bury 4
-    b main_switch_case_next@14
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@26
 
-main_ternary_false@19:
+main_clear_route@21:
+    callsub clear
+    pushbytes 0x00
     intc_0 // 0
-    b main_ternary_merge@20
-
-main_clear_route@12:
-    txn GroupIndex
-    bz main_ternary_false@24
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@25:
-    !
-    assert // not payable
-    bytec_0 // "savedData"
-    box_del
-    pop
-    bytec_0 // "savedData"
-    bytec_1 // 0x
-    box_put
-    bytec 4 // 0x151f7c7580
-    log
-    intc_1 // 1
-    bury 4
-    b main_switch_case_next@14
-
-main_ternary_false@24:
-    intc_0 // 0
-    b main_ternary_merge@25
-
-main_forward_route@11:
-    txn GroupIndex
-    bz main_ternary_false@29
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@30:
-    !
-    assert // not payable
-    bytec_0 // "savedData"
-    box_get
-    swap
-    bury 7
-    assert // box exists
-    itxn_begin
-    bytec_0 // "savedData"
-    box_len
-    pop
-    dup
-    bury 3
-    intc_2 // 4
-    >=
-    dup
-    bury 2
-    bz main_ternary_false@32
-    bytec_0 // "savedData"
-    intc_0 // 0
-    intc_2 // 4
-    box_extract
-    bury 5
-
-main_ternary_merge@33:
-    dup
-    bz main_ternary_false@35
-    dig 1
-    intc_2 // 4
-    -
-    bytec_0 // "savedData"
-    intc_2 // 4
     uncover 2
-    box_extract
-
-main_ternary_merge@36:
-    intc_0 // 0
-    bytec_3 // "rec"
-    app_global_get_ex
-    assert // check rec exists
-    pushint 24
-    extract_uint64
-    intc_3 // 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationID
-    dig 5
-    itxn_field ApplicationArgs
-    itxn_field ApplicationArgs
-    itxn_submit
-    bytec 4 // 0x151f7c7580
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
     log
     intc_1 // 1
-    bury 4
-    b main_switch_case_next@14
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@26
 
-main_ternary_false@35:
-    bytec_1 // 0x
-    b main_ternary_merge@36
-
-main_ternary_false@32:
-    dig 5
-    bury 5
-    b main_ternary_merge@33
-
-main_ternary_false@29:
+main_forward_route@20:
+    callsub forward
+    pushbytes 0x00
     intc_0 // 0
-    b main_ternary_merge@30
+    uncover 2
+    setbit
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@26
 
-main___fallback_route@10:
+main___fallback_route@19:
     callsub __fallback
     intc_1 // 1
-    bury 4
-    b main_switch_case_next@14
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@26
 
-main___postInit_route@9:
-    bytec_2 // "__ctor_pending"
+main___postInit_route@18:
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_2 // "__ctor_pending"
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_3 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     bytec_0 // "savedData"
@@ -242,9 +137,9 @@ main___postInit_route@9:
     box_create
     pop
     itxn_begin
-    bytec 5 // TMPL_APPROVAL_receiver
-    bytec 6 // TMPL_CLEAR_receiver
-    intc_3 // 6
+    bytec 6 // TMPL_APPROVAL_receiver
+    bytec 7 // TMPL_CLEAR_receiver
+    pushint 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
@@ -275,19 +170,49 @@ main___postInit_route@9:
     swap
     itob
     concat
-    bytec_3 // "rec"
+    bytec 4 // "rec"
     swap
     app_global_put
     intc_1 // 1
-    bury 4
-    b main_switch_case_next@14
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__puya_arc4_router__@26
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub val
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub clear
+    callsub __evm_ret0
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub forward
+    callsub __evm_ret0
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__fallback() -> void:
 __fallback:
-    proto 0 0
-    intc_0 // 0
-    dupn 14
     txn GroupIndex
     bz __fallback_ternary_false@2
     txn GroupIndex
@@ -303,7 +228,6 @@ __fallback_ternary_merge@3:
     txn NumAppArgs
     bz __fallback_ternary_false@6
     txna ApplicationArgs 0
-    frame_bury 0
 
 __fallback_ternary_merge@7:
     txn NumAppArgs
@@ -313,10 +237,7 @@ __fallback_ternary_merge@7:
     txna ApplicationArgs 1
 
 __fallback_ternary_merge@10:
-    frame_dig 0
-    swap
     concat
-    frame_bury 1
     txn NumAppArgs
     pushint 2
     >
@@ -324,10 +245,7 @@ __fallback_ternary_merge@10:
     txna ApplicationArgs 2
 
 __fallback_ternary_merge@13:
-    frame_dig 1
-    swap
     concat
-    frame_bury 2
     txn NumAppArgs
     pushint 3
     >
@@ -335,21 +253,15 @@ __fallback_ternary_merge@13:
     txna ApplicationArgs 3
 
 __fallback_ternary_merge@16:
-    frame_dig 2
-    swap
     concat
-    frame_bury 3
     txn NumAppArgs
-    intc_2 // 4
+    intc_3 // 4
     >
     bz __fallback_ternary_false@18
     txna ApplicationArgs 4
 
 __fallback_ternary_merge@19:
-    frame_dig 3
-    swap
     concat
-    frame_bury 4
     txn NumAppArgs
     pushint 5
     >
@@ -357,21 +269,15 @@ __fallback_ternary_merge@19:
     txna ApplicationArgs 5
 
 __fallback_ternary_merge@22:
-    frame_dig 4
-    swap
     concat
-    frame_bury 5
     txn NumAppArgs
-    intc_3 // 6
+    pushint 6
     >
     bz __fallback_ternary_false@24
     txna ApplicationArgs 6
 
 __fallback_ternary_merge@25:
-    frame_dig 5
-    swap
     concat
-    frame_bury 6
     txn NumAppArgs
     pushint 7
     >
@@ -379,10 +285,7 @@ __fallback_ternary_merge@25:
     txna ApplicationArgs 7
 
 __fallback_ternary_merge@28:
-    frame_dig 6
-    swap
     concat
-    frame_bury 7
     txn NumAppArgs
     pushint 8
     >
@@ -390,10 +293,7 @@ __fallback_ternary_merge@28:
     txna ApplicationArgs 8
 
 __fallback_ternary_merge@31:
-    frame_dig 7
-    swap
     concat
-    frame_bury 8
     txn NumAppArgs
     pushint 9
     >
@@ -401,10 +301,7 @@ __fallback_ternary_merge@31:
     txna ApplicationArgs 9
 
 __fallback_ternary_merge@34:
-    frame_dig 8
-    swap
     concat
-    frame_bury 9
     txn NumAppArgs
     pushint 10
     >
@@ -412,10 +309,7 @@ __fallback_ternary_merge@34:
     txna ApplicationArgs 10
 
 __fallback_ternary_merge@37:
-    frame_dig 9
-    swap
     concat
-    frame_bury 10
     txn NumAppArgs
     pushint 11
     >
@@ -423,10 +317,7 @@ __fallback_ternary_merge@37:
     txna ApplicationArgs 11
 
 __fallback_ternary_merge@40:
-    frame_dig 10
-    swap
     concat
-    frame_bury 11
     txn NumAppArgs
     pushint 12
     >
@@ -434,10 +325,7 @@ __fallback_ternary_merge@40:
     txna ApplicationArgs 12
 
 __fallback_ternary_merge@43:
-    frame_dig 11
-    swap
     concat
-    frame_bury 12
     txn NumAppArgs
     pushint 13
     >
@@ -445,10 +333,7 @@ __fallback_ternary_merge@43:
     txna ApplicationArgs 13
 
 __fallback_ternary_merge@46:
-    frame_dig 12
-    swap
     concat
-    frame_bury 13
     txn NumAppArgs
     pushint 14
     >
@@ -456,10 +341,7 @@ __fallback_ternary_merge@46:
     txna ApplicationArgs 14
 
 __fallback_ternary_merge@49:
-    frame_dig 13
-    swap
     concat
-    frame_bury 14
     txn NumAppArgs
     pushint 15
     >
@@ -467,8 +349,6 @@ __fallback_ternary_merge@49:
     txna ApplicationArgs 15
 
 __fallback_ternary_merge@52:
-    frame_dig 14
-    swap
     concat
 
 __fallback_ternary_merge@54:
@@ -558,7 +438,6 @@ __fallback_ternary_false@9:
 __fallback_ternary_false@6:
     intc_0 // 0
     bzero
-    frame_bury 0
     b __fallback_ternary_merge@7
 
 __fallback_ternary_false@53:
@@ -569,3 +448,196 @@ __fallback_ternary_false@53:
 __fallback_ternary_false@2:
     intc_0 // 0
     b __fallback_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.forward() -> uint64:
+forward:
+    txn GroupIndex
+    bz forward_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+forward_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "savedData"
+    box_get
+    assert // box exists
+    itxn_begin
+    bytec_0 // "savedData"
+    box_len
+    pop
+    dup
+    intc_3 // 4
+    >=
+    dup
+    bz forward_ternary_false@5
+    uncover 2
+    pop
+    bytec_0 // "savedData"
+    intc_0 // 0
+    intc_3 // 4
+    box_extract
+
+forward_ternary_merge@6:
+    swap
+    bz forward_ternary_false@8
+    swap
+    intc_3 // 4
+    -
+    bytec_0 // "savedData"
+    intc_3 // 4
+    uncover 2
+    box_extract
+
+forward_ternary_merge@9:
+    intc_0 // 0
+    bytec 4 // "rec"
+    app_global_get_ex
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_1 // 1
+    retsub
+
+forward_ternary_false@8:
+    bury 1
+    bytec_2 // 0x
+    b forward_ternary_merge@9
+
+forward_ternary_false@5:
+    uncover 2
+    b forward_ternary_merge@6
+
+forward_ternary_false@2:
+    intc_0 // 0
+    b forward_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.clear() -> uint64:
+clear:
+    txn GroupIndex
+    bz clear_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+clear_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "savedData"
+    box_del
+    pop
+    bytec_0 // "savedData"
+    bytec_2 // 0x
+    box_put
+    intc_1 // 1
+    retsub
+
+clear_ternary_false@2:
+    intc_0 // 0
+    b clear_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.val() -> bytes:
+val:
+    txn GroupIndex
+    bz val_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+val_ternary_merge@3:
+    !
+    assert // not payable
+    itxn_begin
+    intc_0 // 0
+    bytec 4 // "rec"
+    app_global_get_ex
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0xc473430e // method "received()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    b|
+    retsub
+
+val_ternary_false@2:
+    intc_0 // 0
+    b val_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_0 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/fallback/contracts/call_forward_bytes.sol.sender.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub

@@ -3,9 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_switch.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    intc_2 // 0
-    dup
+    intcblock 32 1
     pushint 4096
     bzero
     dup
@@ -42,7 +40,6 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -62,8 +59,7 @@ main_ternary_merge@9:
     intc_0 // 32
     bzero
     dup
-    bury 2
-    dig 2
+    uncover 2
     b|
     dup
     len
@@ -86,7 +82,6 @@ main_switch_case_next@13:
     intc_0 // 32
     <=
     assert // overflow
-    dig 1
     b|
     pushbytes 0x151f7c75
     swap
@@ -104,5 +99,5 @@ main_switch_case_0@10:
     b main_switch_case_next@13
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9

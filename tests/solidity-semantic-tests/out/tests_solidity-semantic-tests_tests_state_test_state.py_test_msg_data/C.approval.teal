@@ -3,11 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/msg_data.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 2 3
+    intcblock 0 1 32 2
     bytecblock 0x151f7c75
-    intc_0 // 0
-    dupn 28
-    pushbytes ""
     pushint 4096
     bzero
     dup
@@ -32,19 +29,31 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@8
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@8
+    pushbytess 0x26121ff0 0x4ee892c7
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6
+
+main_after_if_else@8:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x38b8b62f 0x5ac8024c // method "f()byte[]", method "g(uint256,bool)byte[]"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6
+    match main_f_route@11 main_g_route@12
     err
 
-main_g_route@6:
+main_g_route@12:
     txna ApplicationArgs 1
+    dup
     len
-    pushint 32
+    intc_2 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     txna ApplicationArgs 2
@@ -55,582 +64,609 @@ main_g_route@6:
     assert // invalid number of bytes for arc4.bool
     intc_0 // 0
     getbit
-    bury 1
+    callsub g
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_f_route@11:
+    callsub f
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_2 // 32
+    callsub __evm_decw
+    dup
+    pushbytes 0x01
+    b<=
+    assert // invalid EVM ABI bool
+    intc_0 // 0
+    callsub __evm_decw
+    swap
+    pushint 24
+    extract_uint64
+    intc_0 // 0
+    !=
+    dig 1
+    len
+    intc_2 // 32
+    <=
+    assert // overflow
+    intc_2 // 32
+    bzero
+    uncover 2
+    b|
+    swap
+    callsub g
+    callsub __evm_ret0
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub f
+    callsub __evm_ret0
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/msg_data.sol.C.f() -> bytes:
+f:
     txn GroupIndex
-    bz main_ternary_false@12
+    bz f_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+f_ternary_merge@3:
     !
     assert // not payable
-    dup
+    txn NumAppArgs
+    bz f_ternary_false@53
+    txn NumAppArgs
+    bz f_ternary_false@6
+    txna ApplicationArgs 0
+
+f_ternary_merge@7:
+    txn NumAppArgs
+    intc_1 // 1
+    >
+    bz f_ternary_false@9
+    txna ApplicationArgs 1
+
+f_ternary_merge@10:
+    concat
+    txn NumAppArgs
+    intc_3 // 2
+    >
+    bz f_ternary_false@12
+    txna ApplicationArgs 2
+
+f_ternary_merge@13:
+    concat
+    txn NumAppArgs
+    pushint 3
+    >
+    bz f_ternary_false@15
+    txna ApplicationArgs 3
+
+f_ternary_merge@16:
+    concat
+    txn NumAppArgs
+    pushint 4
+    >
+    bz f_ternary_false@18
+    txna ApplicationArgs 4
+
+f_ternary_merge@19:
+    concat
+    txn NumAppArgs
+    pushint 5
+    >
+    bz f_ternary_false@21
+    txna ApplicationArgs 5
+
+f_ternary_merge@22:
+    concat
+    txn NumAppArgs
+    pushint 6
+    >
+    bz f_ternary_false@24
+    txna ApplicationArgs 6
+
+f_ternary_merge@25:
+    concat
+    txn NumAppArgs
+    pushint 7
+    >
+    bz f_ternary_false@27
+    txna ApplicationArgs 7
+
+f_ternary_merge@28:
+    concat
+    txn NumAppArgs
+    pushint 8
+    >
+    bz f_ternary_false@30
+    txna ApplicationArgs 8
+
+f_ternary_merge@31:
+    concat
+    txn NumAppArgs
+    pushint 9
+    >
+    bz f_ternary_false@33
+    txna ApplicationArgs 9
+
+f_ternary_merge@34:
+    concat
+    txn NumAppArgs
+    pushint 10
+    >
+    bz f_ternary_false@36
+    txna ApplicationArgs 10
+
+f_ternary_merge@37:
+    concat
+    txn NumAppArgs
+    pushint 11
+    >
+    bz f_ternary_false@39
+    txna ApplicationArgs 11
+
+f_ternary_merge@40:
+    concat
+    txn NumAppArgs
+    pushint 12
+    >
+    bz f_ternary_false@42
+    txna ApplicationArgs 12
+
+f_ternary_merge@43:
+    concat
+    txn NumAppArgs
+    pushint 13
+    >
+    bz f_ternary_false@45
+    txna ApplicationArgs 13
+
+f_ternary_merge@46:
+    concat
+    txn NumAppArgs
+    pushint 14
+    >
+    bz f_ternary_false@48
+    txna ApplicationArgs 14
+
+f_ternary_merge@49:
+    concat
+    txn NumAppArgs
+    pushint 15
+    >
+    bz f_ternary_false@51
+    txna ApplicationArgs 15
+
+f_ternary_merge@52:
+    concat
+    retsub
+
+f_ternary_false@51:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@52
+
+f_ternary_false@48:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@49
+
+f_ternary_false@45:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@46
+
+f_ternary_false@42:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@43
+
+f_ternary_false@39:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@40
+
+f_ternary_false@36:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@37
+
+f_ternary_false@33:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@34
+
+f_ternary_false@30:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@31
+
+f_ternary_false@27:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@28
+
+f_ternary_false@24:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@25
+
+f_ternary_false@21:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@22
+
+f_ternary_false@18:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@19
+
+f_ternary_false@15:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@16
+
+f_ternary_false@12:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@13
+
+f_ternary_false@9:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@10
+
+f_ternary_false@6:
+    intc_0 // 0
+    bzero
+    b f_ternary_merge@7
+
+f_ternary_false@53:
+    intc_0 // 0
+    bzero
+    retsub
+
+f_ternary_false@2:
+    intc_0 // 0
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/msg_data.sol.C.g(__arc4__param0: bytes, _param1: uint64) -> bytes:
+g:
+    proto 2 1
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
     intc_1 // 1
     <=
     assert // ABI bool validation
     txn NumAppArgs
-    bz main_ternary_false@63
+    bz g_ternary_false@53
     txn NumAppArgs
-    bz main_ternary_false@16
+    bz g_ternary_false@6
     txna ApplicationArgs 0
-    bury 30
 
-main_ternary_merge@17:
+g_ternary_merge@7:
     txn NumAppArgs
     intc_1 // 1
     >
-    bz main_ternary_false@19
+    bz g_ternary_false@9
     txna ApplicationArgs 1
 
-main_ternary_merge@20:
-    dig 30
-    swap
+g_ternary_merge@10:
     concat
-    bury 28
     txn NumAppArgs
-    intc_2 // 2
+    intc_3 // 2
     >
-    bz main_ternary_false@22
+    bz g_ternary_false@12
     txna ApplicationArgs 2
 
-main_ternary_merge@23:
-    dig 28
-    swap
+g_ternary_merge@13:
     concat
-    bury 26
     txn NumAppArgs
-    intc_3 // 3
+    pushint 3
     >
-    bz main_ternary_false@25
+    bz g_ternary_false@15
     txna ApplicationArgs 3
 
-main_ternary_merge@26:
-    dig 26
-    swap
+g_ternary_merge@16:
     concat
-    bury 24
     txn NumAppArgs
     pushint 4
     >
-    bz main_ternary_false@28
+    bz g_ternary_false@18
     txna ApplicationArgs 4
 
-main_ternary_merge@29:
-    dig 24
-    swap
+g_ternary_merge@19:
     concat
-    bury 22
     txn NumAppArgs
     pushint 5
     >
-    bz main_ternary_false@31
+    bz g_ternary_false@21
     txna ApplicationArgs 5
 
-main_ternary_merge@32:
-    dig 22
-    swap
+g_ternary_merge@22:
     concat
-    bury 20
     txn NumAppArgs
     pushint 6
     >
-    bz main_ternary_false@34
+    bz g_ternary_false@24
     txna ApplicationArgs 6
 
-main_ternary_merge@35:
-    dig 20
-    swap
+g_ternary_merge@25:
     concat
-    bury 18
     txn NumAppArgs
     pushint 7
     >
-    bz main_ternary_false@37
+    bz g_ternary_false@27
     txna ApplicationArgs 7
 
-main_ternary_merge@38:
-    dig 18
-    swap
+g_ternary_merge@28:
     concat
-    bury 16
     txn NumAppArgs
     pushint 8
     >
-    bz main_ternary_false@40
+    bz g_ternary_false@30
     txna ApplicationArgs 8
 
-main_ternary_merge@41:
-    dig 16
-    swap
+g_ternary_merge@31:
     concat
-    bury 14
     txn NumAppArgs
     pushint 9
     >
-    bz main_ternary_false@43
+    bz g_ternary_false@33
     txna ApplicationArgs 9
 
-main_ternary_merge@44:
-    dig 14
-    swap
+g_ternary_merge@34:
     concat
-    bury 12
     txn NumAppArgs
     pushint 10
     >
-    bz main_ternary_false@46
+    bz g_ternary_false@36
     txna ApplicationArgs 10
 
-main_ternary_merge@47:
-    dig 12
-    swap
+g_ternary_merge@37:
     concat
-    bury 10
     txn NumAppArgs
     pushint 11
     >
-    bz main_ternary_false@49
+    bz g_ternary_false@39
     txna ApplicationArgs 11
 
-main_ternary_merge@50:
-    dig 10
-    swap
+g_ternary_merge@40:
     concat
-    bury 8
     txn NumAppArgs
     pushint 12
     >
-    bz main_ternary_false@52
+    bz g_ternary_false@42
     txna ApplicationArgs 12
 
-main_ternary_merge@53:
-    dig 8
-    swap
+g_ternary_merge@43:
     concat
-    bury 6
     txn NumAppArgs
     pushint 13
     >
-    bz main_ternary_false@55
+    bz g_ternary_false@45
     txna ApplicationArgs 13
 
-main_ternary_merge@56:
-    dig 6
-    swap
+g_ternary_merge@46:
     concat
-    bury 4
     txn NumAppArgs
     pushint 14
     >
-    bz main_ternary_false@58
+    bz g_ternary_false@48
     txna ApplicationArgs 14
 
-main_ternary_merge@59:
-    dig 4
-    swap
+g_ternary_merge@49:
     concat
-    bury 2
     txn NumAppArgs
     pushint 15
     >
-    bz main_ternary_false@61
+    bz g_ternary_false@51
     txna ApplicationArgs 15
 
-main_ternary_merge@62:
-    dig 2
-    swap
+g_ternary_merge@52:
     concat
+    retsub
 
-main_ternary_merge@64:
-    dup
-    len
-    itob
-    extract 6 2
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@61:
+g_ternary_false@51:
     intc_0 // 0
     bzero
-    b main_ternary_merge@62
+    b g_ternary_merge@52
 
-main_ternary_false@58:
+g_ternary_false@48:
     intc_0 // 0
     bzero
-    b main_ternary_merge@59
+    b g_ternary_merge@49
 
-main_ternary_false@55:
+g_ternary_false@45:
     intc_0 // 0
     bzero
-    b main_ternary_merge@56
+    b g_ternary_merge@46
 
-main_ternary_false@52:
+g_ternary_false@42:
     intc_0 // 0
     bzero
-    b main_ternary_merge@53
+    b g_ternary_merge@43
 
-main_ternary_false@49:
+g_ternary_false@39:
     intc_0 // 0
     bzero
-    b main_ternary_merge@50
+    b g_ternary_merge@40
 
-main_ternary_false@46:
+g_ternary_false@36:
     intc_0 // 0
     bzero
-    b main_ternary_merge@47
+    b g_ternary_merge@37
 
-main_ternary_false@43:
+g_ternary_false@33:
     intc_0 // 0
     bzero
-    b main_ternary_merge@44
+    b g_ternary_merge@34
 
-main_ternary_false@40:
+g_ternary_false@30:
     intc_0 // 0
     bzero
-    b main_ternary_merge@41
+    b g_ternary_merge@31
 
-main_ternary_false@37:
+g_ternary_false@27:
     intc_0 // 0
     bzero
-    b main_ternary_merge@38
+    b g_ternary_merge@28
 
-main_ternary_false@34:
+g_ternary_false@24:
     intc_0 // 0
     bzero
-    b main_ternary_merge@35
+    b g_ternary_merge@25
 
-main_ternary_false@31:
+g_ternary_false@21:
     intc_0 // 0
     bzero
-    b main_ternary_merge@32
+    b g_ternary_merge@22
 
-main_ternary_false@28:
+g_ternary_false@18:
     intc_0 // 0
     bzero
-    b main_ternary_merge@29
+    b g_ternary_merge@19
 
-main_ternary_false@25:
+g_ternary_false@15:
     intc_0 // 0
     bzero
-    b main_ternary_merge@26
+    b g_ternary_merge@16
 
-main_ternary_false@22:
+g_ternary_false@12:
     intc_0 // 0
     bzero
-    b main_ternary_merge@23
+    b g_ternary_merge@13
 
-main_ternary_false@19:
+g_ternary_false@9:
     intc_0 // 0
     bzero
-    b main_ternary_merge@20
+    b g_ternary_merge@10
 
-main_ternary_false@16:
+g_ternary_false@6:
     intc_0 // 0
     bzero
-    bury 30
-    b main_ternary_merge@17
+    b g_ternary_merge@7
 
-main_ternary_false@63:
+g_ternary_false@53:
     intc_0 // 0
     bzero
-    b main_ternary_merge@64
+    retsub
 
-main_ternary_false@12:
+g_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@13
+    b g_ternary_merge@3
 
-main_f_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/msg_data.sol.C.__evm_npy() -> void:
+__evm_npy:
     txn GroupIndex
-    bz main_ternary_false@68
+    bz __evm_npy_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@69:
+__evm_npy_ternary_merge@3:
     !
     assert // not payable
-    txn NumAppArgs
-    bz main_ternary_false@119
-    txn NumAppArgs
-    bz main_ternary_false@72
-    txna ApplicationArgs 0
-    bury 30
+    retsub
 
-main_ternary_merge@73:
-    txn NumAppArgs
-    intc_1 // 1
-    >
-    bz main_ternary_false@75
+__evm_npy_ternary_false@2:
+    intc_0 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/msg_data.sol.C.__evm_decw(__off: uint64) -> bytes:
+__evm_decw:
+    proto 1 1
+    frame_dig -1
+    intc_2 // 32
+    +
     txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    frame_dig -1
+    intc_2 // 32
+    extract3
+    retsub
 
-main_ternary_merge@76:
-    dig 30
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/msg_data.sol.C.__evm_ret0(__v: bytes) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 2
     swap
     concat
-    bury 29
-    txn NumAppArgs
-    intc_2 // 2
-    >
-    bz main_ternary_false@78
-    txna ApplicationArgs 2
-
-main_ternary_merge@79:
-    dig 29
-    swap
-    concat
-    bury 27
-    txn NumAppArgs
-    intc_3 // 3
-    >
-    bz main_ternary_false@81
-    txna ApplicationArgs 3
-
-main_ternary_merge@82:
-    dig 27
-    swap
-    concat
-    bury 25
-    txn NumAppArgs
-    pushint 4
-    >
-    bz main_ternary_false@84
-    txna ApplicationArgs 4
-
-main_ternary_merge@85:
-    dig 25
-    swap
-    concat
-    bury 23
-    txn NumAppArgs
-    pushint 5
-    >
-    bz main_ternary_false@87
-    txna ApplicationArgs 5
-
-main_ternary_merge@88:
-    dig 23
-    swap
-    concat
-    bury 21
-    txn NumAppArgs
-    pushint 6
-    >
-    bz main_ternary_false@90
-    txna ApplicationArgs 6
-
-main_ternary_merge@91:
-    dig 21
-    swap
-    concat
-    bury 19
-    txn NumAppArgs
-    pushint 7
-    >
-    bz main_ternary_false@93
-    txna ApplicationArgs 7
-
-main_ternary_merge@94:
-    dig 19
-    swap
-    concat
-    bury 17
-    txn NumAppArgs
-    pushint 8
-    >
-    bz main_ternary_false@96
-    txna ApplicationArgs 8
-
-main_ternary_merge@97:
-    dig 17
-    swap
-    concat
-    bury 15
-    txn NumAppArgs
-    pushint 9
-    >
-    bz main_ternary_false@99
-    txna ApplicationArgs 9
-
-main_ternary_merge@100:
-    dig 15
-    swap
-    concat
-    bury 13
-    txn NumAppArgs
-    pushint 10
-    >
-    bz main_ternary_false@102
-    txna ApplicationArgs 10
-
-main_ternary_merge@103:
-    dig 13
-    swap
-    concat
-    bury 11
-    txn NumAppArgs
-    pushint 11
-    >
-    bz main_ternary_false@105
-    txna ApplicationArgs 11
-
-main_ternary_merge@106:
-    dig 11
-    swap
-    concat
-    bury 9
-    txn NumAppArgs
-    pushint 12
-    >
-    bz main_ternary_false@108
-    txna ApplicationArgs 12
-
-main_ternary_merge@109:
-    dig 9
-    swap
-    concat
-    bury 7
-    txn NumAppArgs
-    pushint 13
-    >
-    bz main_ternary_false@111
-    txna ApplicationArgs 13
-
-main_ternary_merge@112:
-    dig 7
-    swap
-    concat
-    bury 5
-    txn NumAppArgs
-    pushint 14
-    >
-    bz main_ternary_false@114
-    txna ApplicationArgs 14
-
-main_ternary_merge@115:
-    dig 5
-    swap
-    concat
-    bury 3
-    txn NumAppArgs
-    pushint 15
-    >
-    bz main_ternary_false@117
-    txna ApplicationArgs 15
-
-main_ternary_merge@118:
-    dig 3
-    swap
-    concat
-
-main_ternary_merge@120:
     dup
     len
-    itob
-    extract 6 2
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    swap
+    intc_2 // 32
+    %
+    intc_2 // 32
+    swap
+    -
+    intc_2 // 32
+    %
+    bzero
+    frame_dig -1
     swap
     concat
-    bytec_0 // 0x151f7c75
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
     log
-    intc_1 // 1
-    return
-
-main_ternary_false@117:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@118
-
-main_ternary_false@114:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@115
-
-main_ternary_false@111:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@112
-
-main_ternary_false@108:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@109
-
-main_ternary_false@105:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@106
-
-main_ternary_false@102:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@103
-
-main_ternary_false@99:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@100
-
-main_ternary_false@96:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@97
-
-main_ternary_false@93:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@94
-
-main_ternary_false@90:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@91
-
-main_ternary_false@87:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@88
-
-main_ternary_false@84:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@85
-
-main_ternary_false@81:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@82
-
-main_ternary_false@78:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@79
-
-main_ternary_false@75:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@76
-
-main_ternary_false@72:
-    intc_0 // 0
-    bzero
-    bury 30
-    b main_ternary_merge@73
-
-main_ternary_false@119:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@120
-
-main_ternary_false@68:
-    intc_0 // 0
-    b main_ternary_merge@69
+    retsub

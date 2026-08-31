@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/block_timestamp.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 0 32
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -27,25 +28,84 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@7
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@7
+    pushbytes 0x26121ff0
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
     pushbytes 0x4b4fb052 // method "f()bool"
     txna ApplicationArgs 0
-    match main_f_route@4
+    match main_f_route@9
     err
 
-main_f_route@4:
+main_f_route@9:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
+    callsub f
+    pushbytes 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_2 // 32
+    bzero
+    callsub f
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/state/contracts/block_timestamp.sol.C.f() -> uint64:
+f:
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
     !
     assert // not payable
     global LatestTimestamp
@@ -53,17 +113,8 @@ main_ternary_merge@9:
     intc_1 // 0
     itob
     b>
-    pushbytes 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@8:
+f_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@9
+    b f_ternary_merge@3

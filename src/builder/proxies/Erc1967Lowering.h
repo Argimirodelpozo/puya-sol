@@ -2,10 +2,17 @@
 
 #include "awst/Node.h"
 
+#include "builder/sol-types/SolcFwd.h"
+
 #include <memory>
 #include <set>
 #include <string>
 #include <vector>
+
+namespace puyasol::builder
+{
+struct BuildArtifacts;
+}
 
 namespace puyasol::builder::proxies
 {
@@ -90,6 +97,43 @@ public:
 	/// The synthesized admin global's declaration (appended to the
 	/// contract's app_state when any admin-slot use was lowered).
 	static awst::AppStorageDefinition adminStateDefinition(
+		awst::SourceLocation const& _loc);
+
+	/// ARC-28 Upgraded(address) emit statement (the EIP-1967 event, arg =
+	/// this app's own identity). Shared with the UUPS update gate.
+	static std::shared_ptr<awst::Statement> upgradedEvent(
+		awst::SourceLocation const& _loc);
+
+	// ── OZ ERC1967Utils function-level folds ────────────────────────────
+	// OZ v5 reaches the 1967 slots through StorageSlot.getAddressSlot(SLOT)
+	// — the escaped-slot shape the asm-site classifier cannot lower. The
+	// library FUNCTIONS have exact native meanings, so fold them wholesale:
+	//   getImplementation → this app's own identity
+	//   getAdmin/_setAdmin → the synthesized admin global (arms the gate)
+	//   _setImplementation / upgradeToAndCall / beacon family → runtime trap
+	enum class UtilsFold
+	{
+		None,
+		ImplementationLoad,
+		AdminLoad,
+		AdminStore,
+		TrapImplementation,
+		TrapBeacon,
+	};
+
+	/// Classify a member function of a library named "ERC1967Utils".
+	static UtilsFold classifyUtilsFunction(
+		solidity::frontend::FunctionDefinition const& _func);
+
+	/// Replacement body for a folded ERC1967Utils function. `_returnType` and
+	/// `_args` are the built subroutine's (fold bodies must satisfy them);
+	/// Admin folds record the use in `_artifacts` so the reaching contracts
+	/// synthesize the admin global + update gate.
+	static std::shared_ptr<awst::Block> utilsFoldBody(
+		UtilsFold _fold,
+		awst::WType const* _returnType,
+		std::vector<awst::SubroutineArgument> const& _args,
+		BuildArtifacts& _artifacts,
 		awst::SourceLocation const& _loc);
 
 	/// The UpdateApplication method gating native updates on the 1967 admin:

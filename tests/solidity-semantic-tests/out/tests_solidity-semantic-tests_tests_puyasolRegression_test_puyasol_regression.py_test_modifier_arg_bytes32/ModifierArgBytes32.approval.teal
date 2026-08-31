@@ -1,0 +1,635 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.approval_program() -> uint64:
+main:
+    intcblock 1 32 0 2
+    bytecblock 0x151f7c75 "lastRole" "members" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6 0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec_3 // "__ctor_pending"
+    intc_0 // 1
+    app_global_put
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@15
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@15
+    pushbytess 0x4ea436ba 0x1249c58b 0x44df8e70 0x070324cb 0x10ad56b3 0xd5391393 0x282c51f3 0x7e1cb559 0x23cbb185
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11 main_switch_case_7@12 main_switch_case_8@13
+
+main_after_if_else@15:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xbacc49e3 0xbb2db532 0x73ad653e 0x83b7f097 0x4a493f6c 0xc8ffb6e8 0x090c1529 0x12562753 0x81775f72 0x87384e65 // method "__postInit()void", method "grant(byte[32],address)void", method "mint()uint256", method "burn()uint256", method "anyRole(byte[32])uint256", method "isMember(byte[32],address)bool", method "MINTER_ROLE()byte[32]", method "BURNER_ROLE()byte[32]", method "members(byte[32],address)bool", method "lastRole()byte[32]"
+    txna ApplicationArgs 0
+    match main___postInit_route@18 main_grant_route@19 main_mint_route@20 main_burn_route@21 main_anyRole_route@22 main_isMember_route@23 main_MINTER_ROLE_route@24 main_BURNER_ROLE_route@25 main_members_route@26 main_lastRole_route@27
+    err
+
+main_lastRole_route@27:
+    callsub lastRole
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_members_route@26:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub members
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_BURNER_ROLE_route@25:
+    callsub BURNER_ROLE
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_MINTER_ROLE_route@24:
+    callsub MINTER_ROLE
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_isMember_route@23:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub isMember
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_anyRole_route@22:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub anyRole
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_burn_route@21:
+    callsub burn
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_mint_route@20:
+    callsub mint
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_grant_route@19:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    callsub grant
+    intc_0 // 1
+    return
+
+main___postInit_route@18:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_3 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_2 // "members"
+    intc_3 // 2
+    box_create
+    pop
+    bytec_1 // "lastRole"
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    app_global_put
+    intc_0 // 1
+    return
+
+main_switch_case_8@13:
+    callsub __evm_npy
+    callsub lastRole
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_7@12:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    extract 0 32
+    intc_1 // 32
+    callsub __evm_arga
+    callsub members
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_6@11:
+    callsub __evm_npy
+    callsub BURNER_ROLE
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    callsub MINTER_ROLE
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    extract 0 32
+    intc_1 // 32
+    callsub __evm_arga
+    callsub isMember
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    intc_2 // 0
+    callsub __evm_decw
+    extract 0 32
+    callsub anyRole
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub burn
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub mint
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_2 // 0
+    callsub __evm_decw
+    extract 0 32
+    intc_1 // 32
+    callsub __evm_arga
+    callsub grant
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.grant(role: bytes, a: bytes) -> void:
+grant:
+    proto 2 0
+    txn GroupIndex
+    bz grant_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+grant_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    bytec_2 // "members"
+    concat
+    sha256
+    frame_dig -1
+    swap
+    concat
+    sha256
+    intc_0 // 1
+    itob
+    box_put
+    retsub
+
+grant_ternary_false@2:
+    intc_2 // 0
+    b grant_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.mint() -> bytes:
+mint:
+    txn GroupIndex
+    bz mint_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+mint_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "lastRole"
+    bytec 5 // 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
+    app_global_put
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    retsub
+
+mint_ternary_false@2:
+    intc_2 // 0
+    b mint_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.burn() -> bytes:
+burn:
+    txn GroupIndex
+    bz burn_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+burn_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "lastRole"
+    bytec 6 // 0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848
+    app_global_put
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
+    retsub
+
+burn_ternary_false@2:
+    intc_2 // 0
+    b burn_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.anyRole(r: bytes) -> bytes:
+anyRole:
+    proto 1 1
+    txn GroupIndex
+    bz anyRole_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+anyRole_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "lastRole"
+    frame_dig -1
+    app_global_put
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000b
+    retsub
+
+anyRole_ternary_false@2:
+    intc_2 // 0
+    b anyRole_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.isMember(role: bytes, a: bytes) -> uint64:
+isMember:
+    proto 2 1
+    txn GroupIndex
+    bz isMember_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+isMember_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    bytec_2 // "members"
+    concat
+    sha256
+    frame_dig -1
+    swap
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    retsub
+
+isMember_ternary_false@2:
+    intc_2 // 0
+    b isMember_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.MINTER_ROLE() -> bytes:
+MINTER_ROLE:
+    txn GroupIndex
+    bz MINTER_ROLE_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+MINTER_ROLE_ternary_merge@3:
+    !
+    assert // not payable
+    bytec 5 // 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
+    retsub
+
+MINTER_ROLE_ternary_false@2:
+    intc_2 // 0
+    b MINTER_ROLE_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.BURNER_ROLE() -> bytes:
+BURNER_ROLE:
+    txn GroupIndex
+    bz BURNER_ROLE_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+BURNER_ROLE_ternary_merge@3:
+    !
+    assert // not payable
+    bytec 6 // 0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848
+    retsub
+
+BURNER_ROLE_ternary_false@2:
+    intc_2 // 0
+    b BURNER_ROLE_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.members(key0: bytes, key1: bytes) -> uint64:
+members:
+    proto 2 1
+    txn GroupIndex
+    bz members_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+members_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -2
+    bytec_2 // "members"
+    concat
+    sha256
+    frame_dig -1
+    swap
+    concat
+    sha256
+    box_get
+    swap
+    btoi
+    intc_2 // 0
+    swap
+    uncover 2
+    select
+    retsub
+
+members_ternary_false@2:
+    intc_2 // 0
+    b members_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.lastRole() -> bytes:
+lastRole:
+    txn GroupIndex
+    bz lastRole_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+lastRole_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_1 // "lastRole"
+    app_global_get_ex
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    retsub
+
+lastRole_ternary_false@2:
+    intc_2 // 0
+    b lastRole_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.__evm_decw(__off: uint64) -> bytes:
+__evm_decw:
+    proto 1 1
+    frame_dig -1
+    intc_1 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    frame_dig -1
+    intc_1 // 32
+    extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.__evm_arga(__off: uint64) -> bytes:
+__evm_arga:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_1 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub

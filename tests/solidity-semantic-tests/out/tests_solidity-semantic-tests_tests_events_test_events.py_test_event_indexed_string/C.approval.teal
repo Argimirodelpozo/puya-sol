@@ -4,9 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 128 90
-    bytecblock "y" "x" "__ctor_pending" 0x
-    intc_0 // 0
-    bytec_3 // ""
+    bytecblock "y" "x" 0x "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -26,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -34,73 +32,132 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@7
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@7
+    pushbytes 0xd0e30db0
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x92e03b1c // method "__postInit()void", method "deposit()void"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_deposit_route@6
+    match main___postInit_route@10 main_deposit_route@11
     err
 
-main_deposit_route@6:
+main_deposit_route@11:
+    callsub deposit
+    intc_1 // 1
+    return
+
+main___postInit_route@10:
+    bytec_3 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_3 // "__ctor_pending"
+    intc_0 // 0
+    app_global_put
+    bytec_0 // "y"
+    intc_2 // 128
+    box_create
+    pop
+    bytec_1 // "x"
+    bytec_2 // 0x
+    app_global_put
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@18
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@19:
+    !
+    assert // not payable
+    callsub deposit
+    pushbytes 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@18:
+    intc_0 // 0
+    b main_ternary_merge@19
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_indexed_string.sol.C.deposit() -> void:
+deposit:
+    txn GroupIndex
+    bz deposit_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+deposit_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
     itob
-    bury 2
 
-main_while_top@14:
+deposit_while_top@4:
     intc_3 // 90
     itob
-    dig 2
+    dig 1
     b>
-    bz main_after_while@16
+    bz deposit_after_while@6
     intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_2 // 0x
+    cover 2
+    select
     pushbytes 0x00
     concat
     bytec_1 // "x"
     swap
     app_global_put
-    dig 1
     pushbytes 0x01
     b+
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    bury 2
-    b main_while_top@14
+    b deposit_while_top@4
 
-main_after_while@16:
+deposit_after_while@6:
+    pop
     intc_0 // 0
-    bury 1
 
-main_while_top@17:
+deposit_while_top@7:
     dup
     intc_3 // 90
     <
-    bz main_after_while@19
-    intc_0 // 0
-    bytec_1 // "x"
-    app_global_get_ex
-    assert // check x exists
-    dig 1
+    bz deposit_after_while@9
     dup
     itob
     extract 7 1
-    uncover 2
+    intc_0 // 0
+    bytec_1 // "x"
+    app_global_get_ex
+    bytec_2 // 0x
+    cover 2
+    select
     dig 2
     uncover 2
     replace3
@@ -113,20 +170,20 @@ main_while_top@17:
     pushint 255
     <=
     assert // overflow
-    bury 1
-    b main_while_top@17
+    b deposit_while_top@7
 
-main_after_while@19:
+deposit_after_while@9:
+    pop
     bytec_0 // "y"
     box_len
     bury 1
-    bnz main_after_if_else@21
+    bnz deposit_after_if_else@11
     bytec_0 // "y"
     intc_2 // 128
     box_create
     pop
 
-main_after_if_else@21:
+deposit_after_if_else@11:
     bytec_0 // "y"
     intc_0 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
@@ -134,13 +191,13 @@ main_after_if_else@21:
     bytec_0 // "y"
     box_len
     bury 1
-    bnz main_after_if_else@23
+    bnz deposit_after_if_else@13
     bytec_0 // "y"
     intc_2 // 128
     box_create
     pop
 
-main_after_if_else@23:
+deposit_after_if_else@13:
     bytec_0 // "y"
     pushint 32
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
@@ -148,13 +205,13 @@ main_after_if_else@23:
     bytec_0 // "y"
     box_len
     bury 1
-    bnz main_after_if_else@25
+    bnz deposit_after_if_else@15
     bytec_0 // "y"
     intc_2 // 128
     box_create
     pop
 
-main_after_if_else@25:
+deposit_after_if_else@15:
     bytec_0 // "y"
     pushint 64
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000006
@@ -162,13 +219,13 @@ main_after_if_else@25:
     bytec_0 // "y"
     box_len
     bury 1
-    bnz main_after_if_else@27
+    bnz deposit_after_if_else@17
     bytec_0 // "y"
     intc_2 // 128
     box_create
     pop
 
-main_after_if_else@27:
+deposit_after_if_else@17:
     bytec_0 // "y"
     pushint 96
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
@@ -176,7 +233,9 @@ main_after_if_else@27:
     intc_0 // 0
     bytec_1 // "x"
     app_global_get_ex
-    assert // check x exists
+    bytec_2 // 0x
+    cover 2
+    select
     dup
     len
     itob
@@ -197,26 +256,8 @@ main_after_if_else@27:
     swap
     concat
     log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@12:
+deposit_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@13
-
-main___postInit_route@5:
-    bytec_2 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_2 // "__ctor_pending"
-    intc_0 // 0
-    app_global_put
-    bytec_0 // "y"
-    intc_2 // 128
-    box_create
-    pop
-    bytec_1 // "x"
-    bytec_3 // 0x
-    app_global_put
-    intc_1 // 1
-    return
+    b deposit_ternary_merge@3

@@ -5,8 +5,6 @@
 main:
     intcblock 32 1 0 2
     bytecblock 0x151f7c75
-    intc_2 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -43,7 +41,6 @@ main_after_if_else@2:
 main_h_route@7:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -62,7 +59,7 @@ main_ternary_merge@14:
     store 0
     intc_0 // 32
     bzero
-    dig 2
+    swap
     concat
     dup
     len
@@ -87,7 +84,6 @@ main_ternary_false@13:
 main_g_route@6:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_3 // 2
     ==
@@ -108,7 +104,7 @@ main_ternary_merge@24:
     bzero
     pushint 30
     bzero
-    dig 2
+    uncover 2
     swap
     concat
     concat
@@ -135,7 +131,6 @@ main_ternary_false@18:
 main_f_route@5:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     intc_3 // 2
     ==

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/gas_and_value_basic.sol.helper.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "flag" 0x151f7c75
+    intcblock 1 0 32
+    bytecblock 0x151f7c75 "flag"
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "flag"
+    bytec_1 // "flag"
     intc_1 // 0
     app_global_put
     intc_0 // 1
@@ -32,77 +32,173 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    pushbytess 0x12065fe0 0x62548c7b 0xf9633930
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
+
+main_after_if_else@9:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xad7db34f 0x19d9fbcf 0x2fe85e04 // method "getBalance()uint256", method "setFlag()void", method "getFlag()bool"
     txna ApplicationArgs 0
-    match main_getBalance_route@5 main_setFlag_route@6 main_getFlag_route@7
+    match main_getBalance_route@12 main_setFlag_route@13 main_getFlag_route@14
     err
 
-main_getFlag_route@7:
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_0 // "flag"
-    app_global_get_ex
-    assert // check flag exists
+main_getFlag_route@14:
+    callsub getFlag
     pushbytes 0x00
     intc_1 // 0
     uncover 2
     setbit
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@13:
-    intc_1 // 0
-    b main_ternary_merge@14
+main_setFlag_route@13:
+    callsub setFlag
+    intc_0 // 1
+    return
 
-main_setFlag_route@6:
+main_getBalance_route@12:
+    callsub getBalance
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub getFlag
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub setFlag
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    intc_2 // 32
+    bzero
+    callsub getBalance
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/gas_and_value_basic.sol.helper.getBalance() -> bytes:
+getBalance:
+    global CurrentApplicationAddress
+    acct_params_get AcctBalance
+    pop
+    itob
+    intc_2 // 32
+    bzero
+    b|
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/gas_and_value_basic.sol.helper.setFlag() -> void:
+setFlag:
     txn GroupIndex
-    bz main_ternary_false@18
+    bz setFlag_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+setFlag_ternary_merge@3:
     !
     assert // not payable
-    bytec_0 // "flag"
+    bytec_1 // "flag"
     intc_0 // 1
     app_global_put
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@18:
+setFlag_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@19
+    b setFlag_ternary_merge@3
 
-main_getBalance_route@5:
-    global CurrentApplicationAddress
-    acct_params_get AcctBalance
-    pop
-    itob
-    pushint 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/gas_and_value_basic.sol.helper.getFlag() -> uint64:
+getFlag:
+    txn GroupIndex
+    bz getFlag_ternary_false@2
+    txn GroupIndex
     intc_0 // 1
-    return
+    -
+    gtxns Amount
+
+getFlag_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_1 // "flag"
+    app_global_get_ex
+    intc_1 // 0
+    cover 2
+    select
+    retsub
+
+getFlag_ternary_false@2:
+    intc_1 // 0
+    b getFlag_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/gas_and_value_basic.sol.helper.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

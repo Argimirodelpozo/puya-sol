@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_enum.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "c"
+    intcblock 1 0 32
+    bytecblock "c" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -32,73 +32,45 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@8
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@8
+    pushbytess 0x75056e81 0xbbcac3e9
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6
+
+main_after_if_else@8:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbabc40ea 0x0a1c1d05 0xa6fd40b7 // method "cSlotOffset()(uint256,uint256)", method "setBlue()void", method "checkBlue()bool"
     txna ApplicationArgs 0
-    match main_cSlotOffset_route@5 main_setBlue_route@6 main_checkBlue_route@7
+    match main_cSlotOffset_route@11 main_setBlue_route@12 main_checkBlue_route@13
     err
 
-main_checkBlue_route@7:
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_0 // "c"
-    app_global_get_ex
-    assert // check c exists
-    dup
-    pushint 3
-    <
-    assert // enum out of range
-    intc_0 // 1
-    ==
+main_checkBlue_route@13:
+    callsub checkBlue
     pushbytes 0x00
     intc_1 // 0
     uncover 2
     setbit
-    pushbytes 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@13:
-    intc_1 // 0
-    b main_ternary_merge@14
-
-main_setBlue_route@6:
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
-    bytec_0 // "c"
-    intc_0 // 1
-    app_global_put
+main_setBlue_route@12:
+    callsub setBlue
     intc_0 // 1
     return
 
-main_ternary_false@18:
-    intc_1 // 0
-    b main_ternary_merge@19
-
-main_cSlotOffset_route@5:
+main_cSlotOffset_route@11:
     txn GroupIndex
     bz main_ternary_false@23
     txn GroupIndex
@@ -121,3 +93,103 @@ main_ternary_merge@24:
 main_ternary_false@23:
     intc_1 // 0
     b main_ternary_merge@24
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub checkBlue
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub setBlue
+    bytec_1 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_enum.sol.C.setBlue() -> void:
+setBlue:
+    txn GroupIndex
+    bz setBlue_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setBlue_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // "c"
+    intc_0 // 1
+    app_global_put
+    retsub
+
+setBlue_ternary_false@2:
+    intc_1 // 0
+    b setBlue_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_enum.sol.C.checkBlue() -> uint64:
+checkBlue:
+    txn GroupIndex
+    bz checkBlue_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+checkBlue_ternary_merge@3:
+    !
+    assert // not payable
+    intc_1 // 0
+    bytec_0 // "c"
+    app_global_get_ex
+    intc_1 // 0
+    cover 2
+    select
+    dup
+    pushint 3
+    <
+    assert // enum out of range
+    intc_0 // 1
+    ==
+    retsub
+
+checkBlue_ternary_false@2:
+    intc_1 // 0
+    b checkBlue_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_enum.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

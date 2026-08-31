@@ -1,10 +1,10 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_3kqd9isc/s3.sol.C.approval_program() -> uint64:
+// /tmp/multisource_9u5aosag/s3.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    intcblock 1 32 2 0
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -28,30 +28,127 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@7
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@7
+    pushbytes 0xc2985578
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
     pushbytes 0xeddddc3d // method "foo()uint256"
     txna ApplicationArgs 0
-    match main_foo_route@4
+    match main_foo_route@9
     err
 
-main_foo_route@4:
+main_foo_route@9:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
+    callsub foo
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@15:
     !
     assert // not payable
+    intc_1 // 32
+    bzero
+    callsub foo
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_3 // 0
+    b main_ternary_merge@15
+
+
+// __solfn_17() -> bytes:
+f:
+    pushint 1000
+    itob
+    callsub g
+    b+
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    callsub __solfn_28
+    dup2
+    b>=
+    assert // underflow
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    swap
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    retsub
+
+
+// __solfn_28() -> bytes:
+__solfn_28:
+    intc_2 // 2
+    itob
+    retsub
+
+
+// __solfn_36() -> bytes:
+g:
+    pushint 4
+    itob
+    retsub
+
+
+// /tmp/multisource_9u5aosag/s3.sol.C.foo() -> bytes:
+foo:
+    txn GroupIndex
+    bz foo_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+foo_ternary_merge@3:
+    !
+    assert // not payable
+    callsub f
     pushint 10000
     itob
-    callsub /tmp/multisource_3kqd9isc/s3.sol.f_28
+    callsub __solfn_28
     b+
     dup
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -72,11 +169,10 @@ main_ternary_merge@9:
     bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    callsub f
-    dup2
+    dup
+    dig 2
     b>=
     assert // underflow
-    swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     swap
@@ -95,55 +191,8 @@ main_ternary_merge@9:
     intc_1 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@8:
-    pushint 0
-    b main_ternary_merge@9
-
-
-// /tmp/multisource_3kqd9isc/s3.sol.f() -> bytes:
-f:
-    pushint 1000
-    itob
-    callsub g
-    b+
-    dup
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    callsub /tmp/multisource_3kqd9isc/s3.sol.f_28
-    dup2
-    b>=
-    assert // underflow
-    swap
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b+
-    swap
-    b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    bytec_1 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
     retsub
 
-
-// /tmp/multisource_3kqd9isc/s3.sol.f_28() -> bytes:
-/tmp/multisource_3kqd9isc/s3.sol.f_28:
-    pushint 2
-    itob
-    retsub
-
-
-// /tmp/multisource_3kqd9isc/s3.sol.g() -> bytes:
-g:
-    pushint 4
-    itob
-    retsub
+foo_ternary_false@2:
+    intc_3 // 0
+    b foo_ternary_merge@3

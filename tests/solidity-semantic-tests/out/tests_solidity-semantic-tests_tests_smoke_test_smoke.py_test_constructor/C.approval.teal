@@ -3,9 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/constructor.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "state" 0x151f7c75
-    intc_1 // 0
+    intcblock 32 1 0
+    bytecblock 0x151f7c75 "state"
     pushint 4096
     bzero
     dup
@@ -25,13 +24,24 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "state"
+    bytec_1 // "state"
     txna ApplicationArgs 0
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    pushbytess 0xb69ef8a8 0x82ab890a 0xc19d93fb
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
+
+main_after_if_else@9:
     txn OnCompletion
     !
     assert
@@ -39,82 +49,181 @@ main_after_if_else@2:
     assert
     pushbytess 0x76d8a28f 0x70dc8bf7 0xd327fc16 // method "balance()uint256", method "update(uint256)void", method "state()uint256"
     txna ApplicationArgs 0
-    match main_balance_route@5 main_update_route@6 main_state_route@7
+    match main_balance_route@12 main_update_route@13 main_state_route@14
     err
 
-main_state_route@7:
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_0 // "state"
-    app_global_get_ex
-    assert // check state exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec_1 // 0x151f7c75
+main_state_route@14:
+    callsub state
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@13:
-    intc_1 // 0
-    b main_ternary_merge@14
-
-main_update_route@6:
+main_update_route@13:
     txna ApplicationArgs 1
     dup
-    bury 2
     len
-    intc_2 // 32
+    intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
-    bytec_0 // "state"
-    dig 1
-    app_global_put
-    intc_0 // 1
+    callsub update
+    intc_1 // 1
     return
 
-main_ternary_false@18:
-    intc_1 // 0
-    b main_ternary_merge@19
+main_balance_route@12:
+    callsub balance
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
-main_balance_route@5:
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub state
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub update
+    bytec_0 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    intc_0 // 32
+    bzero
+    callsub balance
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/constructor.sol.C.balance() -> bytes:
+balance:
     global CurrentApplicationAddress
     acct_params_get AcctBalance
     pop
     itob
-    intc_2 // 32
+    intc_0 // 32
     bzero
     b|
-    bytec_1 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/constructor.sol.C.update(__arc4__state: bytes) -> void:
+update:
+    proto 1 0
+    txn GroupIndex
+    bz update_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+update_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "state"
+    frame_dig -1
+    app_global_put
+    retsub
+
+update_ternary_false@2:
+    intc_2 // 0
+    b update_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/constructor.sol.C.state() -> bytes:
+state:
+    txn GroupIndex
+    bz state_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+state_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_1 // "state"
+    app_global_get_ex
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+state_ternary_false@2:
+    intc_2 // 0
+    b state_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/constructor.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

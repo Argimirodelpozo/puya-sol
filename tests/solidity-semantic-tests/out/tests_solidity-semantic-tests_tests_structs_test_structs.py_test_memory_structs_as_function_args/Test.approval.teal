@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_as_function_args.sol.Test.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 32 1 0 2
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -23,29 +24,108 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@7
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@7
+    pushbytes 0xf8a8fd6d
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
     pushbytes 0x34914231 // method "test()(uint256,uint256,uint256)"
     txna ApplicationArgs 0
-    match main_test_route@4
+    match main_test_route@9
     err
 
-main_test_route@4:
+main_test_route@9:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
+    callsub test
+    cover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@14
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub test
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_as_function_args.sol.Test.test() -> bytes, bytes, bytes:
+test:
+    txn GroupIndex
+    bz test_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+test_ternary_merge@3:
     !
     assert // not payable
     load 0
@@ -60,26 +140,26 @@ main_ternary_merge@9:
     concat
     replace2 64
     store 0
-    intc_0 // 1
+    intc_1 // 1
     itob
-    pushint 2
+    intc_3 // 2
     itob
-    intc_1 // 32
+    intc_0 // 32
     bzero
     intc_2 // 0
     itob
     pushbytes 0x0100020000000000000000000000000000000000000000000000000000000000000003
     swap
-    callsub extract
+    callsub __solfn_75
     uncover 4
-    callsub extract
+    callsub __solfn_75
     uncover 4
-    callsub extract
+    callsub __solfn_75
     pop
     cover 2
     dig 1
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
     swap
@@ -87,7 +167,7 @@ main_ternary_merge@9:
     b|
     dig 1
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
     swap
@@ -95,36 +175,27 @@ main_ternary_merge@9:
     b|
     dig 2
     len
-    intc_1 // 32
+    intc_0 // 32
     <=
     assert // overflow
     uncover 2
     uncover 3
     b|
-    cover 2
-    concat
-    swap
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@8:
+test_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@9
+    b test_ternary_merge@3
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_as_function_args.sol.Test.extract(s: bytes, which: bytes) -> bytes, bytes:
-extract:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/memory_structs_as_function_args.sol.Test.__solfn_75(s: bytes, which: bytes) -> bytes, bytes:
+__solfn_75:
     proto 2 2
     intc_2 // 0
     itob
     frame_dig -1
     b==
-    bz extract_else_body@2
+    bz __solfn_75_else_body@2
     frame_dig -2
     intc_2 // 0
     getbyte
@@ -132,20 +203,20 @@ extract:
     frame_dig -2
     retsub
 
-extract_else_body@2:
-    intc_0 // 1
+__solfn_75_else_body@2:
+    intc_1 // 1
     itob
     frame_dig -1
     b==
-    bz extract_else_body@4
+    bz __solfn_75_else_body@4
     frame_dig -2
-    intc_0 // 1
+    intc_1 // 1
     extract_uint16
     itob
     frame_dig -2
     retsub
 
-extract_else_body@4:
+__solfn_75_else_body@4:
     frame_dig -2
     extract 3 32
     frame_dig -2

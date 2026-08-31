@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeAsmArrayRoot.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x01 0x03 0x 0x02 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
+    bytecblock 0x03 0x 0x01 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
     pushint 4096
     bzero
     dup
@@ -29,103 +29,28 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@7
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@7
+    pushbytes 0xdab1fa12
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xd6dcd2fd 0x0fada4b7 0x141ea530 // method "resizeRoots(uint256,uint256)void", method "resizeMembers(uint256,uint256)void", method "lengths()(uint256,uint256,uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
-    match main_resizeRoots_route@5 main_resizeMembers_route@6 main_lengths_route@7
+    match main_resizeRoots_route@10 main_resizeMembers_route@11 main_lengths_route@12
     err
 
-main_lengths_route@7:
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    bytec_0 // 0x01
-    callsub __storage_read
-    intc_2 // 0
-    itob
-    dup
-    cover 2
-    b==
-    bz main_else_body@16
-    pushint 99
-    itob
-
-main_after_if_else@17:
-    bytec_1 // 0x03
-    callsub __storage_read
-    dig 2
-    b==
-    bz main_else_body@19
-    bury 1
-    pushint 99
-    itob
-
-main_after_if_else@20:
-    bytec_2 // 0x
-    callsub __storage_read
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    bytec_0 // 0x01
-    callsub __storage_read
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 2
-    b|
-    uncover 4
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 3
-    b|
-    bytec_3 // 0x02
-    callsub __storage_read
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 4
-    b|
-    bytec_1 // 0x03
-    callsub __storage_read
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 5
-    b|
-    uncover 6
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 6
-    b|
+main_lengths_route@12:
+    callsub lengths
     uncover 5
     uncover 5
     concat
@@ -137,38 +62,14 @@ main_after_if_else@20:
     concat
     swap
     concat
-    pushbytes 0x151f7c75
+    bytec_3 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_else_body@19:
-    bytec_1 // 0x03
-    callsub __storage_read
-    uncover 2
-    b>
-    assert // array index out of bounds
-    pushbytes 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
-    callsub __storage_read
-    b main_after_if_else@20
-
-main_else_body@16:
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    pushbytes 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
-    callsub __storage_read
-    b main_after_if_else@17
-
-main_ternary_false@13:
-    intc_2 // 0
-    b main_ternary_merge@14
-
-main_resizeMembers_route@6:
+main_resizeMembers_route@11:
     txna ApplicationArgs 1
     dup
     len
@@ -182,21 +83,21 @@ main_resizeMembers_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@24
+    bz main_ternary_false@25
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+main_ternary_merge@26:
     !
     assert // not payable
     load 0
     store 0
-    bytec_3 // 0x02
+    pushbytes 0x02
     uncover 2
     callsub __storage_write
-    bytec_1 // 0x03
+    bytec_0 // 0x03
     swap
     callsub __storage_write
     load 0
@@ -204,11 +105,11 @@ main_ternary_merge@25:
     intc_1 // 1
     return
 
-main_ternary_false@24:
+main_ternary_false@25:
     intc_2 // 0
-    b main_ternary_merge@25
+    b main_ternary_merge@26
 
-main_resizeRoots_route@5:
+main_resizeRoots_route@10:
     txna ApplicationArgs 1
     dup
     len
@@ -222,21 +123,21 @@ main_resizeRoots_route@5:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@29
+    bz main_ternary_false@30
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@30:
+main_ternary_merge@31:
     !
     assert // not payable
     load 0
     store 0
-    bytec_2 // 0x
+    bytec_1 // 0x
     uncover 2
     callsub __storage_write
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     swap
     callsub __storage_write
     load 0
@@ -244,9 +145,92 @@ main_ternary_merge@30:
     intc_1 // 1
     return
 
-main_ternary_false@29:
+main_ternary_false@30:
     intc_2 // 0
-    b main_ternary_merge@30
+    b main_ternary_merge@31
+
+main_switch_case_0@5:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub lengths
+    dig 6
+    uncover 6
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 6
+    uncover 6
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 5
+    uncover 5
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 4
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_3 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@19:
+    intc_2 // 0
+    b main_ternary_merge@20
 
 
 // __puyasol___storage_read(__slot: bytes) -> bytes:
@@ -254,7 +238,7 @@ __storage_read:
     proto 1 1
     intc_2 // 0
     dup
-    bytec_2 // ""
+    bytec_1 // ""
     frame_dig -1
     bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -298,7 +282,7 @@ __storage_read:
     retsub
 
 __storage_read_after_if_else@3:
-    bytec_2 // 0x
+    bytec_1 // 0x
     frame_bury 0
     retsub
 
@@ -410,3 +394,119 @@ __storage_write_else_body@2:
     swap
     box_replace
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeAsmArrayRoot.lengths() -> bytes, bytes, bytes, bytes, bytes, bytes:
+lengths:
+    txn GroupIndex
+    bz lengths_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+lengths_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_2 // 0x01
+    callsub __storage_read
+    intc_2 // 0
+    itob
+    dup
+    cover 2
+    b==
+    bz lengths_else_body@5
+    pushint 99
+    itob
+
+lengths_after_if_else@6:
+    bytec_0 // 0x03
+    callsub __storage_read
+    dig 2
+    b==
+    bz lengths_else_body@8
+    bury 1
+    pushint 99
+    itob
+
+lengths_after_if_else@9:
+    bytec_1 // 0x
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    bytec_2 // 0x01
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    uncover 4
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    pushbytes 0x02
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 4
+    b|
+    bytec_0 // 0x03
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 5
+    b|
+    uncover 6
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 6
+    b|
+    retsub
+
+lengths_else_body@8:
+    bytec_0 // 0x03
+    callsub __storage_read
+    uncover 2
+    b>
+    assert // array index out of bounds
+    pushbytes 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
+    callsub __storage_read
+    b lengths_after_if_else@9
+
+lengths_else_body@5:
+    bytec_2 // 0x01
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    pushbytes 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
+    callsub __storage_read
+    b lengths_after_if_else@6
+
+lengths_ternary_false@2:
+    intc_2 // 0
+    b lengths_ternary_merge@3

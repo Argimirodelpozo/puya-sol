@@ -1,0 +1,625 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.approval_program() -> uint64:
+main:
+    intcblock 1 32 0 2
+    bytecblock 0x151f7c75 0x 0xfffffffffffffffe 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000003
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_0 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@15
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@15
+    pushbytess 0x08ff8659 0x324702ed 0x73d19e2b 0xdf795e6a 0x178ab95c 0x0a89e97a 0x2d71c1cc 0x6ef1a590 0xbe37c2dd
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11 main_switch_case_7@12 main_switch_case_8@13
+
+main_after_if_else@15:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x1f45175a 0x5ecd8261 0xf8918ab6 0xcf82f316 0xf341205c 0x7bbe82ec 0x1771fc74 0x546c9245 0x2d131183 // method "cmpMixed()(bool,bool,bool)", method "bandMixed()byte[4]", method "packedFixedU32()byte[]", method "packedFixedBytes8()byte[]", method "packedDynBytes8()byte[]", method "packedDynBool()byte[]", method "packedFixedBool()byte[]", method "packedScalars()byte[]", method "packedSignedArray()byte[]"
+    txna ApplicationArgs 0
+    match main_cmpMixed_route@18 main_bandMixed_route@19 main_packedFixedU32_route@20 main_packedFixedBytes8_route@21 main_packedDynBytes8_route@22 main_packedDynBool_route@23 main_packedFixedBool_route@24 main_packedScalars_route@25 main_packedSignedArray_route@26
+    err
+
+main_packedSignedArray_route@26:
+    callsub packedSignedArray
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_packedScalars_route@25:
+    callsub packedScalars
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_packedFixedBool_route@24:
+    callsub packedFixedBool
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_packedDynBool_route@23:
+    callsub packedDynBool
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_packedDynBytes8_route@22:
+    callsub packedDynBytes8
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_packedFixedBytes8_route@21:
+    callsub packedFixedBytes8
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_packedFixedU32_route@20:
+    callsub packedFixedU32
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_bandMixed_route@19:
+    callsub bandMixed
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_cmpMixed_route@18:
+    callsub cmpMixed
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 4
+    setbit
+    intc_0 // 1
+    uncover 3
+    setbit
+    intc_3 // 2
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_8@13:
+    callsub __evm_npy
+    callsub packedSignedArray
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_7@12:
+    callsub __evm_npy
+    callsub packedScalars
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_6@11:
+    callsub __evm_npy
+    callsub packedFixedBool
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    callsub packedDynBool
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    callsub packedDynBytes8
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    callsub packedFixedBytes8
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    callsub packedFixedU32
+    callsub __evm_ret0
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub bandMixed
+    pushint 28
+    bzero
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub cmpMixed
+    uncover 2
+    itob
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    uncover 2
+    itob
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    swap
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.cmpMixed() -> uint64, uint64, uint64:
+cmpMixed:
+    txn GroupIndex
+    bz cmpMixed_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+cmpMixed_ternary_merge@3:
+    !
+    assert // not payable
+    intc_0 // 1
+    dup
+    intc_2 // 0
+    retsub
+
+cmpMixed_ternary_false@2:
+    intc_2 // 0
+    b cmpMixed_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.bandMixed() -> bytes:
+bandMixed:
+    txn GroupIndex
+    bz bandMixed_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+bandMixed_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x61620000
+    retsub
+
+bandMixed_ternary_false@2:
+    intc_2 // 0
+    b bandMixed_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.packedFixedU32() -> bytes:
+packedFixedU32:
+    txn GroupIndex
+    bz packedFixedU32_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+packedFixedU32_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003
+    retsub
+
+packedFixedU32_ternary_false@2:
+    intc_2 // 0
+    b packedFixedU32_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.packedFixedBytes8() -> bytes:
+packedFixedBytes8:
+    txn GroupIndex
+    bz packedFixedBytes8_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+packedFixedBytes8_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x01020304050607080000000000000000000000000000000000000000000000001112131415161718000000000000000000000000000000000000000000000000
+    retsub
+
+packedFixedBytes8_ternary_false@2:
+    intc_2 // 0
+    b packedFixedBytes8_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.packedDynBytes8() -> bytes:
+packedDynBytes8:
+    txn GroupIndex
+    bz packedDynBytes8_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+packedDynBytes8_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // 0x
+    intc_2 // 0
+
+packedDynBytes8_while_top@4:
+    dup
+    intc_3 // 2
+    <
+    bz packedDynBytes8_after_while@6
+    dup
+    pushint 8
+    *
+    intc_3 // 2
+    +
+    pushbytes 0x000201020304050607081112131415161718
+    swap
+    pushint 8
+    extract3
+    pushint 24
+    bzero
+    concat
+    uncover 2
+    swap
+    concat
+    swap
+    intc_0 // 1
+    +
+    b packedDynBytes8_while_top@4
+
+packedDynBytes8_after_while@6:
+    pop
+    retsub
+
+packedDynBytes8_ternary_false@2:
+    intc_2 // 0
+    b packedDynBytes8_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.packedDynBool() -> bytes:
+packedDynBool:
+    txn GroupIndex
+    bz packedDynBool_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+packedDynBool_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // 0x
+    intc_2 // 0
+
+packedDynBool_while_top@4:
+    dup
+    pushint 3
+    <
+    bz packedDynBool_after_while@6
+    intc_1 // 32
+    bzero
+    pushint 16
+    dig 2
+    +
+    pushbytes 0x0003a0
+    swap
+    getbit
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    intc_0 // 1
+    +
+    b packedDynBool_while_top@4
+
+packedDynBool_after_while@6:
+    pop
+    retsub
+
+packedDynBool_ternary_false@2:
+    intc_2 // 0
+    b packedDynBool_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.packedFixedBool() -> bytes:
+packedFixedBool:
+    txn GroupIndex
+    bz packedFixedBool_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+packedFixedBool_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+packedFixedBool_ternary_false@2:
+    intc_2 // 0
+    b packedFixedBool_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.packedScalars() -> bytes:
+packedScalars:
+    txn GroupIndex
+    bz packedScalars_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+packedScalars_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x01020304111213141516171801
+    retsub
+
+packedScalars_ternary_false@2:
+    intc_2 // 0
+    b packedScalars_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.packedSignedArray() -> bytes:
+packedSignedArray:
+    txn GroupIndex
+    bz packedSignedArray_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+packedSignedArray_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_2 // 0xfffffffffffffffe
+    intc_2 // 0
+    getbyte
+    pushint 128
+    >=
+    bz packedSignedArray_ternary_false@5
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+packedSignedArray_ternary_merge@6:
+    bytec_2 // 0xfffffffffffffffe
+    replace2 24
+    bytec 4 // 0x0000000000000003
+    intc_2 // 0
+    getbyte
+    pushint 128
+    >=
+    bz packedSignedArray_ternary_false@8
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+
+packedSignedArray_ternary_merge@9:
+    bytec 4 // 0x0000000000000003
+    replace2 24
+    concat
+    retsub
+
+packedSignedArray_ternary_false@8:
+    intc_1 // 32
+    bzero
+    b packedSignedArray_ternary_merge@9
+
+packedSignedArray_ternary_false@5:
+    intc_1 // 32
+    bzero
+    b packedSignedArray_ternary_merge@6
+
+packedSignedArray_ternary_false@2:
+    intc_2 // 0
+    b packedSignedArray_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/encodepacked_padding.sol.PackedPadding.__evm_ret0(__v: bytes) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_1 // 32
+    bzero
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    frame_dig -1
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    retsub

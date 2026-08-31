@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/bytes_length_member.sol.c.approval_program() -> uint64:
 main:
-    intcblock 0 1
-    bytecblock "data" "__ctor_pending"
-    intc_0 // 0
-    dupn 14
+    intcblock 0 1 32 2
+    bytecblock 0x151f7c75 "data" "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -26,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -34,340 +32,386 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@8
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@8
+    pushbytess 0xb8e010de 0xbe1c766b
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6
+
+main_after_if_else@8:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x22656f1d 0xbc6a2ad6 // method "__postInit()void", method "set()bool", method "getLength()uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_set_route@6 main_getLength_route@7
+    match main___postInit_route@11 main_set_route@12 main_getLength_route@13
     err
 
-main_getLength_route@7:
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    bytec_0 // "data"
-    box_len
-    pop
-    itob
-    pushint 32
-    bzero
-    b|
-    pushbytes 0x151f7c75
+main_getLength_route@13:
+    callsub getLength
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@13:
+main_set_route@12:
+    callsub set
+    pushbytes 0x00
     intc_0 // 0
-    b main_ternary_merge@14
-
-main_set_route@6:
-    txn GroupIndex
-    bz main_ternary_false@18
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@19:
-    !
-    assert // not payable
-    txn NumAppArgs
-    bz main_ternary_false@69
-    txn NumAppArgs
-    bz main_ternary_false@22
-    txna ApplicationArgs 0
-    bury 15
-
-main_ternary_merge@23:
-    txn NumAppArgs
-    intc_1 // 1
-    >
-    bz main_ternary_false@25
-    txna ApplicationArgs 1
-
-main_ternary_merge@26:
-    dig 15
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
     swap
     concat
-    bury 14
-    txn NumAppArgs
-    pushint 2
-    >
-    bz main_ternary_false@28
-    txna ApplicationArgs 2
-
-main_ternary_merge@29:
-    dig 14
-    swap
-    concat
-    bury 13
-    txn NumAppArgs
-    pushint 3
-    >
-    bz main_ternary_false@31
-    txna ApplicationArgs 3
-
-main_ternary_merge@32:
-    dig 13
-    swap
-    concat
-    bury 12
-    txn NumAppArgs
-    pushint 4
-    >
-    bz main_ternary_false@34
-    txna ApplicationArgs 4
-
-main_ternary_merge@35:
-    dig 12
-    swap
-    concat
-    bury 11
-    txn NumAppArgs
-    pushint 5
-    >
-    bz main_ternary_false@37
-    txna ApplicationArgs 5
-
-main_ternary_merge@38:
-    dig 11
-    swap
-    concat
-    bury 10
-    txn NumAppArgs
-    pushint 6
-    >
-    bz main_ternary_false@40
-    txna ApplicationArgs 6
-
-main_ternary_merge@41:
-    dig 10
-    swap
-    concat
-    bury 9
-    txn NumAppArgs
-    pushint 7
-    >
-    bz main_ternary_false@43
-    txna ApplicationArgs 7
-
-main_ternary_merge@44:
-    dig 9
-    swap
-    concat
-    bury 8
-    txn NumAppArgs
-    pushint 8
-    >
-    bz main_ternary_false@46
-    txna ApplicationArgs 8
-
-main_ternary_merge@47:
-    dig 8
-    swap
-    concat
-    bury 7
-    txn NumAppArgs
-    pushint 9
-    >
-    bz main_ternary_false@49
-    txna ApplicationArgs 9
-
-main_ternary_merge@50:
-    dig 7
-    swap
-    concat
-    bury 6
-    txn NumAppArgs
-    pushint 10
-    >
-    bz main_ternary_false@52
-    txna ApplicationArgs 10
-
-main_ternary_merge@53:
-    dig 6
-    swap
-    concat
-    bury 5
-    txn NumAppArgs
-    pushint 11
-    >
-    bz main_ternary_false@55
-    txna ApplicationArgs 11
-
-main_ternary_merge@56:
-    dig 5
-    swap
-    concat
-    bury 4
-    txn NumAppArgs
-    pushint 12
-    >
-    bz main_ternary_false@58
-    txna ApplicationArgs 12
-
-main_ternary_merge@59:
-    dig 4
-    swap
-    concat
-    bury 3
-    txn NumAppArgs
-    pushint 13
-    >
-    bz main_ternary_false@61
-    txna ApplicationArgs 13
-
-main_ternary_merge@62:
-    dig 3
-    swap
-    concat
-    bury 2
-    txn NumAppArgs
-    pushint 14
-    >
-    bz main_ternary_false@64
-    txna ApplicationArgs 14
-
-main_ternary_merge@65:
-    dig 2
-    swap
-    concat
-    bury 1
-    txn NumAppArgs
-    pushint 15
-    >
-    bz main_ternary_false@67
-    txna ApplicationArgs 15
-
-main_ternary_merge@68:
-    dig 1
-    swap
-    concat
-
-main_ternary_merge@70:
-    bytec_0 // "data"
-    box_del
-    pop
-    bytec_0 // "data"
-    swap
-    box_put
-    pushbytes 0x151f7c7580
     log
     intc_1 // 1
     return
 
-main_ternary_false@67:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@68
-
-main_ternary_false@64:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@65
-
-main_ternary_false@61:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@62
-
-main_ternary_false@58:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@59
-
-main_ternary_false@55:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@56
-
-main_ternary_false@52:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@53
-
-main_ternary_false@49:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@50
-
-main_ternary_false@46:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@47
-
-main_ternary_false@43:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@44
-
-main_ternary_false@40:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@41
-
-main_ternary_false@37:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@38
-
-main_ternary_false@34:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@35
-
-main_ternary_false@31:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@32
-
-main_ternary_false@28:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@29
-
-main_ternary_false@25:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@26
-
-main_ternary_false@22:
-    intc_0 // 0
-    bzero
-    bury 15
-    b main_ternary_merge@23
-
-main_ternary_false@69:
-    intc_0 // 0
-    bzero
-    b main_ternary_merge@70
-
-main_ternary_false@18:
-    intc_0 // 0
-    b main_ternary_merge@19
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+main___postInit_route@11:
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_2 // "__ctor_pending"
     intc_0 // 0
     app_global_put
-    bytec_0 // "data"
+    bytec_1 // "data"
     intc_0 // 0
     box_create
     pop
     intc_1 // 1
     return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub getLength
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_2 // 32
+    bzero
+    callsub set
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/bytes_length_member.sol.c.set() -> uint64:
+set:
+    txn GroupIndex
+    bz set_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+set_ternary_merge@3:
+    !
+    assert // not payable
+    txn NumAppArgs
+    bz set_ternary_false@53
+    txn NumAppArgs
+    bz set_ternary_false@6
+    txna ApplicationArgs 0
+
+set_ternary_merge@7:
+    txn NumAppArgs
+    intc_1 // 1
+    >
+    bz set_ternary_false@9
+    txna ApplicationArgs 1
+
+set_ternary_merge@10:
+    concat
+    txn NumAppArgs
+    intc_3 // 2
+    >
+    bz set_ternary_false@12
+    txna ApplicationArgs 2
+
+set_ternary_merge@13:
+    concat
+    txn NumAppArgs
+    pushint 3
+    >
+    bz set_ternary_false@15
+    txna ApplicationArgs 3
+
+set_ternary_merge@16:
+    concat
+    txn NumAppArgs
+    pushint 4
+    >
+    bz set_ternary_false@18
+    txna ApplicationArgs 4
+
+set_ternary_merge@19:
+    concat
+    txn NumAppArgs
+    pushint 5
+    >
+    bz set_ternary_false@21
+    txna ApplicationArgs 5
+
+set_ternary_merge@22:
+    concat
+    txn NumAppArgs
+    pushint 6
+    >
+    bz set_ternary_false@24
+    txna ApplicationArgs 6
+
+set_ternary_merge@25:
+    concat
+    txn NumAppArgs
+    pushint 7
+    >
+    bz set_ternary_false@27
+    txna ApplicationArgs 7
+
+set_ternary_merge@28:
+    concat
+    txn NumAppArgs
+    pushint 8
+    >
+    bz set_ternary_false@30
+    txna ApplicationArgs 8
+
+set_ternary_merge@31:
+    concat
+    txn NumAppArgs
+    pushint 9
+    >
+    bz set_ternary_false@33
+    txna ApplicationArgs 9
+
+set_ternary_merge@34:
+    concat
+    txn NumAppArgs
+    pushint 10
+    >
+    bz set_ternary_false@36
+    txna ApplicationArgs 10
+
+set_ternary_merge@37:
+    concat
+    txn NumAppArgs
+    pushint 11
+    >
+    bz set_ternary_false@39
+    txna ApplicationArgs 11
+
+set_ternary_merge@40:
+    concat
+    txn NumAppArgs
+    pushint 12
+    >
+    bz set_ternary_false@42
+    txna ApplicationArgs 12
+
+set_ternary_merge@43:
+    concat
+    txn NumAppArgs
+    pushint 13
+    >
+    bz set_ternary_false@45
+    txna ApplicationArgs 13
+
+set_ternary_merge@46:
+    concat
+    txn NumAppArgs
+    pushint 14
+    >
+    bz set_ternary_false@48
+    txna ApplicationArgs 14
+
+set_ternary_merge@49:
+    concat
+    txn NumAppArgs
+    pushint 15
+    >
+    bz set_ternary_false@51
+    txna ApplicationArgs 15
+
+set_ternary_merge@52:
+    concat
+
+set_ternary_merge@54:
+    bytec_1 // "data"
+    box_del
+    pop
+    bytec_1 // "data"
+    swap
+    box_put
+    intc_1 // 1
+    retsub
+
+set_ternary_false@51:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@52
+
+set_ternary_false@48:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@49
+
+set_ternary_false@45:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@46
+
+set_ternary_false@42:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@43
+
+set_ternary_false@39:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@40
+
+set_ternary_false@36:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@37
+
+set_ternary_false@33:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@34
+
+set_ternary_false@30:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@31
+
+set_ternary_false@27:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@28
+
+set_ternary_false@24:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@25
+
+set_ternary_false@21:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@22
+
+set_ternary_false@18:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@19
+
+set_ternary_false@15:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@16
+
+set_ternary_false@12:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@13
+
+set_ternary_false@9:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@10
+
+set_ternary_false@6:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@7
+
+set_ternary_false@53:
+    intc_0 // 0
+    bzero
+    b set_ternary_merge@54
+
+set_ternary_false@2:
+    intc_0 // 0
+    b set_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/bytes_length_member.sol.c.getLength() -> bytes:
+getLength:
+    txn GroupIndex
+    bz getLength_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+getLength_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "data"
+    box_len
+    pop
+    itob
+    intc_2 // 32
+    bzero
+    b|
+    retsub
+
+getLength_ternary_false@2:
+    intc_0 // 0
+    b getLength_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/bytes_length_member.sol.c.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_0 // 0
+    b __evm_npy_ternary_merge@3

@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/inline_assembly_for.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32 0
+    intcblock 1 32
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01
-    intc_2 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -43,7 +41,6 @@ main_f_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_1 // 32
     ==
@@ -61,35 +58,31 @@ main_ternary_merge@9:
     load 0
     store 0
     bytec_1 // 0x01
-    bury 2
-    dig 2
-    bury 1
+    swap
 
 main_while_top@10:
     dup
     pushbytes 0x
     b>
     bz main_after_while@12
-    dup2
     dup
     cover 2
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 3
+    swap
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     bytec_1 // 0x01
     b-
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bury 1
     b main_while_top@10
 
 main_after_while@12:
+    pop
     load 0
     store 0
-    dig 1
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
@@ -108,5 +101,5 @@ main_after_while@12:
     return
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9

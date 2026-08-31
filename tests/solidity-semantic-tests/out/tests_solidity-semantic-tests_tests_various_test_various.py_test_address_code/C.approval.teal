@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/address_code.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
-    bytecblock "initCode" "__ctor_pending" 0x151f7c75
+    intcblock 1 32 0
+    bytecblock 0x151f7c75 "initCode" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_1 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 1
     app_global_put
     intc_0 // 1
@@ -32,129 +32,317 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@10
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@10
+    pushbytess 0x26121ff0 0xe2179b8e 0xb8c9d365 0xa926e7c7
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8
+
+main_after_if_else@10:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x4b4fb052 0x4b2c0376 0xafedb2e5 0x0cc35549 // method "__postInit()void", method "f()bool", method "g()uint256", method "h()uint256", method "initCode()byte[]"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_f_route@6 main_g_route@7 main_h_route@8 main_initCode_route@9
+    match main___postInit_route@13 main_f_route@14 main_g_route@15 main_h_route@16 main_initCode_route@17
     err
 
-main_initCode_route@9:
-    txn GroupIndex
-    bz main_ternary_false@15
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@16:
-    !
-    assert // not payable
-    bytec_0 // "initCode"
-    box_get
-    assert // box exists
+main_initCode_route@17:
+    callsub initCode
     dup
     len
     itob
     extract 6 2
     swap
     concat
-    bytec_2 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@15:
-    intc_1 // 0
-    b main_ternary_merge@16
-
-main_h_route@8:
-    txn GroupIndex
-    bz main_ternary_false@20
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@26:
-    !
-    assert // not payable
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000000
+main_h_route@16:
+    callsub h
+    bytec_0 // 0x151f7c75
+    swap
+    concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@20:
-    intc_1 // 0
-    b main_ternary_merge@26
-
-main_g_route@7:
-    txn GroupIndex
-    bz main_ternary_false@25
-    txn GroupIndex
+main_g_route@15:
+    callsub g
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@26
+    return
 
-main_ternary_false@25:
-    intc_1 // 0
-    b main_ternary_merge@26
-
-main_f_route@6:
-    txn GroupIndex
-    bz main_ternary_false@30
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@31:
-    !
-    assert // not payable
-    global CurrentApplicationID
-    app_params_get AppApprovalProgram
-    pop
-    len
-    itob
-    pushint 100
-    itob
-    b>
+main_f_route@14:
+    callsub f
     pushbytes 0x00
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     setbit
-    bytec_2 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@30:
-    intc_1 // 0
-    b main_ternary_merge@31
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
+main___postInit_route@13:
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
-    bytec_1 // "__ctor_pending"
-    intc_1 // 0
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_2 // "__ctor_pending"
+    intc_2 // 0
     app_global_put
-    bytec_0 // "initCode"
-    intc_1 // 0
+    bytec_1 // "initCode"
+    intc_2 // 0
     box_create
     pop
-    bytec_0 // "initCode"
+    bytec_1 // "initCode"
     box_del
     pop
-    bytec_0 // "initCode"
+    bytec_1 // "initCode"
     pushbytes 0x
     box_put
     intc_0 // 1
     return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub initCode
+    dup
+    len
+    dup
+    itob
+    uncover 3
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    intc_1 // 32
+    %
+    intc_1 // 32
+    swap
+    -
+    intc_1 // 32
+    %
+    bzero
+    uncover 2
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub h
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub g
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub f
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/address_code.sol.C.f() -> uint64:
+f:
+    txn GroupIndex
+    bz f_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+f_ternary_merge@3:
+    !
+    assert // not payable
+    global CurrentApplicationID
+    dup
+    bz f_ternary_false@8
+    dup
+    app_params_get AppExtraProgramPages
+    bury 1
+    bz f_ternary_false@6
+    app_params_get AppExtraProgramPages
+    pop
+    intc_0 // 1
+    +
+    pushint 2048
+    *
+
+f_ternary_merge@9:
+    itob
+    pushint 100
+    itob
+    b>
+    retsub
+
+f_ternary_false@6:
+    pop
+    intc_2 // 0
+    b f_ternary_merge@9
+
+f_ternary_false@8:
+    pop
+    intc_2 // 0
+    b f_ternary_merge@9
+
+f_ternary_false@2:
+    intc_2 // 0
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/address_code.sol.C.g() -> bytes:
+g:
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+g_ternary_false@2:
+    intc_2 // 0
+    b g_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/address_code.sol.C.h() -> bytes:
+h:
+    txn GroupIndex
+    bz h_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+h_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    retsub
+
+h_ternary_false@2:
+    intc_2 // 0
+    b h_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/address_code.sol.C.initCode() -> bytes:
+initCode:
+    txn GroupIndex
+    bz initCode_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+initCode_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_1 // "initCode"
+    box_get
+    assert // box exists
+    retsub
+
+initCode_ternary_false@2:
+    intc_2 // 0
+    b initCode_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/address_code.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

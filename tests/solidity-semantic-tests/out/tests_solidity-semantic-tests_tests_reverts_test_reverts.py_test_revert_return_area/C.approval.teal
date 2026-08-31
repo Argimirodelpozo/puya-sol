@@ -1,0 +1,324 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/revert_return_area.sol.C.approval_program() -> uint64:
+main:
+    intcblock 32 0 4096 1 20480
+    pushbytes ""
+    intc_2 // 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_3 // 1
+    return
+
+main_after_if_else@2:
+    txn NumAppArgs
+    bnz main_after_if_else@5
+    txn OnCompletion
+    bnz main_after_if_else@5
+    b __fallback
+
+main_after_if_else@5:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    bz main_after_if_else@15
+    pushbytess 0x1bf9882b 0x219b312e // method "__fallback()void", method "f()(uint256,uint256)"
+    txna ApplicationArgs 0
+    match __fallback main_f_route@12
+
+main_after_if_else@15:
+    intc_1 // 0
+    bury 1
+
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/revert_return_area.sol.C.__puya_arc4_router__@16:
+    dup
+    bnz main_after_if_else@8
+    txn OnCompletion
+    bnz main_after_if_else@8
+    b __fallback
+
+main_after_if_else@8:
+    return
+
+main_f_route@12:
+    txn GroupIndex
+    bz main_ternary_false@19
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@20:
+    !
+    assert // not payable
+    global CurrentApplicationAddress
+    load 0
+    store 0
+    load 0
+    intc_0 // 32
+    bzero
+    cover 2
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
+    replace2 0
+    store 0
+    itxn_begin
+    load 0
+    extract 0 4
+    load 0
+    pushint 4
+    intc_1 // 0
+    extract3
+    uncover 2
+    pushint 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_1 // 0
+    itxn_field OnCompletion
+    intc_1 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    swap
+    itxn_field ApplicationArgs
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    len
+    pushint 4
+    >=
+    bz main_ternary_false@27
+    dup
+    extract 0 4
+    pushbytes 0x151f7c75
+    ==
+
+main_ternary_merge@28:
+    bz main_ternary_false@30
+    extract 4 0
+
+main_ternary_merge@31:
+    dig 1
+    concat
+    extract 0 32
+    dup
+    cover 2
+    len
+    dup
+    intc_0 // 32
+    %
+    dup
+    cover 3
+    -
+    dup
+    intc_2 // 4096
+    %
+    dup
+    cover 2
+    intc_2 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@33
+    pop
+    dup
+    intc_2 // 4096
+    /
+    loads
+    uncover 2
+    intc_0 // 32
+    extract3
+
+main_ternary_merge@34:
+    intc_0 // 32
+    uncover 4
+    dup
+    cover 2
+    -
+    extract3
+    uncover 3
+    swap
+    concat
+    swap
+    intc_1 // 0
+
+main_while_top@35:
+    dig 2
+    len
+    dig 1
+    >
+    bz main_after_while@40
+    dup
+    intc_0 // 32
+    +
+    dup
+    cover 5
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_2 // 4096
+    /
+    cover 2
+    dup
+    intc_2 // 4096
+    %
+    dup
+    cover 2
+    cover 5
+    dig 4
+    swap
+    intc_0 // 32
+    extract3
+    swap
+    pushint 4064
+    <=
+    bz main_else_body@38
+    uncover 2
+    dup
+    loads
+    uncover 5
+    uncover 3
+    replace3
+    stores
+
+main_after_if_else@39:
+    uncover 3
+    b main_while_top@35
+
+main_else_body@38:
+    uncover 2
+    dup
+    loads
+    intc_2 // 4096
+    uncover 6
+    dup
+    cover 2
+    -
+    dig 4
+    intc_1 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_3 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@39
+
+main_after_while@40:
+    pop
+    bury 1
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    load 0
+    extract 0 32
+    load 0
+    store 0
+    pushbytes 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001
+    swap
+    concat
+    log
+    intc_3 // 1
+    bury 1
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/revert_return_area.sol.C.__puya_arc4_router__@16
+
+main_ternary_false@33:
+    dig 1
+    intc_2 // 4096
+    /
+    dup
+    loads
+    uncover 4
+    dig 3
+    extract3
+    swap
+    intc_3 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_1 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@34
+
+main_ternary_false@30:
+    b main_ternary_merge@31
+
+main_ternary_false@27:
+    intc_1 // 0
+    b main_ternary_merge@28
+
+main_ternary_false@19:
+    intc_1 // 0
+    b main_ternary_merge@20
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/reverts/contracts/revert_return_area.sol.C.__fallback() -> void:
+__fallback:
+    txn GroupIndex
+    bz __fallback_ternary_false@2
+    txn GroupIndex
+    intc_3 // 1
+    -
+    gtxns Amount
+
+__fallback_ternary_merge@3:
+    !
+    assert // not payable
+    pushbytes 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000036162630000000000000000000000000000000000000000000000000000000000
+    log
+    err // abc
+
+__fallback_ternary_false@2:
+    intc_1 // 0
+    b __fallback_ternary_merge@3

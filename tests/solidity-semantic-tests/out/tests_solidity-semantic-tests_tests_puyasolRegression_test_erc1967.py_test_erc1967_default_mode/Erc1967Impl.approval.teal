@@ -3,9 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 24
+    intcblock 1 32 0 24
     bytecblock 0x 0x151f7c75 "value" "fallbackCount" "__erc1967_admin" 0x0a4fb6b3 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000096e6f742061646d696e0000000000000000000000000000000000000000000000
-    intc_1 // 0
+    intc_2 // 0
     dupn 3
     bytec_0 // ""
     pushint 4096
@@ -37,175 +37,132 @@ main:
     return
 
 main_after_if_else@2:
-    txn NumAppArgs
-    bnz main_after_if_else@5
     txn OnCompletion
-    bnz main_after_if_else@5
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    pushbytess 0x55241077 0x3fa4f245 0xf776bd06
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
+
+main_after_if_else@9:
+    txn NumAppArgs
+    bnz main_after_if_else@12
+    txn OnCompletion
+    bnz main_after_if_else@12
     callsub __fallback
     intc_0 // 1
     return
 
-main_after_if_else@5:
+main_after_if_else@12:
     pushbytes 0x67ae7042 // method "__erc1967_update()void"
     txna ApplicationArgs 0
-    match main___erc1967_update_route@10
+    match main___erc1967_update_route@17
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_after_if_else@27
+    bz main_after_if_else@34
     bytec 5 // method "admin()address"
     pushbytess 0x4e859a11 0x49841757 0x866a03ee 0xa0b02ffa 0xc46a4b39 0x85ddd6be 0x9db729f9 0x428e20e1 0x1bf9882b 0x75d12918 0x980f1ac7 // method "initAdmin(address)void", method "changeAdmin(address)void", method "implementation()address", method "upgradeTo(address)void", method "setValue(uint256)void", method "rawValue()uint256", method "beacon()address", method "setBeacon(address)void", method "__fallback()void", method "value()uint256", method "fallbackCount()uint256"
     txna ApplicationArgs 0
-    match main_admin_route@13 main_initAdmin_route@14 main_changeAdmin_route@15 main_implementation_route@16 main_upgradeTo_route@17 main_setValue_route@18 main_rawValue_route@19 main_beacon_route@20 main_setBeacon_route@21 main___fallback_route@22 main_value_route@23 main_fallbackCount_route@24
+    match main_admin_route@20 main_initAdmin_route@21 main_changeAdmin_route@22 main_implementation_route@23 main_upgradeTo_route@24 main_setValue_route@25 main_rawValue_route@26 main_beacon_route@27 main_setBeacon_route@28 main___fallback_route@29 main_value_route@30 main_fallbackCount_route@31
 
-main_after_if_else@27:
-    intc_1 // 0
+main_after_if_else@34:
+    intc_2 // 0
     bury 1
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@28:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@35:
     dup
-    bnz main_after_if_else@8
+    bnz main_after_if_else@15
     txn OnCompletion
-    bnz main_after_if_else@8
+    bnz main_after_if_else@15
     callsub __fallback
     intc_0 // 1
     bury 1
 
-main_after_if_else@8:
+main_after_if_else@15:
     return
 
-main_fallbackCount_route@24:
-    txn GroupIndex
-    bz main_ternary_false@31
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@32:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_3 // "fallbackCount"
-    app_global_get_ex
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
+main_fallbackCount_route@31:
+    callsub fallbackCount
     bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@28
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@35
 
-main_ternary_false@31:
-    intc_1 // 0
-    b main_ternary_merge@32
-
-main_value_route@23:
-    txn GroupIndex
-    bz main_ternary_false@36
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@37:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_2 // "value"
-    app_global_get_ex
-    bytec_0 // 0x
-    cover 2
-    select
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
+main_value_route@30:
+    callsub value
     bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@28
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@35
 
-main_ternary_false@36:
-    intc_1 // 0
-    b main_ternary_merge@37
-
-main___fallback_route@22:
+main___fallback_route@29:
     callsub __fallback
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@28
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@35
 
-main_setBeacon_route@21:
+main_setBeacon_route@28:
     txna ApplicationArgs 1
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@43
+    bz main_ternary_false@44
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@49:
+main_ternary_merge@50:
     !
     assert // not payable
     load 0
     store 0
     err // ERC-1967 beacon slot has no AVM equivalent (see proxy.md: beacon patterns need grouped native updates or a re-architecture)
 
-main_ternary_false@43:
-    intc_1 // 0
-    b main_ternary_merge@49
+main_ternary_false@44:
+    intc_2 // 0
+    b main_ternary_merge@50
 
-main_beacon_route@20:
+main_beacon_route@27:
     txn GroupIndex
-    bz main_ternary_false@48
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-    b main_ternary_merge@49
-
-main_ternary_false@48:
-    intc_1 // 0
-    b main_ternary_merge@49
-
-main_rawValue_route@19:
-    txn GroupIndex
-    bz main_ternary_false@53
+    bz main_ternary_false@49
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
+    b main_ternary_merge@50
 
-main_ternary_merge@54:
+main_ternary_false@49:
+    intc_2 // 0
+    b main_ternary_merge@50
+
+main_rawValue_route@26:
+    txn GroupIndex
+    bz main_ternary_false@54
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@55:
     !
     assert // not payable
     load 0
     store 0
-    intc_1 // 0
+    intc_2 // 0
     bytec_2 // "value"
     app_global_get_ex
     assert // state exists
@@ -215,10 +172,10 @@ main_ternary_merge@54:
     b%
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     bytec_1 // 0x151f7c75
@@ -227,54 +184,38 @@ main_ternary_merge@54:
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@28
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@35
 
-main_ternary_false@53:
-    intc_1 // 0
-    b main_ternary_merge@54
+main_ternary_false@54:
+    intc_2 // 0
+    b main_ternary_merge@55
 
-main_setValue_route@18:
+main_setValue_route@25:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    txn GroupIndex
-    bz main_ternary_false@58
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@59:
-    !
-    assert // not payable
-    bytec_2 // "value"
-    swap
-    app_global_put
+    callsub setValue
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@28
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@35
 
-main_ternary_false@58:
-    intc_1 // 0
-    b main_ternary_merge@59
-
-main_upgradeTo_route@17:
+main_upgradeTo_route@24:
     txna ApplicationArgs 1
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@63
+    bz main_ternary_false@61
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@64:
+main_ternary_merge@62:
     !
     assert // not payable
     txn Sender
@@ -282,9 +223,9 @@ main_ternary_merge@64:
     dup
     bury 5
     ==
-    bnz main_bool_true@67
+    bnz main_bool_true@65
     global CallerApplicationID
-    bz main_bool_false@68
+    bz main_bool_false@66
     intc_3 // 24
     bzero
     global CallerApplicationID
@@ -292,45 +233,45 @@ main_ternary_merge@64:
     concat
     dig 3
     ==
-    bz main_bool_false@68
+    bz main_bool_false@66
 
-main_bool_true@67:
+main_bool_true@65:
     intc_0 // 1
 
-main_bool_merge@69:
+main_bool_merge@67:
     dup
-    bnz main_after_if_else@71
+    bnz main_after_if_else@69
     bytec 6 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000096e6f742061646d696e0000000000000000000000000000000000000000000000
     log
 
-main_after_if_else@71:
+main_after_if_else@69:
     assert // not admin
     load 0
     store 0
     err // ERC-1967 upgrade has no in-contract lowering: the AVM upgrade is a native UpdateApplication transaction submitted by the admin with the new compiled program (see proxy.md)
 
-main_bool_false@68:
-    intc_1 // 0
-    b main_bool_merge@69
+main_bool_false@66:
+    intc_2 // 0
+    b main_bool_merge@67
 
-main_ternary_false@63:
-    intc_1 // 0
-    b main_ternary_merge@64
+main_ternary_false@61:
+    intc_2 // 0
+    b main_ternary_merge@62
 
-main_implementation_route@16:
+main_implementation_route@23:
     txn GroupIndex
-    bz main_ternary_false@75
+    bz main_ternary_false@73
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@76:
+main_ternary_merge@74:
     !
     assert // not payable
     load 0
     store 0
-    intc_2 // 32
+    intc_1 // 32
     bzero
     intc_3 // 24
     bzero
@@ -340,9 +281,9 @@ main_ternary_merge@76:
     concat
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     -
-    intc_2 // 32
+    intc_1 // 32
     extract3
     load 0
     store 0
@@ -352,28 +293,28 @@ main_ternary_merge@76:
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@28
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@35
 
-main_ternary_false@75:
-    intc_1 // 0
-    b main_ternary_merge@76
+main_ternary_false@73:
+    intc_2 // 0
+    b main_ternary_merge@74
 
-main_changeAdmin_route@15:
+main_changeAdmin_route@22:
     txna ApplicationArgs 1
     dup
     bury 3
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@80
+    bz main_ternary_false@78
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@81:
+main_ternary_merge@79:
     !
     assert // not payable
     txn Sender
@@ -381,9 +322,9 @@ main_ternary_merge@81:
     dup
     bury 5
     ==
-    bnz main_bool_true@84
+    bnz main_bool_true@82
     global CallerApplicationID
-    bz main_bool_false@85
+    bz main_bool_false@83
     intc_3 // 24
     bzero
     global CallerApplicationID
@@ -391,18 +332,18 @@ main_ternary_merge@81:
     concat
     dig 3
     ==
-    bz main_bool_false@85
+    bz main_bool_false@83
 
-main_bool_true@84:
+main_bool_true@82:
     intc_0 // 1
 
-main_bool_merge@86:
+main_bool_merge@84:
     dup
-    bnz main_after_if_else@88
+    bnz main_after_if_else@86
     bytec 6 // 0x08c379a0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000096e6f742061646d696e0000000000000000000000000000000000000000000000
     log
 
-main_after_if_else@88:
+main_after_if_else@86:
     assert // not admin
     load 0
     store 0
@@ -413,42 +354,42 @@ main_after_if_else@88:
     store 0
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@28
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@35
 
-main_bool_false@85:
-    intc_1 // 0
-    b main_bool_merge@86
+main_bool_false@83:
+    intc_2 // 0
+    b main_bool_merge@84
 
-main_ternary_false@80:
-    intc_1 // 0
-    b main_ternary_merge@81
+main_ternary_false@78:
+    intc_2 // 0
+    b main_ternary_merge@79
 
-main_initAdmin_route@14:
+main_initAdmin_route@21:
     txna ApplicationArgs 1
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@92
+    bz main_ternary_false@90
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@93:
+main_ternary_merge@91:
     !
     assert // not payable
     callsub admin
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     ==
     dup
-    bnz main_after_if_else@95
+    bnz main_after_if_else@93
     pushbytes 0x08c379a000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000013616c726561647920696e697469616c697a656400000000000000000000000000
     log
 
-main_after_if_else@95:
+main_after_if_else@93:
     assert // already initialized
     load 0
     store 0
@@ -459,13 +400,13 @@ main_after_if_else@95:
     store 0
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@28
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@35
 
-main_ternary_false@92:
-    intc_1 // 0
-    b main_ternary_merge@93
+main_ternary_false@90:
+    intc_2 // 0
+    b main_ternary_merge@91
 
-main_admin_route@13:
+main_admin_route@20:
     callsub admin
     bytec_1 // 0x151f7c75
     swap
@@ -473,16 +414,16 @@ main_admin_route@13:
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@28
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@35
 
-main___erc1967_update_route@10:
+main___erc1967_update_route@17:
     txn OnCompletion
     pushint 4 // UpdateApplication
     ==
     txn ApplicationID
     &&
     assert
-    intc_1 // 0
+    intc_2 // 0
     bytec 4 // "__erc1967_admin"
     app_global_get_ex
     bytec_0 // 0x
@@ -493,39 +434,39 @@ main___erc1967_update_route@10:
     txn Sender
     b==
     dup
-    bnz main_after_if_else@107
+    bnz main_after_if_else@105
     dig 5
     bytec_0 // 0x
     b!=
-    bz main_after_if_else@107
+    bz main_after_if_else@105
     dig 5
     pushbytes 0xffffffffffffffff
     b<=
-    bz main_after_if_else@107
+    bz main_after_if_else@105
     pop
-    intc_2 // 32
+    intc_1 // 32
     bzero
     dig 5
     concat
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     -
-    intc_2 // 32
+    intc_1 // 32
     extract3
     intc_3 // 24
     extract_uint64
     app_params_get AppAddress
     swap
     bury 5
-    bz main_bool_false@105
+    bz main_bool_false@103
     dig 3
     txn Sender
     b==
-    bz main_bool_false@105
+    bz main_bool_false@103
     intc_0 // 1
 
-main_after_if_else@107:
+main_after_if_else@105:
     assert // ERC-1967: update sender is not the proxy admin
     intc_3 // 24
     bzero
@@ -538,11 +479,72 @@ main_after_if_else@107:
     log
     intc_0 // 1
     bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@28
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__puya_arc4_router__@35
 
-main_bool_false@105:
-    intc_1 // 0
-    b main_after_if_else@107
+main_bool_false@103:
+    intc_2 // 0
+    b main_after_if_else@105
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub fallbackCount
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub value
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    txna ApplicationArgs 1
+    len
+    intc_1 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    callsub setValue
+    bytec_1 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.admin() -> bytes:
@@ -567,9 +569,9 @@ admin_ternary_merge@5:
 admin_after_if_else@6:
     load 0
     store 0
-    intc_2 // 32
+    intc_1 // 32
     bzero
-    intc_1 // 0
+    intc_2 // 0
     bytec 4 // "__erc1967_admin"
     app_global_get_ex
     bytec_0 // 0x
@@ -578,17 +580,40 @@ admin_after_if_else@6:
     concat
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     -
-    intc_2 // 32
+    intc_1 // 32
     extract3
     load 0
     store 0
     retsub
 
 admin_ternary_false@4:
-    intc_1 // 0
+    intc_2 // 0
     b admin_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.setValue(__arc4_v: bytes) -> void:
+setValue:
+    proto 1 0
+    txn GroupIndex
+    bz setValue_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+setValue_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_2 // "value"
+    frame_dig -1
+    app_global_put
+    retsub
+
+setValue_ternary_false@2:
+    intc_2 // 0
+    b setValue_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__fallback() -> void:
@@ -603,7 +628,7 @@ __fallback:
 __fallback_ternary_merge@3:
     !
     assert // not payable
-    intc_1 // 0
+    intc_2 // 0
     bytec_3 // "fallbackCount"
     app_global_get_ex
     bytec_0 // 0x
@@ -621,5 +646,90 @@ __fallback_ternary_merge@3:
     retsub
 
 __fallback_ternary_false@2:
-    intc_1 // 0
+    intc_2 // 0
     b __fallback_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.value() -> bytes:
+value:
+    txn GroupIndex
+    bz value_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+value_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_2 // "value"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+value_ternary_false@2:
+    intc_2 // 0
+    b value_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.fallbackCount() -> bytes:
+fallbackCount:
+    txn GroupIndex
+    bz fallbackCount_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+fallbackCount_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_3 // "fallbackCount"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_1 // 32
+    <=
+    assert // overflow
+    intc_1 // 32
+    bzero
+    b|
+    retsub
+
+fallbackCount_ternary_false@2:
+    intc_2 // 0
+    b fallbackCount_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/erc1967_impl.sol.Erc1967Impl.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

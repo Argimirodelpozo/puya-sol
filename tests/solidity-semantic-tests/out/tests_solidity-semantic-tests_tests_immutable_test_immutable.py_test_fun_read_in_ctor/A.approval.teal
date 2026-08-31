@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/fun_read_in_ctor.sol.A.approval_program() -> uint64:
 main:
-    intcblock 0 1 255
-    bytecblock "a" "x" 0x151f7c75
+    intcblock 0 1 32 255
+    bytecblock "a" "x" 0x151f7c75 0xe25c1ad5
     pushint 4096
     bzero
     dup
@@ -42,16 +42,28 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@8
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@8
+    pushbytess 0xacbefdb2 0x28bbdc02
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6
+
+main_after_if_else@8:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0x262726a2 0xe25c1ad5 // method "readX()uint64", method "readA()uint64"
+    pushbytes 0x262726a2 // method "readX()uint64"
+    bytec_3 // method "readA()uint64"
     txna ApplicationArgs 0
-    match main_readX_route@5 main_readA_route@6
+    match main_readX_route@11 main_readA_route@12
     err
 
-main_readA_route@6:
+main_readA_route@12:
     callsub readA
     itob
     bytec_2 // 0x151f7c75
@@ -61,23 +73,8 @@ main_readA_route@6:
     intc_1 // 1
     return
 
-main_readX_route@5:
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_1 // "x"
-    app_global_get_ex
-    assert // check x exists
-    intc_2 // 255
-    &
+main_readX_route@11:
+    callsub readX
     itob
     bytec_2 // 0x151f7c75
     swap
@@ -86,31 +83,118 @@ main_ternary_merge@15:
     intc_1 // 1
     return
 
-main_ternary_false@14:
-    intc_0 // 0
-    b main_ternary_merge@15
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub readA
+    callsub __evm_ret0
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub readX
+    callsub __evm_ret0
+    intc_1 // 1
+    return
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/fun_read_in_ctor.sol.A.readA() -> uint64:
-readA:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/fun_read_in_ctor.sol.A.readX() -> uint64:
+readX:
     txn GroupIndex
-    bz readA_ternary_false@2
+    bz readX_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-readA_ternary_merge@3:
+readX_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
-    bytec_0 // "a"
+    bytec_1 // "x"
     app_global_get_ex
-    assert // check a exists
-    intc_2 // 255
+    intc_0 // 0
+    cover 2
+    select
+    intc_3 // 255
     &
     retsub
 
-readA_ternary_false@2:
+readX_ternary_false@2:
     intc_0 // 0
-    b readA_ternary_merge@3
+    b readX_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/fun_read_in_ctor.sol.A.readA() -> uint64:
+readA:
+    txn NumAppArgs
+    bz readA_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_3 // method "readA()uint64"
+    ==
+    bz readA_after_if_else@6
+    txn GroupIndex
+    bz readA_ternary_false@4
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+readA_ternary_merge@5:
+    !
+    assert // not payable
+
+readA_after_if_else@6:
+    intc_0 // 0
+    bytec_0 // "a"
+    app_global_get_ex
+    intc_0 // 0
+    cover 2
+    select
+    intc_3 // 255
+    &
+    retsub
+
+readA_ternary_false@4:
+    intc_0 // 0
+    b readA_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/fun_read_in_ctor.sol.A.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_0 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/immutable/contracts/fun_read_in_ctor.sol.A.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_2 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub

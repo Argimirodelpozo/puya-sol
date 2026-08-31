@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/contracts/convert_fixed_bytes_to_fixed_bytes_same_size.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 0
-    intc_1 // 0
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -28,12 +28,23 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@7
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@7
+    pushbytes 0x99dbd65d
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
     pushbytes 0xedb3e3f9 // method "bytesToBytes(byte[4])byte[4]"
     txna ApplicationArgs 0
-    match main_bytesToBytes_route@4
+    match main_bytesToBytes_route@9
     err
 
-main_bytesToBytes_route@4:
+main_bytesToBytes_route@9:
     txn OnCompletion
     !
     txn ApplicationID
@@ -41,28 +52,77 @@ main_bytesToBytes_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 2
     len
     pushint 4
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 4>
-    txn GroupIndex
-    bz main_ternary_false@8
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@9:
-    !
-    assert // not payable
-    pushbytes 0x151f7c75
-    dig 1
+    callsub bytesToBytes
+    bytec_0 // 0x151f7c75
+    swap
     concat
     log
     intc_0 // 1
     return
 
-main_ternary_false@8:
+main_switch_case_0@5:
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    !
+    assert // not payable
+    txna ApplicationArgs 1
+    len
+    pushint 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    extract 4 28
+    pushint 28
+    bzero
+    swap
+    dig 1
+    ==
+    assert // invalid EVM ABI fixed-bytes padding
+    swap
+    extract 0 4
+    callsub bytesToBytes
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
     intc_1 // 0
-    b main_ternary_merge@9
+    b main_ternary_merge@15
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/types/contracts/convert_fixed_bytes_to_fixed_bytes_same_size.sol.Test.bytesToBytes(input: bytes) -> bytes:
+bytesToBytes:
+    proto 1 1
+    txn GroupIndex
+    bz bytesToBytes_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+bytesToBytes_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    retsub
+
+bytesToBytes_ternary_false@2:
+    intc_1 // 0
+    b bytesToBytes_ternary_merge@3

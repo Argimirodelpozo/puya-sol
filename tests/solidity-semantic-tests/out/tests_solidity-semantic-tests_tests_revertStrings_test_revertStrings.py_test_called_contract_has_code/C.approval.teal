@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/contracts/called_contract_has_code.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0
-    bytecblock 0x2d4970c7
+    bytecblock 0x2d4970c7 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -29,6 +29,17 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@8
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@8
+    pushbytess 0x26121ff0 0xe2179b8e
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6
+
+main_after_if_else@8:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
@@ -36,18 +47,65 @@ main_after_if_else@2:
     bytec_0 // method "f()void"
     pushbytes 0xf2b65f27 // method "g()void"
     txna ApplicationArgs 0
-    match main_f_route@5 main_g_route@6
+    match main_f_route@11 main_g_route@12
     err
 
-main_g_route@6:
+main_g_route@12:
+    callsub g
+    intc_0 // 1
+    return
+
+main_f_route@11:
+    callsub f
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub g
+    bytec_1 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub f
+    bytec_1 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/contracts/called_contract_has_code.sol.C.f() -> void:
+f:
     txn GroupIndex
-    bz main_ternary_false@12
+    bz f_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+f_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+f_ternary_false@2:
+    intc_1 // 0
+    b f_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/contracts/called_contract_has_code.sol.C.g() -> void:
+g:
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
@@ -62,27 +120,27 @@ main_ternary_merge@13:
     bytec_0 // method "f()void"
     itxn_field ApplicationArgs
     itxn_submit
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@12:
+g_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@13
+    b g_ternary_merge@3
 
-main_f_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/contracts/called_contract_has_code.sol.C.__evm_npy() -> void:
+__evm_npy:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz __evm_npy_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+__evm_npy_ternary_merge@3:
     !
     assert // not payable
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@17:
+__evm_npy_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@18
+    b __evm_npy_ternary_merge@3

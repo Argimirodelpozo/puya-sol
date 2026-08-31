@@ -1,10 +1,10 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_xwwy40q6/s2.sol.C.approval_program() -> uint64:
+// /tmp/multisource_hch8jtfy/s2.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 32
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 1 32 2 0
+    bytecblock 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -28,38 +28,106 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@7
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@7
+    pushbytes 0xc2985578
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
     pushbytes 0xeddddc3d // method "foo()uint256"
     txna ApplicationArgs 0
-    match main_foo_route@4
+    match main_foo_route@9
     err
 
-main_foo_route@4:
+main_foo_route@9:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
+    callsub foo
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@14
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@15:
     !
     assert // not payable
-    callsub /tmp/multisource_xwwy40q6/s2.sol.f_21
+    intc_1 // 32
+    bzero
+    callsub foo
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@14:
+    intc_3 // 0
+    b main_ternary_merge@15
+
+
+// __solfn_10() -> bytes:
+f:
+    intc_0 // 1
+    itob
+    retsub
+
+
+// __solfn_21() -> bytes:
+__solfn_21:
+    intc_2 // 2
+    itob
+    retsub
+
+
+// /tmp/multisource_hch8jtfy/s2.sol.C.foo() -> bytes:
+foo:
+    txn GroupIndex
+    bz foo_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+foo_ternary_merge@3:
+    !
+    assert // not payable
+    callsub __solfn_21
     callsub f
     dup2
     b>=
     assert // underflow
     swap
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     swap
     b-
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -73,27 +141,8 @@ main_ternary_merge@9:
     intc_1 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_0 // 1
-    return
-
-main_ternary_false@8:
-    pushint 0
-    b main_ternary_merge@9
-
-
-// /tmp/multisource_xwwy40q6/s2.sol.f() -> bytes:
-f:
-    intc_0 // 1
-    itob
     retsub
 
-
-// /tmp/multisource_xwwy40q6/s2.sol.f_21() -> bytes:
-/tmp/multisource_xwwy40q6/s2.sol.f_21:
-    pushint 2
-    itob
-    retsub
+foo_ternary_false@2:
+    intc_3 // 0
+    b foo_ternary_merge@3

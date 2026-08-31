@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_assign_reference_to_struct.sol.test.approval_program() -> uint64:
 main:
-    intcblock 0 1
-    bytecblock "data1" 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000003 "data2" "data3"
+    intcblock 32 1 0
+    bytecblock "data1" 0x0000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000000000000000000000000003 "data2" "data3" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -40,35 +40,129 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@7
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@7
+    pushbytes 0x12ae6397
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
     pushbytes 0x2da33b3d // method "assign()(uint256,uint256,uint256,uint256)"
     txna ApplicationArgs 0
-    match main_assign_route@4
+    match main_assign_route@9
     err
 
-main_assign_route@4:
+main_assign_route@9:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
+    callsub assign
+    uncover 3
+    uncover 3
+    concat
+    uncover 2
+    concat
+    swap
+    concat
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@14
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@15:
     !
     assert // not payable
-    intc_0 // 0
+    intc_0 // 32
+    bzero
+    callsub assign
+    dig 4
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 4
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/struct_assign_reference_to_struct.sol.test.assign() -> bytes, bytes, bytes, bytes:
+assign:
+    txn GroupIndex
+    bz assign_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+assign_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
     bytec_0 // "data1"
     app_global_get_ex
-    assert // check data1 exists
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     bytec_3 // "data2"
     dig 1
     app_global_put
-    intc_0 // 0
+    intc_2 // 0
     bytec_0 // "data1"
     app_global_get_ex
     bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
@@ -83,24 +177,18 @@ main_ternary_merge@9:
     bytec 4 // "data3"
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000003
     app_global_put
-    intc_0 // 0
+    intc_2 // 0
     bytec_0 // "data1"
     app_global_get_ex
-    assert // check data1 exists
+    bytec_1 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
     extract 0 32
     cover 2
-    concat
     bytec_2 // 0x0000000000000000000000000000000000000000000000000000000000000003
-    concat
-    swap
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    uncover 3
+    retsub
 
-main_ternary_false@8:
-    intc_0 // 0
-    b main_ternary_merge@9
+assign_ternary_false@2:
+    intc_2 // 0
+    b assign_ternary_merge@3

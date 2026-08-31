@@ -3,7 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/specialFunctions/contracts/keccak256_optimized.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0
+    intcblock 1 32 0
+    bytecblock 0x151f7c75 0x00
     pushint 4096
     bzero
     dup
@@ -28,51 +29,166 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@8
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@8
+    pushbytess 0x38bea4cb 0x07bfce37
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6
+
+main_after_if_else@8:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xe75dc517 0x99a77ea5 // method "short()bool", method "long()(bool,bool)"
     txna ApplicationArgs 0
-    match main_short_route@5 main_long_route@6
+    match main_short_route@11 main_long_route@12
     err
 
-main_long_route@6:
+main_long_route@12:
+    callsub long
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 3
+    setbit
+    intc_0 // 1
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_short_route@11:
+    callsub short
+    bytec_1 // 0x00
+    intc_2 // 0
+    uncover 2
+    setbit
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub long
+    swap
+    itob
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    swap
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub short
+    itob
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/specialFunctions/contracts/keccak256_optimized.sol.C.short() -> uint64:
+short:
     txn GroupIndex
-    bz main_ternary_false@12
+    bz short_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+short_ternary_merge@3:
     !
     assert // not payable
-    pushbytes 0x151f7c75c0
-    log
     intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@12:
-    intc_1 // 0
-    b main_ternary_merge@13
+short_ternary_false@2:
+    intc_2 // 0
+    b short_ternary_merge@3
 
-main_short_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/specialFunctions/contracts/keccak256_optimized.sol.C.long() -> uint64, uint64:
+long:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz long_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+long_ternary_merge@3:
     !
     assert // not payable
-    pushbytes 0x151f7c7580
-    log
     intc_0 // 1
-    return
+    dup
+    retsub
 
-main_ternary_false@17:
-    intc_1 // 0
-    b main_ternary_merge@18
+long_ternary_false@2:
+    intc_2 // 0
+    b long_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/specialFunctions/contracts/keccak256_optimized.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

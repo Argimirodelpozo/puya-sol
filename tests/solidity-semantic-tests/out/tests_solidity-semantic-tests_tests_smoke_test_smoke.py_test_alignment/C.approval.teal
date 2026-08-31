@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/alignment.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0
-    bytecblock "stateDecimal"
+    bytecblock "stateDecimal" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -33,31 +33,87 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@7
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@7
+    pushbytes 0xeccb75e7
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
     pushbytes 0x174df305 // method "stateDecimal()uint256"
     txna ApplicationArgs 0
-    match main_stateDecimal_route@4
+    match main_stateDecimal_route@9
     err
 
-main_stateDecimal_route@4:
+main_stateDecimal_route@9:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
+    callsub stateDecimal
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@14
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@15:
+    !
+    assert // not payable
+    intc_0 // 32
+    bzero
+    callsub stateDecimal
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/alignment.sol.C.stateDecimal() -> bytes:
+stateDecimal:
+    txn GroupIndex
+    bz stateDecimal_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+stateDecimal_ternary_merge@3:
     !
     assert // not payable
     intc_2 // 0
     bytec_0 // "stateDecimal"
     app_global_get_ex
-    assert // check stateDecimal exists
+    pushbytes 0x
+    cover 2
+    select
     dup
     len
     intc_0 // 32
@@ -66,13 +122,8 @@ main_ternary_merge@9:
     intc_0 // 32
     bzero
     b|
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@8:
+stateDecimal_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@9
+    b stateDecimal_ternary_merge@3

@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/exponentiation/contracts/signed_base.sol.test.approval_program() -> uint64:
 main:
-    intcblock 8 1 32 0
-    bytecblock 0x 0x01 0x03 0x02 0x80000000 0x0100000000
-    intc_3 // 0
-    dupn 8
+    intcblock 8 1 32
+    bytecblock 0x 0x01 0x80000000 0x03 0xffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000 0x0100000000
     pushint 4096
     bzero
     dup
@@ -53,96 +51,86 @@ main_ternary_merge@9:
     assert // not payable
     intc_0 // 8
     bzero
-    bury 1
     load 0
     store 0
     load 0
     store 0
     bytec_1 // 0x01
-    bury 5
-    bytec_2 // 0x03
-    bury 9
+    bytec_3 // 0x03
     pushint 2
     itob
-    bury 7
 
 main_while_top@11:
-    dig 6
+    dup
     bytec_0 // 0x
     b>
     bz main_after_while@15
-    dig 6
+    dup
     bytec_1 // 0x01
     b&
     bytec_0 // 0x
     b!=
     bz main_after_if_else@14
-    dig 4
-    dig 9
+    uncover 2
+    dig 2
     b*
-    bury 5
+    cover 2
 
 main_after_if_else@14:
-    dig 6
-    bytec_3 // 0x02
+    pushbytes 0x02
     b/
-    bury 7
-    dig 8
+    swap
     dup
     b*
-    bury 9
+    swap
     b main_while_top@11
 
 main_after_while@15:
-    dig 4
-    bytec 4 // 0x80000000
+    popn 2
+    dup
+    bytec_2 // 0x80000000
     b<
     assert // signed exp overflow
+    bytec_3 // 0x03
     bytec_1 // 0x01
-    bury 4
-    bytec_2 // 0x03
-    bury 8
     pushint 3
     itob
-    bury 6
 
 main_while_top@18:
-    dig 5
+    dup
     bytec_0 // 0x
     b>
     bz main_after_while@22
-    dig 5
+    dup
     bytec_1 // 0x01
     b&
     bytec_0 // 0x
     b!=
     bz main_after_if_else@21
-    dig 3
-    dig 8
+    swap
+    dig 2
     b*
-    bury 4
+    swap
 
 main_after_if_else@21:
-    dig 5
-    bytec_3 // 0x02
+    pushbytes 0x02
     b/
-    bury 6
-    dig 7
+    uncover 2
     dup
     b*
-    bury 8
+    cover 2
     b main_while_top@18
 
 main_after_while@22:
-    bytec 4 // 0x80000000
-    dig 4
-    dup
-    cover 2
+    pop
+    bury 1
+    bytec_2 // 0x80000000
+    dig 1
     b<
     !
     assert // signed exp overflow
-    dig 1
-    dig 6
+    dig 2
+    uncover 2
     concat
     dup
     len
@@ -150,6 +138,16 @@ main_after_while@22:
     -
     intc_0 // 8
     extract3
+    bytec 4 // 0xffffffff
+    b&
+    dup
+    bytec_2 // 0x80000000
+    b>=
+    bz main_ternary_false@27
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
+    b+
+
+main_ternary_merge@28:
     dup
     len
     intc_2 // 32
@@ -158,20 +156,21 @@ main_after_while@22:
     intc_2 // 32
     bzero
     dup
-    bury 5
+    cover 3
     b|
-    bury 4
+    swap
+    dup
     bytec_0 // 0x
     b==
-    bnz main_ternary_false@27
-    bytec 5 // 0x0100000000
-    dig 4
+    bnz main_ternary_false@30
+    bytec 6 // 0x0100000000
+    swap
     b-
-    bytec 5 // 0x0100000000
+    bytec 6 // 0x0100000000
     b%
 
-main_ternary_merge@28:
-    dig 1
+main_ternary_merge@31:
+    uncover 3
     swap
     concat
     dup
@@ -180,15 +179,23 @@ main_ternary_merge@28:
     -
     intc_0 // 8
     extract3
+    bytec 4 // 0xffffffff
+    b&
+    dup
+    bytec_2 // 0x80000000
+    b>=
+    bz main_ternary_false@33
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffff00000000
+    b+
+
+main_ternary_merge@34:
     dup
     len
     intc_2 // 32
     <=
     assert // overflow
-    dig 2
+    uncover 2
     b|
-    dig 3
-    swap
     concat
     pushbytes 0x151f7c75
     swap
@@ -197,10 +204,15 @@ main_ternary_merge@28:
     intc_1 // 1
     return
 
+main_ternary_false@33:
+    b main_ternary_merge@34
+
+main_ternary_false@30:
+    b main_ternary_merge@31
+
 main_ternary_false@27:
-    dig 3
     b main_ternary_merge@28
 
 main_ternary_false@8:
-    intc_3 // 0
+    pushint 0
     b main_ternary_merge@9

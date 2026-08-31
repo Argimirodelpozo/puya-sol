@@ -433,6 +433,15 @@ main_after_while@46:
     dig 1
     <=
     assert // EVM ABI decode out of bounds
+    dig 1
+    extract 0 32
+    dup
+    cover 4
+    extract 0 31
+    pushint 31
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
     pushint 64
     dig 1
     <=
@@ -473,7 +482,7 @@ main_after_while@46:
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
     bytec 8 // 0x0000
-    swap
+    cover 2
     intc_2 // 0
 
 main_while_top@47:
@@ -484,7 +493,7 @@ main_while_top@47:
     dup
     intc_0 // 32
     *
-    dig 4
+    dig 3
     +
     dup
     intc_0 // 32
@@ -492,10 +501,16 @@ main_while_top@47:
     dig 6
     <=
     assert // EVM ABI decode out of bounds
-    dig 6
+    dig 7
     swap
     intc_0 // 32
     extract3
+    dup
+    extract 0 30
+    pushint 30
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
     extract 24 8
     dup
     bitlen
@@ -511,7 +526,7 @@ main_while_top@47:
     swap
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    uncover 4
+    uncover 5
     dup
     cover 2
     intc_2 // 0
@@ -522,21 +537,20 @@ main_while_top@47:
     replace2 0
     swap
     concat
-    cover 2
+    cover 3
     intc_3 // 1
     +
     b main_while_top@47
 
 main_after_while@49:
-    popn 2
-    bury 1
+    popn 3
     pushint 96
     uncover 2
     dup
     cover 2
     <=
     assert // EVM ABI decode out of bounds
-    uncover 2
+    uncover 3
     dup
     cover 2
     extract 64 32
@@ -581,11 +595,8 @@ main_after_while@49:
     assert // EVM ABI decode out of bounds
     load 0
     store 0
-    dig 2
-    extract 0 32
-    cover 3
     extract3
-    swap
+    uncover 2
     extract 24 8
     pushbytes 0x000c
     concat
@@ -1341,8 +1352,6 @@ main_after_while@88:
     pushint 24
     extract_uint64
     dup
-    cover 3
-    dup
     intc_0 // 32
     %
     !
@@ -1354,6 +1363,17 @@ main_after_while@88:
     dig 3
     <=
     assert // EVM ABI decode out of bounds
+    dig 3
+    dig 2
+    intc_0 // 32
+    extract3
+    dup
+    cover 5
+    extract 0 31
+    pushint 31
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
     dup
     intc_0 // 32
     +
@@ -1382,7 +1402,7 @@ main_after_while@88:
     intc_0 // 32
     +
     dup
-    cover 5
+    cover 6
     dup
     dig 4
     <=
@@ -1399,7 +1419,7 @@ main_after_while@88:
     pushint 24
     extract_uint64
     dup
-    cover 5
+    cover 6
     dup
     intc 6 // 65535
     <=
@@ -1479,6 +1499,12 @@ main_while_top@89:
     swap
     intc_0 // 32
     extract3
+    dup
+    extract 0 30
+    pushint 30
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
     extract 24 8
     dup
     bitlen
@@ -1514,11 +1540,7 @@ main_after_while@91:
     popn 3
     load 0
     store 0
-    uncover 4
-    dup
-    uncover 5
-    intc_0 // 32
-    extract3
+    swap
     extract 24 8
     dup
     bitlen
@@ -1526,9 +1548,8 @@ main_after_while@91:
     <=
     assert // overflow
     extract 7 1
-    swap
-    uncover 4
-    uncover 4
+    cover 4
+    cover 4
     extract3
     dup
     len
@@ -2431,6 +2452,12 @@ main_while_top@132:
     swap
     intc_0 // 32
     extract3
+    dup
+    extract 0 30
+    pushint 30
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
     extract 24 8
     dup
     bitlen
@@ -2983,9 +3010,15 @@ main_after_while@146:
     intc_0 // 32
     >=
     assert // EVM ABI decode out of bounds
+    extract 0 32
+    dup
+    extract 0 30
+    pushint 30
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
     load 0
     store 0
-    extract 0 32
     extract 24 8
     bytec 9 // 0x151f7c75
     swap

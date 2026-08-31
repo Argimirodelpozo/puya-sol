@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_function_usage_in_constructor_arguments.sol.Base.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "m_a" 0x151f7c75
+    intcblock 1 32 0
+    bytecblock 0x151f7c75 "m_a" 0xd3661b80
     pushint 4096
     bzero
     dup
@@ -24,11 +24,11 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "m_a"
+    bytec_1 // "m_a"
     pushbytes 0x
     app_global_put
     callsub g
-    bytec_0 // "m_a"
+    bytec_1 // "m_a"
     swap
     app_global_put
     intc_0 // 1
@@ -36,27 +36,77 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@8
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@8
+    pushbytess 0x275a4dcc 0xe2179b8e
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6
+
+main_after_if_else@8:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0xd3661b80 0x4b2c0376 // method "overridden()uint256", method "g()uint256"
+    bytec_2 // method "overridden()uint256"
+    pushbytes 0x4b2c0376 // method "g()uint256"
     txna ApplicationArgs 0
-    match main_overridden_route@5 main_g_route@6
+    match main_overridden_route@11 main_g_route@12
     err
 
-main_g_route@6:
+main_g_route@12:
     callsub g
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_0 // 1
     return
 
-main_overridden_route@5:
+main_overridden_route@11:
     callsub overridden
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub g
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_1 // 32
+    bzero
+    callsub overridden
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -66,22 +116,30 @@ main_overridden_route@5:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_function_usage_in_constructor_arguments.sol.Base.overridden() -> bytes:
 overridden:
+    txn NumAppArgs
+    bz overridden_after_if_else@6
+    txna ApplicationArgs 0
+    bytec_2 // method "overridden()uint256"
+    ==
+    bz overridden_after_if_else@6
     txn GroupIndex
-    bz overridden_ternary_false@2
+    bz overridden_ternary_false@4
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-overridden_ternary_merge@3:
+overridden_ternary_merge@5:
     !
     assert // not payable
+
+overridden_after_if_else@6:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
     retsub
 
-overridden_ternary_false@2:
-    intc_1 // 0
-    b overridden_ternary_merge@3
+overridden_ternary_false@4:
+    intc_2 // 0
+    b overridden_ternary_merge@5
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_function_usage_in_constructor_arguments.sol.Base.g() -> bytes:
@@ -99,14 +157,33 @@ g_ternary_merge@3:
     callsub overridden
     dup
     len
-    intc_2 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_1 // 32
     bzero
     b|
     retsub
 
 g_ternary_false@2:
-    intc_1 // 0
+    intc_2 // 0
     b g_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/virtualFunctions/contracts/virtual_function_usage_in_constructor_arguments.sol.Base.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

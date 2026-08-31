@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/byte_array_storage_layout.sol.c.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 255
+    intcblock 32 1 0 8 255
     bytecblock "data" 0x 0x010000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0x151f7c75 "s:"
-    bytec_1 // ""
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -62,19 +60,16 @@ main_ternary_merge@15:
     load 0
     store 0
     intc_2 // 0
-    bury 2
 
 main_while_top@16:
-    dig 1
+    dup
     intc_0 // 32
     <
     bz main_after_while@18
     bytec_0 // "data"
     box_get
     assert // box exists
-    dig 2
-    dup
-    cover 2
+    dig 1
     itob
     extract 7 1
     concat
@@ -87,10 +82,9 @@ main_while_top@16:
     intc_1 // 1
     +
     dup
-    intc_3 // 255
+    intc 4 // 255
     <=
     assert // overflow
-    bury 2
     b main_while_top@16
 
 main_after_while@18:
@@ -170,19 +164,16 @@ main_ternary_merge@23:
     load 0
     store 0
     intc_2 // 0
-    bury 3
 
 main_while_top@24:
-    dig 2
+    dup
     pushint 33
     <
     bz main_after_while@26
     bytec_0 // "data"
     box_get
     assert // box exists
-    dig 3
-    dup
-    cover 2
+    dig 1
     itob
     extract 7 1
     concat
@@ -195,10 +186,9 @@ main_while_top@24:
     intc_1 // 1
     +
     dup
-    intc_3 // 255
+    intc 4 // 255
     <=
     assert // overflow
-    bury 3
     b main_while_top@24
 
 main_after_while@26:
@@ -248,7 +238,6 @@ main_ternary_merge@31:
     load 0
     store 0
     intc_2 // 0
-    bury 1
 
 main_while_top@32:
     dup
@@ -259,8 +248,6 @@ main_while_top@32:
     box_get
     assert // box exists
     dig 1
-    dup
-    cover 2
     itob
     extract 7 1
     concat
@@ -273,10 +260,9 @@ main_while_top@32:
     intc_1 // 1
     +
     dup
-    intc_3 // 255
+    intc 4 // 255
     <=
     assert // overflow
-    bury 1
     b main_while_top@32
 
 main_after_while@34:
@@ -311,6 +297,10 @@ main___postInit_route@5:
     bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
     bytec_3 // "__ctor_pending"
     intc_2 // 0
     app_global_put
@@ -322,7 +312,7 @@ main___postInit_route@5:
     return
 
 
-// __puyasol___storage_read(__slot: bytes) -> bytes:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/byte_array_storage_layout.sol.c.__storage_read(__slot: bytes) -> bytes:
 __storage_read:
     proto 1 1
     frame_dig -1
@@ -333,17 +323,10 @@ __storage_read:
     bytec_1 // 0x
     b==
     bz __storage_read_else_body@2
-    intc_0 // 32
-    bzero
     bytec_0 // "data"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
+    box_len
+    assert // box exists
+    itob
     retsub
 
 __storage_read_else_body@2:
@@ -370,7 +353,7 @@ __storage_read_else_body@2:
     retsub
 
 
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/byte_array_storage_layout.sol.c.__storage_write(__slot: bytes, __value: bytes) -> void:
 __storage_write:
     proto 2 0
     frame_dig -2
@@ -381,19 +364,24 @@ __storage_write:
     bytec_1 // 0x
     b==
     bz __storage_write_else_body@2
-    intc_0 // 32
+    intc_3 // 8
     bzero
     frame_dig -1
     concat
     dup
     len
-    intc_0 // 32
+    intc_3 // 8
     -
-    intc_0 // 32
+    intc_3 // 8
     extract3
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
     bytec_0 // "data"
     swap
-    app_global_put
+    box_resize
     retsub
 
 __storage_write_else_body@2:

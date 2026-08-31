@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/encode_dyn_side_effect.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32
-    bytecblock "cnt" 0x01
+    intcblock 32 1 0 2
+    bytecblock 0x 0x151f7c75 "cnt" 0x01
     pushint 4096
     bzero
     dup
@@ -24,13 +24,24 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_0 // "cnt"
-    pushbytes 0x
+    bytec_2 // "cnt"
+    bytec_0 // 0x
     app_global_put
-    intc_0 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    intc_3 // 2
+    ==
+    bz main_after_if_else@9
+    pushbytess 0xb910e426 0x890cbb73 0xd6d838ad
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
+
+main_after_if_else@9:
     txn OnCompletion
     !
     assert
@@ -38,85 +49,367 @@ main_after_if_else@2:
     assert
     pushbytess 0x8203e835 0x711cd253 0x35011ef9 // method "encStrOnce()(uint256,byte[32])", method "encArrOnce()(uint256,uint256)", method "cnt()uint256"
     txna ApplicationArgs 0
-    match main_encStrOnce_route@5 main_encArrOnce_route@6 main_cnt_route@7
+    match main_encStrOnce_route@12 main_encArrOnce_route@13 main_cnt_route@14
     err
 
-main_cnt_route@7:
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    intc_1 // 0
-    bytec_0 // "cnt"
-    app_global_get_ex
-    assert // check cnt exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    pushbytes 0x151f7c75
+main_cnt_route@14:
+    callsub cnt
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_0 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@13:
-    intc_1 // 0
-    b main_ternary_merge@14
+main_encArrOnce_route@13:
+    callsub encArrOnce
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
-main_encArrOnce_route@6:
+main_encStrOnce_route@12:
+    callsub encStrOnce
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub cnt
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub encArrOnce
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub encStrOnce
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/encode_dyn_side_effect.sol.C.encStrOnce() -> bytes, bytes:
+encStrOnce:
     txn GroupIndex
-    bz main_ternary_false@18
+    bz encStrOnce_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+encStrOnce_ternary_merge@3:
     !
     assert // not payable
-    bytec_0 // "cnt"
-    bytec_1 // 0x01
+    bytec_2 // "cnt"
+    bytec_3 // 0x01
     app_global_put
-    pushbytes 0x151f7c7500000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000009
-    log
-    intc_0 // 1
-    return
+    pushbytess 0x0000000000000000000000000000000000000000000000000000000000000001 0x984002fcc0ca639f96622add24c2edd2fe72c65e71ca3faa243e091e0bc7cdab
+    retsub
 
-main_ternary_false@18:
-    intc_1 // 0
-    b main_ternary_merge@19
+encStrOnce_ternary_false@2:
+    intc_2 // 0
+    b encStrOnce_ternary_merge@3
 
-main_encStrOnce_route@5:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/encode_dyn_side_effect.sol.C.encArrOnce() -> bytes, bytes:
+encArrOnce:
+    proto 0 2
+    bytec_0 // ""
     txn GroupIndex
-    bz main_ternary_false@23
+    bz encArrOnce_ternary_false@2
     txn GroupIndex
-    intc_0 // 1
+    intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@24:
+encArrOnce_ternary_merge@3:
     !
     assert // not payable
-    bytec_0 // "cnt"
-    bytec_1 // 0x01
+    bytec_0 // 0x
+    bytec_2 // "cnt"
+    bytec_3 // 0x01
     app_global_put
-    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000001c977102b20c2aecb0a59a3ccfd4be86be10b8aa73afc8cababdb7f16d390a03a
-    log
-    intc_0 // 1
-    return
+    intc_0 // 32
+    bzero
+    swap
+    intc_2 // 0
+    frame_bury 0
 
-main_ternary_false@23:
-    intc_1 // 0
-    b main_ternary_merge@24
+encArrOnce_while_top@4:
+    frame_dig 0
+    intc_3 // 2
+    <
+    bz encArrOnce_after_while@6
+    frame_dig 0
+    dup
+    intc_0 // 32
+    *
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000070000000000000000000000000000000000000000000000000000000000000009
+    swap
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    intc_1 // 1
+    +
+    frame_bury 0
+    b encArrOnce_while_top@4
+
+encArrOnce_after_while@6:
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000002
+    swap
+    concat
+    dup
+    cover 2
+    dup
+    len
+    dup
+    cover 3
+    intc_0 // 32
+    dig 1
+    <=
+    assert // EVM ABI decode out of bounds
+    dig 1
+    extract 0 32
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    intc_0 // 32
+    +
+    dup
+    cover 5
+    uncover 2
+    <=
+    assert // EVM ABI decode out of bounds
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    bytec_0 // 0x
+    b==
+    assert // EVM ABI array length exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    pushint 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    pushbytes 0x0000
+    cover 2
+    intc_2 // 0
+    frame_bury 0
+
+encArrOnce_while_top@7:
+    frame_dig 0
+    dig 1
+    <
+    bz encArrOnce_after_while@9
+    frame_dig 0
+    dup
+    intc_0 // 32
+    *
+    dig 5
+    +
+    dup
+    intc_0 // 32
+    +
+    dig 7
+    <=
+    assert // EVM ABI decode out of bounds
+    dig 7
+    swap
+    intc_0 // 32
+    extract3
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 3
+    b|
+    pushbytes 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 5
+    dup
+    cover 2
+    intc_2 // 0
+    extract_uint16
+    +
+    itob
+    extract 6 0
+    replace2 0
+    swap
+    concat
+    cover 3
+    intc_1 // 1
+    +
+    frame_bury 0
+    b encArrOnce_while_top@7
+
+encArrOnce_after_while@9:
+    pop
+    intc_2 // 0
+    bytec_2 // "cnt"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    swap
+    extract 34 32
+    frame_bury 1
+    frame_bury 0
+    retsub
+
+encArrOnce_ternary_false@2:
+    intc_2 // 0
+    b encArrOnce_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/encode_dyn_side_effect.sol.C.cnt() -> bytes:
+cnt:
+    txn GroupIndex
+    bz cnt_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+cnt_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_2 // "cnt"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+cnt_ternary_false@2:
+    intc_2 // 0
+    b cnt_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/encode_dyn_side_effect.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

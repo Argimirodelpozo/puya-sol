@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/balance_alias.sol.BalanceAlias.approval_program() -> uint64:
 main:
-    intcblock 0 1 6 16 1000000
-    bytecblock TMPL_APPROVAL_Child TMPL_CLEAR_Child 0xbacc49e3
+    intcblock 0 32 1 6 1000000
+    bytecblock 0x151f7c75 TMPL_APPROVAL_Child TMPL_CLEAR_Child 0xbacc49e3
     pushint 4096
     bzero
     dup
@@ -24,29 +24,94 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@7
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@7
+    pushbytes 0xb74af5a9
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
     pushbytes 0x17619333 // method "probe()(uint256,uint256,uint256)"
     txna ApplicationArgs 0
-    match main_probe_route@4
+    match main_probe_route@9
     err
 
-main_probe_route@4:
+main_probe_route@9:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
+    callsub probe
+    cover 2
+    concat
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_0@5:
+    intc_1 // 32
+    bzero
+    callsub probe
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_1 // 32
+    -
+    intc_1 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/balance_alias.sol.BalanceAlias.probe() -> bytes, bytes, bytes:
+probe:
     itxn_begin
-    bytec_0 // TMPL_APPROVAL_Child
-    bytec_1 // TMPL_CLEAR_Child
-    intc_2 // 6
+    bytec_1 // TMPL_APPROVAL_Child
+    bytec_2 // TMPL_CLEAR_Child
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_3 // 16
+    pushint 16
     itxn_field GlobalNumUint
-    intc_3 // 16
+    pushint 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -60,7 +125,7 @@ main_probe_route@4:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_1 // 1
+    intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
@@ -72,7 +137,7 @@ main_probe_route@4:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_1 // 1
+    intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
@@ -80,7 +145,7 @@ main_probe_route@4:
     pushint 200000
     itxn_field Amount
     itxn_next
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -88,7 +153,7 @@ main_probe_route@4:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_2 // method "__postInit()void"
+    bytec_3 // method "__postInit()void"
     itxn_field ApplicationArgs
     itxn_submit
     pushint 24
@@ -99,13 +164,13 @@ main_probe_route@4:
     swap
     concat
     itxn_begin
-    bytec_0 // TMPL_APPROVAL_Child
-    bytec_1 // TMPL_CLEAR_Child
-    intc_2 // 6
+    bytec_1 // TMPL_APPROVAL_Child
+    bytec_2 // TMPL_CLEAR_Child
+    intc_3 // 6
     itxn_field TypeEnum
-    intc_3 // 16
+    pushint 16
     itxn_field GlobalNumUint
-    intc_3 // 16
+    pushint 16
     itxn_field GlobalNumByteSlice
     intc_0 // 0
     itxn_field Fee
@@ -119,7 +184,7 @@ main_probe_route@4:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_1 // 1
+    intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
@@ -131,7 +196,7 @@ main_probe_route@4:
     app_params_get AppAddress
     pop
     itxn_begin
-    intc_1 // 1
+    intc_2 // 1
     itxn_field TypeEnum
     itxn_field Receiver
     intc_0 // 0
@@ -139,7 +204,7 @@ main_probe_route@4:
     pushint 700000
     itxn_field Amount
     itxn_next
-    intc_2 // 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -147,7 +212,7 @@ main_probe_route@4:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_2 // method "__postInit()void"
+    bytec_3 // method "__postInit()void"
     itxn_field ApplicationArgs
     itxn_submit
     itob
@@ -172,17 +237,15 @@ main_probe_route@4:
     acct_params_get AcctBalance
     pop
     itob
-    uncover 3
-    app_params_get AppAddress
-    pop
-    uncover 2
-    app_params_get AppAddress
-    pop
     swap
+    app_params_get AppAddress
+    pop
     acct_params_get AcctBalance
     pop
     itob
-    swap
+    uncover 3
+    app_params_get AppAddress
+    pop
     acct_params_get AcctBalance
     pop
     itob
@@ -191,7 +254,7 @@ main_probe_route@4:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    pushint 32
+    intc_1 // 32
     bzero
     uncover 3
     dig 1
@@ -201,19 +264,10 @@ main_probe_route@4:
     b|
     dig 3
     len
-    pushint 32
+    intc_1 // 32
     <=
     assert // overflow
     uncover 3
     uncover 3
     b|
-    cover 2
-    concat
-    swap
-    concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub

@@ -1,0 +1,2458 @@
+#pragma version 12
+#pragma typetrack false
+
+// /tmp/multisource_go7lcny8/base64.sol.test.approval_program() -> uint64:
+main:
+    intcblock 32 4096 1 0 20480 4064 255 65535 16777215
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 0x3d 0x0000000000000000000000000000000000000000000000000000000000000040 0x151f7c75 0x03 0x3f "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/" 0x0000000000000000000000000000000000000000000000000000000000040000 0x0000000000000000000000000000000000000000000000000000000000001000 0x01000000 "foo"
+    intc_1 // 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@10
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@10
+    pushbytess 0xf2b74b27 0x8dacbefb 0x30d1b5e7 0x94f4ce3b
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8
+
+main_after_if_else@10:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x4c7cc4a4 0x930313ad 0x0e253121 0x0bb1102b // method "encode_inline_asm(byte[])string", method "encode_no_asm(byte[])string", method "encode_inline_asm_large()void", method "encode_no_asm_large()void"
+    txna ApplicationArgs 0
+    match main_encode_inline_asm_route@13 main_encode_no_asm_route@14 main_encode_inline_asm_large_route@15 main_encode_no_asm_large_route@16
+    err
+
+main_encode_no_asm_large_route@16:
+    callsub encode_no_asm_large
+    intc_2 // 1
+    return
+
+main_encode_inline_asm_large_route@15:
+    callsub encode_inline_asm_large
+    intc_2 // 1
+    return
+
+main_encode_no_asm_route@14:
+    txna ApplicationArgs 1
+    dup
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    callsub encode_no_asm
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_encode_inline_asm_route@13:
+    txna ApplicationArgs 1
+    dup
+    intc_3 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
+    extract 2 0
+    callsub encode_inline_asm
+    dup
+    len
+    itob
+    extract 6 2
+    swap
+    concat
+    bytec 6 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    callsub encode_no_asm_large
+    bytec 6 // 0x151f7c75
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    callsub encode_inline_asm_large
+    bytec 6 // 0x151f7c75
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_3 // 0
+    callsub __evm_deco
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_deco
+    dup
+    intc 7 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    uncover 2
+    extract3
+    callsub encode_no_asm
+    callsub __evm_ret1
+    intc_2 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_3 // 0
+    callsub __evm_deco
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_deco
+    dup
+    intc 7 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    dig 2
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    swap
+    uncover 2
+    extract3
+    callsub encode_inline_asm
+    callsub __evm_ret1
+    intc_2 // 1
+    return
+
+
+// __solfn_403(data: bytes) -> bytes:
+InlineAsmBase64.encode:
+    proto 1 1
+    intc_3 // 0
+    dupn 2
+    pushbytes ""
+    frame_dig -1
+    len
+    dup
+    load 0
+    pushint 88
+    extract_uint64
+    dup
+    cover 3
+    dup
+    intc_0 // 32
+    +
+    dup
+    cover 3
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    cover 2
+    intc_1 // 4096
+    %
+    dup
+    cover 4
+    pushint 24
+    bzero
+    dup
+    cover 6
+    uncover 2
+    itob
+    concat
+    swap
+    intc 5 // 4064
+    <=
+    bz InlineAsmBase64.encode_else_body@2
+    dig 1
+    dup
+    loads
+    dig 5
+    uncover 3
+    replace3
+    stores
+
+InlineAsmBase64.encode_after_if_else@3:
+    load 0
+    uncover 5
+    pushint 31
+    +
+    intc_0 // 32
+    /
+    intc_0 // 32
+    *
+    dig 3
+    +
+    itob
+    dig 5
+    swap
+    concat
+    replace2 64
+    store 0
+    intc_0 // 32
+    bzero
+    dup
+    cover 3
+    frame_dig -1
+    swap
+    concat
+    dup
+    cover 6
+    len
+    intc_0 // 32
+    -
+    cover 2
+    intc_3 // 0
+
+InlineAsmBase64.encode_while_top@4:
+    dup
+    dig 4
+    <
+    bz InlineAsmBase64.encode_after_while@9
+    dig 2
+    dig 1
+    dup
+    cover 2
+    +
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    cover 4
+    intc_1 // 4096
+    %
+    dup
+    cover 6
+    dig 11
+    uncover 2
+    intc_0 // 32
+    extract3
+    swap
+    intc 5 // 4064
+    <=
+    bz InlineAsmBase64.encode_else_body@7
+    uncover 3
+    dup
+    loads
+    uncover 6
+    uncover 3
+    replace3
+    stores
+
+InlineAsmBase64.encode_after_if_else@8:
+    intc_0 // 32
+    +
+    b InlineAsmBase64.encode_while_top@4
+
+InlineAsmBase64.encode_else_body@7:
+    uncover 3
+    dup
+    loads
+    intc_1 // 4096
+    uncover 7
+    dup
+    cover 2
+    -
+    dig 4
+    intc_3 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_2 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b InlineAsmBase64.encode_after_if_else@8
+
+InlineAsmBase64.encode_after_while@9:
+    pop
+    uncover 2
+    pop
+    uncover 5
+    pop
+    intc_1 // 4096
+    dig 4
+    -
+    dup
+    cover 6
+    intc_0 // 32
+    >=
+    dup
+    cover 3
+    bz InlineAsmBase64.encode_ternary_false@11
+    dup
+    loads
+    dig 5
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@12:
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM memory word exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    cover 8
+    dup
+    intc_1 // 4096
+    <=
+    assert // EVM memory byte value exceeds AVM stack limit
+    dig 2
+    intc_1 // 4096
+    %
+    dup
+    cover 5
+    intc_1 // 4096
+    swap
+    -
+    dup
+    cover 8
+    <=
+    bz InlineAsmBase64.encode_ternary_false@14
+    dig 1
+    intc_1 // 4096
+    /
+    loads
+    dig 4
+    uncover 11
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@15:
+    len
+    itob
+    intc_3 // 0
+    itob
+    b==
+    bz InlineAsmBase64.encode_after_if_else@17
+    pushbytes ""
+    frame_bury 0
+    retsub
+
+InlineAsmBase64.encode_after_if_else@17:
+    load 0
+    pushint 88
+    extract_uint64
+    dup
+    cover 4
+    dup
+    intc_0 // 32
+    +
+    dup
+    frame_bury 3
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    cover 2
+    intc_1 // 4096
+    %
+    dup
+    intc 5 // 4064
+    <=
+    bz InlineAsmBase64.encode_else_body@19
+    uncover 2
+    dup
+    loads
+    uncover 2
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    replace3
+    stores
+
+InlineAsmBase64.encode_after_if_else@20:
+    load 0
+    dig 4
+    pushint 96
+    +
+    itob
+    dig 10
+    swap
+    concat
+    replace2 64
+    store 0
+    intc_3 // 0
+
+InlineAsmBase64.encode_while_top@21:
+    dup
+    pushint 64
+    <
+    bz InlineAsmBase64.encode_after_while@26
+    frame_dig 3
+    dig 1
+    dup
+    cover 2
+    +
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    cover 4
+    intc_1 // 4096
+    %
+    dup
+    cover 7
+    pushbytes 0x4142434445464748494a4b4c4d4e4f505152535455565758595a6162636465666768696a6b6c6d6e6f707172737475767778797a303132333435363738392b2f0000000000000000000000000000000000000000000000000000000000000000
+    uncover 2
+    intc_0 // 32
+    extract3
+    swap
+    intc 5 // 4064
+    <=
+    bz InlineAsmBase64.encode_else_body@24
+    uncover 3
+    dup
+    loads
+    uncover 7
+    uncover 3
+    replace3
+    stores
+
+InlineAsmBase64.encode_after_if_else@25:
+    intc_0 // 32
+    +
+    b InlineAsmBase64.encode_while_top@21
+
+InlineAsmBase64.encode_else_body@24:
+    uncover 3
+    dup
+    loads
+    intc_1 // 4096
+    uncover 8
+    dup
+    cover 2
+    -
+    dig 4
+    intc_3 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_2 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b InlineAsmBase64.encode_after_if_else@25
+
+InlineAsmBase64.encode_after_while@26:
+    pop
+    dig 2
+    bz InlineAsmBase64.encode_ternary_false@28
+    dup
+    loads
+    dig 7
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@29:
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM memory word exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    cover 11
+    dup
+    intc_1 // 4096
+    <=
+    assert // EVM memory byte value exceeds AVM stack limit
+    pushint 4
+    itob
+    cover 2
+    dig 9
+    <=
+    bz InlineAsmBase64.encode_ternary_false@31
+    uncover 8
+    pop
+    uncover 2
+    intc_1 // 4096
+    /
+    loads
+    uncover 5
+    uncover 10
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@32:
+    len
+    itob
+    pushint 2
+    itob
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 3
+    itob
+    b/
+    uncover 2
+    b*
+    dup
+    cover 8
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 8
+    bzero
+    dup
+    frame_bury 2
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    cover 8
+    load 0
+    pushint 88
+    extract_uint64
+    dup
+    cover 10
+    dup
+    intc_0 // 32
+    +
+    dup
+    cover 8
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    cover 3
+    intc_1 // 4096
+    %
+    dup
+    cover 5
+    swap
+    itob
+    dig 10
+    swap
+    concat
+    cover 10
+    intc 5 // 4064
+    <=
+    dup
+    cover 12
+    bz InlineAsmBase64.encode_else_body@34
+    dig 1
+    dup
+    loads
+    dig 5
+    uncover 12
+    replace3
+    stores
+
+InlineAsmBase64.encode_after_if_else@35:
+    load 0
+    uncover 12
+    pushint 31
+    +
+    intc_0 // 32
+    /
+    intc_0 // 32
+    *
+    dig 9
+    +
+    itob
+    uncover 10
+    swap
+    concat
+    replace2 64
+    store 0
+    load 0
+    store 0
+    dig 5
+    uncover 12
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 10
+    bz InlineAsmBase64.encode_else_body@37
+    dig 2
+    dup
+    loads
+    dig 6
+    uncover 3
+    replace3
+    stores
+
+InlineAsmBase64.encode_after_if_else@38:
+    uncover 4
+    itob
+    bytec_1 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    cover 9
+    frame_dig 4
+    itob
+    cover 2
+    dig 3
+    bz InlineAsmBase64.encode_ternary_false@40
+    dup
+    loads
+    dig 7
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@41:
+    dig 3
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 0
+    uncover 9
+    itob
+    pushbytes 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 1
+
+InlineAsmBase64.encode_while_top@42:
+    dig 2
+    frame_dig 0
+    b<
+    bz InlineAsmBase64.encode_after_while@77
+    uncover 2
+    bytec 7 // 0x03
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    cover 3
+    frame_dig 2
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    cover 4
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    intc_1 // 4096
+    %
+    dup
+    cover 6
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz InlineAsmBase64.encode_ternary_false@45
+    pop
+    uncover 3
+    intc_1 // 4096
+    /
+    loads
+    uncover 5
+    intc_0 // 32
+    extract3
+    cover 8
+
+InlineAsmBase64.encode_ternary_merge@46:
+    dig 8
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    cover 12
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000040000
+    b/
+    bytec 8 // 0x3f
+    b&
+    dig 11
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 2
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    cover 11
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    swap
+    frame_dig 1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    dup
+    cover 14
+    loads
+    cover 13
+    intc_1 // 4096
+    %
+    cover 12
+    intc_1 // 4096
+    %
+    dup
+    cover 5
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz InlineAsmBase64.encode_ternary_false@54
+    pop
+    uncover 10
+    intc_1 // 4096
+    /
+    loads
+    uncover 5
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@55:
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 31 1
+    uncover 12
+    uncover 12
+    uncover 2
+    replace3
+    uncover 11
+    swap
+    stores
+    frame_dig 1
+    bytec_1 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury 1
+    dig 12
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000001000
+    b/
+    bytec 8 // 0x3f
+    b&
+    dig 12
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 2
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    cover 12
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    dup
+    cover 14
+    loads
+    cover 13
+    intc_1 // 4096
+    %
+    cover 12
+    intc_1 // 4096
+    %
+    dup
+    cover 5
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz InlineAsmBase64.encode_ternary_false@63
+    pop
+    uncover 10
+    intc_1 // 4096
+    /
+    loads
+    uncover 5
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@64:
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 31 1
+    uncover 12
+    uncover 12
+    uncover 2
+    replace3
+    uncover 11
+    swap
+    stores
+    frame_dig 1
+    bytec_1 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury 1
+    uncover 12
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    b/
+    bytec 8 // 0x3f
+    b&
+    dig 12
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 2
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    cover 12
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    dup
+    cover 14
+    loads
+    cover 13
+    intc_1 // 4096
+    %
+    cover 12
+    intc_1 // 4096
+    %
+    dup
+    cover 5
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz InlineAsmBase64.encode_ternary_false@72
+    pop
+    uncover 10
+    intc_1 // 4096
+    /
+    loads
+    uncover 5
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@73:
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 31 1
+    uncover 12
+    uncover 12
+    uncover 2
+    replace3
+    uncover 11
+    swap
+    stores
+    frame_dig 1
+    bytec_1 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury 1
+    uncover 9
+    bytec 8 // 0x3f
+    b&
+    dig 11
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 2
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    cover 11
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    dup
+    cover 13
+    loads
+    cover 12
+    intc_1 // 4096
+    %
+    cover 11
+    intc_1 // 4096
+    %
+    dup
+    cover 5
+    intc_1 // 4096
+    swap
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz InlineAsmBase64.encode_ternary_false@75
+    pop
+    uncover 9
+    intc_1 // 4096
+    /
+    loads
+    uncover 5
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@76:
+    dig 6
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    extract 31 1
+    uncover 11
+    uncover 11
+    uncover 2
+    replace3
+    uncover 10
+    swap
+    stores
+    frame_dig 1
+    bytec_1 // 0x01
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_bury 1
+    b InlineAsmBase64.encode_while_top@42
+
+InlineAsmBase64.encode_ternary_false@75:
+    uncover 10
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 7
+    dig 3
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b InlineAsmBase64.encode_ternary_merge@76
+
+InlineAsmBase64.encode_ternary_false@72:
+    uncover 11
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 7
+    dig 3
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b InlineAsmBase64.encode_ternary_merge@73
+
+InlineAsmBase64.encode_ternary_false@63:
+    uncover 11
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 7
+    dig 3
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b InlineAsmBase64.encode_ternary_merge@64
+
+InlineAsmBase64.encode_ternary_false@54:
+    uncover 11
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 7
+    dig 3
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b InlineAsmBase64.encode_ternary_merge@55
+
+InlineAsmBase64.encode_ternary_false@45:
+    uncover 4
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 7
+    dig 3
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    cover 8
+    b InlineAsmBase64.encode_ternary_merge@46
+
+InlineAsmBase64.encode_after_while@77:
+    uncover 2
+    pop
+    uncover 8
+    pop
+    dig 2
+    bz InlineAsmBase64.encode_ternary_false@80
+    dup
+    loads
+    dig 6
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@81:
+    bytec 7 // 0x03
+    b%
+    dig 5
+    b|
+    cover 2
+    uncover 3
+    bz InlineAsmBase64.encode_ternary_false@86
+    uncover 7
+    pop
+    loads
+    uncover 5
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@87:
+    bytec 7 // 0x03
+    b%
+    uncover 4
+    b|
+    len
+    intc_0 // 32
+    -
+    uncover 2
+    swap
+    intc_0 // 32
+    extract3
+    pushbytess 0x0000000000000000000000000000000000000000000000000000000000000001 0x0000000000000000000000000000000000000000000000000000000000000002
+    uncover 2
+    match InlineAsmBase64.encode_switch_case_0@90 InlineAsmBase64.encode_switch_case_1@91
+
+InlineAsmBase64.encode_switch_case_next@92:
+    load 0
+    store 0
+    intc_1 // 4096
+    dig 2
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz InlineAsmBase64.encode_ternary_false@94
+    pop
+    loads
+    swap
+    intc_0 // 32
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@95:
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM memory word exceeds uint64
+    pushint 24
+    extract_uint64
+    dup
+    cover 2
+    dup
+    intc_1 // 4096
+    <=
+    assert // EVM memory byte value exceeds AVM stack limit
+    dig 1
+    intc_1 // 4096
+    %
+    dup
+    cover 2
+    intc_1 // 4096
+    swap
+    -
+    dup
+    cover 2
+    <=
+    bz InlineAsmBase64.encode_ternary_false@97
+    pop
+    swap
+    intc_1 // 4096
+    /
+    loads
+    swap
+    uncover 2
+    extract3
+
+InlineAsmBase64.encode_ternary_merge@98:
+    frame_bury 0
+    retsub
+
+InlineAsmBase64.encode_ternary_false@97:
+    uncover 2
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 3
+    dig 3
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    uncover 3
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b InlineAsmBase64.encode_ternary_merge@98
+
+InlineAsmBase64.encode_ternary_false@94:
+    swap
+    dup
+    loads
+    uncover 3
+    dig 3
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b InlineAsmBase64.encode_ternary_merge@95
+
+InlineAsmBase64.encode_switch_case_1@91:
+    frame_dig 1
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    bytec_1 // 0x01
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 2
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 2
+    intc_1 // 4096
+    %
+    bytec 4 // 0x3d
+    replace3
+    stores
+    b InlineAsmBase64.encode_switch_case_next@92
+
+InlineAsmBase64.encode_switch_case_0@90:
+    frame_dig 1
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b+
+    dup
+    bytec_1 // 0x01
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    frame_dig 2
+    dup
+    cover 3
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 2
+    intc_1 // 4096
+    %
+    bytec 4 // 0x3d
+    replace3
+    stores
+    pushbytes 0x02
+    b-
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 2
+    intc_1 // 4096
+    %
+    bytec 4 // 0x3d
+    replace3
+    stores
+    b InlineAsmBase64.encode_switch_case_next@92
+
+InlineAsmBase64.encode_ternary_false@86:
+    dup
+    loads
+    uncover 6
+    uncover 8
+    dup
+    cover 4
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b InlineAsmBase64.encode_ternary_merge@87
+
+InlineAsmBase64.encode_ternary_false@80:
+    dupn 2
+    loads
+    dig 7
+    dig 10
+    dup
+    cover 4
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b InlineAsmBase64.encode_ternary_merge@81
+
+InlineAsmBase64.encode_ternary_false@40:
+    dupn 2
+    loads
+    dig 8
+    dig 11
+    dup
+    cover 4
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b InlineAsmBase64.encode_ternary_merge@41
+
+InlineAsmBase64.encode_else_body@37:
+    dig 2
+    dup
+    loads
+    intc_1 // 4096
+    dig 7
+    dup
+    cover 2
+    -
+    dig 4
+    intc_3 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_2 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b InlineAsmBase64.encode_after_if_else@38
+
+InlineAsmBase64.encode_else_body@34:
+    dig 1
+    dup
+    loads
+    intc_1 // 4096
+    dig 6
+    dup
+    cover 2
+    -
+    uncover 13
+    dup
+    cover 5
+    intc_3 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_2 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b InlineAsmBase64.encode_after_if_else@35
+
+InlineAsmBase64.encode_ternary_false@31:
+    uncover 2
+    intc_1 // 4096
+    /
+    dup
+    loads
+    uncover 6
+    uncover 9
+    dup
+    cover 4
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    uncover 11
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b InlineAsmBase64.encode_ternary_merge@32
+
+InlineAsmBase64.encode_ternary_false@28:
+    dupn 2
+    loads
+    dig 8
+    dig 12
+    dup
+    cover 4
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b InlineAsmBase64.encode_ternary_merge@29
+
+InlineAsmBase64.encode_else_body@19:
+    uncover 2
+    dup
+    loads
+    intc_1 // 4096
+    uncover 3
+    dup
+    cover 2
+    -
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    intc_3 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_2 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b InlineAsmBase64.encode_after_if_else@20
+
+InlineAsmBase64.encode_ternary_false@14:
+    dig 1
+    intc_1 // 4096
+    /
+    dup
+    loads
+    dig 5
+    dig 9
+    dup
+    cover 4
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    uncover 12
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b InlineAsmBase64.encode_ternary_merge@15
+
+InlineAsmBase64.encode_ternary_false@11:
+    dupn 2
+    loads
+    dig 6
+    dig 9
+    dup
+    cover 4
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b InlineAsmBase64.encode_ternary_merge@12
+
+InlineAsmBase64.encode_else_body@2:
+    dig 1
+    dup
+    loads
+    intc_1 // 4096
+    dig 6
+    dup
+    cover 2
+    -
+    dig 4
+    intc_3 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_2 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b InlineAsmBase64.encode_after_if_else@3
+
+
+// __solfn_632(data: bytes) -> bytes:
+NoAsmBase64.encode:
+    proto 1 1
+    intc_3 // 0
+    frame_dig -1
+    len
+    itob
+    dup
+    intc_3 // 0
+    itob
+    dup
+    cover 3
+    b==
+    bz NoAsmBase64.encode_after_if_else@2
+    pushbytes ""
+    frame_bury 0
+    retsub
+
+NoAsmBase64.encode_after_if_else@2:
+    pushint 8
+    bzero
+    dup
+    frame_bury 0
+    pushint 4
+    itob
+    pushint 2
+    itob
+    dup
+    cover 4
+    dig 3
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    pushint 3
+    itob
+    dup
+    cover 5
+    b/
+    b*
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    bzero
+    swap
+    frame_dig 1
+
+NoAsmBase64.encode_while_top@3:
+    dup
+    dig 2
+    b<
+    bz NoAsmBase64.encode_after_while@26
+    dup
+    dig 5
+    b+
+    dupn 2
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 3
+    b<
+    bz NoAsmBase64.encode_else_body@6
+    dup
+    bytec_3 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    frame_dig 0
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_dig -1
+    swap
+    getbyte
+    intc 6 // 255
+    &
+    cover 2
+
+NoAsmBase64.encode_after_if_else@7:
+    intc_2 // 1
+    itob
+    dig 1
+    b+
+    dupn 2
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 3
+    b<
+    bz NoAsmBase64.encode_else_body@12
+    dup
+    bytec_3 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    frame_dig 0
+    dup
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_dig -1
+    swap
+    getbyte
+    intc 6 // 255
+    &
+    itob
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000100
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 12 // 0x01000000
+    b%
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+
+NoAsmBase64.encode_after_if_else@13:
+    swap
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dup
+    bytec_3 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    frame_dig 0
+    dup
+    cover 2
+    dig 1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    frame_dig -1
+    swap
+    getbyte
+    intc 6 // 255
+    &
+    itob
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000010000
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec 12 // 0x01000000
+    b%
+    dig 2
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    uncover 3
+    +
+    dup
+    intc 8 // 16777215
+    <=
+    assert // overflow
+    uncover 4
+    +
+    dup
+    intc 8 // 16777215
+    <=
+    assert // overflow
+    dup
+    itob
+    dup
+    bytec 10 // 0x0000000000000000000000000000000000000000000000000000000000040000
+    b/
+    dig 4
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    pushint 63
+    &
+    bytec 9 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    swap
+    intc_2 // 1
+    extract3
+    frame_dig 1
+    dup
+    bytec_1 // 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 1
+    bytec_3 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 6
+    uncover 2
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    uncover 8
+    swap
+    uncover 3
+    replace3
+    dig 2
+    bytec 11 // 0x0000000000000000000000000000000000000000000000000000000000001000
+    b/
+    dig 6
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    pushint 63
+    &
+    bytec 9 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    swap
+    intc_2 // 1
+    extract3
+    dig 2
+    bytec_1 // 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 3
+    bytec_3 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 7
+    uncover 4
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    cover 2
+    cover 3
+    replace3
+    uncover 2
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000040
+    b/
+    dig 5
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    pushint 63
+    &
+    bytec 9 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    swap
+    intc_2 // 1
+    extract3
+    dig 2
+    bytec_1 // 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 3
+    bytec_3 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    dig 6
+    uncover 4
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    cover 2
+    cover 3
+    replace3
+    uncover 2
+    pushint 63
+    &
+    bytec 9 // "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    swap
+    intc_2 // 1
+    extract3
+    dig 2
+    bytec_1 // 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    dig 3
+    bytec_3 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    uncover 5
+    uncover 4
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    cover 2
+    cover 3
+    replace3
+    cover 3
+    swap
+    bytec 7 // 0x03
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    swap
+    frame_bury 1
+    b NoAsmBase64.encode_while_top@3
+
+NoAsmBase64.encode_else_body@12:
+    pop
+    intc_3 // 0
+    b NoAsmBase64.encode_after_if_else@13
+
+NoAsmBase64.encode_else_body@6:
+    pop
+    intc_3 // 0
+    cover 2
+    b NoAsmBase64.encode_after_if_else@7
+
+NoAsmBase64.encode_after_while@26:
+    pop
+    uncover 2
+    b%
+    dup
+    intc_2 // 1
+    itob
+    b==
+    bz NoAsmBase64.encode_else_body@28
+    pop
+    bury 1
+    frame_dig 1
+    bytec_1 // 0x01
+    b-
+    dup
+    bytec_3 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    frame_dig 0
+    dup
+    cover 2
+    dig 1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    uncover 3
+    swap
+    bytec 4 // 0x3d
+    replace3
+    swap
+    bytec_1 // 0x01
+    b-
+    dup
+    bytec_3 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    bytec 4 // 0x3d
+    replace3
+
+NoAsmBase64.encode_after_if_else@31:
+    frame_bury 0
+    retsub
+
+NoAsmBase64.encode_else_body@28:
+    uncover 2
+    b==
+    bz NoAsmBase64.encode_after_if_else@31
+    frame_dig 1
+    bytec_1 // 0x01
+    b-
+    dup
+    bytec_3 // 0x010000000000000000
+    b<
+    assert // array index out of bounds
+    frame_dig 0
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    bytec 4 // 0x3d
+    replace3
+    b NoAsmBase64.encode_after_if_else@31
+
+
+// /tmp/multisource_go7lcny8/base64.sol.test.encode_inline_asm(data: bytes) -> bytes:
+encode_inline_asm:
+    proto 1 1
+    txn GroupIndex
+    bz encode_inline_asm_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+encode_inline_asm_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub InlineAsmBase64.encode
+    retsub
+
+encode_inline_asm_ternary_false@2:
+    intc_3 // 0
+    b encode_inline_asm_ternary_merge@3
+
+
+// /tmp/multisource_go7lcny8/base64.sol.test.encode_no_asm(data: bytes) -> bytes:
+encode_no_asm:
+    proto 1 1
+    txn GroupIndex
+    bz encode_no_asm_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+encode_no_asm_ternary_merge@3:
+    !
+    assert // not payable
+    frame_dig -1
+    callsub NoAsmBase64.encode
+    retsub
+
+encode_no_asm_ternary_false@2:
+    intc_3 // 0
+    b encode_no_asm_ternary_merge@3
+
+
+// /tmp/multisource_go7lcny8/base64.sol.test.encode_inline_asm_large() -> void:
+encode_inline_asm_large:
+    proto 0 0
+    txn GroupIndex
+    bz encode_inline_asm_large_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+encode_inline_asm_large_ternary_merge@3:
+    !
+    assert // not payable
+    intc_3 // 0
+    itob
+
+encode_inline_asm_large_while_top@4:
+    pushint 1000
+    itob
+    dig 1
+    b>
+    bz encode_inline_asm_large_after_while@6
+    bytec 13 // "foo"
+    callsub InlineAsmBase64.encode
+    pop
+    bytec_1 // 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b encode_inline_asm_large_while_top@4
+
+encode_inline_asm_large_after_while@6:
+    retsub
+
+encode_inline_asm_large_ternary_false@2:
+    intc_3 // 0
+    b encode_inline_asm_large_ternary_merge@3
+
+
+// /tmp/multisource_go7lcny8/base64.sol.test.encode_no_asm_large() -> void:
+encode_no_asm_large:
+    proto 0 0
+    txn GroupIndex
+    bz encode_no_asm_large_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+encode_no_asm_large_ternary_merge@3:
+    !
+    assert // not payable
+    intc_3 // 0
+    itob
+
+encode_no_asm_large_while_top@4:
+    pushint 1000
+    itob
+    dig 1
+    b>
+    bz encode_no_asm_large_after_while@6
+    bytec 13 // "foo"
+    callsub NoAsmBase64.encode
+    pop
+    bytec_1 // 0x01
+    b+
+    dup
+    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b encode_no_asm_large_while_top@4
+
+encode_no_asm_large_after_while@6:
+    retsub
+
+encode_no_asm_large_ternary_false@2:
+    intc_3 // 0
+    b encode_no_asm_large_ternary_merge@3
+
+
+// /tmp/multisource_go7lcny8/base64.sol.test.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_3 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /tmp/multisource_go7lcny8/base64.sol.test.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    intc_0 // 32
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    frame_dig -1
+    intc_0 // 32
+    extract3
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    retsub
+
+
+// /tmp/multisource_go7lcny8/base64.sol.test.__evm_ret1(__v: bytes) -> void:
+__evm_ret1:
+    proto 1 0
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    len
+    dup
+    itob
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc_0 // 32
+    %
+    intc_0 // 32
+    swap
+    -
+    intc_0 // 32
+    %
+    bzero
+    frame_dig -1
+    swap
+    concat
+    concat
+    pushbytes 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    swap
+    concat
+    log
+    retsub

@@ -4,6 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/selector_1.sol.B.approval_program() -> uint64:
 main:
     intcblock 1 0
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -28,42 +29,105 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@8
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@8
+    pushbytess 0xcf9f23b5 0x7defb410
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6
+
+main_after_if_else@8:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x0c88cb4e 0x11105f41 // method "ext()void", method "pub()void"
     txna ApplicationArgs 0
-    match main_ext_route@5 main_pub_route@6
+    match main_ext_route@11 main_pub_route@12
     err
 
-main_pub_route@6:
-    txn GroupIndex
-    bz main_ternary_false@12
-    txn GroupIndex
-    intc_0 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@18:
-    !
-    assert // not payable
+main_pub_route@12:
+    callsub pub
     intc_0 // 1
     return
 
-main_ternary_false@12:
-    intc_1 // 0
-    b main_ternary_merge@18
+main_ext_route@11:
+    callsub ext
+    intc_0 // 1
+    return
 
-main_ext_route@5:
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub pub
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub ext
+    bytec_0 // 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/selector_1.sol.B.ext() -> void:
+ext:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz ext_ternary_false@2
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
-    b main_ternary_merge@18
 
-main_ternary_false@17:
+ext_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+ext_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@18
+    b ext_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/selector_1.sol.B.pub() -> void:
+pub:
+    txn GroupIndex
+    bz pub_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+pub_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+pub_ternary_false@2:
+    intc_1 // 0
+    b pub_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/selector_1.sol.B.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3

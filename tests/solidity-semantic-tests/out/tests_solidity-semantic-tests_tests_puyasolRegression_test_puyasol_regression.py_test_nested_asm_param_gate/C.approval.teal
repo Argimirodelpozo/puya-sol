@@ -5,8 +5,6 @@
 main:
     intcblock 32 1 0 2
     bytecblock "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000001 0x 0x010000000000000000000000000000000000000000000000000000000000000000 0x151f7c75
-    intc_2 // 0
-    dup
     pushint 4096
     bzero
     dup
@@ -46,7 +44,6 @@ main_after_if_else@2:
 main_viaNestedBlock_route@7:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -66,8 +63,7 @@ main_ternary_merge@14:
     intc_0 // 32
     bzero
     dup
-    bury 2
-    dig 2
+    uncover 2
     b|
     dup
     len
@@ -90,7 +86,6 @@ main_switch_case_next@17:
     intc_0 // 32
     <=
     assert // overflow
-    dig 1
     b|
     bytec 4 // 0x151f7c75
     swap
@@ -110,7 +105,6 @@ main_ternary_false@13:
 main_viaUnchecked_route@6:
     txna ApplicationArgs 1
     dup
-    bury 3
     len
     intc_0 // 32
     ==
@@ -130,8 +124,7 @@ main_ternary_merge@22:
     intc_0 // 32
     bzero
     dup
-    bury 2
-    dig 2
+    uncover 2
     b|
     dup
     len
@@ -155,7 +148,6 @@ main_switch_case_next@26:
     intc_0 // 32
     <=
     assert // overflow
-    dig 1
     b|
     bytec 4 // 0x151f7c75
     swap
@@ -180,6 +172,10 @@ main___postInit_route@5:
     bytec_0 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
     bytec_0 // "__ctor_pending"
     intc_2 // 0
     app_global_put

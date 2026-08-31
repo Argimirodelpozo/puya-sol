@@ -3,9 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_really_lots_of_data.sol.ClientReceipt.approval_program() -> uint64:
 main:
-    intcblock 0 1
-    intc_0 // 0
-    dupn 14
+    intcblock 0 1 2
     pushint 4096
     bzero
     dup
@@ -29,201 +27,195 @@ main:
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@7
+    txn NumAppArgs
+    intc_2 // 2
+    ==
+    bz main_after_if_else@7
+    pushbytes 0xd0e30db0
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
     pushbytes 0x92e03b1c // method "deposit()void"
     txna ApplicationArgs 0
-    match main_deposit_route@4
+    match main_deposit_route@9
     err
 
-main_deposit_route@4:
+main_deposit_route@9:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
+    callsub deposit
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@8
+    bz main_ternary_false@14
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@9:
+main_ternary_merge@15:
+    !
+    assert // not payable
+    callsub deposit
+    pushbytes 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_ternary_false@14:
+    intc_0 // 0
+    b main_ternary_merge@15
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_really_lots_of_data.sol.ClientReceipt.deposit() -> void:
+deposit:
+    txn GroupIndex
+    bz deposit_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+deposit_ternary_merge@3:
     !
     assert // not payable
     txn NumAppArgs
-    bz main_ternary_false@59
+    bz deposit_ternary_false@53
     txn NumAppArgs
-    bz main_ternary_false@12
+    bz deposit_ternary_false@6
     txna ApplicationArgs 0
-    bury 15
 
-main_ternary_merge@13:
+deposit_ternary_merge@7:
     txn NumAppArgs
     intc_1 // 1
     >
-    bz main_ternary_false@15
+    bz deposit_ternary_false@9
     txna ApplicationArgs 1
 
-main_ternary_merge@16:
-    dig 15
-    swap
+deposit_ternary_merge@10:
     concat
-    bury 14
     txn NumAppArgs
-    pushint 2
+    intc_2 // 2
     >
-    bz main_ternary_false@18
+    bz deposit_ternary_false@12
     txna ApplicationArgs 2
 
-main_ternary_merge@19:
-    dig 14
-    swap
+deposit_ternary_merge@13:
     concat
-    bury 13
     txn NumAppArgs
     pushint 3
     >
-    bz main_ternary_false@21
+    bz deposit_ternary_false@15
     txna ApplicationArgs 3
 
-main_ternary_merge@22:
-    dig 13
-    swap
+deposit_ternary_merge@16:
     concat
-    bury 12
     txn NumAppArgs
     pushint 4
     >
-    bz main_ternary_false@24
+    bz deposit_ternary_false@18
     txna ApplicationArgs 4
 
-main_ternary_merge@25:
-    dig 12
-    swap
+deposit_ternary_merge@19:
     concat
-    bury 11
     txn NumAppArgs
     pushint 5
     >
-    bz main_ternary_false@27
+    bz deposit_ternary_false@21
     txna ApplicationArgs 5
 
-main_ternary_merge@28:
-    dig 11
-    swap
+deposit_ternary_merge@22:
     concat
-    bury 10
     txn NumAppArgs
     pushint 6
     >
-    bz main_ternary_false@30
+    bz deposit_ternary_false@24
     txna ApplicationArgs 6
 
-main_ternary_merge@31:
-    dig 10
-    swap
+deposit_ternary_merge@25:
     concat
-    bury 9
     txn NumAppArgs
     pushint 7
     >
-    bz main_ternary_false@33
+    bz deposit_ternary_false@27
     txna ApplicationArgs 7
 
-main_ternary_merge@34:
-    dig 9
-    swap
+deposit_ternary_merge@28:
     concat
-    bury 8
     txn NumAppArgs
     pushint 8
     >
-    bz main_ternary_false@36
+    bz deposit_ternary_false@30
     txna ApplicationArgs 8
 
-main_ternary_merge@37:
-    dig 8
-    swap
+deposit_ternary_merge@31:
     concat
-    bury 7
     txn NumAppArgs
     pushint 9
     >
-    bz main_ternary_false@39
+    bz deposit_ternary_false@33
     txna ApplicationArgs 9
 
-main_ternary_merge@40:
-    dig 7
-    swap
+deposit_ternary_merge@34:
     concat
-    bury 6
     txn NumAppArgs
     pushint 10
     >
-    bz main_ternary_false@42
+    bz deposit_ternary_false@36
     txna ApplicationArgs 10
 
-main_ternary_merge@43:
-    dig 6
-    swap
+deposit_ternary_merge@37:
     concat
-    bury 5
     txn NumAppArgs
     pushint 11
     >
-    bz main_ternary_false@45
+    bz deposit_ternary_false@39
     txna ApplicationArgs 11
 
-main_ternary_merge@46:
-    dig 5
-    swap
+deposit_ternary_merge@40:
     concat
-    bury 4
     txn NumAppArgs
     pushint 12
     >
-    bz main_ternary_false@48
+    bz deposit_ternary_false@42
     txna ApplicationArgs 12
 
-main_ternary_merge@49:
-    dig 4
-    swap
+deposit_ternary_merge@43:
     concat
-    bury 3
     txn NumAppArgs
     pushint 13
     >
-    bz main_ternary_false@51
+    bz deposit_ternary_false@45
     txna ApplicationArgs 13
 
-main_ternary_merge@52:
-    dig 3
-    swap
+deposit_ternary_merge@46:
     concat
-    bury 2
     txn NumAppArgs
     pushint 14
     >
-    bz main_ternary_false@54
+    bz deposit_ternary_false@48
     txna ApplicationArgs 14
 
-main_ternary_merge@55:
-    dig 2
-    swap
+deposit_ternary_merge@49:
     concat
-    bury 1
     txn NumAppArgs
     pushint 15
     >
-    bz main_ternary_false@57
+    bz deposit_ternary_false@51
     txna ApplicationArgs 15
 
-main_ternary_merge@58:
-    dig 1
-    swap
+deposit_ternary_merge@52:
     concat
 
-main_ternary_merge@60:
+deposit_ternary_merge@54:
     dup
     len
     itob
@@ -234,95 +226,93 @@ main_ternary_merge@60:
     swap
     concat
     log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@57:
+deposit_ternary_false@51:
     intc_0 // 0
     bzero
-    b main_ternary_merge@58
+    b deposit_ternary_merge@52
 
-main_ternary_false@54:
+deposit_ternary_false@48:
     intc_0 // 0
     bzero
-    b main_ternary_merge@55
+    b deposit_ternary_merge@49
 
-main_ternary_false@51:
+deposit_ternary_false@45:
     intc_0 // 0
     bzero
-    b main_ternary_merge@52
+    b deposit_ternary_merge@46
 
-main_ternary_false@48:
+deposit_ternary_false@42:
     intc_0 // 0
     bzero
-    b main_ternary_merge@49
+    b deposit_ternary_merge@43
 
-main_ternary_false@45:
+deposit_ternary_false@39:
     intc_0 // 0
     bzero
-    b main_ternary_merge@46
+    b deposit_ternary_merge@40
 
-main_ternary_false@42:
+deposit_ternary_false@36:
     intc_0 // 0
     bzero
-    b main_ternary_merge@43
+    b deposit_ternary_merge@37
 
-main_ternary_false@39:
+deposit_ternary_false@33:
     intc_0 // 0
     bzero
-    b main_ternary_merge@40
+    b deposit_ternary_merge@34
 
-main_ternary_false@36:
+deposit_ternary_false@30:
     intc_0 // 0
     bzero
-    b main_ternary_merge@37
+    b deposit_ternary_merge@31
 
-main_ternary_false@33:
+deposit_ternary_false@27:
     intc_0 // 0
     bzero
-    b main_ternary_merge@34
+    b deposit_ternary_merge@28
 
-main_ternary_false@30:
+deposit_ternary_false@24:
     intc_0 // 0
     bzero
-    b main_ternary_merge@31
+    b deposit_ternary_merge@25
 
-main_ternary_false@27:
+deposit_ternary_false@21:
     intc_0 // 0
     bzero
-    b main_ternary_merge@28
+    b deposit_ternary_merge@22
 
-main_ternary_false@24:
+deposit_ternary_false@18:
     intc_0 // 0
     bzero
-    b main_ternary_merge@25
+    b deposit_ternary_merge@19
 
-main_ternary_false@21:
+deposit_ternary_false@15:
     intc_0 // 0
     bzero
-    b main_ternary_merge@22
+    b deposit_ternary_merge@16
 
-main_ternary_false@18:
+deposit_ternary_false@12:
     intc_0 // 0
     bzero
-    b main_ternary_merge@19
+    b deposit_ternary_merge@13
 
-main_ternary_false@15:
+deposit_ternary_false@9:
     intc_0 // 0
     bzero
-    b main_ternary_merge@16
+    b deposit_ternary_merge@10
 
-main_ternary_false@12:
+deposit_ternary_false@6:
     intc_0 // 0
     bzero
-    bury 15
-    b main_ternary_merge@13
+    b deposit_ternary_merge@7
 
-main_ternary_false@59:
+deposit_ternary_false@53:
     intc_0 // 0
     bzero
-    b main_ternary_merge@60
+    b deposit_ternary_merge@54
 
-main_ternary_false@8:
+deposit_ternary_false@2:
     intc_0 // 0
-    b main_ternary_merge@9
+    b deposit_ternary_merge@3

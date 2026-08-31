@@ -32,24 +32,81 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@7
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@7
+    pushbytes 0xd0e30db0
+    txna ApplicationArgs 0
+    match main_switch_case_0@5
+
+main_after_if_else@7:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0xbacc49e3 0x92e03b1c // method "__postInit()void", method "deposit()void"
     txna ApplicationArgs 0
-    match main___postInit_route@5 main_deposit_route@6
+    match main___postInit_route@10 main_deposit_route@11
     err
 
-main_deposit_route@6:
+main_deposit_route@11:
+    callsub deposit
+    intc_0 // 1
+    return
+
+main___postInit_route@10:
+    bytec_1 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec_1 // "__ctor_pending"
+    intc_1 // 0
+    app_global_put
+    bytec_0 // "x"
+    intc_1 // 0
+    box_create
+    pop
+    intc_0 // 1
+    return
+
+main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@12
+    bz main_ternary_false@18
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@13:
+main_ternary_merge@19:
+    !
+    assert // not payable
+    callsub deposit
+    pushbytes 0x151f7c75
+    log
+    intc_0 // 1
+    return
+
+main_ternary_false@18:
+    intc_1 // 0
+    b main_ternary_merge@19
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event_really_really_lots_of_data_from_storage.sol.ClientReceipt.deposit() -> void:
+deposit:
+    txn GroupIndex
+    bz deposit_ternary_false@2
+    txn GroupIndex
+    intc_0 // 1
+    -
+    gtxns Amount
+
+deposit_ternary_merge@3:
     !
     assert // not payable
     pushint 31
@@ -86,23 +143,8 @@ main_ternary_merge@13:
     box_put
     pushbytes 0x2e670e84000000000000000a0012000000000000000f001f4142430000000000000000000000000000000000000000000000000000005a
     log
-    intc_0 // 1
-    return
+    retsub
 
-main_ternary_false@12:
+deposit_ternary_false@2:
     intc_1 // 0
-    b main_ternary_merge@13
-
-main___postInit_route@5:
-    bytec_1 // "__ctor_pending"
-    app_global_get
-    assert // __postInit already called
-    bytec_1 // "__ctor_pending"
-    intc_1 // 0
-    app_global_put
-    bytec_0 // "x"
-    intc_1 // 0
-    box_create
-    pop
-    intc_0 // 1
-    return
+    b deposit_ternary_merge@3

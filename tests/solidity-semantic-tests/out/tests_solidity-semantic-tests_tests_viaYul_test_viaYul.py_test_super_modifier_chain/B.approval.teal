@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/super_modifier_chain.sol.B.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 100
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "log" 0x151f7c75
-    intc_0 // 0
-    dupn 2
+    intcblock 32 1 0 100
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 "log" 0x151f7c75 0x
     pushint 4096
     bzero
     dup
@@ -27,12 +25,23 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "log"
-    pushbytes 0x
+    bytec_3 // 0x
     app_global_put
     intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@9
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@9
+    pushbytess 0xafc2cbe7 0x62513ebd 0x51973ec9
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7
+
+main_after_if_else@9:
     txn OnCompletion
     !
     assert
@@ -40,32 +49,11 @@ main_after_if_else@2:
     assert
     pushbytess 0xbde02b56 0x9a3e37e8 0xc97b1991 // method "fBoth()uint256", method "fPre()uint256", method "log()uint256"
     txna ApplicationArgs 0
-    match main_fBoth_route@5 main_fPre_route@6 main_log_route@7
+    match main_fBoth_route@12 main_fPre_route@13 main_log_route@14
     err
 
-main_log_route@7:
-    txn GroupIndex
-    bz main_ternary_false@13
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@14:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_1 // "log"
-    app_global_get_ex
-    assert // check log exists
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
+main_log_route@14:
+    callsub log
     bytec_2 // 0x151f7c75
     swap
     concat
@@ -73,41 +61,104 @@ main_ternary_merge@14:
     intc_1 // 1
     return
 
-main_ternary_false@13:
-    intc_0 // 0
-    b main_ternary_merge@14
+main_fPre_route@13:
+    callsub fPre
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
-main_fPre_route@6:
+main_fBoth_route@12:
+    callsub fBoth
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub log
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub fPre
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub fBoth
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/super_modifier_chain.sol.B.fBoth() -> bytes:
+fBoth:
     txn GroupIndex
-    bz main_ternary_false@18
+    bz fBoth_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@19:
+fBoth_ternary_merge@3:
     !
     assert // not payable
-    intc_0 // 0
+    intc_2 // 0
     bytec_1 // "log"
     app_global_get_ex
-    assert // check log exists
+    bytec_3 // 0x
+    cover 2
+    select
     intc_3 // 100
     itob
-    dup
-    bury 5
     swap
     dig 1
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    pushint 11
-    itob
-    dup
-    bury 5
-    b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -116,122 +167,7 @@ main_ternary_merge@19:
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_1 // "log"
-    swap
-    app_global_put
-    txn GroupIndex
-    bz main_ternary_false@27
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@28:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_1 // "log"
-    app_global_get_ex
-    assert // check log exists
-    dig 3
-    dup
-    cover 2
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dig 3
-    b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    pushint 22
-    itob
-    b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_1 // "log"
     dig 1
-    app_global_put
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    b|
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@27:
-    intc_0 // 0
-    b main_ternary_merge@28
-
-main_ternary_false@18:
-    intc_0 // 0
-    b main_ternary_merge@19
-
-main_fBoth_route@5:
-    txn GroupIndex
-    bz main_ternary_false@23
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@24:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_1 // "log"
-    app_global_get_ex
-    assert // check log exists
-    intc_3 // 100
-    itob
-    dup
-    bury 3
-    b*
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    pushint 33
-    itob
-    b+
-    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    bytec_1 // "log"
-    swap
-    app_global_put
-    txn GroupIndex
-    bz main_ternary_false@32
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@33:
-    !
-    assert // not payable
-    intc_0 // 0
-    bytec_1 // "log"
-    app_global_get_ex
-    assert // check log exists
-    dig 1
-    dup
-    cover 2
     b*
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -264,31 +200,140 @@ main_ternary_merge@33:
     app_global_put
     dup
     len
-    intc_2 // 32
+    intc_0 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_0 // 32
     bzero
+    b|
+    retsub
+
+fBoth_ternary_false@2:
+    intc_2 // 0
+    b fBoth_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/super_modifier_chain.sol.B.fPre() -> bytes:
+fPre:
+    txn GroupIndex
+    bz fPre_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+fPre_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_1 // "log"
+    app_global_get_ex
+    bytec_3 // 0x
+    cover 2
+    select
+    intc_3 // 100
+    itob
     swap
     dig 1
-    b|
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 11
+    itob
+    swap
+    dig 1
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 33
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    b*
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    pushint 22
+    itob
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // "log"
+    dig 1
+    app_global_put
     dup
     len
-    intc_2 // 32
+    intc_0 // 32
     <=
     assert // overflow
+    intc_0 // 32
+    bzero
     b|
-    bytec_2 // 0x151f7c75
-    swap
-    concat
-    log
+    retsub
+
+fPre_ternary_false@2:
+    intc_2 // 0
+    b fPre_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/super_modifier_chain.sol.B.log() -> bytes:
+log:
+    txn GroupIndex
+    bz log_ternary_false@2
+    txn GroupIndex
     intc_1 // 1
-    return
+    -
+    gtxns Amount
 
-main_ternary_false@32:
-    intc_0 // 0
-    b main_ternary_merge@33
+log_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_1 // "log"
+    app_global_get_ex
+    bytec_3 // 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
 
-main_ternary_false@23:
-    intc_0 // 0
-    b main_ternary_merge@24
+log_ternary_false@2:
+    intc_2 // 0
+    b log_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/super_modifier_chain.sol.B.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

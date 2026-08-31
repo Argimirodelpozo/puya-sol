@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/signextend_adddelta.sol.C.approval_program() -> uint64:
 main:
-    intcblock 16 1 0
-    bytecblock 0x0000000000000000000000000000000100000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
-    intc_2 // 0
-    dupn 2
+    intcblock 16 1
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x0000000000000000000000000000000100000000000000000000000000000000 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -43,14 +41,12 @@ main_addDelta_route@4:
     assert
     txna ApplicationArgs 1
     dup
-    bury 4
     len
     intc_0 // 16
     ==
     assert // invalid number of bytes for arc4.uint128
     txna ApplicationArgs 2
     dup
-    bury 3
     len
     intc_0 // 16
     ==
@@ -65,7 +61,6 @@ main_addDelta_route@4:
 main_ternary_merge@9:
     !
     assert // not payable
-    dig 1
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
@@ -78,37 +73,54 @@ main_ternary_merge@9:
 main_ternary_merge@12:
     load 0
     store 0
-    dig 3
+    swap
     bytec_2 // 0xffffffffffffffffffffffffffffffff
     b&
-    bury 2
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
-    bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
     b*
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     pushbytes 0x8000000000000000000000000000000000000000000000000000000000000000
     b>=
-    bz main_ternary_false@18
-    bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    bz main_ternary_false@17
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
     b/
     bytec_3 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b|
 
-main_ternary_merge@21:
-    dig 1
+main_ternary_merge@19:
     b+
-    bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
     b/
     pushbytes 0x
     b!=
-    !
-    assert // revert
+    bz main_after_if_else@23
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000093dafdf1
+    replace2 0
+    store 0
+    load 0
+    store 0
+    load 0
+    extract 28 32
+    extract 0 4
+    log
+    err // revert
+
+main_after_if_else@23:
     load 0
     store 0
     intc_0 // 16
@@ -138,14 +150,16 @@ main_ternary_merge@21:
     intc_1 // 1
     return
 
-main_ternary_false@18:
-    bytec_0 // 0x0000000000000000000000000000000100000000000000000000000000000000
+main_ternary_false@17:
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    bytec_1 // 0x0000000000000000000000000000000100000000000000000000000000000000
     b/
-    b main_ternary_merge@21
+    b main_ternary_merge@19
 
 main_ternary_false@11:
     b main_ternary_merge@12
 
 main_ternary_false@8:
-    intc_2 // 0
+    pushint 0
     b main_ternary_merge@9

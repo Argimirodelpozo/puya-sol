@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeBoxRef.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 8
-    bytecblock 0x01 0x02 0x 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563 0x03 0x04 0x151f7c75 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61d9 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b 0x8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d23 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
+    intcblock 32 1 0 8
+    bytecblock 0x01 0x151f7c75 0x02 0x 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61d9 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22 0x03 0x04 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b 0x8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d23 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:" 0x0000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -24,10 +24,21 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_1 // 1
     return
 
 main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@12
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@12
+    pushbytess 0x7d94792a 0xc0406226 0xef8fa0a4 0xaefeb5d0 0x4ca4f61b 0x8506762e
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10
+
+main_after_if_else@12:
     txn OnCompletion
     !
     assert
@@ -35,505 +46,155 @@ main_after_if_else@2:
     assert
     pushbytess 0x100b7c32 0x0c098fbf 0x33ef9faa 0x209caf0a 0x809d3515 0x8c95cb47 // method "seed()void", method "run()uint256", method "runElementRef()uint256", method "runNestedRef()(uint256,bool)", method "runScalarRef()(uint256,uint256,uint256)", method "runMixedRef()(uint256,uint256)"
     txna ApplicationArgs 0
-    match main_seed_route@5 main_run_route@6 main_runElementRef_route@7 main_runNestedRef_route@8 main_runScalarRef_route@9 main_runMixedRef_route@10
+    match main_seed_route@15 main_run_route@16 main_runElementRef_route@17 main_runNestedRef_route@18 main_runScalarRef_route@19 main_runMixedRef_route@20
     err
 
-main_runMixedRef_route@10:
-    txn GroupIndex
-    bz main_ternary_false@16
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@17:
-    !
-    assert // not payable
-    intc_1 // 0
-    itob
-    bytec 5 // 0x03
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    pushint 717
-    itob
-    bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
-    swap
-    callsub __storage_write
-    bytec 6 // 0x04
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    pushint 818
-    itob
-    bytec 12 // 0x8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b
-    swap
-    callsub __storage_write
-    bytec 5 // 0x03
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    bytec 6 // 0x04
-    callsub __storage_read
-    b<
-    assert // array index out of bounds
-    bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
-    callsub __storage_read
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    bytec 12 // 0x8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b
-    callsub __storage_read
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 2
-    b|
+main_runMixedRef_route@20:
+    callsub runMixedRef
     concat
-    bytec 7 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@16:
-    intc_1 // 0
-    b main_ternary_merge@17
-
-main_runScalarRef_route@9:
-    txn GroupIndex
-    bz main_ternary_false@21
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@22:
-    !
-    assert // not payable
-    intc_1 // 0
-    itob
-    bytec_1 // 0x02
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    pushint 515
-    itob
-    bytec_3 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
-    swap
-    callsub __storage_write
-    bytec_1 // 0x02
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    bytec_3 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
-    callsub __storage_read
-    pushint 5
-    itob
-    b+
-    dup
-    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    bytec_3 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
-    swap
-    callsub __storage_write
-    bytec_1 // 0x02
-    callsub __storage_read
-    bytec_3 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
-    dig 1
-    b+
-    pushint 616
-    itob
-    callsub __storage_write
-    bytec_0 // 0x01
-    b+
-    bytec_1 // 0x02
-    swap
-    callsub __storage_write
-    bytec_1 // 0x02
-    callsub __storage_read
-    bytec_1 // 0x02
-    callsub __storage_read
-    uncover 2
-    b>
-    assert // array index out of bounds
-    intc_2 // 1
-    itob
-    bytec_1 // 0x02
-    callsub __storage_read
-    b<
-    assert // array index out of bounds
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    bytec_3 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
-    callsub __storage_read
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 2
-    b|
-    pushbytes 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5acf
-    callsub __storage_read
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 3
-    b|
+main_runScalarRef_route@19:
+    callsub runScalarRef
     cover 2
     concat
     swap
     concat
-    bytec 7 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@21:
-    intc_1 // 0
-    b main_ternary_merge@22
-
-main_runNestedRef_route@8:
-    txn GroupIndex
-    bz main_ternary_false@26
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@27:
-    !
-    assert // not payable
-    intc_1 // 0
-    itob
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    bytec 8 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    intc_0 // 32
-    bzero
-    pushint 909
-    itob
-    bytec 9 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22
-    swap
-    callsub __storage_write
-    bytec 9 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22
-    callsub __storage_read
-    intc_2 // 1
-    itob
-    b+
-    dup
-    bytec 14 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    bytec 9 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22
-    swap
-    callsub __storage_write
-    bytec 13 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d23
-    callsub __storage_read
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x01
-    replace2 31
-    bytec 13 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d23
-    swap
-    callsub __storage_write
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 2
-    b>
-    assert // array index out of bounds
-    bytec 8 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
-    callsub __storage_read
-    dig 2
-    b>
-    assert // array index out of bounds
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 2
-    b>
-    assert // array index out of bounds
-    bytec 8 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
-    callsub __storage_read
-    uncover 2
-    b>
-    assert // array index out of bounds
-    bytec 9 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22
-    callsub __storage_read
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 1
-    b|
-    bytec 13 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d23
-    callsub __storage_read
-    uncover 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 31
-    getbyte
-    intc_1 // 0
-    !=
+main_runNestedRef_route@18:
+    callsub runNestedRef
     pushbytes 0x00
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     setbit
     concat
-    bytec 7 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
-    intc_2 // 1
+    intc_1 // 1
     return
 
-main_ternary_false@26:
-    intc_1 // 0
-    b main_ternary_merge@27
-
-main_runElementRef_route@7:
-    txn GroupIndex
-    bz main_ternary_false@31
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@32:
-    !
-    assert // not payable
-    intc_1 // 0
-    itob
-    bytec_2 // 0x
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    bytec 4 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    pushint 808
-    itob
-    bytec 10 // 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61d9
+main_runElementRef_route@17:
+    callsub runElementRef
+    bytec_1 // 0x151f7c75
     swap
-    callsub __storage_write
-    bytec_2 // 0x
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    bytec 4 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
-    callsub __storage_read
-    b<
-    assert // array index out of bounds
-    bytec 10 // 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61d9
-    callsub __storage_read
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_run_route@16:
+    callsub run
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_seed_route@15:
+    callsub seed
+    intc_1 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub runMixedRef
+    dig 2
+    uncover 2
+    concat
     dup
     len
     intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@31:
-    intc_1 // 0
-    b main_ternary_merge@32
-
-main_run_route@6:
-    txn GroupIndex
-    bz main_ternary_false@36
-    txn GroupIndex
-    intc_2 // 1
     -
-    gtxns Amount
-
-main_ternary_merge@37:
-    !
-    assert // not payable
-    intc_1 // 0
-    itob
-    bytec_2 // 0x
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    bytec 4 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    pushint 707
-    itob
-    bytec 10 // 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61d9
-    swap
-    callsub __storage_write
-    bytec_2 // 0x
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    bytec 4 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
-    callsub __storage_read
-    b<
-    assert // array index out of bounds
-    bytec 10 // 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61d9
-    callsub __storage_read
-    dup
-    len
     intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_2 // 1
-    return
-
-main_ternary_false@36:
-    intc_1 // 0
-    b main_ternary_merge@37
-
-main_seed_route@5:
-    txn GroupIndex
-    bz main_ternary_false@41
-    txn GroupIndex
-    intc_2 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@42:
-    !
-    assert // not payable
-    bytec_2 // 0x
-    callsub __storage_read
-    intc_1 // 0
-    itob
-    dup
+    extract3
     cover 2
-    b==
-    bz main_after_if_else@44
-    bytec_2 // 0x
-    callsub __storage_read
-    bytec_0 // 0x01
-    b+
-    bytec_2 // 0x
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
     swap
-    callsub __storage_write
-    bytec_2 // 0x
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    bytec 4 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
-    callsub __storage_read
-    bytec 10 // 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61d9
-    dig 1
-    b+
-    bytec 15 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    callsub __storage_write
-    bytec_0 // 0x01
-    b+
-    bytec 4 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
-    swap
-    callsub __storage_write
+    concat
+    log
+    intc_1 // 1
+    return
 
-main_after_if_else@44:
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
-    b==
-    bz main_after_if_else@46
-    bytec_0 // 0x01
-    callsub __storage_read
-    bytec_0 // 0x01
-    b+
-    bytec_0 // 0x01
-    swap
-    callsub __storage_write
-    bytec_0 // 0x01
-    callsub __storage_read
-    dig 1
-    b>
-    assert // array index out of bounds
-    bytec 8 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
-    callsub __storage_read
+main_switch_case_4@9:
+    callsub __evm_npy
     intc_0 // 32
     bzero
-    dig 1
-    bytec_1 // 0x02
-    b*
-    bytec 9 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22
-    b+
+    callsub runScalarRef
+    dig 3
+    uncover 3
+    concat
     dup
-    bytec 15 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    callsub __storage_write
-    bytec_0 // 0x01
-    b+
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 3
+    uncover 3
+    concat
     dup
-    callsub __storage_read
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub runNestedRef
+    dig 2
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    itob
     uncover 2
     swap
     concat
@@ -543,95 +204,73 @@ main_after_if_else@44:
     -
     intc_0 // 32
     extract3
-    pushbytes 0x00
-    replace2 31
-    callsub __storage_write
-    bytec_0 // 0x01
-    b+
-    bytec 8 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
+    concat
+    bytec_1 // 0x151f7c75
     swap
-    callsub __storage_write
-
-main_after_if_else@46:
-    bytec_1 // 0x02
-    callsub __storage_read
-    dig 1
-    b==
-    bz main_after_if_else@48
-    bytec_1 // 0x02
-    callsub __storage_read
-    bytec_3 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
-    dig 1
-    b+
-    intc_2 // 1
-    itob
-    callsub __storage_write
-    bytec_0 // 0x01
-    b+
-    bytec_1 // 0x02
-    swap
-    callsub __storage_write
-
-main_after_if_else@48:
-    bytec 5 // 0x03
-    callsub __storage_read
-    dig 1
-    b==
-    bz main_after_if_else@50
-    bytec 5 // 0x03
-    callsub __storage_read
-    bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
-    dig 1
-    b+
-    pushint 2
-    itob
-    callsub __storage_write
-    bytec_0 // 0x01
-    b+
-    bytec 5 // 0x03
-    swap
-    callsub __storage_write
-
-main_after_if_else@50:
-    bytec 6 // 0x04
-    callsub __storage_read
-    b==
-    bz main_after_if_else@52
-    bytec 6 // 0x04
-    callsub __storage_read
-    bytec 12 // 0x8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b
-    dig 1
-    b+
-    pushint 3
-    itob
-    callsub __storage_write
-    bytec_0 // 0x01
-    b+
-    bytec 6 // 0x04
-    swap
-    callsub __storage_write
-
-main_after_if_else@52:
-    intc_2 // 1
+    concat
+    log
+    intc_1 // 1
     return
 
-main_ternary_false@41:
-    intc_1 // 0
-    b main_ternary_merge@42
+main_switch_case_2@7:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub runElementRef
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub run
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub seed
+    bytec_1 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
 
 
 // __puyasol___storage_read(__slot: bytes) -> bytes:
 __storage_read:
     proto 1 1
-    intc_1 // 0
+    intc_2 // 0
     dup
-    bytec_2 // ""
+    bytec_3 // ""
     frame_dig -1
-    bytec 16 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 14 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -1
-    bytec 17 // 0x010000
+    bytec 15 // 0x010000
     b<
     bz __storage_read_else_body@4
     intc_3 // 8
@@ -648,7 +287,7 @@ __storage_read:
     pushint 64
     /
     itob
-    bytec 18 // "p:"
+    bytec 16 // "p:"
     swap
     concat
     dup
@@ -669,7 +308,7 @@ __storage_read:
     retsub
 
 __storage_read_after_if_else@3:
-    bytec_2 // 0x
+    bytec_3 // 0x
     frame_bury 0
     retsub
 
@@ -684,7 +323,7 @@ __storage_read_else_body@4:
     -
     intc_0 // 32
     extract3
-    bytec 19 // "s:"
+    bytec 17 // "s:"
     swap
     concat
     dup
@@ -693,7 +332,7 @@ __storage_read_else_body@4:
     bury 1
     bz __storage_read_after_if_else@3
     frame_dig 0
-    intc_1 // 0
+    intc_2 // 0
     intc_0 // 32
     box_extract
     frame_bury 0
@@ -704,11 +343,11 @@ __storage_read_else_body@4:
 __storage_write:
     proto 2 0
     frame_dig -2
-    bytec 16 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 14 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -2
-    bytec 17 // 0x010000
+    bytec 15 // 0x010000
     b<
     bz __storage_write_else_body@2
     intc_3 // 8
@@ -724,7 +363,7 @@ __storage_write:
     pushint 64
     /
     itob
-    bytec 18 // "p:"
+    bytec 16 // "p:"
     swap
     concat
     dup
@@ -761,7 +400,7 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec 19 // "s:"
+    bytec 17 // "s:"
     swap
     concat
     dup
@@ -777,7 +416,583 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    intc_1 // 0
+    intc_2 // 0
     swap
     box_replace
     retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeBoxRef.seed() -> void:
+seed:
+    txn GroupIndex
+    bz seed_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+seed_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_3 // 0x
+    callsub __storage_read
+    intc_2 // 0
+    itob
+    dup
+    cover 2
+    b==
+    bz seed_after_if_else@5
+    bytec_3 // 0x
+    callsub __storage_read
+    bytec_0 // 0x01
+    b+
+    bytec_3 // 0x
+    swap
+    callsub __storage_write
+    bytec_3 // 0x
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    bytec 4 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    callsub __storage_read
+    bytec 6 // 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61d9
+    dig 1
+    b+
+    bytec 18 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    callsub __storage_write
+    bytec_0 // 0x01
+    b+
+    bytec 4 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    swap
+    callsub __storage_write
+
+seed_after_if_else@5:
+    bytec_0 // 0x01
+    callsub __storage_read
+    dig 1
+    b==
+    bz seed_after_if_else@7
+    bytec_0 // 0x01
+    callsub __storage_read
+    bytec_0 // 0x01
+    b+
+    bytec_0 // 0x01
+    swap
+    callsub __storage_write
+    bytec_0 // 0x01
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    bytec 7 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
+    callsub __storage_read
+    intc_0 // 32
+    bzero
+    dig 1
+    bytec_2 // 0x02
+    b*
+    bytec 8 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22
+    b+
+    dup
+    bytec 18 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    callsub __storage_write
+    bytec_0 // 0x01
+    b+
+    dup
+    callsub __storage_read
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x00
+    replace2 31
+    callsub __storage_write
+    bytec_0 // 0x01
+    b+
+    bytec 7 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
+    swap
+    callsub __storage_write
+
+seed_after_if_else@7:
+    bytec_2 // 0x02
+    callsub __storage_read
+    dig 1
+    b==
+    bz seed_after_if_else@9
+    bytec_2 // 0x02
+    callsub __storage_read
+    bytec 5 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
+    dig 1
+    b+
+    intc_1 // 1
+    itob
+    callsub __storage_write
+    bytec_0 // 0x01
+    b+
+    bytec_2 // 0x02
+    swap
+    callsub __storage_write
+
+seed_after_if_else@9:
+    bytec 9 // 0x03
+    callsub __storage_read
+    dig 1
+    b==
+    bz seed_after_if_else@11
+    bytec 9 // 0x03
+    callsub __storage_read
+    bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
+    dig 1
+    b+
+    pushint 2
+    itob
+    callsub __storage_write
+    bytec_0 // 0x01
+    b+
+    bytec 9 // 0x03
+    swap
+    callsub __storage_write
+
+seed_after_if_else@11:
+    bytec 10 // 0x04
+    callsub __storage_read
+    b==
+    bz seed_after_if_else@13
+    bytec 10 // 0x04
+    callsub __storage_read
+    bytec 12 // 0x8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b
+    dig 1
+    b+
+    pushint 3
+    itob
+    callsub __storage_write
+    bytec_0 // 0x01
+    b+
+    bytec 10 // 0x04
+    swap
+    callsub __storage_write
+
+seed_after_if_else@13:
+    retsub
+
+seed_ternary_false@2:
+    intc_2 // 0
+    b seed_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeBoxRef.run() -> bytes:
+run:
+    txn GroupIndex
+    bz run_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+run_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+    bytec_3 // 0x
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    bytec 4 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    pushint 707
+    itob
+    bytec 6 // 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61d9
+    swap
+    callsub __storage_write
+    bytec_3 // 0x
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    bytec 4 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    callsub __storage_read
+    b<
+    assert // array index out of bounds
+    bytec 6 // 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61d9
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+run_ternary_false@2:
+    intc_2 // 0
+    b run_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeBoxRef.runElementRef() -> bytes:
+runElementRef:
+    txn GroupIndex
+    bz runElementRef_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+runElementRef_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+    bytec_3 // 0x
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    bytec 4 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    pushint 808
+    itob
+    bytec 6 // 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61d9
+    swap
+    callsub __storage_write
+    bytec_3 // 0x
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    bytec 4 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    callsub __storage_read
+    b<
+    assert // array index out of bounds
+    bytec 6 // 0x510e4e770828ddbf7f7b00ab00a9f6adaf81c0dc9cc85f1f8249c256942d61d9
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+runElementRef_ternary_false@2:
+    intc_2 // 0
+    b runElementRef_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeBoxRef.runNestedRef() -> bytes, uint64:
+runNestedRef:
+    txn GroupIndex
+    bz runNestedRef_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+runNestedRef_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+    bytec_0 // 0x01
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    bytec 7 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    intc_0 // 32
+    bzero
+    pushint 909
+    itob
+    bytec 8 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22
+    swap
+    callsub __storage_write
+    bytec 8 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22
+    callsub __storage_read
+    intc_1 // 1
+    itob
+    b+
+    dup
+    bytec 19 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 8 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22
+    swap
+    callsub __storage_write
+    bytec 13 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d23
+    callsub __storage_read
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x01
+    replace2 31
+    bytec 13 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d23
+    swap
+    callsub __storage_write
+    bytec_0 // 0x01
+    callsub __storage_read
+    dig 2
+    b>
+    assert // array index out of bounds
+    bytec 7 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
+    callsub __storage_read
+    dig 2
+    b>
+    assert // array index out of bounds
+    bytec_0 // 0x01
+    callsub __storage_read
+    dig 2
+    b>
+    assert // array index out of bounds
+    bytec 7 // 0xb10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
+    callsub __storage_read
+    uncover 2
+    b>
+    assert // array index out of bounds
+    bytec 8 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 1
+    b|
+    bytec 13 // 0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d23
+    callsub __storage_read
+    uncover 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 31
+    getbyte
+    intc_2 // 0
+    !=
+    retsub
+
+runNestedRef_ternary_false@2:
+    intc_2 // 0
+    b runNestedRef_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeBoxRef.runScalarRef() -> bytes, bytes, bytes:
+runScalarRef:
+    txn GroupIndex
+    bz runScalarRef_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+runScalarRef_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+    bytec_2 // 0x02
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    pushint 515
+    itob
+    bytec 5 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
+    swap
+    callsub __storage_write
+    bytec_2 // 0x02
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    bytec 5 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
+    callsub __storage_read
+    pushint 5
+    itob
+    b+
+    dup
+    bytec 19 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec 5 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
+    swap
+    callsub __storage_write
+    bytec_2 // 0x02
+    callsub __storage_read
+    bytec 5 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
+    dig 1
+    b+
+    pushint 616
+    itob
+    callsub __storage_write
+    bytec_0 // 0x01
+    b+
+    bytec_2 // 0x02
+    swap
+    callsub __storage_write
+    bytec_2 // 0x02
+    callsub __storage_read
+    bytec_2 // 0x02
+    callsub __storage_read
+    uncover 2
+    b>
+    assert // array index out of bounds
+    intc_1 // 1
+    itob
+    bytec_2 // 0x02
+    callsub __storage_read
+    b<
+    assert // array index out of bounds
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    bytec 5 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    dig 2
+    b|
+    pushbytes 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5acf
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 3
+    b|
+    retsub
+
+runScalarRef_ternary_false@2:
+    intc_2 // 0
+    b runScalarRef_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeBoxRef.runMixedRef() -> bytes, bytes:
+runMixedRef:
+    txn GroupIndex
+    bz runMixedRef_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+runMixedRef_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    itob
+    bytec 9 // 0x03
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    pushint 717
+    itob
+    bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
+    swap
+    callsub __storage_write
+    bytec 10 // 0x04
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    pushint 818
+    itob
+    bytec 12 // 0x8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b
+    swap
+    callsub __storage_write
+    bytec 9 // 0x03
+    callsub __storage_read
+    dig 1
+    b>
+    assert // array index out of bounds
+    bytec 10 // 0x04
+    callsub __storage_read
+    b<
+    assert // array index out of bounds
+    bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    bytec 12 // 0x8a35acfbc15ff81a39ae7d344fd709f28e8600b4aa8c65c6b64bfe7fe36bd19b
+    callsub __storage_read
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    retsub
+
+runMixedRef_ternary_false@2:
+    intc_2 // 0
+    b runMixedRef_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeBoxRef.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

@@ -1,0 +1,152 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/events/contracts/event.sol.ClientReceipt.approval_program() -> uint64:
+main:
+    intcblock 32 1 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    pushbytes 0xb6bb55a7 // method "deposit(byte[32],bool)void"
+    txna ApplicationArgs 0
+    match main_deposit_route@4
+    err
+
+main_deposit_route@4:
+    txn OnCompletion
+    !
+    txn ApplicationID
+    &&
+    assert
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_1 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_2 // 0
+    getbit
+    dup
+    intc_1 // 1
+    <=
+    assert // ABI bool validation
+    bz main_else_body@12
+    intc_0 // 32
+    bzero
+    txn GroupIndex
+    bz main_ternary_false@9
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@10:
+    itob
+    txn Sender
+    load 0
+    store 0
+    load 0
+    uncover 3
+    dup
+    cover 3
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 0
+    store 0
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushbytes 0x19dacbf83c5de6658e14cbf7bcae5c15eca2eedecf1c66fbca928e4d351bea0f
+    swap
+    concat
+    swap
+    uncover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    load 0
+    extract 0 32
+    concat
+    log
+    load 0
+    store 0
+
+main_after_if_else@16:
+    intc_1 // 1
+    return
+
+main_ternary_false@9:
+    intc_2 // 0
+    b main_ternary_merge@10
+
+main_else_body@12:
+    txn Sender
+    txn GroupIndex
+    bz main_ternary_false@14
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@15:
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    swap
+    uncover 2
+    concat
+    swap
+    concat
+    pushbytes 0x7e080067 // method "Deposit(address,byte[32],uint256)"
+    swap
+    concat
+    log
+    b main_after_if_else@16
+
+main_ternary_false@14:
+    intc_2 // 0
+    b main_ternary_merge@15

@@ -882,7 +882,16 @@ std::shared_ptr<awst::Subroutine> AWSTBuilder::buildFreestandingSubroutine(
 	emitAsmParamSpills(m_session.typeMapper, fnCtx, _func.body(), _sourceFile,
 		asmParamSpills);
 
-	sub->body = sol_ast::buildBlock(blk, _func.body());
+	// OZ ERC1967Utils function-level folds (proxy.md §1/§3): the real bodies
+	// reach the 1967 slots through StorageSlot (the escaped-slot shape) and
+	// would drag the storage-dispatch runtime + delegatecall into the demand
+	// graph; each has an exact native meaning instead.
+	if (auto fold = proxies::Erc1967Lowering::classifyUtilsFunction(_func);
+		fold != proxies::Erc1967Lowering::UtilsFold::None)
+		sub->body = proxies::Erc1967Lowering::utilsFoldBody(
+			fold, sub->returnType, sub->args, m_session.artifacts, loc);
+	else
+		sub->body = sol_ast::buildBlock(blk, _func.body());
 	if (!asmParamSpills.empty())
 		sub->body->body.insert(sub->body->body.begin(),
 			std::make_move_iterator(asmParamSpills.begin()),
