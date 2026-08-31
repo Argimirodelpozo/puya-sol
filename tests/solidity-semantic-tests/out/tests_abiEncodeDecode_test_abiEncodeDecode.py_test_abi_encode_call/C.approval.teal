@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 24 65535
-    bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x 0x151f7c75
+    intcblock 32 0 1 2 65535
+    bytecblock 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -31,7 +31,7 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@11
     txn NumAppArgs
-    pushint 2
+    intc_3 // 2
     ==
     bz main_after_if_else@11
     pushbytess 0x291c5a61 0x5f431992
@@ -55,7 +55,7 @@ main_callExternal_route@15:
     intc_1 // 0
     uncover 2
     setbit
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -96,7 +96,7 @@ main_callMeMaybe_route@14:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     +
     dig 2
@@ -112,7 +112,7 @@ main_callMeMaybe_route@14:
     substring3
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     +
     ==
@@ -127,7 +127,7 @@ main_callMeMaybe_route@14:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    pushint 2
+    intc_3 // 2
     +
     dig 1
     len
@@ -152,7 +152,7 @@ main_switch_case_1@9:
     -
     intc_0 // 32
     extract3
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -162,28 +162,14 @@ main_switch_case_1@9:
 main_switch_case_0@5:
     callsub __evm_npy
     intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    intc_3 // 24
-    extract_uint64
+    callsub __evm_deco
     dupn 2
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    intc_3 // 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -191,14 +177,7 @@ main_switch_case_0@5:
     assert // unaligned EVM ABI offset
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    intc_3 // 24
-    extract_uint64
+    callsub __evm_deco
     dup
     cover 2
     intc 4 // 65535
@@ -260,14 +239,7 @@ main_after_while@8:
     dup
     pushint 64
     +
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    intc_3 // 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -276,14 +248,7 @@ main_after_while@8:
     dig 1
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    intc_3 // 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc 4 // 65535
     <=
@@ -301,14 +266,7 @@ main_after_while@8:
     dig 2
     pushint 96
     +
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    intc_3 // 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -317,14 +275,7 @@ main_after_while@8:
     dig 3
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    intc_3 // 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc 4 // 65535
     <=
@@ -345,39 +296,25 @@ main_after_while@8:
     callsub __evm_decw
     dup
     extract 0 24
-    intc_3 // 24
+    pushint 24
     bzero
     ==
     assert // invalid EVM ABI enum padding
-    intc_3 // 24
+    pushint 24
     extract_uint64
     dup
     pushint 3
     <
     assert // enum out of range
     pushint 64
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    intc_3 // 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    intc_3 // 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc 4 // 65535
     <=
@@ -479,7 +416,7 @@ main_after_while@8:
     swap
     callsub callMeMaybe
     pop
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     log
     intc_2 // 1
     return
@@ -554,11 +491,11 @@ callMeMaybe_after_if_else@7:
 
 callMeMaybe_after_if_else@9:
     assert
-    pushint 2
+    intc_3 // 2
     >
     assert // array index out of bounds
     extract 66 32
-    pushint 2
+    intc_3 // 2
     itob
     b==
     dup
@@ -721,4 +658,19 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call.sol.C.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
     retsub

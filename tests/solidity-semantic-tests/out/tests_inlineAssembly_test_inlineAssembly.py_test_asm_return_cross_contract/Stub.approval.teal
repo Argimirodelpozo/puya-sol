@@ -134,26 +134,12 @@ main_approve_route@17:
 
 main_switch_case_1@6:
     callsub __evm_npy
+    intc_0 // 32
+    bzero
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    swap
-    dig 1
-    ==
-    assert // invalid EVM ABI address padding
+    callsub __evm_arga
     intc_0 // 32
-    callsub __evm_decw
-    dup
-    extract 0 12
-    uncover 2
-    ==
-    assert // invalid EVM ABI address padding
-    intc_0 // 32
-    bzero
-    cover 2
+    callsub __evm_arga
     callsub allowance
     concat
     dup
@@ -171,16 +157,10 @@ main_switch_case_1@6:
 
 main_switch_case_0@5:
     callsub __evm_npy
-    intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
     intc_0 // 32
     bzero
+    intc_2 // 0
+    callsub __evm_arga
     intc_0 // 32
     callsub __evm_decw
     dup
@@ -188,10 +168,8 @@ main_switch_case_0@5:
     intc_0 // 32
     <=
     assert // overflow
-    dig 1
+    dig 2
     b|
-    uncover 2
-    swap
     callsub approve
     itob
     concat
@@ -564,4 +542,18 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__evm_arga(__off: uint64) -> bytes:
+__evm_arga:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
     retsub

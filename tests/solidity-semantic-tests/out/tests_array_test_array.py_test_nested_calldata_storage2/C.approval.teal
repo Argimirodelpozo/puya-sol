@@ -4,8 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 2 1 65535
-    bytecblock "tmp_i" 0x "__ctor_pending" 0x151f7c75 0x0000
-    bytec_1 // ""
+    bytecblock "tmp_i" "__ctor_pending" 0x151f7c75 0x 0x0000
+    bytec_3 // ""
     dupn 3
     pushint 4096
     bzero
@@ -26,7 +26,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_3 // 1
     app_global_put
     intc_3 // 1
@@ -68,7 +68,7 @@ main_tmp_i_route@19:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub tmp_i
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -138,14 +138,14 @@ main_after_for@28:
     return
 
 main___postInit_route@17:
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_2 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     bytec_0 // "tmp_i"
@@ -187,7 +187,7 @@ main_switch_case_1@12:
     -
     intc_0 // 32
     extract3
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -197,28 +197,14 @@ main_switch_case_1@12:
 main_switch_case_0@5:
     callsub __evm_npy
     intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     bury 5
     intc 4 // 65535
@@ -244,14 +230,7 @@ main_while_top@6:
     dup
     uncover 2
     +
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -259,14 +238,7 @@ main_while_top@6:
     assert // unaligned EVM ABI offset
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     bury 6
     intc 4 // 65535
@@ -430,7 +402,7 @@ main_after_for@35:
 main_after_while@11:
     callsub i
     pop
-    bytec_3 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     log
     intc_3 // 1
     return
@@ -564,4 +536,19 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol.C.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_3 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
     retsub

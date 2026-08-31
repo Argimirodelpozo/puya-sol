@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/bytes_in_constructors_packer.sol.Creator.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 24
-    bytecblock 0x151f7c75 0x TMPL_APPROVAL_Main TMPL_CLEAR_Main
+    intcblock 0 32 1 6
+    bytecblock 0x151f7c75 TMPL_APPROVAL_Main TMPL_CLEAR_Main
     pushint 4096
     bzero
     dup
@@ -88,28 +88,14 @@ main_ternary_merge@15:
     !
     assert // not payable
     intc_1 // 32
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    intc_3 // 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_1 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    intc_3 // 24
-    extract_uint64
+    callsub __evm_deco
     dup
     pushint 65535
     <=
@@ -182,9 +168,9 @@ f_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
-    bytec_2 // TMPL_APPROVAL_Main
-    bytec_3 // TMPL_CLEAR_Main
-    pushint 6
+    bytec_1 // TMPL_APPROVAL_Main
+    bytec_2 // TMPL_CLEAR_Main
+    intc_3 // 6
     itxn_field TypeEnum
     pushint 16
     itxn_field GlobalNumUint
@@ -222,7 +208,7 @@ f_ternary_merge@3:
     intc_0 // 0
     itxn_field Amount
     itxn_next
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -237,15 +223,15 @@ f_ternary_merge@3:
     frame_dig -2
     itxn_field ApplicationArgs
     itxn_submit
-    intc_3 // 24
+    pushint 24
     bzero
     swap
     itob
     concat
     itxn_begin
-    intc_3 // 24
+    pushint 24
     extract_uint64
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -259,7 +245,7 @@ f_ternary_merge@3:
     itxn LastLog
     extract 4 0
     itxn_begin
-    pushint 6
+    intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0
     itxn_field OnCompletion
@@ -305,4 +291,19 @@ __evm_decw:
     frame_dig -1
     intc_1 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/bytes_in_constructors_packer.sol.Creator.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
     retsub

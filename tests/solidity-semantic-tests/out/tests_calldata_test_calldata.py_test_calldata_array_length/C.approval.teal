@@ -4,8 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/calldata_array_length.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1 2 65535
-    bytecblock 0x 0x151f7c75 0x0000 0x0001
-    bytec_0 // ""
+    bytecblock 0x151f7c75 0x 0x0000 0x0001
+    bytec_1 // ""
     dupn 3
     pushint 4096
     bzero
@@ -60,7 +60,7 @@ main_f_route@23:
     assert // invalid number of bytes for arc4.static_array<arc4.uint256, 2>
     callsub f(t_array$_t_uint256_$2_calldata_ptr)
     pop
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -130,7 +130,7 @@ main_after_for@32:
     concat
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -152,7 +152,7 @@ main_f_route@21:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint256>
     callsub f(t_array$_t_uint256_$dyn_calldata_ptr)
     pop
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -191,7 +191,7 @@ main_switch_case_2@16:
     -
     intc_0 // 32
     extract3
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -201,28 +201,14 @@ main_switch_case_2@16:
 main_switch_case_1@9:
     callsub __evm_npy
     intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     bury 5
     intc 4 // 65535
@@ -248,14 +234,7 @@ main_while_top@10:
     dup
     uncover 2
     +
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -263,14 +242,7 @@ main_while_top@10:
     assert // unaligned EVM ABI offset
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     bury 6
     intc 4 // 65535
@@ -468,7 +440,7 @@ main_after_while@15:
     intc_0 // 32
     extract3
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -478,28 +450,14 @@ main_after_while@15:
 main_switch_case_0@5:
     callsub __evm_npy
     intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     cover 2
     intc 4 // 65535
@@ -568,7 +526,7 @@ main_after_while@8:
     -
     intc_0 // 32
     extract3
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -609,7 +567,7 @@ f(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$dyn_calldata_ptr):
     proto 1 4
     intc_1 // 0
     dup
-    bytec_0 // ""
+    bytec_1 // ""
     txn GroupIndex
     bz f(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$dyn_calldata_ptr)_ternary_false@2
     txn GroupIndex
@@ -620,9 +578,9 @@ f(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$dyn_calldata_ptr):
 f(t_array$_t_array$_t_uint256_$dyn_calldata_ptr_$dyn_calldata_ptr)_ternary_merge@3:
     !
     assert // not payable
-    bytec_0 // 0x
+    bytec_1 // 0x
     frame_bury 0
-    bytec_0 // 0x
+    bytec_1 // 0x
     frame_bury 1
     frame_dig -1
     intc_1 // 0
@@ -769,4 +727,19 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/calldata_array_length.sol.C.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
     retsub

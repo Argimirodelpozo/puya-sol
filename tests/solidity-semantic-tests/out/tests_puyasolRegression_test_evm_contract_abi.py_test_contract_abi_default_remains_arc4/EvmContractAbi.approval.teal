@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.approval_program() -> uint64:
 main:
     intcblock 32 0 1 2 65535 128
-    bytecblock 0x 0x151f7c75 0x80000000000000000000000000000000 0x010000 0x0000 0xffffffffffffffffffffffffffffffff 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x01 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x8000 0x0100000000000000000000000000000000 0x000a 0x0000000000000000000000000000000000000000000000000000000000000040 0x0001 0x0006 0x00010002 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock 0x151f7c75 0x 0x80000000000000000000000000000000 0x010000 0x0000 0xffffffffffffffffffffffffffffffff 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x01 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x8000 0x0100000000000000000000000000000000 0x000a 0x0000000000000000000000000000000000000000000000000000000000000040 0x0001 0x0006 0x00010002 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_1 // 0
     dup
-    bytec_0 // ""
+    bytec_1 // ""
     dupn 9
     pushint 4096
     bzero
@@ -47,9 +47,9 @@ main_after_if_else@49:
     bnz main_after_if_else@52
     txn OnCompletion
     bnz main_after_if_else@52
-    bytec_0 // 0x
+    bytec_1 // 0x
     callsub __fallback
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -77,7 +77,7 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     bnz main_after_if_else@55
     txna ApplicationArgs 0
     callsub __fallback
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -107,7 +107,7 @@ main___fallback_route@66:
     extract 6 2
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -174,7 +174,7 @@ main_bool_merge@81:
     setbit
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -223,7 +223,7 @@ main_arc4Codec_route@64:
     concat
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -257,7 +257,7 @@ main_codec_route@63:
     extract 6 2
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -306,7 +306,7 @@ main_record_route@62:
     assert // invalid number of bytes for Record
     callsub record
     pop
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -420,7 +420,7 @@ main_after_for@95:
     dig 10
     callsub nested
     pop
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -444,7 +444,7 @@ main_signed_route@60:
     assert // invalid number of bytes for arc4.uint128
     callsub signed
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -484,7 +484,7 @@ main_scalars_route@59:
     concat
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -494,7 +494,7 @@ main_scalars_route@59:
 
 main_ping_route@58:
     callsub ping
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -513,28 +513,14 @@ main_switch_case_6@47:
     ==
     assert // invalid EVM ABI unsigned integer padding
     intc_0 // 32
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc 4 // 65535
     <=
@@ -599,7 +585,7 @@ main_switch_case_6@47:
     concat
     concat
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -617,28 +603,14 @@ main_switch_case_5@46:
     ==
     assert // invalid EVM ABI unsigned integer padding
     intc_0 // 32
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc 4 // 65535
     <=
@@ -699,14 +671,7 @@ main_switch_case_5@46:
 main_switch_case_4@39:
     callsub __evm_npy
     intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -724,14 +689,7 @@ main_switch_case_4@39:
     dup
     intc_0 // 32
     +
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -740,14 +698,7 @@ main_switch_case_4@39:
     dig 1
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     cover 4
     dup
@@ -767,14 +718,7 @@ main_switch_case_4@39:
     dup
     pushint 64
     +
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -782,14 +726,7 @@ main_switch_case_4@39:
     assert // unaligned EVM ABI offset
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     bury 9
     intc 4 // 65535
@@ -854,7 +791,7 @@ main_while_top@40:
 
 main_after_while@42:
     pop
-    bytec_0 // 0x
+    bytec_1 // 0x
     uncover 3
     extract 24 8
     dup
@@ -1042,28 +979,14 @@ main_after_while@45:
 main_switch_case_3@20:
     callsub __evm_npy
     intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     bury 7
     intc 4 // 65535
@@ -1089,14 +1012,7 @@ main_while_top@21:
     dup
     uncover 2
     +
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -1104,14 +1020,7 @@ main_while_top@21:
     assert // unaligned EVM ABI offset
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     cover 3
     intc 4 // 65535
@@ -1137,14 +1046,7 @@ main_while_top@23:
     dup
     uncover 2
     +
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -1152,14 +1054,7 @@ main_while_top@23:
     assert // unaligned EVM ABI offset
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     cover 5
     intc 4 // 65535
@@ -1265,7 +1160,7 @@ main_after_while@28:
     b main_while_top@21
 
 main_after_while@29:
-    bytec_0 // 0x
+    bytec_1 // 0x
     dup
     uncover 2
     callsub nested
@@ -1285,9 +1180,9 @@ main_while_top@30:
     dig 9
     <
     bz main_after_while@38
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 3
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 5
     dig 1
     dig 13
@@ -1307,7 +1202,7 @@ main_while_top@32:
     dig 5
     <
     bz main_after_while@37
-    bytec_0 // 0x
+    bytec_1 // 0x
     cover 7
     dig 2
     dig 17
@@ -1614,7 +1509,7 @@ main_ternary_merge@19:
     swap
     replace3
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -1707,7 +1602,7 @@ main_switch_case_1@6:
     uncover 2
     concat
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -1726,7 +1621,7 @@ main_switch_case_0@5:
     -
     intc_0 // 32
     extract3
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -1929,7 +1824,7 @@ scalars_ternary_false@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.signed(x: uint64, __arc4_y: bytes) -> bytes, bytes:
 signed:
     proto 2 2
-    bytec_0 // ""
+    bytec_1 // ""
     dup
     txn GroupIndex
     bz signed_ternary_false@2
@@ -2402,4 +2297,19 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
     retsub

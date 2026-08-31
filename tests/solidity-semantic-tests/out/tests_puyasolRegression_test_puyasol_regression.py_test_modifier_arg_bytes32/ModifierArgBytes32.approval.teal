@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.approval_program() -> uint64:
 main:
-    intcblock 1 32 0 12
+    intcblock 1 32 0 2
     bytecblock 0x151f7c75 "lastRole" "members" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6 0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@15
     txn NumAppArgs
-    pushint 2
+    intc_3 // 2
     ==
     bz main_after_if_else@15
     pushbytess 0x4ea436ba 0x1249c58b 0x44df8e70 0x070324cb 0x10ad56b3 0xd5391393 0x282c51f3 0x7e1cb559 0x23cbb185
@@ -191,7 +191,7 @@ main___postInit_route@18:
     intc_2 // 0
     app_global_put
     bytec_2 // "members"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
     bytec_1 // "lastRole"
@@ -212,18 +212,11 @@ main_switch_case_8@13:
 
 main_switch_case_7@12:
     callsub __evm_npy
-    intc_1 // 32
-    callsub __evm_decw
-    dup
-    extract 0 12
-    intc_3 // 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
     intc_2 // 0
     callsub __evm_decw
     extract 0 32
-    swap
+    intc_1 // 32
+    callsub __evm_arga
     callsub members
     callsub __evm_ret0
     intc_0 // 1
@@ -251,18 +244,11 @@ main_switch_case_5@10:
 
 main_switch_case_4@9:
     callsub __evm_npy
-    intc_1 // 32
-    callsub __evm_decw
-    dup
-    extract 0 12
-    intc_3 // 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
     intc_2 // 0
     callsub __evm_decw
     extract 0 32
-    swap
+    intc_1 // 32
+    callsub __evm_arga
     callsub isMember
     callsub __evm_ret0
     intc_0 // 1
@@ -330,18 +316,11 @@ main_switch_case_1@6:
 
 main_switch_case_0@5:
     callsub __evm_npy
-    intc_1 // 32
-    callsub __evm_decw
-    dup
-    extract 0 12
-    intc_3 // 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
     intc_2 // 0
     callsub __evm_decw
     extract 0 32
-    swap
+    intc_1 // 32
+    callsub __evm_arga
     callsub grant
     bytec_0 // 0x151f7c75
     log
@@ -618,6 +597,20 @@ __evm_decw:
     frame_dig -1
     intc_1 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_arg_bytes32.sol.ModifierArgBytes32.__evm_arga(__off: uint64) -> bytes:
+__evm_arga:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
     retsub
 
 

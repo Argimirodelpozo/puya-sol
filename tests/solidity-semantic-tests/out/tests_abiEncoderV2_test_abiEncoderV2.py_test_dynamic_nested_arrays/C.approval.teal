@@ -4,10 +4,10 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/dynamic_nested_arrays.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 2 1 65535
-    bytecblock 0x 0x151f7c75 0x0001 0x0000
+    bytecblock 0x151f7c75 0x0001 0x0000 0x
     intc_1 // 0
     dup
-    bytec_0 // ""
+    bytec_3 // ""
     dupn 6
     pushint 4096
     bzero
@@ -68,7 +68,7 @@ main_test_route@27:
     concat
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -211,7 +211,7 @@ main_after_for@39:
     concat
     swap
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -291,7 +291,7 @@ main_switch_case_1@21:
     intc_0 // 32
     extract3
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -301,34 +301,20 @@ main_switch_case_1@21:
 main_switch_case_0@5:
     callsub __evm_npy
     intc_0 // 32
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     bury 8
     intc 4 // 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec_3 // 0x0000
+    bytec_2 // 0x0000
     swap
     intc_0 // 32
     +
@@ -347,14 +333,7 @@ main_while_top@6:
     dup
     uncover 2
     +
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -362,20 +341,13 @@ main_while_top@6:
     assert // unaligned EVM ABI offset
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     bury 9
     intc 4 // 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec_3 // 0x0000
+    bytec_2 // 0x0000
     cover 2
     intc_0 // 32
     +
@@ -405,7 +377,7 @@ main_while_top@8:
     <=
     assert // overflow
     extract 6 2
-    bytec_2 // 0x0001
+    bytec_1 // 0x0001
     swap
     concat
     dup
@@ -537,28 +509,14 @@ main_after_for@52:
 main_after_while@11:
     pop
     pushint 64
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dupn 2
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -566,20 +524,13 @@ main_after_while@11:
     assert // unaligned EVM ABI offset
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     bury 8
     intc 4 // 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec_3 // 0x0000
+    bytec_2 // 0x0000
     dup
     cover 2
     swap
@@ -622,7 +573,7 @@ main_while_top@12:
     uncover 2
     b|
     concat
-    bytec_2 // 0x0001
+    bytec_1 // 0x0001
     swap
     concat
     dup
@@ -653,14 +604,7 @@ main_after_while@14:
     dup
     intc_0 // 32
     +
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -668,14 +612,7 @@ main_after_while@14:
     assert // unaligned EVM ABI offset
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     bury 9
     intc 4 // 65535
@@ -722,7 +659,7 @@ main_while_top@15:
     uncover 2
     b|
     concat
-    bytec_2 // 0x0001
+    bytec_1 // 0x0001
     swap
     concat
     dup
@@ -754,14 +691,7 @@ main_after_while@17:
     dup
     pushint 64
     +
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -769,14 +699,7 @@ main_after_while@17:
     assert // unaligned EVM ABI offset
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_0 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     cover 6
     intc 4 // 65535
@@ -823,7 +746,7 @@ main_while_top@18:
     uncover 2
     b|
     concat
-    bytec_2 // 0x0001
+    bytec_1 // 0x0001
     swap
     concat
     dup
@@ -979,7 +902,7 @@ main_after_while@20:
     intc_0 // 32
     extract3
     concat
-    bytec_1 // 0x151f7c75
+    bytec_0 // 0x151f7c75
     swap
     concat
     log
@@ -1546,4 +1469,19 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncoderV2/contracts/dynamic_nested_arrays.sol.C.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_3 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
     retsub

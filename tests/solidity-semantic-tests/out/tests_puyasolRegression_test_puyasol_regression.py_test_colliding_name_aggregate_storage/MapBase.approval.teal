@@ -162,17 +162,10 @@ main___postInit_route@15:
 
 main_switch_case_5@10:
     callsub __evm_npy
-    intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
     intc_0 // 32
     bzero
-    swap
+    intc_2 // 0
+    callsub __evm_arga
     callsub bal
     concat
     dup
@@ -190,17 +183,10 @@ main_switch_case_5@10:
 
 main_switch_case_4@9:
     callsub __evm_npy
-    intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
     intc_0 // 32
     bzero
-    swap
+    intc_2 // 0
+    callsub __evm_arga
     callsub readBal
     concat
     dup
@@ -219,13 +205,7 @@ main_switch_case_4@9:
 main_switch_case_3@8:
     callsub __evm_npy
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
+    callsub __evm_arga
     intc_0 // 32
     callsub __evm_decw
     dup
@@ -586,4 +566,18 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/colliding_name_aggregate_storage.sol.MapBase.__evm_arga(__off: uint64) -> bytes:
+__evm_arga:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
     retsub

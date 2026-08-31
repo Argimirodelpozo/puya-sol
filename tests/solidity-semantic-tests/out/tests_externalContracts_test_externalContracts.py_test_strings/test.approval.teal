@@ -1,10 +1,10 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_de3055kn/strings.sol.test.approval_program() -> uint64:
+// /tmp/multisource_d3fsn9xz/strings.sol.test.approval_program() -> uint64:
 main:
     intcblock 32 4096 0 1 20480 4064 65535
-    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 0x 0x20 0x01 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 0x02 0xff 0x010000000000000000000000000000000000000000000000000000000000000020 0x010000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0xa6bf65a0
+    bytecblock 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000 0x20 0x 0x01 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 0x02 0xff 0x010000000000000000000000000000000000000000000000000000000000000020 0x010000000000000000 0x8000000000000000000000000000000000000000000000000000000000000000 0xa6bf65a0
     intc_1 // 4096
     bzero
     dup
@@ -178,28 +178,14 @@ main_toSlice_route@14:
 main_switch_case_4@9:
     callsub __evm_npy
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_2 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_2 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc 6 // 65535
     <=
@@ -241,28 +227,14 @@ main_switch_case_4@9:
 main_switch_case_3@8:
     callsub __evm_npy
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_2 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_2 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc 6 // 65535
     <=
@@ -299,28 +271,14 @@ main_switch_case_3@8:
 main_switch_case_2@7:
     callsub __evm_npy
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_2 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_2 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc 6 // 65535
     <=
@@ -359,28 +317,14 @@ main_switch_case_2@7:
 main_switch_case_1@6:
     callsub __evm_npy
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_2 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_2 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc 6 // 65535
     <=
@@ -407,28 +351,14 @@ main_switch_case_1@6:
 main_switch_case_0@5:
     callsub __evm_npy
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_2 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_2 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc 6 // 65535
     <=
@@ -578,27 +508,27 @@ strings.memcpy_after_if_else@8:
     load 0
     store 0
     frame_dig -3
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     frame_dig -2
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     frame_dig -1
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b>=
     assert // underflow
     frame_dig -1
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b-
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -690,13 +620,13 @@ strings.memcpy_after_if_else@11:
 
 strings.memcpy_while_top@12:
     dup
-    bytec_2 // 0x
+    bytec_3 // 0x
     b>
     bz strings.memcpy_after_while@16
     dup
     bytec 4 // 0x01
     b&
-    bytec_2 // 0x
+    bytec_3 // 0x
     b!=
     bz strings.memcpy_after_if_else@15
     swap
@@ -1097,7 +1027,7 @@ strings.toSlice_after_while@9:
     store 0
     frame_dig 0
     itob
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -1123,7 +1053,7 @@ strings.toSlice_after_while@9:
 strings.toSlice_ternary_merge@12:
     dup
     extract 0 24
-    bytec_2 // 0x
+    bytec_3 // 0x
     b==
     assert // EVM memory word exceeds uint64
     pushint 24
@@ -1143,7 +1073,7 @@ strings.toSlice_ternary_merge@12:
 strings.toSlice_ternary_merge@15:
     dup
     extract 0 24
-    bytec_2 // 0x
+    bytec_3 // 0x
     b==
     assert // EVM memory word exceeds uint64
     pushint 24
@@ -1297,9 +1227,9 @@ strings.toSlice_else_body@2:
 // __solfn_2214(self: bytes) -> bytes:
 strings.len:
     proto 1 1
-    bytec_2 // 0x
+    bytec_3 // 0x
     frame_dig -1
-    bytec_2 // 0x
+    bytec_3 // 0x
     b==
     bz strings.len_after_if_else@2
     intc_2 // 0
@@ -1547,7 +1477,7 @@ strings.toSliceB32_after_if_else@6:
     cover 9
     load 0
     dig 1
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -1613,7 +1543,7 @@ strings.toSliceB32_after_if_else@6:
 strings.toSliceB32_after_if_else@9:
     uncover 8
     itob
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -2028,7 +1958,7 @@ strings.toString_after_if_else@3:
     store 0
     uncover 3
     itob
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -2054,7 +1984,7 @@ strings.toString_after_if_else@3:
 strings.toString_ternary_merge@6:
     dup
     extract 0 24
-    bytec_2 // 0x
+    bytec_3 // 0x
     b==
     assert // EVM memory word exceeds uint64
     pushint 24
@@ -2435,7 +2365,7 @@ strings.compare:
     proto 2 3
     intc_2 // 0
     dupn 4
-    bytec_2 // ""
+    bytec_3 // ""
     frame_dig -2
     extract 0 32
     dup
@@ -2599,13 +2529,13 @@ strings.compare_ternary_merge@10:
 
 strings.compare_while_top@13:
     dup
-    bytec_2 // 0x
+    bytec_3 // 0x
     b>
     bz strings.compare_after_while@17
     dup
     bytec 4 // 0x01
     b&
-    bytec_2 // 0x
+    bytec_3 // 0x
     b!=
     bz strings.compare_after_if_else@16
     uncover 3
@@ -2688,21 +2618,21 @@ strings.compare_after_if_else@18:
 
 strings.compare_after_if_else@21:
     uncover 4
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     uncover 5
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     uncover 4
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b+
     dup
     bytec_0 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -3149,7 +3079,7 @@ strings.startsWith_ternary_merge@31:
     cover 2
     frame_dig 0
     itob
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -3187,7 +3117,7 @@ strings.startsWith_ternary_merge@31:
 strings.startsWith_ternary_merge@34:
     uncover 3
     itob
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -3656,7 +3586,7 @@ strings.concat_after_if_else@3:
     store 0
     uncover 3
     itob
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -3695,7 +3625,7 @@ strings.concat_after_if_else@3:
 strings.concat_ternary_merge@6:
     dup
     extract 0 24
-    bytec_2 // 0x
+    bytec_3 // 0x
     b==
     assert // EVM memory word exceeds uint64
     pushint 24
@@ -3826,7 +3756,7 @@ strings.join:
     cover 3
     b==
     bz strings.join_after_if_else@2
-    bytec_2 // ""
+    bytec_3 // ""
     frame_dig -2
     frame_dig -1
     frame_bury 2
@@ -3985,7 +3915,7 @@ strings.join_after_if_else@8:
     store 0
     uncover 5
     itob
-    bytec_3 // 0x20
+    bytec_2 // 0x20
     b+
     bytec_1 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -4085,7 +4015,7 @@ strings.join_after_while@13:
 strings.join_ternary_merge@16:
     dup
     extract 0 24
-    bytec_2 // 0x
+    bytec_3 // 0x
     b==
     assert // EVM memory word exceeds uint64
     pushint 24
@@ -4203,7 +4133,7 @@ strings.join_else_body@7:
     b strings.join_after_if_else@8
 
 
-// /tmp/multisource_de3055kn/strings.sol.test.toSlice(a: bytes) -> bytes:
+// /tmp/multisource_d3fsn9xz/strings.sol.test.toSlice(a: bytes) -> bytes:
 toSlice:
     proto 1 1
     txn GroupIndex
@@ -4237,7 +4167,7 @@ toSlice_ternary_false@2:
     b toSlice_ternary_merge@3
 
 
-// /tmp/multisource_de3055kn/strings.sol.test.roundtrip(a: bytes) -> bytes:
+// /tmp/multisource_d3fsn9xz/strings.sol.test.roundtrip(a: bytes) -> bytes:
 roundtrip:
     proto 1 1
     txn GroupIndex
@@ -4261,7 +4191,7 @@ roundtrip_ternary_false@2:
     b roundtrip_ternary_merge@3
 
 
-// /tmp/multisource_de3055kn/strings.sol.test.utf8len(a: bytes) -> bytes:
+// /tmp/multisource_d3fsn9xz/strings.sol.test.utf8len(a: bytes) -> bytes:
 utf8len:
     proto 1 1
     txn GroupIndex
@@ -4293,7 +4223,7 @@ utf8len_ternary_false@2:
     b utf8len_ternary_merge@3
 
 
-// /tmp/multisource_de3055kn/strings.sol.test.multiconcat(a: bytes, __arc4_count: bytes) -> bytes:
+// /tmp/multisource_d3fsn9xz/strings.sol.test.multiconcat(a: bytes, __arc4_count: bytes) -> bytes:
 multiconcat:
     proto 2 1
     txn NumAppArgs
@@ -4349,7 +4279,7 @@ multiconcat_ternary_false@4:
     b multiconcat_ternary_merge@5
 
 
-// /tmp/multisource_de3055kn/strings.sol.test.benchmark(text: bytes, seed: bytes) -> bytes:
+// /tmp/multisource_d3fsn9xz/strings.sol.test.benchmark(text: bytes, seed: bytes) -> bytes:
 benchmark:
     proto 2 1
     txn GroupIndex
@@ -4426,7 +4356,7 @@ benchmark_ternary_false@2:
     b benchmark_ternary_merge@3
 
 
-// /tmp/multisource_de3055kn/strings.sol.test.__evm_npy() -> void:
+// /tmp/multisource_d3fsn9xz/strings.sol.test.__evm_npy() -> void:
 __evm_npy:
     txn GroupIndex
     bz __evm_npy_ternary_false@2
@@ -4445,7 +4375,7 @@ __evm_npy_ternary_false@2:
     b __evm_npy_ternary_merge@3
 
 
-// /tmp/multisource_de3055kn/strings.sol.test.__evm_decw(__off: uint64) -> bytes:
+// /tmp/multisource_d3fsn9xz/strings.sol.test.__evm_decw(__off: uint64) -> bytes:
 __evm_decw:
     proto 1 1
     frame_dig -1
@@ -4462,7 +4392,22 @@ __evm_decw:
     retsub
 
 
-// /tmp/multisource_de3055kn/strings.sol.test.__evm_ret0(__v: bytes) -> void:
+// /tmp/multisource_d3fsn9xz/strings.sol.test.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_3 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    retsub
+
+
+// /tmp/multisource_d3fsn9xz/strings.sol.test.__evm_ret0(__v: bytes) -> void:
 __evm_ret0:
     proto 1 0
     intc_0 // 32

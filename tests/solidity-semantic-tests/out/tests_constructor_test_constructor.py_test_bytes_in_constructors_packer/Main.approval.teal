@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/bytes_in_constructors_packer.sol.Main.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x151f7c75 "m_s" 0x "__ctor_pending" "m_x" 0xff3b09c8
+    bytecblock 0x151f7c75 "m_s" "__ctor_pending" "m_x" 0xff3b09c8
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -48,7 +48,7 @@ main_after_if_else@9:
     txn ApplicationID
     assert
     pushbytes 0xd7fd1ca3 // method "__postInit(byte[],uint256)void"
-    bytec 5 // method "f(byte[])byte[]"
+    bytec 4 // method "f(byte[])byte[]"
     pushbytess 0xce7531ad 0xe73cd39c // method "m_x()uint256", method "part(uint256)byte[1]"
     txna ApplicationArgs 0
     match main___postInit_route@12 main_f_route@13 main_m_x_route@14 main_part_route@15
@@ -122,26 +122,26 @@ main___postInit_route@12:
     intc_0 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
-    bytec_3 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_3 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_2 // 0
     app_global_put
     bytec_1 // "m_s"
     intc_2 // 0
     box_create
     pop
-    bytec 4 // "m_x"
-    bytec_2 // 0x
+    bytec_3 // "m_x"
+    pushbytes 0x
     app_global_put
     swap
     callsub f
-    bytec 4 // "m_x"
+    bytec_3 // "m_x"
     uncover 2
     app_global_put
     bytec_1 // "m_s"
@@ -198,28 +198,14 @@ main_switch_case_1@6:
 main_switch_case_0@5:
     callsub __evm_npy
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_2 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_2 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     pushint 65535
     <=
@@ -281,7 +267,7 @@ f:
     txn NumAppArgs
     bz f_after_if_else@6
     txna ApplicationArgs 0
-    bytec 5 // method "f(byte[])byte[]"
+    bytec 4 // method "f(byte[])byte[]"
     ==
     bz f_after_if_else@6
     txn GroupIndex
@@ -317,9 +303,9 @@ m_x_ternary_merge@3:
     !
     assert // not payable
     intc_2 // 0
-    bytec 4 // "m_x"
+    bytec_3 // "m_x"
     app_global_get_ex
-    bytec_2 // 0x
+    pushbytes 0x
     cover 2
     select
     dup
@@ -407,4 +393,19 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/bytes_in_constructors_packer.sol.Main.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
     retsub

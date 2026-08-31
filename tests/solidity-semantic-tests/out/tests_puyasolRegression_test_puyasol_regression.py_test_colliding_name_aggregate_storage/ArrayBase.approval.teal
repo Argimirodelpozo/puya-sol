@@ -156,28 +156,14 @@ main_switch_case_4@9:
 main_switch_case_3@8:
     callsub __evm_npy
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    pushbytes 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    pushbytes 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     pushint 65535
     <=
@@ -497,4 +483,19 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/colliding_name_aggregate_storage.sol.ArrayBase.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
     retsub

@@ -119,13 +119,7 @@ main_doTransfer_route@12:
 main_switch_case_2@7:
     callsub __evm_npy
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
+    callsub __evm_arga
     intc_0 // 32
     callsub __evm_decw
     dup
@@ -144,13 +138,7 @@ main_switch_case_2@7:
 main_switch_case_1@6:
     callsub __evm_npy
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
+    callsub __evm_arga
     intc_0 // 32
     callsub __evm_decw
     dup
@@ -169,13 +157,7 @@ main_switch_case_1@6:
 main_switch_case_0@5:
     callsub __evm_npy
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
+    callsub __evm_arga
     intc_0 // 32
     callsub __evm_decw
     dup
@@ -354,6 +336,20 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/amount_overflow_guard.sol.AmountOverflowGuard.__evm_arga(__off: uint64) -> bytes:
+__evm_arga:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
     retsub
 
 

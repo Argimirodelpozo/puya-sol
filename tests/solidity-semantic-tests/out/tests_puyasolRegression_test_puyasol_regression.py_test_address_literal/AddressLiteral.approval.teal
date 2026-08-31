@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/address_literal.sol.AddressLiteral.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 12
+    intcblock 1 0 32 20
     bytecblock 0x151f7c75 "router" 0x0000000000000000000000000000000000000000000000000000000000000000 0x00
     pushint 4096
     bzero
@@ -164,13 +164,7 @@ main_switch_case_7@12:
 main_switch_case_6@11:
     callsub __evm_npy
     intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    intc_3 // 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
+    callsub __evm_arga
     callsub setRouter
     bytec_0 // 0x151f7c75
     log
@@ -197,13 +191,7 @@ main_switch_case_5@10:
 main_switch_case_4@9:
     callsub __evm_npy
     intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    intc_3 // 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
+    callsub __evm_arga
     callsub eqDead
     callsub __evm_ret1
     intc_0 // 1
@@ -226,13 +214,7 @@ main_switch_case_2@7:
 main_switch_case_1@6:
     callsub __evm_npy
     intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    intc_3 // 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
+    callsub __evm_arga
     callsub isRouter
     callsub __evm_ret1
     intc_0 // 1
@@ -477,6 +459,20 @@ __evm_decw:
     retsub
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/address_literal.sol.AddressLiteral.__evm_arga(__off: uint64) -> bytes:
+__evm_arga:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    retsub
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/address_literal.sol.AddressLiteral.__evm_ret0(__v: bytes) -> void:
 __evm_ret0:
     proto 1 0
@@ -484,11 +480,11 @@ __evm_ret0:
     bzero
     frame_dig -1
     len
-    pushint 20
+    intc_3 // 20
     -
     frame_dig -1
     swap
-    pushint 20
+    intc_3 // 20
     extract3
     concat
     dup

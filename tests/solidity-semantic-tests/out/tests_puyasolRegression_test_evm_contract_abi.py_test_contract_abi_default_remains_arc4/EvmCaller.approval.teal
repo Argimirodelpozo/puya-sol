@@ -83,14 +83,6 @@ main_switch_case_0@5:
 main_ternary_merge@15:
     !
     assert // not payable
-    intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
     intc_0 // 32
     callsub __evm_decw
     dup
@@ -101,11 +93,17 @@ main_ternary_merge@15:
     assert // invalid EVM ABI unsigned integer padding
     intc_0 // 32
     bzero
-    swap
+    intc_2 // 0
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    uncover 2
     pushint 24
     extract_uint64
-    uncover 2
-    swap
     callsub forward
     itob
     concat

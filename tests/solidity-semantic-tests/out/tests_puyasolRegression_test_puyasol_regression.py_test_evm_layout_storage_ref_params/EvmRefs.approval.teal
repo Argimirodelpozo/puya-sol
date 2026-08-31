@@ -668,28 +668,14 @@ main_switch_case_5@10:
 main_switch_case_4@9:
     callsub __evm_npy
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc 4 // 65535
     <=
@@ -750,28 +736,14 @@ main_switch_case_1@6:
 main_switch_case_0@5:
     callsub __evm_npy
     intc_2 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc 4 // 65535
     <=
@@ -2165,6 +2137,21 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_storage_layout_refs.sol.EvmRefs.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    bytec_1 // 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
     retsub
 
 

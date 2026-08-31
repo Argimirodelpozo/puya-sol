@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_to_mapping.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1 2 65535
-    bytecblock "s" 0x 0x151f7c75 0x00060008000000000000 "__ctor_pending" 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502 0x0ffa993b5c47bfc6b7c2b2b8ee09d01ac715a33caa91878b0daaafd68753f964 0xba6cc55c93b5e52160529d54e203fa370297082d2f38f67608ea49fb60c11f4f 0x675a0ee62580be893d086a3f5e65bdf5db5399b9434f5ae41e11b399b3a3dbe7
+    bytecblock "s" 0x151f7c75 0x00060008000000000000 "__ctor_pending" 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502 0x0ffa993b5c47bfc6b7c2b2b8ee09d01ac715a33caa91878b0daaafd68753f964 0xba6cc55c93b5e52160529d54e203fa370297082d2f38f67608ea49fb60c11f4f 0x675a0ee62580be893d086a3f5e65bdf5db5399b9434f5ae41e11b399b3a3dbe7
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_2 // 1
     app_global_put
     intc_2 // 1
@@ -93,7 +93,7 @@ main_from_calldata_route@20:
     assert // invalid number of bytes for S
     callsub from_calldata
     pop
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -102,7 +102,7 @@ main_from_calldata_route@20:
 
 main_from_memory_route@19:
     callsub from_memory
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -111,7 +111,7 @@ main_from_memory_route@19:
 
 main_from_storage_route@18:
     callsub from_storage
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -120,7 +120,7 @@ main_from_storage_route@18:
 
 main_from_state_route@17:
     callsub from_state
-    bytec_2 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -128,14 +128,14 @@ main_from_state_route@17:
     return
 
 main___postInit_route@16:
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec 4 // "__ctor_pending"
+    bytec_3 // "__ctor_pending"
     intc_1 // 0
     app_global_put
     pushbytes "m"
@@ -144,7 +144,7 @@ main___postInit_route@16:
     pop
     bytec_0 // "s"
     box_get
-    bytec_3 // 0x00060008000000000000
+    bytec_2 // 0x00060008000000000000
     cover 2
     select
     dup
@@ -213,28 +213,14 @@ main___postInit_route@16:
 main_switch_case_3@8:
     callsub __evm_npy
     intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dupn 2
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -243,14 +229,7 @@ main_switch_case_3@8:
     dig 1
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     cover 4
     dup
@@ -270,14 +249,7 @@ main_switch_case_3@8:
     dup
     intc_0 // 32
     +
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
@@ -285,14 +257,7 @@ main_switch_case_3@8:
     assert // unaligned EVM ABI offset
     +
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     cover 2
     intc 4 // 65535
@@ -444,13 +409,13 @@ from_state_ternary_merge@3:
     assert // not payable
     bytec_0 // "s"
     box_get
-    bytec_3 // 0x00060008000000000000
+    bytec_2 // 0x00060008000000000000
     cover 2
     select
-    bytec 5 // 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502
+    bytec 4 // 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502
     box_del
     pop
-    bytec 5 // 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502
+    bytec 4 // 0xa056bee98351488fc927bcfd7931d5d3f98d9656632ba627cd238c2213c75502
     dig 1
     box_put
     retsub
@@ -474,13 +439,13 @@ from_storage_ternary_merge@3:
     assert // not payable
     bytec_0 // "s"
     box_get
-    bytec_3 // 0x00060008000000000000
+    bytec_2 // 0x00060008000000000000
     cover 2
     select
-    bytec 6 // 0x0ffa993b5c47bfc6b7c2b2b8ee09d01ac715a33caa91878b0daaafd68753f964
+    bytec 5 // 0x0ffa993b5c47bfc6b7c2b2b8ee09d01ac715a33caa91878b0daaafd68753f964
     box_del
     pop
-    bytec 6 // 0x0ffa993b5c47bfc6b7c2b2b8ee09d01ac715a33caa91878b0daaafd68753f964
+    bytec 5 // 0x0ffa993b5c47bfc6b7c2b2b8ee09d01ac715a33caa91878b0daaafd68753f964
     dig 1
     box_put
     retsub
@@ -504,13 +469,13 @@ from_memory_ternary_merge@3:
     assert // not payable
     bytec_0 // "s"
     box_get
-    bytec_3 // 0x00060008000000000000
+    bytec_2 // 0x00060008000000000000
     cover 2
     select
-    bytec 7 // 0xba6cc55c93b5e52160529d54e203fa370297082d2f38f67608ea49fb60c11f4f
+    bytec 6 // 0xba6cc55c93b5e52160529d54e203fa370297082d2f38f67608ea49fb60c11f4f
     box_del
     pop
-    bytec 7 // 0xba6cc55c93b5e52160529d54e203fa370297082d2f38f67608ea49fb60c11f4f
+    bytec 6 // 0xba6cc55c93b5e52160529d54e203fa370297082d2f38f67608ea49fb60c11f4f
     dig 1
     box_put
     retsub
@@ -533,10 +498,10 @@ from_calldata:
 from_calldata_ternary_merge@3:
     !
     assert // not payable
-    bytec 8 // 0x675a0ee62580be893d086a3f5e65bdf5db5399b9434f5ae41e11b399b3a3dbe7
+    bytec 7 // 0x675a0ee62580be893d086a3f5e65bdf5db5399b9434f5ae41e11b399b3a3dbe7
     box_del
     pop
-    bytec 8 // 0x675a0ee62580be893d086a3f5e65bdf5db5399b9434f5ae41e11b399b3a3dbe7
+    bytec 7 // 0x675a0ee62580be893d086a3f5e65bdf5db5399b9434f5ae41e11b399b3a3dbe7
     frame_dig -1
     box_put
     frame_dig -1
@@ -584,10 +549,25 @@ __evm_decw:
     retsub
 
 
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_to_mapping.sol.C.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
+    retsub
+
+
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/copy_to_mapping.sol.C.__evm_ret0(__v: bytes) -> bytes:
 __evm_ret0:
     proto 1 1
-    bytec_1 // 0x
+    pushbytes 0x
     frame_dig -1
     intc_3 // 2
     extract_uint16

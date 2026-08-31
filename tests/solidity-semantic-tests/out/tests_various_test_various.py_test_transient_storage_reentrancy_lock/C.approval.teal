@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/transient_storage_reentrancy_lock.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 1 32 12
+    intcblock 0 1 32
     bytecblock 0x6fa91285 0x151f7c75 0x01
     pushint 4096
     bzero
@@ -86,13 +86,7 @@ main_test_route@11:
 main_switch_case_1@6:
     callsub __evm_npy
     intc_0 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    intc_3 // 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
+    callsub __evm_arga
     callsub reentrantCall
     bytec_1 // 0x151f7c75
     log
@@ -101,20 +95,15 @@ main_switch_case_1@6:
 
 main_switch_case_0@5:
     callsub __evm_npy
-    intc_0 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    intc_3 // 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
     intc_2 // 32
     callsub __evm_decw
     dup
     bytec_2 // 0x01
     b<=
     assert // invalid EVM ABI bool
+    intc_0 // 0
+    callsub __evm_arga
+    swap
     pushint 24
     extract_uint64
     intc_0 // 0
@@ -242,4 +231,18 @@ __evm_decw:
     frame_dig -1
     intc_2 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/transient_storage_reentrancy_lock.sol.C.__evm_arga(__off: uint64) -> bytes:
+__evm_arga:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
     retsub

@@ -251,14 +251,6 @@ main_switch_case_0@5:
 main_ternary_merge@8:
     ==
     assert // invalid EVM ABI signed integer padding
-    pushint 64
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
     pushint 96
     callsub __evm_decw
     dup
@@ -268,7 +260,7 @@ main_ternary_merge@8:
     intc_0 // 32
     bzero
     dup
-    cover 3
+    cover 2
     intc_1 // 0
     callsub __evm_decw
     dup
@@ -281,7 +273,7 @@ main_ternary_merge@8:
     intc_2 // 16
     bzero
     dup
-    uncover 7
+    uncover 6
     concat
     dup
     len
@@ -295,7 +287,15 @@ main_ternary_merge@8:
     <=
     assert // overflow
     b|
-    uncover 3
+    pushint 64
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    uncover 4
     pushint 24
     extract_uint64
     intc_1 // 0
@@ -304,9 +304,10 @@ main_ternary_merge@8:
     intc_1 // 0
     uncover 2
     setbit
-    cover 2
-    concat
     uncover 3
+    uncover 3
+    concat
+    uncover 2
     concat
     swap
     concat

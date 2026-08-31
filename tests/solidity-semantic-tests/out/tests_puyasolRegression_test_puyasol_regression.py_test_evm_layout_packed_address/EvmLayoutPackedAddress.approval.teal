@@ -231,17 +231,10 @@ main_switch_case_4@9:
 
 main_switch_case_3@8:
     callsub __evm_npy
-    intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
     intc_0 // 32
     bzero
-    swap
+    intc_1 // 0
+    callsub __evm_arga
     callsub configs
     dig 2
     len
@@ -293,17 +286,10 @@ main_switch_case_3@8:
 
 main_switch_case_2@7:
     callsub __evm_npy
-    intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
     intc_0 // 32
     bzero
-    swap
+    intc_1 // 0
+    callsub __evm_arga
     callsub roundTrip
     dig 2
     len
@@ -355,14 +341,6 @@ main_switch_case_2@7:
 
 main_switch_case_1@6:
     callsub __evm_npy
-    intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
     intc_0 // 32
     callsub __evm_decw
     dup
@@ -377,10 +355,12 @@ main_switch_case_1@6:
     bytec_0 // 0x01
     b<=
     assert // invalid EVM ABI bool
-    swap
+    intc_1 // 0
+    callsub __evm_arga
+    uncover 2
     pushint 24
     extract_uint64
-    swap
+    uncover 2
     pushint 24
     extract_uint64
     intc_1 // 0
@@ -393,23 +373,6 @@ main_switch_case_1@6:
 
 main_switch_case_0@5:
     callsub __evm_npy
-    intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    swap
-    dig 1
-    ==
-    assert // invalid EVM ABI address padding
-    intc_0 // 32
-    callsub __evm_decw
-    dup
-    extract 0 12
-    uncover 2
-    ==
-    assert // invalid EVM ABI address padding
     pushint 64
     callsub __evm_decw
     dup
@@ -424,10 +387,14 @@ main_switch_case_0@5:
     bytec_0 // 0x01
     b<=
     assert // invalid EVM ABI bool
-    swap
+    intc_1 // 0
+    callsub __evm_arga
+    intc_0 // 32
+    callsub __evm_arga
+    uncover 3
     pushint 24
     extract_uint64
-    swap
+    uncover 3
     pushint 24
     extract_uint64
     intc_1 // 0
@@ -1128,4 +1095,18 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_layout_packed_address.sol.EvmLayoutPackedAddress.__evm_arga(__off: uint64) -> bytes:
+__evm_arga:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
     retsub

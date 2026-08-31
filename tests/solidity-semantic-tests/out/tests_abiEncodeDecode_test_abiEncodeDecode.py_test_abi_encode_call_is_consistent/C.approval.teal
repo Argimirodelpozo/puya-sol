@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_is_consistent.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32 2
-    bytecblock 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000 0x 0x33d85810d50c8672 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000 "sideEffectRan" "fPointer" "xstor" 0x172b55f3 0x87b3184a 0xce316b93 0xd38dceec 0x61e7ca43 0x00f784fc 0x692353b1 0xf96c0244 0xa326be91
+    bytecblock 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000 0x33d85810d50c8672 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000 "sideEffectRan" "fPointer" "xstor" 0x172b55f3 0x87b3184a 0xce316b93 0xd38dceec 0x61e7ca43 0x00f784fc 0x692353b1 0xf96c0244 0xa326be91
     pushint 4096
     bzero
     dup
@@ -24,14 +24,14 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 6 // "sideEffectRan"
+    bytec 5 // "sideEffectRan"
     intc_1 // 0
     app_global_put
-    bytec 7 // "fPointer"
+    bytec 6 // "fPointer"
     pushbytes 0x00000000000000000000000000000000
     app_global_put
-    bytec 8 // "xstor"
-    bytec_3 // 0x
+    bytec 7 // "xstor"
+    pushbytes 0x
     app_global_put
     intc_0 // 1
     return
@@ -54,15 +54,15 @@ main_after_if_else@16:
     txn ApplicationID
     assert
     pushbytes 0xd50c8672 // method "fExternal(uint256,string)void"
-    bytec 9 // method "getExternalFunctionPointer()byte[16]"
-    bytec 10 // method "fSignatureFromLiteral()byte[]"
-    bytec 11 // method "fSignatureFromLiteralCall()byte[]"
-    bytec 12 // method "fSignatureFromMemory()byte[]"
-    bytec 13 // method "fSignatureFromMemoryCall()byte[]"
-    bytec 14 // method "fSignatureFromMemorys()byte[]"
-    bytec 15 // method "fPointerCall()byte[]"
-    bytec 16 // method "fLocalPointerCall()byte[]"
-    bytec 17 // method "fReturnedFunctionPointer()byte[]"
+    bytec 8 // method "getExternalFunctionPointer()byte[16]"
+    bytec 9 // method "fSignatureFromLiteral()byte[]"
+    bytec 10 // method "fSignatureFromLiteralCall()byte[]"
+    bytec 11 // method "fSignatureFromMemory()byte[]"
+    bytec 12 // method "fSignatureFromMemoryCall()byte[]"
+    bytec 13 // method "fSignatureFromMemorys()byte[]"
+    bytec 14 // method "fPointerCall()byte[]"
+    bytec 15 // method "fLocalPointerCall()byte[]"
+    bytec 16 // method "fReturnedFunctionPointer()byte[]"
     pushbytes 0xb2fd8e38 // method "assertConsistentSelectors()void"
     txna ApplicationArgs 0
     match main_fExternal_route@19 main_getExternalFunctionPointer_route@20 main_fSignatureFromLiteral_route@21 main_fSignatureFromLiteralCall_route@22 main_fSignatureFromMemory_route@23 main_fSignatureFromMemoryCall_route@24 main_fSignatureFromMemorys_route@25 main_fPointerCall_route@26 main_fLocalPointerCall_route@27 main_fReturnedFunctionPointer_route@28 main_assertConsistentSelectors_route@29
@@ -291,28 +291,14 @@ main_switch_case_1@6:
 main_switch_case_0@5:
     callsub __evm_npy
     intc_2 // 32
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_3 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_2 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_3 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     pushint 65535
     <=
@@ -375,7 +361,7 @@ getExternalFunctionPointer:
     txn NumAppArgs
     bz getExternalFunctionPointer_after_if_else@6
     txna ApplicationArgs 0
-    bytec 9 // method "getExternalFunctionPointer()byte[16]"
+    bytec 8 // method "getExternalFunctionPointer()byte[16]"
     ==
     bz getExternalFunctionPointer_after_if_else@6
     txn GroupIndex
@@ -390,12 +376,12 @@ getExternalFunctionPointer_ternary_merge@5:
     assert // not payable
 
 getExternalFunctionPointer_after_if_else@6:
-    bytec 6 // "sideEffectRan"
+    bytec 5 // "sideEffectRan"
     intc_0 // 1
     app_global_put
     global CurrentApplicationID
     itob
-    bytec 4 // 0x33d85810d50c8672
+    bytec_3 // 0x33d85810d50c8672
     concat
     retsub
 
@@ -409,7 +395,7 @@ fSignatureFromLiteral:
     txn NumAppArgs
     bz fSignatureFromLiteral_after_if_else@6
     txna ApplicationArgs 0
-    bytec 10 // method "fSignatureFromLiteral()byte[]"
+    bytec 9 // method "fSignatureFromLiteral()byte[]"
     ==
     bz fSignatureFromLiteral_after_if_else@6
     txn GroupIndex
@@ -437,7 +423,7 @@ fSignatureFromLiteralCall:
     txn NumAppArgs
     bz fSignatureFromLiteralCall_after_if_else@6
     txna ApplicationArgs 0
-    bytec 11 // method "fSignatureFromLiteralCall()byte[]"
+    bytec 10 // method "fSignatureFromLiteralCall()byte[]"
     ==
     bz fSignatureFromLiteralCall_after_if_else@6
     txn GroupIndex
@@ -465,7 +451,7 @@ fSignatureFromMemory:
     txn NumAppArgs
     bz fSignatureFromMemory_after_if_else@6
     txna ApplicationArgs 0
-    bytec 12 // method "fSignatureFromMemory()byte[]"
+    bytec 11 // method "fSignatureFromMemory()byte[]"
     ==
     bz fSignatureFromMemory_after_if_else@6
     txn GroupIndex
@@ -493,7 +479,7 @@ fSignatureFromMemoryCall:
     txn NumAppArgs
     bz fSignatureFromMemoryCall_after_if_else@6
     txna ApplicationArgs 0
-    bytec 13 // method "fSignatureFromMemoryCall()byte[]"
+    bytec 12 // method "fSignatureFromMemoryCall()byte[]"
     ==
     bz fSignatureFromMemoryCall_after_if_else@6
     txn GroupIndex
@@ -521,7 +507,7 @@ fSignatureFromMemorys:
     txn NumAppArgs
     bz fSignatureFromMemorys_after_if_else@6
     txna ApplicationArgs 0
-    bytec 14 // method "fSignatureFromMemorys()byte[]"
+    bytec 13 // method "fSignatureFromMemorys()byte[]"
     ==
     bz fSignatureFromMemorys_after_if_else@6
     txn GroupIndex
@@ -536,7 +522,7 @@ fSignatureFromMemorys_ternary_merge@5:
     assert // not payable
 
 fSignatureFromMemorys_after_if_else@6:
-    bytec 8 // "xstor"
+    bytec 7 // "xstor"
     pushbytes "fExternal(uint256,string)"
     app_global_put
     bytec_2 // 0x33d858100000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
@@ -552,7 +538,7 @@ fPointerCall:
     txn NumAppArgs
     bz fPointerCall_after_if_else@6
     txna ApplicationArgs 0
-    bytec 15 // method "fPointerCall()byte[]"
+    bytec 14 // method "fPointerCall()byte[]"
     ==
     bz fPointerCall_after_if_else@6
     txn GroupIndex
@@ -569,13 +555,13 @@ fPointerCall_ternary_merge@5:
 fPointerCall_after_if_else@6:
     global CurrentApplicationID
     itob
-    bytec 4 // 0x33d85810d50c8672
+    bytec_3 // 0x33d85810d50c8672
     concat
-    bytec 7 // "fPointer"
+    bytec 6 // "fPointer"
     dig 1
     app_global_put
     extract 8 4
-    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
     concat
     retsub
 
@@ -589,7 +575,7 @@ fLocalPointerCall:
     txn NumAppArgs
     bz fLocalPointerCall_after_if_else@6
     txna ApplicationArgs 0
-    bytec 16 // method "fLocalPointerCall()byte[]"
+    bytec 15 // method "fLocalPointerCall()byte[]"
     ==
     bz fLocalPointerCall_after_if_else@6
     txn GroupIndex
@@ -606,10 +592,10 @@ fLocalPointerCall_ternary_merge@5:
 fLocalPointerCall_after_if_else@6:
     global CurrentApplicationID
     itob
-    bytec 4 // 0x33d85810d50c8672
+    bytec_3 // 0x33d85810d50c8672
     concat
     extract 8 4
-    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
     concat
     retsub
 
@@ -623,7 +609,7 @@ fReturnedFunctionPointer:
     txn NumAppArgs
     bz fReturnedFunctionPointer_after_if_else@6
     txna ApplicationArgs 0
-    bytec 17 // method "fReturnedFunctionPointer()byte[]"
+    bytec 16 // method "fReturnedFunctionPointer()byte[]"
     ==
     bz fReturnedFunctionPointer_after_if_else@6
     txn GroupIndex
@@ -640,7 +626,7 @@ fReturnedFunctionPointer_ternary_merge@5:
 fReturnedFunctionPointer_after_if_else@6:
     callsub getExternalFunctionPointer
     extract 8 4
-    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
+    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000033132330000000000000000000000000000000000000000000000000000000000
     concat
     retsub
 
@@ -773,6 +759,21 @@ __evm_decw:
     frame_dig -1
     intc_2 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/abiEncodeDecode/contracts/abi_encode_call_is_consistent.sol.C.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
     retsub
 
 

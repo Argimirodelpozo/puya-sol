@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/storage_calldata_refs.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1 2
-    bytecblock "data" "__ctor_pending" 0x151f7c75 0x 0x0000 0x0001
+    bytecblock "data" "__ctor_pending" 0x151f7c75 0x0000 0x0001
     pushint 4096
     bzero
     dup
@@ -111,34 +111,20 @@ main_ternary_merge@22:
     !
     assert // not payable
     intc_0 // 32
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_3 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_3 // 0x
-    b==
-    assert // EVM ABI array length exceeds uint64
-    pushint 24
-    extract_uint64
+    callsub __evm_deco
     dup
     cover 2
     pushint 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
+    bytec_3 // 0x0000
     swap
     intc_0 // 32
     +
@@ -163,7 +149,7 @@ main_while_top@6:
     intc_0 // 32
     bzero
     b|
-    bytec 5 // 0x0001
+    bytec 4 // 0x0001
     swap
     concat
     dup
@@ -240,7 +226,7 @@ fun:
     proto 2 3
     frame_dig -1
     box_get
-    bytec 4 // 0x0000
+    bytec_3 // 0x0000
     cover 2
     select
     extract 2 32
@@ -262,7 +248,7 @@ f:
 f_ternary_merge@3:
     !
     assert // not payable
-    bytec 5 // 0x0001
+    bytec 4 // 0x0001
     frame_dig -2
     concat
     dup
@@ -346,4 +332,19 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/storage_calldata_refs.sol.C.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    pushint 24
+    extract_uint64
     retsub

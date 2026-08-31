@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/lowlevel_call_evm_calldata.sol.Caller.approval_program() -> uint64:
 main:
     intcblock 32 0 1 24
-    bytecblock 0x151f7c75 0x
+    bytecblock 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -112,13 +112,7 @@ main_callSet_route@12:
 main_switch_case_2@7:
     callsub __evm_npy
     intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
+    callsub __evm_arga
     intc_0 // 32
     callsub __evm_decw
     dup
@@ -137,37 +131,15 @@ main_switch_case_2@7:
 
 main_switch_case_1@6:
     callsub __evm_npy
-    intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
     intc_0 // 32
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI offset exceeds uint64
-    intc_3 // 24
-    extract_uint64
+    callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
     dup
-    callsub __evm_decw
-    dup
-    extract 0 24
-    bytec_1 // 0x
-    b==
-    assert // EVM ABI length exceeds uint64
-    intc_3 // 24
-    extract_uint64
+    callsub __evm_deco
     dup
     pushint 65535
     <=
@@ -184,12 +156,12 @@ main_switch_case_1@6:
     assert // EVM ABI decode out of bounds
     intc_0 // 32
     bzero
+    intc_1 // 0
+    callsub __evm_arga
     txna ApplicationArgs 1
-    uncover 2
     uncover 3
+    uncover 4
     extract3
-    uncover 2
-    swap
     callsub callTag
     concat
     dup
@@ -208,13 +180,7 @@ main_switch_case_1@6:
 main_switch_case_0@5:
     callsub __evm_npy
     intc_1 // 0
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
+    callsub __evm_arga
     intc_0 // 32
     callsub __evm_decw
     dup
@@ -426,4 +392,33 @@ __evm_decw:
     frame_dig -1
     intc_0 // 32
     extract3
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/lowlevel_call_evm_calldata.sol.Caller.__evm_deco(__off: uint64) -> uint64:
+__evm_deco:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 24
+    pushbytes 0x
+    b==
+    assert // EVM ABI offset exceeds uint64
+    intc_3 // 24
+    extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/lowlevel_call_evm_calldata.sol.Caller.__evm_arga(__off: uint64) -> bytes:
+__evm_arga:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
     retsub
