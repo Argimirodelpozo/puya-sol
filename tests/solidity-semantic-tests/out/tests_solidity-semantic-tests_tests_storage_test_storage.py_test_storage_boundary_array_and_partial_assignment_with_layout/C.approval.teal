@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock 0x 0x01 0x02 0x03 0x04 0x05 0x06 0x07 0x08 0x09 "a" 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
-    intc_2 // 0
-    dup
+    intcblock 32 1 0 10
+    bytecblock 0x 0x151f7c75 0x01 0x02 0x03 0x04 0x05 0x06 0x07 0x08 0x09 "a" 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
     pushint 4096
     bzero
     dup
@@ -26,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 10 // "a"
+    bytec 11 // "a"
     bytec_0 // 0x
     app_global_put
     intc_1 // 1
@@ -34,24 +32,617 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@14
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@14
+    pushbytess 0xf460473e 0x7d4cb2c3 0x9a2c301a 0xe80b7ab6 0x0c55699c
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9
+
+main_after_if_else@14:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x2bbf0199 0x8b47da4a 0x55a8717a 0x963090af 0x3e40144f // method "fillArray()void", method "partialAssignArrayBeforeStorageBoundary()void", method "partialAssignArrayCrossStorageBoundary()void", method "clearArray()void", method "x()uint256[10]"
     txna ApplicationArgs 0
-    match main_fillArray_route@5 main_partialAssignArrayBeforeStorageBoundary_route@6 main_partialAssignArrayCrossStorageBoundary_route@7 main_clearArray_route@8 main_x_route@9
+    match main_fillArray_route@17 main_partialAssignArrayBeforeStorageBoundary_route@18 main_partialAssignArrayCrossStorageBoundary_route@19 main_clearArray_route@20 main_x_route@21
     err
 
-main_x_route@9:
+main_x_route@21:
+    callsub x
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_clearArray_route@20:
+    callsub clearArray
+    intc_1 // 1
+    return
+
+main_partialAssignArrayCrossStorageBoundary_route@19:
+    callsub partialAssignArrayCrossStorageBoundary
+    intc_1 // 1
+    return
+
+main_partialAssignArrayBeforeStorageBoundary_route@18:
+    callsub partialAssignArrayBeforeStorageBoundary
+    intc_1 // 1
+    return
+
+main_fillArray_route@17:
+    callsub fillArray
+    intc_1 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    bytec_0 // 0x
+    intc_2 // 0
+
+main_while_top@10:
+    dup
+    intc_3 // 10
+    <
+    bz main_after_while@12
+    intc_0 // 32
+    bzero
+    callsub x
+    dig 2
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    intc_1 // 1
+    +
+    b main_while_top@10
+
+main_after_while@12:
+    pop
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_3@8:
+    callsub __evm_npy
+    callsub clearArray
+    bytec_1 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    callsub partialAssignArrayCrossStorageBoundary
+    bytec_1 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub partialAssignArrayBeforeStorageBoundary
+    bytec_1 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub fillArray
+    bytec_1 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol.C.__storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    frame_dig -1
+    bytec 13 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    bytec 12 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
+    b==
+    bz __storage_read_else_body@2
+    intc_0 // 32
+    bzero
+    intc_2 // 0
+    bytec 11 // "a"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    b|
+    extract 0 32
+    retsub
+
+__storage_read_else_body@2:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 14 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol.C.__storage_write(__slot: bytes, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    frame_dig -2
+    bytec 13 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    bytec 12 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
+    b==
+    bz __storage_write_else_body@2
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 11 // "a"
+    swap
+    app_global_put
+    retsub
+
+__storage_write_else_body@2:
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 14 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_2 // 0
+    swap
+    box_replace
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol.C.__solfn_19() -> bytes:
+__solfn_19:
+    load 0
+    store 0
+    load 0
+    store 0
+    bytec 12 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol.C.fillArray() -> void:
+fillArray:
+    proto 0 0
     txn GroupIndex
-    bz main_ternary_false@15
+    bz fillArray_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@16:
+fillArray_ternary_merge@3:
+    !
+    assert // not payable
+    callsub __solfn_19
+    intc_1 // 1
+    itob
+
+fillArray_while_top@4:
+    intc_3 // 10
+    itob
+    dig 1
+    b>
+    bz fillArray_after_while@6
+    dup
+    pushbytes 0x0a
+    b<
+    assert // array index out of bounds
+    dup2
+    b+
+    dig 1
+    callsub __storage_write
+    bytec_2 // 0x01
+    b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b fillArray_while_top@4
+
+fillArray_after_while@6:
+    retsub
+
+fillArray_ternary_false@2:
+    intc_2 // 0
+    b fillArray_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol.C.partialAssignArrayBeforeStorageBoundary() -> void:
+partialAssignArrayBeforeStorageBoundary:
+    txn GroupIndex
+    bz partialAssignArrayBeforeStorageBoundary_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+partialAssignArrayBeforeStorageBoundary_ternary_merge@3:
+    !
+    assert // not payable
+    callsub __solfn_19
+    pushint 224
+    bzero
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000b000000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000000d
+    swap
+    concat
+    intc_0 // 32
+    bzero
+    dig 1
+    extract 0 32 // on error: index access is out of bounds
+    dig 1
+    b|
+    extract 0 32
+    dig 3
+    swap
+    callsub __storage_write
+    dig 2
+    bytec_2 // 0x01
+    b+
+    dig 2
+    extract 32 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec_3 // 0x02
+    b+
+    dig 2
+    extract 64 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec 4 // 0x03
+    b+
+    dig 2
+    extract 96 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec 5 // 0x04
+    b+
+    dig 2
+    extract 128 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec 6 // 0x05
+    b+
+    dig 2
+    extract 160 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec 7 // 0x06
+    b+
+    dig 2
+    extract 192 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec 8 // 0x07
+    b+
+    dig 2
+    extract 224 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec 9 // 0x08
+    b+
+    dig 2
+    pushint 256
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    uncover 2
+    bytec 10 // 0x09
+    b+
+    uncover 2
+    pushint 288
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    uncover 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    retsub
+
+partialAssignArrayBeforeStorageBoundary_ternary_false@2:
+    intc_2 // 0
+    b partialAssignArrayBeforeStorageBoundary_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol.C.partialAssignArrayCrossStorageBoundary() -> void:
+partialAssignArrayCrossStorageBoundary:
+    txn GroupIndex
+    bz partialAssignArrayCrossStorageBoundary_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+partialAssignArrayCrossStorageBoundary_ternary_merge@3:
+    !
+    assert // not payable
+    callsub __solfn_19
+    pushint 96
+    bzero
+    pushbytes 0x000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000000f00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000011000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000130000000000000000000000000000000000000000000000000000000000000014
+    swap
+    concat
+    intc_0 // 32
+    bzero
+    dig 1
+    extract 0 32 // on error: index access is out of bounds
+    dig 1
+    b|
+    extract 0 32
+    dig 3
+    swap
+    callsub __storage_write
+    dig 2
+    bytec_2 // 0x01
+    b+
+    dig 2
+    extract 32 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec_3 // 0x02
+    b+
+    dig 2
+    extract 64 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec 4 // 0x03
+    b+
+    dig 2
+    extract 96 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec 5 // 0x04
+    b+
+    dig 2
+    extract 128 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec 6 // 0x05
+    b+
+    dig 2
+    extract 160 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec 7 // 0x06
+    b+
+    dig 2
+    extract 192 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec 8 // 0x07
+    b+
+    dig 2
+    extract 224 32 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    dig 2
+    bytec 9 // 0x08
+    b+
+    dig 2
+    pushint 256
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    dig 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    uncover 2
+    bytec 10 // 0x09
+    b+
+    uncover 2
+    pushint 288
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    uncover 2
+    b|
+    extract 0 32
+    callsub __storage_write
+    retsub
+
+partialAssignArrayCrossStorageBoundary_ternary_false@2:
+    intc_2 // 0
+    b partialAssignArrayCrossStorageBoundary_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol.C.clearArray() -> void:
+clearArray:
+    txn GroupIndex
+    bz clearArray_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+clearArray_ternary_merge@3:
+    !
+    assert // not payable
+    callsub __solfn_19
+    dup
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    bytec_2 // 0x01
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    bytec_3 // 0x02
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    bytec 4 // 0x03
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    bytec 5 // 0x04
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    bytec 6 // 0x05
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    bytec 7 // 0x06
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    bytec 8 // 0x07
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    bytec 9 // 0x08
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    bytec 10 // 0x09
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    retsub
+
+clearArray_ternary_false@2:
+    intc_2 // 0
+    b clearArray_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol.C.x() -> bytes:
+x:
+    txn GroupIndex
+    bz x_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@3:
     !
     assert // not payable
     load 0
@@ -66,7 +657,7 @@ main_ternary_merge@16:
     concat
     replace2 64
     store 0
-    callsub getArray
+    callsub __solfn_19
     dup
     callsub __storage_read
     dup
@@ -80,7 +671,7 @@ main_ternary_merge@16:
     dig 1
     b|
     dig 2
-    bytec_1 // 0x01
+    bytec_2 // 0x01
     b+
     callsub __storage_read
     dup
@@ -91,7 +682,7 @@ main_ternary_merge@16:
     dig 2
     b|
     dig 3
-    bytec_2 // 0x02
+    bytec_3 // 0x02
     b+
     callsub __storage_read
     dup
@@ -102,7 +693,7 @@ main_ternary_merge@16:
     dig 3
     b|
     dig 4
-    bytec_3 // 0x03
+    bytec 4 // 0x03
     b+
     callsub __storage_read
     dup
@@ -113,7 +704,7 @@ main_ternary_merge@16:
     dig 4
     b|
     dig 5
-    bytec 4 // 0x04
+    bytec 5 // 0x04
     b+
     callsub __storage_read
     dup
@@ -124,7 +715,7 @@ main_ternary_merge@16:
     dig 5
     b|
     dig 6
-    bytec 5 // 0x05
+    bytec 6 // 0x05
     b+
     callsub __storage_read
     dup
@@ -135,7 +726,7 @@ main_ternary_merge@16:
     dig 6
     b|
     dig 7
-    bytec 6 // 0x06
+    bytec 7 // 0x06
     b+
     callsub __storage_read
     dup
@@ -146,7 +737,7 @@ main_ternary_merge@16:
     dig 7
     b|
     dig 8
-    bytec 7 // 0x07
+    bytec 8 // 0x07
     b+
     callsub __storage_read
     dup
@@ -157,7 +748,7 @@ main_ternary_merge@16:
     dig 8
     b|
     dig 9
-    bytec 8 // 0x08
+    bytec 9 // 0x08
     b+
     callsub __storage_read
     dup
@@ -168,7 +759,7 @@ main_ternary_merge@16:
     dig 9
     b|
     uncover 10
-    bytec 9 // 0x09
+    bytec 10 // 0x09
     b+
     callsub __storage_read
     dup
@@ -197,375 +788,27 @@ main_ternary_merge@16:
     concat
     swap
     concat
-    pushbytes 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@15:
+x_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@16
+    b x_ternary_merge@3
 
-main_clearArray_route@8:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol.C.__evm_npy() -> void:
+__evm_npy:
     txn GroupIndex
-    bz main_ternary_false@20
+    bz __evm_npy_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+__evm_npy_ternary_merge@3:
     !
     assert // not payable
-    callsub getArray
-    dup
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec_1 // 0x01
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec_2 // 0x02
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec_3 // 0x03
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec 4 // 0x04
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec 5 // 0x05
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec 6 // 0x06
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec 7 // 0x07
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec 8 // 0x08
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    bytec 9 // 0x09
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    intc_1 // 1
-    return
-
-main_ternary_false@20:
-    intc_2 // 0
-    b main_ternary_merge@21
-
-main_partialAssignArrayCrossStorageBoundary_route@7:
-    txn GroupIndex
-    bz main_ternary_false@25
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@26:
-    !
-    assert // not payable
-    callsub getArray
-    dup
-    pushbytes 0x0e
-    callsub __storage_write
-    dup
-    bytec_1 // 0x01
-    b+
-    pushbytes 0x0f
-    callsub __storage_write
-    dup
-    bytec_2 // 0x02
-    b+
-    pushbytes 0x10
-    callsub __storage_write
-    dup
-    bytec_3 // 0x03
-    b+
-    pushbytes 0x11
-    callsub __storage_write
-    dup
-    bytec 4 // 0x04
-    b+
-    pushbytes 0x12
-    callsub __storage_write
-    dup
-    bytec 5 // 0x05
-    b+
-    pushbytes 0x13
-    callsub __storage_write
-    dup
-    bytec 6 // 0x06
-    b+
-    pushbytes 0x14
-    callsub __storage_write
-    dup
-    bytec 7 // 0x07
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec 8 // 0x08
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    bytec 9 // 0x09
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    intc_1 // 1
-    return
-
-main_ternary_false@25:
-    intc_2 // 0
-    b main_ternary_merge@26
-
-main_partialAssignArrayBeforeStorageBoundary_route@6:
-    txn GroupIndex
-    bz main_ternary_false@30
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@31:
-    !
-    assert // not payable
-    callsub getArray
-    dup
-    pushbytes 0x0b
-    callsub __storage_write
-    dup
-    bytec_1 // 0x01
-    b+
-    pushbytes 0x0c
-    callsub __storage_write
-    dup
-    bytec_2 // 0x02
-    b+
-    pushbytes 0x0d
-    callsub __storage_write
-    dup
-    bytec_3 // 0x03
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec 4 // 0x04
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec 5 // 0x05
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec 6 // 0x06
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec 7 // 0x07
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec 8 // 0x08
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    bytec 9 // 0x09
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    intc_1 // 1
-    return
-
-main_ternary_false@30:
-    intc_2 // 0
-    b main_ternary_merge@31
-
-main_fillArray_route@5:
-    txn GroupIndex
-    bz main_ternary_false@35
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@36:
-    !
-    assert // not payable
-    callsub getArray
-    bury 2
-    intc_1 // 1
-    itob
-    bury 1
-
-main_while_top@37:
-    pushint 10
-    itob
-    dig 1
-    b>
-    bz main_after_while@39
-    dup2
-    dup
-    cover 2
-    b+
-    dig 1
-    callsub __storage_write
-    bytec_1 // 0x01
-    b+
-    dup
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
-    assert // overflow
-    bury 1
-    b main_while_top@37
-
-main_after_while@39:
-    intc_1 // 1
-    return
-
-main_ternary_false@35:
-    intc_2 // 0
-    b main_ternary_merge@36
-
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    frame_dig -1
-    bytec 12 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    bytec 11 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
-    b==
-    bz __storage_read_else_body@2
-    intc_0 // 32
-    bzero
-    bytec 10 // "a"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
     retsub
 
-__storage_read_else_body@2:
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 13 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
+__evm_npy_ternary_false@2:
     intc_2 // 0
-    intc_0 // 32
-    box_extract
-    retsub
-
-
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
-__storage_write:
-    proto 2 0
-    frame_dig -2
-    bytec 12 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -2
-    bytec 11 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
-    b==
-    bz __storage_write_else_body@2
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 10 // "a"
-    swap
-    app_global_put
-    retsub
-
-__storage_write_else_body@2:
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 13 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
-    swap
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_2 // 0
-    swap
-    box_replace
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_and_partial_assignment_with_layout.sol.C.getArray() -> bytes:
-getArray:
-    load 0
-    store 0
-    load 0
-    store 0
-    bytec 11 // 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
-    retsub
+    b __evm_npy_ternary_merge@3

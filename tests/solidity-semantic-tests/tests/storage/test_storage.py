@@ -45,7 +45,15 @@ def test_accessors_mapping_for_array(harness):
 
 def test_array_accessor(harness):
     """storage/contracts/array_accessor.sol"""
-    app = harness.compile_and_deploy('storage/contracts/array_accessor.sol', postinit_budget_pool=4)
+    # Slot mode's ctor (128 packed uint24 elements + nested-mapping writes)
+    # costs >10.4k opcodes — past the ~11k group-pooling ceiling. Inner-txn
+    # opups (--ensure-budget) reach ~180k; postinit_inner_txns covers their
+    # fees. Default mode just issues fewer opups (ensure_budget tops up only
+    # the shortfall).
+    app = harness.compile_and_deploy(
+        'storage/contracts/array_accessor.sol',
+        ensure_budget={"__postInit": 20_000},
+        postinit_budget_pool=4, postinit_inner_txns=30)
     r = harness.call(app, 'data(uint256)', 0)
     assert as_int(r.abi_return) == 8
     r = harness.call(app, 'data(uint256)', 8, expect_revert=True)

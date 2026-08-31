@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete_overlapping_variable.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0
-    bytecblock 0x "y" 0x01 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
-    intc_2 // 0
-    dup
+    intcblock 32 1 0 10
+    bytecblock 0x 0x151f7c75 "y" 0x01 0x010000000000000000000000000000000000000000000000000000000000000000 "s:"
     pushint 4096
     bzero
     dup
@@ -28,7 +26,7 @@ main:
     bnz main_after_if_else@2
     pushint 42
     itob
-    bytec_1 // "y"
+    bytec_2 // "y"
     swap
     app_global_put
     intc_1 // 1
@@ -36,58 +34,379 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
+    bnz main_after_if_else@13
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@13
+    pushbytess 0xf460473e 0xe80b7ab6 0x0c55699c 0xa56dfe4a
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@11
+
+main_after_if_else@13:
+    txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
     pushbytess 0x2bbf0199 0x963090af 0x3e40144f 0x5c5e3bbc // method "fillArray()void", method "clearArray()void", method "x()uint256[10]", method "y()uint256"
     txna ApplicationArgs 0
-    match main_fillArray_route@5 main_clearArray_route@6 main_x_route@7 main_y_route@8
+    match main_fillArray_route@16 main_clearArray_route@17 main_x_route@18 main_y_route@19
     err
 
-main_y_route@8:
-    txn GroupIndex
-    bz main_ternary_false@14
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@15:
-    !
-    assert // not payable
-    intc_2 // 0
-    bytec_1 // "y"
-    app_global_get_ex
-    assert // check y exists
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec_3 // 0x151f7c75
+main_y_route@19:
+    callsub y
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_ternary_false@14:
-    intc_2 // 0
-    b main_ternary_merge@15
+main_x_route@18:
+    callsub x
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
 
-main_x_route@7:
+main_clearArray_route@17:
+    callsub clearArray
+    intc_1 // 1
+    return
+
+main_fillArray_route@16:
+    callsub fillArray
+    intc_1 // 1
+    return
+
+main_switch_case_3@11:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub y
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    callsub __evm_npy
+    bytec_0 // 0x
+    intc_2 // 0
+
+main_while_top@8:
+    dup
+    intc_3 // 10
+    <
+    bz main_after_while@10
+    intc_0 // 32
+    bzero
+    callsub x
+    dig 2
+    intc_0 // 32
+    *
+    intc_0 // 32
+    extract3 // on error: index access is out of bounds
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    concat
+    swap
+    intc_1 // 1
+    +
+    b main_while_top@8
+
+main_after_while@10:
+    pop
+    bytec_1 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    callsub clearArray
+    bytec_1 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub fillArray
+    bytec_1 // 0x151f7c75
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete_overlapping_variable.sol.C.__storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    frame_dig -1
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    bytec_0 // 0x
+    b==
+    bz __storage_read_else_body@2
+    intc_0 // 32
+    bzero
+    intc_2 // 0
+    bytec_2 // "y"
+    app_global_get_ex
+    bytec_0 // 0x
+    cover 2
+    select
+    b|
+    extract 0 32
+    retsub
+
+__storage_read_else_body@2:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    intc_2 // 0
+    intc_0 // 32
+    box_extract
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete_overlapping_variable.sol.C.__storage_write(__slot: bytes, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    frame_dig -2
+    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    bytec_0 // 0x
+    b==
+    bz __storage_write_else_body@2
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_2 // "y"
+    swap
+    app_global_put
+    retsub
+
+__storage_write_else_body@2:
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_2 // 0
+    swap
+    box_replace
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete_overlapping_variable.sol.C.__solfn_14() -> bytes:
+__solfn_14:
+    load 0
+    store 0
+    load 0
+    store 0
+    pushbytes 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete_overlapping_variable.sol.C.fillArray() -> void:
+fillArray:
+    proto 0 0
     txn GroupIndex
-    bz main_ternary_false@19
+    bz fillArray_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@20:
+fillArray_ternary_merge@3:
+    !
+    assert // not payable
+    callsub __solfn_14
+    intc_1 // 1
+    itob
+
+fillArray_while_top@4:
+    intc_3 // 10
+    itob
+    dig 1
+    b>
+    bz fillArray_after_while@6
+    dup
+    pushbytes 0x0a
+    b<
+    assert // array index out of bounds
+    dup2
+    b+
+    dig 1
+    callsub __storage_write
+    bytec_3 // 0x01
+    b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    b fillArray_while_top@4
+
+fillArray_after_while@6:
+    retsub
+
+fillArray_ternary_false@2:
+    intc_2 // 0
+    b fillArray_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete_overlapping_variable.sol.C.clearArray() -> void:
+clearArray:
+    txn GroupIndex
+    bz clearArray_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+clearArray_ternary_merge@3:
+    !
+    assert // not payable
+    callsub __solfn_14
+    dup
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    pushbytes 0x02
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    pushbytes 0x03
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    pushbytes 0x04
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    pushbytes 0x05
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    pushbytes 0x06
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    pushbytes 0x07
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    dup
+    pushbytes 0x08
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    pushbytes 0x09
+    b+
+    bytec_0 // 0x
+    callsub __storage_write
+    retsub
+
+clearArray_ternary_false@2:
+    intc_2 // 0
+    b clearArray_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete_overlapping_variable.sol.C.x() -> bytes:
+x:
+    txn GroupIndex
+    bz x_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+x_ternary_merge@3:
     !
     assert // not payable
     load 0
@@ -102,7 +421,7 @@ main_ternary_merge@20:
     concat
     replace2 64
     store 0
-    callsub getArray
+    callsub __solfn_14
     dup
     callsub __storage_read
     dup
@@ -116,7 +435,7 @@ main_ternary_merge@20:
     dig 1
     b|
     dig 2
-    bytec_2 // 0x01
+    bytec_3 // 0x01
     b+
     callsub __storage_read
     dup
@@ -233,243 +552,60 @@ main_ternary_merge@20:
     concat
     swap
     concat
-    bytec_3 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
+    retsub
 
-main_ternary_false@19:
+x_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@20
+    b x_ternary_merge@3
 
-main_clearArray_route@6:
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete_overlapping_variable.sol.C.y() -> bytes:
+y:
     txn GroupIndex
-    bz main_ternary_false@24
+    bz y_ternary_false@2
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@25:
+y_ternary_merge@3:
     !
     assert // not payable
-    callsub getArray
-    dup
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    bytec_2 // 0x01
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    pushbytes 0x02
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    pushbytes 0x03
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    pushbytes 0x04
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    pushbytes 0x05
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    pushbytes 0x06
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    pushbytes 0x07
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    dup
-    pushbytes 0x08
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    pushbytes 0x09
-    b+
-    bytec_0 // 0x
-    callsub __storage_write
-    intc_1 // 1
-    return
-
-main_ternary_false@24:
     intc_2 // 0
-    b main_ternary_merge@25
-
-main_fillArray_route@5:
-    txn GroupIndex
-    bz main_ternary_false@29
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@30:
-    !
-    assert // not payable
-    callsub getArray
-    bury 2
-    intc_1 // 1
-    itob
-    bury 1
-
-main_while_top@31:
-    pushint 10
-    itob
-    dig 1
-    b>
-    bz main_after_while@33
-    dup2
-    dup
+    bytec_2 // "y"
+    app_global_get_ex
+    bytec_0 // 0x
     cover 2
-    b+
-    dig 1
-    callsub __storage_write
-    bytec_2 // 0x01
-    b+
+    select
     dup
-    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-    b<=
+    len
+    intc_0 // 32
+    <=
     assert // overflow
-    bury 1
-    b main_while_top@31
+    intc_0 // 32
+    bzero
+    b|
+    retsub
 
-main_after_while@33:
+y_ternary_false@2:
+    intc_2 // 0
+    b y_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete_overlapping_variable.sol.C.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
     intc_1 // 1
-    return
+    -
+    gtxns Amount
 
-main_ternary_false@29:
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
     intc_2 // 0
-    b main_ternary_merge@30
-
-
-// __puyasol___storage_read(__slot: bytes) -> bytes:
-__storage_read:
-    proto 1 1
-    frame_dig -1
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -1
-    bytec_0 // 0x
-    b==
-    bz __storage_read_else_body@2
-    intc_0 // 32
-    bzero
-    bytec_1 // "y"
-    app_global_get
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    retsub
-
-__storage_read_else_body@2:
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 5 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
-    intc_2 // 0
-    intc_0 // 32
-    box_extract
-    retsub
-
-
-// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
-__storage_write:
-    proto 2 0
-    frame_dig -2
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    frame_bury -2
-    bytec_0 // 0x
-    b==
-    bz __storage_write_else_body@2
-    intc_0 // 32
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_1 // "y"
-    swap
-    app_global_put
-    retsub
-
-__storage_write_else_body@2:
-    intc_0 // 32
-    bzero
-    dup
-    frame_dig -2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec 5 // "s:"
-    swap
-    concat
-    dup
-    intc_0 // 32
-    box_create
-    pop
-    swap
-    frame_dig -1
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_2 // 0
-    swap
-    box_replace
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/storage_boundary_array_delete_overlapping_variable.sol.C.getArray() -> bytes:
-getArray:
-    load 0
-    store 0
-    load 0
-    store 0
-    pushbytes 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffb
-    retsub
+    b __evm_npy_ternary_merge@3
