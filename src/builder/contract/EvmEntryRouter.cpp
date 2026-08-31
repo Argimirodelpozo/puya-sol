@@ -142,6 +142,73 @@ void synthesizeEvmEntryHelpers(
 		sub.body = std::move(body);
 		contract.methods.push_back(std::move(sub));
 	}
+	// __evm_deco(__off) — offset/length small word: decw + high-24-zero
+	// assert + narrow. __evm_arga(__off) — address leaf: decw + padding
+	// assert. Each dynamic arg repeats the former, each address arg the
+	// latter; one body apiece (puya strips whichever ends up uncalled).
+	{
+		awst::ContractMethod sub;
+		sub.sourceLocation = loc;
+		sub.cref = cref;
+		sub.memberName = "__evm_deco";
+		sub.returnType = awst::WType::uint64Type();
+		sub.arc4MethodConfig = std::nullopt;
+		awst::SubroutineArgument offArg;
+		offArg.name = "__off";
+		offArg.wtype = awst::WType::uint64Type();
+		offArg.sourceLocation = loc;
+		sub.args.push_back(offArg);
+		auto body = awst::makeBlock(loc);
+		auto fetch = awst::makeSubroutineCall(
+			awst::InstanceMethodTarget{"__evm_decw"},
+			awst::WType::bytesType(), loc);
+		awst::pushCallArg(fetch->args, awst::makeVarExpression(
+			"__off", awst::WType::uint64Type(), loc));
+		auto value = awst::makeEvalOnce(std::move(fetch), loc);
+		body->body.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(
+				awst::makeNumericCompare(
+					awst::makeAsBiguint(
+						awst::makeExtract(value, 0, 24, loc), loc),
+					awst::NumericComparison::Eq,
+					awst::makeIntegerConstant("0", loc,
+						awst::WType::biguintType()), loc),
+				loc, "EVM ABI offset exceeds uint64"), loc));
+		body->body.push_back(awst::makeReturnStatement(
+			awst::makeWord32ToUInt64(value, loc), loc));
+		sub.body = std::move(body);
+		contract.methods.push_back(std::move(sub));
+	}
+	{
+		awst::ContractMethod sub;
+		sub.sourceLocation = loc;
+		sub.cref = cref;
+		sub.memberName = "__evm_arga";
+		sub.returnType = awst::WType::accountType();
+		sub.arc4MethodConfig = std::nullopt;
+		awst::SubroutineArgument offArg;
+		offArg.name = "__off";
+		offArg.wtype = awst::WType::uint64Type();
+		offArg.sourceLocation = loc;
+		sub.args.push_back(offArg);
+		auto body = awst::makeBlock(loc);
+		auto fetch = awst::makeSubroutineCall(
+			awst::InstanceMethodTarget{"__evm_decw"},
+			awst::WType::bytesType(), loc);
+		awst::pushCallArg(fetch->args, awst::makeVarExpression(
+			"__off", awst::WType::uint64Type(), loc));
+		auto value = awst::makeEvalOnce(std::move(fetch), loc);
+		body->body.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(
+				awst::makeBytesComparison(
+					awst::makeExtract(value, 0, 12, loc),
+					awst::EqualityComparison::Eq, awst::makeBzero(12, loc), loc),
+				loc, "invalid EVM ABI address padding"), loc));
+		body->body.push_back(awst::makeReturnStatement(
+			awst::makeAsAccount(value, loc), loc));
+		sub.body = std::move(body);
+		contract.methods.push_back(std::move(sub));
+	}
 }
 
 struct EvmRoute
@@ -375,7 +442,8 @@ std::shared_ptr<awst::Block> buildEvmArmBody(
 		}
 		auto decoded = abi::decodeEvmAbi(
 			typeMapper, awst::makeAppArg(1, loc), paramTypes,
-			decodedType, loc, body->body, "__evm_decw");
+			decodedType, loc, body->body, "__evm_decw", "__evm_deco",
+			"__evm_arga");
 		if (paramTypes.size() == 1)
 			values.push_back(std::move(decoded));
 		else

@@ -28,9 +28,12 @@ public:
 	Decoder(TypeMapper& typeMapper,
 		std::shared_ptr<awst::Expression> blob,
 		awst::SourceLocation const& loc,
-		char const* wordFetchSub = nullptr):
+		char const* wordFetchSub = nullptr,
+		char const* smallWordSub = nullptr,
+		char const* addressSub = nullptr):
 		m_typeMapper(typeMapper), m_blob(std::move(blob)), m_loc(loc),
-		m_wordFetchSub(wordFetchSub)
+		m_wordFetchSub(wordFetchSub), m_smallWordSub(smallWordSub),
+		m_addressSub(addressSub)
 	{
 	}
 
@@ -86,6 +89,16 @@ private:
 		std::shared_ptr<awst::Expression> position, Statements& out,
 		char const* what)
 	{
+		// Shared fetch+assert+narrow subroutine. The helper's assert message is
+		// generic; `what` only differentiates the inline diagnostics.
+		if (m_smallWordSub)
+		{
+			auto call = awst::makeSubroutineCall(
+				awst::InstanceMethodTarget{m_smallWordSub},
+				awst::WType::uint64Type(), m_loc);
+			awst::pushCallArg(call->args, std::move(position));
+			return call;
+		}
 		auto value = awst::makeEvalOnce(word(std::move(position), out), m_loc);
 		auto prefix = awst::makeAsBiguint(
 			awst::makeExtract(value, 0, 24, m_loc), m_loc);
@@ -126,6 +139,17 @@ private:
 		std::shared_ptr<awst::Expression> position,
 		Statements& out)
 	{
+		if (m_addressSub
+			&& (dynamic_cast<AddressType const*>(type)
+				|| dynamic_cast<ContractType const*>(type)))
+		{
+			// Shared fetch+padding-assert subroutine for the address leaf.
+			auto call = awst::makeSubroutineCall(
+				awst::InstanceMethodTarget{m_addressSub},
+				awst::WType::accountType(), m_loc);
+			awst::pushCallArg(call->args, std::move(position));
+			return call;
+		}
 		if (codec::isWordType(type))
 			return codec::valueFromEvmWord(
 				m_typeMapper, type, word(std::move(position), out), m_loc, out,
@@ -288,6 +312,8 @@ private:
 
 	TypeMapper& m_typeMapper;
 	char const* m_wordFetchSub = nullptr;
+	char const* m_smallWordSub = nullptr;
+	char const* m_addressSub = nullptr;
 	std::shared_ptr<awst::Expression> m_blob;
 	awst::SourceLocation const& m_loc;
 };
@@ -309,9 +335,12 @@ std::shared_ptr<awst::Expression> decodeEvmAbi(
 	awst::WType const* targetType,
 	awst::SourceLocation const& loc,
 	Statements& out,
-	char const* wordFetchSub)
+	char const* wordFetchSub,
+	char const* smallWordSub,
+	char const* addressSub)
 {
-	return Decoder(typeMapper, std::move(blob), loc, wordFetchSub).tuple(
+	return Decoder(typeMapper, std::move(blob), loc, wordFetchSub,
+		smallWordSub, addressSub).tuple(
 		components, targetType, out);
 }
 

@@ -30,6 +30,10 @@ bool canDecodeEvmAbi(
 /// body across all routes (a 55-method contract repeated the inline form
 /// hundreds of times). Only valid when the subroutine reads the same bytes
 /// the decoder was given (the arms pass ApplicationArgs[1]).
+/// `smallWordSub` / `addressSub`: optional sibling helpers with the same
+/// same-blob contract — `smallWordSub(off) -> uint64` replaces the inline
+/// offset/length small-word fetch (word + high-24-zero assert + btoi) and
+/// `addressSub(off) -> account` the address leaf (word + padding assert).
 std::shared_ptr<awst::Expression> decodeEvmAbi(
 	TypeMapper& typeMapper,
 	std::shared_ptr<awst::Expression> blob,
@@ -37,6 +41,8 @@ std::shared_ptr<awst::Expression> decodeEvmAbi(
 	awst::WType const* targetType,
 	awst::SourceLocation const& loc,
 	std::vector<std::shared_ptr<awst::Statement>>& out,
-	char const* wordFetchSub = nullptr);
+	char const* wordFetchSub = nullptr,
+	char const* smallWordSub = nullptr,
+	char const* addressSub = nullptr);
 
 } // namespace puyasol::builder::abi
