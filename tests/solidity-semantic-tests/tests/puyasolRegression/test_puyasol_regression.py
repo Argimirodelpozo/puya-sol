@@ -3836,6 +3836,22 @@ def test_evm_layout_runtime_for_modifier_assembly_only(harness):
     assert as_int(got) == 1
 
 
+def test_evm_layout_storage_ref_ext_call_arg(harness):
+    """A ternary-selected storage ref (`pick ? a : b`) passed as an EXTERNAL
+    call's memory arg must materialize through the itxn encode leg — this leg
+    once leaked the raw slot handle and then hit 'invalid Box reference
+    p:<page>' before the itxn arg materialization landed (audit S4 follow-up).
+    """
+    arts = harness.compile(
+        "puyasolRegression/contracts/slot_storage_ref_ext_call_arg.sol",
+        extra_args=_EVM_LAYOUT)
+    app = harness.deploy(arts, "ExtArg", extra_funding_microalgos=30_000_000)
+    assert as_int(harness.call(
+        app, "viaExtArg(bool)", True, extra_fee=20_000).abi_return) == 3
+    assert as_int(harness.call(
+        app, "viaExtArg(bool)", False, extra_fee=20_000).abi_return) == 70
+
+
 def test_evm_layout_recursive_struct_delete(harness):
     """delete on a RECURSIVE struct (S{S[] x}) cannot inline its clear — the
     emission recursed forever (segfault). It now routes through a per-type
