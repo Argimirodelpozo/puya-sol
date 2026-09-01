@@ -5163,3 +5163,61 @@ def test_conversion_cold_arms(harness):
                      bytes.fromhex("aabbccddeeff001122334455"),
                      bytes.fromhex("00" * 19 + "7f")).abi_return
     assert [as_int(x) for x in r] == [0xAABBCCDDEEFF001122334455, 0x7F]
+
+
+def test_evm_layout_asm_slot_dynarray_param(harness):
+    """puyasolRegression/contracts/asm_slot_dynarray_param.sol — NOT o.g.
+
+    OZ Checkpoints._unsafeAccess: asm `.slot` on a DYNAMIC-ARRAY storage
+    param, keccak data-slot arithmetic, `result.slot :=` rebind, packed
+    uint48/uint208 field reads through the rebound ref. Native in slot mode
+    (the batch's arc4.dynamic_array<Checkpoint208> compile family: degen/
+    cyber/etherfi/lombard/swissborg). Default mode remains the documented
+    box-key model limitation.
+    """
+    app = harness.compile_and_deploy(
+        "puyasolRegression/contracts/asm_slot_dynarray_param.sol",
+        extra_args=_EVM_LAYOUT)
+    for k, v in [(100, 11_111), (200, 22_222), (300, 33_333)]:
+        harness.call(app, "push(uint48,uint208)", k, v, extra_fee=10_000)
+    assert as_int(harness.call(app, "len()").abi_return) == 3
+    for i, (k, v) in enumerate([(100, 11_111), (200, 22_222), (300, 33_333)]):
+        r = harness.call(app, "readUnsafe(uint256)", i,
+                         extra_fee=10_000).abi_return
+        assert (as_int(r[0]), as_int(r[1])) == (k, v)
+
+
+def test_evm_ctor_address_namespace(harness):
+    """puyasolRegression/contracts/evm_ctor_address_namespace.sol — NOT o.g.
+
+    EVM profile: an ADDRESS constructor param must enter the 160-bit
+    (bzero12 ++ low-20) namespace like every decoded address argument and the
+    normalized msg.sender. Deploy tooling passes a full 32-byte AVM account;
+    keying storage on the raw form ORPHANED ctor-written state — swissborg's
+    ctor mint was invisible to transfer ("ERC20: transfer amount exceeds
+    balance" on txn #0 while EVM history succeeded).
+    """
+    from Crypto.Hash import keccak as _keccak
+    from eth_abi import encode as evm_abi_encode
+    from algosdk.encoding import decode_address
+
+    def sel(sig):
+        d = _keccak.new(digest_bits=256)
+        d.update(sig.encode())
+        return d.digest()[:4]
+
+    acct = harness.localnet.account
+    arts = harness.compile(
+        "puyasolRegression/contracts/evm_ctor_address_namespace.sol",
+        extra_args=["--evm-layout", "--contract-abi", "evm"])
+    app = harness.deploy(arts, ctor_args=[acct.address])
+    a20 = decode_address(acct.address)[-20:]
+    body = evm_abi_encode(["address"], ["0x" + a20.hex()])
+    r = harness.call_raw(app, sel("bal(address)"), extra_args=(body,))
+    magic = bytes.fromhex("151f7c75")
+    ret = next((bytes(l)[4:] for l in reversed(r.logs)
+                if bytes(l).startswith(magic)), None)
+    assert ret is not None and int.from_bytes(ret, "big") == 1000
+    body2 = evm_abi_encode(["uint256"], [100])
+    r2 = harness.call_raw(app, sel("spend(uint256)"), extra_args=(body2,))
+    assert not r2.reverted, r2.fail_message

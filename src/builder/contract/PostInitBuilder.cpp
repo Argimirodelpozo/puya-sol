@@ -179,6 +179,37 @@ void ContractBuilder::buildPostInitMethod(
 		auto clearStmt = awst::makeExpressionStatement(clearPending, method.sourceLocation);
 		postInitBody->body.push_back(std::move(clearStmt));
 
+		// EVM profile: ADDRESS ctor params enter the 160-bit namespace
+		// (bzero12 ++ low-20) like every decoded address argument and the
+		// normalized msg.sender. Deploy tooling passes either the EVM word or
+		// a full 32-byte AVM account; keying storage on the RAW form orphans
+		// ctor-written state (BORG: ctor mint invisible to transfer).
+		if (m_typeMapper.profile().contractAbi == ContractAbi::Evm && constructor)
+			for (size_t pi = 0;
+				pi < postInit.args.size() && pi < constructor->parameters().size();
+				++pi)
+			{
+				auto const& arg = postInit.args[pi];
+				if (arg.wtype != awst::WType::accountType())
+					continue;
+				auto loc2 = method.sourceLocation;
+				auto normalized = awst::makeAsAccount(
+					awst::makeConcat(
+						awst::makeBzero(12, loc2),
+						awst::makeExtractLastN(
+							awst::makeAsBytes(
+								awst::makeVarExpression(
+									arg.name, awst::WType::accountType(), loc2),
+								loc2),
+							20, loc2),
+						loc2),
+					loc2);
+				postInitBody->body.push_back(awst::makeAssignmentStatement(
+					awst::makeVarExpression(
+						arg.name, awst::WType::accountType(), loc2),
+					std::move(normalized), loc2));
+			}
+
 		// Decode each remapped biguint arg: `<origName> = ARC4Decode(__arc4_<origName>)`.
 		for (auto const& decode: postInitDecodes)
 		{
