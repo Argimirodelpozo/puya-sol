@@ -16,6 +16,7 @@
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/SolIntType.h"
+#include "builder/sol-ast/calls/RevertBlob.h"
 #include "Logger.h"
 
 #include <cctype>
@@ -518,42 +519,35 @@ std::string FunctionPointerBuilder::dispatchName(
 
 // ── Generate dispatch subroutines ──
 
-std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethods(
-	ContractContext& _ctx,
-	std::string const& _cref,
-	awst::SourceLocation const& _loc,
-	std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs)
+namespace dispatch_detail
 {
-	std::vector<awst::ContractMethod> methods;
-	auto const& registry = _ctx.functionPointers;
 
-	if (registry.neededDispatches.empty())
-		return methods;
-
+/// Group registered targets by dispatch signature. Foreign non-resolvable
+/// targets (different non-library contract, no subroutine id, not a
+/// __super_ ref, part of the external interface) are dropped; signatures
+/// demanded by call sites but with no surviving targets keep an EMPTY group
+/// (the dispatch subroutine must still exist so references resolve).
+std::map<std::string, std::vector<FuncPtrEntry const*>> collectDispatchGroups(
+	FunctionPointerRegistry const& _registry, std::string const& _contractName)
+{
 	auto funcScopeContract = [](FunctionDefinition const* fd) -> ContractDefinition const* {
 		return fd ? fd->annotation().contract : nullptr;
 	};
-	// Extract contract name from _cref (last "."-separated segment).
-	std::string contractName;
-	auto dotPos = _cref.find_last_of('.');
-	if (dotPos != std::string::npos)
-		contractName = _cref.substr(dotPos + 1);
-
 	std::map<std::string, std::vector<FuncPtrEntry const*>> groups;
-	for (auto const& [key, entry] : registry.targets)
+	for (auto const& [key, entry] : _registry.targets)
 	{
-		std::string dname = dispatchName(entry.funcType);
+		std::string dname = FunctionPointerBuilder::dispatchName(entry.funcType);
 		// Taking a function's address does not require a dispatcher. A dynamic
 		// call or external self-call records the signature in neededDispatches.
-		if (!registry.neededDispatches.count(dname))
+		if (!_registry.neededDispatches.count(dname))
 			continue;
 		// Skip foreign targets (different non-library, non-base contract).
 		// Keep if: awstName starts with __super_, subroutineId is set,
 		// or the function is in the current contract or a library.
 		auto const* fdContract = funcScopeContract(entry.funcDef);
 		bool foreignNonResolvable = fdContract
-			&& !contractName.empty()
-			&& fdContract->name() != contractName
+			&& !_contractName.empty()
+			&& fdContract->name() != _contractName
 			&& !fdContract->isLibrary()
 			&& entry.subroutineId.empty()
 			&& entry.name.find("__super_") == std::string::npos;
@@ -568,11 +562,301 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 		groups[dname].push_back(&entry);
 	}
 	// Ensure needed signatures have entries, even if empty.
-	for (auto const& [dname, funcType] : registry.neededDispatches)
+	for (auto const& [dname, funcType] : _registry.neededDispatches)
 	{
 		if (groups.find(dname) == groups.end())
 			groups[dname] = {};
 	}
+	return groups;
+}
+
+/// Method skeleton: native return type + (__funcptr_id, __static, params).
+awst::ContractMethod buildDispatchSignature(
+	ContractContext& _ctx,
+	std::string const& _cref,
+	std::string const& _dname,
+	FunctionType const* _funcType,
+	awst::SourceLocation const& _loc)
+{
+	awst::ContractMethod dispatch;
+	dispatch.sourceLocation = _loc;
+	dispatch.cref = _cref;
+	dispatch.memberName = _dname;
+	dispatch.arc4MethodConfig = std::nullopt;
+	dispatch.pure = false;
+
+	// Return type: the SAME native mapping the call site uses
+	// (computeReturnType — single native type or WTuple for multi).
+	// The old mapDispatchType drifted from the call site (public signed
+	// ≤64 promoted to biguint vs uint64 at the call; multi-return was a
+	// silent void). Public targets return WIRE-encoded values — the
+	// per-entry body adapts them back to the native return.
+	dispatch.returnType = computeReturnType(_ctx, _funcType);
+
+	// Args: __funcptr_id first, then __static, then function params.
+	{
+		awst::SubroutineArgument idArg;
+		idArg.name = "__funcptr_id";
+		idArg.wtype = awst::WType::uint64Type();
+		idArg.sourceLocation = _loc;
+		dispatch.args.push_back(idArg);
+	}
+	{
+		awst::SubroutineArgument stArg;
+		stArg.name = "__static";
+		stArg.wtype = awst::WType::uint64Type();
+		stArg.sourceLocation = _loc;
+		dispatch.args.push_back(stArg);
+	}
+	for (size_t i = 0; i < _funcType->parameterTypes().size(); ++i)
+	{
+		awst::SubroutineArgument arg;
+		arg.name = "__arg" + std::to_string(i);
+		// The SAME native mapping the call site coerces to — the old
+		// mapDispatchType sent address/enum/struct/non-byte-array params
+		// to biguint while the call site passed account/uint64/array
+		// wtypes.
+		arg.wtype = _ctx.typeMapper.map(_funcType->parameterTypes()[i]);
+		arg.sourceLocation = _loc;
+		dispatch.args.push_back(arg);
+	}
+	return dispatch;
+}
+
+/// Innermost else of the id chain: EVM reverts with Panic(0x51) for an
+/// invalid/uninitialized internal function pointer — log that payload before
+/// the assert so the revert-data oracle sees identical bytes (same
+/// log-then-err convention as require/assert, RevertBlob.h).
+std::shared_ptr<awst::Block> buildInvalidPointerBlock(
+	awst::SourceLocation const& _loc)
+{
+	auto defaultBlock = awst::makeBlock(_loc);
+	auto logCall = awst::makeIntrinsicCall(
+		"log", awst::WType::voidType(), _loc);
+	logCall->stackArgs.push_back(awst::makeBytesConstant(
+		sol_ast::panicRevertBlobBytes(0x51), _loc));
+	defaultBlock->body.push_back(
+		awst::makeExpressionStatement(std::move(logCall), _loc));
+	auto stmt = awst::makeExpressionStatement(awst::makeAssert(
+		awst::makeFalse(_loc), _loc, "invalid function pointer"), _loc);
+	defaultBlock->body.push_back(std::move(stmt));
+	return defaultBlock;
+}
+
+/// One `__funcptr_id == N` arm: static-context write protection, target call
+/// with per-param coercion, and the wire→native return adaptation for PUBLIC
+/// targets (whose returns are build-time wire-encoded).
+std::shared_ptr<awst::Block> buildDispatchEntryArm(
+	ContractContext& _ctx,
+	FuncPtrEntry const* entry,
+	FunctionType const* funcType,
+	awst::ContractMethod const& dispatch,
+	awst::SourceLocation const& _loc)
+{
+	auto ifBlock = awst::makeBlock(_loc);
+	// Write protection: this target mutates state — a static-context
+	// dispatch (view/pure pointer, id laundered in via asm) reverts,
+	// mirroring EVM's failed staticcall (tstore_hidden_staticcall).
+	if (entry->funcDef
+		&& (entry->funcDef->stateMutability() == StateMutability::NonPayable
+			|| entry->funcDef->stateMutability() == StateMutability::Payable))
+	{
+		auto stVar = awst::makeVarExpression(
+			"__static", awst::WType::uint64Type(), _loc);
+		auto isZero = awst::makeNumericCompare(std::move(stVar),
+			awst::NumericComparison::Eq,
+			awst::makeIntegerConstant(uint64_t{0}, _loc), _loc);
+		ifBlock->body.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(std::move(isZero), _loc,
+				"write protection"), _loc));
+	}
+	{
+		awst::SubroutineTarget target = !entry->subroutineId.empty()
+			? awst::SubroutineTarget{awst::SubroutineID{entry->subroutineId}}
+			: awst::SubroutineTarget{awst::InstanceMethodTarget{entry->name}};
+		auto call = awst::makeSubroutineCall(
+			std::move(target), dispatch.returnType, _loc);
+
+		bool isPublic = entry->funcDef
+			&& entry->funcDef->isPartOfExternalInterface();
+
+		for (size_t i = 0; i < funcType->parameterTypes().size(); ++i)
+		{
+			awst::CallArg arg;
+			auto var = awst::makeVarExpression("__arg" + std::to_string(i), dispatch.args[i + 2].wtype, _loc);
+
+			// Use the target's param name; fall back to _paramN for unnamed
+			// params (matches AWSTBuilder's synthesised naming).
+			std::string paramName = "__arg" + std::to_string(i);
+			if (entry->funcDef && i < entry->funcDef->parameters().size())
+			{
+				paramName = entry->funcDef->parameters()[i]->name();
+				if (paramName.empty())
+					paramName = "_param" + std::to_string(i);
+			}
+
+			awst::WType const* arc4Type = isPublic
+				? dispatchPublicArgArc4Type(
+					_ctx.typeMapper, var->wtype, funcType->parameterTypes()[i])
+				: nullptr;
+
+			if (arc4Type && arc4Type != var->wtype)
+			{
+				auto encode = awst::makeARC4Encode(std::move(var), arc4Type, _loc);
+
+				arg.name = "__arc4_" + paramName;
+				arg.value = std::move(encode);
+			}
+			else
+			{
+				arg.name = paramName;
+				arg.value = std::move(var);
+			}
+			call->args.push_back(std::move(arg));
+		}
+
+		// Public targets return WIRE-encoded values (build-time
+		// return encoding): adapt back to the native dispatch return.
+		bool retIsSignedNarrow = false;
+		if (funcType->returnParameterTypes().size() == 1)
+			if (auto it = builder::SolIntType::fromSol(
+					funcType->returnParameterTypes()[0]);
+				it && it->isSigned && it->bits <= 64)
+				retIsSignedNarrow = true;
+		if (isPublic && dispatch.returnType == awst::WType::biguintType())
+			call->wtype = _ctx.typeMapper.createType<awst::ARC4UIntN>(256); // arc4.uint256
+		else if (isPublic && retIsSignedNarrow
+			&& dispatch.returnType == awst::WType::uint64Type())
+			// Signed narrow publishes as uint256 on the wire.
+			call->wtype = _ctx.typeMapper.createType<awst::ARC4UIntN>(256);
+		// (public multi-return handled by the entry skip in the caller)
+
+		if (dispatch.returnType != awst::WType::voidType())
+		{
+			std::shared_ptr<awst::Expression> retValue = std::move(call);
+			if (isPublic && retValue->wtype != dispatch.returnType)
+			{
+				// ARC4 wire → biguint, then narrow to the native
+				// carrier when needed (canonical 256-bit TC's low 8
+				// bytes ARE the 64-bit-TC carrier for signed narrow).
+				std::shared_ptr<awst::Expression> decoded =
+					awst::makeARC4Decode(std::move(retValue),
+						awst::WType::biguintType(), _loc);
+				if (dispatch.returnType != awst::WType::biguintType())
+					decoded = builder::TypeCoercion::implicitNumericCast(
+						std::move(decoded), dispatch.returnType, _loc);
+				retValue = std::move(decoded);
+			}
+			auto ret = awst::makeReturnStatement(std::move(retValue), _loc);
+			ifBlock->body.push_back(std::move(ret));
+		}
+		else
+		{
+			auto stmt = awst::makeExpressionStatement(std::move(call), _loc);
+			ifBlock->body.push_back(std::move(stmt));
+			auto ret = awst::makeReturnStatement(nullptr, _loc);
+			ifBlock->body.push_back(std::move(ret));
+		}
+	}
+	return ifBlock;
+}
+
+/// __sel_to_id_<sig>(__sel: bytes) -> uint64
+/// Maps a 4-byte routing selector to an internal dispatch id (self-call path).
+awst::ContractMethod buildSelToIdMethod(
+	ContractContext& _ctx,
+	std::string const& _cref,
+	std::string const& dname,
+	std::vector<FuncPtrEntry const*> const& entries,
+	awst::SourceLocation const& _loc)
+{
+	awst::ContractMethod selToId;
+	selToId.sourceLocation = _loc;
+	selToId.cref = _cref;
+	selToId.memberName = "__sel_to_id_" + dname;
+	selToId.arc4MethodConfig = std::nullopt;
+	selToId.pure = false;
+	selToId.returnType = awst::WType::uint64Type();
+	{
+		awst::SubroutineArgument selArg;
+		selArg.name = "__sel";
+		selArg.wtype = awst::WType::bytesType();
+		selArg.sourceLocation = _loc;
+		selToId.args.push_back(selArg);
+	}
+
+	auto selBody = awst::makeBlock(_loc);
+
+	auto selDefault = awst::makeBlock(_loc);
+	{
+		auto stmt = awst::makeExpressionStatement(awst::makeAssert(
+			awst::makeFalse(_loc), _loc,
+			"unknown function selector in self-call dispatch"), _loc);
+		selDefault->body.push_back(std::move(stmt));
+	}
+	std::shared_ptr<awst::Block> selElse = selDefault;
+
+	for (auto const* entry : entries)
+	{
+		if (!entry->funcDef) continue;
+		std::shared_ptr<awst::Expression> methodConst;
+		if (_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
+		{
+			auto const* externalType = entry->funcDef->functionType(false);
+			if (!externalType)
+				continue;
+			methodConst = awst::makeBytesConstant(
+				builder::SolcFacts::externalSelector(*externalType), _loc,
+				awst::BytesEncoding::Base16, awst::WType::bytesType());
+		}
+		else
+			methodConst = awst::makeMethodConstant(
+				InnerCallHandlers::buildMethodSelector(_ctx, entry->funcDef),
+				awst::WType::bytesType(), _loc);
+
+		auto selVar = awst::makeVarExpression("__sel", awst::WType::bytesType(), _loc);
+		auto cmp = awst::makeBytesComparison(std::move(selVar),
+			awst::EqualityComparison::Eq, std::move(methodConst), _loc);
+
+		auto thenBlock = awst::makeBlock(_loc);
+		thenBlock->body.push_back(awst::makeReturnStatement(
+			awst::makeIntegerConstant(entry->id, _loc), _loc));
+
+		auto ifElse = awst::makeIfElse(
+			std::move(cmp), std::move(thenBlock), std::move(selElse), _loc);
+
+		auto newElse = awst::makeBlock(_loc);
+		newElse->body.push_back(std::move(ifElse));
+		selElse = std::move(newElse);
+	}
+	for (auto& stmt : selElse->body)
+		selBody->body.push_back(std::move(stmt));
+	selToId.body = selBody;
+	return selToId;
+}
+
+} // namespace dispatch_detail
+
+std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethods(
+	ContractContext& _ctx,
+	std::string const& _cref,
+	awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs)
+{
+	using namespace dispatch_detail;
+	std::vector<awst::ContractMethod> methods;
+	auto const& registry = _ctx.functionPointers;
+
+	if (registry.neededDispatches.empty())
+		return methods;
+
+	// Extract contract name from _cref (last "."-separated segment).
+	std::string contractName;
+	auto dotPos = _cref.find_last_of('.');
+	if (dotPos != std::string::npos)
+		contractName = _cref.substr(dotPos + 1);
+
+	auto groups = collectDispatchGroups(registry, contractName);
 
 	for (auto const& [dname, entries] : groups)
 	{
@@ -583,60 +867,12 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			funcType = registry.neededDispatches.at(dname);
 		if (!funcType) continue;
 
-		awst::ContractMethod dispatch;
-		dispatch.sourceLocation = _loc;
-		dispatch.cref = _cref;
-		dispatch.memberName = dname;
-		dispatch.arc4MethodConfig = std::nullopt;
-		dispatch.pure = false;
-
-		// Return type: the SAME native mapping the call site uses
-		// (computeReturnType — single native type or WTuple for multi).
-		// The old mapDispatchType drifted from the call site (public signed
-		// ≤64 promoted to biguint vs uint64 at the call; multi-return was a
-		// silent void). Public targets return WIRE-encoded values — the
-		// per-entry body below adapts them back to the native return.
-		dispatch.returnType = computeReturnType(_ctx, funcType);
-
-		// Args: __funcptr_id first, then __static, then function params.
-		{
-			awst::SubroutineArgument idArg;
-			idArg.name = "__funcptr_id";
-			idArg.wtype = awst::WType::uint64Type();
-			idArg.sourceLocation = _loc;
-			dispatch.args.push_back(idArg);
-		}
-		{
-			awst::SubroutineArgument stArg;
-			stArg.name = "__static";
-			stArg.wtype = awst::WType::uint64Type();
-			stArg.sourceLocation = _loc;
-			dispatch.args.push_back(stArg);
-		}
-		for (size_t i = 0; i < funcType->parameterTypes().size(); ++i)
-		{
-			awst::SubroutineArgument arg;
-			arg.name = "__arg" + std::to_string(i);
-			// The SAME native mapping the call site coerces to — the old
-			// mapDispatchType sent address/enum/struct/non-byte-array params
-			// to biguint while the call site passed account/uint64/array
-			// wtypes.
-			arg.wtype = _ctx.typeMapper.map(funcType->parameterTypes()[i]);
-			arg.sourceLocation = _loc;
-			dispatch.args.push_back(arg);
-		}
+		auto dispatch = buildDispatchSignature(_ctx, _cref, dname, funcType, _loc);
 
 		auto body = awst::makeBlock(_loc);
 
-		// Build if/else chain; innermost = assert(false) for invalid id.
-		auto defaultBlock = awst::makeBlock(_loc);
-		{
-			auto stmt = awst::makeExpressionStatement(awst::makeAssert(
-				awst::makeFalse(_loc), _loc, "invalid function pointer"), _loc);
-			defaultBlock->body.push_back(std::move(stmt));
-		}
-
-		std::shared_ptr<awst::Block> elseBlock = defaultBlock;
+		// Build if/else chain; innermost = Panic(0x51) + assert for invalid id.
+		std::shared_ptr<awst::Block> elseBlock = buildInvalidPointerBlock(_loc);
 
 		for (auto const* entry : entries)
 		{
@@ -659,111 +895,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			auto idConst = awst::makeIntegerConstant(entry->id, _loc);
 			auto cmp = awst::makeNumericCompare(std::move(idVar), awst::NumericComparison::Eq, std::move(idConst), _loc);
 
-			auto ifBlock = awst::makeBlock(_loc);
-			// Write protection: this target mutates state — a static-context
-			// dispatch (view/pure pointer, id laundered in via asm) reverts,
-			// mirroring EVM's failed staticcall (tstore_hidden_staticcall).
-			if (entry->funcDef
-				&& (entry->funcDef->stateMutability() == StateMutability::NonPayable
-					|| entry->funcDef->stateMutability() == StateMutability::Payable))
-			{
-				auto stVar = awst::makeVarExpression(
-					"__static", awst::WType::uint64Type(), _loc);
-				auto isZero = awst::makeNumericCompare(std::move(stVar),
-					awst::NumericComparison::Eq,
-					awst::makeIntegerConstant(uint64_t{0}, _loc), _loc);
-				ifBlock->body.push_back(awst::makeExpressionStatement(
-					awst::makeAssert(std::move(isZero), _loc,
-						"write protection"), _loc));
-			}
-			{
-				awst::SubroutineTarget target = !entry->subroutineId.empty()
-					? awst::SubroutineTarget{awst::SubroutineID{entry->subroutineId}}
-					: awst::SubroutineTarget{awst::InstanceMethodTarget{entry->name}};
-				auto call = awst::makeSubroutineCall(
-					std::move(target), dispatch.returnType, _loc);
-
-				bool isPublic = entry->funcDef
-					&& entry->funcDef->isPartOfExternalInterface();
-
-				for (size_t i = 0; i < funcType->parameterTypes().size(); ++i)
-				{
-					awst::CallArg arg;
-					auto var = awst::makeVarExpression("__arg" + std::to_string(i), dispatch.args[i + 2].wtype, _loc);
-
-					// Use the target's param name; fall back to _paramN for unnamed
-					// params (matches AWSTBuilder's synthesised naming).
-					std::string paramName = "__arg" + std::to_string(i);
-					if (entry->funcDef && i < entry->funcDef->parameters().size())
-					{
-						paramName = entry->funcDef->parameters()[i]->name();
-						if (paramName.empty())
-							paramName = "_param" + std::to_string(i);
-					}
-
-					awst::WType const* arc4Type = isPublic
-						? dispatchPublicArgArc4Type(
-							_ctx.typeMapper, var->wtype, funcType->parameterTypes()[i])
-						: nullptr;
-
-					if (arc4Type && arc4Type != var->wtype)
-					{
-						auto encode = awst::makeARC4Encode(std::move(var), arc4Type, _loc);
-
-						arg.name = "__arc4_" + paramName;
-						arg.value = std::move(encode);
-					}
-					else
-					{
-						arg.name = paramName;
-						arg.value = std::move(var);
-					}
-					call->args.push_back(std::move(arg));
-				}
-
-				// Public targets return WIRE-encoded values (build-time
-				// return encoding): adapt back to the native dispatch return.
-				bool retIsSignedNarrow = false;
-				if (funcType->returnParameterTypes().size() == 1)
-					if (auto it = builder::SolIntType::fromSol(
-							funcType->returnParameterTypes()[0]);
-						it && it->isSigned && it->bits <= 64)
-						retIsSignedNarrow = true;
-				if (isPublic && dispatch.returnType == awst::WType::biguintType())
-					call->wtype = _ctx.typeMapper.createType<awst::ARC4UIntN>(256); // arc4.uint256
-				else if (isPublic && retIsSignedNarrow
-					&& dispatch.returnType == awst::WType::uint64Type())
-					// Signed narrow publishes as uint256 on the wire.
-					call->wtype = _ctx.typeMapper.createType<awst::ARC4UIntN>(256);
-				// (public multi-return handled by the entry skip above)
-
-				if (dispatch.returnType != awst::WType::voidType())
-				{
-					std::shared_ptr<awst::Expression> retValue = std::move(call);
-					if (isPublic && retValue->wtype != dispatch.returnType)
-					{
-						// ARC4 wire → biguint, then narrow to the native
-						// carrier when needed (canonical 256-bit TC's low 8
-						// bytes ARE the 64-bit-TC carrier for signed narrow).
-						std::shared_ptr<awst::Expression> decoded =
-							awst::makeARC4Decode(std::move(retValue),
-								awst::WType::biguintType(), _loc);
-						if (dispatch.returnType != awst::WType::biguintType())
-							decoded = builder::TypeCoercion::implicitNumericCast(
-								std::move(decoded), dispatch.returnType, _loc);
-						retValue = std::move(decoded);
-					}
-					auto ret = awst::makeReturnStatement(std::move(retValue), _loc);
-					ifBlock->body.push_back(std::move(ret));
-				}
-				else
-				{
-					auto stmt = awst::makeExpressionStatement(std::move(call), _loc);
-					ifBlock->body.push_back(std::move(stmt));
-					auto ret = awst::makeReturnStatement(nullptr, _loc);
-					ifBlock->body.push_back(std::move(ret));
-				}
-			}
+			auto ifBlock = buildDispatchEntryArm(
+				_ctx, entry, funcType, dispatch, _loc);
 
 			auto ifElse = awst::makeIfElse(
 				std::move(cmp), std::move(ifBlock), std::move(elseBlock), _loc);
@@ -791,83 +924,18 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 		methods.push_back(std::move(dispatch));
 
-		// __sel_to_id_<sig>(__sel: bytes) -> uint64
-		// Maps a 4-byte ARC4 selector to an internal dispatch id (self-call path).
-		// Always generated even for empty groups so call-site references resolve.
+		// __sel_to_id_<sig>: always generated, even for empty groups, so
+		// call-site references resolve.
+		auto selToId = buildSelToIdMethod(_ctx, _cref, dname, entries, _loc);
+		if (_outRootSubs && registry.neededRootDispatches.count(dname))
 		{
-			awst::ContractMethod selToId;
-			selToId.sourceLocation = _loc;
-			selToId.cref = _cref;
-			selToId.memberName = "__sel_to_id_" + dname;
-			selToId.arc4MethodConfig = std::nullopt;
-			selToId.pure = false;
-			selToId.returnType = awst::WType::uint64Type();
-			{
-				awst::SubroutineArgument selArg;
-				selArg.name = "__sel";
-				selArg.wtype = awst::WType::bytesType();
-				selArg.sourceLocation = _loc;
-				selToId.args.push_back(selArg);
-			}
-
-			auto selBody = awst::makeBlock(_loc);
-
-			auto selDefault = awst::makeBlock(_loc);
-			{
-				auto stmt = awst::makeExpressionStatement(awst::makeAssert(
-					awst::makeFalse(_loc), _loc,
-					"unknown function selector in self-call dispatch"), _loc);
-				selDefault->body.push_back(std::move(stmt));
-			}
-			std::shared_ptr<awst::Block> selElse = selDefault;
-
-			for (auto const* entry : entries)
-			{
-				if (!entry->funcDef) continue;
-				std::shared_ptr<awst::Expression> methodConst;
-				if (_ctx.typeMapper.profile().contractAbi == ContractAbi::Evm)
-				{
-					auto const* externalType = entry->funcDef->functionType(false);
-					if (!externalType)
-						continue;
-					methodConst = awst::makeBytesConstant(
-						builder::SolcFacts::externalSelector(*externalType), _loc,
-						awst::BytesEncoding::Base16, awst::WType::bytesType());
-				}
-				else
-					methodConst = awst::makeMethodConstant(
-						InnerCallHandlers::buildMethodSelector(_ctx, entry->funcDef),
-						awst::WType::bytesType(), _loc);
-
-				auto selVar = awst::makeVarExpression("__sel", awst::WType::bytesType(), _loc);
-				auto cmp = awst::makeBytesComparison(std::move(selVar),
-					awst::EqualityComparison::Eq, std::move(methodConst), _loc);
-
-				auto thenBlock = awst::makeBlock(_loc);
-				thenBlock->body.push_back(awst::makeReturnStatement(
-					awst::makeIntegerConstant(entry->id, _loc), _loc));
-
-				auto ifElse = awst::makeIfElse(
-					std::move(cmp), std::move(thenBlock), std::move(selElse), _loc);
-
-				auto newElse = awst::makeBlock(_loc);
-				newElse->body.push_back(std::move(ifElse));
-				selElse = std::move(newElse);
-			}
-			for (auto& stmt : selElse->body)
-				selBody->body.push_back(std::move(stmt));
-			selToId.body = selBody;
-
-			if (_outRootSubs && registry.neededRootDispatches.count(dname))
-			{
-				auto sub = awst::makeSubroutine(
-					_cref + "." + selToId.memberName, selToId.memberName,
-					selToId.args, selToId.returnType, selToId.body,
-					/*pure=*/false, selToId.sourceLocation);
-				_outRootSubs->push_back(std::move(sub));
-			}
-			methods.push_back(std::move(selToId));
+			auto sub = awst::makeSubroutine(
+				_cref + "." + selToId.memberName, selToId.memberName,
+				selToId.args, selToId.returnType, selToId.body,
+				/*pure=*/false, selToId.sourceLocation);
+			_outRootSubs->push_back(std::move(sub));
 		}
+		methods.push_back(std::move(selToId));
 	}
 
 	return methods;

@@ -196,7 +196,7 @@ f_else_body@6:
 f_else_body@8:
     intc_0 // 1
     ==
-    assert // invalid function pointer
+    bz f_else_body@10
     txn Sender
     bytec_0 // "stages"
     concat
@@ -205,6 +205,11 @@ f_else_body@8:
     itob
     box_put
     b f_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/mapping_of_functions.sol.Flow.__funcptr_dispatch_ret@11
+
+f_else_body@10:
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 f_ternary_false@2:
     intc_1 // 0

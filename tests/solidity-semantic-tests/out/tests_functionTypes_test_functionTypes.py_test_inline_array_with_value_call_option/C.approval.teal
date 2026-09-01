@@ -241,9 +241,14 @@ h_after_if_else@4:
 h_else_body@13:
     intc_0 // 1
     ==
-    assert // invalid function pointer
+    bz h_else_body@15
     callsub f
     b h_after_if_else@4
+
+h_else_body@15:
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 h_else_body@7:
     bytec_1 // method "f()uint256"

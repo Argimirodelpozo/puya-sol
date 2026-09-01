@@ -280,10 +280,15 @@ t_ternary_merge@3:
     swap
     intc_1 // 1
     ==
-    assert // invalid function pointer
+    bz t_else_body@8
     callsub eval
     pop
     retsub
+
+t_else_body@8:
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 t_ternary_false@2:
     intc_0 // 0
