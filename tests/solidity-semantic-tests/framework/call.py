@@ -405,7 +405,10 @@ def call(
     _LAST_POPULATE_ERROR = ""  # per-call: a stale value would mislabel this failure
     algod = localnet.algod
     sender = localnet.account.address
-    signer = AccountTransactionSigner(localnet.account.private_key)
+    # An account may carry its own TransactionSigner (xchain LogicSig sender
+    # accounts in the chainwide replay); ed25519 accounts fall through.
+    signer = (getattr(localnet.account, "signer", None)
+              or AccountTransactionSigner(localnet.account.private_key))
 
     abi_method = _resolve_method(app.app_spec, sig)
     if abi_method is None:
@@ -876,7 +879,10 @@ def call_raw(
     """
     algod = localnet.algod
     sender = localnet.account.address
-    signer = AccountTransactionSigner(localnet.account.private_key)
+    # An account may carry its own TransactionSigner (xchain LogicSig sender
+    # accounts in the chainwide replay); ed25519 accounts fall through.
+    signer = (getattr(localnet.account, "signer", None)
+              or AccountTransactionSigner(localnet.account.private_key))
     if budget_pool > 0 and not expect_revert:
         app_args = ((list(extra_args) or None) if selector is None
                     else [selector] + list(extra_args))

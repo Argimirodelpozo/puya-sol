@@ -8,6 +8,7 @@
 #include "builder/SelectorSemantics.h"
 #include "builder/sol-intrinsics/IntrinsicMapper.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/XchainAccounts.h"
 #include <algorithm>
 #include <cctype>
 #include <vector>
@@ -35,21 +36,43 @@ std::shared_ptr<awst::Expression> buildEvmMsgSender(
 	auto low160 = awst::makeExtractLastN(std::move(sender), 20, loc);
 	std::shared_ptr<awst::Expression> projected = awst::makeAsAccount(
 		awst::makeLeftPadToN(std::move(low160), 32, loc), loc);
-	// xchain account model: a caller that presented a VERIFIED owner claim
-	// (ApplicationArgs[2], asserted against the derived LogicSig address at
-	// the entry arm) IS that 20-byte EVM identity. The low-20 projection of
-	// the raw sender survives only as the unclaimed-caller compatibility
-	// shim (deploy/creator paths).
-	if (ctx.typeMapper.profile().xchainAccounts)
+	// xchain account model: a caller that presented a valid owner claim
+	// (ApplicationArgs[2]: 20 bytes whose derived LogicSig address IS the
+	// sender) is that EVM identity. The check is fully SELF-VERIFYING at
+	// the read site — arity alone must not gate it, because __postInit and
+	// ARC-4-routed calls legitimately carry 3+ args that are NOT claims
+	// (a multi-arg ctor once adopted its own second argument as the
+	// minting identity). The hash comparison cannot pass accidentally.
+	// The low-20 projection of the raw sender survives only as the
+	// unclaimed-caller compatibility shim (deploy/creator paths).
+	if (auto const& xc = ctx.typeMapper.profile().xchainAccounts)
 	{
-		auto hasClaim = awst::makeNumericCompare(
+		auto argCountOk = awst::makeNumericCompare(
 			awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
 			awst::NumericComparison::Gte,
 			awst::makeIntegerConstant("3", loc), loc);
+		auto lenOk = awst::makeNumericCompare(
+			awst::makeLen(awst::makeAppArg(2, loc), loc),
+			awst::NumericComparison::Eq,
+			awst::makeIntegerConstant("20", loc), loc);
+		auto shapeOk = awst::makeBoolBinOp(
+			std::move(argCountOk), awst::BinaryBooleanOperator::And,
+			std::move(lenOk), loc);
+		auto derivedOk = awst::makeBytesComparison(
+			awst::makeAsBytes(
+				builder::xchain::derivedAccount(
+					*xc, awst::makeAppArg(2, loc), loc), loc),
+			awst::EqualityComparison::Eq,
+			awst::makeAsBytes(
+				awst::makeTxn("Sender", awst::WType::accountType(), loc), loc),
+			loc);
+		auto isClaim = awst::makeBoolBinOp(
+			std::move(shapeOk), awst::BinaryBooleanOperator::And,
+			std::move(derivedOk), loc);
 		auto claimed = awst::makeAsAccount(
 			awst::makeLeftPadToN(awst::makeAppArg(2, loc), 32, loc), loc);
 		return awst::makeConditional(
-			std::move(hasClaim), std::move(claimed), std::move(projected),
+			std::move(isClaim), std::move(claimed), std::move(projected),
 			awst::WType::accountType(), loc);
 	}
 	return projected;

@@ -6536,7 +6536,7 @@
                   "immutable": true
                 },
                 "condition": {
-                  "_type": "NumericComparisonExpression",
+                  "_type": "BooleanBinaryOperation",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
                     "line": 17,
@@ -6550,8 +6550,8 @@
                     "name": "bool",
                     "immutable": true
                   },
-                  "lhs": {
-                    "_type": "IntrinsicCall",
+                  "left": {
+                    "_type": "BooleanBinaryOperation",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
                       "line": 17,
@@ -6562,18 +6562,148 @@
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "uint64",
+                      "name": "bool",
                       "immutable": true
                     },
-                    "op_code": "txn",
-                    "immediates": [
-                      "NumAppArgs"
-                    ],
-                    "stack_args": []
+                    "left": {
+                      "_type": "NumericComparisonExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                        "line": 17,
+                        "end_line": 17,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "bool",
+                        "immutable": true
+                      },
+                      "lhs": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                          "line": 17,
+                          "end_line": 17,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "op_code": "txn",
+                        "immediates": [
+                          "NumAppArgs"
+                        ],
+                        "stack_args": []
+                      },
+                      "operator": ">=",
+                      "rhs": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                          "line": 17,
+                          "end_line": 17,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 3,
+                        "teal_alias": null
+                      }
+                    },
+                    "op": "and",
+                    "right": {
+                      "_type": "NumericComparisonExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                        "line": 17,
+                        "end_line": 17,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "bool",
+                        "immutable": true
+                      },
+                      "lhs": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                          "line": 17,
+                          "end_line": 17,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "op_code": "len",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                              "line": 17,
+                              "end_line": 17,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "op_code": "txna",
+                            "immediates": [
+                              "ApplicationArgs",
+                              2
+                            ],
+                            "stack_args": []
+                          }
+                        ]
+                      },
+                      "operator": "==",
+                      "rhs": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                          "line": 17,
+                          "end_line": 17,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "uint64",
+                          "immutable": true
+                        },
+                        "value": 20,
+                        "teal_alias": null
+                      }
+                    }
                   },
-                  "operator": ">=",
-                  "rhs": {
-                    "_type": "IntegerConstant",
+                  "op": "and",
+                  "right": {
+                    "_type": "BytesComparisonExpression",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
                       "line": 17,
@@ -6584,11 +6714,205 @@
                     },
                     "wtype": {
                       "_type": "WType",
-                      "name": "uint64",
+                      "name": "bool",
                       "immutable": true
                     },
-                    "value": 3,
-                    "teal_alias": null
+                    "lhs": {
+                      "_type": "ReinterpretCast",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                        "line": 17,
+                        "end_line": 17,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "expr": {
+                        "_type": "ReinterpretCast",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                          "line": 17,
+                          "end_line": 17,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "account",
+                          "immutable": true
+                        },
+                        "expr": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                            "line": 17,
+                            "end_line": 17,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "sha512_256",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                "line": 17,
+                                "end_line": 17,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                    "line": 17,
+                                    "end_line": 17,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "concat",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "BytesConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                        "line": 17,
+                                        "end_line": 17,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "value": "P;zf)a$#)=fD`",
+                                      "encoding": "base16"
+                                    },
+                                    {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                        "line": 17,
+                                        "end_line": 17,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "BytesWType",
+                                        "name": "bytes",
+                                        "immutable": true,
+                                        "length": null
+                                      },
+                                      "op_code": "txna",
+                                      "immediates": [
+                                        "ApplicationArgs",
+                                        2
+                                      ],
+                                      "stack_args": []
+                                    }
+                                  ]
+                                },
+                                {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                    "line": 17,
+                                    "end_line": 17,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "value": "NPz(",
+                                  "encoding": "base16"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    },
+                    "operator": "==",
+                    "rhs": {
+                      "_type": "ReinterpretCast",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                        "line": 17,
+                        "end_line": 17,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "expr": {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                          "line": 17,
+                          "end_line": 17,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "account",
+                          "immutable": true
+                        },
+                        "op_code": "txn",
+                        "immediates": [
+                          "Sender"
+                        ],
+                        "stack_args": []
+                      }
+                    }
                   }
                 },
                 "true_expr": {
@@ -7981,7 +8305,7 @@
                                 "immutable": true
                               },
                               "condition": {
-                                "_type": "NumericComparisonExpression",
+                                "_type": "BooleanBinaryOperation",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
                                   "line": 24,
@@ -7995,8 +8319,8 @@
                                   "name": "bool",
                                   "immutable": true
                                 },
-                                "lhs": {
-                                  "_type": "IntrinsicCall",
+                                "left": {
+                                  "_type": "BooleanBinaryOperation",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
                                     "line": 24,
@@ -8007,18 +8331,148 @@
                                   },
                                   "wtype": {
                                     "_type": "WType",
-                                    "name": "uint64",
+                                    "name": "bool",
                                     "immutable": true
                                   },
-                                  "op_code": "txn",
-                                  "immediates": [
-                                    "NumAppArgs"
-                                  ],
-                                  "stack_args": []
+                                  "left": {
+                                    "_type": "NumericComparisonExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                      "line": 24,
+                                      "end_line": 24,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "bool",
+                                      "immutable": true
+                                    },
+                                    "lhs": {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                        "line": 24,
+                                        "end_line": 24,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "op_code": "txn",
+                                      "immediates": [
+                                        "NumAppArgs"
+                                      ],
+                                      "stack_args": []
+                                    },
+                                    "operator": ">=",
+                                    "rhs": {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                        "line": 24,
+                                        "end_line": 24,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 3,
+                                      "teal_alias": null
+                                    }
+                                  },
+                                  "op": "and",
+                                  "right": {
+                                    "_type": "NumericComparisonExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                      "line": 24,
+                                      "end_line": 24,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "bool",
+                                      "immutable": true
+                                    },
+                                    "lhs": {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                        "line": 24,
+                                        "end_line": 24,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "op_code": "len",
+                                      "immediates": [],
+                                      "stack_args": [
+                                        {
+                                          "_type": "IntrinsicCall",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                            "line": 24,
+                                            "end_line": 24,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "BytesWType",
+                                            "name": "bytes",
+                                            "immutable": true,
+                                            "length": null
+                                          },
+                                          "op_code": "txna",
+                                          "immediates": [
+                                            "ApplicationArgs",
+                                            2
+                                          ],
+                                          "stack_args": []
+                                        }
+                                      ]
+                                    },
+                                    "operator": "==",
+                                    "rhs": {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                        "line": 24,
+                                        "end_line": 24,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 20,
+                                      "teal_alias": null
+                                    }
+                                  }
                                 },
-                                "operator": ">=",
-                                "rhs": {
-                                  "_type": "IntegerConstant",
+                                "op": "and",
+                                "right": {
+                                  "_type": "BytesComparisonExpression",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
                                     "line": 24,
@@ -8029,11 +8483,205 @@
                                   },
                                   "wtype": {
                                     "_type": "WType",
-                                    "name": "uint64",
+                                    "name": "bool",
                                     "immutable": true
                                   },
-                                  "value": 3,
-                                  "teal_alias": null
+                                  "lhs": {
+                                    "_type": "ReinterpretCast",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                      "line": 24,
+                                      "end_line": 24,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "expr": {
+                                      "_type": "ReinterpretCast",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                        "line": 24,
+                                        "end_line": 24,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "account",
+                                        "immutable": true
+                                      },
+                                      "expr": {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                          "line": 24,
+                                          "end_line": 24,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "sha512_256",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntrinsicCall",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                              "line": 24,
+                                              "end_line": 24,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "BytesWType",
+                                              "name": "bytes",
+                                              "immutable": true,
+                                              "length": null
+                                            },
+                                            "op_code": "concat",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                  "line": 24,
+                                                  "end_line": 24,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "op_code": "concat",
+                                                "immediates": [],
+                                                "stack_args": [
+                                                  {
+                                                    "_type": "BytesConstant",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                      "line": 24,
+                                                      "end_line": 24,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "value": "P;zf)a$#)=fD`",
+                                                    "encoding": "base16"
+                                                  },
+                                                  {
+                                                    "_type": "IntrinsicCall",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                      "line": 24,
+                                                      "end_line": 24,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "op_code": "txna",
+                                                    "immediates": [
+                                                      "ApplicationArgs",
+                                                      2
+                                                    ],
+                                                    "stack_args": []
+                                                  }
+                                                ]
+                                              },
+                                              {
+                                                "_type": "BytesConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                  "line": 24,
+                                                  "end_line": 24,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "value": "NPz(",
+                                                "encoding": "base16"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  },
+                                  "operator": "==",
+                                  "rhs": {
+                                    "_type": "ReinterpretCast",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                      "line": 24,
+                                      "end_line": 24,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "expr": {
+                                      "_type": "IntrinsicCall",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                        "line": 24,
+                                        "end_line": 24,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "account",
+                                        "immutable": true
+                                      },
+                                      "op_code": "txn",
+                                      "immediates": [
+                                        "Sender"
+                                      ],
+                                      "stack_args": []
+                                    }
+                                  }
                                 }
                               },
                               "true_expr": {
@@ -9137,7 +9785,7 @@
                                           "immutable": true
                                         },
                                         "condition": {
-                                          "_type": "NumericComparisonExpression",
+                                          "_type": "BooleanBinaryOperation",
                                           "source_location": {
                                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
                                             "line": 24,
@@ -9151,8 +9799,8 @@
                                             "name": "bool",
                                             "immutable": true
                                           },
-                                          "lhs": {
-                                            "_type": "IntrinsicCall",
+                                          "left": {
+                                            "_type": "BooleanBinaryOperation",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
                                               "line": 24,
@@ -9163,18 +9811,148 @@
                                             },
                                             "wtype": {
                                               "_type": "WType",
-                                              "name": "uint64",
+                                              "name": "bool",
                                               "immutable": true
                                             },
-                                            "op_code": "txn",
-                                            "immediates": [
-                                              "NumAppArgs"
-                                            ],
-                                            "stack_args": []
+                                            "left": {
+                                              "_type": "NumericComparisonExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                "line": 24,
+                                                "end_line": 24,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "bool",
+                                                "immutable": true
+                                              },
+                                              "lhs": {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                  "line": 24,
+                                                  "end_line": 24,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "op_code": "txn",
+                                                "immediates": [
+                                                  "NumAppArgs"
+                                                ],
+                                                "stack_args": []
+                                              },
+                                              "operator": ">=",
+                                              "rhs": {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                  "line": 24,
+                                                  "end_line": 24,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 3,
+                                                "teal_alias": null
+                                              }
+                                            },
+                                            "op": "and",
+                                            "right": {
+                                              "_type": "NumericComparisonExpression",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                "line": 24,
+                                                "end_line": 24,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "WType",
+                                                "name": "bool",
+                                                "immutable": true
+                                              },
+                                              "lhs": {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                  "line": 24,
+                                                  "end_line": 24,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "op_code": "len",
+                                                "immediates": [],
+                                                "stack_args": [
+                                                  {
+                                                    "_type": "IntrinsicCall",
+                                                    "source_location": {
+                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                      "line": 24,
+                                                      "end_line": 24,
+                                                      "comment_lines": 0,
+                                                      "column": null,
+                                                      "end_column": null
+                                                    },
+                                                    "wtype": {
+                                                      "_type": "BytesWType",
+                                                      "name": "bytes",
+                                                      "immutable": true,
+                                                      "length": null
+                                                    },
+                                                    "op_code": "txna",
+                                                    "immediates": [
+                                                      "ApplicationArgs",
+                                                      2
+                                                    ],
+                                                    "stack_args": []
+                                                  }
+                                                ]
+                                              },
+                                              "operator": "==",
+                                              "rhs": {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                  "line": 24,
+                                                  "end_line": 24,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 20,
+                                                "teal_alias": null
+                                              }
+                                            }
                                           },
-                                          "operator": ">=",
-                                          "rhs": {
-                                            "_type": "IntegerConstant",
+                                          "op": "and",
+                                          "right": {
+                                            "_type": "BytesComparisonExpression",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
                                               "line": 24,
@@ -9185,11 +9963,205 @@
                                             },
                                             "wtype": {
                                               "_type": "WType",
-                                              "name": "uint64",
+                                              "name": "bool",
                                               "immutable": true
                                             },
-                                            "value": 3,
-                                            "teal_alias": null
+                                            "lhs": {
+                                              "_type": "ReinterpretCast",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                "line": 24,
+                                                "end_line": 24,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "expr": {
+                                                "_type": "ReinterpretCast",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                  "line": 24,
+                                                  "end_line": 24,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "account",
+                                                  "immutable": true
+                                                },
+                                                "expr": {
+                                                  "_type": "IntrinsicCall",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                    "line": 24,
+                                                    "end_line": 24,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
+                                                  },
+                                                  "wtype": {
+                                                    "_type": "BytesWType",
+                                                    "name": "bytes",
+                                                    "immutable": true,
+                                                    "length": null
+                                                  },
+                                                  "op_code": "sha512_256",
+                                                  "immediates": [],
+                                                  "stack_args": [
+                                                    {
+                                                      "_type": "IntrinsicCall",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                        "line": 24,
+                                                        "end_line": 24,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "BytesWType",
+                                                        "name": "bytes",
+                                                        "immutable": true,
+                                                        "length": null
+                                                      },
+                                                      "op_code": "concat",
+                                                      "immediates": [],
+                                                      "stack_args": [
+                                                        {
+                                                          "_type": "IntrinsicCall",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                            "line": 24,
+                                                            "end_line": 24,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "BytesWType",
+                                                            "name": "bytes",
+                                                            "immutable": true,
+                                                            "length": null
+                                                          },
+                                                          "op_code": "concat",
+                                                          "immediates": [],
+                                                          "stack_args": [
+                                                            {
+                                                              "_type": "BytesConstant",
+                                                              "source_location": {
+                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                                "line": 24,
+                                                                "end_line": 24,
+                                                                "comment_lines": 0,
+                                                                "column": null,
+                                                                "end_column": null
+                                                              },
+                                                              "wtype": {
+                                                                "_type": "BytesWType",
+                                                                "name": "bytes",
+                                                                "immutable": true,
+                                                                "length": null
+                                                              },
+                                                              "value": "P;zf)a$#)=fD`",
+                                                              "encoding": "base16"
+                                                            },
+                                                            {
+                                                              "_type": "IntrinsicCall",
+                                                              "source_location": {
+                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                                "line": 24,
+                                                                "end_line": 24,
+                                                                "comment_lines": 0,
+                                                                "column": null,
+                                                                "end_column": null
+                                                              },
+                                                              "wtype": {
+                                                                "_type": "BytesWType",
+                                                                "name": "bytes",
+                                                                "immutable": true,
+                                                                "length": null
+                                                              },
+                                                              "op_code": "txna",
+                                                              "immediates": [
+                                                                "ApplicationArgs",
+                                                                2
+                                                              ],
+                                                              "stack_args": []
+                                                            }
+                                                          ]
+                                                        },
+                                                        {
+                                                          "_type": "BytesConstant",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                            "line": 24,
+                                                            "end_line": 24,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "BytesWType",
+                                                            "name": "bytes",
+                                                            "immutable": true,
+                                                            "length": null
+                                                          },
+                                                          "value": "NPz(",
+                                                          "encoding": "base16"
+                                                        }
+                                                      ]
+                                                    }
+                                                  ]
+                                                }
+                                              }
+                                            },
+                                            "operator": "==",
+                                            "rhs": {
+                                              "_type": "ReinterpretCast",
+                                              "source_location": {
+                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                "line": 24,
+                                                "end_line": 24,
+                                                "comment_lines": 0,
+                                                "column": null,
+                                                "end_column": null
+                                              },
+                                              "wtype": {
+                                                "_type": "BytesWType",
+                                                "name": "bytes",
+                                                "immutable": true,
+                                                "length": null
+                                              },
+                                              "expr": {
+                                                "_type": "IntrinsicCall",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol",
+                                                  "line": 24,
+                                                  "end_line": 24,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "account",
+                                                  "immutable": true
+                                                },
+                                                "op_code": "txn",
+                                                "immediates": [
+                                                  "Sender"
+                                                ],
+                                                "stack_args": []
+                                              }
+                                            }
                                           }
                                         },
                                         "true_expr": {

@@ -15,6 +15,7 @@ Writes avm_results.json into the case dir.
 """
 from __future__ import annotations
 
+import os
 import base64
 import hashlib
 import json
@@ -525,6 +526,37 @@ def algo_account(i: int) -> _Acct:
     return _Acct(encoding.encode_address(pub), priv_b64)
 
 
+# ── xchain sender accounts (EVM_DIVERGENCE.md, --xchain-template) ─────────
+# Each sender index i becomes the LogicSig account OWNED by its historical
+# 20-byte address: A(E) = sha512_256("Program" || template-with-E-spliced).
+# msg.sender then equals the TRUE historical identity (the app call carries
+# the owner claim in ApplicationArgs[2]), retiring the low-20-of-ed25519
+# projection from the replay canon. CHD_NO_XCHAIN=1 restores ed25519 mode.
+XCHAIN_PLACEHOLDER = bytes.fromhex("ee" * 20)
+XCHAIN_TOY_TEAL = ("#pragma version 9\npushbytes 0x"
+                   + XCHAIN_PLACEHOLDER.hex() + "\npop\npushint 1\n")
+
+
+def xchain_template(algod) -> bytes:
+    tmpl = base64.b64decode(algod.compile(XCHAIN_TOY_TEAL)["result"])
+    assert tmpl.count(XCHAIN_PLACEHOLDER) == 1
+    return tmpl
+
+
+def xchain_account(template: bytes, owner20: bytes) -> _Acct:
+    import hashlib
+    from algosdk.atomic_transaction_composer import LogicSigTransactionSigner
+    from algosdk.transaction import LogicSigAccount
+    program = template.replace(XCHAIN_PLACEHOLDER, owner20)
+    address = encoding.encode_address(
+        hashlib.new("sha512_256", b"Program" + program).digest())
+    acct = _Acct(address, None)
+    acct.lsig = LogicSigAccount(program)
+    acct.signer = LogicSigTransactionSigner(acct.lsig)
+    acct.xchain_owner = owner20
+    return acct
+
+
 def main():
     case_dir = Path(sys.argv[1]).resolve()
     opts = json.loads(sys.argv[2]) if len(sys.argv) > 2 else {}
@@ -558,7 +590,20 @@ def main():
     clock_by_index = replay_clock_targets(calls, time_base)
 
     # ── deterministic sender accounts, funded from the dispenser ──────────
-    accts = {i: algo_account(i) for i in reg["senders"].values()}
+    use_xchain = not os.environ.get("CHD_NO_XCHAIN")
+    _idx_owner = {}
+    for _a, _i in (reg.get("senders") or {}).items():
+        _idx_owner[_i] = bytes.fromhex(_a[2:])
+    for _a, _i in (reg.get("args") or {}).items():
+        _idx_owner.setdefault(_i, bytes.fromhex(_a[2:]))
+    _xtmpl = xchain_template(ln.algod) if use_xchain else None
+
+    def sender_account(i: int) -> _Acct:
+        if not use_xchain:
+            return algo_account(i)
+        return xchain_account(_xtmpl, _idx_owner.get(i) or arg_content20(i))
+
+    accts = {i: sender_account(i) for i in reg["senders"].values()}
     # ARG-SYMBOL senders: a contract that only ever appears as an argument
     # (the curator Safe behind morpho's internal setAdmin/setFlowCaps) still
     # SENDS internal calls. accts.get(sym, dispenser) silently degraded those
@@ -568,7 +613,7 @@ def main():
     for _c in calls:
         _sm0 = (_c.get("sender") or {}).get("__addr__")
         if isinstance(_sm0, int) and _sm0 not in accts:
-            accts[_sm0] = algo_account(_sm0)
+            accts[_sm0] = sender_account(_sm0)
     used = {c["sender"]["__addr__"] for c in calls
             if c.get("sender") and isinstance(c["sender"].get("__addr__"), int)}
     algod = ln.algod
@@ -616,6 +661,9 @@ def main():
         if m == "C":
             return dispenser.address
         if isinstance(m, int) and m in accts:
+            owner = getattr(accts[m], "xchain_owner", None)
+            if owner is not None:
+                return encoding.encode_address(bytes(12) + owner)
             return accts[m].address
         if isinstance(m, int):
             return encoding.encode_address(bytes(12) + arg_content20(m))
@@ -662,6 +710,10 @@ def main():
     # calldata; ARC4 remains the native transport only for harness-private
     # lifecycle methods and dependency tape loaders.
     _main_args = list(_main_args or []) + ["--contract-abi", "evm"]
+    _xchain_args = ([] if not use_xchain else
+                    ["--xchain-template", _xtmpl.hex(),
+                     "--xchain-placeholder", XCHAIN_PLACEHOLDER.hex()])
+    _main_args += _xchain_args
     # A dep that must ROUTE a call has to be built with its CALLER's wire ABI.
     # Deps were compiled with the mode flags only, so their routers dispatched
     # ARC-4 method selectors while the contract under test called them with EVM
@@ -690,7 +742,8 @@ def main():
             try:
                 _abi_args = (_mode_args
                              if dspec["addr"].lower() in _taped_deps
-                             else list(_mode_args or []) + ["--contract-abi", "evm"])
+                             else list(_mode_args or []) + ["--contract-abi", "evm"]
+                             + _xchain_args)
                 darts = h.compile(dep_sol, extra_args=_abi_args)
                 dapp = h.deploy(darts, dspec.get("name"),
                                 ctor_args=[resolve(m) for m in dspec["args"]] or None)
@@ -722,13 +775,18 @@ def main():
     for _a, _i in (reg.get("args") or {}).items():
         # symbols that SEND resolve to their real (signable) account — the
         # translated answer must equal what msg.sender will actually be
+        _sa = accts.get(_i) if _i in _sender_syms else None
+        _own = getattr(_sa, "xchain_owner", None) if _sa else None
         _m20[bytes.fromhex(_a[2:])] = (
-            encoding.decode_address(accts[_i].address)
-            if _i in _sender_syms and _i in accts
+            bytes(12) + _own if _own is not None
+            else encoding.decode_address(_sa.address) if _sa
             else bytes(12) + arg_content20(_i))
     for _a, _i in (reg.get("senders") or {}).items():
         if _i in accts:
-            _m20[bytes.fromhex(_a[2:])] = encoding.decode_address(accts[_i].address)
+            _own2 = getattr(accts[_i], "xchain_owner", None)
+            _m20[bytes.fromhex(_a[2:])] = (
+                bytes(12) + _own2 if _own2 is not None
+                else encoding.decode_address(accts[_i].address))
     if reg.get("creator"):
         _m20[bytes.fromhex(reg["creator"][2:])] = encoding.decode_address(
             dispenser.address)
@@ -900,8 +958,10 @@ def main():
         values = [_evm_wire_value(value, spec)
                   for value, spec in zip(args, inputs)]
         body = evm_abi_encode([_ctype(spec) for spec in inputs], values)
+        _claim = getattr(ln.account, "xchain_owner", None)
+        _xargs = (body,) if _claim is None else (body, _claim)
         result = h.call_raw(
-            app_, _evm_selector(sig), extra_args=(body,), **call_opts)
+            app_, _evm_selector(sig), extra_args=_xargs, **call_opts)
         if result.reverted:
             return result
         magic = bytes.fromhex("151f7c75")
@@ -944,6 +1004,9 @@ def main():
            bytes(32).hex(): symbol("Z")}
     for i, a in accts.items():
         inv[encoding.decode_address(a.address).hex()] = symbol(i)
+        _own3 = getattr(a, "xchain_owner", None)
+        if _own3 is not None:
+            inv[(bytes(12) + _own3).hex()] = symbol(i)
     for _a, i in reg["args"].items():
         inv[(bytes(12) + arg_content20(i)).hex()] = symbol(i)
     for _a, i in (reg.get("deps") or {}).items():
@@ -1204,7 +1267,10 @@ def main():
     syms = {symbol("C"): encoding.decode_address(dispenser.address),
             symbol("Z"): bytes(32)}
     for _i, _a in accts.items():
-        syms[symbol(_i)] = encoding.decode_address(_a.address)
+        # xchain senders: keys/events carry the IDENTITY (owner) form.
+        _own4 = getattr(_a, "xchain_owner", None)
+        syms[symbol(_i)] = (bytes(12) + _own4 if _own4 is not None
+                            else encoding.decode_address(_a.address))
     for _ad, _i in reg["args"].items():
         syms[symbol(_i)] = bytes(12) + arg_content20(_i)
     for _ad, _i in (reg.get("deps") or {}).items():
