@@ -271,10 +271,18 @@ int main(int _argc, char* _argv[])
 
 	// Option-driven post-AWST passes (order matters; see AwstPostPasses.h).
 	applyInlineOverrides(roots, opts);
-	applyFnSplits(roots, opts);
-	auto pureHelperResult = extractPureHelpers(roots, opts);
-	if (auto exitCode = runSimpleSplitterIfRequested(roots, opts, sourceFile))
-		return *exitCode;
+	// The experimental splitter (--split-config / --fn-split /
+	// --deploy-pure-helpers) lives on branch `experimental/splitter`,
+	// removed from main pending the redesign (memory: splitter-deprecated).
+	if (!opts.splitConfig.empty() || !opts.forceDelegate.empty()
+		|| !opts.fnSplits.empty() || opts.deployPureHelpers)
+	{
+		logger.error(
+			"the splitter was removed from main pending redesign — "
+			"check out branch `experimental/splitter` for --split-config/"
+			"--fn-split/--deploy-pure-helpers");
+		return 2;
+	}
 
 	// ─── Serialization and output ─────────────────────────────────────────
 
@@ -368,10 +376,6 @@ int main(int _argc, char* _argv[])
 	auto const& childContracts = builder.artifacts().childContracts;
 	std::string optionsPath = (fs::path(opts.outputDir) / "options.json").string();
 	std::map<std::string, int64_t> intTemplateVars;
-	// --deploy-pure-helpers injects TemplateVars at rewritten call sites;
-	// declare as int placeholders (deploy harness substitutes real app ids).
-	for (auto const& h : pureHelperResult.extracted)
-		intTemplateVars[h.templateVarName] = 0;
 	if (contractNames.size() <= 1)
 	{
 		std::string contractName = contractNames.empty() ? "" : contractNames[0];

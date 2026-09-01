@@ -1,20 +1,24 @@
-#include "json/Base85.h"
+#pragma once
+
+/// @file Base85.hpp
+/// RFC1924 base85 encode/decode — header-only (single consumer:
+/// AWSTSerializer's byte-payload compaction).
 
 #include <algorithm>
 #include <cstdint>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 namespace puyasol::json
 {
 
-namespace
-{
 
 // RFC1924 character set (85 printable ASCII characters)
-constexpr char const* ALPHABET =
+inline constexpr char const* ALPHABET =
 	"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~";
 
-int charIndex(char _c)
+inline int charIndex(char _c)
 {
 	char const* pos = std::find(ALPHABET, ALPHABET + 85, _c);
 	if (pos == ALPHABET + 85)
@@ -22,9 +26,7 @@ int charIndex(char _c)
 	return static_cast<int>(pos - ALPHABET);
 }
 
-} // namespace
-
-std::string base85Encode(std::vector<uint8_t> const& _data)
+inline std::string base85Encode(std::vector<uint8_t> const& _data)
 {
 	if (_data.empty())
 		return "";

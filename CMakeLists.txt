@@ -198,14 +198,8 @@ set(SOURCES
 	src/builder/sol-ast/stmts/SolInlineAssembly.cpp
 	src/builder/sol-ast/stmts/SolBlock.cpp
 	src/json/AWSTSerializer.cpp
-	src/json/Base85.cpp
 	src/json/OptionsWriter.cpp
 	src/runner/PuyaRunner.cpp
-	src/experimental/splitter/FunctionSplitter.cpp
-	src/experimental/splitter/PureHelperExtractor.cpp
-	src/experimental/splitter/AwstWalker.cpp
-	src/experimental/splitter/SimpleSplitter.cpp
-	src/experimental/splitter/SimpleSplitterRunner.cpp
 )
 
 add_executable(puya-sol ${SOURCES})
