@@ -310,55 +310,6 @@ int main(int _argc, char* _argv[])
 		logger.info("Wrote: " + awstPath);
 	}
 
-	// Assigning INTO a constant is never meaningful — it means some lvalue path
-	// gave up and returned a placeholder (e.g. SolExpressionDispatch's
-	// "unsupported member access" warning yields an empty BytesConstant), so the
-	// write silently goes nowhere. puya rejects it with an unreadable
-	// "deserialization failed: 'BytesConstant'" because a constant isn't in its
-	// Lvalue union; other shapes would just drop the store. Fail loud here, at
-	// the source location, instead of either outcome.
-	{
-		static const std::set<std::string> kConstNodes{
-			"IntegerConstant", "BoolConstant", "BytesConstant", "StringConstant",
-			"VoidConstant", "MethodConstant", "AddressConstant"};
-		std::function<void(nlohmann::json const&)> scan = [&](nlohmann::json const& node)
-		{
-			if (node.is_object())
-			{
-				auto ty = node.value("_type", std::string{});
-				if ((ty == "AssignmentExpression" || ty == "AssignmentStatement")
-					&& node.contains("target") && node["target"].is_object()
-					&& kConstNodes.count(node["target"].value("_type", std::string{})))
-				{
-					auto const& t = node["target"];
-					puyasol::awst::SourceLocation loc;
-					if (node.contains("source_location") && node["source_location"].is_object())
-					{
-						auto const& sl = node["source_location"];
-						loc.file = sl.value("file", std::string{});
-						loc.line = sl.value("line", 0);
-					}
-					logger.error(
-						"assignment target lowered to a constant ("
-						+ t.value("_type", std::string{})
-						+ ") — this write would be silently dropped. The left-hand side "
-						"uses a construct puya-sol cannot resolve to storage or memory "
-						"(look for a preceding 'unsupported member access' warning).",
-						loc);
-				}
-				for (auto const& [k, v]: node.items())
-					scan(v);
-			}
-			else if (node.is_array())
-				for (auto const& v: node)
-					scan(v);
-		};
-		scan(awstJson);
-		if (logger.hasErrors())
-			return 1;
-	}
-
-
 	// Dump to stdout if requested (keep on stdout for piping)
 	if (opts.dumpAwst)
 		std::cout << awstJson.dump(2) << std::endl;

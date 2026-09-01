@@ -2,6 +2,7 @@
 
 #include "awst/SourceLocation.h"
 #include "awst/WType.h"
+#include "Logger.h"
 
 #include <map>
 #include <memory>
@@ -565,6 +566,27 @@ struct AssignmentExpression: Expression
 	std::shared_ptr<Expression> value;
 };
 
+/// True for constant nodes (IntegerConstant … AddressConstant). Assigning
+/// INTO a constant is never meaningful — it means an lvalue path gave up and
+/// returned a placeholder; puya rejects such AWST with an unreadable
+/// "deserialization failed" (constants aren't in its Lvalue union), and a
+/// permissive shape would silently drop the store. The assignment factories
+/// fail loud at creation instead — one guard covers every producing path.
+/// Defined at the bottom of this header (MethodConstant/AddressConstant are
+/// declared after the factories).
+inline bool isConstantExpression(Expression const* _e);
+
+inline void checkAssignableTarget(
+	Expression const* _target, SourceLocation const& _loc)
+{
+	if (isConstantExpression(_target))
+		Logger::instance().error(
+			"assignment target lowered to a constant — this write would be "
+			"silently dropped. The left-hand side uses a construct the "
+			"compiler could not resolve to a writable location (look for a "
+			"preceding 'unsupported member access' warning).", _loc);
+}
+
 // wtype defaults to target->wtype; pass explicit wtype for tuple LHS or library writes.
 inline std::shared_ptr<AssignmentExpression> makeAssignmentExpression(
 	std::shared_ptr<Expression> target,
@@ -578,6 +600,7 @@ inline std::shared_ptr<AssignmentExpression> makeAssignmentExpression(
 	node->wtype = wtype;
 	node->target = std::move(target);
 	node->value = std::move(value);
+	checkAssignableTarget(node->target.get(), node->sourceLocation);
 	return node;
 }
 
@@ -2141,6 +2164,7 @@ inline std::shared_ptr<AssignmentStatement> makeAssignmentStatement(
 	node->sourceLocation = std::move(loc);
 	node->target = std::move(target);
 	node->value = std::move(value);
+	checkAssignableTarget(node->target.get(), node->sourceLocation);
 	return node;
 }
 
@@ -2294,5 +2318,18 @@ struct LogicSignature: RootNode
 	std::optional<int> avmVersion;
 	std::optional<bool> validateEncoding;
 };
+
+// Defined here — after every constant node type is complete (declaration
+// beside checkAssignableTarget, which the assignment factories call).
+inline bool isConstantExpression(Expression const* _e)
+{
+	return dynamic_cast<IntegerConstant const*>(_e)
+		|| dynamic_cast<BoolConstant const*>(_e)
+		|| dynamic_cast<BytesConstant const*>(_e)
+		|| dynamic_cast<StringConstant const*>(_e)
+		|| dynamic_cast<VoidConstant const*>(_e)
+		|| dynamic_cast<MethodConstant const*>(_e)
+		|| dynamic_cast<AddressConstant const*>(_e);
+}
 
 } // namespace puyasol::awst

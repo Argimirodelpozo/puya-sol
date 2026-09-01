@@ -196,6 +196,17 @@ public:
 			}
 		}
 
+		// LVALUE position (solc's willBeWrittenTo): a placeholder here becomes
+		// an assignment target and the write silently goes nowhere — fail loud
+		// at the source instead (the assignment factories carry a second net).
+		if (_n.annotation().willBeWrittenTo)
+		{
+			Logger::instance().error(
+				"unsupported member access '." + _n.memberName()
+				+ "' in assignment-target position — the write cannot be "
+				"resolved to a storage or memory location", loc);
+			return awst::makeBytesConstant({}, loc);
+		}
 		// Warning (not error): TypeType member access like `MyType.wrap;` (no
 		// invocation) emits a typed zero — value never used at runtime.
 		Logger::instance().warning(
