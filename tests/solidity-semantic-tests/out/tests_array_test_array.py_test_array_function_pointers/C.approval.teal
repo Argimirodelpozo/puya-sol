@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_function_pointers.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1 8
-    bytecblock 0x010000000000000000 0x0000 0x151f7c75 0x0000000000000000 0x00020000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x000000000000000000000000
+    bytecblock 0x010000000000000000 0x0000 0x151f7c75 0x0000000000000000 0x4e487b710000000000000000000000000000000000000000000000000000000000000051 0x00020000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -533,6 +533,8 @@ f_after_while@6:
     bytec_0 // 0x010000000000000000
     b<
     assert // array index out of bounds
+    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
     err // invalid function pointer
 
 f_ternary_false@2:
@@ -576,7 +578,7 @@ f2_while_top@4:
     <
     bz f2_after_while@6
     uncover 2
-    bytec 4 // 0x00020000
+    bytec 5 // 0x00020000
     intc_2 // 1
     callsub dynamic_array_concat_dynamic_element
     cover 2
@@ -652,7 +654,7 @@ f2_after_while@11:
     pushbytes 0x01
     b+
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     b f2_while_top@7
@@ -666,6 +668,8 @@ f2_after_while@12:
     bytec_0 // 0x010000000000000000
     b<
     assert // array index out of bounds
+    bytec 4 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
     err // invalid function pointer
 
 f2_ternary_false@2:
@@ -713,7 +717,7 @@ g_while_top@4:
     itob
     extract 6 0
     replace2 0
-    bytec 6 // 0x000000000000000000000000
+    bytec 7 // 0x000000000000000000000000
     concat
     swap
     intc_2 // 1
@@ -805,7 +809,7 @@ g2_while_top@4:
     <
     bz g2_after_while@6
     uncover 2
-    bytec 4 // 0x00020000
+    bytec 5 // 0x00020000
     intc_2 // 1
     callsub dynamic_array_concat_dynamic_element
     cover 2
@@ -850,7 +854,7 @@ g2_while_top@9:
     itob
     extract 6 0
     replace2 0
-    bytec 6 // 0x000000000000000000000000
+    bytec 7 // 0x000000000000000000000000
     concat
     cover 3
     intc_2 // 1
@@ -881,7 +885,7 @@ g2_after_while@11:
     pushbytes 0x01
     b+
     dup
-    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     b g2_while_top@7

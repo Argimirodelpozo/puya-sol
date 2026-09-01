@@ -144,10 +144,15 @@ h_ternary_merge@3:
     select
     intc_0 // 1
     ==
-    assert // invalid function pointer
+    bz h_else_body@6
     frame_dig -1
     extract 2 1
     retsub
+
+h_else_body@6:
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 h_ternary_false@2:
     intc_1 // 0

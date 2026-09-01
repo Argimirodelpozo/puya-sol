@@ -251,10 +251,15 @@ use_after_if_else@6:
     select
     intc_1 // 1
     ==
-    assert // invalid function pointer
+    bz use_else_body@9
     frame_dig -1
     callsub double
     retsub
+
+use_else_body@9:
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 use_ternary_false@4:
     intc_2 // 0

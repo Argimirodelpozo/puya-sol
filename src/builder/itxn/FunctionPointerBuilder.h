@@ -95,11 +95,15 @@ public:
 	/// Generate __funcptr_dispatch subroutines (one per signature group).
 	/// Called after all methods are translated. Populates _outRootSubs so
 	/// library subroutines can resolve dispatch via SubroutineID.
+	/// _existingMethods: the contract's already-translated methods — the
+	/// GROUND-TRUTH return types for public multi-return targets (their
+	/// returns are wire-encoded; the dispatch adapts back to native).
 	static std::vector<awst::ContractMethod> generateDispatchMethods(
 		ContractContext& _ctx,
 		std::string const& _cref,
 		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs = nullptr);
+		std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs = nullptr,
+		std::vector<awst::ContractMethod> const* _existingMethods = nullptr);
 
 	/// Dispatch subroutine name for a given function type signature.
 	static std::string dispatchName(

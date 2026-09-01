@@ -628,12 +628,17 @@ __funcptr_dispatch_ret_t_uint256_else_body@2:
     frame_dig -2
     intc_1 // 1
     ==
-    assert // invalid function pointer
+    bz __funcptr_dispatch_ret_t_uint256_else_body@4
     frame_dig -1
     !
     assert // write protection
     callsub g
     retsub
+
+__funcptr_dispatch_ret_t_uint256_else_body@4:
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/packed_functions.sol.C.__sel_to_id___funcptr_dispatch_ret_t_uint256(__sel: bytes) -> uint64:

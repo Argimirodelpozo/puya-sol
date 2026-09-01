@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fnptr_dispatch_seam.sol.FnPtrSeam.approval_program() -> uint64:
 main:
     intcblock 32 1 0 255 128 9223372036854775808 18446744073709551488 18446744073709551360
-    bytecblock 0x151f7c75 0x01 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000000 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    bytecblock 0x151f7c75 0x01 0x4e487b710000000000000000000000000000000000000000000000000000000000000051 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000000 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -203,7 +203,7 @@ main_switch_case_5@13:
     intc 4 // 128
     >=
     bz main_ternary_false@15
-    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffff
 
 main_ternary_merge@16:
     ==
@@ -234,7 +234,7 @@ main_ternary_merge@16:
     intc 4 // 128
     >=
     bz main_ternary_false@18
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@19:
     swap
@@ -493,6 +493,7 @@ main_ternary_false@7:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fnptr_dispatch_seam.sol.FnPtrSeam.pick8(c: uint64, useUnsigned: uint64, u: uint64, i: uint64) -> bytes:
 pick8:
     proto 4 1
+    pushbytes ""
     txn GroupIndex
     bz pick8_ternary_false@2
     txn GroupIndex
@@ -515,6 +516,7 @@ pick8_ternary_merge@3:
     pushint 127
     <=
     dup
+    frame_bury 0
     bnz pick8_bool_true@5
     frame_dig -1
     intc 6 // 18446744073709551488
@@ -536,7 +538,6 @@ pick8_bool_merge@7:
     assert // ABI bool validation
     frame_dig -3
     bz pick8_after_if_else@9
-    pop
     pushint 2
     intc_1 // 1
     frame_dig -4
@@ -570,12 +571,13 @@ pick8_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol
     intc_0 // 32
     bzero
     b|
+    swap
     retsub
 
 pick8_else_body@18:
     intc_1 // 1
     ==
-    assert // invalid function pointer
+    bz pick8_else_body@20
     frame_dig -2
     intc_3 // 255
     <=
@@ -592,6 +594,11 @@ pick8_else_body@18:
     itob
     b pick8_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fnptr_dispatch_seam.sol.FnPtrSeam.__funcptr_dispatch_t_uint8_ret_t_uint256@21
 
+pick8_else_body@20:
+    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
+
 pick8_after_if_else@9:
     pushints 4 3
     frame_dig -4
@@ -601,6 +608,7 @@ pick8_after_if_else@9:
     ==
     bz pick8_else_body@12
     pop
+    frame_dig 0
     bnz pick8_bool_true@33
     frame_dig -1
     intc 6 // 18446744073709551488
@@ -641,6 +649,7 @@ pick8_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol
     intc_0 // 32
     bzero
     b|
+    swap
     retsub
 
 pick8_ternary_false@37:
@@ -653,7 +662,8 @@ pick8_bool_false@34:
 pick8_else_body@12:
     pushint 3
     ==
-    assert // invalid function pointer
+    bz pick8_else_body@20
+    frame_dig 0
     bnz pick8_bool_true@24
     frame_dig -1
     intc 6 // 18446744073709551488
@@ -759,7 +769,7 @@ pickAddr_ternary_merge@3:
     bz pickAddr_else_body@6
     pop
     frame_dig -1
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     ==
     pushints 80 70
     uncover 2
@@ -780,15 +790,20 @@ pickAddr_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-
 pickAddr_else_body@6:
     pushint 7
     ==
-    assert // invalid function pointer
+    bz pickAddr_else_body@8
     frame_dig -1
-    bytec 4 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
     ==
     pushints 8 7
     uncover 2
     select
     itob
     b pickAddr_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fnptr_dispatch_seam.sol.FnPtrSeam.__funcptr_dispatch_t_address_ret_t_uint256@9
+
+pickAddr_else_body@8:
+    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 pickAddr_ternary_false@2:
     intc_2 // 0
@@ -850,7 +865,7 @@ pickEnum_ternary_merge@3:
     itob
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
 
@@ -868,7 +883,7 @@ pickEnum_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-
 pickEnum_else_body@6:
     pushint 9
     ==
-    assert // invalid function pointer
+    bz pickEnum_else_body@8
     frame_dig -1
     intc_3 // 255
     <=
@@ -887,10 +902,15 @@ pickEnum_else_body@6:
     itob
     b+
     dup
-    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     b pickEnum_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fnptr_dispatch_seam.sol.FnPtrSeam.__funcptr_dispatch_t_enum__E__18_ret_t_uint256@9
+
+pickEnum_else_body@8:
+    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 pickEnum_ternary_false@2:
     intc_2 // 0
@@ -952,13 +972,18 @@ pickPair_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-
 pickPair_else_body@6:
     pushint 11
     ==
-    assert // invalid function pointer
+    bz pickPair_else_body@8
     pushint 11
     itob
     pushint 22
     itob
     swap
     b pickPair_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fnptr_dispatch_seam.sol.FnPtrSeam.__funcptr_dispatch_ret_t_uint256_t_uint256@9
+
+pickPair_else_body@8:
+    bytec_2 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 pickPair_ternary_false@2:
     intc_2 // 0
@@ -979,13 +1004,13 @@ callExt_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
-    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec 5 // 0x80000000000000000000000000000000
+    bytec 6 // 0x80000000000000000000000000000000
     b>=
     bz callExt_ternary_false@5
-    bytec 6 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    bytec 7 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
 
 callExt_ternary_merge@6:
@@ -1035,13 +1060,13 @@ callExt_ternary_merge@6:
     itxn_submit
     itxn LastLog
     extract 4 0
-    bytec_2 // 0xffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec 5 // 0x80000000000000000000000000000000
+    bytec 6 // 0x80000000000000000000000000000000
     b>=
     bz callExt_ternary_false@12
-    bytec 6 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    bytec 7 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
 
 callExt_ternary_merge@13:

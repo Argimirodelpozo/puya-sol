@@ -158,9 +158,14 @@ callZ_ternary_merge@3:
     select
     intc_0 // 1
     ==
-    assert // invalid function pointer
+    bz callZ_else_body@6
     callsub f
     retsub
+
+callZ_else_body@6:
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 callZ_ternary_false@2:
     intc_2 // 0

@@ -157,11 +157,16 @@ test_ternary_merge@3:
     select
     intc_0 // 1
     ==
-    assert // invalid function pointer
+    bz test_else_body@6
     callsub L.longdata
     keccak256
     ==
     retsub
+
+test_else_body@6:
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 test_ternary_false@2:
     intc_1 // 0

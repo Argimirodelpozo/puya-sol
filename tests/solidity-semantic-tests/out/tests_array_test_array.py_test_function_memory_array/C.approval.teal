@@ -633,10 +633,15 @@ test_else_body@10:
 test_else_body@12:
     intc_1 // 1
     ==
-    assert // invalid function pointer
+    bz test_else_body@14
     frame_dig -2
     callsub a
     b test_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_memory_array.sol.C.__funcptr_dispatch_t_uint256_ret_t_uint256@15
+
+test_else_body@14:
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 test_ternary_false@2:
     intc_2 // 0

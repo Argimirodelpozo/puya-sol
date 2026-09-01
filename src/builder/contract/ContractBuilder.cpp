@@ -849,7 +849,7 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 		loc.file = m_sourceFile;
 		auto& dispCtx = *m_exprBuilder;
 		auto dispatchMethods = eb::FunctionPointerBuilder::generateDispatchMethods(
-			dispCtx, cref, loc, &m_dispatchSubroutines);
+			dispCtx, cref, loc, &m_dispatchSubroutines, &contract->methods);
 		for (auto& m : dispatchMethods)
 			contract->methods.push_back(std::move(m));
 		eb::FunctionPointerBuilder::reset(*m_exprBuilder);

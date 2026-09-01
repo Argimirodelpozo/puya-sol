@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/viaYul/contracts/function_pointers.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 6
-    bytecblock 0x151f7c75 0x00000000
+    bytecblock 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000051 0x00000000
     pushint 4096
     bzero
     dup
@@ -96,6 +96,8 @@ f:
 f_ternary_merge@3:
     !
     assert // not payable
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
     err // invalid function pointer
 
 f_ternary_false@2:
@@ -126,7 +128,7 @@ g_ternary_merge@3:
     itxn_field Fee
     intc_0 // 0
     itxn_field ApplicationID
-    bytec_1 // 0x00000000
+    bytec_2 // 0x00000000
     itxn_field ApplicationArgs
     itxn_submit
     retsub
@@ -148,6 +150,8 @@ h2:
 h2_ternary_merge@3:
     !
     assert // not payable
+    bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
     err // invalid function pointer
 
 h2_ternary_false@2:
@@ -178,7 +182,7 @@ k2_ternary_merge@3:
     itxn_field Fee
     intc_0 // 0
     itxn_field ApplicationID
-    bytec_1 // 0x00000000
+    bytec_2 // 0x00000000
     itxn_field ApplicationArgs
     itxn_submit
     retsub

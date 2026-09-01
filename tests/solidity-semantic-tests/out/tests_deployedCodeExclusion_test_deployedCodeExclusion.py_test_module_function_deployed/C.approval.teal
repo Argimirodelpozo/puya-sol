@@ -1,7 +1,7 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_3xpa2fk0/main.sol.C.approval_program() -> uint64:
+// /tmp/multisource_rckqtsel/main.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 32
     bytecblock "data" "__ctor_pending" 0x151f7c75 "f"
@@ -133,7 +133,7 @@ longdata:
     retsub
 
 
-// /tmp/multisource_3xpa2fk0/main.sol.C.test() -> uint64:
+// /tmp/multisource_rckqtsel/main.sol.C.test() -> uint64:
 test:
     txn GroupIndex
     bz test_ternary_false@2
@@ -157,11 +157,16 @@ test_ternary_merge@3:
     select
     intc_0 // 1
     ==
-    assert // invalid function pointer
+    bz test_else_body@6
     callsub longdata
     keccak256
     ==
     retsub
+
+test_else_body@6:
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 test_ternary_false@2:
     intc_1 // 0

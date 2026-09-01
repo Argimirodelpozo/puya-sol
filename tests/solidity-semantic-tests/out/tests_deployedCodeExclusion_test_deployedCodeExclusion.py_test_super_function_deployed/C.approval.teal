@@ -150,10 +150,15 @@ test_ternary_merge@3:
     select
     intc_0 // 1
     ==
-    assert // invalid function pointer
+    bz test_else_body@6
     pushbytes 0x275dd439f58c96100e440031372b796380c9fa136a68277453d053dbb98ecd6e
     ==
     retsub
+
+test_else_body@6:
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
 
 test_ternary_false@2:
     intc_1 // 0

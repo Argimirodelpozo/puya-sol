@@ -651,6 +651,7 @@ std::shared_ptr<awst::Block> buildDispatchEntryArm(
 	FuncPtrEntry const* entry,
 	FunctionType const* funcType,
 	awst::ContractMethod const& dispatch,
+	awst::ContractMethod const* targetMethod,
 	awst::SourceLocation const& _loc)
 {
 	auto ifBlock = awst::makeBlock(_loc);
@@ -713,6 +714,53 @@ std::shared_ptr<awst::Block> buildDispatchEntryArm(
 				arg.value = std::move(var);
 			}
 			call->args.push_back(std::move(arg));
+		}
+
+		// Public MULTI-return target: the callee's translated method carries
+		// the GROUND-TRUTH wire tuple (whichever encoder produced it —
+		// build-time, chain-dispatch, or post-pass). Type the call with it
+		// and adapt each element back to native: ARC4 uints decode through
+		// biguint (narrowed to the uint64 carrier when native), ARC4
+		// aggregates ConvertArray back; untouched elements are native.
+		if (auto const* natTuple =
+				dynamic_cast<awst::WTuple const*>(dispatch.returnType);
+			natTuple && isPublic && targetMethod)
+		{
+			auto const* wireTuple = dynamic_cast<awst::WTuple const*>(
+				targetMethod->returnType);
+			if (wireTuple
+				&& wireTuple->types().size() == natTuple->types().size())
+			{
+				call->wtype = targetMethod->returnType;
+				auto se = awst::makeEvalOnce(std::move(call), _loc);
+				auto tuple = awst::makeTupleExpression(nullptr, _loc);
+				for (size_t i = 0; i < natTuple->types().size(); ++i)
+				{
+					auto const* wire = wireTuple->types()[i];
+					auto const* native = natTuple->types()[i];
+					std::shared_ptr<awst::Expression> item =
+						awst::makeTupleItem(se, static_cast<int>(i), wire, _loc);
+					if (wire != native)
+					{
+						if (dynamic_cast<awst::ARC4UIntN const*>(wire))
+						{
+							item = awst::makeARC4Decode(std::move(item),
+								awst::WType::biguintType(), _loc);
+							if (native != awst::WType::biguintType())
+								item = builder::TypeCoercion::implicitNumericCast(
+									std::move(item), native, _loc);
+						}
+						else
+							item = awst::makeConvertArray(
+								std::move(item), native, _loc);
+					}
+					tuple->items.push_back(std::move(item));
+				}
+				tuple->wtype = dispatch.returnType;
+				ifBlock->body.push_back(
+					awst::makeReturnStatement(std::move(tuple), _loc));
+				return ifBlock;
+			}
 		}
 
 		// Public targets return WIRE-encoded values (build-time
@@ -841,7 +889,8 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 	ContractContext& _ctx,
 	std::string const& _cref,
 	awst::SourceLocation const& _loc,
-	std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs)
+	std::vector<std::shared_ptr<awst::Subroutine>>* _outRootSubs,
+	std::vector<awst::ContractMethod> const* _existingMethods)
 {
 	using namespace dispatch_detail;
 	std::vector<awst::ContractMethod> methods;
@@ -876,19 +925,29 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 
 		for (auto const* entry : entries)
 		{
-			// Public multi-return target: the wire-tuple decode is
-			// unimplemented. Merely REGISTERING such a pointer (.selector /
-			// .address accessors) must not fail the compile — skip the entry
-			// so only an actual dynamic dispatch to it hits the
+			// Ground-truth return type for wire adaptation: the target's
+			// translated ContractMethod (public returns are wire-encoded).
+			awst::ContractMethod const* targetMethod = nullptr;
+			if (_existingMethods)
+				for (auto const& m : *_existingMethods)
+					if (m.memberName == entry->name)
+					{
+						targetMethod = &m;
+						break;
+					}
+			// Public multi-return without a resolvable wire tuple (target
+			// method missing, or its return isn't the expected tuple): skip
+			// the entry — only an actual dynamic dispatch to it hits the
 			// invalid-function-pointer assert (loud at runtime).
 			if (entry->funcDef && entry->funcDef->isPartOfExternalInterface()
-				&& dynamic_cast<awst::WTuple const*>(dispatch.returnType))
+				&& dynamic_cast<awst::WTuple const*>(dispatch.returnType)
+				&& !(targetMethod && dynamic_cast<awst::WTuple const*>(
+					targetMethod->returnType)))
 			{
 				Logger::instance().warning(
 					"function pointer to PUBLIC multi-return '" + entry->name
-					+ "' cannot be dispatched (wire tuple decode "
-					  "unimplemented); calls through this pointer will fail "
-					  "at runtime.", _loc);
+					+ "' cannot be dispatched (no resolvable wire tuple); "
+					  "calls through this pointer will fail at runtime.", _loc);
 				continue;
 			}
 			auto idVar = awst::makeVarExpression("__funcptr_id", awst::WType::uint64Type(), _loc);
@@ -896,7 +955,7 @@ std::vector<awst::ContractMethod> FunctionPointerBuilder::generateDispatchMethod
 			auto cmp = awst::makeNumericCompare(std::move(idVar), awst::NumericComparison::Eq, std::move(idConst), _loc);
 
 			auto ifBlock = buildDispatchEntryArm(
-				_ctx, entry, funcType, dispatch, _loc);
+				_ctx, entry, funcType, dispatch, targetMethod, _loc);
 
 			auto ifElse = awst::makeIfElse(
 				std::move(cmp), std::move(ifBlock), std::move(elseBlock), _loc);

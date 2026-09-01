@@ -352,9 +352,14 @@ __funcptr_dispatch_ret:
     frame_dig -2
     intc_1 // 1
     ==
-    assert // invalid function pointer
+    bz __funcptr_dispatch_ret_else_body@2
     frame_dig -1
     !
     assert // write protection
     callsub ext
     retsub
+
+__funcptr_dispatch_ret_else_body@2:
+    pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000051
+    log
+    err // invalid function pointer
