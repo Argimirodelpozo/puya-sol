@@ -1,5 +1,6 @@
 #include "builder/contract/ContractBuilder.h"
 #include "builder/AwstShorthand.h"
+#include "builder/XchainAccounts.h"
 
 #include "builder/contract/RouterConditions.h"
 
@@ -541,10 +542,44 @@ void emitEvmArmSwitch(
 				awst::BytesEncoding::Base16, awst::WType::bytesType()),
 			buildEvmArmBody(typeMapper, route, retTails, loc));
 	auto guarded = awst::makeBlock(loc);
+	// xchain account model: ApplicationArgs[2] is an OPTIONAL 20-byte owner
+	// claim. Verify it ONCE here — the claimed identity must own THIS sender:
+	// sha512_256("Program" || template-with-owner-spliced) == Txn.Sender.
+	// msg.sender sites then adopt the claim without re-verifying.
+	std::shared_ptr<awst::Expression> argShape = appArgCountIs(2, loc);
+	if (auto const& xc = typeMapper.profile().xchainAccounts)
+	{
+		argShape = awst::makeBoolBinOp(
+			std::move(argShape), awst::BinaryBooleanOperator::Or,
+			appArgCountIs(3, loc), loc);
+		auto verify = awst::makeBlock(loc);
+		verify->body.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(
+				awst::makeNumericCompare(
+					awst::makeLen(awst::makeAppArg(2, loc), loc),
+					awst::NumericComparison::Eq, u64(20, loc), loc),
+				loc, "xchain owner claim must be 20 bytes"),
+			loc));
+		verify->body.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(
+				awst::makeBytesComparison(
+					awst::makeAsBytes(
+						xchain::derivedAccount(*xc, awst::makeAppArg(2, loc), loc),
+						loc),
+					awst::EqualityComparison::Eq,
+					awst::makeAsBytes(
+						awst::makeTxn("Sender", awst::WType::accountType(), loc),
+						loc),
+					loc),
+				loc, "xchain owner claim does not match sender"),
+			loc));
+		guarded->body.push_back(awst::makeIfElse(
+			appArgCountIs(3, loc), std::move(verify), nullptr, loc));
+	}
 	guarded->body.push_back(std::move(switchNode));
 	auto condition = awst::makeBoolBinOp(
 		isNoOpCall(loc), awst::BinaryBooleanOperator::And,
-		appArgCountIs(2, loc), loc);
+		std::move(argShape), loc);
 	sink.push_back(awst::makeIfElse(
 		std::move(condition), std::move(guarded), nullptr, loc));
 }

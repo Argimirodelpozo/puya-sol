@@ -143,6 +143,11 @@ void printUsage(char const* _progName)
 		<< "                         canonical ABI body blob in ApplicationArgs[1].\n"
 		<< "  --evm-version <name>   EVM version for the Solidity parser. Accepts the same\n"
 		<< "                         names solc supports: homestead..osaka. Default: cancun.\n"
+		<< "  --xchain-template <hex>  xchain LogicSig template bytecode (20-byte owner\n"
+		<< "                         placeholder inside; see --xchain-placeholder). Enables\n"
+		<< "                         the xchain account model in the EVM profile.\n"
+		<< "  --xchain-placeholder <hex>  The 20-byte owner placeholder inside the\n"
+		<< "                         template (default ee x20).\n"
 		<< "  --evm-chain-id <N>     Compile-time uint256 returned by block.chainid. Without\n"
 		<< "                         it, GenesisHash is used as an AVM network identity.\n"
 		<< "  --evm-block-gas-limit <N> Compile-time uint256 returned by block.gaslimit.\n"
@@ -289,6 +294,10 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.evmBlockGasLimit = parseUint256Decimal(arg, _argv[++i]);
 		else if (arg == "--evm-coinbase" && i + 1 < _argc)
 			opts.evmCoinbase = parseAddressHex(arg, _argv[++i]);
+		else if (arg == "--xchain-template" && i + 1 < _argc)
+			opts.xchainTemplateHex = _argv[++i];
+		else if (arg == "--xchain-placeholder" && i + 1 < _argc)
+			opts.xchainPlaceholderHex = _argv[++i];
 		else if (arg == "--deploy-pure-helpers")
 			opts.deployPureHelpers = true;
 		else if (arg == "--force-inline-sub" && i + 1 < _argc)

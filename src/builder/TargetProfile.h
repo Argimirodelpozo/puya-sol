@@ -2,8 +2,10 @@
 
 #include "builder/ScratchLayout.h"
 
+#include <cstdint>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace puyasol::builder
 {
@@ -34,6 +36,20 @@ struct TargetProfile
 	std::optional<std::string> evmChainId;
 	std::optional<std::string> evmBlockGasLimit;
 	std::optional<std::string> evmCoinbase;
+	/// xchain account model (github.com/algorandfoundation/xchain-accounts):
+	/// each 20-byte EVM identity E owns the LogicSig account whose program is
+	/// the pinned template with E spliced at the placeholder —
+	/// A(E) = sha512_256("Program" || prefix || E || suffix). When set (EVM
+	/// profile only): native value transfers to 160-bit identities pay A(E)
+	/// instead of the keyless padded pseudo-account, and the entry arm accepts
+	/// a VERIFIED owner claim (ApplicationArgs[2]) adopted as msg.sender.
+	struct XchainAccounts
+	{
+		std::vector<uint8_t> programPrefix;
+		std::vector<uint8_t> programSuffix;
+	};
+	std::optional<XchainAccounts> xchainAccounts;
+
 	/// Canonical EVMVersion::name(); empty means the compiler default.
 	/// Stored as the NAME, not the value: a by-value EVMVersion made this
 	/// 44-line POD drag liblangutil/EVMVersion.h -> boost.exception into

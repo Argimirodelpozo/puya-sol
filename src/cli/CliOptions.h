@@ -41,6 +41,15 @@ struct Options
 	std::string evmChainId;
 	std::string evmBlockGasLimit;
 	std::string evmCoinbase;
+	// --xchain-template <hex>: compiled xchain LogicSig template bytecode
+	// containing a 20-byte owner placeholder (--xchain-placeholder, default
+	// 20x 0xee). Enables the xchain account model in the EVM profile: native
+	// value transfers to 160-bit identities route to the owner's derived
+	// LogicSig account sha512_256("Program" || template-with-owner-spliced),
+	// and the entry arm accepts a VERIFIED owner claim as msg.sender. The
+	// template must be PINNED — the derived address is the exact program hash.
+	std::string xchainTemplateHex;
+	std::string xchainPlaceholderHex = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
 	// --evm-memory-slots <N>: 0 means unspecified/default (5 slots=20KB).
 	// Pages are contiguous from slot 0; the transient blob sits at N and the
 	// AVM.sol group-scratch range at N+1..N+10 (default N=5 reproduces the

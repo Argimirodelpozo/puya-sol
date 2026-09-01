@@ -33,8 +33,26 @@ std::shared_ptr<awst::Expression> buildEvmMsgSender(
 	auto sender = awst::makeTxn(
 		"Sender", awst::WType::accountType(), loc);
 	auto low160 = awst::makeExtractLastN(std::move(sender), 20, loc);
-	return awst::makeAsAccount(
+	std::shared_ptr<awst::Expression> projected = awst::makeAsAccount(
 		awst::makeLeftPadToN(std::move(low160), 32, loc), loc);
+	// xchain account model: a caller that presented a VERIFIED owner claim
+	// (ApplicationArgs[2], asserted against the derived LogicSig address at
+	// the entry arm) IS that 20-byte EVM identity. The low-20 projection of
+	// the raw sender survives only as the unclaimed-caller compatibility
+	// shim (deploy/creator paths).
+	if (ctx.typeMapper.profile().xchainAccounts)
+	{
+		auto hasClaim = awst::makeNumericCompare(
+			awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
+			awst::NumericComparison::Gte,
+			awst::makeIntegerConstant("3", loc), loc);
+		auto claimed = awst::makeAsAccount(
+			awst::makeLeftPadToN(awst::makeAppArg(2, loc), 32, loc), loc);
+		return awst::makeConditional(
+			std::move(hasClaim), std::move(claimed), std::move(projected),
+			awst::WType::accountType(), loc);
+	}
+	return projected;
 }
 
 // An explicitly configured EVM chain id is exact for replay. Otherwise use

@@ -214,6 +214,49 @@ int main(int _argc, char* _argv[])
 				? opts.evmMemorySlots
 				: puyasol::builder::ScratchLayout::defaultMemorySlots),
 	};
+	// --xchain-template: split the pinned LogicSig template at the 20-byte
+	// owner placeholder. The derived address is the exact program hash, so
+	// any decode/placement error must fail the COMPILE, not the funds.
+	if (!opts.xchainTemplateHex.empty())
+	{
+		auto decodeHex = [&](std::string const& hex,
+			char const* what) -> std::vector<uint8_t> {
+			std::string h = hex.rfind("0x", 0) == 0 ? hex.substr(2) : hex;
+			if (h.size() % 2 != 0)
+			{
+				logger.error(std::string(what) + " must be even-length hex");
+				std::exit(2);
+			}
+			std::vector<uint8_t> out;
+			for (size_t i = 0; i < h.size(); i += 2)
+				out.push_back(static_cast<uint8_t>(
+					std::stoul(h.substr(i, 2), nullptr, 16)));
+			return out;
+		};
+		auto tmpl = decodeHex(opts.xchainTemplateHex, "--xchain-template");
+		auto ph = decodeHex(opts.xchainPlaceholderHex, "--xchain-placeholder");
+		if (ph.size() != 20)
+		{
+			logger.error("--xchain-placeholder must be exactly 20 bytes");
+			return 2;
+		}
+		if (opts.contractAbi != "evm")
+		{
+			logger.error("--xchain-template requires --contract-abi evm "
+				"(the xchain account model lives in the 160-bit namespace)");
+			return 2;
+		}
+		auto it = std::search(tmpl.begin(), tmpl.end(), ph.begin(), ph.end());
+		if (it == tmpl.end()
+			|| std::search(it + 1, tmpl.end(), ph.begin(), ph.end()) != tmpl.end())
+		{
+			logger.error("--xchain-template must contain the owner placeholder "
+				"exactly once");
+			return 2;
+		}
+		targetProfile.xchainAccounts = puyasol::builder::TargetProfile::XchainAccounts{
+			{tmpl.begin(), it}, {it + 20, tmpl.end()}};
+	}
 	auto roots = builder.build(
 		compiler, sourceFile, opts.opupBudget, opts.ensureBudget,
 		opts.viaYulBehavior, sourceAliases, std::move(targetProfile));

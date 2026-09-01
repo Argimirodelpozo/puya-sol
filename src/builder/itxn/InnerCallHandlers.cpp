@@ -16,6 +16,7 @@
 #include "builder/sol-types/ConversionPlan.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/XchainAccounts.h"
 #include "Logger.h"
 
 namespace puyasol::builder::eb
@@ -428,11 +429,27 @@ std::string InnerCallHandlers::buildMethodSelector(
 // ── Payment ──
 
 std::shared_ptr<awst::Expression> InnerCallHandlers::buildPaymentTransaction(
-	ContractContext& /*_ctx*/,
+	ContractContext& _ctx,
 	std::shared_ptr<awst::Expression> _receiver,
 	std::shared_ptr<awst::Expression> _amount,
 	awst::SourceLocation const& _loc)
 {
+	// The one choke point for native value transfers (transfer/send/
+	// call{value}/typed-call payments). With the xchain account model the
+	// 160-bit identity's OWNER receives at the derived LogicSig account;
+	// without it, an EVM-profile payment to a 160-bit identity lands at a
+	// KEYLESS padded pseudo-account — warn (see EVM_DIVERGENCE.md).
+	auto const& profile = _ctx.typeMapper.profile();
+	if (profile.xchainAccounts)
+		_receiver = xchain::mapPaymentReceiver(profile, std::move(_receiver), _loc);
+	else if (profile.contractAbi == ContractAbi::Evm)
+		Logger::instance().warning(
+			"native value transfer in the EVM profile: a 160-bit identity is a "
+			"keyless padded pseudo-account, so value sent to one is "
+			"unrecoverable. The EVM profile is a differential/compat "
+			"instrument (EVM_DIVERGENCE.md); --xchain-template maps identities "
+			"to spendable xchain LogicSig accounts.", _loc);
+
 	static awst::WInnerTransactionFields s_payFieldsType(TxnTypePay);
 
 	auto create = awst::makeCreateInnerTransaction(&s_payFieldsType, _loc);
