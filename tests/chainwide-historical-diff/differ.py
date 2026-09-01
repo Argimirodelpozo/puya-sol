@@ -114,6 +114,33 @@ def _is_default(value) -> bool:
     return False
 
 
+def _defaults_equal(x, y) -> bool:
+    """Structural equality where absent, None, False, 0 and 0x00… coincide.
+
+    dicts: an entry missing on one side matches a default value on the other;
+    lists: elementwise, padded with None (absent tail fields are defaults).
+    """
+    if isinstance(x, dict) and isinstance(y, dict):
+        for k in set(x) | set(y):
+            if k in x and k in y:
+                if not _defaults_equal(x[k], y[k]):
+                    return False
+            elif not _is_default(x.get(k, y.get(k))):
+                return False
+        return True
+    if isinstance(x, (list, tuple)) and isinstance(y, (list, tuple)):
+        n = max(len(x), len(y))
+        xs = list(x) + [None] * (n - len(x))
+        ys = list(y) + [None] * (n - len(y))
+        return all(_defaults_equal(a, b) for a, b in zip(xs, ys))
+    if x is None or y is None:
+        other = y if x is None else x
+        return _is_default(other)
+    if _hex_norm(x) == _hex_norm(y):
+        return True
+    return _is_default(x) and _is_default(y)
+
+
 def _height_skew_noise(ev_, av_, wtxn, evm_no, avm_no):
     """Block-HEIGHT skew: a contract storing `block.number` (staup's `_locked`
     = block.number + lockPeriod) writes each leg's own local chain height —
@@ -346,7 +373,13 @@ def diff_case(case_dir: Path) -> dict:
                     return int(a, 16) == b
                 except ValueError:
                     return False
-        return False
+        # Deep absent-vs-default equivalence. Inside a decoded struct/nested
+        # map the two legs render "never written" differently: the EVM leg
+        # reads slots (explicit 0x00 / omits zero map entries), the AVM leg
+        # enumerates boxes (None for an unwritten field, explicit False for a
+        # revoked-role box). AccessControl _roles surfaced all three shapes
+        # (vanry/temple/pol/gbp). Default-valued content is the SAME state.
+        return _defaults_equal(x, y)
 
     e_sc, a_sc = es.get("scalars") or {}, as_.get("scalars") or {}
     for var in sorted(set(e_sc) | set(a_sc)):

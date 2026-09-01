@@ -146,7 +146,10 @@ def test_entry_present_on_one_leg_holding_the_default_is_noise(tmp_path):
         tmp_path, evm_map={"_m": {}}, avm_map={"_m": {"«D3»": 0}},
     ))["counts"]
     assert counts["storage_map_div"] == 0
-    assert counts["storage_noise"] == 1
+    # Deep default-equivalence (_defaults_equal) now folds this at the
+    # equality layer: a default-valued entry vs an absent one is the SAME
+    # state, silently equal rather than surfaced as classified noise.
+    assert counts["storage_noise"] == 0
 
 
 def test_an_all_default_struct_is_noise_too(tmp_path):

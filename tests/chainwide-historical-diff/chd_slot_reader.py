@@ -57,10 +57,15 @@ def read_slot_storage(slotmap: dict[int, bytes], layout: dict, syms: dict,
 
     def slot_mode_key(candidate: KeyCandidate, type_doc: dict) -> bytes:
         label = str(type_doc.get("label") or "")
-        # EVM-layout mode deliberately retains full AVM addresses in slots and
-        # in mapping preimages; all other key types follow solc's encoding.
+        # Address mapping KEYS live in the 160-bit namespace (bzero12 ++
+        # low-20) — the compiler's EVM-faithful keccak preimage. The old
+        # full-32-byte form predates the namespace work and orphaned every
+        # derived entry whose symbol carried a raw AVM account (the creator/
+        # dep symbols: AccessControl _roles member misses). Identity-form
+        # candidates pass through unchanged.
         if label == "address" or label.startswith("contract "):
-            return bytes(candidate.value)
+            raw = bytes(candidate.value)
+            return bytes(12) + raw[-20:]
         return evm_key_bytes(candidate, type_doc, _kec)
 
     reader = EvmStorageReader(
