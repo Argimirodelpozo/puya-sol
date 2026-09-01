@@ -1,11 +1,27 @@
-#include "awst/Termination.h"
+#pragma once
+
+/// @file Termination.hpp
+/// AWST control-flow analysis helpers used by the builder pipeline:
+///   - blockAlwaysTerminates: does this block always terminate (return / revert)?
+///   - removeDeadCode: strip statements after a guaranteed terminator
+///
+/// `removeDeadCode` is required for puya backend acceptance (puya 5.8.0+
+/// rejects unreachable code with a compile error). Header-only (folded from
+/// the former .h/.cpp pair).
+
+#include "awst/Node.h"
+
+#include <memory>
+#include <vector>
 
 namespace puyasol::awst
 {
 
+namespace termination_detail
+{
 // True if this statement always terminates control flow on every path
 // (a `return` or an `assert(false)` produced by `revert`/`require(false)`).
-static bool statementAlwaysTerminates(Statement const& _stmt)
+inline bool statementAlwaysTerminates(Statement const& _stmt)
 {
 	if (dynamic_cast<ReturnStatement const*>(&_stmt))
 		return true;
@@ -25,13 +41,16 @@ static bool statementAlwaysTerminates(Statement const& _stmt)
 	}
 	return false;
 }
+} // namespace termination_detail
 
-bool blockAlwaysTerminates(Block const& _block)
+/// True if every path through this block reaches a terminator.
+/// Recurses through nested blocks and `if/else` where both arms terminate.
+inline bool blockAlwaysTerminates(Block const& _block)
 {
 	if (_block.body.empty())
 		return false;
 	auto const& last = _block.body.back();
-	if (statementAlwaysTerminates(*last))
+	if (termination_detail::statementAlwaysTerminates(*last))
 		return true;
 	// Last statement is an if/else with both branches terminating
 	if (auto const* ifElse = dynamic_cast<IfElse const*>(last.get()))
@@ -47,8 +66,11 @@ bool blockAlwaysTerminates(Block const& _block)
 	return false;
 }
 
-void removeDeadCode(std::vector<std::shared_ptr<Statement>>& _body)
+/// Remove unreachable statements that follow a guaranteed terminator inside
+/// a block body — recursively into nested blocks, ifs, while/for loops.
+inline void removeDeadCode(std::vector<std::shared_ptr<Statement>>& _body)
 {
+	using termination_detail::statementAlwaysTerminates;
 	for (size_t i = 0; i < _body.size(); ++i)
 	{
 		// Recurse into nested blocks first.

@@ -8,7 +8,7 @@
 #include "builder/AWSTBuilder.h" // containsMappingType
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/storage/StorageMapper.h"
-#include "builder/storage/StoragePlace.h"
+#include "builder/storage/StoragePlace.hpp"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/Arc4Defaults.h"
 #include "builder/sol-types/TypeCoercion.h"

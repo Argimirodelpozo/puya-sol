@@ -16,7 +16,7 @@
 #include "builder/sol-ast/stmts/SolBlock.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "awst/Clone.h"
-#include "awst/Termination.h"
+#include "awst/Termination.hpp"
 
 #include <libsolidity/ast/ASTVisitor.h>
 

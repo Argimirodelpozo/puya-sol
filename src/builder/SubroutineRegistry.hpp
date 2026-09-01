@@ -1,16 +1,25 @@
-#include "builder/SubroutineRegistry.h"
+#pragma once
 
+/// @file SubroutineRegistry.hpp
+/// Whole-unit integrity checks for root-level AWST subroutines. Producers emit
+/// helpers on demand; this validates identity and reference invariants without
+/// performing post-build dead-code elimination. Header-only (one consumer;
+/// folded from the former .h/.cpp pair).
+
+#include "awst/Node.h"
 #include "awst/Visit.h"
 #include "Logger.h"
 
 #include <map>
+#include <memory>
+#include <vector>
 
 namespace puyasol::builder
 {
-namespace
-{
 
-void collectReferences(
+namespace subroutine_registry_detail
+{
+inline void collectReferences(
 	awst::Statement const* _body,
 	std::map<std::string, awst::SourceLocation>& _references)
 {
@@ -24,12 +33,14 @@ void collectReferences(
 			_references.try_emplace(id->target, call->sourceLocation);
 	});
 }
+} // namespace subroutine_registry_detail
 
-} // namespace
-
-bool validateRootSubroutines(
+/// Log an error for every duplicate subroutine ID or unresolved
+/// SubroutineCallExpression target. Returns true when the unit is valid.
+inline bool validateRootSubroutines(
 	std::vector<std::shared_ptr<awst::RootNode>> const& _roots)
 {
+	using subroutine_registry_detail::collectReferences;
 	std::map<std::string, awst::Subroutine const*> definitions;
 	std::map<std::string, awst::SourceLocation> references;
 	bool valid = true;

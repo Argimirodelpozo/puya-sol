@@ -2,7 +2,7 @@
 #include "builder/ProgramAnalysis.h"
 #include "builder/itxn/InnerCallHandlers.h"
 #include "builder/storage/EvmLayoutMode.h"
-#include "awst/Termination.h"
+#include "awst/Termination.hpp"
 #include "awst/StatementWalk.h"
 #include "awst/Visit.h"
 #include "builder/AWSTBuilder.h"

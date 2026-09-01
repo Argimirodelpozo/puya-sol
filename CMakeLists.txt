@@ -43,7 +43,6 @@ set(SOURCES
 	src/awst/Node.cpp
 	src/awst/Visit.cpp
 	src/awst/Clone.cpp
-	src/awst/Termination.cpp
 	# Builder core
 	src/builder/AWSTBuilder.cpp
 	src/builder/CompilationSession.cpp
@@ -54,7 +53,6 @@ set(SOURCES
 	src/builder/SelectorSemantics.cpp
 	src/builder/SourceLocConvert.cpp
 	src/builder/FunctionIdRegistry.cpp
-	src/builder/SubroutineRegistry.cpp
 	src/builder/contract/ContractBuilder.cpp
 	src/builder/contract/EvmMemoryCodec.cpp
 	src/builder/contract/EvmEntryRouter.cpp
@@ -106,7 +104,6 @@ set(SOURCES
 	src/builder/proxies/Erc1967Lowering.cpp
 	src/builder/proxies/UupsLowering.cpp
 	src/builder/storage/StorageMapper.cpp
-	src/builder/storage/StoragePlace.cpp
 	src/builder/storage/StorageLayout.cpp
 	src/builder/storage/StorageRuntimePlan.cpp
 	src/builder/storage/SlotHandleAccess.cpp
@@ -190,7 +187,6 @@ set(SOURCES
 	src/builder/sol-ast/exprs/SolAssignmentTuple.cpp
 	src/builder/sol-ast/exprs/SolAssignmentStructField.cpp
 	src/builder/sol-ast/exprs/SolAssignmentBytesElem.cpp
-	src/builder/sol-ast/SolStatement.cpp
 	src/builder/sol-ast/stmts/SolExpressionStatement.cpp
 	src/builder/sol-ast/stmts/SolControlFlow.cpp
 	src/builder/sol-ast/stmts/SolEmitStatement.cpp
