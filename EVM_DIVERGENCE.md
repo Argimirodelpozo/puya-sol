@@ -52,5 +52,14 @@ indistinguishable from the `bzero24 ++ appId` contract-value convention
   AVM; `address.code` of a KNOWN app resolves via the app id convention.
 - try/catch catch-clauses: unreachable — a failing inner txn aborts the
   whole transaction (success paths are equivalence-tested).
+- Low-level calls (`t.call`/`staticcall`, any calldata incl. empty): submit
+  a real inner app call. Two consequences vs the EVM: a REJECTED call
+  aborts the whole transaction (`ok == false` is not catchable), and a
+  CODELESS target aborts where the EVM silently succeeds with
+  `(true, "")` — fabricating that success would let error handling pass
+  spuriously. Zero-value `t.call("")` on a real contract executes the
+  callee's `receive()`/`fallback()` like solc (zero-arg app call).
+  `{value:}` + empty calldata stays a bare payment: the receive BODY does
+  not run (see the value-transfer section above).
 - Indexed DYNAMIC event params, ARC-56 mapping-prefix, selector-includes-
   returns: documented wire-level divergences.

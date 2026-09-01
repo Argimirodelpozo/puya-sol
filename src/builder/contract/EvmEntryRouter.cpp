@@ -646,12 +646,23 @@ void ContractBuilder::emitEvmEntryDispatch(
 		auto did = [&]() {
 			return awst::makeVarExpression(didName, awst::WType::boolType(), loc);
 		};
-		approval.body->body.push_back(awst::makeAssignmentStatement(
+		// Guard on NumAppArgs>0: every residual route is a selector-ful
+		// lifecycle method, but puya's router (no bare routes) reads
+		// ApplicationArgs[0] UNGUARDED — a zero-arg call (EVM empty calldata,
+		// t.call("")) faulted there before the receive/fallback arms below
+		// could dispatch it.
+		auto hasArgs = awst::makeNumericCompare(
+			awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
+			awst::NumericComparison::Gt, u64(0, loc), loc);
+		auto routerBlock = awst::makeBlock(loc);
+		routerBlock->body.push_back(awst::makeAssignmentStatement(
 			did(), awst::makeARC4Router(awst::WType::boolType(), loc), loc));
 		auto accepted = awst::makeBlock(loc);
 		accepted->body.push_back(awst::makeReturnStatement(awst::makeTrue(loc), loc));
-		approval.body->body.push_back(awst::makeIfElse(
+		routerBlock->body.push_back(awst::makeIfElse(
 			did(), std::move(accepted), nullptr, loc));
+		approval.body->body.push_back(awst::makeIfElse(
+			std::move(hasArgs), std::move(routerBlock), nullptr, loc));
 	}
 
 	// Empty Solidity calldata selects receive(), or fallback() when receive is

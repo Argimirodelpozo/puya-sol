@@ -31,31 +31,33 @@ main:
     return
 
 main_after_if_else@2:
+    txn NumAppArgs
+    bz main_after_if_else@6
     pushbytes 0x990f30ae // method "__postInit(address)void"
     txna ApplicationArgs 0
-    match main___postInit_route@26
+    match main___postInit_route@28
     intc_1 // 0
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_ctor_address_namespace.sol.CtorMint.__puya_arc4_router__@28:
-    bz main_after_if_else@4
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_ctor_address_namespace.sol.CtorMint.__puya_arc4_router__@30:
+    bz main_after_if_else@6
     intc_2 // 1
     return
 
-main_after_if_else@4:
+main_after_if_else@6:
     txn OnCompletion
-    bnz main_after_if_else@10
+    bnz main_after_if_else@12
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@10
+    bz main_after_if_else@12
     pushbytess 0x1dbf3bc7 0x5580f72a
     txna ApplicationArgs 0
-    match main_switch_case_0@7 main_switch_case_1@8
+    match main_switch_case_0@9 main_switch_case_1@10
 
-main_after_if_else@10:
+main_after_if_else@12:
     err
 
-main_switch_case_1@8:
+main_switch_case_1@10:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -68,13 +70,13 @@ main_switch_case_1@8:
     ==
     assert // invalid EVM ABI address padding
     txn GroupIndex
-    bz main_ternary_false@15
+    bz main_ternary_false@17
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@16:
+main_ternary_merge@18:
     !
     assert // not payable
     extract 0 32
@@ -103,11 +105,11 @@ main_ternary_merge@16:
     intc_2 // 1
     return
 
-main_ternary_false@15:
+main_ternary_false@17:
     intc_1 // 0
-    b main_ternary_merge@16
+    b main_ternary_merge@18
 
-main_switch_case_0@7:
+main_switch_case_0@9:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -122,13 +124,13 @@ main_switch_case_0@7:
     b|
     swap
     txn GroupIndex
-    bz main_ternary_false@20
+    bz main_ternary_false@22
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@21:
+main_ternary_merge@23:
     !
     assert // not payable
     txn Sender
@@ -150,11 +152,11 @@ main_ternary_merge@21:
     dig 2
     b>=
     dup
-    bnz main_after_if_else@23
+    bnz main_after_if_else@25
     pushbytes 0x08c379a00000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000c696e73756666696369656e740000000000000000000000000000000000000000
     log
 
-main_after_if_else@23:
+main_after_if_else@25:
     assert // insufficient
     txn Sender
     extract 12 20
@@ -227,11 +229,11 @@ main_after_if_else@23:
     intc_2 // 1
     return
 
-main_ternary_false@20:
+main_ternary_false@22:
     intc_1 // 0
-    b main_ternary_merge@21
+    b main_ternary_merge@23
 
-main___postInit_route@26:
+main___postInit_route@28:
     txn OnCompletion
     !
     txn ApplicationID
@@ -274,7 +276,7 @@ main___postInit_route@26:
     swap
     callsub __storage_write
     intc_2 // 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_ctor_address_namespace.sol.CtorMint.__puya_arc4_router__@28
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_ctor_address_namespace.sol.CtorMint.__puya_arc4_router__@30
 
 
 // __puyasol___storage_read(__slot: bytes) -> bytes:

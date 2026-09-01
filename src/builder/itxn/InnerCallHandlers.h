@@ -117,6 +117,14 @@ private:
 		std::shared_ptr<awst::Expression> _callValue,
 		awst::SourceLocation const& _loc);
 
+	/// `t.call("")` with NO value: EVM still EXECUTES the callee (receive, or
+	/// fallback when no receive exists). Zero-arg inner app call — the EVM
+	/// entry router's NumAppArgs==0 arm is exactly that dispatch.
+	static std::unique_ptr<InstanceBuilder> handleCallWithEmptyData(
+		ContractContext& _ctx,
+		std::shared_ptr<awst::Expression> _receiver,
+		awst::SourceLocation const& _loc);
+
 	/// .staticcall(data) for precompile addresses 0x01–0x09.
 	static std::unique_ptr<InstanceBuilder> handleStaticCallPrecompile(
 		ContractContext& _ctx,

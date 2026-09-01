@@ -305,7 +305,25 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithSignatureArgs(
 			}
 		}
 		else
-			evmSelector = awst::makeAsBytes(_ctx.buildExpr(*args[0]), _loc);
+		{
+			// encodeWithSelector's first arg types as bytes4, but a NUMBER
+			// literal (abi.encodeWithSelector(0xdeadbeef)) builds as
+			// uint64/biguint — asBytes on those is an invalid cast, and itob
+			// alone would yield 8 bytes. Take the low-order 4 bytes, matching
+			// handleEncodeWithSelector's coercion.
+			auto sel = _ctx.buildExpr(*args[0]);
+			if (sel->wtype == awst::WType::uint64Type())
+				sel = awst::makeExtractLastN(
+					awst::makeItob(std::move(sel), _loc), 4, _loc);
+			else if (sel->wtype == awst::WType::biguintType())
+				sel = awst::makeExtractLastN(
+					awst::makeLeftPad(
+						awst::makeAsBytes(std::move(sel), _loc), 4, _loc),
+					4, _loc);
+			else
+				sel = awst::makeAsBytes(std::move(sel), _loc);
+			evmSelector = std::move(sel);
+		}
 
 		std::vector<ASTPointer<Expression const>> callArgs;
 		for (size_t i = 1; i < args.size(); ++i)
@@ -476,6 +494,40 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithRawData(
 	auto stripPrefix = awst::makeExtract(
 		std::move(readLog), 4, 0, _loc); // ARC-4 return log prefix
 
+	return std::make_unique<GenericResultBuilder>(_ctx,
+		makeBoolBytesTuple(true, std::move(stripPrefix), _loc));
+}
+
+std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithEmptyData(
+	ContractContext& _ctx,
+	std::shared_ptr<awst::Expression> _receiver,
+	awst::SourceLocation const& _loc)
+{
+	// Solc's dispatcher runs receive() for calldatasize==0 (fallback when no
+	// receive exists) even at zero value — the callee EXECUTES. A zero-arg
+	// inner app call reaches the EVM entry router's NumAppArgs==0 arm, which
+	// is that dispatch. Non-app receivers (EVM: a silent success on an EOA)
+	// fail the inner txn — the LowLevelCallOutcome adaptation applies.
+	EvmFeaturePolicy::report(
+		EvmFeature::LowLevelCallOutcome, _ctx.typeMapper.profile(), _loc);
+	auto appId = addressToAppId(std::move(_receiver), _loc);
+
+	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
+	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, _loc);
+	create->fields["TypeEnum"] = awst::makeIntegerConstant(TxnTypeAppl, _loc);
+	create->fields["Fee"] = awst::makeZero(_loc);
+	create->fields["ApplicationID"] = std::move(appId);
+	create->fields["OnCompletion"] = awst::makeZero(_loc);
+	// No ApplicationArgs: the callee sees empty calldata.
+
+	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
+	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, _loc);
+	submit->itxns.push_back(std::move(create));
+	_ctx.preEffects().push_back(
+		awst::makeExpressionStatement(std::move(submit), _loc));
+
+	auto readLog = captureLastLog(_ctx, _loc);
+	auto stripPrefix = awst::makeExtract(std::move(readLog), 4, 0, _loc);
 	return std::make_unique<GenericResultBuilder>(_ctx,
 		makeBoolBytesTuple(true, std::move(stripPrefix), _loc));
 }

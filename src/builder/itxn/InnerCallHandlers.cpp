@@ -1006,12 +1006,9 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::handleCallWithData(
 		if (isLiteralZeroAddress(_baseExpr))
 			return std::make_unique<GenericResultBuilder>(_ctx,
 				makeBoolBytesTupleEmpty(_loc));
-		EvmFeaturePolicy::report(
-			EvmFeature::UnknownLowLevelCall,
-			_ctx.typeMapper.profile(), _loc);
-		return std::make_unique<GenericResultBuilder>(_ctx,
-			makeBoolBytesTuple(
-				false, awst::makeBytesConstant({}, _loc), _loc));
+		// Zero-value empty call: solc EXECUTES the callee (receive, or
+		// fallback when no receive) — zero-arg inner app call.
+		return handleCallWithEmptyData(_ctx, std::move(_receiver), _loc);
 	}
 	return handleCallWithRawData(_ctx, _receiver, std::move(dataExpr), std::move(_callValue), _loc);}
 

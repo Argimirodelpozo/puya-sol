@@ -33,43 +33,45 @@ main:
     return
 
 main_after_if_else@2:
+    txn NumAppArgs
+    bz main_after_if_else@6
     pushbytes 0xbacc49e3 // method "__postInit()void"
     txna ApplicationArgs 0
-    match main___postInit_route@62
+    match main___postInit_route@64
     intc_2 // 0
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol.XchainKit.__puya_arc4_router__@64:
-    bz main_after_if_else@4
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol.XchainKit.__puya_arc4_router__@66:
+    bz main_after_if_else@6
     intc_1 // 1
     return
 
-main_after_if_else@4:
+main_after_if_else@6:
     txn OnCompletion
-    bnz main_after_if_else@7
+    bnz main_after_if_else@9
     txn NumAppArgs
-    bnz main_after_if_else@7
+    bnz main_after_if_else@9
     bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
 
-main_after_if_else@7:
+main_after_if_else@9:
     txn OnCompletion
-    bnz main_after_if_else@18
+    bnz main_after_if_else@20
     txn NumAppArgs
     pushint 2
     ==
-    bnz main_if_body@10
+    bnz main_if_body@12
     txn NumAppArgs
     pushint 3
     ==
-    bz main_after_if_else@18
+    bz main_after_if_else@20
 
-main_if_body@10:
+main_if_body@12:
     txn NumAppArgs
     pushint 3
     ==
-    bz main_after_if_else@12
+    bz main_after_if_else@14
     txna ApplicationArgs 2
     len
     intc_3 // 20
@@ -85,28 +87,28 @@ main_if_body@10:
     ==
     assert // xchain owner claim does not match sender
 
-main_after_if_else@12:
+main_after_if_else@14:
     pushbytess 0x117de2fd 0xb3b36bb3 0xb6b55f25 0x5580f72a
     txna ApplicationArgs 0
-    match main_switch_case_0@13 main_switch_case_1@14 main_switch_case_2@15 main_switch_case_3@16
+    match main_switch_case_0@15 main_switch_case_1@16 main_switch_case_2@17 main_switch_case_3@18
 
-main_after_if_else@18:
+main_after_if_else@20:
     err
 
-main_switch_case_3@16:
+main_switch_case_3@18:
     callsub __evm_npy
     intc_0 // 32
     bzero
     intc_2 // 0
     callsub __evm_arga
     txn GroupIndex
-    bz main_ternary_false@21
+    bz main_ternary_false@23
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@22:
+main_ternary_merge@24:
     !
     assert // not payable
     bytec_3 // "bal"
@@ -137,11 +139,11 @@ main_ternary_merge@22:
     intc_1 // 1
     return
 
-main_ternary_false@21:
+main_ternary_false@23:
     intc_2 // 0
-    b main_ternary_merge@22
+    b main_ternary_merge@24
 
-main_switch_case_2@15:
+main_switch_case_2@17:
     callsub __evm_npy
     intc_2 // 0
     callsub __evm_decw
@@ -157,24 +159,24 @@ main_switch_case_2@15:
     b|
     swap
     txn GroupIndex
-    bz main_ternary_false@26
+    bz main_ternary_false@28
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@27:
+main_ternary_merge@29:
     !
     assert // not payable
     txn NumAppArgs
     pushint 3
     >=
-    bz main_ternary_false@31
+    bz main_ternary_false@33
     txna ApplicationArgs 2
     len
     intc_3 // 20
     ==
-    bz main_ternary_false@31
+    bz main_ternary_false@33
     bytec_1 // 0x50726f6772616d098014
     txna ApplicationArgs 2
     concat
@@ -183,7 +185,7 @@ main_ternary_merge@27:
     sha512_256
     txn Sender
     ==
-    bz main_ternary_false@31
+    bz main_ternary_false@33
     txna ApplicationArgs 2
     concat
     dup
@@ -195,7 +197,7 @@ main_ternary_merge@27:
     intc_0 // 32
     extract3
 
-main_ternary_merge@32:
+main_ternary_merge@34:
     bytec_3 // "bal"
     concat
     sha256
@@ -211,12 +213,12 @@ main_ternary_merge@32:
     txn NumAppArgs
     pushint 3
     >=
-    bz main_ternary_false@36
+    bz main_ternary_false@38
     txna ApplicationArgs 2
     len
     intc_3 // 20
     ==
-    bz main_ternary_false@36
+    bz main_ternary_false@38
     bytec_1 // 0x50726f6772616d098014
     txna ApplicationArgs 2
     concat
@@ -225,7 +227,7 @@ main_ternary_merge@32:
     sha512_256
     txn Sender
     ==
-    bz main_ternary_false@36
+    bz main_ternary_false@38
     dig 3
     dup
     len
@@ -234,7 +236,7 @@ main_ternary_merge@32:
     intc_0 // 32
     extract3
 
-main_ternary_merge@37:
+main_ternary_merge@39:
     bytec_3 // "bal"
     concat
     sha256
@@ -248,7 +250,7 @@ main_ternary_merge@37:
     intc_1 // 1
     return
 
-main_ternary_false@36:
+main_ternary_false@38:
     dig 2
     dup
     len
@@ -256,9 +258,9 @@ main_ternary_false@36:
     -
     intc_0 // 32
     extract3
-    b main_ternary_merge@37
+    b main_ternary_merge@39
 
-main_ternary_false@31:
+main_ternary_false@33:
     txn Sender
     extract 12 20
     concat
@@ -270,35 +272,35 @@ main_ternary_false@31:
     -
     intc_0 // 32
     extract3
-    b main_ternary_merge@32
+    b main_ternary_merge@34
 
-main_ternary_false@26:
+main_ternary_false@28:
     intc_2 // 0
-    b main_ternary_merge@27
+    b main_ternary_merge@29
 
-main_switch_case_1@14:
+main_switch_case_1@16:
     callsub __evm_npy
     intc_0 // 32
     bzero
     txn GroupIndex
-    bz main_ternary_false@41
+    bz main_ternary_false@43
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@42:
+main_ternary_merge@44:
     !
     assert // not payable
     txn NumAppArgs
     pushint 3
     >=
-    bz main_ternary_false@46
+    bz main_ternary_false@48
     txna ApplicationArgs 2
     len
     intc_3 // 20
     ==
-    bz main_ternary_false@46
+    bz main_ternary_false@48
     bytec_1 // 0x50726f6772616d098014
     txna ApplicationArgs 2
     concat
@@ -307,7 +309,7 @@ main_ternary_merge@42:
     sha512_256
     txn Sender
     ==
-    bz main_ternary_false@46
+    bz main_ternary_false@48
     dup
     txna ApplicationArgs 2
     concat
@@ -318,7 +320,7 @@ main_ternary_merge@42:
     intc_0 // 32
     extract3
 
-main_ternary_merge@47:
+main_ternary_merge@49:
     dup
     len
     intc_3 // 20
@@ -339,7 +341,7 @@ main_ternary_merge@47:
     intc_1 // 1
     return
 
-main_ternary_false@46:
+main_ternary_false@48:
     txn Sender
     extract 12 20
     dig 1
@@ -351,13 +353,13 @@ main_ternary_false@46:
     -
     intc_0 // 32
     extract3
-    b main_ternary_merge@47
+    b main_ternary_merge@49
 
-main_ternary_false@41:
+main_ternary_false@43:
     intc_2 // 0
-    b main_ternary_merge@42
+    b main_ternary_merge@44
 
-main_switch_case_0@13:
+main_switch_case_0@15:
     callsub __evm_npy
     intc_2 // 0
     callsub __evm_arga
@@ -372,13 +374,13 @@ main_switch_case_0@13:
     bzero
     b|
     txn GroupIndex
-    bz main_ternary_false@51
+    bz main_ternary_false@53
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@52:
+main_ternary_merge@54:
     !
     assert // not payable
     dup
@@ -403,12 +405,12 @@ main_ternary_merge@52:
     dup
     bury 5
     ==
-    bz main_ternary_false@55
+    bz main_ternary_false@57
     dup
     extract 12 12
     dig 3
     !=
-    bz main_ternary_false@55
+    bz main_ternary_false@57
     extract 12 20
     bytec_1 // 0x50726f6772616d098014
     swap
@@ -417,7 +419,7 @@ main_ternary_merge@52:
     concat
     sha512_256
 
-main_ternary_merge@56:
+main_ternary_merge@58:
     intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
@@ -430,14 +432,14 @@ main_ternary_merge@56:
     intc_1 // 1
     return
 
-main_ternary_false@55:
-    b main_ternary_merge@56
+main_ternary_false@57:
+    b main_ternary_merge@58
 
-main_ternary_false@51:
+main_ternary_false@53:
     intc_2 // 0
-    b main_ternary_merge@52
+    b main_ternary_merge@54
 
-main___postInit_route@62:
+main___postInit_route@64:
     txn OnCompletion
     !
     txn ApplicationID
@@ -458,7 +460,7 @@ main___postInit_route@62:
     box_create
     pop
     intc_1 // 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol.XchainKit.__puya_arc4_router__@64
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol.XchainKit.__puya_arc4_router__@66
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol.XchainKit.__evm_npy() -> void:

@@ -17,9 +17,17 @@ def test_array_multiple_local_vars(harness):
     assert as_int(harness.call(app, "f(uint256[])", [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 111]).abi_return) == 55
 
 def test_bare_call_no_returndatacopy(harness):
-    """functionCall/contracts/bare_call_no_returndatacopy.sol"""
-    with pytest.raises(CompileError):
-        harness.compile_and_deploy("functionCall/contracts/bare_call_no_returndatacopy.sol")
+    """functionCall/contracts/bare_call_no_returndatacopy.sol
+
+    solc: `address(0xffff).call("")` -> true (codeless address). AVM
+    adaptation (LowLevelCallOutcome): the empty call submits a real inner
+    app call, so a codeless target ABORTS — previously a fail-loud compile
+    error, moved to runtime by the empty-call lowering (zero-value
+    t.call("") must execute receive() on real contracts)."""
+    app = harness.compile_and_deploy(
+        "functionCall/contracts/bare_call_no_returndatacopy.sol")
+    r = harness.call(app, "f()", expect_revert=True)
+    assert r.reverted, "codeless .call(\"\") target must abort on AVM"
 
 def test_call_attached_library_function_on_function(harness):
     """functionCall/contracts/call_attached_library_function_on_function.sol"""
@@ -94,11 +102,23 @@ def test_call_options_overload(harness):
     assert as_int(harness.call(app, "bal()").abi_return) - app.balance_baseline >= funding - 30  # minus inner-call values
 
 def test_calling_nonexisting_contract_throws(harness):
-    """functionCall/contracts/calling_nonexisting_contract_throws.sol"""
-    # Its low-level h() call relies on closed-world knowledge that address
-    # 0x1212 has no code. The AVM compiler cannot prove that from source.
-    with pytest.raises(CompileError):
-        harness.compile_and_deploy("functionCall/contracts/calling_nonexisting_contract_throws.sol")
+    """functionCall/contracts/calling_nonexisting_contract_throws.sol
+
+    solc: f()/g() FAILURE (typed calls extcodesize-check the target), and
+    h() -> 7 — a LOW-LEVEL call to a codeless address silently succeeds on
+    the EVM. AVM adaptation (LowLevelCallOutcome, documented): every
+    low-level call submits a real inner app call, so h() on a codeless
+    address ABORTS instead of succeeding — (true, empty) is not fabricable
+    without closed-world knowledge. h() used to be a fail-loud COMPILE
+    error; the empty-call lowering now compiles it (zero-value t.call("")
+    must execute receive() on real contracts), moving the honest failure
+    to runtime, same as the nonempty low-level shapes.
+    """
+    app = harness.compile_and_deploy(
+        "functionCall/contracts/calling_nonexisting_contract_throws.sol")
+    for sig in ("f()", "g()", "h()"):
+        r = harness.call(app, sig, expect_revert=True)
+        assert r.reverted, f"{sig}: codeless target must abort on AVM"
 
 def test_calling_other_functions(harness):
     """functionCall/contracts/calling_other_functions.sol"""
