@@ -55,7 +55,7 @@ main_after_if_else@11:
     bz main_after_if_else@23
     pushbytess 0xfafb6a08 0x1bf9882b 0xc599eb05 0x5d854d0e // method "approve(address,uint256)bool", method "__fallback()void", method "__receive()void", method "allowance(address,address)uint256"
     txna ApplicationArgs 0
-    match main_approve_route@17 main___fallback_route@18 main___receive_route@19 main_allowance_route@20
+    match main_approve_route@17 __fallback main___receive_route@19 main_allowance_route@20
 
 main_after_if_else@23:
     intc_2 // 0
@@ -66,9 +66,7 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     bnz main_after_if_else@14
     txn OnCompletion
     bnz main_after_if_else@14
-    callsub __fallback
-    intc_1 // 1
-    bury 1
+    b __fallback
 
 main_after_if_else@14:
     return
@@ -96,12 +94,6 @@ main_allowance_route@20:
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__puya_arc4_router__@24
 
 main___receive_route@19:
-    intc_1 // 1
-    bury 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__puya_arc4_router__@24
-
-main___fallback_route@18:
-    callsub __fallback
     intc_1 // 1
     bury 1
     b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.__puya_arc4_router__@24
@@ -389,7 +381,8 @@ __fallback_after_while@6:
     log
     load 0
     store 0
-    retsub
+    intc_1 // 1
+    return
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.allowance(key0: bytes, key1: bytes) -> bytes:

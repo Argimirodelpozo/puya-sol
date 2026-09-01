@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/switch_returndatasize.sol.SwitchRds.approval_program() -> uint64:
 main:
     intcblock 32 0 1 4096 20480
-    bytecblock 0x151f7c75 "__ctor_pending" "c" 0x0000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_Callee TMPL_CLEAR_Callee
+    bytecblock 0x151f7c75 "__ctor_pending" "c" 0x0000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_Callee_P1 TMPL_APPROVAL_Callee_P0 TMPL_CLEAR_Callee
     pushbytes ""
     intc_3 // 4096
     bzero
@@ -398,8 +398,9 @@ main___postInit_route@10:
     intc_1 // 0
     app_global_put
     itxn_begin
-    bytec 4 // TMPL_APPROVAL_Callee
-    bytec 5 // TMPL_CLEAR_Callee
+    bytec 4 // TMPL_APPROVAL_Callee_P1
+    bytec 5 // TMPL_APPROVAL_Callee_P0
+    bytec 6 // TMPL_CLEAR_Callee
     pushint 6
     itxn_field TypeEnum
     pushint 16
@@ -411,7 +412,8 @@ main___postInit_route@10:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

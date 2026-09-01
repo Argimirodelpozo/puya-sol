@@ -436,7 +436,10 @@ def _read_avm_maps_legacy(algod, app_id, arc56, syms, fold, calls=None):
     roots = {k.encode() for k in
              (((arc56 or {}).get("state") or {}).get("keys", {}).get("box") or {})}
     roots |= {k.encode() for k in bmaps}
-    stray = [b for b in have - matched if b not in roots]
+    # "__cp_<Child>" boxes carry deployer-provisioned child approval programs
+    # (--child-programs-via-box) — harness plumbing, not contract storage.
+    stray = [b for b in have - matched
+             if b not in roots and not b.startswith(b"__cp_")]
     out["__unattributed_boxes__"] = len(stray)
     return out
 
@@ -497,7 +500,9 @@ def read_avm_maps(algod, app_id, arc56, layout, syms, fold, calls=None,
     roots |= {name.encode()
               for name in (((arc56.get("state") or {}).get("maps") or {})
                            .get("box") or {})}
-    unexplained = set(box_values) - reader.matched - raw_names - roots
+    # "__cp_<Child>" boxes = deployer-provisioned child programs, not storage.
+    unexplained = (set(box_values) - reader.matched - raw_names - roots
+                   - {n for n in box_values if n.startswith(b"__cp_")})
     groups = {}
     for name in sorted(unexplained):
         shape = f"name:{len(name)}/value:{len(box_values[name])}"
@@ -690,7 +695,8 @@ def main():
     # + transient coherence). The 39-contract zero-divergence certification
     # predates this; a re-certification run revalidates sizes/behavior.
     _mode_args = ([] + (["--evm-layout"] if evm_layout else [])
-                     + (["--evm-memory-layout"] if (evm_memory and not evm_layout) else [])) or None
+                     + (["--evm-memory-layout"] if (evm_memory and not evm_layout) else [])
+                     + (["--child-programs-via-box"] if opts.get("child_box") else [])) or None
     split_config = opts.get("split_config")
     if split_config:
         split_path = Path(split_config)
@@ -1012,6 +1018,27 @@ def main():
     for _a, i in (reg.get("deps") or {}).items():
         if _a in dep_local:
             inv[encoding.decode_address(dep_local[_a]).hex()] = symbol(f"D{i}")
+            # ESCROW form too: a stand-in's fallback answers `address()` from
+            # assembly, which surfaces the dep's escrow — fold it to the same
+            # dep symbol the EVM leg's local stub address folds to.
+            if _a.lower() in dep_app_byaddr:
+                inv[encoding.decode_address(
+                    dep_app_byaddr[_a.lower()].app_addr).hex()] = symbol(f"D{i}")
+    # `new C()` children: apps created by the MAIN app (its escrow is their
+    # creator), in id order, pair with the EVM leg's deterministic CREATE
+    # addresses keccak(rlp([main, nonce]))[12:] at the same ordinal (CH<n>).
+    # Both value forms fold: contract-value (bzero24 ++ itob(id)) and escrow.
+    try:
+        from algosdk.logic import get_application_address as _appaddr
+        _created = sorted(a["id"] for a in (
+            algod.account_info(app.app_addr).get("created-apps") or []))
+        for _n, _cid in enumerate(_created[:8]):
+            inv.setdefault((bytes(24) + int(_cid).to_bytes(8, "big")).hex(),
+                           symbol(f"CH{_n}"))
+            inv.setdefault(encoding.decode_address(_appaddr(_cid)).hex(),
+                           symbol(f"CH{_n}"))
+    except Exception:
+        pass
     # A Solidity `address` occupies 20 bytes of an EVM slot, so under
     # --evm-storage-layout a 32-byte AVM account is stored TRUNCATED to its low
     # 20 bytes. Without these entries such a slot folds to a raw "?0x…" while
@@ -1276,6 +1303,15 @@ def main():
     for _ad, _i in (reg.get("deps") or {}).items():
         if _ad in dep_local:
             syms[symbol(f"D{_i}")] = encoding.decode_address(dep_local[_ad])
+    # `new C()` children (post-replay refresh — factory creates included):
+    # contract-value form, ordinal-paired with EVM CREATE addresses (CH<n>).
+    try:
+        _created = sorted(a["id"] for a in (
+            algod.account_info(app.app_addr).get("created-apps") or []))
+        for _n, _cid in enumerate(_created[:8]):
+            syms[symbol(f"CH{_n}")] = bytes(24) + int(_cid).to_bytes(8, "big")
+    except Exception:
+        pass
     # Same shared instant the EVM leg pins to. Each AVM probe is a real
     # transaction sealing its own block, so without this the phase answers at
     # whatever the last replayed entry left behind and every accruing view

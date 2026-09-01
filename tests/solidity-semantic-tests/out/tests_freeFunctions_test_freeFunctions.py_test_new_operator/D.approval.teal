@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/freeFunctions/contracts/new_operator.sol.D.approval_program() -> uint64:
 main:
     intcblock 1 0 32 6
-    bytecblock 0x151f7c75 TMPL_APPROVAL_C TMPL_CLEAR_C
+    bytecblock 0x151f7c75 TMPL_APPROVAL_C_P1 TMPL_APPROVAL_C_P0 TMPL_CLEAR_C
     pushint 4096
     bzero
     dup
@@ -94,8 +94,9 @@ main_ternary_false@14:
 // __solfn_18() -> bytes:
 test:
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_C
-    bytec_2 // TMPL_CLEAR_C
+    bytec_1 // TMPL_APPROVAL_C_P1
+    bytec_2 // TMPL_APPROVAL_C_P0
+    bytec_3 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -107,7 +108,8 @@ test:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

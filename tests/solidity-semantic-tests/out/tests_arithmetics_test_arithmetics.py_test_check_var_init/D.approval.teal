@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/contracts/check_var_init.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 32 6 1000000
-    bytecblock 0x151f7c75 TMPL_APPROVAL_C TMPL_CLEAR_C 0xbacc49e3
+    bytecblock 0x151f7c75 TMPL_APPROVAL_C_P1 TMPL_APPROVAL_C_P0 TMPL_CLEAR_C 0xbacc49e3
     pushint 4096
     bzero
     dup
@@ -116,8 +116,9 @@ f_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_C
-    bytec_2 // TMPL_CLEAR_C
+    bytec_1 // TMPL_APPROVAL_C_P1
+    bytec_2 // TMPL_APPROVAL_C_P0
+    bytec_3 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -129,7 +130,8 @@ f_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -163,7 +165,7 @@ f_ternary_merge@3:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_3 // method "__postInit()void"
+    bytec 4 // method "__postInit()void"
     itxn_field ApplicationArgs
     itxn_submit
     retsub
@@ -176,8 +178,9 @@ f_ternary_false@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/arithmetics/contracts/check_var_init.sol.D.g() -> bytes:
 g:
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_C
-    bytec_2 // TMPL_CLEAR_C
+    bytec_1 // TMPL_APPROVAL_C_P1
+    bytec_2 // TMPL_APPROVAL_C_P0
+    bytec_3 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -189,7 +192,8 @@ g:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -224,7 +228,7 @@ g:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_3 // method "__postInit()void"
+    bytec 4 // method "__postInit()void"
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin

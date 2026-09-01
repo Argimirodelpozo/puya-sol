@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/call_value_with_data.sol.CallValueData.approval_program() -> uint64:
 main:
     intcblock 0 32 1 6
-    bytecblock 0x151f7c75 TMPL_APPROVAL_Vault TMPL_CLEAR_Vault
+    bytecblock 0x151f7c75 TMPL_APPROVAL_Vault_P1 TMPL_APPROVAL_Vault_P0 TMPL_CLEAR_Vault
     pushint 4096
     bzero
     dup
@@ -111,8 +111,9 @@ main_switch_case_0@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/call_value_with_data.sol.CallValueData.run() -> uint64, bytes, bytes:
 run:
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_Vault
-    bytec_2 // TMPL_CLEAR_Vault
+    bytec_1 // TMPL_APPROVAL_Vault_P1
+    bytec_2 // TMPL_APPROVAL_Vault_P0
+    bytec_3 // TMPL_CLEAR_Vault
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -124,7 +125,8 @@ run:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

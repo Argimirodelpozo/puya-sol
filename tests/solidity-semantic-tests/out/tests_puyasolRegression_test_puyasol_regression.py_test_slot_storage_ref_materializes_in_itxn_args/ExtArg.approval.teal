@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/slot_storage_ref_ext_arg.sol.ExtArg.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x 0x01 0x703a0000000000000000 "__ctor_pending" 0x151f7c75 TMPL_APPROVAL_Sink TMPL_CLEAR_Sink
+    bytecblock 0x 0x01 0x703a0000000000000000 "__ctor_pending" 0x151f7c75 TMPL_APPROVAL_Sink_P1 TMPL_APPROVAL_Sink_P0 TMPL_CLEAR_Sink
     pushint 4096
     bzero
     dup
@@ -145,8 +145,9 @@ main___postInit_route@10:
     swap
     callsub __storage_write
     itxn_begin
-    bytec 5 // TMPL_APPROVAL_Sink
-    bytec 6 // TMPL_CLEAR_Sink
+    bytec 5 // TMPL_APPROVAL_Sink_P1
+    bytec 6 // TMPL_APPROVAL_Sink_P0
+    bytec 7 // TMPL_CLEAR_Sink
     pushint 6
     itxn_field TypeEnum
     pushint 16
@@ -158,7 +159,8 @@ main___postInit_route@10:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

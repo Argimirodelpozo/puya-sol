@@ -1,10 +1,10 @@
 #pragma version 12
 #pragma typetrack false
 
-// /tmp/multisource_ybuam7ol/B.sol.C.approval_program() -> uint64:
+// /tmp/multisource_n7cx_5vl/B.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 32 1 6
-    bytecblock "y" "x" 0x151f7c75 0x290efb48 TMPL_APPROVAL_A TMPL_CLEAR_A
+    bytecblock "y" "x" 0x151f7c75 0x290efb48 TMPL_APPROVAL_A_P1 TMPL_APPROVAL_A_P0 TMPL_CLEAR_A
     pushint 4096
     bzero
     dup
@@ -111,7 +111,7 @@ main_ternary_false@14:
     b main_ternary_merge@15
 
 
-// /tmp/multisource_ybuam7ol/B.sol.C.test() -> bytes, bytes:
+// /tmp/multisource_n7cx_5vl/B.sol.C.test() -> bytes, bytes:
 test:
     txn GroupIndex
     bz test_ternary_false@2
@@ -124,8 +124,9 @@ test_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
-    bytec 4 // TMPL_APPROVAL_A
-    bytec 5 // TMPL_CLEAR_A
+    bytec 4 // TMPL_APPROVAL_A_P1
+    bytec 5 // TMPL_APPROVAL_A_P0
+    bytec 6 // TMPL_CLEAR_A
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -137,7 +138,8 @@ test_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

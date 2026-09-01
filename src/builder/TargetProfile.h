@@ -50,6 +50,15 @@ struct TargetProfile
 	};
 	std::optional<XchainAccounts> xchainAccounts;
 
+	/// `new C()` child approval programs load from a "__cp_<Child>" box
+	/// provisioned by the deployer (via the synthesized __provisionChildProg
+	/// method) instead of being embedded as template constants in the parent
+	/// bytecode. Shaves the child's full size off the parent program — the
+	/// only road when parent + embedded child exceeds the 16KB program cap
+	/// but the parent alone fits. Only children created in __postInit can use
+	/// this (boxes cannot exist before the app does).
+	bool childProgramsViaBox = false;
+
 	/// Canonical EVMVersion::name(); empty means the compiler default.
 	/// Stored as the NAME, not the value: a by-value EVMVersion made this
 	/// 44-line POD drag liblangutil/EVMVersion.h -> boost.exception into

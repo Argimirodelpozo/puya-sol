@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmFactory.approval_program() -> uint64:
 main:
     intcblock 32 0 1 24 65535
-    bytecblock TMPL_APPROVAL_EvmConstructed TMPL_CLEAR_EvmConstructed
+    bytecblock TMPL_APPROVAL_EvmConstructed_P1 TMPL_APPROVAL_EvmConstructed_P0 TMPL_CLEAR_EvmConstructed
     pushint 4096
     bzero
     dup
@@ -99,8 +99,9 @@ main_ternary_merge@18:
     -
     intc_0 // 32
     extract3
-    bytec_0 // TMPL_APPROVAL_EvmConstructed
-    bytec_1 // TMPL_CLEAR_EvmConstructed
+    bytec_0 // TMPL_APPROVAL_EvmConstructed_P1
+    bytec_1 // TMPL_APPROVAL_EvmConstructed_P0
+    bytec_2 // TMPL_CLEAR_EvmConstructed
     pushint 6
     itxn_field TypeEnum
     pushint 16
@@ -112,7 +113,8 @@ main_ternary_merge@18:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_field ApplicationArgs
     itxn_submit
     itxn CreatedApplicationID

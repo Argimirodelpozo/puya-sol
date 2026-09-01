@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_extcodesize.sol.AsmExtcodesize.approval_program() -> uint64:
 main:
     intcblock 0 1 32 4096 2048 20480
-    bytecblock 0x151f7c75 "probe" 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x00 "__ctor_pending" 0x01 TMPL_APPROVAL_Probe TMPL_CLEAR_Probe
+    bytecblock 0x151f7c75 "probe" 0x0000000000000000000000000000000000000000000000000000000000000000 0x 0x00 "__ctor_pending" 0x01 TMPL_APPROVAL_Probe_P1 TMPL_APPROVAL_Probe_P0 TMPL_CLEAR_Probe
     intc_3 // 4096
     bzero
     dup
@@ -605,8 +605,9 @@ main___postInit_route@12:
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec 7 // TMPL_APPROVAL_Probe
-    bytec 8 // TMPL_CLEAR_Probe
+    bytec 7 // TMPL_APPROVAL_Probe_P1
+    bytec 8 // TMPL_APPROVAL_Probe_P0
+    bytec 9 // TMPL_CLEAR_Probe
     pushint 6
     itxn_field TypeEnum
     pushint 16
@@ -618,7 +619,8 @@ main___postInit_route@12:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/balance_alias.sol.BalanceAlias.approval_program() -> uint64:
 main:
     intcblock 0 32 1 6 1000000
-    bytecblock 0x151f7c75 TMPL_APPROVAL_Child TMPL_CLEAR_Child 0xbacc49e3
+    bytecblock 0x151f7c75 TMPL_APPROVAL_Child_P1 TMPL_APPROVAL_Child_P0 TMPL_CLEAR_Child 0xbacc49e3
     pushint 4096
     bzero
     dup
@@ -105,8 +105,9 @@ main_switch_case_0@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/balance_alias.sol.BalanceAlias.probe() -> bytes, bytes, bytes:
 probe:
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_Child
-    bytec_2 // TMPL_CLEAR_Child
+    bytec_1 // TMPL_APPROVAL_Child_P1
+    bytec_2 // TMPL_APPROVAL_Child_P0
+    bytec_3 // TMPL_CLEAR_Child
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -118,7 +119,8 @@ probe:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -153,7 +155,7 @@ probe:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_3 // method "__postInit()void"
+    bytec 4 // method "__postInit()void"
     itxn_field ApplicationArgs
     itxn_submit
     pushint 24
@@ -164,8 +166,9 @@ probe:
     swap
     concat
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_Child
-    bytec_2 // TMPL_CLEAR_Child
+    bytec_1 // TMPL_APPROVAL_Child_P1
+    bytec_2 // TMPL_APPROVAL_Child_P0
+    bytec_3 // TMPL_CLEAR_Child
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -177,7 +180,8 @@ probe:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -212,7 +216,7 @@ probe:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_3 // method "__postInit()void"
+    bytec 4 // method "__postInit()void"
     itxn_field ApplicationArgs
     itxn_submit
     itob

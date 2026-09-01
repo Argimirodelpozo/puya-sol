@@ -292,6 +292,11 @@ def deploy(
         algod, algod.send_transaction(pay.sign(localnet.account.private_key)), 4
     )
 
+    # --child-programs-via-box: stream child approval programs into their
+    # "__cp_<Child>" boxes before __postInit runs the `new C()` creates.
+    _provision_child_program_boxes(
+        algod, localnet, app_id, app_spec, app_addr, artifacts)
+
     app_client = au.AppClient(
         au.AppClientParams(
             algorand=localnet.client,
@@ -568,6 +573,71 @@ def _call_postinit(
                 postinit_args=postinit_args, budget_pool=8, inner_txns=inner_txns,
                 topped_up=topped_up)
         raise DeployError(f"__postInit failed: {str(e)[:300]}") from e
+
+
+def _provision_child_program_boxes(
+    algod, localnet, app_id: int, app_spec, app_addr: str, artifacts: dict
+) -> None:
+    """--child-programs-via-box: stream each child approval program into its
+    "__cp_<Child>" box via the synthesized __provisionChildProg method.
+
+    The method's presence in the arc56 IS the flag signal (it is only
+    synthesized for contracts whose `new C()` loads box pages); the child
+    binaries still land in deploy.tmpl.json as TMPL_APPROVAL_<child>_P0/_P1
+    pages — here they feed the box instead of a TEAL substitution."""
+    import json as _json
+    import os
+    from algosdk.atomic_transaction_composer import AtomicTransactionComposer
+    from algosdk.transaction import PaymentTxn
+
+    prov_spec = next(
+        (m for m in app_spec.methods if m.name == "__provisionChildProg"), None)
+    if prov_spec is None:
+        return
+    tmpl_path = artifacts["approval_teal"].parent / "deploy.tmpl.json"
+    if not tmpl_path.exists():
+        return
+    tmpl = _json.loads(tmpl_path.read_text())
+    programs: dict[str, bytes] = {}
+    for k in tmpl:
+        if k.startswith("TMPL_APPROVAL_") and k.endswith("_P0"):
+            child = k[len("TMPL_APPROVAL_"):-len("_P0")]
+            programs[child] = bytes.fromhex(
+                tmpl.get(f"TMPL_APPROVAL_{child}_P0", "")
+                + tmpl.get(f"TMPL_APPROVAL_{child}_P1", ""))
+
+    sender = localnet.account.address
+    signer = localnet.client.account.get_signer(sender)
+    method = prov_spec.to_abi_method()
+    for child, program in sorted(programs.items()):
+        box_name = b"__cp_" + child.encode()
+        # Box MBR lands on the app account at box_create time — fund it first.
+        mbr = 2500 + 400 * (len(box_name) + len(program)) + 1000
+        sp_pay = algod.suggested_params()
+        pay = PaymentTxn(sender, sp_pay, app_addr, mbr, note=os.urandom(8))
+        wait_for_confirmation(
+            algod,
+            algod.send_transaction(pay.sign(localnet.account.private_key)), 4)
+        # ≤1900-byte chunks keep each call's app-args well under the 2048 cap.
+        chunk = 1900
+        for off in range(0, len(program), chunk):
+            atc = AtomicTransactionComposer()
+            sp = algod.suggested_params()
+            sp.flat_fee = True
+            sp.fee = 2000
+            atc.add_method_call(
+                app_id=app_id, method=method, sender=sender, sp=sp,
+                signer=signer,
+                method_args=[box_name, len(program), off,
+                             program[off:off + chunk]],
+                note=os.urandom(8))
+            try:
+                atc = au.populate_app_call_resources(atc, algod)
+                atc.execute(algod, wait_rounds=4)
+            except Exception as e:
+                raise DeployError(
+                    f"__provisionChildProg({child}, off={off}) failed: "
+                    f"{str(e)[:300]}") from e
 
 
 def _zero_for_type(t: str):

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/inner_call_tuple_results.sol.Caller.approval_program() -> uint64:
 main:
     intcblock 0 32 1 6
-    bytecblock 0x151f7c75 "__ctor_pending" "s" 0x0000000000000000000000000000000000000000000000000000000000000000 0xb5251388 0x311e3db1 TMPL_APPROVAL_Cee TMPL_CLEAR_Cee
+    bytecblock 0x151f7c75 "__ctor_pending" "s" 0x0000000000000000000000000000000000000000000000000000000000000000 0xb5251388 0x311e3db1 TMPL_APPROVAL_Cee_P1 TMPL_APPROVAL_Cee_P0 TMPL_CLEAR_Cee
     pushint 4096
     bzero
     dup
@@ -86,8 +86,9 @@ main___postInit_route@11:
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec 6 // TMPL_APPROVAL_Cee
-    bytec 7 // TMPL_CLEAR_Cee
+    bytec 6 // TMPL_APPROVAL_Cee_P1
+    bytec 7 // TMPL_APPROVAL_Cee_P0
+    bytec 8 // TMPL_CLEAR_Cee
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -99,7 +100,8 @@ main___postInit_route@11:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

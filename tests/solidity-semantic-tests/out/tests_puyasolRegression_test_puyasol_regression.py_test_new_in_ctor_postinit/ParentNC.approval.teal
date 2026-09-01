@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/new_in_ctor_postinit.sol.ParentNC.approval_program() -> uint64:
 main:
     intcblock 0 32 1 2
-    bytecblock 0x151f7c75 0x "parr" "got" "__ctor_pending" "gotPlain" "gotArg" "gotMode" "gotTag" 0x00000000 TMPL_APPROVAL_ChildNC TMPL_CLEAR_ChildNC
+    bytecblock 0x151f7c75 0x "parr" "got" "__ctor_pending" "gotPlain" "gotArg" "gotMode" "gotTag" 0x00000000 TMPL_APPROVAL_ChildNC_P1 TMPL_APPROVAL_ChildNC_P0 TMPL_CLEAR_ChildNC
     pushint 4096
     bzero
     dup
@@ -154,8 +154,9 @@ main___postInit_route@16:
     intc_1 // 32
     callsub box_dynamic_array_concat_fixed
     itxn_begin
-    bytec 10 // TMPL_APPROVAL_ChildNC
-    bytec 11 // TMPL_CLEAR_ChildNC
+    bytec 10 // TMPL_APPROVAL_ChildNC_P1
+    bytec 11 // TMPL_APPROVAL_ChildNC_P0
+    bytec 12 // TMPL_CLEAR_ChildNC
     pushint 6
     itxn_field TypeEnum
     pushint 16
@@ -167,7 +168,8 @@ main___postInit_route@16:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

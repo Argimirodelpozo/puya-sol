@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionTypes/contracts/call_to_zero_initialized_function_type_ir.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 12
-    bytecblock "x" TMPL_APPROVAL_Other TMPL_CLEAR_Other
+    bytecblock "x" TMPL_APPROVAL_Other_P1 TMPL_APPROVAL_Other_P0 TMPL_CLEAR_Other
     pushint 4096
     bzero
     dup
@@ -186,8 +186,9 @@ t_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_Other
-    bytec_2 // TMPL_CLEAR_Other
+    bytec_1 // TMPL_APPROVAL_Other_P1
+    bytec_2 // TMPL_APPROVAL_Other_P0
+    bytec_3 // TMPL_CLEAR_Other
     pushint 6
     itxn_field TypeEnum
     pushint 16
@@ -199,7 +200,8 @@ t_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

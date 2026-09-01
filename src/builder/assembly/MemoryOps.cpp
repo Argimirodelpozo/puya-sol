@@ -1051,8 +1051,20 @@ void AssemblyBuilder::handleReturn(
 		auto logStmt = awst::makeExpressionStatement(std::move(logCall), _loc);
 		_out.push_back(std::move(logStmt));
 
-		// Flush and return void
 		flushMemoryToScratch(_loc, _out);
+		if (m_frameIsProgram)
+		{
+			// Program frame (internal/private/fallback/receive): EVM return()
+			// ends the whole call — halt so the answer log above stays the
+			// LAST log (the return-carrier the caller decodes). A subroutine
+			// return here let the router append its empty void carrier after.
+			auto returnOp = awst::makeIntrinsicCall(
+				"return", awst::WType::voidType(), _loc);
+			returnOp->stackArgs.push_back(awst::makeTrue(_loc));
+			_out.push_back(awst::makeExpressionStatement(std::move(returnOp), _loc));
+			m_haltEmitted = true;
+			return;
+		}
 		auto ret = awst::makeReturnStatement(nullptr, _loc);
 		_out.push_back(std::move(ret));
 		return;

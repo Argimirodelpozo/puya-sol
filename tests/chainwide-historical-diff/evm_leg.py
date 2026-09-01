@@ -320,6 +320,11 @@ def main():
                                                "storageLayout"]}}}
     if _patch >= 18:
         settings["evmVersion"] = "paris"
+    # Dep/stub compiles share the same gate — a hardcoded "paris" dies on
+    # pre-0.8.18 oracles ("Invalid EVM version requested").
+    _dep_settings = {"outputSelection": {"*": {"*": ["evm.bytecode.object"]}}}
+    if _patch >= 18:
+        _dep_settings["evmVersion"] = "paris"
     if mf:
         # Real file tree + the verification's own remappings — solc consumes
         # both natively via standard-json.
@@ -464,9 +469,7 @@ def main():
                 "language": "Solidity",
                 "sources": {"dep.sol": {"content":
                     (d["dir"] / "prepared.sol").read_text()}},
-                "settings": {"evmVersion": "paris",
-                             "outputSelection": {"*": {"*":
-                                 ["evm.bytecode.object"]}}}})
+                "settings": dict(_dep_settings)})
             dtarget = None
             for by_name in dout["contracts"].values():
                 for cname, cdata in by_name.items():
@@ -486,9 +489,7 @@ def main():
                     dout = solcx.compile_standard({
                         "language": "Solidity",
                         "sources": {"dep.sol": {"content": _fb.read_text()}},
-                        "settings": {"evmVersion": "paris",
-                                     "outputSelection": {"*": {"*":
-                                         ["evm.bytecode.object"]}}}})
+                        "settings": dict(_dep_settings)})
                     _sc = dout["contracts"]["dep.sol"]["StubERC20"]
                     d["bytecode"] = _sc["evm"]["bytecode"]["object"]
                     d["case"]["abi"] = d["case"].get("stub_abi") or d["case"]["abi"]
@@ -700,9 +701,7 @@ def main():
                     dout = solcx.compile_standard({
                         "language": "Solidity",
                         "sources": {"dep.sol": {"content": _fb.read_text()}},
-                        "settings": {"evmVersion": "paris",
-                                     "outputSelection": {"*": {"*":
-                                         ["evm.bytecode.object"]}}}})
+                        "settings": dict(_dep_settings)})
                     _sc = dout["contracts"]["dep.sol"]["StubERC20"]
                     d["case"]["abi"] = d["case"].get("stub_abi") or d["case"]["abi"]
                     Cd = w3.eth.contract(abi=d["case"]["abi"],
@@ -875,11 +874,30 @@ def main():
         for a, i in (reg.get("deps") or {}).items():
             if a in _dep_local:
                 inv[_dep_local[a].lower()] = symbol(f"D{i}")
+        # `new C()` children: contract CREATE addresses are deterministic —
+        # keccak(rlp([creator, nonce]))[12:], nonce from 1. Pair the first
+        # ordinals with the AVM leg's created-apps under the same CH<n>
+        # symbols so runtime-created child identities fold cross-leg.
+        try:
+            import rlp as _rlp
+            from eth_utils import keccak as _keccak_fn
+            for _n in range(8):
+                _ca = _keccak_fn(
+                    _rlp.encode([bytes.fromhex(caddr[2:]), _n + 1]))[12:]
+                inv.setdefault("0x" + _ca.hex(), symbol(f"CH{_n}"))
+        except Exception:
+            pass
 
         def fold(addr):
             if addr is None:
                 return None
-            return inv.get(str(addr).lower(), f"?{str(addr).lower()}")
+            s = str(addr).lower()
+            hit = inv.get(s)
+            # 32-byte word carrying a clean address (12 zero bytes ++ 20):
+            # canon_value probes identities through fold as 64-hex words.
+            if hit is None and len(s) == 66 and s.startswith("0x" + "0" * 24):
+                hit = inv.get("0x" + s[26:])
+            return hit if hit is not None else f"?{s}"
 
         def decode_logs(receipt):
             outl = []

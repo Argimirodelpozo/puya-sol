@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/transient_storage_selfdestruct.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 1 6 16 1000000
-    bytecblock 0x151f7c75 "c" "__ctor_pending" TMPL_APPROVAL_C TMPL_CLEAR_C 0x0000000000000000000000000000000000000000000000000000000000000000 0x7cb116cd 0x000000000000000000000000000000000000000000000000000000000000002a 0xb30e2ea6 0xf08d7860 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytecblock 0x151f7c75 "c" "__ctor_pending" TMPL_APPROVAL_C_P1 TMPL_APPROVAL_C_P0 TMPL_CLEAR_C 0x0000000000000000000000000000000000000000000000000000000000000000 0x7cb116cd 0x000000000000000000000000000000000000000000000000000000000000002a 0xb30e2ea6 0xf08d7860 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
     dup
@@ -83,8 +83,9 @@ main___postInit_route@12:
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec_3 // TMPL_APPROVAL_C
-    bytec 4 // TMPL_CLEAR_C
+    bytec_3 // TMPL_APPROVAL_C_P1
+    bytec 4 // TMPL_APPROVAL_C_P0
+    bytec 5 // TMPL_CLEAR_C
     intc_2 // 6
     itxn_field TypeEnum
     intc_3 // 16
@@ -96,7 +97,8 @@ main___postInit_route@12:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -182,7 +184,7 @@ destroy_ternary_merge@3:
     intc_0 // 0
     bytec_1 // "c"
     app_global_get_ex
-    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     pushint 24
@@ -195,9 +197,9 @@ destroy_ternary_merge@3:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 6 // method "set(uint256)void"
+    bytec 7 // method "set(uint256)void"
     itxn_field ApplicationArgs
-    bytec 7 // 0x000000000000000000000000000000000000000000000000000000000000002a
+    bytec 8 // 0x000000000000000000000000000000000000000000000000000000000000002a
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
@@ -210,7 +212,7 @@ destroy_ternary_merge@3:
     itxn_field Fee
     dig 1
     itxn_field ApplicationID
-    bytec 8 // method "terminate(address)void"
+    bytec 9 // method "terminate(address)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -222,7 +224,7 @@ destroy_ternary_merge@3:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 9 // method "get()uint256"
+    bytec 10 // method "get()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -230,7 +232,7 @@ destroy_ternary_merge@3:
     b==
     dup
     bnz destroy_after_if_else@8
-    bytec 10 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec 11 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 destroy_after_if_else@8:
@@ -255,8 +257,9 @@ createAndDestroy_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
-    bytec_3 // TMPL_APPROVAL_C
-    bytec 4 // TMPL_CLEAR_C
+    bytec_3 // TMPL_APPROVAL_C_P1
+    bytec 4 // TMPL_APPROVAL_C_P0
+    bytec 5 // TMPL_CLEAR_C
     intc_2 // 6
     itxn_field TypeEnum
     intc_3 // 16
@@ -268,7 +271,8 @@ createAndDestroy_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -305,9 +309,9 @@ createAndDestroy_ternary_merge@3:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec 6 // method "set(uint256)void"
+    bytec 7 // method "set(uint256)void"
     itxn_field ApplicationArgs
-    bytec 7 // 0x000000000000000000000000000000000000000000000000000000000000002a
+    bytec 8 // 0x000000000000000000000000000000000000000000000000000000000000002a
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
@@ -320,7 +324,7 @@ createAndDestroy_ternary_merge@3:
     itxn_field Fee
     dig 1
     itxn_field ApplicationID
-    bytec 8 // method "terminate(address)void"
+    bytec 9 // method "terminate(address)void"
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs
     itxn_submit
@@ -332,7 +336,7 @@ createAndDestroy_ternary_merge@3:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec 9 // method "get()uint256"
+    bytec 10 // method "get()uint256"
     itxn_field ApplicationArgs
     itxn_submit
     itxn LastLog
@@ -340,7 +344,7 @@ createAndDestroy_ternary_merge@3:
     b==
     dup
     bnz createAndDestroy_after_if_else@10
-    bytec 10 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
+    bytec 11 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
 createAndDestroy_after_if_else@10:
@@ -367,7 +371,7 @@ c_ternary_merge@3:
     intc_0 // 0
     bytec_1 // "c"
     app_global_get_ex
-    bytec 5 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     retsub

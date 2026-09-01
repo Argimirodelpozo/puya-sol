@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/contracts/bubble.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 0 6 16
-    bytecblock "__ctor_pending" "a" TMPL_APPROVAL_A TMPL_CLEAR_A
+    bytecblock "__ctor_pending" "a" TMPL_APPROVAL_A_P1 TMPL_APPROVAL_A_P0 TMPL_CLEAR_A
     pushint 4096
     bzero
     dup
@@ -69,8 +69,9 @@ main___postInit_route@10:
     intc_1 // 0
     app_global_put
     itxn_begin
-    bytec_2 // TMPL_APPROVAL_A
-    bytec_3 // TMPL_CLEAR_A
+    bytec_2 // TMPL_APPROVAL_A_P1
+    bytec_3 // TMPL_APPROVAL_A_P0
+    bytec 4 // TMPL_CLEAR_A
     intc_2 // 6
     itxn_field TypeEnum
     intc_3 // 16
@@ -82,7 +83,8 @@ main___postInit_route@10:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

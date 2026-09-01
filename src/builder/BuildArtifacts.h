@@ -31,6 +31,11 @@ struct BuildArtifacts
 	std::map<std::string, std::string> evmClearSubs;
 	std::vector<std::pair<std::string, solidity::frontend::Type const*>> pendingEvmClearSubs;
 	std::set<std::string> childContracts;
+	/// Children whose `new C()` create loads the approval program from a
+	/// "__cp_<Child>" box (--child-programs-via-box). The contract that owns
+	/// such creates gets the synthesized __provisionChildProg method.
+	/// Snapshot-and-reset per ContractBuilder::build (like usesErc1967Admin).
+	std::set<std::string> boxProvisionedChildren;
 	bool needsRipemd160 = false;
 	/// An EIP-1967 admin-slot use was lowered while translating the CURRENT
 	/// contract's bodies: it gets the synthesized "__erc1967_admin" global and
@@ -61,6 +66,7 @@ struct BuildArtifacts
 		evmClearSubs.clear();
 		pendingEvmClearSubs.clear();
 		childContracts.clear();
+		boxProvisionedChildren.clear();
 		needsRipemd160 = false;
 		usesErc1967Admin = false;
 		currentFreestandingFunctionId = -1;

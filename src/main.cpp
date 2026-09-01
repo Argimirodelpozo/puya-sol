@@ -208,6 +208,7 @@ int main(int _argc, char* _argv[])
 			? std::nullopt : std::optional<std::string>{opts.evmBlockGasLimit},
 		.evmCoinbase = opts.evmCoinbase.empty()
 			? std::nullopt : std::optional<std::string>{opts.evmCoinbase},
+		.childProgramsViaBox = opts.childProgramsViaBox,
 		.evmVersionName = evmVer.name(),
 		.scratchLayout = puyasol::builder::ScratchLayout(
 			opts.evmMemorySlots > 0

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inheritance/contracts/value_for_constructor.sol.Main.approval_program() -> uint64:
 main:
     intcblock 0 1 32 24
-    bytecblock 0x151f7c75 "h" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x2fe85e04 0x0a5c26e3 TMPL_APPROVAL_Helper TMPL_CLEAR_Helper
+    bytecblock 0x151f7c75 "h" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x2fe85e04 0x0a5c26e3 TMPL_APPROVAL_Helper_P1 TMPL_APPROVAL_Helper_P0 TMPL_CLEAR_Helper
     pushint 4096
     bzero
     dup
@@ -101,8 +101,9 @@ main___postInit_route@12:
     itxn_begin
     intc_1 // 1
     itob
-    bytec 6 // TMPL_APPROVAL_Helper
-    bytec 7 // TMPL_CLEAR_Helper
+    bytec 6 // TMPL_APPROVAL_Helper_P1
+    bytec 7 // TMPL_APPROVAL_Helper_P0
+    bytec 8 // TMPL_CLEAR_Helper
     pushint 6
     itxn_field TypeEnum
     pushint 16
@@ -114,7 +115,8 @@ main___postInit_route@12:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     pushbytes 0x616263
     itxn_field ApplicationArgs
     itxn_field ApplicationArgs

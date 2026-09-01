@@ -148,6 +148,9 @@ void printUsage(char const* _progName)
 		<< "                         the xchain account model in the EVM profile.\n"
 		<< "  --xchain-placeholder <hex>  The 20-byte owner placeholder inside the\n"
 		<< "                         template (default ee x20).\n"
+		<< "  --child-programs-via-box  `new C()` child approval programs load from a\n"
+		<< "                         deployer-provisioned __cp_<Child> box instead of\n"
+		<< "                         embedded template constants (16KB-cap relief).\n"
 		<< "  --evm-chain-id <N>     Compile-time uint256 returned by block.chainid. Without\n"
 		<< "                         it, GenesisHash is used as an AVM network identity.\n"
 		<< "  --evm-block-gas-limit <N> Compile-time uint256 returned by block.gaslimit.\n"
@@ -298,6 +301,8 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.xchainTemplateHex = _argv[++i];
 		else if (arg == "--xchain-placeholder" && i + 1 < _argc)
 			opts.xchainPlaceholderHex = _argv[++i];
+		else if (arg == "--child-programs-via-box")
+			opts.childProgramsViaBox = true;
 		else if (arg == "--deploy-pure-helpers")
 			opts.deployPureHelpers = true;
 		else if (arg == "--force-inline-sub" && i + 1 < _argc)

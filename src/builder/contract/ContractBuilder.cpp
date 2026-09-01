@@ -36,6 +36,93 @@
 namespace puyasol::builder
 {
 
+/// --child-programs-via-box: the deployer streams each child approval program
+/// into its "__cp_<Child>" box through this synthesized ABI method (creator-
+/// gated; the name-prefix assert keeps it off storage boxes) before the
+/// `new C()` site box_extracts the pages. One method serves every child.
+static awst::ContractMethod makeProvisionChildProgMethod(
+	TypeMapper& _typeMapper, std::string const& _cref,
+	awst::SourceLocation const& _loc)
+{
+	awst::ContractMethod method;
+	method.sourceLocation = _loc;
+	method.cref = _cref;
+	method.memberName = "__provisionChildProg";
+	method.returnType = awst::WType::voidType();
+
+	auto addArg = [&](char const* name, awst::WType const* wtype) {
+		awst::SubroutineArgument arg;
+		arg.name = name;
+		arg.sourceLocation = _loc;
+		arg.wtype = wtype;
+		method.args.push_back(std::move(arg));
+	};
+	addArg("name", awst::WType::bytesType());
+	addArg("total", awst::WType::uint64Type());
+	addArg("offset", awst::WType::uint64Type());
+	addArg("chunk", awst::WType::bytesType());
+
+	awst::ARC4ABIMethodConfig config;
+	config.name = "__provisionChildProg";
+	config.sourceLocation = _loc;
+	config.allowedCompletionTypes = {0}; // NoOp
+	config.create = 3;                   // Disallow
+	config.readonly = false;
+	method.arc4MethodConfig = config;
+
+	auto arg = [&](char const* name, awst::WType const* wtype) {
+		return awst::makeVarExpression(name, wtype, _loc);
+	};
+	auto body = awst::makeBlock(_loc);
+	{
+		auto sender = awst::makeAsBytes(
+			awst::makeTxn("Sender", awst::WType::accountType(), _loc), _loc);
+		auto creator = awst::makeAsBytes(
+			awst::makeGlobal(std::string("CreatorAddress"),
+				awst::WType::accountType(), _loc), _loc);
+		body->body.push_back(awst::makeExpressionStatement(
+			awst::makeAssert(
+				awst::makeBytesComparison(std::move(sender),
+					awst::EqualityComparison::Eq, std::move(creator), _loc),
+				_loc, "__provisionChildProg callable only by the app creator"),
+			_loc));
+	}
+	body->body.push_back(awst::makeExpressionStatement(
+		awst::makeAssert(
+			awst::makeBytesComparison(
+				awst::makeExtract3(arg("name", awst::WType::bytesType()),
+					awst::makeIntegerConstant("0", _loc),
+					awst::makeIntegerConstant("5", _loc), _loc),
+				awst::EqualityComparison::Eq,
+				awst::makeUtf8BytesConstant("__cp_", _loc), _loc),
+			_loc, "__provisionChildProg targets child-program boxes only"),
+		_loc));
+	{
+		auto* lenTupleT = _typeMapper.createType<awst::WTuple>(
+			std::vector<awst::WType const*>{
+				awst::WType::uint64Type(), awst::WType::boolType()});
+		auto exists = awst::makeTupleItem(
+			awst::makeBoxLen(arg("name", awst::WType::bytesType()),
+				lenTupleT, _loc),
+			1, awst::WType::boolType(), _loc);
+		auto createBlock = awst::makeBlock(_loc);
+		createBlock->body.push_back(awst::makeExpressionStatement(
+			awst::makeBoxCreate(arg("name", awst::WType::bytesType()),
+				arg("total", awst::WType::uint64Type()), _loc),
+			_loc));
+		body->body.push_back(awst::makeIfElse(
+			awst::makeNot(std::move(exists), _loc), std::move(createBlock),
+			nullptr, _loc));
+	}
+	body->body.push_back(awst::makeExpressionStatement(
+		awst::makeBoxReplace(arg("name", awst::WType::bytesType()),
+			arg("offset", awst::WType::uint64Type()),
+			arg("chunk", awst::WType::bytesType()), _loc),
+		_loc));
+	method.body = std::move(body);
+	return method;
+}
+
 /// Checks if a Solidity AST subtree references any state variable whose AST ID
 /// is in the given set (i.e. box-stored state variables).
 
@@ -677,6 +764,18 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				contract->methods.push_back(std::move(sub));
 			m_modifierSubroutines.clear();
 		}
+	}
+
+	// --child-programs-via-box: this contract's bodies emitted box-loading
+	// `new C()` creates — append the deployer's provisioning method BEFORE
+	// dispatch so the residual ARC4 router (or plain ARC4 router) sees it.
+	// Snapshot-and-reset: the set is per-contract, like usesErc1967Admin.
+	if (!m_typeMapper.artifacts().boxProvisionedChildren.empty())
+	{
+		m_typeMapper.artifacts().boxProvisionedChildren.clear();
+		contract->methods.push_back(makeProvisionChildProgMethod(
+			m_typeMapper, contract->id,
+			contract->approvalProgram.sourceLocation));
 	}
 
 	if (m_typeMapper.profile().contractAbi == ContractAbi::Evm)

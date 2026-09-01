@@ -1044,7 +1044,14 @@ awst::ContractMethod ContractBuilder::buildFunction(
 		m_functionCtx->callableId = _func.id();
 		m_functionCtx->frameIsProgram =
 			_func.visibility() == solidity::frontend::Visibility::Internal
-			|| _func.visibility() == solidity::frontend::Visibility::Private;
+			|| _func.visibility() == solidity::frontend::Visibility::Private
+			// fallback/receive are ONLY router-dispatched (Solidity has no
+			// `this.fallback()` form), so an asm `return(o,s)` inside them ends
+			// the whole call. Without the halt the router's post-call void
+			// carrier lands AFTER the fallback's own answer log and, as the
+			// LAST log, clobbers it — callers decoded an EMPTY answer from the
+			// tape-stub fallback (pm_negriskadapter balanceOf probes).
+			|| _func.isFallback() || _func.isReceive();
 		// UUPS recognized-idiom folds (proxy.md §3): the OZ UUPSUpgradeable
 		// context checks pass and the in-contract upgrade path traps; the
 		// real bodies would drag delegatecall + escaped-1967-slot storage

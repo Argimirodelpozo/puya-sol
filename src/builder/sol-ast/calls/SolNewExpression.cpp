@@ -438,23 +438,60 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			create->fields["GlobalNumUint"] = makeU64("16");
 			create->fields["GlobalNumByteSlice"] = makeU64("16");
 
-			// ApprovalProgramPages = (TMPL_APPROVAL_ChildName_P0, .._P1): the
-			// program is split into two ≤4096-byte template pages because a
-			// single AVM stack value (and bytecblock constant) caps at 4096
-			// bytes while a 3-extra-page program can reach 8192. The second
-			// page substitutes to empty for small children.
+			// ApprovalProgramPages = two ≤4096-byte pages: a single AVM stack
+			// value (and bytecblock constant) caps at 4096 bytes while a
+			// 3-extra-page program can reach 8192. Sources:
+			//   default: TMPL_APPROVAL_ChildName_P0/_P1 template constants
+			//     (page 1 substitutes to empty for small children);
+			//   --child-programs-via-box: slices of the deployer-provisioned
+			//     "__cp_<Child>" box (the program never enters the parent
+			//     bytecode — 16KB-cap relief). Page split at runtime from
+			//     box_len; box_extract(key, len, 0) is valid for the empty
+			//     tail, so no branch on the extract itself.
 			{
 				auto pages = awst::makeTupleExpression(nullptr, m_loc);
-				std::vector<awst::WType const*> pageTypes;
-				for (int page = 0; page < 2; ++page)
+				if (m_ctx.typeMapper.profile().childProgramsViaBox)
 				{
-					pages->items.push_back(awst::makeTemplateVar(
-						"TMPL_APPROVAL_" + childName + "_P" + std::to_string(page),
-						awst::WType::bytesType(), m_loc));
-					pageTypes.push_back(awst::WType::bytesType());
+					m_ctx.typeMapper.artifacts().boxProvisionedChildren
+						.insert(childName);
+					auto boxKey = [&]() {
+						return awst::makeUtf8BytesConstant(
+							"__cp_" + childName, m_loc);
+					};
+					auto lenU64 = [&]() {
+						auto* tupleT = m_ctx.typeMapper.createType<awst::WTuple>(
+							std::vector<awst::WType const*>{
+								awst::WType::uint64Type(),
+								awst::WType::boolType()});
+						return awst::makeTupleItem(
+							awst::makeBoxLen(boxKey(), tupleT, m_loc), 0,
+							awst::WType::uint64Type(), m_loc);
+					};
+					auto page0Len = [&]() {
+						return awst::makeConditional(
+							awst::makeNumericCompare(lenU64(),
+								awst::NumericComparison::Gt,
+								awst::makeIntegerConstant("4096", m_loc), m_loc),
+							awst::makeIntegerConstant("4096", m_loc), lenU64(),
+							awst::WType::uint64Type(), m_loc);
+					};
+					pages->items.push_back(awst::makeBoxExtract(boxKey(),
+						awst::makeIntegerConstant("0", m_loc), page0Len(), m_loc));
+					pages->items.push_back(awst::makeBoxExtract(boxKey(),
+						page0Len(),
+						awst::makeUInt64BinOp(lenU64(),
+							awst::UInt64BinaryOperator::Sub, page0Len(), m_loc),
+						m_loc));
 				}
+				else
+					for (int page = 0; page < 2; ++page)
+						pages->items.push_back(awst::makeTemplateVar(
+							"TMPL_APPROVAL_" + childName + "_P" + std::to_string(page),
+							awst::WType::bytesType(), m_loc));
 				pages->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
-					std::move(pageTypes), std::nullopt);
+					std::vector<awst::WType const*>{
+						awst::WType::bytesType(), awst::WType::bytesType()},
+					std::nullopt);
 				create->fields["ApprovalProgramPages"] = std::move(pages);
 			}
 

@@ -511,10 +511,23 @@ def canon_value(v, abi_type: str, fold_addr, components=None):
         return bool(v)
     if abi_type.startswith(("uint", "int")):
         try:
-            return int(v)
+            n = int(v)
         except (ValueError, TypeError):
             # a FOLDED address symbol ('C', '«7»') in a component whose ABI
             # metadata lacks a type and defaulted to uint256 — the symbol IS
             # the canonical value; both legs fold identically
             return v
+        # A uint that IS a known identity (a stand-in's fallback answering its
+        # own address, an address-valued word read through a uint getter)
+        # renders leg-specifically (20-byte address vs escrow/app form) — fold
+        # it to the shared symbol. Plain numbers miss and pass through; a
+        # collision would need exact equality with a known 160+-bit identity.
+        if fold_addr is not None and 2**64 <= n < 2**256:
+            try:
+                sym = fold_addr("0x%064x" % n)
+                if isinstance(sym, str) and not sym.startswith("?"):
+                    return sym
+            except Exception:
+                pass
+        return n
     return v

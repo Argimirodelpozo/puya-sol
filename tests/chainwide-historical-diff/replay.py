@@ -73,7 +73,8 @@ def _chain_now() -> int:
 def replay(tag: str, max_txns: int = 300, snapshot_every: int = 25,
            evm_layout: bool = False, evm_memory: bool = False,
            split_config: str | None = None,
-           force_delegate: list[str] | None = None) -> dict:
+           force_delegate: list[str] | None = None,
+           child_box: bool = False) -> dict:
     case_dir = CASES / tag
     case = load_json(case_dir / "case.json")
     skips: dict[int, str] = {}
@@ -116,6 +117,7 @@ def replay(tag: str, max_txns: int = 300, snapshot_every: int = 25,
                           "evm_layout": evm_layout,
                           "evm_memory": evm_memory,
                           "split_config": split_config,
+                          "child_box": child_box,
                           "force_delegate": force_delegate or []})], "avm")
         pl = load_json(case_dir / "avm_results.json").get("platform_limits") or {}
         new = {int(k): f"avm-platform-limit:{v[:40]}" for k, v in pl.items()
@@ -154,6 +156,9 @@ def main():
     evm_memory = "--evm-memory" in argv
     if evm_memory:
         argv.remove("--evm-memory")
+    child_box = "--child-programs-via-box" in argv
+    if child_box:
+        argv.remove("--child-programs-via-box")
     if not argv:
         sys.exit(__doc__)
     tag = argv[0]
@@ -167,7 +172,7 @@ def main():
     print(f"[replay] {tag}: max_txns={max_txns}"
           + (" [--evm-layout]" if evm_layout else ""))
     print_report(replay(tag, max_txns, snap, evm_layout, evm_memory,
-                        split_config, force_delegate))
+                        split_config, force_delegate, child_box))
 
 
 if __name__ == "__main__":

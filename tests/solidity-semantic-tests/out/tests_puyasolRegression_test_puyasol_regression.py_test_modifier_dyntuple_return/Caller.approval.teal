@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/modifier_dyntuple_return.sol.Caller.approval_program() -> uint64:
 main:
     intcblock 32 0 1 6
-    bytecblock 0x151f7c75 0x8000000000000000000000000000000000000000000000000000000000000000 "c" 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000000 0x03e8 "__ctor_pending" 0xffffffffffffffff 0x8000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000 TMPL_APPROVAL_Cee TMPL_CLEAR_Cee
+    bytecblock 0x151f7c75 0x8000000000000000000000000000000000000000000000000000000000000000 "c" 0x010000000000000000000000000000000000000000000000000000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000000000000000000000000000000000000000000000000000000000000000 0x03e8 "__ctor_pending" 0xffffffffffffffff 0x8000000000000000 0xffffffffffffffffffffffffffffffffffffffffffffffff0000000000000000 TMPL_APPROVAL_Cee_P1 TMPL_APPROVAL_Cee_P0 TMPL_CLEAR_Cee
     pushint 4096
     bzero
     dup
@@ -139,8 +139,9 @@ main___postInit_route@20:
     intc_1 // 0
     app_global_put
     itxn_begin
-    bytec 11 // TMPL_APPROVAL_Cee
-    bytec 12 // TMPL_CLEAR_Cee
+    bytec 11 // TMPL_APPROVAL_Cee_P1
+    bytec 12 // TMPL_APPROVAL_Cee_P0
+    bytec 13 // TMPL_CLEAR_Cee
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -152,7 +153,8 @@ main___postInit_route@20:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

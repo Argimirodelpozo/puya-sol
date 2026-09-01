@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/structs/contracts/function_type_copy.sol.Test.approval_program() -> uint64:
 main:
     intcblock 1 0 32 6
-    bytecblock 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 "__ctor_pending" 0x21f5b0f3 0x79c18c5e 0x769c4dc6 TMPL_APPROVAL_C TMPL_CLEAR_C
+    bytecblock 0x151f7c75 0x4e487b710000000000000000000000000000000000000000000000000000000000000001 "__ctor_pending" 0x21f5b0f3 0x79c18c5e 0x769c4dc6 TMPL_APPROVAL_C_P1 TMPL_APPROVAL_C_P0 TMPL_CLEAR_C
     pushint 4096
     bzero
     dup
@@ -95,8 +95,9 @@ main___postInit_route@13:
     intc_1 // 0
     app_global_put
     itxn_begin
-    bytec 6 // TMPL_APPROVAL_C
-    bytec 7 // TMPL_CLEAR_C
+    bytec 6 // TMPL_APPROVAL_C_P1
+    bytec 7 // TMPL_APPROVAL_C_P0
+    bytec 8 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -108,7 +109,8 @@ main___postInit_route@13:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

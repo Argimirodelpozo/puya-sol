@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/asm_pop_call_output.sol.PopCallCaller.approval_program() -> uint64:
 main:
     intcblock 32 0 4096 1 20480
-    bytecblock 0x151f7c75 TMPL_APPROVAL_PopCallCallee TMPL_CLEAR_PopCallCallee
+    bytecblock 0x151f7c75 TMPL_APPROVAL_PopCallCallee_P1 TMPL_APPROVAL_PopCallCallee_P0 TMPL_CLEAR_PopCallCallee
     intc_2 // 4096
     bzero
     dup
@@ -56,8 +56,9 @@ main_ternary_merge@9:
     !
     assert // not payable
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_PopCallCallee
-    bytec_2 // TMPL_CLEAR_PopCallCallee
+    bytec_1 // TMPL_APPROVAL_PopCallCallee_P1
+    bytec_2 // TMPL_APPROVAL_PopCallCallee_P0
+    bytec_3 // TMPL_CLEAR_PopCallCallee
     pushint 6
     itxn_field TypeEnum
     pushint 16
@@ -69,7 +70,8 @@ main_ternary_merge@9:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

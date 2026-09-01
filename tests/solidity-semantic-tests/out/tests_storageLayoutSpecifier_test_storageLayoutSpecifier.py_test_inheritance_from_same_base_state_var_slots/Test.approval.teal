@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/inheritance_from_same_base_state_var_slots.sol.Test.approval_program() -> uint64:
 main:
     intcblock 32 0 1 6 1000000
-    bytecblock 0x151f7c75 "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 "a" TMPL_APPROVAL_A TMPL_CLEAR_A TMPL_APPROVAL_B TMPL_CLEAR_B TMPL_APPROVAL_C TMPL_CLEAR_C
+    bytecblock 0x151f7c75 "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 "a" TMPL_APPROVAL_A_P1 TMPL_APPROVAL_A_P0 TMPL_CLEAR_A TMPL_APPROVAL_B_P1 TMPL_APPROVAL_B_P0 TMPL_CLEAR_B TMPL_APPROVAL_C_P1 TMPL_APPROVAL_C_P0 TMPL_CLEAR_C
     pushint 4096
     bzero
     dup
@@ -93,8 +93,9 @@ main___postInit_route@12:
     intc_1 // 0
     app_global_put
     itxn_begin
-    bytec 4 // TMPL_APPROVAL_A
-    bytec 5 // TMPL_CLEAR_A
+    bytec 4 // TMPL_APPROVAL_A_P1
+    bytec 5 // TMPL_APPROVAL_A_P0
+    bytec 6 // TMPL_CLEAR_A
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -106,7 +107,8 @@ main___postInit_route@12:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -132,8 +134,9 @@ main___postInit_route@12:
     swap
     app_global_put
     itxn_begin
-    bytec 6 // TMPL_APPROVAL_B
-    bytec 7 // TMPL_CLEAR_B
+    bytec 7 // TMPL_APPROVAL_B_P1
+    bytec 8 // TMPL_APPROVAL_B_P0
+    bytec 9 // TMPL_CLEAR_B
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -145,7 +148,8 @@ main___postInit_route@12:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -168,8 +172,9 @@ main___postInit_route@12:
     swap
     app_global_put
     itxn_begin
-    bytec 8 // TMPL_APPROVAL_C
-    bytec 9 // TMPL_CLEAR_C
+    bytec 10 // TMPL_APPROVAL_C_P1
+    bytec 11 // TMPL_APPROVAL_C_P0
+    bytec 12 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -181,7 +186,8 @@ main___postInit_route@12:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

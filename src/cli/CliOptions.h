@@ -50,6 +50,11 @@ struct Options
 	// template must be PINNED — the derived address is the exact program hash.
 	std::string xchainTemplateHex;
 	std::string xchainPlaceholderHex = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee";
+	// --child-programs-via-box: `new C()` child approval programs load from a
+	// deployer-provisioned "__cp_<Child>" box instead of being embedded as
+	// template constants — for parents that only fit the 16KB program cap
+	// without the embedded child bytes.
+	bool childProgramsViaBox = false;
 	// --evm-memory-slots <N>: 0 means unspecified/default (5 slots=20KB).
 	// Pages are contiguous from slot 0; the transient blob sits at N and the
 	// AVM.sol group-scratch range at N+1..N+10 (default N=5 reproduces the

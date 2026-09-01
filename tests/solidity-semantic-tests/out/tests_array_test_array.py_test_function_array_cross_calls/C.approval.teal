@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/function_array_cross_calls.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 32 1 6
-    bytecblock 0x151f7c75 "counter" 0xcf0aa045 0xcd78b354 0x4b2c0376 0x5935cd14 0xb238366a 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff TMPL_APPROVAL_D TMPL_CLEAR_D
+    bytecblock 0x151f7c75 "counter" 0xcf0aa045 0xcd78b354 0x4b2c0376 0x5935cd14 0xb238366a 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff TMPL_APPROVAL_D_P1 TMPL_APPROVAL_D_P0 TMPL_CLEAR_D
     pushint 4096
     bzero
     dup
@@ -342,8 +342,9 @@ test_after_while@6:
     concat
     replace2 2 // on error: index access is out of bounds
     itxn_begin
-    bytec 8 // TMPL_APPROVAL_D
-    bytec 9 // TMPL_CLEAR_D
+    bytec 8 // TMPL_APPROVAL_D_P1
+    bytec 9 // TMPL_APPROVAL_D_P0
+    bytec 10 // TMPL_CLEAR_D
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -355,7 +356,8 @@ test_after_while@6:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/new_review_constructor.sol.NewReviewCtorBase.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:" TMPL_APPROVAL_NewReviewSpawn TMPL_CLEAR_NewReviewSpawn
+    bytecblock 0x "__ctor_pending" 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:" TMPL_APPROVAL_NewReviewSpawn_P1 TMPL_APPROVAL_NewReviewSpawn_P0 TMPL_CLEAR_NewReviewSpawn
     pushint 4096
     bzero
     dup
@@ -111,8 +111,9 @@ main___postInit_route@10:
     intc_2 // 0
     app_global_put
     itxn_begin
-    bytec 7 // TMPL_APPROVAL_NewReviewSpawn
-    bytec 8 // TMPL_CLEAR_NewReviewSpawn
+    bytec 7 // TMPL_APPROVAL_NewReviewSpawn_P1
+    bytec 8 // TMPL_APPROVAL_NewReviewSpawn_P0
+    bytec 9 // TMPL_CLEAR_NewReviewSpawn
     pushint 6
     itxn_field TypeEnum
     pushint 16
@@ -124,7 +125,8 @@ main___postInit_route@10:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
