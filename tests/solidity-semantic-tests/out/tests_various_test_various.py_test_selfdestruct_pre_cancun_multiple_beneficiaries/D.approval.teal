@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.approval_program() -> uint64:
 main:
     intcblock 1 0 32 24
-    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 "c" 0xb30e2ea6 "account1" "account2" TMPL_APPROVAL_C TMPL_CLEAR_C
+    bytecblock 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000000000 "c" 0xb30e2ea6 "account1" "account2" TMPL_APPROVAL_C_P1 TMPL_APPROVAL_C_P0 TMPL_CLEAR_C
     pushint 4096
     bzero
     dup
@@ -188,8 +188,9 @@ main_switch_case_0@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/selfdestruct_pre_cancun_multiple_beneficiaries.sol.D.deploy() -> void:
 deploy:
     itxn_begin
-    bytec 6 // TMPL_APPROVAL_C
-    bytec 7 // TMPL_CLEAR_C
+    bytec 6 // TMPL_APPROVAL_C_P1
+    bytec 7 // TMPL_APPROVAL_C_P0
+    bytec 8 // TMPL_CLEAR_C
     pushint 6
     itxn_field TypeEnum
     pushint 16
@@ -201,7 +202,8 @@ deploy:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

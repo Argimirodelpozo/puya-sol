@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/smoke/contracts/alignment.sol.D.approval_program() -> uint64:
 main:
     intcblock 32 0 1 6
-    bytecblock 0x151f7c75 "stateBool" "stateDecimal" "stateBytes" 0x174df305 TMPL_APPROVAL_C TMPL_CLEAR_C
+    bytecblock 0x151f7c75 "stateBool" "stateDecimal" "stateBytes" 0x174df305 TMPL_APPROVAL_C_P1 TMPL_APPROVAL_C_P0 TMPL_CLEAR_C
     pushint 4096
     bzero
     dup
@@ -281,8 +281,9 @@ internalStateDecimal_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
-    bytec 5 // TMPL_APPROVAL_C
-    bytec 6 // TMPL_CLEAR_C
+    bytec 5 // TMPL_APPROVAL_C_P1
+    bytec 6 // TMPL_APPROVAL_C_P0
+    bytec 7 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -294,7 +295,8 @@ internalStateDecimal_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

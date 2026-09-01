@@ -180,18 +180,26 @@ def _write_child_deploy_templates(out_dir: Path, options: dict) -> None:
     compile. No children → no file, matching the C++ early return.
     """
     defs = options.get("cli_template_definitions") or {}
+    # APPROVAL_ keys carry _P0/_P1 page suffixes; CLEAR_ is one per child.
     children = sorted(
-        k[len("APPROVAL_"):] for k in defs
-        if isinstance(k, str) and k.startswith("APPROVAL_")
+        k[len("CLEAR_"):] for k in defs
+        if isinstance(k, str) and k.startswith("CLEAR_")
     )
     if not children:
         return
     tmpl: dict[str, str] = {}
     for child in children:
-        for kind in ("approval", "clear"):
-            bin_path = out_dir / f"{child}.{kind}.bin"
-            if bin_path.exists():
-                tmpl[f"TMPL_{kind.upper()}_{child}"] = bin_path.read_bytes().hex()
+        approval = out_dir / f"{child}.approval.bin"
+        if approval.exists():
+            # Two ≤4096-byte pages matching the ApprovalProgramPages template
+            # pair emitted by SolNewExpression; page 1 empty if unused.
+            hex_val = approval.read_bytes().hex()
+            page_hex = 4096 * 2
+            tmpl[f"TMPL_APPROVAL_{child}_P0"] = hex_val[:page_hex]
+            tmpl[f"TMPL_APPROVAL_{child}_P1"] = hex_val[page_hex:]
+        clear = out_dir / f"{child}.clear.bin"
+        if clear.exists():
+            tmpl[f"TMPL_CLEAR_{child}"] = clear.read_bytes().hex()
     # sort_keys matches nlohmann::json's std::map ordering so the file is
     # byte-identical to the C++ writer's (these land in committed out/ dirs).
     (out_dir / "deploy.tmpl.json").write_text(json.dumps(tmpl, indent=2, sort_keys=True))

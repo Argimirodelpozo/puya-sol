@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/external_call_at_construction_time.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 32 0 16 1000000
-    bytecblock 0x151f7c75 TMPL_APPROVAL_T TMPL_CLEAR_T TMPL_APPROVAL_U TMPL_CLEAR_U
+    bytecblock 0x151f7c75 TMPL_APPROVAL_T_P1 TMPL_APPROVAL_T_P0 TMPL_CLEAR_T TMPL_APPROVAL_U_P1 TMPL_APPROVAL_U_P0 TMPL_CLEAR_U
     pushint 4096
     bzero
     dup
@@ -130,8 +130,9 @@ f_ternary_merge@3:
     b==
     bz f_else_body@7
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_T
-    bytec_2 // TMPL_CLEAR_T
+    bytec_1 // TMPL_APPROVAL_T_P1
+    bytec_2 // TMPL_APPROVAL_T_P0
+    bytec_3 // TMPL_CLEAR_T
     pushint 6
     itxn_field TypeEnum
     intc_3 // 16
@@ -143,7 +144,8 @@ f_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     app_params_get AppAddress
@@ -184,8 +186,9 @@ f_else_body@7:
     b==
     bz f_after_if_else@12
     itxn_begin
-    bytec_3 // TMPL_APPROVAL_U
-    bytec 4 // TMPL_CLEAR_U
+    bytec 4 // TMPL_APPROVAL_U_P1
+    bytec 5 // TMPL_APPROVAL_U_P0
+    bytec 6 // TMPL_CLEAR_U
     pushint 6
     itxn_field TypeEnum
     intc_3 // 16
@@ -197,7 +200,8 @@ f_else_body@7:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     app_params_get AppAddress

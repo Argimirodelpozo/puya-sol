@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/send_zero_ether.sol.Main.approval_program() -> uint64:
 main:
     intcblock 1 0 32 16
-    bytecblock 0x151f7c75 TMPL_APPROVAL_Receiver TMPL_CLEAR_Receiver
+    bytecblock 0x151f7c75 TMPL_APPROVAL_Receiver_P1 TMPL_APPROVAL_Receiver_P0 TMPL_CLEAR_Receiver
     pushint 4096
     bzero
     dup
@@ -109,8 +109,9 @@ s_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_Receiver
-    bytec_2 // TMPL_CLEAR_Receiver
+    bytec_1 // TMPL_APPROVAL_Receiver_P1
+    bytec_2 // TMPL_APPROVAL_Receiver_P0
+    bytec_3 // TMPL_CLEAR_Receiver
     pushint 6
     itxn_field TypeEnum
     intc_3 // 16
@@ -122,7 +123,8 @@ s_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

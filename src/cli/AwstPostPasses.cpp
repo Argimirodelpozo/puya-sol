@@ -126,7 +126,12 @@ void writeChildDeployTemplates(
 				snprintf(buf, sizeof(buf), "%02x", b);
 				hex += buf;
 			}
-			tmpl["TMPL_APPROVAL_" + childName] = hex;
+			// Two ≤4096-byte pages (8192 hex chars each) matching the
+			// ApprovalProgramPages template pair; page 1 empty if unused.
+			constexpr size_t pageHex = 4096 * 2;
+			tmpl["TMPL_APPROVAL_" + childName + "_P0"] = hex.substr(0, std::min(hex.size(), pageHex));
+			tmpl["TMPL_APPROVAL_" + childName + "_P1"] =
+				hex.size() > pageHex ? hex.substr(pageHex) : std::string();
 		}
 		if (fs::exists(clearBin))
 		{

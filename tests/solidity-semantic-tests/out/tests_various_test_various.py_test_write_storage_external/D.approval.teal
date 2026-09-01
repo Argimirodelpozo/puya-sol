@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/write_storage_external.sol.D.approval_program() -> uint64:
 main:
     intcblock 0 32 1 6
-    bytecblock 0x151f7c75 "c" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x7c1072af 0x88035e71 TMPL_APPROVAL_C TMPL_CLEAR_C
+    bytecblock 0x151f7c75 "c" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 0x7c1072af 0x88035e71 TMPL_APPROVAL_C_P1 TMPL_APPROVAL_C_P0 TMPL_CLEAR_C
     pushint 4096
     bzero
     dup
@@ -91,8 +91,9 @@ main___postInit_route@12:
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec 6 // TMPL_APPROVAL_C
-    bytec 7 // TMPL_CLEAR_C
+    bytec 6 // TMPL_APPROVAL_C_P1
+    bytec 7 // TMPL_APPROVAL_C_P0
+    bytec 8 // TMPL_CLEAR_C
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -104,7 +105,8 @@ main___postInit_route@12:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

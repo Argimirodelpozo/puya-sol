@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/address_code_complex.sol.C.approval_program() -> uint64:
 main:
     intcblock 0 1 32 6 1000000
-    bytecblock TMPL_APPROVAL_A TMPL_CLEAR_A 0xbacc49e3 0x151f7c75
+    bytecblock TMPL_APPROVAL_A_P1 TMPL_APPROVAL_A_P0 TMPL_CLEAR_A 0xbacc49e3 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -51,7 +51,7 @@ main_after_if_else@8:
 
 main_g_route@12:
     callsub g
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -66,7 +66,7 @@ main_f_route@11:
     extract 6 2
     swap
     concat
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -85,7 +85,7 @@ main_switch_case_1@6:
     -
     intc_2 // 32
     extract3
-    bytec_3 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
@@ -144,8 +144,9 @@ f_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
-    bytec_0 // TMPL_APPROVAL_A
-    bytec_1 // TMPL_CLEAR_A
+    bytec_0 // TMPL_APPROVAL_A_P1
+    bytec_1 // TMPL_APPROVAL_A_P0
+    bytec_2 // TMPL_CLEAR_A
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -157,7 +158,8 @@ f_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -191,12 +193,13 @@ f_ternary_merge@3:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "__postInit()void"
+    bytec_3 // method "__postInit()void"
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
-    bytec_0 // TMPL_APPROVAL_A
-    bytec_1 // TMPL_CLEAR_A
+    bytec_0 // TMPL_APPROVAL_A_P1
+    bytec_1 // TMPL_APPROVAL_A_P0
+    bytec_2 // TMPL_CLEAR_A
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -208,7 +211,8 @@ f_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -243,7 +247,7 @@ f_ternary_merge@3:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_2 // method "__postInit()void"
+    bytec_3 // method "__postInit()void"
     itxn_field ApplicationArgs
     itxn_submit
     pushint 24
@@ -280,8 +284,9 @@ g_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
-    bytec_0 // TMPL_APPROVAL_A
-    bytec_1 // TMPL_CLEAR_A
+    bytec_0 // TMPL_APPROVAL_A_P1
+    bytec_1 // TMPL_APPROVAL_A_P0
+    bytec_2 // TMPL_CLEAR_A
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -293,7 +298,8 @@ g_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -327,12 +333,13 @@ g_ternary_merge@3:
     intc_0 // 0
     itxn_field Fee
     itxn_field ApplicationID
-    bytec_2 // method "__postInit()void"
+    bytec_3 // method "__postInit()void"
     itxn_field ApplicationArgs
     itxn_submit
     itxn_begin
-    bytec_0 // TMPL_APPROVAL_A
-    bytec_1 // TMPL_CLEAR_A
+    bytec_0 // TMPL_APPROVAL_A_P1
+    bytec_1 // TMPL_APPROVAL_A_P0
+    bytec_2 // TMPL_CLEAR_A
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -344,7 +351,8 @@ g_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -379,7 +387,7 @@ g_ternary_merge@3:
     itxn_field Fee
     dup
     itxn_field ApplicationID
-    bytec_2 // method "__postInit()void"
+    bytec_3 // method "__postInit()void"
     itxn_field ApplicationArgs
     itxn_submit
     pushint 24

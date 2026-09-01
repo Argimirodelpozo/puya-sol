@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/extcall_bytes_arg_side_effect.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 1 0 6
-    bytecblock 0x151f7c75 "__ctor_pending" "cnt" 0x "callee" TMPL_APPROVAL_Callee TMPL_CLEAR_Callee
+    bytecblock 0x151f7c75 "__ctor_pending" "cnt" 0x "callee" TMPL_APPROVAL_Callee_P1 TMPL_APPROVAL_Callee_P0 TMPL_CLEAR_Callee
     pushint 4096
     bzero
     dup
@@ -86,8 +86,9 @@ main___postInit_route@11:
     bytec_3 // 0x
     app_global_put
     itxn_begin
-    bytec 5 // TMPL_APPROVAL_Callee
-    bytec 6 // TMPL_CLEAR_Callee
+    bytec 5 // TMPL_APPROVAL_Callee_P1
+    bytec 6 // TMPL_APPROVAL_Callee_P0
+    bytec 7 // TMPL_CLEAR_Callee
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -99,7 +100,8 @@ main___postInit_route@11:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/new_child_value_probe.sol.C.approval_program() -> uint64:
 main:
     intcblock 32 0 1 6
-    bytecblock 0x151f7c75 "child" 0x0000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_Child TMPL_CLEAR_Child
+    bytecblock 0x151f7c75 "child" 0x0000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_Child_P1 TMPL_APPROVAL_Child_P0 TMPL_CLEAR_Child
     pushint 4096
     bzero
     dup
@@ -142,8 +142,9 @@ main_switch_case_0@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/constructor/contracts/new_child_value_probe.sol.C.deploy() -> bytes, bytes:
 deploy:
     itxn_begin
-    bytec_3 // TMPL_APPROVAL_Child
-    bytec 4 // TMPL_CLEAR_Child
+    bytec_3 // TMPL_APPROVAL_Child_P1
+    bytec 4 // TMPL_APPROVAL_Child_P0
+    bytec 5 // TMPL_CLEAR_Child
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -155,7 +156,8 @@ deploy:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

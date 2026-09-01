@@ -21,7 +21,10 @@ static void addTemplateVarDefs(
 		// The actual values are substituted at deployment time from
 		// the .tmpl file, but puya needs the declarations to compile.
 		// Keys WITHOUT the TMPL_ prefix — puya adds it from template_vars_prefix
-		defs["APPROVAL_" + child] = "0x068101"; // stub: #pragma version 6; int 1
+		// Approval is split into two ≤4096-byte pages (ApprovalProgramPages);
+		// see SolNewExpression. Page 1 is empty for small children.
+		defs["APPROVAL_" + child + "_P0"] = "0x068101"; // stub: #pragma version 6; int 1
+		defs["APPROVAL_" + child + "_P1"] = "0x068101";
 		defs["CLEAR_" + child] = "0x068101";
 	}
 	// Integer template vars (e.g. UROS_ORCH_APP_ID for the splitter):

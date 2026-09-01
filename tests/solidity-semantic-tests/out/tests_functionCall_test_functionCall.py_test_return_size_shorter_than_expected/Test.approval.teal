@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/return_size_shorter_than_expected.sol.Test.approval_program() -> uint64:
 main:
     intcblock 0 1 6 16
-    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_ShortReturn TMPL_CLEAR_ShortReturn
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_ShortReturn_P1 TMPL_APPROVAL_ShortReturn_P0 TMPL_CLEAR_ShortReturn
     pushint 4096
     bzero
     dup
@@ -50,8 +50,9 @@ main_ternary_merge@9:
     !
     assert // not payable
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_ShortReturn
-    bytec_2 // TMPL_CLEAR_ShortReturn
+    bytec_1 // TMPL_APPROVAL_ShortReturn_P1
+    bytec_2 // TMPL_APPROVAL_ShortReturn_P0
+    bytec_3 // TMPL_CLEAR_ShortReturn
     intc_2 // 6
     itxn_field TypeEnum
     intc_3 // 16
@@ -63,7 +64,8 @@ main_ternary_merge@9:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

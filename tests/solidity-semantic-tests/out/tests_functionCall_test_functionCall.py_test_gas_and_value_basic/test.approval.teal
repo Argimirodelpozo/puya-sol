@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/gas_and_value_basic.sol.test.approval_program() -> uint64:
 main:
     intcblock 0 32 1 6
-    bytecblock 0x151f7c75 "h" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_helper TMPL_CLEAR_helper
+    bytecblock 0x151f7c75 "h" "__ctor_pending" 0x0000000000000000000000000000000000000000000000000000000000000000 TMPL_APPROVAL_helper_P1 TMPL_APPROVAL_helper_P0 TMPL_CLEAR_helper
     pushint 4096
     bzero
     dup
@@ -107,8 +107,9 @@ main___postInit_route@12:
     intc_0 // 0
     app_global_put
     itxn_begin
-    bytec 4 // TMPL_APPROVAL_helper
-    bytec 5 // TMPL_CLEAR_helper
+    bytec 4 // TMPL_APPROVAL_helper_P1
+    bytec 5 // TMPL_APPROVAL_helper_P0
+    bytec 6 // TMPL_CLEAR_helper
     intc_3 // 6
     itxn_field TypeEnum
     pushint 16
@@ -120,7 +121,8 @@ main___postInit_route@12:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup

@@ -438,9 +438,25 @@ std::shared_ptr<awst::Expression> SolNewExpression::toAwst()
 			create->fields["GlobalNumUint"] = makeU64("16");
 			create->fields["GlobalNumByteSlice"] = makeU64("16");
 
-			// ApprovalProgram = TemplateVar("TMPL_APPROVAL_ChildName")
-			create->fields["ApprovalProgram"] = awst::makeTemplateVar(
-				"TMPL_APPROVAL_" + childName, awst::WType::bytesType(), m_loc);
+			// ApprovalProgramPages = (TMPL_APPROVAL_ChildName_P0, .._P1): the
+			// program is split into two ≤4096-byte template pages because a
+			// single AVM stack value (and bytecblock constant) caps at 4096
+			// bytes while a 3-extra-page program can reach 8192. The second
+			// page substitutes to empty for small children.
+			{
+				auto pages = awst::makeTupleExpression(nullptr, m_loc);
+				std::vector<awst::WType const*> pageTypes;
+				for (int page = 0; page < 2; ++page)
+				{
+					pages->items.push_back(awst::makeTemplateVar(
+						"TMPL_APPROVAL_" + childName + "_P" + std::to_string(page),
+						awst::WType::bytesType(), m_loc));
+					pageTypes.push_back(awst::WType::bytesType());
+				}
+				pages->wtype = m_ctx.typeMapper.createType<awst::WTuple>(
+					std::move(pageTypes), std::nullopt);
+				create->fields["ApprovalProgramPages"] = std::move(pages);
+			}
 
 			// ClearStateProgram = TemplateVar("TMPL_CLEAR_ChildName")
 			create->fields["ClearStateProgram"] = awst::makeTemplateVar(

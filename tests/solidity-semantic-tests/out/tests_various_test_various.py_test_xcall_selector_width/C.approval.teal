@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/various/contracts/xcall_selector_width.sol.C.approval_program() -> uint64:
 main:
     intcblock 16 0 32 1 1000000 255
-    bytecblock 0x151f7c75 TMPL_APPROVAL_Callee TMPL_CLEAR_Callee 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    bytecblock 0x151f7c75 TMPL_APPROVAL_Callee_P1 TMPL_APPROVAL_Callee_P0 TMPL_CLEAR_Callee 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -182,7 +182,7 @@ main_switch_case_1@6:
     pushint 128
     >=
     bz main_ternary_false@8
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffff
 
 main_ternary_merge@9:
     ==
@@ -299,8 +299,9 @@ callF_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_Callee
-    bytec_2 // TMPL_CLEAR_Callee
+    bytec_1 // TMPL_APPROVAL_Callee_P1
+    bytec_2 // TMPL_APPROVAL_Callee_P0
+    bytec_3 // TMPL_CLEAR_Callee
     pushint 6
     itxn_field TypeEnum
     intc_0 // 16
@@ -312,7 +313,8 @@ callF_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -396,19 +398,20 @@ callG_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec 4 // 0x80000000000000000000000000000000
+    bytec 5 // 0x80000000000000000000000000000000
     b>=
     bz callG_ternary_false@5
-    bytec 5 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    bytec 6 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
 
 callG_ternary_merge@6:
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_Callee
-    bytec_2 // TMPL_CLEAR_Callee
+    bytec_1 // TMPL_APPROVAL_Callee_P1
+    bytec_2 // TMPL_APPROVAL_Callee_P0
+    bytec_3 // TMPL_CLEAR_Callee
     pushint 6
     itxn_field TypeEnum
     intc_0 // 16
@@ -420,7 +423,8 @@ callG_ternary_merge@6:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -467,13 +471,13 @@ callG_ternary_merge@6:
     itxn_submit
     itxn LastLog
     extract 4 0
-    bytec_3 // 0xffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
-    bytec 4 // 0x80000000000000000000000000000000
+    bytec 5 // 0x80000000000000000000000000000000
     b>=
     bz callG_ternary_false@11
-    bytec 5 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
+    bytec 6 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
 
 callG_ternary_merge@12:
@@ -520,8 +524,9 @@ callH_ternary_merge@3:
     &
     frame_bury -1
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_Callee
-    bytec_2 // TMPL_CLEAR_Callee
+    bytec_1 // TMPL_APPROVAL_Callee_P1
+    bytec_2 // TMPL_APPROVAL_Callee_P0
+    bytec_3 // TMPL_CLEAR_Callee
     pushint 6
     itxn_field TypeEnum
     intc_0 // 16
@@ -533,7 +538,8 @@ callH_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
@@ -589,8 +595,9 @@ callK_ternary_merge@3:
     !
     assert // not payable
     itxn_begin
-    bytec_1 // TMPL_APPROVAL_Callee
-    bytec_2 // TMPL_CLEAR_Callee
+    bytec_1 // TMPL_APPROVAL_Callee_P1
+    bytec_2 // TMPL_APPROVAL_Callee_P0
+    bytec_3 // TMPL_CLEAR_Callee
     pushint 6
     itxn_field TypeEnum
     intc_0 // 16
@@ -602,7 +609,8 @@ callK_ternary_merge@3:
     pushint 3
     itxn_field ExtraProgramPages
     itxn_field ClearStateProgram
-    itxn_field ApprovalProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
     itxn_submit
     itxn CreatedApplicationID
     dup
