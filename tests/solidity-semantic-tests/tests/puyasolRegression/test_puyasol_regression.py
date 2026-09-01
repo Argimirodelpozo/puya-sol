@@ -5084,3 +5084,82 @@ def test_udvt_basics(harness):
         app, "roundtrip(uint128)", 123456789).abi_return) == 123456789
     harness.call(app, "addStore(uint128,uint128)", 1000, 2345)
     assert as_int(harness.call(app, "stored()").abi_return) == 3345
+
+
+def test_unchecked_semantics_matrix(harness):
+    """puyasolRegression/contracts/unchecked_semantics_matrix.sol — NOT o.g.
+
+    Solc-equivalence audit: unchecked semantics oracle-locked (legacy 0.8.28
+    + py-evm). Wrap on +/-/*/**/-- at both tiers; division by zero PANICS
+    even unchecked; -type(int256).min wraps to itself; and unchecked is
+    LEXICAL — a helper called from an unchecked block stays checked.
+    """
+    P = 1 << 256
+
+    def sgn(v):
+        v = as_int(v)
+        return v - P if v >= P // 2 else v
+
+    u = harness.compile_and_deploy(
+        "puyasolRegression/contracts/unchecked_semantics_matrix.sol")
+    assert as_int(harness.call(u, "u1()").abi_return) == 0
+    assert as_int(harness.call(u, "u2()").abi_return) == P - 1
+    assert harness.call(u, "u3(uint256,uint256)", 5, 0,
+                        expect_revert=True).reverted
+    assert sgn(harness.call(u, "u4()").abi_return) == -(1 << 255)
+    assert harness.call(u, "u5()", expect_revert=True).reverted
+    assert as_int(harness.call(u, "u6()").abi_return) == 0
+    assert as_int(harness.call(u, "u7()").abi_return) == 144
+    assert sgn(harness.call(u, "u8()").abi_return) == 127
+
+
+def test_try_success_decode(harness):
+    """puyasolRegression/contracts/try_success_decode.sol — NOT o.g.
+
+    Try/catch SUCCESS-path decode edges, oracle-locked: multi-return
+    destructure into try-clause params, try around contract creation,
+    dynamic-array return decode. (Catch paths are the documented by-arch
+    divergence — a failing inner txn aborts the whole txn — and are NOT
+    asserted here.)
+    """
+    t = harness.compile_and_deploy(
+        "puyasolRegression/contracts/try_success_decode.sol", fund_wei=1)
+    r = harness.call(t, "t1()", extra_fee=10_000).abi_return
+    assert (as_int(r[0]), r[1]) == (7, "ok")
+    assert as_int(harness.call(t, "t2()", extra_fee=20_000).abi_return) == 1
+    assert as_int(harness.call(t, "t3()", extra_fee=10_000).abi_return) == 311
+
+
+def test_conversion_cold_arms(harness):
+    """puyasolRegression/contracts/conversion_cold_arms.sol — NOT o.g.
+
+    SolTypeConversion's formerly-cold arms, oracle-locked: the address(0)
+    literal fast path, contract(application-carrier)->address, small-tier
+    bytesN<->uintN with narrowing masks, uint->address at literal and
+    type(uint160).max, and the mid-tier (biguint-carrier) bytes12/bytes20.
+    Addresses compared in the 160-bit (low-20) namespace.
+    """
+    from algosdk.encoding import decode_address
+
+    def low20(v):
+        b = decode_address(v) if isinstance(v, str) else bytes(v)[-32:]
+        return b[-20:].hex()
+
+    c2 = harness.compile_and_deploy(
+        "puyasolRegression/contracts/conversion_cold_arms.sol", fund_wei=1)
+    assert low20(harness.call(c2, "zeroAddr()").abi_return) == "00" * 20
+    assert harness.call(c2, "contractToAddr()").abi_return is True
+    r = harness.call(c2, "smallBytesToInt(bytes1,bytes2,bytes8)",
+                     b"\xab", b"\xde\xad",
+                     bytes.fromhex("1122334455667788")).abi_return
+    assert [as_int(x) for x in r] == [0xAB, 0xDEAD, 0x1122334455667788]
+    r = harness.call(c2, "smallIntToBytes(uint8,uint16,uint64)",
+                     0xAB, 0xDEAD, 0x1122334455667788).abi_return
+    assert [bytes(x).hex() for x in r] == ["ab", "dead", "1122334455667788"]
+    r = harness.call(c2, "numToAddr()").abi_return
+    assert [low20(x) for x in r] == [
+        "000000000000000000000000000000000000dead", "ff" * 20]
+    r = harness.call(c2, "midTiers(bytes12,bytes20)",
+                     bytes.fromhex("aabbccddeeff001122334455"),
+                     bytes.fromhex("00" * 19 + "7f")).abi_return
+    assert [as_int(x) for x in r] == [0xAABBCCDDEEFF001122334455, 0x7F]
