@@ -1,0 +1,762 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_bools.sol.BoolArrayParity.approval_program() -> uint64:
+main:
+    intcblock 32 0 1 8
+    bytecblock 0x 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563 0x20 0x01 0x00 0x151f7c75 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
+    intc_1 // 0
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@8
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@8
+    pushbytess 0x378c17c5 0x81274d3a
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6
+
+main_after_if_else@8:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0x00b9ce8b 0x46571beb 0x3b29e07a // method "pushReadTrueTrue()bool", method "wordAndOps()(bool,uint256)", method "flags(uint256)bool"
+    txna ApplicationArgs 0
+    match main_pushReadTrueTrue_route@11 main_wordAndOps_route@12 main_flags_route@13
+    err
+
+main_flags_route@13:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub flags
+    bytec 4 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_wordAndOps_route@12:
+    txn GroupIndex
+    bz main_ternary_false@21
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@22:
+    !
+    assert // not payable
+    bytec_0 // 0x
+    callsub __storage_read
+    dup
+    bytec_2 // 0x20
+    b/
+    bytec_1 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    b+
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    cover 3
+    dup
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_3 // 8
+    bzero
+    dig 4
+    bytec_2 // 0x20
+    b%
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 31
+    swap
+    -
+    intc_1 // 0
+    itob
+    cover 6
+    uncover 2
+    swap
+    bytec 4 // 0x00
+    replace3
+    uncover 2
+    swap
+    callsub __storage_write
+    uncover 2
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x
+    swap
+    callsub __storage_write
+    pushint 2
+    itob
+    dup
+    bury 6
+    bytec_0 // 0x
+    callsub __storage_read
+    b<
+    assert // array index out of bounds
+    bytec_1 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_2 // 1
+    itob
+    cover 3
+    bytec_3 // 0x01
+    replace2 29
+    bytec_1 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    swap
+    callsub __storage_write
+    bytec_0 // 0x
+    callsub __storage_read
+    dup
+    bytec_0 // 0x
+    b>
+    assert // pop from empty array
+    bytec_3 // 0x01
+    b-
+    dup
+    bytec_2 // 0x20
+    b/
+    bytec_1 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    b+
+    dup
+    callsub __storage_read
+    uncover 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_2 // 0x20
+    b%
+    uncover 4
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 31
+    swap
+    -
+    bytec 4 // 0x00
+    replace3
+    callsub __storage_write
+    bytec_0 // 0x
+    swap
+    callsub __storage_write
+    load 0
+    store 0
+    bytec_1 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    callsub __storage_read
+    dup
+    load 0
+    store 0
+    pushint 257
+    itob
+    b==
+    bz main_else_body@25
+    bytec_0 // 0x
+    callsub __storage_read
+    dig 5
+    b==
+    bz main_else_body@25
+    bytec_0 // 0x
+    callsub __storage_read
+    uncover 3
+    b>
+    assert // array index out of bounds
+    bytec_1 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    callsub __storage_read
+    dig 3
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 31
+    getbyte
+    intc_1 // 0
+    !=
+
+main_after_if_else@26:
+    bz main_else_body@28
+    bytec_0 // 0x
+    callsub __storage_read
+    uncover 2
+    b>
+    assert // array index out of bounds
+    bytec_1 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 30
+    getbyte
+    intc_1 // 0
+    !=
+
+main_after_if_else@29:
+    swap
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    bytec 4 // 0x00
+    intc_1 // 0
+    uncover 3
+    setbit
+    swap
+    concat
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_else_body@28:
+    bury 1
+    intc_1 // 0
+    b main_after_if_else@29
+
+main_else_body@25:
+    uncover 2
+    pop
+    intc_1 // 0
+    b main_after_if_else@26
+
+main_ternary_false@21:
+    intc_1 // 0
+    b main_ternary_merge@22
+
+main_pushReadTrueTrue_route@11:
+    callsub pushReadTrueTrue
+    bytec 4 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_1@6:
+    callsub __evm_npy
+    txna ApplicationArgs 1
+    len
+    intc_0 // 32
+    >=
+    assert // EVM ABI decode out of bounds
+    txna ApplicationArgs 1
+    extract 0 32
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    callsub flags
+    callsub __evm_ret0
+    intc_2 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    callsub pushReadTrueTrue
+    callsub __evm_ret0
+    intc_2 // 1
+    return
+
+
+// __puyasol___storage_read(__slot: bytes) -> bytes:
+__storage_read:
+    proto 1 1
+    intc_1 // 0
+    dup
+    bytec_0 // ""
+    frame_dig -1
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -1
+    bytec 7 // 0x010000
+    b<
+    bz __storage_read_else_body@4
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    frame_bury 2
+    pushint 64
+    /
+    itob
+    bytec 8 // "p:"
+    swap
+    concat
+    dup
+    frame_bury 1
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 2
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    frame_dig 1
+    swap
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+__storage_read_after_if_else@3:
+    bytec_0 // 0x
+    frame_bury 0
+    retsub
+
+__storage_read_else_body@4:
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 9 // "s:"
+    swap
+    concat
+    dup
+    frame_bury 0
+    box_len
+    bury 1
+    bz __storage_read_after_if_else@3
+    frame_dig 0
+    intc_1 // 0
+    intc_0 // 32
+    box_extract
+    frame_bury 0
+    retsub
+
+
+// __puyasol___storage_write(__slot: bytes, __value: bytes) -> void:
+__storage_write:
+    proto 2 0
+    frame_dig -2
+    bytec 6 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    frame_bury -2
+    bytec 7 // 0x010000
+    b<
+    bz __storage_write_else_body@2
+    intc_3 // 8
+    bzero
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    dup
+    pushint 64
+    /
+    itob
+    bytec 8 // "p:"
+    swap
+    concat
+    dup
+    pushint 2048
+    box_create
+    pop
+    swap
+    pushint 64
+    %
+    intc_0 // 32
+    *
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    box_replace
+    retsub
+
+__storage_write_else_body@2:
+    intc_0 // 32
+    bzero
+    dup
+    frame_dig -2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 9 // "s:"
+    swap
+    concat
+    dup
+    intc_0 // 32
+    box_create
+    pop
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_1 // 0
+    swap
+    box_replace
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_bools.sol.BoolArrayParity.pushReadTrueTrue() -> uint64:
+pushReadTrueTrue:
+    txn GroupIndex
+    bz pushReadTrueTrue_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+pushReadTrueTrue_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // 0x
+    callsub __storage_read
+    dup
+    bytec_2 // 0x20
+    b/
+    bytec_1 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    b+
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    cover 3
+    dup
+    callsub __storage_read
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_3 // 8
+    bzero
+    dig 4
+    bytec_2 // 0x20
+    b%
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 31
+    swap
+    -
+    intc_2 // 1
+    itob
+    cover 6
+    uncover 2
+    swap
+    bytec_3 // 0x01
+    replace3
+    uncover 2
+    swap
+    callsub __storage_write
+    uncover 2
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x
+    swap
+    callsub __storage_write
+    bytec_0 // 0x
+    callsub __storage_read
+    dup
+    bytec_2 // 0x20
+    b/
+    bytec_1 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    b+
+    dup
+    callsub __storage_read
+    dig 4
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    bytec_2 // 0x20
+    b%
+    uncover 4
+    swap
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 31
+    swap
+    -
+    bytec_3 // 0x01
+    replace3
+    callsub __storage_write
+    bytec_3 // 0x01
+    b+
+    bytec_0 // 0x
+    swap
+    callsub __storage_write
+    intc_1 // 0
+    itob
+    bytec_0 // 0x
+    callsub __storage_read
+    b<
+    assert // array index out of bounds
+    bytec_1 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 31
+    getbyte
+    bz pushReadTrueTrue_else_body@5
+    bytec_0 // 0x
+    callsub __storage_read
+    b<
+    assert // array index out of bounds
+    bytec_1 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    pushint 30
+    getbyte
+    intc_1 // 0
+    !=
+    retsub
+
+pushReadTrueTrue_else_body@5:
+    popn 2
+    intc_1 // 0
+    retsub
+
+pushReadTrueTrue_ternary_false@2:
+    intc_1 // 0
+    b pushReadTrueTrue_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_bools.sol.BoolArrayParity.flags(__arc4_key0: bytes) -> uint64:
+flags:
+    proto 1 1
+    txn GroupIndex
+    bz flags_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+flags_ternary_merge@3:
+    !
+    assert // not payable
+    bytec_0 // 0x
+    callsub __storage_read
+    frame_dig -1
+    b>
+    assert // array out-of-bounds
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    bytec_2 // 0x20
+    b/
+    bytec_1 // 0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563
+    b+
+    callsub __storage_read
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    intc_3 // 8
+    bzero
+    frame_dig -1
+    bytec_2 // 0x20
+    b%
+    concat
+    dup
+    len
+    intc_3 // 8
+    -
+    extract_uint64
+    pushint 31
+    swap
+    -
+    getbyte
+    intc_1 // 0
+    !=
+    retsub
+
+flags_ternary_false@2:
+    intc_1 // 0
+    b flags_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_bools.sol.BoolArrayParity.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_1 // 0
+    b __evm_npy_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_bools.sol.BoolArrayParity.__evm_ret0(__v: uint64) -> void:
+__evm_ret0:
+    proto 1 0
+    intc_0 // 32
+    bzero
+    frame_dig -1
+    itob
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec 5 // 0x151f7c75
+    swap
+    concat
+    log
+    retsub

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParityCore.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8
-    bytecblock 0x01 0x 0x03 0x09 0x0a 0x08 0x00 0x02 0x151f7c75 0x20 0xc65a7bb8d6351c1cf70c95a316cc6a92839c986682d98bc35f958f4883f9d2a8 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b 0x04 0x6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace 0xf3f7a9fe364faab93b216da50a3214154f22a0a2b415b23a84c8169e8b636ee3 0x06 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:" 0x0000 0xcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f
+    bytecblock 0x 0x03 0x01 0x09 0x08 0x02 0x151f7c75 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b 0x00 0x04 0x6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace 0xf3f7a9fe364faab93b216da50a3214154f22a0a2b415b23a84c8169e8b636ee3 0x06 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:" 0x0000 0xcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f
     pushint 4096
     bzero
     dup
@@ -29,121 +29,101 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@13
+    bnz main_after_if_else@12
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@13
-    pushbytess 0x13345f94 0xc174c3c9 0xd8c8ac3c 0x74bb810b 0x3e5a4e0e 0x877c81ba 0x0617f735
+    bz main_after_if_else@12
+    pushbytess 0x13345f94 0xc174c3c9 0xd8c8ac3c 0x74bb810b 0x3e5a4e0e 0x877c81ba
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10
 
-main_after_if_else@13:
+main_after_if_else@12:
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0x00a5fd5d 0xfe6ec172 0x6bc51985 0xa69cab67 0xf8d27f54 0xe21f1bbc 0x6a603e89 // method "deleteStructKeepsMapping()bool", method "deleteArrayZeroesElements()bool", method "pushRefAndDefault()bool", method "popThenPushReadsZero()bool", method "structStorageCopy()bool", method "arrayStorageCopy()bool", method "boolArrayCore()bool"
+    pushbytess 0x00a5fd5d 0xfe6ec172 0x6bc51985 0xa69cab67 0xf8d27f54 0xe21f1bbc // method "deleteStructKeepsMapping()bool", method "deleteArrayZeroesElements()bool", method "pushRefAndDefault()bool", method "popThenPushReadsZero()bool", method "structStorageCopy()bool", method "arrayStorageCopy()bool"
     txna ApplicationArgs 0
-    match main_deleteStructKeepsMapping_route@16 main_deleteArrayZeroesElements_route@17 main_pushRefAndDefault_route@18 main_popThenPushReadsZero_route@19 main_structStorageCopy_route@20 main_arrayStorageCopy_route@21 main_boolArrayCore_route@22
+    match main_deleteStructKeepsMapping_route@15 main_deleteArrayZeroesElements_route@16 main_pushRefAndDefault_route@17 main_popThenPushReadsZero_route@18 main_structStorageCopy_route@19 main_arrayStorageCopy_route@20
     err
 
-main_boolArrayCore_route@22:
-    callsub boolArrayCore
-    bytec 6 // 0x00
-    intc_2 // 0
-    uncover 2
-    setbit
-    bytec 8 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_arrayStorageCopy_route@21:
+main_arrayStorageCopy_route@20:
     callsub arrayStorageCopy
-    bytec 6 // 0x00
+    bytec 8 // 0x00
     intc_2 // 0
     uncover 2
     setbit
-    bytec 8 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_structStorageCopy_route@20:
+main_structStorageCopy_route@19:
     callsub structStorageCopy
-    bytec 6 // 0x00
+    bytec 8 // 0x00
     intc_2 // 0
     uncover 2
     setbit
-    bytec 8 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_popThenPushReadsZero_route@19:
+main_popThenPushReadsZero_route@18:
     callsub popThenPushReadsZero
-    bytec 6 // 0x00
+    bytec 8 // 0x00
     intc_2 // 0
     uncover 2
     setbit
-    bytec 8 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_pushRefAndDefault_route@18:
+main_pushRefAndDefault_route@17:
     callsub pushRefAndDefault
-    bytec 6 // 0x00
+    bytec 8 // 0x00
     intc_2 // 0
     uncover 2
     setbit
-    bytec 8 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_deleteArrayZeroesElements_route@17:
+main_deleteArrayZeroesElements_route@16:
     callsub deleteArrayZeroesElements
-    bytec 6 // 0x00
+    bytec 8 // 0x00
     intc_2 // 0
     uncover 2
     setbit
-    bytec 8 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_deleteStructKeepsMapping_route@16:
+main_deleteStructKeepsMapping_route@15:
     callsub deleteStructKeepsMapping
-    bytec 6 // 0x00
+    bytec 8 // 0x00
     intc_2 // 0
     uncover 2
     setbit
-    bytec 8 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
-    return
-
-main_switch_case_6@11:
-    callsub __evm_npy
-    callsub boolArrayCore
-    callsub __evm_ret0
     intc_1 // 1
     return
 
@@ -195,13 +175,13 @@ __storage_read:
     proto 1 1
     intc_2 // 0
     dup
-    bytec_1 // ""
+    bytec_0 // ""
     frame_dig -1
-    bytec 17 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 14 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -1
-    bytec 18 // 0x010000
+    bytec 15 // 0x010000
     b<
     bz __storage_read_else_body@4
     intc_3 // 8
@@ -218,7 +198,7 @@ __storage_read:
     pushint 64
     /
     itob
-    bytec 19 // "p:"
+    bytec 16 // "p:"
     swap
     concat
     dup
@@ -239,7 +219,7 @@ __storage_read:
     retsub
 
 __storage_read_after_if_else@3:
-    bytec_1 // 0x
+    bytec_0 // 0x
     frame_bury 0
     retsub
 
@@ -254,7 +234,7 @@ __storage_read_else_body@4:
     -
     intc_0 // 32
     extract3
-    bytec 20 // "s:"
+    bytec 17 // "s:"
     swap
     concat
     dup
@@ -274,11 +254,11 @@ __storage_read_else_body@4:
 __storage_write:
     proto 2 0
     frame_dig -2
-    bytec 17 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 14 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -2
-    bytec 18 // 0x010000
+    bytec 15 // 0x010000
     b<
     bz __storage_write_else_body@2
     intc_3 // 8
@@ -294,7 +274,7 @@ __storage_write:
     pushint 64
     /
     itob
-    bytec 19 // "p:"
+    bytec 16 // "p:"
     swap
     concat
     dup
@@ -331,7 +311,7 @@ __storage_write_else_body@2:
     -
     intc_0 // 32
     extract3
-    bytec 20 // "s:"
+    bytec 17 // "s:"
     swap
     concat
     dup
@@ -527,7 +507,7 @@ __evm_dynarr_write_while_top@13:
     itob
     dig 3
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
     intc_1 // 1
     +
@@ -541,7 +521,7 @@ __evm_dynarr_write_after_while@15:
 __evm_dynarr_recursive_read:
     proto 7 1
     intc_2 // 0
-    bytec_1 // ""
+    bytec_0 // ""
     frame_dig -6
     intc_1 // 1
     <=
@@ -710,9 +690,9 @@ __evm_dynarr_recursive_read_after_if_else@2:
     extract3
     keccak256
     cover 2
-    bytec_1 // 0x
+    bytec_0 // 0x
     swap
-    bytec_1 // 0x
+    bytec_0 // 0x
     cover 3
     pushint 2
     *
@@ -773,7 +753,7 @@ __evm_dynarr_recursive_read_after_while@5:
 // __puyasol___evm_dynarr_recursive_write(__slot: bytes, __val: bytes, __depth: uint64, __size: uint64, __aw: uint64, __per: uint64, __mul: uint64, __bp: uint64) -> void:
 __evm_dynarr_recursive_write:
     proto 8 0
-    bytec_1 // ""
+    bytec_0 // ""
     frame_dig -6
     intc_1 // 1
     <=
@@ -899,7 +879,7 @@ __evm_dynarr_recursive_write_while_top@9:
     frame_dig -6
     intc_1 // 1
     -
-    bytec 21 // 0x0000
+    bytec 18 // 0x0000
     swap
     frame_dig -5
     frame_dig -4
@@ -931,29 +911,29 @@ deleteStructKeepsMapping_ternary_merge@3:
     assert // not payable
     pushint 5
     itob
-    bytec_1 // 0x
+    bytec_0 // 0x
     swap
     callsub __storage_write
     pushint 6
     itob
     dup
     frame_bury 0
-    bytec 22 // 0xcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f
+    bytec 19 // 0xcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f
     swap
     callsub __storage_write
-    bytec_1 // 0x
+    bytec_0 // 0x
     dup
     callsub __storage_write
-    bytec_0 // 0x01
-    bytec_1 // 0x
+    bytec_2 // 0x01
+    bytec_0 // 0x
     callsub __storage_write
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_read
     intc_2 // 0
     itob
     b==
     bz deleteStructKeepsMapping_bool_false@6
-    bytec 22 // 0xcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f
+    bytec 19 // 0xcc69885fda6bcc1a4ace058b4a62bf5e179ea78fd58a1ccd71c22cc9b688792f
     callsub __storage_read
     frame_dig 0
     b==
@@ -985,43 +965,43 @@ deleteArrayZeroesElements:
 deleteArrayZeroesElements_ternary_merge@3:
     !
     assert // not payable
-    bytec 7 // 0x02
+    bytec 5 // 0x02
     callsub __storage_read
-    bytec 14 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
+    bytec 11 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
     dig 1
     b+
     pushint 11
     itob
     callsub __storage_write
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
-    bytec 7 // 0x02
+    bytec 5 // 0x02
     swap
     callsub __storage_write
-    bytec 7 // 0x02
+    bytec 5 // 0x02
     callsub __storage_read
-    bytec 14 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
+    bytec 11 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
     dig 1
     b+
     pushint 22
     itob
     callsub __storage_write
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
-    bytec 7 // 0x02
+    bytec 5 // 0x02
     swap
     callsub __storage_write
-    bytec 7 // 0x02
-    bytec 21 // 0x0000
+    bytec 5 // 0x02
+    bytec 18 // 0x0000
     intc_0 // 32
     dup
     intc_1 // 1
     dup
     intc_2 // 0
     callsub __evm_dynarr_write
-    bytec 7 // 0x02
+    bytec 5 // 0x02
     callsub __storage_read
-    bytec 14 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
+    bytec 11 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
     dig 1
     b+
     intc_2 // 0
@@ -1029,23 +1009,23 @@ deleteArrayZeroesElements_ternary_merge@3:
     dup
     cover 3
     callsub __storage_write
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
-    bytec 7 // 0x02
+    bytec 5 // 0x02
     swap
     callsub __storage_write
-    bytec 7 // 0x02
+    bytec 5 // 0x02
     callsub __storage_read
     intc_1 // 1
     itob
     b==
     bz deleteArrayZeroesElements_else_body@5
-    bytec 7 // 0x02
+    bytec 5 // 0x02
     callsub __storage_read
     dig 1
     b>
     assert // array index out of bounds
-    bytec 14 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
+    bytec 11 // 0x405787fa12a823e0f2b7631cc41b3ba8828b3321ca811111fa75cd3aa3bb5ace
     callsub __storage_read
     b==
     retsub
@@ -1074,7 +1054,7 @@ pushRefAndDefault_ternary_merge@3:
     assert // not payable
 
 pushRefAndDefault_while_top@4:
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     callsub __storage_read
     intc_2 // 0
     itob
@@ -1083,28 +1063,28 @@ pushRefAndDefault_while_top@4:
     b>
     bz pushRefAndDefault_after_while@6
     pop
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     callsub __storage_read
     dup
-    bytec_1 // 0x
+    bytec_0 // 0x
     b>
     assert // pop from empty array
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b-
-    bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
+    bytec 7 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
     dig 1
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     swap
     callsub __storage_write
     b pushRefAndDefault_while_top@4
 
 pushRefAndDefault_after_while@6:
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     callsub __storage_read
-    bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
+    bytec 7 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
     dig 1
     b+
     pushint 7
@@ -1112,30 +1092,30 @@ pushRefAndDefault_after_while@6:
     dup
     cover 3
     callsub __storage_write
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     swap
     callsub __storage_write
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     callsub __storage_read
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     swap
     callsub __storage_write
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     callsub __storage_read
     pushint 2
     itob
     b==
     bz pushRefAndDefault_else_body@8
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     callsub __storage_read
     dig 2
     b>
     assert // array index out of bounds
-    bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
+    bytec 7 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
     callsub __storage_read
     b==
 
@@ -1143,7 +1123,7 @@ pushRefAndDefault_after_if_else@9:
     bz pushRefAndDefault_else_body@11
     intc_1 // 1
     itob
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     callsub __storage_read
     b<
     assert // array index out of bounds
@@ -1181,7 +1161,7 @@ popThenPushReadsZero_ternary_merge@3:
     assert // not payable
 
 popThenPushReadsZero_while_top@4:
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     callsub __storage_read
     intc_2 // 0
     itob
@@ -1190,67 +1170,67 @@ popThenPushReadsZero_while_top@4:
     b>
     bz popThenPushReadsZero_after_while@6
     pop
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     callsub __storage_read
     dup
-    bytec_1 // 0x
+    bytec_0 // 0x
     b>
     assert // pop from empty array
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b-
-    bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
+    bytec 7 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
     dig 1
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     swap
     callsub __storage_write
     b popThenPushReadsZero_while_top@4
 
 popThenPushReadsZero_after_while@6:
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     callsub __storage_read
-    bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
+    bytec 7 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
     dig 1
     b+
     pushint 99
     itob
     callsub __storage_write
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     swap
     callsub __storage_write
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     callsub __storage_read
     dup
-    bytec_1 // 0x
+    bytec_0 // 0x
     b>
     assert // pop from empty array
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b-
-    bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
+    bytec 7 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
     dig 1
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     swap
     callsub __storage_write
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     callsub __storage_read
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     swap
     callsub __storage_write
-    bytec_2 // 0x03
+    bytec_1 // 0x03
     callsub __storage_read
     dig 1
     b>
     assert // array index out of bounds
-    bytec 11 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
+    bytec 7 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
     callsub __storage_read
     b==
     retsub
@@ -1279,7 +1259,7 @@ structStorageCopy_ternary_merge@3:
     bzero
     dup
     frame_bury 1
-    bytec 12 // 0x04
+    bytec 9 // 0x04
     callsub __storage_read
     dig 1
     swap
@@ -1293,7 +1273,7 @@ structStorageCopy_ternary_merge@3:
     pushint 3
     itob
     replace2 24
-    bytec 12 // 0x04
+    bytec 9 // 0x04
     swap
     callsub __storage_write
     pushint 4
@@ -1303,7 +1283,7 @@ structStorageCopy_ternary_merge@3:
     pushbytes 0x05
     swap
     callsub __storage_write
-    bytec 12 // 0x04
+    bytec 9 // 0x04
     callsub __storage_read
     dig 1
     swap
@@ -1330,7 +1310,7 @@ structStorageCopy_ternary_merge@3:
     swap
     extract 0 32
     concat
-    bytec 16 // 0x06
+    bytec 13 // 0x06
     callsub __storage_read
     dig 2
     swap
@@ -1353,14 +1333,14 @@ structStorageCopy_ternary_merge@3:
     intc_3 // 8
     extract3
     replace2 24
-    bytec 16 // 0x06
+    bytec 13 // 0x06
     swap
     callsub __storage_write
     extract 8 32
     pushbytes 0x07
     swap
     callsub __storage_write
-    bytec 12 // 0x04
+    bytec 9 // 0x04
     callsub __storage_read
     dig 1
     swap
@@ -1374,10 +1354,10 @@ structStorageCopy_ternary_merge@3:
     pushint 9
     itob
     replace2 24
-    bytec 12 // 0x04
+    bytec 9 // 0x04
     swap
     callsub __storage_write
-    bytec 16 // 0x06
+    bytec 13 // 0x06
     callsub __storage_read
     concat
     dup
@@ -1396,7 +1376,7 @@ structStorageCopy_ternary_merge@3:
     frame_dig 0
     b==
     bz structStorageCopy_bool_false@7
-    bytec 12 // 0x04
+    bytec 9 // 0x04
     callsub __storage_read
     frame_dig 1
     swap
@@ -1443,7 +1423,7 @@ arrayStorageCopy_ternary_merge@3:
     assert // not payable
 
 arrayStorageCopy_while_top@4:
-    bytec 5 // 0x08
+    bytec 4 // 0x08
     callsub __storage_read
     intc_2 // 0
     itob
@@ -1452,20 +1432,20 @@ arrayStorageCopy_while_top@4:
     b>
     bz arrayStorageCopy_while_top@7
     pop
-    bytec 5 // 0x08
+    bytec 4 // 0x08
     callsub __storage_read
     dup
-    bytec_1 // 0x
+    bytec_0 // 0x
     b>
     assert // pop from empty array
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b-
-    bytec 15 // 0xf3f7a9fe364faab93b216da50a3214154f22a0a2b415b23a84c8169e8b636ee3
+    bytec 12 // 0xf3f7a9fe364faab93b216da50a3214154f22a0a2b415b23a84c8169e8b636ee3
     dig 1
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
-    bytec 5 // 0x08
+    bytec 4 // 0x08
     swap
     callsub __storage_write
     b arrayStorageCopy_while_top@4
@@ -1479,15 +1459,15 @@ arrayStorageCopy_while_top@7:
     bytec_3 // 0x09
     callsub __storage_read
     dup
-    bytec_1 // 0x
+    bytec_0 // 0x
     b>
     assert // pop from empty array
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b-
-    bytec 13 // 0x6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af
+    bytec 10 // 0x6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af
     dig 1
     b+
-    bytec_1 // 0x
+    bytec_0 // 0x
     callsub __storage_write
     bytec_3 // 0x09
     swap
@@ -1495,9 +1475,9 @@ arrayStorageCopy_while_top@7:
     b arrayStorageCopy_while_top@7
 
 arrayStorageCopy_after_while@9:
-    bytec 5 // 0x08
+    bytec 4 // 0x08
     callsub __storage_read
-    bytec 15 // 0xf3f7a9fe364faab93b216da50a3214154f22a0a2b415b23a84c8169e8b636ee3
+    bytec 12 // 0xf3f7a9fe364faab93b216da50a3214154f22a0a2b415b23a84c8169e8b636ee3
     dig 1
     b+
     intc_1 // 1
@@ -1505,14 +1485,14 @@ arrayStorageCopy_after_while@9:
     dup
     cover 4
     callsub __storage_write
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
-    bytec 5 // 0x08
+    bytec 4 // 0x08
     swap
     callsub __storage_write
-    bytec 5 // 0x08
+    bytec 4 // 0x08
     callsub __storage_read
-    bytec 15 // 0xf3f7a9fe364faab93b216da50a3214154f22a0a2b415b23a84c8169e8b636ee3
+    bytec 12 // 0xf3f7a9fe364faab93b216da50a3214154f22a0a2b415b23a84c8169e8b636ee3
     dig 1
     b+
     pushint 2
@@ -1523,51 +1503,51 @@ arrayStorageCopy_after_while@9:
     dig 1
     callsub __storage_write
     swap
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
-    bytec 5 // 0x08
+    bytec 4 // 0x08
     swap
     callsub __storage_write
     bytec_3 // 0x09
     callsub __storage_read
-    bytec 13 // 0x6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af
+    bytec 10 // 0x6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af
     dig 1
     b+
     pushint 77
     itob
     callsub __storage_write
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
     bytec_3 // 0x09
     swap
     callsub __storage_write
     bytec_3 // 0x09
     callsub __storage_read
-    bytec 13 // 0x6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af
+    bytec 10 // 0x6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af
     dig 1
     b+
     pushint 88
     itob
     callsub __storage_write
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
     bytec_3 // 0x09
     swap
     callsub __storage_write
     bytec_3 // 0x09
     callsub __storage_read
-    bytec 13 // 0x6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af
+    bytec 10 // 0x6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af
     dig 1
     b+
     pushint 99
     itob
     callsub __storage_write
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
     bytec_3 // 0x09
     swap
     callsub __storage_write
-    bytec 5 // 0x08
+    bytec 4 // 0x08
     intc_1 // 1
     intc_0 // 32
     dup
@@ -1584,9 +1564,9 @@ arrayStorageCopy_after_while@9:
     dup
     intc_2 // 0
     callsub __evm_dynarr_recursive_write
-    bytec 5 // 0x08
+    bytec 4 // 0x08
     callsub __storage_read
-    bytec 15 // 0xf3f7a9fe364faab93b216da50a3214154f22a0a2b415b23a84c8169e8b636ee3
+    bytec 12 // 0xf3f7a9fe364faab93b216da50a3214154f22a0a2b415b23a84c8169e8b636ee3
     dig 1
     b+
     pushint 3
@@ -1594,9 +1574,9 @@ arrayStorageCopy_after_while@9:
     dup
     frame_bury 0
     callsub __storage_write
-    bytec_0 // 0x01
+    bytec_2 // 0x01
     b+
-    bytec 5 // 0x08
+    bytec 4 // 0x08
     swap
     callsub __storage_write
     bytec_3 // 0x09
@@ -1607,7 +1587,7 @@ arrayStorageCopy_after_while@9:
     callsub __storage_read
     b<
     assert // array index out of bounds
-    bytec 13 // 0x6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af
+    bytec 10 // 0x6e1540171b6c0c960b71a7020d9f60077f6af931a8bbf590da0223dacf75c7af
     callsub __storage_read
     dig 2
     b==
@@ -1625,7 +1605,7 @@ arrayStorageCopy_after_if_else@12:
 
 arrayStorageCopy_after_if_else@15:
     bz arrayStorageCopy_bool_false@18
-    bytec 5 // 0x08
+    bytec 4 // 0x08
     callsub __storage_read
     frame_dig 0
     b==
@@ -1653,285 +1633,6 @@ arrayStorageCopy_else_body@11:
 arrayStorageCopy_ternary_false@2:
     intc_2 // 0
     b arrayStorageCopy_ternary_merge@3
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParityCore.boolArrayCore() -> uint64:
-boolArrayCore:
-    txn GroupIndex
-    bz boolArrayCore_ternary_false@2
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-boolArrayCore_ternary_merge@3:
-    !
-    assert // not payable
-    bytec 4 // 0x0a
-    callsub __storage_read
-    dup
-    bytec 9 // 0x20
-    b/
-    bytec 10 // 0xc65a7bb8d6351c1cf70c95a316cc6a92839c986682d98bc35f958f4883f9d2a8
-    b+
-    intc_0 // 32
-    bzero
-    dup
-    cover 2
-    cover 3
-    dup
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    intc_3 // 8
-    bzero
-    dig 4
-    bytec 9 // 0x20
-    b%
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    pushint 31
-    swap
-    -
-    intc_1 // 1
-    itob
-    dup
-    cover 7
-    cover 7
-    uncover 2
-    swap
-    bytec_0 // 0x01
-    replace3
-    uncover 2
-    swap
-    callsub __storage_write
-    uncover 2
-    bytec_0 // 0x01
-    b+
-    bytec 4 // 0x0a
-    swap
-    callsub __storage_write
-    bytec 4 // 0x0a
-    callsub __storage_read
-    dup
-    bytec 9 // 0x20
-    b/
-    bytec 10 // 0xc65a7bb8d6351c1cf70c95a316cc6a92839c986682d98bc35f958f4883f9d2a8
-    b+
-    dup
-    callsub __storage_read
-    dig 4
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 2
-    bytec 9 // 0x20
-    b%
-    dig 4
-    swap
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    pushint 31
-    swap
-    -
-    intc_2 // 0
-    itob
-    cover 7
-    bytec 6 // 0x00
-    replace3
-    callsub __storage_write
-    bytec_0 // 0x01
-    b+
-    bytec 4 // 0x0a
-    swap
-    callsub __storage_write
-    bytec 4 // 0x0a
-    callsub __storage_read
-    dup
-    bytec 9 // 0x20
-    b/
-    bytec 10 // 0xc65a7bb8d6351c1cf70c95a316cc6a92839c986682d98bc35f958f4883f9d2a8
-    b+
-    dup
-    callsub __storage_read
-    dig 4
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 2
-    bytec 9 // 0x20
-    b%
-    dig 4
-    swap
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    pushint 31
-    swap
-    -
-    bytec_0 // 0x01
-    replace3
-    callsub __storage_write
-    bytec_0 // 0x01
-    b+
-    bytec 4 // 0x0a
-    swap
-    callsub __storage_write
-    bytec 4 // 0x0a
-    callsub __storage_read
-    uncover 3
-    b>
-    assert // array index out of bounds
-    bytec 10 // 0xc65a7bb8d6351c1cf70c95a316cc6a92839c986682d98bc35f958f4883f9d2a8
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    bytec_0 // 0x01
-    replace2 30
-    bytec 10 // 0xc65a7bb8d6351c1cf70c95a316cc6a92839c986682d98bc35f958f4883f9d2a8
-    swap
-    callsub __storage_write
-    bytec 4 // 0x0a
-    callsub __storage_read
-    dup
-    bytec_1 // 0x
-    b>
-    assert // pop from empty array
-    bytec_0 // 0x01
-    b-
-    dup
-    bytec 9 // 0x20
-    b/
-    bytec 10 // 0xc65a7bb8d6351c1cf70c95a316cc6a92839c986682d98bc35f958f4883f9d2a8
-    b+
-    dup
-    callsub __storage_read
-    uncover 4
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    dig 2
-    bytec 9 // 0x20
-    b%
-    uncover 4
-    swap
-    concat
-    dup
-    len
-    intc_3 // 8
-    -
-    extract_uint64
-    pushint 31
-    swap
-    -
-    bytec 6 // 0x00
-    replace3
-    callsub __storage_write
-    bytec 4 // 0x0a
-    swap
-    callsub __storage_write
-    bytec 4 // 0x0a
-    callsub __storage_read
-    pushint 2
-    itob
-    b==
-    bz boolArrayCore_else_body@5
-    bytec 4 // 0x0a
-    callsub __storage_read
-    b<
-    assert // array index out of bounds
-    bytec 10 // 0xc65a7bb8d6351c1cf70c95a316cc6a92839c986682d98bc35f958f4883f9d2a8
-    callsub __storage_read
-    dig 2
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 31
-    getbyte
-    intc_2 // 0
-    !=
-
-boolArrayCore_after_if_else@6:
-    bz boolArrayCore_else_body@8
-    bytec 4 // 0x0a
-    callsub __storage_read
-    b<
-    assert // array index out of bounds
-    bytec 10 // 0xc65a7bb8d6351c1cf70c95a316cc6a92839c986682d98bc35f958f4883f9d2a8
-    callsub __storage_read
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    pushint 30
-    getbyte
-    intc_2 // 0
-    !=
-    retsub
-
-boolArrayCore_else_body@8:
-    popn 2
-    intc_2 // 0
-    retsub
-
-boolArrayCore_else_body@5:
-    pop
-    intc_2 // 0
-    b boolArrayCore_after_if_else@6
-
-boolArrayCore_ternary_false@2:
-    intc_2 // 0
-    b boolArrayCore_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParityCore.__evm_npy() -> void:
@@ -1967,7 +1668,7 @@ __evm_ret0:
     -
     intc_0 // 32
     extract3
-    bytec 8 // 0x151f7c75
+    bytec 6 // 0x151f7c75
     swap
     concat
     log

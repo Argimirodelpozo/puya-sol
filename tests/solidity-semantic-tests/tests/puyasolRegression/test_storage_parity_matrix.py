@@ -16,13 +16,12 @@ SOURCE = "puyasolRegression/contracts/storage_parity_matrix.sol"
 SLOT_PROBES = [
     "packedWord()", "packedWrite()", "stringKey()", "signedKey()",
     "packedArray()", "popZeroes()", "shortString()", "longString()",
-    "boolArrayWord()", "signedArrayWord()", "shortLongRoundTrip()",
-    "slotOffsetFacts()",
+    "signedArrayWord()", "shortLongRoundTrip()", "slotOffsetFacts()",
 ]
 CORE_PROBES = [
     "deleteStructKeepsMapping()", "deleteArrayZeroesElements()",
     "pushRefAndDefault()", "popThenPushReadsZero()",
-    "structStorageCopy()", "arrayStorageCopy()", "boolArrayCore()",
+    "structStorageCopy()", "arrayStorageCopy()",
 ]
 
 
@@ -48,3 +47,23 @@ def test_core_semantics_both_modes(harness, mode):
     app = harness.deploy(artifacts, "StorageParityCore")
     for sig in CORE_PROBES:
         _run(harness, app, sig)
+
+
+BOOLS = "puyasolRegression/contracts/storage_parity_bools.sol"
+
+
+def test_bool_array_slot_mode_parity(harness):
+    """Slot mode: byte-consistent bool[] incl. the T,T discriminator and
+    raw-word + pop-zeroing checks (oracle-endorsed expectations)."""
+    artifacts = harness.compile(BOOLS, extra_args=["--evm-layout"])
+    app = harness.deploy(artifacts, "BoolArrayParity")
+    for sig in ("pushReadTrueTrue()", "wordAndOps()"):
+        _run(harness, app, sig)
+
+
+def test_bool_array_default_mode_fails_loud(harness):
+    """Default mode: storage bool[] is puyabug.md #10 (silent wrong reads) —
+    must be a COMPILE error pointing at --evm-layout."""
+    from framework.compile import CompileError
+    with pytest.raises(CompileError, match="bool"):
+        harness.compile(BOOLS)

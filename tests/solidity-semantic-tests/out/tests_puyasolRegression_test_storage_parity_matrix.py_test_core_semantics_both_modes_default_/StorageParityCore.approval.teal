@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParityCore.approval_program() -> uint64:
 main:
     intcblock 0 1 2 32
-    bytecblock "coreFlags" "arr2" "dst" 0x00 "src" "arr" 0x151f7c75 "p1" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000 "st" "p2" "__ctor_pending" 0xc6c6ce37906577350fea343f7b6c0b6bdde33bb40e7c759acc3324a7b13e19a1 0x0000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000000000000000000000220000 0x0000000000000000000000000000000000000000000000000000000000000063
+    bytecblock "arr2" "dst" "src" "arr" 0x151f7c75 0x00 "p1" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000 "st" "p2" "__ctor_pending" 0xc6c6ce37906577350fea343f7b6c0b6bdde33bb40e7c759acc3324a7b13e19a1 0x0000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000000000000000000000220000 0x0000000000000000000000000000000000000000000000000000000000000063
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 11 // "__ctor_pending"
+    bytec 10 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -32,161 +32,137 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@13
+    bnz main_after_if_else@12
     txn NumAppArgs
     intc_2 // 2
     ==
-    bz main_after_if_else@13
-    pushbytess 0x13345f94 0xc174c3c9 0xd8c8ac3c 0x74bb810b 0x3e5a4e0e 0x877c81ba 0x0617f735
+    bz main_after_if_else@12
+    pushbytess 0x13345f94 0xc174c3c9 0xd8c8ac3c 0x74bb810b 0x3e5a4e0e 0x877c81ba
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10
 
-main_after_if_else@13:
+main_after_if_else@12:
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x00a5fd5d 0xfe6ec172 0x6bc51985 0xa69cab67 0xf8d27f54 0xe21f1bbc 0x6a603e89 // method "__postInit()void", method "deleteStructKeepsMapping()bool", method "deleteArrayZeroesElements()bool", method "pushRefAndDefault()bool", method "popThenPushReadsZero()bool", method "structStorageCopy()bool", method "arrayStorageCopy()bool", method "boolArrayCore()bool"
+    pushbytess 0xbacc49e3 0x00a5fd5d 0xfe6ec172 0x6bc51985 0xa69cab67 0xf8d27f54 0xe21f1bbc // method "__postInit()void", method "deleteStructKeepsMapping()bool", method "deleteArrayZeroesElements()bool", method "pushRefAndDefault()bool", method "popThenPushReadsZero()bool", method "structStorageCopy()bool", method "arrayStorageCopy()bool"
     txna ApplicationArgs 0
-    match main___postInit_route@16 main_deleteStructKeepsMapping_route@17 main_deleteArrayZeroesElements_route@18 main_pushRefAndDefault_route@19 main_popThenPushReadsZero_route@20 main_structStorageCopy_route@21 main_arrayStorageCopy_route@22 main_boolArrayCore_route@23
+    match main___postInit_route@15 main_deleteStructKeepsMapping_route@16 main_deleteArrayZeroesElements_route@17 main_pushRefAndDefault_route@18 main_popThenPushReadsZero_route@19 main_structStorageCopy_route@20 main_arrayStorageCopy_route@21
     err
 
-main_boolArrayCore_route@23:
-    callsub boolArrayCore
-    bytec_3 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    bytec 6 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_arrayStorageCopy_route@22:
+main_arrayStorageCopy_route@21:
     callsub arrayStorageCopy
-    bytec_3 // 0x00
+    bytec 5 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec 6 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_structStorageCopy_route@21:
+main_structStorageCopy_route@20:
     callsub structStorageCopy
-    bytec_3 // 0x00
+    bytec 5 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec 6 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_popThenPushReadsZero_route@20:
+main_popThenPushReadsZero_route@19:
     callsub popThenPushReadsZero
-    bytec_3 // 0x00
+    bytec 5 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec 6 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_pushRefAndDefault_route@19:
+main_pushRefAndDefault_route@18:
     callsub pushRefAndDefault
-    bytec_3 // 0x00
+    bytec 5 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec 6 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_deleteArrayZeroesElements_route@18:
+main_deleteArrayZeroesElements_route@17:
     callsub deleteArrayZeroesElements
-    bytec_3 // 0x00
+    bytec 5 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec 6 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main_deleteStructKeepsMapping_route@17:
+main_deleteStructKeepsMapping_route@16:
     callsub deleteStructKeepsMapping
-    bytec_3 // 0x00
+    bytec 5 // 0x00
     intc_0 // 0
     uncover 2
     setbit
-    bytec 6 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log
     intc_1 // 1
     return
 
-main___postInit_route@16:
-    bytec 11 // "__ctor_pending"
+main___postInit_route@15:
+    bytec 10 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec 11 // "__ctor_pending"
+    bytec 10 // "__ctor_pending"
     intc_0 // 0
     app_global_put
-    bytec 5 // "arr"
+    bytec_3 // "arr"
     intc_2 // 2
     box_create
     pop
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     intc_2 // 2
     box_create
     pop
-    bytec 4 // "src"
+    bytec_2 // "src"
     intc_2 // 2
     box_create
     pop
-    bytec_2 // "dst"
+    bytec_1 // "dst"
     intc_2 // 2
     box_create
     pop
-    bytec_0 // "coreFlags"
-    intc_2 // 2
-    box_create
-    pop
-    bytec 7 // "p1"
-    bytec 8 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 6 // "p1"
+    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    bytec 10 // "p2"
-    bytec 8 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 9 // "p2"
+    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    intc_1 // 1
-    return
-
-main_switch_case_6@11:
-    callsub __evm_npy
-    callsub boolArrayCore
-    callsub __evm_ret0
     intc_1 // 1
     return
 
@@ -327,34 +303,34 @@ deleteStructKeepsMapping:
 deleteStructKeepsMapping_ternary_merge@3:
     !
     assert // not payable
-    bytec 9 // "st"
+    bytec 8 // "st"
     box_get
-    bytec 14 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
+    bytec 13 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
     cover 2
     select
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000005
     replace2 0
-    bytec 9 // "st"
+    bytec 8 // "st"
     box_del
     pop
-    bytec 9 // "st"
+    bytec 8 // "st"
     swap
     box_put
     pushint 6
     itob
-    bytec 12 // 0xc6c6ce37906577350fea343f7b6c0b6bdde33bb40e7c759acc3324a7b13e19a1
+    bytec 11 // 0xc6c6ce37906577350fea343f7b6c0b6bdde33bb40e7c759acc3324a7b13e19a1
     box_del
     pop
-    bytec 12 // 0xc6c6ce37906577350fea343f7b6c0b6bdde33bb40e7c759acc3324a7b13e19a1
+    bytec 11 // 0xc6c6ce37906577350fea343f7b6c0b6bdde33bb40e7c759acc3324a7b13e19a1
     dig 1
     box_put
-    bytec 9 // "st"
+    bytec 8 // "st"
     box_del
     pop
-    bytec 9 // "st"
-    bytec 14 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
+    bytec 8 // "st"
+    bytec 13 // 0x000000000000000000000000000000000000000000000000000000000000000000220000
     box_put
-    bytec 12 // 0xc6c6ce37906577350fea343f7b6c0b6bdde33bb40e7c759acc3324a7b13e19a1
+    bytec 11 // 0xc6c6ce37906577350fea343f7b6c0b6bdde33bb40e7c759acc3324a7b13e19a1
     box_get
     pushbytes 0x
     cover 2
@@ -383,40 +359,40 @@ deleteArrayZeroesElements_ternary_merge@3:
     assert // not payable
     intc_1 // 1
     itob
-    bytec 5 // "arr"
+    bytec_3 // "arr"
     intc_0 // 0
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000b
     intc_1 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
-    bytec 5 // "arr"
+    bytec_3 // "arr"
     intc_0 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000016
     intc_1 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
-    bytec 5 // "arr"
+    bytec_3 // "arr"
     box_del
     pop
-    bytec 5 // "arr"
+    bytec_3 // "arr"
     pushbytes 0x0000
     box_put
     intc_0 // 0
     itob
     frame_bury 0
-    bytec 5 // "arr"
+    bytec_3 // "arr"
     intc_0 // 0
-    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_1 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
-    bytec 5 // "arr"
+    bytec_3 // "arr"
     box_len
     pop
     intc_2 // 2
     >=
     bz deleteArrayZeroesElements_ternary_false@5
-    bytec 5 // "arr"
+    bytec_3 // "arr"
     box_len
     pop
 
@@ -428,7 +404,7 @@ deleteArrayZeroesElements_ternary_merge@6:
     itob
     b==
     bz deleteArrayZeroesElements_bool_false@9
-    bytec 5 // "arr"
+    bytec_3 // "arr"
     intc_2 // 2
     intc_3 // 32
     box_extract // on error: index out of bounds
@@ -471,13 +447,13 @@ pushRefAndDefault_ternary_merge@3:
     assert // not payable
 
 pushRefAndDefault_while_top@4:
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     box_len
     pop
     intc_2 // 2
     >=
     bz pushRefAndDefault_ternary_false@6
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     box_len
     pop
 
@@ -493,7 +469,7 @@ pushRefAndDefault_ternary_merge@7:
     frame_bury 0
     b>
     bz pushRefAndDefault_after_while@9
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     intc_0 // 0
     intc_3 // 32
     callsub box_dynamic_array_pop_fixed_size
@@ -503,25 +479,25 @@ pushRefAndDefault_after_while@9:
     pushint 7
     itob
     frame_bury 1
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     intc_0 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
     intc_1 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     intc_0 // 0
-    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_1 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     box_len
     pop
     intc_2 // 2
     >=
     bz pushRefAndDefault_ternary_false@11
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     box_len
     pop
 
@@ -535,14 +511,14 @@ pushRefAndDefault_ternary_merge@12:
     itob
     b==
     bz pushRefAndDefault_bool_false@16
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     intc_2 // 2
     intc_3 // 32
     box_extract // on error: index out of bounds
     frame_dig 1
     b==
     bz pushRefAndDefault_bool_false@16
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     pushint 34
     intc_3 // 32
     box_extract // on error: index out of bounds
@@ -586,13 +562,13 @@ popThenPushReadsZero_ternary_merge@3:
     assert // not payable
 
 popThenPushReadsZero_while_top@4:
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     box_len
     pop
     intc_2 // 2
     >=
     bz popThenPushReadsZero_ternary_false@6
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     box_len
     pop
 
@@ -609,30 +585,30 @@ popThenPushReadsZero_ternary_merge@7:
     b>
     bz popThenPushReadsZero_after_while@9
     pop
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     intc_0 // 0
     intc_3 // 32
     callsub box_dynamic_array_pop_fixed_size
     b popThenPushReadsZero_while_top@4
 
 popThenPushReadsZero_after_while@9:
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     intc_0 // 0
-    bytec 15 // 0x0000000000000000000000000000000000000000000000000000000000000063
+    bytec 14 // 0x0000000000000000000000000000000000000000000000000000000000000063
     intc_1 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     intc_0 // 0
     intc_3 // 32
     callsub box_dynamic_array_pop_fixed_size
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     intc_0 // 0
-    bytec 13 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_1 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
-    bytec_1 // "arr2"
+    bytec_0 // "arr2"
     intc_2 // 2
     intc_3 // 32
     box_extract // on error: index out of bounds
@@ -665,7 +641,7 @@ structStorageCopy_ternary_merge@3:
     pushint 3
     itob
     intc_0 // 0
-    bytec 7 // "p1"
+    bytec 6 // "p1"
     app_global_get_ex
     assert // state exists
     extract 8 32
@@ -676,27 +652,27 @@ structStorageCopy_ternary_merge@3:
     frame_bury 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000004
     concat
-    bytec 7 // "p1"
+    bytec 6 // "p1"
     dig 1
     app_global_put
-    bytec 10 // "p2"
+    bytec 9 // "p2"
     swap
     app_global_put
     pushint 9
     itob
     intc_0 // 0
-    bytec 7 // "p1"
+    bytec 6 // "p1"
     app_global_get_ex
     assert // state exists
     extract 8 32
     concat
-    bytec 7 // "p1"
+    bytec 6 // "p1"
     swap
     app_global_put
     intc_0 // 0
-    bytec 10 // "p2"
+    bytec 9 // "p2"
     app_global_get_ex
-    bytec 8 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     intc_0 // 0
@@ -705,9 +681,9 @@ structStorageCopy_ternary_merge@3:
     ==
     bz structStorageCopy_bool_false@7
     intc_0 // 0
-    bytec 10 // "p2"
+    bytec 9 // "p2"
     app_global_get_ex
-    bytec 8 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     extract 8 32
@@ -715,9 +691,9 @@ structStorageCopy_ternary_merge@3:
     b==
     bz structStorageCopy_bool_false@7
     intc_0 // 0
-    bytec 7 // "p1"
+    bytec 6 // "p1"
     app_global_get_ex
-    bytec 8 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
     intc_0 // 0
@@ -757,13 +733,13 @@ arrayStorageCopy_ternary_merge@3:
     assert // not payable
 
 arrayStorageCopy_while_top@4:
-    bytec 4 // "src"
+    bytec_2 // "src"
     box_len
     pop
     intc_2 // 2
     >=
     bz arrayStorageCopy_ternary_false@6
-    bytec 4 // "src"
+    bytec_2 // "src"
     box_len
     pop
 
@@ -780,20 +756,20 @@ arrayStorageCopy_ternary_merge@7:
     b>
     bz arrayStorageCopy_while_top@10
     pop
-    bytec 4 // "src"
+    bytec_2 // "src"
     intc_0 // 0
     intc_3 // 32
     callsub box_dynamic_array_pop_fixed_size
     b arrayStorageCopy_while_top@4
 
 arrayStorageCopy_while_top@10:
-    bytec_2 // "dst"
+    bytec_1 // "dst"
     box_len
     pop
     intc_2 // 2
     >=
     bz arrayStorageCopy_ternary_false@12
-    bytec_2 // "dst"
+    bytec_1 // "dst"
     box_len
     pop
 
@@ -806,7 +782,7 @@ arrayStorageCopy_ternary_merge@13:
     dig 1
     b>
     bz arrayStorageCopy_after_while@15
-    bytec_2 // "dst"
+    bytec_1 // "dst"
     intc_0 // 0
     intc_3 // 32
     callsub box_dynamic_array_pop_fixed_size
@@ -817,7 +793,7 @@ arrayStorageCopy_after_while@15:
     intc_1 // 1
     itob
     frame_bury 0
-    bytec 4 // "src"
+    bytec_2 // "src"
     intc_0 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
     intc_1 // 1
@@ -826,55 +802,55 @@ arrayStorageCopy_after_while@15:
     intc_2 // 2
     itob
     frame_bury 1
-    bytec 4 // "src"
+    bytec_2 // "src"
     intc_0 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
     intc_1 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
-    bytec_2 // "dst"
+    bytec_1 // "dst"
     intc_0 // 0
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000004d
     intc_1 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
-    bytec_2 // "dst"
+    bytec_1 // "dst"
     intc_0 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000058
     intc_1 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
-    bytec_2 // "dst"
+    bytec_1 // "dst"
     intc_0 // 0
-    bytec 15 // 0x0000000000000000000000000000000000000000000000000000000000000063
+    bytec 14 // 0x0000000000000000000000000000000000000000000000000000000000000063
     intc_1 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
-    bytec 4 // "src"
+    bytec_2 // "src"
     box_get
     assert // box exists
-    bytec_2 // "dst"
+    bytec_1 // "dst"
     box_del
     pop
-    bytec_2 // "dst"
+    bytec_1 // "dst"
     swap
     box_put
     pushint 3
     itob
     frame_bury 2
-    bytec 4 // "src"
+    bytec_2 // "src"
     intc_0 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
     intc_1 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
-    bytec_2 // "dst"
+    bytec_1 // "dst"
     box_len
     pop
     intc_2 // 2
     >=
     bz arrayStorageCopy_ternary_false@17
-    bytec_2 // "dst"
+    bytec_1 // "dst"
     box_len
     pop
 
@@ -887,27 +863,27 @@ arrayStorageCopy_ternary_merge@18:
     frame_dig 1
     b==
     bz arrayStorageCopy_bool_false@26
-    bytec_2 // "dst"
+    bytec_1 // "dst"
     intc_2 // 2
     intc_3 // 32
     box_extract // on error: index out of bounds
     frame_dig 0
     b==
     bz arrayStorageCopy_bool_false@26
-    bytec_2 // "dst"
+    bytec_1 // "dst"
     pushint 34
     intc_3 // 32
     box_extract // on error: index out of bounds
     frame_dig 1
     b==
     bz arrayStorageCopy_bool_false@26
-    bytec 4 // "src"
+    bytec_2 // "src"
     box_len
     pop
     intc_2 // 2
     >=
     bz arrayStorageCopy_ternary_false@23
-    bytec 4 // "src"
+    bytec_2 // "src"
     box_len
     pop
 
@@ -951,175 +927,6 @@ arrayStorageCopy_ternary_false@2:
     b arrayStorageCopy_ternary_merge@3
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParityCore.boolArrayCore() -> uint64:
-boolArrayCore:
-    txn GroupIndex
-    bz boolArrayCore_ternary_false@2
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-boolArrayCore_ternary_merge@3:
-    !
-    assert // not payable
-    bytec_0 // "coreFlags"
-    intc_0 // 0
-    pushbytes 0x80
-    intc_1 // 1
-    dup
-    callsub box_dynamic_array_concat_fixed
-    bytec_0 // "coreFlags"
-    intc_0 // 0
-    bytec_3 // 0x00
-    intc_1 // 1
-    dup
-    callsub box_dynamic_array_concat_fixed
-    bytec_0 // "coreFlags"
-    intc_0 // 0
-    pushbytes 0x80
-    intc_1 // 1
-    dup
-    callsub box_dynamic_array_concat_fixed
-    bytec_0 // "coreFlags"
-    box_len
-    bury 1
-    bz boolArrayCore_ternary_false@5
-    bytec_0 // "coreFlags"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-boolArrayCore_ternary_merge@6:
-    intc_1 // 1
-    >
-    assert // array index out of bounds
-    bytec_0 // "coreFlags"
-    box_len
-    bury 1
-    bnz boolArrayCore_after_if_else@8
-    bytec_0 // "coreFlags"
-    intc_2 // 2
-    box_create
-    pop
-
-boolArrayCore_after_if_else@8:
-    bytec_0 // "coreFlags"
-    intc_2 // 2
-    intc_1 // 1
-    box_extract
-    intc_1 // 1
-    dup
-    setbit
-    bytec_0 // "coreFlags"
-    intc_2 // 2
-    uncover 2
-    box_replace // on error: index out of bounds
-    bytec_0 // "coreFlags"
-    intc_0 // 0
-    intc_1 // 1
-    callsub box_dynamic_array_pop_fixed_size
-    bytec_0 // "coreFlags"
-    box_len
-    bury 1
-    bz boolArrayCore_ternary_false@10
-    bytec_0 // "coreFlags"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-boolArrayCore_ternary_merge@11:
-    itob
-    intc_2 // 2
-    itob
-    b==
-    bz boolArrayCore_else_body@16
-    bytec_0 // "coreFlags"
-    box_len
-    bury 1
-    bz boolArrayCore_ternary_false@14
-    bytec_0 // "coreFlags"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-boolArrayCore_ternary_merge@15:
-    assert // array index out of bounds
-    bytec_0 // "coreFlags"
-    intc_2 // 2
-    intc_1 // 1
-    box_extract // on error: index out of bounds
-    intc_0 // 0
-    getbit
-    bytec_3 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    intc_0 // 0
-    getbit
-
-boolArrayCore_after_if_else@17:
-    bz boolArrayCore_else_body@22
-    bytec_0 // "coreFlags"
-    box_len
-    bury 1
-    bz boolArrayCore_ternary_false@20
-    bytec_0 // "coreFlags"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-boolArrayCore_ternary_merge@21:
-    intc_1 // 1
-    >
-    assert // array index out of bounds
-    bytec_0 // "coreFlags"
-    intc_2 // 2
-    intc_1 // 1
-    box_extract // on error: index out of bounds
-    intc_1 // 1
-    getbit
-    bytec_3 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    intc_0 // 0
-    getbit
-    retsub
-
-boolArrayCore_ternary_false@20:
-    intc_0 // 0
-    b boolArrayCore_ternary_merge@21
-
-boolArrayCore_else_body@22:
-    intc_0 // 0
-    retsub
-
-boolArrayCore_ternary_false@14:
-    intc_0 // 0
-    b boolArrayCore_ternary_merge@15
-
-boolArrayCore_else_body@16:
-    intc_0 // 0
-    b boolArrayCore_after_if_else@17
-
-boolArrayCore_ternary_false@10:
-    intc_0 // 0
-    b boolArrayCore_ternary_merge@11
-
-boolArrayCore_ternary_false@5:
-    intc_0 // 0
-    b boolArrayCore_ternary_merge@6
-
-boolArrayCore_ternary_false@2:
-    intc_0 // 0
-    b boolArrayCore_ternary_merge@3
-
-
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParityCore.__evm_npy() -> void:
 __evm_npy:
     txn GroupIndex
@@ -1153,7 +960,7 @@ __evm_ret0:
     -
     intc_3 // 32
     extract3
-    bytec 6 // 0x151f7c75
+    bytec 4 // 0x151f7c75
     swap
     concat
     log

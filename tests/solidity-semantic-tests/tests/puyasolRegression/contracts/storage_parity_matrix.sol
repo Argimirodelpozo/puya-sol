@@ -85,22 +85,12 @@ contract StorageParitySlots {
             0x3031323334353637383930313233343536373839303132333435363738393031);
     }
 
-    bool[] public flags;   // slot 5 — packed 32 bools/slot, one BYTE each
-    int16[] public si;     // slot 6 — packed 16 elems/slot, two's complement
-
-    function boolArrayWord() public returns (bool ok, uint256 w) {
-        flags.push(true);
-        flags.push(false);
-        flags.push(true);
-        bytes32 base = keccak256(abi.encodePacked(uint256(5)));
-        assembly { w := sload(base) }
-        ok = (w == 0x010001) && flags[0] && !flags[1] && flags[2];
-    }
+    int16[] public si;     // slot 5 — packed 16 elems/slot, two's complement
 
     function signedArrayWord() public returns (bool ok, uint256 w) {
         si.push(-1);
         si.push(2);
-        bytes32 base = keccak256(abi.encodePacked(uint256(6)));
+        bytes32 base = keccak256(abi.encodePacked(uint256(5)));
         assembly { w := sload(base) }
         // elem0 two's-complement 0xFFFF at the LSB, elem1 0x0002 above it
         ok = (w == 0x0002FFFF) && (si[0] == -1) && (si[1] == 2);
@@ -177,7 +167,6 @@ contract StorageParityCore {
     P internal p2;
     uint256[] internal src;
     uint256[] internal dst;
-    bool[] internal coreFlags;
 
     function structStorageCopy() public returns (bool ok) {
         p1.u = 3;
@@ -199,14 +188,5 @@ contract StorageParityCore {
         src.push(3);
         ok = (dst.length == 2) && (dst[0] == 1) && (dst[1] == 2)
             && (src.length == 3);
-    }
-
-    function boolArrayCore() public returns (bool ok) {
-        coreFlags.push(true);
-        coreFlags.push(false);
-        coreFlags.push(true);
-        coreFlags[1] = true;
-        coreFlags.pop();
-        ok = (coreFlags.length == 2) && coreFlags[0] && coreFlags[1];
     }
 }

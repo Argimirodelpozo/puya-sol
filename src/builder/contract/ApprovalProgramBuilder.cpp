@@ -279,6 +279,41 @@ void ContractBuilder::emitStateVarInitFor(
 	}
 }
 
+namespace
+{
+/// True when a DYNAMIC bool array (`bool[]`) is reachable inside a storage
+/// type (directly, or through mapping values / struct members / outer
+/// arrays). That exact shape is puyabug.md #10: puya's box-backed
+/// arc4.dynamic_array<arc4.bool> lowerings DISAGREE on packing granularity —
+/// append writes one BYTE per element, IndexExpression reads getbit —
+/// so push(true);push(true) reads back [true, false]: silent wrong data.
+/// The granularity is chosen inside puya's ArrayExtend lowering (no frontend
+/// channel). Fixed bool[N] whole-array init/reads are consistent (element
+/// indexing already fails loud at runtime) and stay allowed.
+bool reachesDynamicBoolArray(solidity::frontend::Type const* _t, int _depth = 0)
+{
+	using namespace solidity::frontend;
+	if (!_t || _depth > 16)
+		return false;
+	if (auto const* at = dynamic_cast<ArrayType const*>(_t))
+	{
+		if (at->isDynamicallySized() && at->baseType()
+			&& at->baseType()->category() == Type::Category::Bool)
+			return true;
+		return reachesDynamicBoolArray(at->baseType(), _depth + 1);
+	}
+	if (auto const* mt = dynamic_cast<MappingType const*>(_t))
+		return reachesDynamicBoolArray(mt->valueType(), _depth + 1);
+	if (auto const* st = dynamic_cast<StructType const*>(_t))
+	{
+		for (auto const& member: st->structDefinition().members())
+			if (member && reachesDynamicBoolArray(member->type(), _depth + 1))
+				return true;
+	}
+	return false;
+}
+} // anonymous namespace
+
 /// buildApprovalProgram phase: collect box-stored array/bytes vars for box_create in __postInit (m_boxArrayVars).
 void ContractBuilder::collectBoxArrayVars(
 	solidity::frontend::ContractDefinition const& _contract,
@@ -289,6 +324,19 @@ void ContractBuilder::collectBoxArrayVars(
 	{
 		if (var->isConstant())
 			return;
+		// puyabug.md #10 gate (default storage mode only): storage `bool[]`
+		// silently reads wrong values back — fail loud with the workaround.
+		// Slot mode uses puya-sol's own byte-consistent lowering (verified
+		// against solc raw slot words) and is unaffected.
+		if (!m_typeMapper.profile().evmStorageLayout
+			&& reachesDynamicBoolArray(var->type()))
+			Logger::instance().error(
+				"storage `bool[]` is unsupported in the default storage mode: "
+				"puya's box-backed bool-array append and read disagree on "
+				"packing (puyabug.md #10) — push(true);push(true) reads back "
+				"[true, false]. Compile with --evm-layout (byte-consistent "
+				"slot storage), or use uint8[]/bool[N].",
+				loc);
 		if (lengthInitialized.count(var->id()))
 			return;
 

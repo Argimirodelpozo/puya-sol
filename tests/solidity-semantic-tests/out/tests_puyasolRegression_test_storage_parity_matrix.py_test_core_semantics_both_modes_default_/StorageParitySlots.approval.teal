@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParitySlots.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2 65536 32768 18446744073709486080 48076
-    bytecblock 0x151f7c75 0x00 "flags" "arr8" 0x010000000000000000000000000000000000000000000000000000000000000000 "s" "si" "b" 0x04 "a" "c" "__ctor_pending" 0xffff 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b 0xfdb6516b2f3ca28f8a88fa60aa6b338d44347d48b443402d112ba6deaa5b103e 0x60150443273224f5fb8ef96c0b853f945f0b489fd05ea1714dd36041f73c5cd6 "mi"
+    bytecblock 0x151f7c75 "arr8" 0x010000000000000000000000000000000000000000000000000000000000000000 0x00 "s" "si" "b" 0x04 "a" "c" "__ctor_pending" 0xffff 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b 0xfdb6516b2f3ca28f8a88fa60aa6b338d44347d48b443402d112ba6deaa5b103e 0x60150443273224f5fb8ef96c0b853f945f0b489fd05ea1714dd36041f73c5cd6 "mi"
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 11 // "__ctor_pending"
+    bytec 10 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -32,27 +32,27 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@21
+    bnz main_after_if_else@20
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@21
-    pushbytess 0x0dbe671f 0x4df7e3d0 0xc3da42b8 0x680d405f 0x024bccb2 0x3dfe0e62 0x86b714e2 0x81274d3a 0xbd331a60
+    bz main_after_if_else@20
+    pushbytess 0x0dbe671f 0x4df7e3d0 0xc3da42b8 0x680d405f 0x024bccb2 0x3dfe0e62 0x86b714e2 0xbd331a60
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@13 main_switch_case_6@14 main_switch_case_7@15 main_switch_case_8@16
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@13 main_switch_case_6@14 main_switch_case_7@15
 
-main_after_if_else@21:
+main_after_if_else@20:
     txn OnCompletion
     !
     assert
     txn ApplicationID
     assert
-    pushbytess 0xbacc49e3 0x5c7485a2 0xe5c07983 0x36140cea 0x5f811220 0xd5843ff5 0xb2899db2 0x02fc5e06 0xc55ffe88 0x27031425 0xd5c298cd 0xb52bf1bb 0xc77f4a19 0xf9522e2f 0x8c9379e6 0xc4acfa0f 0x7b3de046 0x8fc99499 0xec590fdd 0x8a416b85 0x3b29e07a 0x8539f00d // method "__postInit()void", method "packedWord()(bool,uint256)", method "packedWrite()(bool,uint256)", method "stringKey()bool", method "signedKey()bool", method "packedArray()(bool,uint256,uint256)", method "popZeroes()(bool,uint256,uint256)", method "shortString()(bool,uint256)", method "longString()(bool,uint256,uint256)", method "boolArrayWord()(bool,uint256)", method "signedArrayWord()(bool,uint256)", method "slotOffsetFacts()bool", method "shortLongRoundTrip()(bool,uint256)", method "a()uint64", method "b()uint64", method "c()bool", method "m(string)uint256", method "mi(uint64)uint256", method "arr8(uint256)uint64", method "s()string", method "flags(uint256)bool", method "si(uint256)uint256"
+    pushbytess 0xbacc49e3 0x5c7485a2 0xe5c07983 0x36140cea 0x5f811220 0xd5843ff5 0xb2899db2 0x02fc5e06 0xc55ffe88 0xd5c298cd 0xb52bf1bb 0xc77f4a19 0xf9522e2f 0x8c9379e6 0xc4acfa0f 0x7b3de046 0x8fc99499 0xec590fdd 0x8a416b85 0x8539f00d // method "__postInit()void", method "packedWord()(bool,uint256)", method "packedWrite()(bool,uint256)", method "stringKey()bool", method "signedKey()bool", method "packedArray()(bool,uint256,uint256)", method "popZeroes()(bool,uint256,uint256)", method "shortString()(bool,uint256)", method "longString()(bool,uint256,uint256)", method "signedArrayWord()(bool,uint256)", method "slotOffsetFacts()bool", method "shortLongRoundTrip()(bool,uint256)", method "a()uint64", method "b()uint64", method "c()bool", method "m(string)uint256", method "mi(uint64)uint256", method "arr8(uint256)uint64", method "s()string", method "si(uint256)uint256"
     txna ApplicationArgs 0
-    match main___postInit_route@24 main_packedWord_route@25 main_packedWrite_route@26 main_stringKey_route@27 main_signedKey_route@28 main_packedArray_route@29 main_popZeroes_route@30 main_shortString_route@31 main_longString_route@32 main_boolArrayWord_route@33 main_signedArrayWord_route@34 main_slotOffsetFacts_route@35 main_shortLongRoundTrip_route@36 main_a_route@37 main_b_route@38 main_c_route@39 main_m_route@40 main_mi_route@41 main_arr8_route@42 main_s_route@43 main_flags_route@44 main_si_route@45
+    match main___postInit_route@23 main_packedWord_route@24 main_packedWrite_route@25 main_stringKey_route@26 main_signedKey_route@27 main_packedArray_route@28 main_popZeroes_route@29 main_shortString_route@30 main_longString_route@31 main_signedArrayWord_route@32 main_slotOffsetFacts_route@33 main_shortLongRoundTrip_route@34 main_a_route@35 main_b_route@36 main_c_route@37 main_m_route@38 main_mi_route@39 main_arr8_route@40 main_s_route@41 main_si_route@42
     err
 
-main_si_route@45:
+main_si_route@42:
     txna ApplicationArgs 1
     dup
     len
@@ -67,26 +67,7 @@ main_si_route@45:
     intc_1 // 1
     return
 
-main_flags_route@44:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_2 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub flags
-    bytec_1 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_s_route@43:
+main_s_route@41:
     callsub s
     dup
     len
@@ -101,7 +82,7 @@ main_s_route@43:
     intc_1 // 1
     return
 
-main_arr8_route@42:
+main_arr8_route@40:
     txna ApplicationArgs 1
     dup
     len
@@ -117,7 +98,7 @@ main_arr8_route@42:
     intc_1 // 1
     return
 
-main_mi_route@41:
+main_mi_route@39:
     txna ApplicationArgs 1
     dup
     len
@@ -133,7 +114,7 @@ main_mi_route@41:
     intc_1 // 1
     return
 
-main_m_route@40:
+main_m_route@38:
     txna ApplicationArgs 1
     dup
     intc_0 // 0
@@ -153,9 +134,9 @@ main_m_route@40:
     intc_1 // 1
     return
 
-main_c_route@39:
+main_c_route@37:
     callsub c
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_0 // 0
     uncover 2
     setbit
@@ -166,7 +147,7 @@ main_c_route@39:
     intc_1 // 1
     return
 
-main_b_route@38:
+main_b_route@36:
     callsub b
     itob
     bytec_0 // 0x151f7c75
@@ -176,7 +157,7 @@ main_b_route@38:
     intc_1 // 1
     return
 
-main_a_route@37:
+main_a_route@35:
     callsub a
     itob
     bytec_0 // 0x151f7c75
@@ -186,32 +167,32 @@ main_a_route@37:
     intc_1 // 1
     return
 
-main_shortLongRoundTrip_route@36:
+main_shortLongRoundTrip_route@34:
     txn GroupIndex
-    bz main_ternary_false@69
+    bz main_ternary_false@64
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@70:
+main_ternary_merge@65:
     !
     assert // not payable
-    bytec 5 // "s"
+    bytec 4 // "s"
     pushbytes "xy"
     app_global_put
     load 0
     store 0
-    bytec 8 // 0x04
+    bytec 7 // 0x04
     callsub __storage_read
     dup
     load 0
     store 0
     pushbytes 0x7879000000000000000000000000000000000000000000000000000000000004
     b==
-    bz main_bool_false@73
+    bz main_bool_false@68
     intc_0 // 0
-    bytec 5 // "s"
+    bytec 4 // "s"
     app_global_get_ex
     pushbytes 0x
     cover 2
@@ -221,12 +202,12 @@ main_ternary_merge@70:
     intc_3 // 2
     itob
     b==
-    bz main_bool_false@73
+    bz main_bool_false@68
     intc_1 // 1
     swap
 
-main_bool_merge@74:
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+main_bool_merge@69:
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -236,7 +217,7 @@ main_bool_merge@74:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_0 // 0
     uncover 3
     setbit
@@ -249,24 +230,24 @@ main_bool_merge@74:
     intc_1 // 1
     return
 
-main_bool_false@73:
+main_bool_false@68:
     intc_0 // 0
     swap
-    b main_bool_merge@74
+    b main_bool_merge@69
 
-main_ternary_false@69:
+main_ternary_false@64:
     intc_0 // 0
-    b main_ternary_merge@70
+    b main_ternary_merge@65
 
-main_slotOffsetFacts_route@35:
+main_slotOffsetFacts_route@33:
     txn GroupIndex
-    bz main_ternary_false@78
+    bz main_ternary_false@73
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@79:
+main_ternary_merge@74:
     !
     assert // not payable
     load 0
@@ -278,28 +259,28 @@ main_ternary_merge@79:
     intc_1 // 1
     return
 
-main_ternary_false@78:
+main_ternary_false@73:
     intc_0 // 0
-    b main_ternary_merge@79
+    b main_ternary_merge@74
 
-main_signedArrayWord_route@34:
+main_signedArrayWord_route@32:
     txn GroupIndex
-    bz main_ternary_false@84
+    bz main_ternary_false@79
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@85:
+main_ternary_merge@80:
     !
     assert // not payable
-    bytec 6 // "si"
+    bytec 5 // "si"
     intc_0 // 0
-    bytec 12 // 0xffff
+    bytec 11 // 0xffff
     intc_1 // 1
     intc_3 // 2
     callsub box_dynamic_array_concat_fixed
-    bytec 6 // "si"
+    bytec 5 // "si"
     intc_0 // 0
     pushbytes 0x0002
     intc_1 // 1
@@ -307,7 +288,7 @@ main_ternary_merge@85:
     callsub box_dynamic_array_concat_fixed
     load 0
     store 0
-    pushbytes 0xf652222313e28459528d920b65115c16c04f3efc82aaedc97be59f3f377c0d3f
+    pushbytes 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0
     callsub __storage_read
     dup
     load 0
@@ -315,8 +296,8 @@ main_ternary_merge@85:
     pushint 196607
     itob
     b==
-    bz main_bool_false@95
-    bytec 6 // "si"
+    bz main_bool_false@90
+    bytec 5 // "si"
     intc_3 // 2
     dup
     box_extract // on error: index out of bounds
@@ -326,15 +307,15 @@ main_ternary_merge@85:
     dup
     intc 5 // 32768
     >=
-    bz main_ternary_false@88
+    bz main_ternary_false@83
     intc 6 // 18446744073709486080
     +
 
-main_ternary_merge@89:
+main_ternary_merge@84:
     pushint 18446744073709551615
     ==
-    bz main_bool_false@95
-    bytec 6 // "si"
+    bz main_bool_false@90
+    bytec 5 // "si"
     pushint 4
     intc_3 // 2
     box_extract // on error: index out of bounds
@@ -344,19 +325,19 @@ main_ternary_merge@89:
     dup
     intc 5 // 32768
     >=
-    bz main_ternary_false@92
+    bz main_ternary_false@87
     intc 6 // 18446744073709486080
     +
 
-main_ternary_merge@93:
+main_ternary_merge@88:
     intc_3 // 2
     ==
-    bz main_bool_false@95
+    bz main_bool_false@90
     intc_1 // 1
     swap
 
-main_bool_merge@96:
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+main_bool_merge@91:
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -366,7 +347,7 @@ main_bool_merge@96:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_0 // 0
     uncover 3
     setbit
@@ -379,215 +360,38 @@ main_bool_merge@96:
     intc_1 // 1
     return
 
-main_bool_false@95:
+main_bool_false@90:
     intc_0 // 0
     swap
-    b main_bool_merge@96
+    b main_bool_merge@91
 
-main_ternary_false@92:
-    b main_ternary_merge@93
+main_ternary_false@87:
+    b main_ternary_merge@88
 
-main_ternary_false@88:
-    b main_ternary_merge@89
+main_ternary_false@83:
+    b main_ternary_merge@84
 
-main_ternary_false@84:
+main_ternary_false@79:
     intc_0 // 0
-    b main_ternary_merge@85
+    b main_ternary_merge@80
 
-main_boolArrayWord_route@33:
+main_longString_route@31:
     txn GroupIndex
-    bz main_ternary_false@100
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-main_ternary_merge@101:
-    !
-    assert // not payable
-    bytec_2 // "flags"
-    intc_0 // 0
-    pushbytes 0x80
-    intc_1 // 1
-    dup
-    callsub box_dynamic_array_concat_fixed
-    bytec_2 // "flags"
-    intc_0 // 0
-    bytec_1 // 0x00
-    intc_1 // 1
-    dup
-    callsub box_dynamic_array_concat_fixed
-    bytec_2 // "flags"
-    intc_0 // 0
-    pushbytes 0x80
-    intc_1 // 1
-    dup
-    callsub box_dynamic_array_concat_fixed
-    load 0
-    store 0
-    pushbytes 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0
-    callsub __storage_read
-    dup
-    load 0
-    store 0
-    pushint 65537
-    itob
-    b==
-    bz main_else_body@106
-    bytec_2 // "flags"
-    box_len
-    bury 1
-    bz main_ternary_false@104
-    bytec_2 // "flags"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@105:
-    assert // array index out of bounds
-    bytec_2 // "flags"
-    intc_3 // 2
-    intc_1 // 1
-    box_extract // on error: index out of bounds
-    intc_0 // 0
-    getbit
-    bytec_1 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    intc_0 // 0
-    getbit
-
-main_after_if_else@107:
-    bz main_else_body@112
-    bytec_2 // "flags"
-    box_len
-    bury 1
-    bz main_ternary_false@110
-    bytec_2 // "flags"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@111:
-    intc_1 // 1
-    >
-    assert // array index out of bounds
-    bytec_2 // "flags"
-    intc_3 // 2
-    intc_1 // 1
-    box_extract // on error: index out of bounds
-    intc_1 // 1
-    getbit
-    bytec_1 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    intc_0 // 0
-    getbit
-    !
-
-main_after_if_else@113:
-    bz main_else_body@118
-    bytec_2 // "flags"
-    box_len
-    bury 1
-    bz main_ternary_false@116
-    bytec_2 // "flags"
-    box_get
-    pop
-    intc_0 // 0
-    extract_uint16
-
-main_ternary_merge@117:
-    intc_3 // 2
-    >
-    assert // array index out of bounds
-    bytec_2 // "flags"
-    intc_3 // 2
-    intc_1 // 1
-    box_extract // on error: index out of bounds
-    intc_3 // 2
-    getbit
-    bytec_1 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    intc_0 // 0
-    getbit
-
-main_after_if_else@119:
-    swap
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
-    b%
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    bytec_1 // 0x00
-    intc_0 // 0
-    uncover 3
-    setbit
-    swap
-    concat
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    intc_1 // 1
-    return
-
-main_ternary_false@116:
-    intc_0 // 0
-    b main_ternary_merge@117
-
-main_else_body@118:
-    intc_0 // 0
-    b main_after_if_else@119
-
-main_ternary_false@110:
-    intc_0 // 0
-    b main_ternary_merge@111
-
-main_else_body@112:
-    intc_0 // 0
-    b main_after_if_else@113
-
-main_ternary_false@104:
-    intc_0 // 0
-    b main_ternary_merge@105
-
-main_else_body@106:
-    intc_0 // 0
-    b main_after_if_else@107
-
-main_ternary_false@100:
-    intc_0 // 0
-    b main_ternary_merge@101
-
-main_longString_route@32:
-    txn GroupIndex
-    bz main_ternary_false@123
+    bz main_ternary_false@95
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@124:
+main_ternary_merge@96:
     !
     assert // not payable
-    bytec 5 // "s"
+    bytec 4 // "s"
     pushbytes "0123456789012345678901234567890123456789"
     app_global_put
     load 0
     store 0
-    bytec 8 // 0x04
+    bytec 7 // 0x04
     callsub __storage_read
     dup
     load 0
@@ -602,16 +406,16 @@ main_ternary_merge@124:
     pushint 81
     itob
     b==
-    bz main_bool_false@127
+    bz main_bool_false@99
     dig 1
     pushbytes 0x3031323334353637383930313233343536373839303132333435363738393031
     b==
-    bz main_bool_false@127
+    bz main_bool_false@99
     intc_1 // 1
     cover 2
 
-main_bool_merge@128:
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+main_bool_merge@100:
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -624,7 +428,7 @@ main_bool_merge@128:
     dig 1
     b|
     uncover 2
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -633,7 +437,7 @@ main_bool_merge@128:
     assert // overflow
     uncover 2
     b|
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_0 // 0
     uncover 4
     setbit
@@ -648,32 +452,32 @@ main_bool_merge@128:
     intc_1 // 1
     return
 
-main_bool_false@127:
+main_bool_false@99:
     intc_0 // 0
     cover 2
-    b main_bool_merge@128
+    b main_bool_merge@100
 
-main_ternary_false@123:
+main_ternary_false@95:
     intc_0 // 0
-    b main_ternary_merge@124
+    b main_ternary_merge@96
 
-main_shortString_route@31:
+main_shortString_route@30:
     txn GroupIndex
-    bz main_ternary_false@132
+    bz main_ternary_false@104
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@133:
+main_ternary_merge@105:
     !
     assert // not payable
-    bytec 5 // "s"
+    bytec 4 // "s"
     pushbytes "abc"
     app_global_put
     load 0
     store 0
-    bytec 8 // 0x04
+    bytec 7 // 0x04
     callsub __storage_read
     load 0
     store 0
@@ -681,7 +485,7 @@ main_ternary_merge@133:
     pushbytes 0x6162630000000000000000000000000000000000000000000000000000000006
     b==
     swap
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -691,7 +495,7 @@ main_ternary_merge@133:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_0 // 0
     uncover 3
     setbit
@@ -704,22 +508,22 @@ main_ternary_merge@133:
     intc_1 // 1
     return
 
-main_ternary_false@132:
+main_ternary_false@104:
     intc_0 // 0
-    b main_ternary_merge@133
+    b main_ternary_merge@105
 
-main_popZeroes_route@30:
+main_popZeroes_route@29:
     txn GroupIndex
-    bz main_ternary_false@137
+    bz main_ternary_false@109
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@138:
+main_ternary_merge@110:
     !
     assert // not payable
-    bytec_3 // "arr8"
+    bytec_1 // "arr8"
     intc_0 // 0
     intc_3 // 2
     box_extract
@@ -729,45 +533,45 @@ main_ternary_merge@138:
     dup
     itob
     extract 6 2
-    bytec_3 // "arr8"
+    bytec_1 // "arr8"
     intc_0 // 0
     uncover 2
     box_replace
     intc_3 // 2
     +
-    bytec_3 // "arr8"
+    bytec_1 // "arr8"
     swap
     intc_1 // 1
     pushbytes 0x
     box_splice
-    bytec_3 // "arr8"
+    bytec_1 // "arr8"
     box_len
     pop
     intc_1 // 1
     -
-    bytec_3 // "arr8"
+    bytec_1 // "arr8"
     swap
     box_resize
     load 0
     store 0
-    bytec_3 // "arr8"
+    bytec_1 // "arr8"
     box_len
     bury 1
-    bz main_ternary_false@140
-    bytec_3 // "arr8"
+    bz main_ternary_false@112
+    bytec_1 // "arr8"
     box_len
     pop
     intc_3 // 2
     -
 
-main_ternary_merge@141:
+main_ternary_merge@113:
     itob
     dup
     load 0
     store 0
     load 0
     store 0
-    bytec 13 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
+    bytec 12 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
     callsub __storage_read
     swap
     load 0
@@ -775,18 +579,18 @@ main_ternary_merge@141:
     intc_3 // 2
     itob
     b==
-    bz main_bool_false@144
+    bz main_bool_false@116
     pushint 513
     itob
     dig 1
     b==
-    bz main_bool_false@144
+    bz main_bool_false@116
     intc_1 // 1
     swap
 
-main_bool_merge@145:
+main_bool_merge@117:
     uncover 2
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -799,7 +603,7 @@ main_bool_merge@145:
     dig 1
     b|
     uncover 2
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -808,7 +612,7 @@ main_bool_merge@145:
     assert // overflow
     uncover 2
     b|
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_0 // 0
     uncover 4
     setbit
@@ -823,37 +627,37 @@ main_bool_merge@145:
     intc_1 // 1
     return
 
-main_bool_false@144:
+main_bool_false@116:
     intc_0 // 0
     swap
-    b main_bool_merge@145
+    b main_bool_merge@117
 
-main_ternary_false@140:
+main_ternary_false@112:
     intc_0 // 0
-    b main_ternary_merge@141
+    b main_ternary_merge@113
 
-main_ternary_false@137:
+main_ternary_false@109:
     intc_0 // 0
-    b main_ternary_merge@138
+    b main_ternary_merge@110
 
-main_packedArray_route@29:
+main_packedArray_route@28:
     txn GroupIndex
-    bz main_ternary_false@149
+    bz main_ternary_false@121
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@150:
+main_ternary_merge@122:
     !
     assert // not payable
-    bytec_3 // "arr8"
+    bytec_1 // "arr8"
     intc_0 // 0
     pushbytes 0x01
     intc_1 // 1
     dup
     callsub box_dynamic_array_concat_fixed
-    bytec_3 // "arr8"
+    bytec_1 // "arr8"
     intc_0 // 0
     pushbytes 0x02
     intc_1 // 1
@@ -861,7 +665,7 @@ main_ternary_merge@150:
     callsub box_dynamic_array_concat_fixed
     pushint 3
     itob
-    bytec_3 // "arr8"
+    bytec_1 // "arr8"
     intc_0 // 0
     pushbytes 0x03
     intc_1 // 1
@@ -869,42 +673,42 @@ main_ternary_merge@150:
     callsub box_dynamic_array_concat_fixed
     load 0
     store 0
-    bytec_3 // "arr8"
+    bytec_1 // "arr8"
     box_len
     bury 1
-    bz main_ternary_false@152
-    bytec_3 // "arr8"
+    bz main_ternary_false@124
+    bytec_1 // "arr8"
     box_len
     pop
     intc_3 // 2
     -
 
-main_ternary_merge@153:
+main_ternary_merge@125:
     itob
     dup
     load 0
     store 0
     load 0
     store 0
-    bytec 13 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
+    bytec 12 // 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b
     callsub __storage_read
     swap
     load 0
     store 0
     uncover 3
     b==
-    bz main_bool_false@156
+    bz main_bool_false@128
     pushint 197121
     itob
     dig 1
     b==
-    bz main_bool_false@156
+    bz main_bool_false@128
     intc_1 // 1
     swap
 
-main_bool_merge@157:
+main_bool_merge@129:
     uncover 2
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -917,7 +721,7 @@ main_bool_merge@157:
     dig 1
     b|
     uncover 2
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -926,7 +730,7 @@ main_bool_merge@157:
     assert // overflow
     uncover 2
     b|
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_0 // 0
     uncover 4
     setbit
@@ -941,36 +745,36 @@ main_bool_merge@157:
     intc_1 // 1
     return
 
-main_bool_false@156:
+main_bool_false@128:
     intc_0 // 0
     swap
-    b main_bool_merge@157
+    b main_bool_merge@129
 
-main_ternary_false@152:
+main_ternary_false@124:
     intc_0 // 0
-    b main_ternary_merge@153
+    b main_ternary_merge@125
 
-main_ternary_false@149:
+main_ternary_false@121:
     intc_0 // 0
-    b main_ternary_merge@150
+    b main_ternary_merge@122
 
-main_signedKey_route@28:
+main_signedKey_route@27:
     txn GroupIndex
-    bz main_ternary_false@161
+    bz main_ternary_false@133
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@162:
+main_ternary_merge@134:
     !
     assert // not payable
     pushint 9
     itob
-    bytec 14 // 0xfdb6516b2f3ca28f8a88fa60aa6b338d44347d48b443402d112ba6deaa5b103e
+    bytec 13 // 0xfdb6516b2f3ca28f8a88fa60aa6b338d44347d48b443402d112ba6deaa5b103e
     box_del
     pop
-    bytec 14 // 0xfdb6516b2f3ca28f8a88fa60aa6b338d44347d48b443402d112ba6deaa5b103e
+    bytec 13 // 0xfdb6516b2f3ca28f8a88fa60aa6b338d44347d48b443402d112ba6deaa5b103e
     dig 1
     box_put
     load 0
@@ -980,7 +784,7 @@ main_ternary_merge@162:
     load 0
     store 0
     b==
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_0 // 0
     uncover 2
     setbit
@@ -991,27 +795,27 @@ main_ternary_merge@162:
     intc_1 // 1
     return
 
-main_ternary_false@161:
+main_ternary_false@133:
     intc_0 // 0
-    b main_ternary_merge@162
+    b main_ternary_merge@134
 
-main_stringKey_route@27:
+main_stringKey_route@26:
     txn GroupIndex
-    bz main_ternary_false@166
+    bz main_ternary_false@138
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@167:
+main_ternary_merge@139:
     !
     assert // not payable
     pushint 7
     itob
-    bytec 15 // 0x60150443273224f5fb8ef96c0b853f945f0b489fd05ea1714dd36041f73c5cd6
+    bytec 14 // 0x60150443273224f5fb8ef96c0b853f945f0b489fd05ea1714dd36041f73c5cd6
     box_del
     pop
-    bytec 15 // 0x60150443273224f5fb8ef96c0b853f945f0b489fd05ea1714dd36041f73c5cd6
+    bytec 14 // 0x60150443273224f5fb8ef96c0b853f945f0b489fd05ea1714dd36041f73c5cd6
     dig 1
     box_put
     load 0
@@ -1021,7 +825,7 @@ main_ternary_merge@167:
     load 0
     store 0
     b==
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_0 // 0
     uncover 2
     setbit
@@ -1032,22 +836,22 @@ main_ternary_merge@167:
     intc_1 // 1
     return
 
-main_ternary_false@166:
+main_ternary_false@138:
     intc_0 // 0
-    b main_ternary_merge@167
+    b main_ternary_merge@139
 
-main_packedWrite_route@26:
+main_packedWrite_route@25:
     txn GroupIndex
-    bz main_ternary_false@171
+    bz main_ternary_false@143
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@172:
+main_ternary_merge@144:
     !
     assert // not payable
-    bytec 7 // "b"
+    bytec 6 // "b"
     pushint 4386
     app_global_put
     load 0
@@ -1060,31 +864,31 @@ main_ternary_merge@172:
     pushint 17900202
     itob
     b==
-    bz main_bool_false@176
+    bz main_bool_false@148
     intc_0 // 0
-    bytec 9 // "a"
+    bytec 8 // "a"
     app_global_get_ex
     intc_0 // 0
     cover 2
     select
     pushint 170
     ==
-    bz main_bool_false@176
+    bz main_bool_false@148
     intc_0 // 0
-    bytec 10 // "c"
+    bytec 9 // "c"
     app_global_get_ex
     intc_0 // 0
     cover 2
     select
-    bz main_bool_false@176
+    bz main_bool_false@148
     intc_1 // 1
     swap
 
-main_bool_merge@177:
-    bytec 7 // "b"
+main_bool_merge@149:
+    bytec 6 // "b"
     intc 7 // 48076
     app_global_put
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -1094,7 +898,7 @@ main_bool_merge@177:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_0 // 0
     uncover 3
     setbit
@@ -1107,24 +911,24 @@ main_bool_merge@177:
     intc_1 // 1
     return
 
-main_bool_false@176:
+main_bool_false@148:
     intc_0 // 0
     swap
-    b main_bool_merge@177
+    b main_bool_merge@149
 
-main_ternary_false@171:
+main_ternary_false@143:
     intc_0 // 0
-    b main_ternary_merge@172
+    b main_ternary_merge@144
 
-main_packedWord_route@25:
+main_packedWord_route@24:
     txn GroupIndex
-    bz main_ternary_false@181
+    bz main_ternary_false@153
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@182:
+main_ternary_merge@154:
     !
     assert // not payable
     load 0
@@ -1138,7 +942,7 @@ main_ternary_merge@182:
     dig 1
     b==
     swap
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -1148,7 +952,7 @@ main_ternary_merge@182:
     intc_2 // 32
     bzero
     b|
-    bytec_1 // 0x00
+    bytec_3 // 0x00
     intc_0 // 0
     uncover 3
     setbit
@@ -1161,57 +965,53 @@ main_ternary_merge@182:
     intc_1 // 1
     return
 
-main_ternary_false@181:
+main_ternary_false@153:
     intc_0 // 0
-    b main_ternary_merge@182
+    b main_ternary_merge@154
 
-main___postInit_route@24:
-    bytec 11 // "__ctor_pending"
+main___postInit_route@23:
+    bytec 10 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec 11 // "__ctor_pending"
+    bytec 10 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     pushbytes "m"
     intc_3 // 2
     box_create
     pop
-    bytec 16 // "mi"
+    bytec 15 // "mi"
     intc_3 // 2
     box_create
     pop
-    bytec_3 // "arr8"
+    bytec_1 // "arr8"
     intc_3 // 2
     box_create
     pop
-    bytec_2 // "flags"
+    bytec 5 // "si"
     intc_3 // 2
     box_create
     pop
-    bytec 6 // "si"
-    intc_3 // 2
-    box_create
-    pop
-    bytec 9 // "a"
+    bytec 8 // "a"
     pushint 170
     app_global_put
-    bytec 7 // "b"
+    bytec 6 // "b"
     intc 7 // 48076
     app_global_put
-    bytec 10 // "c"
+    bytec 9 // "c"
     intc_1 // 1
     app_global_put
-    bytec 5 // "s"
+    bytec 4 // "s"
     pushbytes 0x
     app_global_put
     intc_1 // 1
     return
 
-main_switch_case_8@16:
+main_switch_case_7@15:
     callsub __evm_npy
     pushint 8
     bzero
@@ -1240,11 +1040,11 @@ main_switch_case_8@16:
     getbyte
     pushint 128
     >=
-    bz main_ternary_false@18
+    bz main_ternary_false@17
     bury 1
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-main_ternary_merge@19:
+main_ternary_merge@18:
     swap
     dup
     len
@@ -1260,26 +1060,9 @@ main_ternary_merge@19:
     intc_1 // 1
     return
 
-main_ternary_false@18:
+main_ternary_false@17:
     swap
-    b main_ternary_merge@19
-
-main_switch_case_7@15:
-    callsub __evm_npy
-    intc_0 // 0
-    callsub __evm_decw
-    dup
-    len
-    intc_2 // 32
-    <=
-    assert // overflow
-    intc_2 // 32
-    bzero
-    b|
-    callsub flags
-    callsub __evm_ret0
-    intc_1 // 1
-    return
+    b main_ternary_merge@18
 
 main_switch_case_6@14:
     callsub __evm_npy
@@ -1332,7 +1115,7 @@ main_switch_case_5@13:
     bzero
     b|
     callsub arr8
-    callsub __evm_ret1
+    callsub __evm_ret0
     intc_1 // 1
     return
 
@@ -1426,8 +1209,21 @@ main_switch_case_3@8:
 
 main_switch_case_2@7:
     callsub __evm_npy
+    intc_2 // 32
+    bzero
     callsub c
-    callsub __evm_ret0
+    itob
+    concat
+    dup
+    len
+    intc_2 // 32
+    -
+    intc_2 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
     intc_1 // 1
     return
 
@@ -1454,7 +1250,7 @@ main_switch_case_1@6:
 main_switch_case_0@5:
     callsub __evm_npy
     callsub a
-    callsub __evm_ret1
+    callsub __evm_ret0
     intc_1 // 1
     return
 
@@ -1505,14 +1301,14 @@ box_dynamic_array_concat_fixed:
 __storage_read:
     proto 1 1
     frame_dig -1
-    bytec 4 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -1
-    pushbytes 0x06
+    pushbytes 0x05
     b==
     bz __storage_read_else_body@2
-    bytec 6 // "si"
+    bytec 5 // "si"
     intc_0 // 0
     intc_3 // 2
     box_extract
@@ -1522,24 +1318,11 @@ __storage_read:
 
 __storage_read_else_body@2:
     frame_dig -1
-    pushbytes 0x05
+    bytec 7 // 0x04
     b==
     bz __storage_read_else_body@4
-    bytec_2 // "flags"
     intc_0 // 0
-    intc_3 // 2
-    box_extract
-    btoi
-    itob
-    retsub
-
-__storage_read_else_body@4:
-    frame_dig -1
-    bytec 8 // 0x04
-    b==
-    bz __storage_read_else_body@6
-    intc_0 // 0
-    bytec 5 // "s"
+    bytec 4 // "s"
     app_global_get_ex
     pushbytes 0x
     cover 2
@@ -1548,12 +1331,12 @@ __storage_read_else_body@4:
     itob
     retsub
 
-__storage_read_else_body@6:
+__storage_read_else_body@4:
     frame_dig -1
     pushbytes 0x03
     b==
-    bz __storage_read_else_body@8
-    bytec_3 // "arr8"
+    bz __storage_read_else_body@6
+    bytec_1 // "arr8"
     intc_0 // 0
     intc_3 // 2
     box_extract
@@ -1561,13 +1344,13 @@ __storage_read_else_body@6:
     itob
     retsub
 
-__storage_read_else_body@8:
+__storage_read_else_body@6:
     frame_dig -1
     pushbytes 0x
     b==
-    bz __storage_read_else_body@10
+    bz __storage_read_else_body@8
     intc_0 // 0
-    bytec 10 // "c"
+    bytec 9 // "c"
     app_global_get_ex
     intc_0 // 0
     cover 2
@@ -1580,7 +1363,7 @@ __storage_read_else_body@8:
     swap
     concat
     intc_0 // 0
-    bytec 7 // "b"
+    bytec 6 // "b"
     app_global_get_ex
     intc_0 // 0
     cover 2
@@ -1589,7 +1372,7 @@ __storage_read_else_body@8:
     extract 6 2
     concat
     intc_0 // 0
-    bytec 9 // "a"
+    bytec 8 // "a"
     app_global_get_ex
     intc_0 // 0
     cover 2
@@ -1599,7 +1382,7 @@ __storage_read_else_body@8:
     concat
     retsub
 
-__storage_read_else_body@10:
+__storage_read_else_body@8:
     intc_2 // 32
     bzero
     frame_dig -1
@@ -1636,7 +1419,7 @@ a_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
-    bytec 9 // "a"
+    bytec 8 // "a"
     app_global_get_ex
     intc_0 // 0
     cover 2
@@ -1661,7 +1444,7 @@ b_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
-    bytec 7 // "b"
+    bytec 6 // "b"
     app_global_get_ex
     intc_0 // 0
     cover 2
@@ -1686,7 +1469,7 @@ c_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
-    bytec 10 // "c"
+    bytec 9 // "c"
     app_global_get_ex
     intc_0 // 0
     cover 2
@@ -1764,7 +1547,7 @@ mi_bool_merge@7:
     assert // ABI validation
     frame_dig -1
     itob
-    bytec 16 // "mi"
+    bytec 15 // "mi"
     concat
     sha256
     box_get
@@ -1814,7 +1597,7 @@ arr8_ternary_merge@3:
     extract_uint64
     intc_3 // 2
     +
-    bytec_3 // "arr8"
+    bytec_1 // "arr8"
     swap
     intc_1 // 1
     box_extract // on error: index out of bounds
@@ -1839,7 +1622,7 @@ s_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
-    bytec 5 // "s"
+    bytec 4 // "s"
     app_global_get_ex
     pushbytes 0x
     cover 2
@@ -1849,59 +1632,6 @@ s_ternary_merge@3:
 s_ternary_false@2:
     intc_0 // 0
     b s_ternary_merge@3
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParitySlots.flags(__arc4_key0: bytes) -> uint64:
-flags:
-    proto 1 1
-    txn GroupIndex
-    bz flags_ternary_false@2
-    txn GroupIndex
-    intc_1 // 1
-    -
-    gtxns Amount
-
-flags_ternary_merge@3:
-    !
-    assert // not payable
-    pushint 8
-    bzero
-    frame_dig -1
-    concat
-    dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dup
-    pushint 8
-    /
-    intc_3 // 2
-    +
-    swap
-    pushint 8
-    %
-    bytec_2 // "flags"
-    uncover 2
-    intc_1 // 1
-    box_extract // on error: index out of bounds
-    dig 1
-    pushint 8
-    <
-    assert // index access is out of bounds
-    swap
-    getbit
-    bytec_1 // 0x00
-    intc_0 // 0
-    uncover 2
-    setbit
-    intc_0 // 0
-    getbit
-    retsub
-
-flags_ternary_false@2:
-    intc_0 // 0
-    b flags_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParitySlots.si(__arc4_key0: bytes) -> bytes:
@@ -1930,13 +1660,13 @@ si_ternary_merge@3:
     *
     intc_3 // 2
     +
-    bytec 6 // "si"
+    bytec 5 // "si"
     swap
     intc_3 // 2
     box_extract // on error: index out of bounds
     btoi
     itob
-    bytec 12 // 0xffff
+    bytec 11 // 0xffff
     b&
     dup
     pushbytes 0x8000
@@ -2017,27 +1747,6 @@ __evm_deco:
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParitySlots.__evm_ret0(__v: uint64) -> void:
 __evm_ret0:
-    proto 1 0
-    intc_2 // 32
-    bzero
-    frame_dig -1
-    itob
-    concat
-    dup
-    len
-    intc_2 // 32
-    -
-    intc_2 // 32
-    extract3
-    bytec_0 // 0x151f7c75
-    swap
-    concat
-    log
-    retsub
-
-
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParitySlots.__evm_ret1(__v: uint64) -> void:
-__evm_ret1:
     proto 1 0
     intc_2 // 32
     bzero
