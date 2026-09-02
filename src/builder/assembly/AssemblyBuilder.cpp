@@ -14,6 +14,8 @@
 #include <algorithm>
 #include <array>
 #include <optional>
+#include <set>
+#include <functional>
 #include <sstream>
 // yul nodes BY VALUE (the AST aliases are std::variant, which needs
 // complete types). Kept out of AssemblyBuilder.h so only the TUs that
@@ -118,6 +120,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_localWideConstants.clear();
 	m_yulConstantValues.clear();
 	m_alignedLocals.clear();
+	m_fmpStaysAligned = false;
 	m_localSlotConstants.clear();
 	m_reassignedLocals.clear();
 	auto const yulFacts = SolcFacts::analyzeYul(_block, _dialect);
@@ -129,6 +132,11 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_upgradedLocals.clear();
 	m_paramBitWidths = _paramBitWidths;
 	m_constants = _constants;
+	// AFTER m_constants: verifiers bump the free-memory pointer by a SOLIDITY
+	// constant (`uint16 constant pLastMem`), and an unresolvable bump poisons
+	// the invariant for the whole block. Also needs m_reassignedLocals and
+	// m_yulConstantValues, both set above.
+	m_fmpStaysAligned = freeMemoryPointerStaysAligned(_block);
 	m_storageSlotVars = _storageSlotVars;
 	m_boxKeyedStructSlots = _boxKeyedStructSlots;
 	m_blobOffsetVars = _blobOffsetVars;
@@ -793,6 +801,136 @@ std::optional<unsigned> decimalMod32(std::string const& _v)
 }
 } // namespace
 
+namespace
+{
+/// A Yul number literal equal to _v.
+bool isYulLiteral(solidity::yul::Expression const& _e, uint64_t _v)
+{
+	auto const* lit = std::get_if<solidity::yul::Literal>(&_e);
+	if (!lit || lit->kind != solidity::yul::LiteralKind::Number)
+		return false;
+	return lit->value.value() == _v;
+}
+} // namespace
+
+std::optional<unsigned> AssemblyBuilder::yulAlignmentMod32(
+	solidity::yul::Expression const& _expr,
+	std::set<std::string> const& _fmpLocals
+) const
+{
+	using namespace solidity::yul;
+	if (auto const* lit = std::get_if<Literal>(&_expr))
+	{
+		if (lit->kind != LiteralKind::Number)
+			return std::nullopt;
+		return decimalMod32(lit->value.value().str());
+	}
+	if (auto const* id = std::get_if<Identifier>(&_expr))
+	{
+		std::string const name = id->name.str();
+		if (_fmpLocals.count(name))
+			return 0u;   // induction hypothesis
+		auto it = m_yulConstantValues.find(name);
+		if (it != m_yulConstantValues.end())
+			return decimalMod32(it->second);
+		// Solidity `constant` referenced from assembly (poseidon and every
+		// snarkjs verifier bump the pointer by one: `uint16 constant pLastMem`).
+		// These are not Yul locals, so SSAValueTracker never sees them.
+		auto cit = m_constants.find(name);
+		if (cit != m_constants.end())
+			return decimalMod32(cit->second);
+		return std::nullopt;
+	}
+	auto const* call = std::get_if<FunctionCall>(&_expr);
+	if (!call)
+		return std::nullopt;
+	std::string const fn = getFunctionName(call->functionName);
+	// The pointer itself, under the induction hypothesis.
+	if (fn == "mload" && call->arguments.size() == 1
+		&& isYulLiteral(call->arguments[0], 0x40))
+		return 0u;
+	if (call->arguments.size() != 2)
+		return std::nullopt;
+	auto l = yulAlignmentMod32(call->arguments[0], _fmpLocals);
+	auto r = yulAlignmentMod32(call->arguments[1], _fmpLocals);
+	if (fn == "add")
+		return (l && r) ? std::optional<unsigned>((*l + *r) % 32) : std::nullopt;
+	if (fn == "sub")
+		return (l && r) ? std::optional<unsigned>((*l + 32 - *r) % 32) : std::nullopt;
+	if (fn == "mul")
+		return ((l && *l == 0) || (r && *r == 0))
+			? std::optional<unsigned>(0u) : std::nullopt;
+	if (fn == "and")
+		// Masking off the low bits: `and(x, not(31))` and friends clear the
+		// residue only when the mask's low 5 bits are zero.
+		return (r && *r == 0) ? std::optional<unsigned>(0u) : std::nullopt;
+	return std::nullopt;
+}
+
+bool AssemblyBuilder::freeMemoryPointerStaysAligned(
+	solidity::yul::Block const& _block)
+{
+	using namespace solidity::yul;
+	std::set<std::string> fmpLocals;
+	bool ok = true;
+
+	// Pass 1: locals bound to mload(0x40). Single-assignment only — a
+	// reassigned name could hold anything at the use site.
+	// Pass 2: every mstore(0x40, X) must preserve alignment.
+	std::function<void(Block const&, int)> walk =
+		[&](Block const& _b, int _pass)
+	{
+		for (auto const& st: _b.statements)
+		{
+			if (auto const* vd = std::get_if<VariableDeclaration>(&st))
+			{
+				if (_pass == 1 && vd->value && vd->variables.size() == 1)
+				{
+					auto const* c = std::get_if<FunctionCall>(vd->value.get());
+					if (c && getFunctionName(c->functionName) == "mload"
+						&& c->arguments.size() == 1
+						&& isYulLiteral(c->arguments[0], 0x40))
+					{
+						std::string const n = vd->variables.front().name.str();
+						if (!m_reassignedLocals.count(n))
+							fmpLocals.insert(n);
+					}
+				}
+			}
+			else if (auto const* es = std::get_if<ExpressionStatement>(&st))
+			{
+				if (_pass != 2)
+					continue;
+				auto const* c = std::get_if<FunctionCall>(&es->expression);
+				if (c && getFunctionName(c->functionName) == "mstore"
+					&& c->arguments.size() == 2
+					&& isYulLiteral(c->arguments[0], 0x40))
+				{
+					auto a = yulAlignmentMod32(c->arguments[1], fmpLocals);
+					if (!a || *a != 0)
+						ok = false;
+				}
+			}
+			else if (auto const* i = std::get_if<If>(&st))
+				walk(i->body, _pass);
+			else if (auto const* sw = std::get_if<Switch>(&st))
+				for (auto const& c: sw->cases)
+					walk(c.body, _pass);
+			else if (auto const* fl = std::get_if<ForLoop>(&st))
+			{
+				walk(fl->pre, _pass); walk(fl->post, _pass); walk(fl->body, _pass);
+			}
+			else if (auto const* fd = std::get_if<FunctionDefinition>(&st))
+				walk(fd->body, _pass);
+			else if (auto const* nested = std::get_if<Block>(&st))
+				walk(*nested, _pass);
+		}
+	};
+	walk(_block, 1);
+	walk(_block, 2);
+	return ok;
+}
+
 std::optional<unsigned> AssemblyBuilder::alignmentMod32(
 	awst::Expression const& _offset) const
 {
@@ -951,6 +1089,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	auto savedWideConstants = std::move(m_localWideConstants);
 	auto savedYulConstants = std::move(m_yulConstantValues);
 	auto savedAlignedLocals = std::move(m_alignedLocals);
+	auto const savedFmpAligned = m_fmpStaysAligned;
 	auto savedCalldataParamNames = std::move(m_calldataParamNames);
 	auto savedUpgraded = std::move(m_upgradedLocals);
 	auto savedParamBitWidths = m_paramBitWidths;
@@ -969,6 +1108,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	m_localWideConstants.clear();
 	m_yulConstantValues.clear();
 	m_alignedLocals.clear();
+	m_fmpStaysAligned = false;
 	m_localSlotConstants.clear();
 	m_calldataParamNames.clear();
 	m_upgradedLocals.clear();
@@ -1047,6 +1187,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	m_localWideConstants = std::move(savedWideConstants);
 	m_yulConstantValues = std::move(savedYulConstants);
 	m_alignedLocals = std::move(savedAlignedLocals);
+	m_fmpStaysAligned = savedFmpAligned;
 	m_calldataParamNames = std::move(savedCalldataParamNames);
 	m_upgradedLocals = std::move(savedUpgraded);
 	m_paramBitWidths = std::move(savedParamBitWidths);

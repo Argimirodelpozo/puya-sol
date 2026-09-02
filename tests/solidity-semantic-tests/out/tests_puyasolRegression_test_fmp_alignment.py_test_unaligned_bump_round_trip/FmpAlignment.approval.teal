@@ -1,0 +1,659 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/fmp_alignment.sol.FmpAlignment.approval_program() -> uint64:
+main:
+    intcblock 32 4096 1 0 20480 4064
+    bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x40 0x151f7c75
+    intc_1 // 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    intc_2 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytess 0xd4103fd4 0x7ac77c32 0xbf392fe1 // method "alignedBump(uint256)uint256", method "unalignedBump(uint256)uint256", method "unalignedBumpNeighbours(uint256,uint256)(uint256,uint256)"
+    txna ApplicationArgs 0
+    match main_alignedBump_route@5 main_unalignedBump_route@6 main_unalignedBumpNeighbours_route@7
+    err
+
+main_unalignedBumpNeighbours_route@7:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    cover 2
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@13
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@14:
+    !
+    assert // not payable
+    load 0
+    store 0
+    load 0
+    extract 64 32
+    dup
+    cover 3
+    load 0
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    cover 5
+    dig 2
+    pushbytes 0x41
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 64
+    store 0
+    pushint 8
+    bzero
+    dup
+    cover 5
+    uncover 2
+    pushbytes 0x20
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    cover 2
+    intc_1 // 4096
+    %
+    dup
+    cover 3
+    swap
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc 5 // 4064
+    <=
+    bz main_else_body@16
+    dig 1
+    dup
+    loads
+    dig 4
+    uncover 3
+    replace3
+    stores
+
+main_after_if_else@17:
+    uncover 5
+    bytec_1 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    uncover 4
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    swap
+    intc_1 // 4096
+    %
+    dup
+    cover 3
+    dig 6
+    uncover 6
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc 5 // 4064
+    <=
+    bz main_else_body@19
+    dig 1
+    dup
+    loads
+    dig 5
+    uncover 3
+    replace3
+    stores
+
+main_after_if_else@20:
+    intc_1 // 4096
+    dig 4
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@22
+    pop
+    swap
+    loads
+    uncover 3
+    intc_0 // 32
+    extract3
+
+main_ternary_merge@23:
+    intc_1 // 4096
+    dig 3
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@25
+    pop
+    swap
+    loads
+    uncover 2
+    intc_0 // 32
+    extract3
+
+main_ternary_merge@26:
+    load 0
+    store 0
+    swap
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    dup
+    cover 2
+    b|
+    uncover 2
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@25:
+    uncover 2
+    dup
+    loads
+    uncover 4
+    dig 3
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@26
+
+main_ternary_false@22:
+    uncover 2
+    dup
+    loads
+    uncover 5
+    dig 3
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@23
+
+main_else_body@19:
+    dig 1
+    dup
+    loads
+    intc_1 // 4096
+    dig 6
+    dup
+    cover 2
+    -
+    dig 4
+    intc_3 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_2 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@20
+
+main_else_body@16:
+    dig 1
+    dup
+    loads
+    intc_1 // 4096
+    dig 5
+    dup
+    cover 2
+    -
+    dig 4
+    intc_3 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_2 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@17
+
+main_ternary_false@13:
+    intc_3 // 0
+    b main_ternary_merge@14
+
+main_unalignedBump_route@6:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@30
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@31:
+    !
+    assert // not payable
+    load 0
+    store 0
+    load 0
+    extract 64 32
+    load 0
+    intc_0 // 32
+    bzero
+    dup
+    cover 2
+    cover 3
+    dig 2
+    pushbytes 0x21
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    replace2 64
+    store 0
+    pushint 8
+    bzero
+    uncover 2
+    bytec_1 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    cover 2
+    intc_1 // 4096
+    %
+    dup
+    cover 3
+    swap
+    uncover 5
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    swap
+    intc 5 // 4064
+    <=
+    bz main_else_body@33
+    dig 1
+    dup
+    loads
+    dig 4
+    uncover 3
+    replace3
+    stores
+
+main_after_if_else@34:
+    intc_1 // 4096
+    dig 2
+    -
+    dup
+    intc_0 // 32
+    >=
+    bz main_ternary_false@36
+    pop
+    loads
+    swap
+    intc_0 // 32
+    extract3
+
+main_ternary_merge@37:
+    load 0
+    store 0
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@36:
+    swap
+    dup
+    loads
+    uncover 3
+    dig 3
+    extract3
+    swap
+    intc_2 // 1
+    +
+    loads
+    intc_0 // 32
+    uncover 3
+    -
+    intc_3 // 0
+    swap
+    extract3
+    concat
+    b main_ternary_merge@37
+
+main_else_body@33:
+    dig 1
+    dup
+    loads
+    intc_1 // 4096
+    dig 5
+    dup
+    cover 2
+    -
+    dig 4
+    intc_3 // 0
+    dig 2
+    extract3
+    swap
+    cover 3
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    intc_2 // 1
+    +
+    dup
+    loads
+    intc_0 // 32
+    dig 3
+    -
+    uncover 4
+    uncover 4
+    uncover 2
+    extract3
+    replace2 0
+    stores
+    b main_after_if_else@34
+
+main_ternary_false@30:
+    intc_3 // 0
+    b main_ternary_merge@31
+
+main_alignedBump_route@5:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txn GroupIndex
+    bz main_ternary_false@41
+    txn GroupIndex
+    intc_2 // 1
+    -
+    gtxns Amount
+
+main_ternary_merge@42:
+    !
+    assert // not payable
+    load 0
+    store 0
+    load 0
+    extract 64 32
+    load 0
+    intc_0 // 32
+    bzero
+    dig 2
+    pushbytes 0x0200
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dig 1
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    uncover 2
+    swap
+    replace2 64
+    store 0
+    pushint 8
+    bzero
+    uncover 2
+    bytec_1 // 0x40
+    b+
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
+    dup
+    intc_1 // 4096
+    /
+    swap
+    intc_1 // 4096
+    %
+    dig 2
+    uncover 4
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    dig 2
+    loads
+    dig 2
+    uncover 2
+    replace3
+    dig 2
+    swap
+    stores
+    swap
+    loads
+    swap
+    intc_0 // 32
+    extract3
+    load 0
+    store 0
+    bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    b%
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    b|
+    bytec_2 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_2 // 1
+    return
+
+main_ternary_false@41:
+    intc_3 // 0
+    b main_ternary_merge@42

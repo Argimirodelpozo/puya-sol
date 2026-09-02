@@ -1423,6 +1423,24 @@ private:
 	);
 
 	/// div/mod returning 0 for divisor=0 (EVM semantics; AVM would panic).
+	/// Solidity's allocator only hands out 32-aligned pointers, and the model
+	/// starts the free-memory pointer at 0x80. This verifies that inductively
+	/// for the block: assume mload(0x40) is aligned, then check every
+	/// mstore(0x40, X) stores a provably aligned X. If all do, the invariant
+	/// holds throughout and an FMP-derived base is aligned — which is what
+	/// makes `add(pMem, k)` offsets provable at all.
+	bool freeMemoryPointerStaysAligned(solidity::yul::Block const& _block);
+
+	/// Residue mod 32 of a YUL expression, with FMP-derived locals assumed
+	/// aligned (the induction hypothesis above). Locals resolve through
+	/// solc's SSAValueTracker constants.
+	std::optional<unsigned> yulAlignmentMod32(
+		solidity::yul::Expression const& _expr,
+		std::set<std::string> const& _fmpLocals) const;
+
+	/// Set when the invariant above holds for the current block.
+	bool m_fmpStaysAligned = false;
+
 	/// Offset's residue mod 32 when provable, else nullopt ("assume unaligned").
 	/// A scratch slot is a multiple of 32, so a 32-byte access at residue r has
 	/// at least 32-r bytes before the slot boundary: residue 0 can never

@@ -186,8 +186,15 @@ void AssemblyBuilder::buildVariableDeclaration(
 		// 32-alignment of a single-assignment local, for the memory-slot straddle
 		// proof: `let p := mul(i, 32)` or `add(base, 0x40)` carries forward so
 		// every mload/mstore through p can drop its second-slot arm.
-		if (!m_reassignedLocals.count(origName) && value
-			&& alignmentMod32(*value).value_or(1u) == 0u)
+		bool aligned = value && alignmentMod32(*value).value_or(1u) == 0u;
+		// `let pMem := mload(0x40)`: the AWST read is opaque, but the pointer
+		// itself is 32-aligned whenever the block preserves that invariant.
+		if (!aligned && m_fmpStaysAligned && _decl.value)
+			if (auto const* c = std::get_if<solidity::yul::FunctionCall>(_decl.value.get()))
+				aligned = getFunctionName(c->functionName) == "mload"
+					&& c->arguments.size() == 1
+					&& yulAlignmentMod32(*_decl.value, {}).value_or(1u) == 0u;
+		if (!m_reassignedLocals.count(origName) && aligned)
 			m_alignedLocals.insert(name);
 		else
 			m_alignedLocals.erase(name);
