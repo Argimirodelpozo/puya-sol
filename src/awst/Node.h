@@ -1419,6 +1419,10 @@ inline std::shared_ptr<Expression> makeKeyBytes(
 {
 	if (encType == WType::uint64Type())
 		return makeItob(std::move(value), std::move(loc));
+	// bool keys (mapping(bool => ..)): 8-byte itob like the uint64 class —
+	// the bare bool→bytes reinterpret below is not a valid puya cast.
+	if (encType == WType::boolType())
+		return makeItob(makeAsUInt64(std::move(value), loc), std::move(loc));
 	if (encType == WType::biguintType())
 	{
 		auto reinterpret = makeReinterpretCast(std::move(value), WType::bytesType(), loc);
