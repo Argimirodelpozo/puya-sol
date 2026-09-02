@@ -634,8 +634,14 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleExtcodehash(
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleAddress(
 	awst::SourceLocation const& _loc)
 {
-	// address() → global CurrentApplicationAddress, cast to biguint
+	// address() → global CurrentApplicationAddress, cast to biguint. In the
+	// EVM profile the 160-bit namespace applies to the contract's own
+	// identity too (matches high-level address(this) and caller()); the raw
+	// 32-byte escrow returned through an asm fallback failed the caller's
+	// EVM-address decode (CTFExchange's factory-implementation getters).
 	auto addr = awst::makeGlobal("CurrentApplicationAddress", awst::WType::bytesType(), _loc);
+	if (m_typeMapper.profile().contractAbi == ContractAbi::Evm)
+		addr = awst::makeExtractLastN(std::move(addr), 20, _loc);
 
 	auto cast = awst::makeAsBiguint(std::move(addr), _loc);
 	return cast;

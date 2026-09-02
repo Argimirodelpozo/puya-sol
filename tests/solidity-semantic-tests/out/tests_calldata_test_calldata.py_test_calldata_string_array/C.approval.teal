@@ -3,8 +3,9 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/calldata_string_array.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 2 0 1 65535
+    intcblock 32 0 2 1 65535
     bytecblock 0x 0x0000000000000000000000000000000000000000000000000000000000000080 0x151f7c75
+    intc_1 // 0
     bytec_0 // ""
     dupn 2
     pushint 4096
@@ -31,22 +32,22 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@10
+    bnz main_after_if_else@7
     txn NumAppArgs
-    intc_1 // 2
+    intc_2 // 2
     ==
-    bz main_after_if_else@10
+    bz main_after_if_else@7
     pushbytes 0xe9cc8780
     txna ApplicationArgs 0
     match main_switch_case_0@5
 
-main_after_if_else@10:
+main_after_if_else@7:
     pushbytes 0xff59165a // method "f(string[])(uint256,uint256,uint256,string)"
     txna ApplicationArgs 0
-    match main_f_route@12
+    match main_f_route@9
     err
 
-main_f_route@12:
+main_f_route@9:
     txn OnCompletion
     !
     txn ApplicationID
@@ -54,26 +55,26 @@ main_f_route@12:
     assert
     txna ApplicationArgs 1
     dupn 2
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_1 // 2
+    intc_2 // 2
     *
     swap
     dup
     len
     cover 2
     extract 2 0
-    intc_2 // 0
+    intc_1 // 0
 
-main_for_header@20:
+main_for_header@22:
     dup
     dig 5
     <
-    bz main_after_for@22
+    bz main_after_for@24
     dup
-    intc_1 // 2
+    intc_2 // 2
     *
     dig 2
     dup
@@ -88,21 +89,21 @@ main_for_header@20:
     dig 1
     len
     substring3
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    intc_1 // 2
+    intc_2 // 2
     +
     +
     cover 2
     intc_3 // 1
     +
-    b main_for_header@20
+    b main_for_header@22
 
-main_after_for@22:
+main_after_for@24:
     popn 2
     uncover 2
     pop
-    intc_1 // 2
+    intc_2 // 2
     +
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint8>>
@@ -133,22 +134,25 @@ main_after_for@22:
 
 main_switch_case_0@5:
     txn GroupIndex
-    bz main_ternary_false@17
+    bz main_ternary_false@14
     txn GroupIndex
     intc_3 // 1
     -
     gtxns Amount
 
-main_ternary_merge@18:
+main_ternary_merge@15:
     !
     assert // not payable
-    intc_2 // 0
+    intc_1 // 0
     callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
+    intc_0 // 32
+    bzero
+    bury 5
     dup
     callsub __evm_deco
     dup
@@ -161,13 +165,13 @@ main_ternary_merge@18:
     intc_0 // 32
     +
     bury 4
-    intc_2 // 0
+    intc_1 // 0
 
-main_while_top@6:
+main_while_top@18:
     dup
     dig 4
     <
-    bz main_after_while@8
+    bz main_after_while@20
     dup
     intc_0 // 32
     *
@@ -214,10 +218,10 @@ main_while_top@6:
     dup
     extract 2 0
     swap
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    intc_1 // 2
+    intc_2 // 2
     *
     dig 2
     len
@@ -227,15 +231,15 @@ main_while_top@6:
     substring3
     uncover 4
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
     dup
-    intc_1 // 2
+    intc_2 // 2
     *
-    intc_1 // 2
+    intc_2 // 2
     +
     dig 2
-    intc_1 // 2
+    intc_2 // 2
     dig 2
     substring3
     uncover 5
@@ -256,19 +260,19 @@ main_while_top@6:
     itob
     extract 6 0
     cover 2
-    intc_1 // 2
+    intc_2 // 2
     *
     dup
     bury 5
-    intc_2 // 0
+    intc_1 // 0
     swap
     cover 2
 
-main_for_header@24:
+main_for_header@26:
     dup
     dig 6
     <
-    bz main_after_for@26
+    bz main_after_for@28
     uncover 2
     dup
     itob
@@ -281,15 +285,15 @@ main_for_header@24:
     cover 5
     dig 1
     extract_uint16
-    intc_1 // 2
+    intc_2 // 2
     +
     +
     cover 2
-    intc_1 // 2
+    intc_2 // 2
     +
-    b main_for_header@24
+    b main_for_header@26
 
-main_after_for@26:
+main_after_for@28:
     pop
     bury 1
     swap
@@ -298,20 +302,18 @@ main_after_for@26:
     swap
     intc_3 // 1
     +
-    b main_while_top@6
+    b main_while_top@18
 
-main_after_while@8:
+main_after_while@20:
     pop
-    intc_0 // 32
-    bzero
-    swap
     callsub f
     pop
-    cover 4
     cover 3
     cover 2
-    dig 1
     swap
+    dig 7
+    dup
+    uncover 2
     concat
     dup
     len
@@ -375,9 +377,9 @@ main_after_while@8:
     intc_3 // 1
     return
 
-main_ternary_false@17:
-    intc_2 // 0
-    b main_ternary_merge@18
+main_ternary_false@14:
+    intc_1 // 0
+    b main_ternary_merge@15
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/calldata/contracts/calldata_string_array.sol.C.f(a: bytes) -> bytes, bytes, bytes, bytes, bytes:
@@ -394,18 +396,18 @@ f_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
     dup
     assert // array index out of bounds
     frame_dig -1
     extract 2 0
     dup
-    intc_2 // 0
+    intc_1 // 0
     extract_uint16
     dup2
     extract_uint16
-    intc_1 // 2
+    intc_2 // 2
     +
     extract3
     extract 2 0
@@ -422,7 +424,7 @@ f_ternary_merge@3:
     dig 2
     b|
     dig 3
-    intc_2 // 0
+    intc_1 // 0
     getbyte
     pushint 255
     &
@@ -434,7 +436,7 @@ f_ternary_merge@3:
     retsub
 
 f_ternary_false@2:
-    intc_2 // 0
+    intc_1 // 0
     b f_ternary_merge@3
 
 

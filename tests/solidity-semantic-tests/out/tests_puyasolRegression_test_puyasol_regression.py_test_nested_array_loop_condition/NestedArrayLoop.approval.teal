@@ -3,10 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/nested_array_loop.sol.NestedArrayLoop.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 2 65535
-    bytecblock 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x01 0x151f7c75 0x0000 0x010000000000000000 0x0001 0x00010002
-    bytec_0 // ""
-    dupn 8
+    intcblock 32 0 2 1 65535
+    bytecblock 0x 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x01 0x151f7c75 0x010000000000000000 0x0000
     pushint 4096
     bzero
     dup
@@ -26,21 +24,21 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@31
+    bnz main_after_if_else@10
     txn NumAppArgs
-    intc_3 // 2
+    intc_2 // 2
     ==
-    bz main_after_if_else@31
+    bz main_after_if_else@10
     pushbytess 0x5fc6cdb9 0xc19e3cb0 0x473c0ac8 0xf358b7e6
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@12 main_switch_case_2@19 main_switch_case_3@23
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8
 
-main_after_if_else@31:
+main_after_if_else@10:
     txn OnCompletion
     !
     assert
@@ -48,17 +46,17 @@ main_after_if_else@31:
     assert
     pushbytess 0xdc551652 0x241c9ca7 0x5e9e3ca9 0x5cad2192 // method "sumNested(uint256[][])uint256", method "countNested(uint256[][])uint256", method "sumEvenIdx(uint256[])uint256", method "sumNestedWhile(uint256[][])uint256"
     txna ApplicationArgs 0
-    match main_sumNested_route@34 main_countNested_route@35 main_sumEvenIdx_route@36 main_sumNestedWhile_route@37
+    match main_sumNested_route@13 main_countNested_route@14 main_sumEvenIdx_route@15 main_sumNestedWhile_route@16
     err
 
-main_sumNestedWhile_route@37:
+main_sumNestedWhile_route@16:
     txna ApplicationArgs 1
     dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_3 // 2
+    intc_2 // 2
     *
     swap
     dup
@@ -67,13 +65,13 @@ main_sumNestedWhile_route@37:
     extract 2 0
     intc_1 // 0
 
-main_for_header@42:
+main_for_header@21:
     dup
     dig 5
     <
-    bz main_after_for@44
+    bz main_after_for@23
     dup
-    intc_3 // 2
+    intc_2 // 2
     *
     dig 2
     dup
@@ -92,19 +90,19 @@ main_for_header@42:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     +
     cover 2
-    intc_2 // 1
+    intc_3 // 1
     +
-    b main_for_header@42
+    b main_for_header@21
 
-main_after_for@44:
+main_after_for@23:
     popn 2
     uncover 2
     pop
-    intc_3 // 2
+    intc_2 // 2
     +
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
@@ -114,17 +112,17 @@ main_after_for@44:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
-main_sumEvenIdx_route@36:
+main_sumEvenIdx_route@15:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     dig 1
     len
@@ -136,17 +134,17 @@ main_sumEvenIdx_route@36:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
-main_countNested_route@35:
+main_countNested_route@14:
     txna ApplicationArgs 1
     dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_3 // 2
+    intc_2 // 2
     *
     swap
     dup
@@ -155,13 +153,13 @@ main_countNested_route@35:
     extract 2 0
     intc_1 // 0
 
-main_for_header@49:
+main_for_header@28:
     dup
     dig 5
     <
-    bz main_after_for@51
+    bz main_after_for@30
     dup
-    intc_3 // 2
+    intc_2 // 2
     *
     dig 2
     dup
@@ -180,19 +178,19 @@ main_for_header@49:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     +
     cover 2
-    intc_2 // 1
+    intc_3 // 1
     +
-    b main_for_header@49
+    b main_for_header@28
 
-main_after_for@51:
+main_after_for@30:
     popn 2
     uncover 2
     pop
-    intc_3 // 2
+    intc_2 // 2
     +
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
@@ -202,17 +200,17 @@ main_after_for@51:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
-main_sumNested_route@34:
+main_sumNested_route@13:
     txna ApplicationArgs 1
     dupn 2
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
     cover 2
-    intc_3 // 2
+    intc_2 // 2
     *
     swap
     dup
@@ -221,13 +219,13 @@ main_sumNested_route@34:
     extract 2 0
     intc_1 // 0
 
-main_for_header@54:
+main_for_header@33:
     dup
     dig 5
     <
-    bz main_after_for@56
+    bz main_after_for@35
     dup
-    intc_3 // 2
+    intc_2 // 2
     *
     dig 2
     dup
@@ -246,19 +244,19 @@ main_for_header@54:
     extract_uint16 // on error: invalid array length header
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     +
     cover 2
-    intc_2 // 1
+    intc_3 // 1
     +
-    b main_for_header@54
+    b main_for_header@33
 
-main_after_for@56:
+main_after_for@35:
     popn 2
     uncover 2
     pop
-    intc_3 // 2
+    intc_2 // 2
     +
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>
@@ -268,10 +266,10 @@ main_after_for@56:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
-main_switch_case_3@23:
+main_switch_case_3@8:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_deco
@@ -280,121 +278,10 @@ main_switch_case_3@23:
     %
     !
     assert // unaligned EVM ABI offset
-    dup
-    callsub __evm_deco
-    dup
-    bury 4
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    swap
-    intc_0 // 32
-    +
-    bury 8
-    intc_1 // 0
-
-main_while_top@24:
-    dup
-    dig 4
-    <
-    bz main_after_while@29
-    dup
-    intc_0 // 32
-    *
-    dig 9
-    dup
-    uncover 2
-    +
-    callsub __evm_deco
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    +
-    dup
-    callsub __evm_deco
-    dup
-    bury 5
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    cover 3
-    intc_0 // 32
-    +
-    cover 2
-    intc_1 // 0
-
-main_while_top@26:
-    dup
-    dig 6
-    <
-    bz main_after_while@28
-    dup
-    intc_0 // 32
-    *
-    dig 4
-    +
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 6 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 6
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 4
-    intc_2 // 1
-    +
-    b main_while_top@26
-
-main_after_while@28:
-    pop
-    uncover 2
-    pop
-    bytec 7 // 0x00010002
-    uncover 3
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 3
-    cover 2
-    callsub dynamic_array_concat_dynamic_element
-    swap
-    intc_2 // 1
-    +
-    b main_while_top@24
-
-main_after_while@29:
-    pop
     intc_0 // 32
     bzero
     swap
+    callsub __evm_deca_0
     callsub sumNestedWhile
     pop
     concat
@@ -408,10 +295,10 @@ main_after_while@29:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
-main_switch_case_2@19:
+main_switch_case_2@7:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_deco
@@ -420,67 +307,10 @@ main_switch_case_2@19:
     %
     !
     assert // unaligned EVM ABI offset
-    dup
-    callsub __evm_deco
-    dup
-    cover 2
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    swap
-    intc_0 // 32
-    +
-    intc_1 // 0
-
-main_while_top@20:
-    dup
-    dig 4
-    <
-    bz main_after_while@22
-    dup
-    intc_0 // 32
-    *
-    dig 2
-    +
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 6 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 4
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 2
-    intc_2 // 1
-    +
-    b main_while_top@20
-
-main_after_while@22:
-    popn 2
     intc_0 // 32
     bzero
     swap
+    callsub __evm_deca_1
     callsub sumEvenIdx
     pop
     concat
@@ -494,10 +324,10 @@ main_after_while@22:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
-main_switch_case_1@12:
+main_switch_case_1@6:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_deco
@@ -506,121 +336,10 @@ main_switch_case_1@12:
     %
     !
     assert // unaligned EVM ABI offset
-    dup
-    callsub __evm_deco
-    dup
-    bury 6
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    swap
-    intc_0 // 32
-    +
-    bury 9
-    intc_1 // 0
-
-main_while_top@13:
-    dup
-    dig 6
-    <
-    bz main_after_while@18
-    dup
-    intc_0 // 32
-    *
-    dig 10
-    dup
-    uncover 2
-    +
-    callsub __evm_deco
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    +
-    dup
-    callsub __evm_deco
-    dup
-    bury 7
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    cover 3
-    intc_0 // 32
-    +
-    cover 2
-    intc_1 // 0
-
-main_while_top@15:
-    dup
-    dig 8
-    <
-    bz main_after_while@17
-    dup
-    intc_0 // 32
-    *
-    dig 4
-    +
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 6 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 6
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 4
-    intc_2 // 1
-    +
-    b main_while_top@15
-
-main_after_while@17:
-    pop
-    uncover 2
-    pop
-    bytec 7 // 0x00010002
-    uncover 3
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 3
-    cover 2
-    callsub dynamic_array_concat_dynamic_element
-    swap
-    intc_2 // 1
-    +
-    b main_while_top@13
-
-main_after_while@18:
-    pop
     intc_0 // 32
     bzero
     swap
+    callsub __evm_deca_0
     callsub countNested
     pop
     concat
@@ -634,7 +353,7 @@ main_after_while@18:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
 
 main_switch_case_0@5:
@@ -646,121 +365,10 @@ main_switch_case_0@5:
     %
     !
     assert // unaligned EVM ABI offset
-    dup
-    callsub __evm_deco
-    dup
-    bury 8
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    swap
-    intc_0 // 32
-    +
-    bury 10
-    intc_1 // 0
-
-main_while_top@6:
-    dup
-    dig 8
-    <
-    bz main_after_while@11
-    dup
-    intc_0 // 32
-    *
-    dig 11
-    dup
-    uncover 2
-    +
-    callsub __evm_deco
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    +
-    dup
-    callsub __evm_deco
-    dup
-    bury 9
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    cover 3
-    intc_0 // 32
-    +
-    cover 2
-    intc_1 // 0
-
-main_while_top@8:
-    dup
-    dig 10
-    <
-    bz main_after_while@10
-    dup
-    intc_0 // 32
-    *
-    dig 4
-    +
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 6 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 6
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 4
-    intc_2 // 1
-    +
-    b main_while_top@8
-
-main_after_while@10:
-    pop
-    uncover 2
-    pop
-    bytec 7 // 0x00010002
-    uncover 3
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 3
-    cover 2
-    callsub dynamic_array_concat_dynamic_element
-    swap
-    intc_2 // 1
-    +
-    b main_while_top@6
-
-main_after_while@11:
-    pop
     intc_0 // 32
     bzero
     swap
+    callsub __evm_deca_0
     callsub sumNested
     pop
     concat
@@ -774,103 +382,8 @@ main_after_while@11:
     swap
     concat
     log
-    intc_2 // 1
+    intc_3 // 1
     return
-
-
-// _puya_lib.arc4.dynamic_array_concat_dynamic_element(array: bytes, new_head_and_tail: bytes, new_items_count: uint64) -> bytes:
-dynamic_array_concat_dynamic_element:
-    proto 3 1
-    frame_dig -3
-    intc_1 // 0
-    extract_uint16
-    dup
-    frame_dig -1
-    +
-    itob
-    extract 6 0
-    swap
-    frame_dig -3
-    extract 2 0
-    swap
-    intc_3 // 2
-    *
-    swap
-    frame_dig -1
-    intc_3 // 2
-    *
-    cover 2
-    intc_1 // 0
-    cover 4
-
-dynamic_array_concat_dynamic_element_for_header@1:
-    frame_dig 0
-    dig 2
-    <
-    bz dynamic_array_concat_dynamic_element_after_for@4
-    dup
-    frame_dig 0
-    dup
-    cover 2
-    extract_uint16
-    dig 4
-    +
-    itob
-    extract 6 0
-    uncover 5
-    swap
-    concat
-    cover 4
-    intc_3 // 2
-    +
-    frame_bury 0
-    b dynamic_array_concat_dynamic_element_for_header@1
-
-dynamic_array_concat_dynamic_element_after_for@4:
-    dup
-    len
-    swap
-    intc_1 // 0
-    frame_bury 0
-
-dynamic_array_concat_dynamic_element_for_header@5:
-    frame_dig 0
-    dig 4
-    <
-    bz dynamic_array_concat_dynamic_element_after_for@8
-    frame_dig -2
-    frame_dig 0
-    dup
-    cover 2
-    extract_uint16
-    dig 3
-    +
-    itob
-    extract 6 0
-    uncover 6
-    swap
-    concat
-    cover 5
-    intc_3 // 2
-    +
-    frame_bury 0
-    b dynamic_array_concat_dynamic_element_for_header@5
-
-dynamic_array_concat_dynamic_element_after_for@8:
-    cover 2
-    substring3
-    uncover 2
-    swap
-    concat
-    frame_dig -2
-    len
-    frame_dig -2
-    uncover 3
-    uncover 2
-    substring3
-    concat
-    swap
-    retsub
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/nested_array_loop.sol.NestedArrayLoop.sumNested(a: bytes) -> bytes, bytes:
@@ -880,7 +393,7 @@ sumNested:
     txn GroupIndex
     bz sumNested_ternary_false@2
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
@@ -905,7 +418,7 @@ sumNested_while_top@4:
 
 sumNested_while_top@6:
     dupn 2
-    bytec 5 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
@@ -926,7 +439,7 @@ sumNested_while_top@6:
     frame_dig -1
     extract 2 0
     swap
-    intc_3 // 2
+    intc_2 // 2
     *
     dig 1
     swap
@@ -935,7 +448,7 @@ sumNested_while_top@6:
     extract_uint16
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     extract3
     dup
@@ -964,7 +477,7 @@ sumNested_while_top@6:
 sumNested_after_if_else@9:
     uncover 2
     dup
-    bytec 5 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     uncover 4
@@ -1028,7 +541,7 @@ countNested:
     txn GroupIndex
     bz countNested_ternary_false@2
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
@@ -1053,7 +566,7 @@ countNested_while_top@4:
 
 countNested_while_top@6:
     dupn 2
-    bytec 5 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
@@ -1072,7 +585,7 @@ countNested_while_top@6:
     frame_dig -1
     extract 2 0
     swap
-    intc_3 // 2
+    intc_2 // 2
     *
     dig 1
     swap
@@ -1081,7 +594,7 @@ countNested_while_top@6:
     extract_uint16
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     extract3
     intc_1 // 0
@@ -1146,7 +659,7 @@ sumEvenIdx:
     txn GroupIndex
     bz sumEvenIdx_ternary_false@2
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
@@ -1166,12 +679,12 @@ sumEvenIdx_while_top@4:
     dig 1
     b>
     bz sumEvenIdx_after_while@10
-    intc_3 // 2
+    intc_2 // 2
     itob
     dig 1
     swap
     b%
-    intc_2 // 1
+    intc_3 // 1
     itob
     b==
     bz sumEvenIdx_after_if_else@7
@@ -1185,7 +698,7 @@ sumEvenIdx_while_top@4:
 
 sumEvenIdx_after_if_else@7:
     dupn 2
-    bytec 5 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
@@ -1258,7 +771,7 @@ sumNestedWhile:
     txn GroupIndex
     bz sumNestedWhile_ternary_false@2
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
@@ -1286,7 +799,7 @@ sumNestedWhile_while_top@4:
 
 sumNestedWhile_while_top@6:
     dupn 2
-    bytec 5 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
@@ -1307,7 +820,7 @@ sumNestedWhile_while_top@6:
     frame_dig -1
     extract 2 0
     swap
-    intc_3 // 2
+    intc_2 // 2
     *
     dig 1
     swap
@@ -1316,7 +829,7 @@ sumNestedWhile_while_top@6:
     extract_uint16
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     extract3
     dup
@@ -1344,7 +857,7 @@ sumNestedWhile_while_top@6:
 sumNestedWhile_after_if_else@9:
     uncover 2
     dup
-    bytec 5 // 0x010000000000000000
+    bytec 4 // 0x010000000000000000
     b<
     assert // array index out of bounds
     uncover 3
@@ -1407,7 +920,7 @@ __evm_npy:
     txn GroupIndex
     bz __evm_npy_ternary_false@2
     txn GroupIndex
-    intc_2 // 1
+    intc_3 // 1
     -
     gtxns Amount
 
@@ -1450,4 +963,214 @@ __evm_deco:
     assert // EVM ABI offset exceeds uint64
     pushint 24
     extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/nested_array_loop.sol.NestedArrayLoop.__evm_deca_1(__start: uint64) -> bytes:
+__evm_deca_1:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_deco
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    bytec 5 // 0x0000
+    frame_dig -1
+    intc_0 // 32
+    +
+    intc_1 // 0
+
+__evm_deca_1_while_top@1:
+    dup
+    dig 4
+    <
+    bz __evm_deca_1_after_while@3
+    dup
+    intc_0 // 32
+    *
+    dig 2
+    +
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    pushbytes 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 4
+    dup
+    cover 2
+    intc_1 // 0
+    extract_uint16
+    +
+    itob
+    extract 6 0
+    replace2 0
+    swap
+    concat
+    cover 2
+    intc_3 // 1
+    +
+    b __evm_deca_1_while_top@1
+
+__evm_deca_1_after_while@3:
+    popn 2
+    swap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/nested_array_loop.sol.NestedArrayLoop.__evm_deca_0(__start: uint64) -> bytes:
+__evm_deca_0:
+    proto 1 1
+    bytec_0 // ""
+    frame_dig -1
+    callsub __evm_deco
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    bytec 5 // 0x0000
+    frame_dig -1
+    intc_0 // 32
+    +
+    swap
+    intc_1 // 0
+
+__evm_deca_0_while_top@1:
+    dup
+    frame_dig 1
+    <
+    bz __evm_deca_0_after_while@3
+    dup
+    intc_0 // 32
+    *
+    frame_dig 2
+    dup
+    uncover 2
+    +
+    callsub __evm_deco
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    +
+    callsub __evm_deca_1
+    pushbytes 0x00010002
+    swap
+    concat
+    dup
+    extract 2 0
+    cover 2
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 3
+    dup
+    cover 2
+    intc_1 // 0
+    extract_uint16
+    dup
+    dig 2
+    +
+    itob
+    extract 6 0
+    cover 4
+    uncover 2
+    extract 2 0
+    cover 2
+    intc_2 // 2
+    *
+    cover 3
+    intc_2 // 2
+    *
+    cover 3
+    intc_1 // 0
+    frame_bury 0
+
+__evm_deca_0_for_header@5:
+    frame_dig 0
+    dig 3
+    <
+    bz __evm_deca_0_after_for@7
+    dup
+    frame_dig 0
+    dup
+    cover 2
+    extract_uint16
+    dig 5
+    +
+    itob
+    extract 6 0
+    uncover 6
+    swap
+    concat
+    cover 5
+    intc_2 // 2
+    +
+    frame_bury 0
+    b __evm_deca_0_for_header@5
+
+__evm_deca_0_after_for@7:
+    dup
+    len
+    cover 3
+    intc_1 // 0
+    frame_bury 0
+
+__evm_deca_0_for_header@8:
+    frame_dig 0
+    dig 5
+    <
+    bz __evm_deca_0_after_for@10
+    dig 6
+    frame_dig 0
+    dup
+    cover 2
+    extract_uint16
+    dig 5
+    +
+    itob
+    extract 6 0
+    uncover 7
+    swap
+    concat
+    cover 6
+    intc_2 // 2
+    +
+    frame_bury 0
+    b __evm_deca_0_for_header@8
+
+__evm_deca_0_after_for@10:
+    uncover 2
+    uncover 3
+    substring3
+    uncover 3
+    swap
+    concat
+    uncover 3
+    dup
+    len
+    uncover 4
+    swap
+    substring3
+    concat
+    swap
+    intc_3 // 1
+    +
+    b __evm_deca_0_while_top@1
+
+__evm_deca_0_after_while@3:
+    pop
+    frame_bury 0
     retsub

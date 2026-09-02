@@ -800,6 +800,19 @@ std::shared_ptr<awst::Contract> ContractBuilder::build(
 				contract->approvalProgram.sourceLocation);
 	}
 
+	// Router-memoized struct decoders (EvmAbiDecode): the arms referenced
+	// them by name while dispatch was built; append the bodies now.
+	{
+		auto& arts = m_typeMapper.artifacts();
+		for (auto& method: arts.pendingEvmDecodeMethods)
+		{
+			method.cref = contract->id;
+			contract->methods.push_back(std::move(method));
+		}
+		arts.pendingEvmDecodeMethods.clear();
+		arts.evmDecodeStructMethods.clear();
+	}
+
 	// Emit MRO / fallback / explicit-base super subroutines now that all
 	// regular method bodies are translated.
 	emitSuperSubroutines(*contract, contractName);

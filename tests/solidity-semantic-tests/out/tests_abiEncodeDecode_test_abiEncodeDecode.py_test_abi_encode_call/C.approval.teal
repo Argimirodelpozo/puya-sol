@@ -29,16 +29,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@11
+    bnz main_after_if_else@8
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@11
+    bz main_after_if_else@8
     pushbytess 0x291c5a61 0x5f431992
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@9
+    match main_switch_case_0@5 main_switch_case_1@6
 
-main_after_if_else@11:
+main_after_if_else@8:
     txn OnCompletion
     !
     assert
@@ -46,10 +46,10 @@ main_after_if_else@11:
     assert
     pushbytess 0xc5e435fe 0x6dd6bff0 // method "callMeMaybe((uint256[],uint256,string,byte[],uint8),uint256,string)void", method "callExternal()bool"
     txna ApplicationArgs 0
-    match main_callMeMaybe_route@14 main_callExternal_route@15
+    match main_callMeMaybe_route@11 main_callExternal_route@12
     err
 
-main_callExternal_route@15:
+main_callExternal_route@12:
     callsub callExternal
     pushbytes 0x00
     intc_1 // 0
@@ -62,7 +62,7 @@ main_callExternal_route@15:
     intc_2 // 1
     return
 
-main_callMeMaybe_route@14:
+main_callMeMaybe_route@11:
     txna ApplicationArgs 1
     dup
     len
@@ -139,7 +139,7 @@ main_callMeMaybe_route@14:
     intc_2 // 1
     return
 
-main_switch_case_1@9:
+main_switch_case_1@6:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -168,6 +168,31 @@ main_switch_case_0@5:
     %
     !
     assert // unaligned EVM ABI offset
+    pushint 64
+    callsub __evm_deco
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dup
+    callsub __evm_deco
+    dup
+    cover 4
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    cover 4
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
     dup
     callsub __evm_deco
     dup
@@ -175,6 +200,81 @@ main_switch_case_0@5:
     %
     !
     assert // unaligned EVM ABI offset
+    dig 1
+    pushint 64
+    +
+    callsub __evm_deco
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dig 2
+    +
+    dup
+    callsub __evm_deco
+    dup
+    cover 4
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    cover 4
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    dig 1
+    pushint 96
+    +
+    callsub __evm_deco
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dig 2
+    +
+    dup
+    callsub __evm_deco
+    dup
+    cover 5
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
+    swap
+    intc_0 // 32
+    +
+    dup
+    cover 4
+    +
+    txna ApplicationArgs 1
+    len
+    <=
+    assert // EVM ABI decode out of bounds
+    dig 1
+    pushint 128
+    +
+    callsub __evm_decw
+    dup
+    extract 0 24
+    pushint 24
+    bzero
+    ==
+    assert // invalid EVM ABI enum padding
+    pushint 24
+    extract_uint64
+    dup
+    cover 5
+    pushint 3
+    <
+    assert // enum out of range
     +
     dup
     callsub __evm_deco
@@ -184,16 +284,16 @@ main_switch_case_0@5:
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
     pushbytes 0x0000
-    swap
+    cover 2
     intc_0 // 32
     +
     intc_1 // 0
 
-main_while_top@6:
+main_while_top@21:
     dup
-    dig 4
+    dig 3
     <
-    bz main_after_while@8
+    bz main_after_while@23
     dup
     intc_0 // 32
     *
@@ -216,7 +316,7 @@ main_while_top@6:
     swap
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    uncover 4
+    uncover 5
     dup
     cover 2
     intc_1 // 0
@@ -227,109 +327,14 @@ main_while_top@6:
     replace2 0
     swap
     concat
-    cover 2
+    cover 3
     intc_2 // 1
     +
-    b main_while_top@6
+    b main_while_top@21
 
-main_after_while@8:
-    popn 2
-    bury 1
-    swap
-    dup
-    pushint 64
-    +
-    callsub __evm_deco
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dig 1
-    +
-    dup
-    callsub __evm_deco
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    swap
-    intc_0 // 32
-    +
-    dup
-    dig 2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    dig 2
-    pushint 96
-    +
-    callsub __evm_deco
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dig 3
-    +
-    dup
-    callsub __evm_deco
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    swap
-    intc_0 // 32
-    +
-    dup
-    dig 2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    dig 4
-    pushint 128
-    +
-    callsub __evm_decw
-    dup
-    extract 0 24
-    pushint 24
-    bzero
-    ==
-    assert // invalid EVM ABI enum padding
-    pushint 24
-    extract_uint64
-    dup
-    pushint 3
-    <
-    assert // enum out of range
-    pushint 64
-    callsub __evm_deco
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    callsub __evm_deco
-    dup
-    intc 4 // 65535
-    <=
-    assert // EVM ABI byte sequence exceeds ARC4 uint16 length
-    swap
-    intc_0 // 32
-    +
-    dup
-    dig 2
-    +
-    txna ApplicationArgs 1
-    len
-    <=
-    assert // EVM ABI decode out of bounds
-    uncover 7
+main_after_while@23:
+    popn 3
+    uncover 6
     intc_0 // 32
     +
     callsub __evm_decw
@@ -344,8 +349,8 @@ main_after_while@8:
     dig 1
     b|
     txna ApplicationArgs 1
+    uncover 5
     uncover 8
-    uncover 9
     extract3
     dup
     len
@@ -354,8 +359,8 @@ main_after_while@8:
     swap
     concat
     txna ApplicationArgs 1
+    uncover 5
     uncover 7
-    uncover 8
     extract3
     dup
     len
@@ -363,7 +368,7 @@ main_after_while@8:
     extract 6 2
     swap
     concat
-    uncover 6
+    uncover 5
     itob
     dup
     bitlen
@@ -371,7 +376,7 @@ main_after_while@8:
     <=
     assert // overflow
     extract 7 1
-    uncover 7
+    uncover 5
     dup
     cover 2
     len

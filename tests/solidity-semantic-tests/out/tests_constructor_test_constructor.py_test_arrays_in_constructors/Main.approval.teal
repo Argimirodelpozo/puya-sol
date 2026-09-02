@@ -34,16 +34,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@15
+    bnz main_after_if_else@12
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@15
+    bz main_after_if_else@12
     pushbytess 0x290c05ea 0x85164c99 0x5d6d4751
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@12 main_switch_case_2@13
+    match main_switch_case_0@5 main_switch_case_1@9 main_switch_case_2@10
 
-main_after_if_else@15:
+main_after_if_else@12:
     txn OnCompletion
     !
     assert
@@ -53,10 +53,10 @@ main_after_if_else@15:
     bytec 5 // method "f(address[])address[]"
     pushbytess 0xce7531ad 0xc8283ac6 // method "m_x()uint256", method "part(uint256)address"
     txna ApplicationArgs 0
-    match main___postInit_route@18 main_f_route@19 main_m_x_route@20 main_part_route@21
+    match main___postInit_route@15 main_f_route@16 main_m_x_route@17 main_part_route@18
     err
 
-main_part_route@21:
+main_part_route@18:
     txna ApplicationArgs 1
     dup
     len
@@ -71,7 +71,7 @@ main_part_route@21:
     intc_1 // 1
     return
 
-main_m_x_route@20:
+main_m_x_route@17:
     callsub m_x
     bytec_1 // 0x151f7c75
     swap
@@ -80,7 +80,7 @@ main_m_x_route@20:
     intc_1 // 1
     return
 
-main_f_route@19:
+main_f_route@16:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
@@ -102,7 +102,7 @@ main_f_route@19:
     intc_1 // 1
     return
 
-main___postInit_route@18:
+main___postInit_route@15:
     txna ApplicationArgs 1
     dup
     intc_2 // 0
@@ -153,7 +153,7 @@ main___postInit_route@18:
     intc_1 // 1
     return
 
-main_switch_case_2@13:
+main_switch_case_2@10:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -172,7 +172,7 @@ main_switch_case_2@13:
     intc_1 // 1
     return
 
-main_switch_case_1@12:
+main_switch_case_1@9:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -215,10 +215,12 @@ main_switch_case_0@5:
     %
     !
     assert // unaligned EVM ABI offset
+    bytec_0 // 0x
+    swap
     dup
     callsub __evm_deco
     dup
-    bury 3
+    bury 4
     pushint 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
@@ -227,14 +229,14 @@ main_switch_case_0@5:
     intc_0 // 32
     +
     intc_2 // 0
-    bury 4
+    bury 5
 
-main_while_top@6:
-    dig 3
-    dig 3
+main_while_top@24:
+    dig 4
+    dig 4
     <
-    bz main_after_while@8
-    dig 3
+    bz main_after_while@26
+    dig 4
     dup
     intc_0 // 32
     *
@@ -269,13 +271,11 @@ main_while_top@6:
     cover 2
     intc_1 // 1
     +
-    bury 4
-    b main_while_top@6
+    bury 5
+    b main_while_top@24
 
-main_after_while@8:
+main_after_while@26:
     pop
-    bytec_0 // 0x
-    swap
     callsub f
     pop
     dup
@@ -285,11 +285,11 @@ main_after_while@8:
     intc_2 // 0
     bury 4
 
-main_while_top@9:
+main_while_top@6:
     dig 3
     dig 3
     <
-    bz main_after_while@11
+    bz main_after_while@8
     intc_0 // 32
     bzero
     dig 1
@@ -321,9 +321,9 @@ main_while_top@9:
     intc_1 // 1
     +
     bury 4
-    b main_while_top@9
+    b main_while_top@6
 
-main_after_while@11:
+main_after_while@8:
     pop
     intc_0 // 32
     bzero

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/calldata.sol.C.approval_program() -> uint64:
 main:
-    intcblock 0 32 1 2 65535
-    bytecblock "addresses" 0x151f7c75 0x0000 "__ctor_pending" 0x010000000000000000 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0001
+    intcblock 0 32 1 2
+    bytecblock "addresses" 0x151f7c75 "__ctor_pending" 0x010000000000000000 0x01 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x0000
     pushint 4096
     bzero
     dup
@@ -24,7 +24,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec_3 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_2 // 1
     app_global_put
     intc_2 // 1
@@ -32,16 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@17
+    bnz main_after_if_else@11
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@17
+    bz main_after_if_else@11
     pushbytess 0x290c05ea 0xcb77ae28 0x937b5cdc 0xc51b800f 0xedf26d9b
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@9 main_switch_case_2@13 main_switch_case_3@14 main_switch_case_4@15
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9
 
-main_after_if_else@17:
+main_after_if_else@11:
     txn OnCompletion
     !
     assert
@@ -49,10 +49,10 @@ main_after_if_else@17:
     assert
     pushbytess 0xbacc49e3 0x101b42c9 0xbc8bf04d 0x0ec23091 0x10d82b40 0x004c2225 // method "__postInit()void", method "f(address[])void", method "g(address[])void", method "test_f()bool", method "test_g()bool", method "addresses(uint256)address"
     txna ApplicationArgs 0
-    match main___postInit_route@20 main_f_route@21 main_g_route@22 main_test_f_route@23 main_test_g_route@24 main_addresses_route@25
+    match main___postInit_route@14 main_f_route@15 main_g_route@16 main_test_f_route@17 main_test_g_route@18 main_addresses_route@19
     err
 
-main_addresses_route@25:
+main_addresses_route@19:
     txna ApplicationArgs 1
     dup
     len
@@ -67,7 +67,7 @@ main_addresses_route@25:
     intc_2 // 1
     return
 
-main_test_g_route@24:
+main_test_g_route@18:
     callsub test_g
     pushbytes 0x00
     intc_0 // 0
@@ -80,7 +80,7 @@ main_test_g_route@24:
     intc_2 // 1
     return
 
-main_test_f_route@23:
+main_test_f_route@17:
     callsub test_f
     pushbytes 0x00
     intc_0 // 0
@@ -93,7 +93,7 @@ main_test_f_route@23:
     intc_2 // 1
     return
 
-main_g_route@22:
+main_g_route@16:
     txna ApplicationArgs 1
     dup
     intc_0 // 0
@@ -111,7 +111,7 @@ main_g_route@22:
     intc_2 // 1
     return
 
-main_f_route@21:
+main_f_route@15:
     txna ApplicationArgs 1
     dup
     intc_0 // 0
@@ -129,15 +129,15 @@ main_f_route@21:
     intc_2 // 1
     return
 
-main___postInit_route@20:
-    bytec_3 // "__ctor_pending"
+main___postInit_route@14:
+    bytec_2 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec_3 // "__ctor_pending"
+    bytec_2 // "__ctor_pending"
     intc_0 // 0
     app_global_put
     bytec_0 // "addresses"
@@ -147,7 +147,7 @@ main___postInit_route@20:
     intc_2 // 1
     return
 
-main_switch_case_4@15:
+main_switch_case_4@9:
     callsub __evm_npy
     intc_1 // 32
     bzero
@@ -181,21 +181,21 @@ main_switch_case_4@15:
     intc_2 // 1
     return
 
-main_switch_case_3@14:
+main_switch_case_3@8:
     callsub __evm_npy
     callsub test_g
     callsub __evm_ret1
     intc_2 // 1
     return
 
-main_switch_case_2@13:
+main_switch_case_2@7:
     callsub __evm_npy
     callsub test_f
     callsub __evm_ret1
     intc_2 // 1
     return
 
-main_switch_case_1@9:
+main_switch_case_1@6:
     callsub __evm_npy
     intc_0 // 0
     callsub __evm_deco
@@ -204,56 +204,7 @@ main_switch_case_1@9:
     %
     !
     assert // unaligned EVM ABI offset
-    dup
-    callsub __evm_deco
-    dup
-    cover 2
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec_2 // 0x0000
-    swap
-    intc_1 // 32
-    +
-    intc_0 // 0
-
-main_while_top@10:
-    dup
-    dig 4
-    <
-    bz main_after_while@12
-    dup
-    intc_1 // 32
-    *
-    dig 2
-    +
-    callsub __evm_arga
-    bytec 7 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 4
-    dup
-    cover 2
-    intc_0 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 2
-    intc_2 // 1
-    +
-    b main_while_top@10
-
-main_after_while@12:
-    popn 2
+    callsub __evm_deca_0
     callsub g
     pop
     bytec_1 // 0x151f7c75
@@ -270,56 +221,7 @@ main_switch_case_0@5:
     %
     !
     assert // unaligned EVM ABI offset
-    dup
-    callsub __evm_deco
-    dup
-    cover 2
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec_2 // 0x0000
-    swap
-    intc_1 // 32
-    +
-    intc_0 // 0
-
-main_while_top@6:
-    dup
-    dig 4
-    <
-    bz main_after_while@8
-    dup
-    intc_1 // 32
-    *
-    dig 2
-    +
-    callsub __evm_arga
-    bytec 7 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_0 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 4
-    dup
-    cover 2
-    intc_0 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 2
-    intc_2 // 1
-    +
-    b main_while_top@6
-
-main_after_while@8:
-    popn 2
+    callsub __evm_deca_0
     callsub f
     pop
     bytec_1 // 0x151f7c75
@@ -355,7 +257,7 @@ f_while_top@4:
     bz f_after_while@7
     swap
     dup
-    bytec 4 // 0x010000000000000000
+    bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
@@ -389,10 +291,10 @@ f_while_top@4:
     itxn_field Fee
     itxn_field ApplicationID
     itxn_submit
-    bytec 5 // 0x01
+    bytec 4 // 0x01
     b+
     dup
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     b f_while_top@4
@@ -438,7 +340,7 @@ g_while_top@4:
     b>
     bz g_after_while@7
     dup
-    bytec 4 // 0x010000000000000000
+    bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
     itxn_begin
@@ -468,10 +370,10 @@ g_while_top@4:
     itxn_field Fee
     itxn_field ApplicationID
     itxn_submit
-    bytec 5 // 0x01
+    bytec 4 // 0x01
     b+
     dup
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     b g_while_top@4
@@ -508,7 +410,7 @@ test_f_ternary_merge@3:
     box_del
     pop
     bytec_0 // "addresses"
-    bytec_2 // 0x0000
+    bytec 6 // 0x0000
     box_put
     pushbytes 0x0003000000000000000000000000000000000000000000000000000000000000001500000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000017
     callsub f
@@ -538,7 +440,7 @@ test_g_ternary_merge@3:
     box_del
     pop
     bytec_0 // "addresses"
-    bytec_2 // 0x0000
+    bytec 6 // 0x0000
     box_put
     pushbytes 0x000500000000000000000000000000000000000000000000000000000000000000180000000000000000000000000000000000000000000000000000000000000019000000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000000000000000001b000000000000000000000000000000000000000000000000000000000000001c
     callsub g
@@ -587,7 +489,7 @@ __solfn_293_while_top@4:
     b<
     bz __solfn_293_after_while@6
     dup
-    bytec 4 // 0x010000000000000000
+    bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
     pushint 8
@@ -615,10 +517,10 @@ __solfn_293_while_top@4:
     extract3 // on error: index access is out of bounds
     ==
     assert
-    bytec 5 // 0x01
+    bytec 4 // 0x01
     b+
     dup
-    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 5 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
     b __solfn_293_while_top@4
@@ -721,20 +623,6 @@ __evm_deco:
     retsub
 
 
-// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/calldata.sol.C.__evm_arga(__off: uint64) -> bytes:
-__evm_arga:
-    proto 1 1
-    frame_dig -1
-    callsub __evm_decw
-    dup
-    extract 0 12
-    pushint 12
-    bzero
-    ==
-    assert // invalid EVM ABI address padding
-    retsub
-
-
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/calldata.sol.C.__evm_ret1(__v: uint64) -> void:
 __evm_ret1:
     proto 1 0
@@ -753,4 +641,66 @@ __evm_ret1:
     swap
     concat
     log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/userDefinedValueType/contracts/calldata.sol.C.__evm_deca_0(__start: uint64) -> bytes:
+__evm_deca_0:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_deco
+    dup
+    pushint 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    bytec 6 // 0x0000
+    frame_dig -1
+    intc_1 // 32
+    +
+    intc_0 // 0
+
+__evm_deca_0_while_top@1:
+    dup
+    dig 4
+    <
+    bz __evm_deca_0_after_while@3
+    dup
+    intc_1 // 32
+    *
+    dig 2
+    +
+    callsub __evm_decw
+    dup
+    extract 0 12
+    pushint 12
+    bzero
+    ==
+    assert // invalid EVM ABI address padding
+    pushbytes 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_0 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 4
+    dup
+    cover 2
+    intc_0 // 0
+    extract_uint16
+    +
+    itob
+    extract 6 0
+    replace2 0
+    swap
+    concat
+    cover 2
+    intc_2 // 1
+    +
+    b __evm_deca_0_while_top@1
+
+__evm_deca_0_after_while@3:
+    popn 2
+    swap
     retsub

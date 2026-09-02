@@ -5,6 +5,7 @@
 #include "awst/NameGen.h"
 #include "builder/codec/EvmValueCodec.h"
 #include "builder/sol-types/TypeMapper.h"
+#include "builder/BuildArtifacts.h"
 
 #include <set>
 // solc AST nodes used completely (dynamic_cast / member access); the hub
@@ -203,6 +204,55 @@ private:
 		std::shared_ptr<awst::Expression> knownCount,
 		Statements& out)
 	{
+		// Router context: one shared method per dynamic array TYPE — the
+		// length/bounds/loop scaffold was inlined at every use (Order[] and
+		// uint256[] each appeared in several CTFExchange arms).
+		if (m_wordFetchSub && !knownCount && array->isDynamicallySized())
+		{
+			auto const* arrayW = m_typeMapper.map(array);
+			auto& arts = m_typeMapper.artifacts();
+			std::string key = "array:" + array->canonicalName();
+			auto found = arts.evmDecodeStructMethods.find(key);
+			std::string name;
+			if (found != arts.evmDecodeStructMethods.end())
+				name = found->second;
+			else
+			{
+				name = "__evm_deca_" + std::to_string(
+					awst::NameGen::next("EvmAbiDecode.arrayMethod"));
+				arts.evmDecodeStructMethods[key] = name;
+				awst::ContractMethod method;
+				method.sourceLocation = m_loc;
+				method.memberName = name;
+				method.returnType = arrayW;
+				awst::SubroutineArgument startArg;
+				startArg.name = "__start";
+				startArg.wtype = awst::WType::uint64Type();
+				startArg.sourceLocation = m_loc;
+				method.args.push_back(startArg);
+				auto body = awst::makeBlock(m_loc);
+				auto value = arrayValueInline(array,
+					awst::makeVarExpression("__start", awst::WType::uint64Type(), m_loc),
+					nullptr, body->body);
+				body->body.push_back(
+					awst::makeReturnStatement(std::move(value), m_loc));
+				method.body = body;
+				arts.pendingEvmDecodeMethods.push_back(std::move(method));
+			}
+			auto call = awst::makeSubroutineCall(
+				awst::InstanceMethodTarget{name}, arrayW, m_loc);
+			awst::pushCallArg(call->args, "__start", std::move(start));
+			return call;
+		}
+		return arrayValueInline(array, std::move(start), std::move(knownCount), out);
+	}
+
+	std::shared_ptr<awst::Expression> arrayValueInline(
+		ArrayType const* array,
+		std::shared_ptr<awst::Expression> start,
+		std::shared_ptr<awst::Expression> knownCount,
+		Statements& out)
+	{
 		auto const* arrayW = m_typeMapper.map(array);
 		auto const* elemW = arrayElementType(arrayW);
 		auto const* elemType = array->baseType();
@@ -276,6 +326,58 @@ private:
 			m_typeMapper.map(structure));
 		if (!structW)
 			return awst::makeBytesConstant({}, m_loc);
+		// Router context (blob == ApplicationArgs[1], shared fetch helpers):
+		// decode each struct type through ONE contract method instead of
+		// inlining the field walk at every use — fillOrder/fillOrders/
+		// matchOrders each carried their own Order decoder, and Order[]
+		// repeated it per element (CTFExchange: the difference between
+		// 19.4 KB and the 16 KB cap).
+		if (m_wordFetchSub)
+		{
+			auto& arts = m_typeMapper.artifacts();
+			auto const& def = structure->structDefinition();
+			std::string key = def.name() + "#" + std::to_string(def.id());
+			auto found = arts.evmDecodeStructMethods.find(key);
+			std::string name;
+			if (found != arts.evmDecodeStructMethods.end())
+				name = found->second;
+			else
+			{
+				name = "__evm_decs_" + std::to_string(def.id());
+				// Registered BEFORE the body so recursive structs resolve.
+				arts.evmDecodeStructMethods[key] = name;
+				awst::ContractMethod method;
+				method.sourceLocation = m_loc;
+				method.memberName = name;
+				method.returnType = structW;
+				awst::SubroutineArgument startArg;
+				startArg.name = "__start";
+				startArg.wtype = awst::WType::uint64Type();
+				startArg.sourceLocation = m_loc;
+				method.args.push_back(startArg);
+				auto body = awst::makeBlock(m_loc);
+				auto value = structFields(structure, structW,
+					awst::makeVarExpression("__start", awst::WType::uint64Type(), m_loc),
+					body->body);
+				body->body.push_back(
+					awst::makeReturnStatement(std::move(value), m_loc));
+				method.body = body;
+				arts.pendingEvmDecodeMethods.push_back(std::move(method));
+			}
+			auto call = awst::makeSubroutineCall(
+				awst::InstanceMethodTarget{name}, structW, m_loc);
+			awst::pushCallArg(call->args, "__start", std::move(start));
+			return call;
+		}
+		return structFields(structure, structW, std::move(start), out);
+	}
+
+	std::shared_ptr<awst::Expression> structFields(
+		StructType const* structure,
+		awst::ARC4Struct const* structW,
+		std::shared_ptr<awst::Expression> start,
+		Statements& out)
+	{
 		auto base = awst::makeEvalOnce(std::move(start), m_loc);
 		auto result = awst::makeNewStruct(structW, m_loc);
 		uint64_t cursor = 0;

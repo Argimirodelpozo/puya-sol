@@ -36,6 +36,11 @@ struct BuildArtifacts
 	/// such creates gets the synthesized __provisionChildProg method.
 	/// Snapshot-and-reset per ContractBuilder::build (like usesErc1967Admin).
 	std::set<std::string> boxProvisionedChildren;
+	/// EVM-router calldata decoders memoized per struct: canonical struct id
+	/// -> contract-method name (`__evm_decs_<id>`), bodies queued here and
+	/// appended to the contract after dispatch is built. Per-contract.
+	std::map<std::string, std::string> evmDecodeStructMethods;
+	std::vector<awst::ContractMethod> pendingEvmDecodeMethods;
 	bool needsRipemd160 = false;
 	/// An EIP-1967 admin-slot use was lowered while translating the CURRENT
 	/// contract's bodies: it gets the synthesized "__erc1967_admin" global and
@@ -67,6 +72,8 @@ struct BuildArtifacts
 		pendingEvmClearSubs.clear();
 		childContracts.clear();
 		boxProvisionedChildren.clear();
+		evmDecodeStructMethods.clear();
+		pendingEvmDecodeMethods.clear();
 		needsRipemd160 = false;
 		usesErc1967Admin = false;
 		currentFreestandingFunctionId = -1;

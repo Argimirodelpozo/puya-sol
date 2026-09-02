@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeEvm.approval_program() -> uint64:
 main:
-    intcblock 32 0 1 2 65535 256 128
-    bytecblock 0x 0x00 0x01 0x151f7c75 0x0000 0x02 0x0e 0x0001 0x04 0x0004 0x03 0x05 0x07 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd 0x0f 0x10 0x09 0x0c 0x00010002 0x010000000000000000000000000000000000000000000000000000000000000000 0x06 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0 0xa66cc928b5edb82af9bd49922954155ab7b0942694bea4ce44661d9a8736c688 0x08 0x0b 0x11 0x0a 0x0d 0x0043 0x010000 "p:" "s:"
+    intcblock 32 0 1 2 256 65535
+    bytecblock 0x 0x00 0x01 0x151f7c75 0x0000 0x02 0x0e 0x04 0x0004 0x03 0x05 0x07 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd 0x0f 0x10 0x09 0x0c 0x00010002 0x010000000000000000000000000000000000000000000000000000000000000000 0x06 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0 0xa66cc928b5edb82af9bd49922954155ab7b0942694bea4ce44661d9a8736c688 0x08 0x0b 0x0001 0x11 0x0a 0x0d 0x0043 0x010000 "p:" "s:"
     bytec_0 // ""
-    dupn 18
+    dupn 5
     pushint 4096
     bzero
     dup
@@ -31,16 +31,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@71
+    bnz main_after_if_else@26
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@71
+    bz main_after_if_else@26
     pushbytess 0x7da99db5 0xba057d06 0x5f2eb343 0x1f95c8a5 0x8c4f90ab 0x154ea099 0xf571ee0d 0xcdd7d796 0xf7b09bd1 0x8888dcb3 0xa387b03a 0x77512308 0x3408e02d 0xb7ea6706 0x30351edd 0x83497adc 0xe8ea6757 0x69363a0b 0xb16a867c 0xe534155d
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@15 main_switch_case_2@16 main_switch_case_3@29 main_switch_case_4@33 main_switch_case_5@43 main_switch_case_6@47 main_switch_case_7@48 main_switch_case_8@52 main_switch_case_9@59 main_switch_case_10@60 main_switch_case_11@61 main_switch_case_12@62 main_switch_case_13@63 main_switch_case_14@64 main_switch_case_15@65 main_switch_case_16@66 main_switch_case_17@67 main_switch_case_18@68 main_switch_case_19@69
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11 main_switch_case_7@12 main_switch_case_8@13 main_switch_case_9@14 main_switch_case_10@15 main_switch_case_11@16 main_switch_case_12@17 main_switch_case_13@18 main_switch_case_14@19 main_switch_case_15@20 main_switch_case_16@21 main_switch_case_17@22 main_switch_case_18@23 main_switch_case_19@24
 
-main_after_if_else@71:
+main_after_if_else@26:
     txn OnCompletion
     !
     assert
@@ -48,10 +48,10 @@ main_after_if_else@71:
     assert
     pushbytess 0xb8b1a4b6 0xacf9fc44 0x3e498ed4 0x5bc9b31d 0xd705ca6b 0x40b56233 0x886f323d 0x775f93e9 0x6c275638 0x95748ff3 0x0ba2627c 0x2bc36987 0xf389a633 0xc55aae99 0xfb09e2fe 0x1833b600 0xe8c2229d 0x48cc6361 0x0e41aeb8 0x1c57d5aa // method "replace(uint256[][][])void", method "setHolder(uint256,bool,uint256)void", method "replaceMixed(uint256[][2][2])void", method "replaceFixedLeaf(uint256[2][2][])void", method "replaceMixedTree(uint256[][2][])void", method "replacePackedLeaf(bool[3][2][])void", method "replaceHolders(((uint256,bool),uint256)[2])void", method "pushComplex(uint256[],uint256,bool,uint256)void", method "replaceComplex((uint256[],((uint256,bool),uint256))[])void", method "popComplex()void", method "mixedSummary()(uint256,uint256,uint256,uint256)", method "fixedLeafSummary()(uint256,uint256,uint256,uint256,uint256)", method "mixedTreeSummary()(uint256,uint256,uint256,uint256,uint256)", method "packedLeafSummary()(uint256,bool,bool,bool,bool,bool,bool)", method "holderSummary()(uint256,bool,uint256,uint256,bool,uint256)", method "complexSummary()(uint256,uint256,uint256,bool,uint256)", method "clearAggregates()void", method "clearedSummary()(uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)", method "summary()(uint256,uint256,uint256,uint256,uint256,uint256)", method "holder()((uint256,bool),uint512)"
     txna ApplicationArgs 0
-    match main_replace_route@74 main_setHolder_route@75 main_replaceMixed_route@76 main_replaceFixedLeaf_route@77 main_replaceMixedTree_route@78 main_replacePackedLeaf_route@79 main_replaceHolders_route@80 main_pushComplex_route@81 main_replaceComplex_route@82 main_popComplex_route@83 main_mixedSummary_route@84 main_fixedLeafSummary_route@85 main_mixedTreeSummary_route@86 main_packedLeafSummary_route@87 main_holderSummary_route@88 main_complexSummary_route@89 main_clearAggregates_route@90 main_clearedSummary_route@91 main_summary_route@92 main_holder_route@93
+    match main_replace_route@29 main_setHolder_route@30 main_replaceMixed_route@31 main_replaceFixedLeaf_route@32 main_replaceMixedTree_route@33 main_replacePackedLeaf_route@34 main_replaceHolders_route@35 main_pushComplex_route@36 main_replaceComplex_route@37 main_popComplex_route@38 main_mixedSummary_route@39 main_fixedLeafSummary_route@40 main_mixedTreeSummary_route@41 main_packedLeafSummary_route@42 main_holderSummary_route@43 main_complexSummary_route@44 main_clearAggregates_route@45 main_clearedSummary_route@46 main_summary_route@47 main_holder_route@48
     err
 
-main_holder_route@93:
+main_holder_route@48:
     callsub holder
     dup
     len
@@ -69,7 +69,7 @@ main_holder_route@93:
     intc_2 // 1
     return
 
-main_summary_route@92:
+main_summary_route@47:
     callsub summary
     uncover 5
     uncover 5
@@ -89,7 +89,7 @@ main_summary_route@92:
     intc_2 // 1
     return
 
-main_clearedSummary_route@91:
+main_clearedSummary_route@46:
     callsub clearedSummary
     uncover 7
     uncover 7
@@ -113,12 +113,12 @@ main_clearedSummary_route@91:
     intc_2 // 1
     return
 
-main_clearAggregates_route@90:
+main_clearAggregates_route@45:
     callsub clearAggregates
     intc_2 // 1
     return
 
-main_complexSummary_route@89:
+main_complexSummary_route@44:
     callsub complexSummary
     uncover 4
     uncover 4
@@ -139,7 +139,7 @@ main_complexSummary_route@89:
     intc_2 // 1
     return
 
-main_holderSummary_route@88:
+main_holderSummary_route@43:
     callsub holderSummary
     bytec_1 // 0x00
     intc_1 // 0
@@ -166,7 +166,7 @@ main_holderSummary_route@88:
     intc_2 // 1
     return
 
-main_packedLeafSummary_route@87:
+main_packedLeafSummary_route@42:
     callsub packedLeafSummary
     bytec_1 // 0x00
     intc_1 // 0
@@ -195,7 +195,7 @@ main_packedLeafSummary_route@87:
     intc_2 // 1
     return
 
-main_mixedTreeSummary_route@86:
+main_mixedTreeSummary_route@41:
     callsub mixedTreeSummary
     uncover 4
     uncover 4
@@ -213,7 +213,7 @@ main_mixedTreeSummary_route@86:
     intc_2 // 1
     return
 
-main_fixedLeafSummary_route@85:
+main_fixedLeafSummary_route@40:
     callsub fixedLeafSummary
     uncover 4
     uncover 4
@@ -231,7 +231,7 @@ main_fixedLeafSummary_route@85:
     intc_2 // 1
     return
 
-main_mixedSummary_route@84:
+main_mixedSummary_route@39:
     callsub mixedSummary
     uncover 3
     uncover 3
@@ -247,12 +247,12 @@ main_mixedSummary_route@84:
     intc_2 // 1
     return
 
-main_popComplex_route@83:
+main_popComplex_route@38:
     callsub popComplex
     intc_2 // 1
     return
 
-main_replaceComplex_route@82:
+main_replaceComplex_route@37:
     txna ApplicationArgs 1
     dupn 2
     intc_1 // 0
@@ -268,11 +268,11 @@ main_replaceComplex_route@82:
     extract 2 0
     intc_1 // 0
 
-main_for_header@120:
+main_for_header@100:
     dup
     dig 5
     <
-    bz main_after_for@122
+    bz main_after_for@102
     dup
     intc_3 // 2
     *
@@ -310,9 +310,9 @@ main_for_header@120:
     cover 2
     intc_2 // 1
     +
-    b main_for_header@120
+    b main_for_header@100
 
-main_after_for@122:
+main_after_for@102:
     popn 2
     uncover 2
     pop
@@ -325,7 +325,7 @@ main_after_for@122:
     intc_2 // 1
     return
 
-main_pushComplex_route@81:
+main_pushComplex_route@36:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
@@ -363,7 +363,7 @@ main_pushComplex_route@81:
     intc_2 // 1
     return
 
-main_replaceHolders_route@80:
+main_replaceHolders_route@35:
     txna ApplicationArgs 1
     dup
     len
@@ -375,7 +375,7 @@ main_replaceHolders_route@80:
     intc_2 // 1
     return
 
-main_replacePackedLeaf_route@79:
+main_replacePackedLeaf_route@34:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
@@ -393,7 +393,232 @@ main_replacePackedLeaf_route@79:
     intc_2 // 1
     return
 
-main_replaceMixedTree_route@78:
+main_replaceMixedTree_route@33:
+    txna ApplicationArgs 1
+    dupn 2
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    dup
+    bury 6
+    intc_3 // 2
+    *
+    swap
+    dup
+    len
+    cover 2
+    extract 2 0
+    intc_1 // 0
+
+main_for_header@111:
+    dup
+    dig 8
+    <
+    bz main_after_for@116
+    dup
+    intc_3 // 2
+    *
+    dig 2
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 5
+    ==
+    assert // invalid tail pointer for (len+(len+uint256[])[2][])
+    dig 1
+    len
+    substring3
+    cover 3
+    pushint 4
+    cover 2
+    intc_1 // 0
+
+main_for_header@113:
+    dup
+    intc_3 // 2
+    <
+    bz main_after_for@115
+    dup
+    intc_3 // 2
+    *
+    dig 6
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    uncover 6
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+uint256[])[2]
+    dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    +
+    cover 3
+    intc_2 // 1
+    +
+    b main_for_header@113
+
+main_after_for@115:
+    pop
+    uncover 4
+    pop
+    uncover 3
+    uncover 3
+    +
+    cover 2
+    intc_2 // 1
+    +
+    b main_for_header@111
+
+main_after_for@116:
+    popn 2
+    intc_3 // 2
+    +
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>>
+    callsub replaceMixedTree
+    pop
+    intc_2 // 1
+    return
+
+main_replaceFixedLeaf_route@32:
+    txna ApplicationArgs 1
+    dup
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    pushint 128
+    *
+    intc_3 // 2
+    +
+    dig 1
+    len
+    ==
+    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.static_array<arc4.uint256, 2>, 2>>
+    callsub replaceFixedLeaf
+    pop
+    intc_2 // 1
+    return
+
+main_replaceMixed_route@31:
+    txna ApplicationArgs 1
+    pushint 4
+    intc_1 // 0
+
+main_for_header@121:
+    dup
+    intc_3 // 2
+    <
+    bz main_after_for@126
+    dup
+    intc_3 // 2
+    *
+    dig 3
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    dig 4
+    ==
+    assert // invalid tail pointer for (len+uint256[])[2][2]
+    dig 1
+    len
+    substring3
+    cover 2
+    pushint 4
+    swap
+    intc_1 // 0
+
+main_for_header@123:
+    dup
+    intc_3 // 2
+    <
+    bz main_after_for@125
+    dup
+    intc_3 // 2
+    *
+    dig 5
+    dup
+    uncover 2
+    extract_uint16 // on error: invalid array encoding
+    dup
+    uncover 5
+    dup
+    cover 4
+    ==
+    assert // invalid tail pointer for (len+uint256[])[2]
+    dig 1
+    len
+    substring3
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    intc_0 // 32
+    *
+    intc_3 // 2
+    +
+    +
+    cover 2
+    intc_2 // 1
+    +
+    b main_for_header@123
+
+main_after_for@125:
+    pop
+    uncover 3
+    pop
+    cover 2
+    +
+    swap
+    intc_2 // 1
+    +
+    b main_for_header@121
+
+main_after_for@126:
+    pop
+    swap
+    dup
+    len
+    uncover 2
+    ==
+    assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>, 2>
+    callsub replaceMixed
+    pop
+    intc_2 // 1
+    return
+
+main_setHolder_route@30:
+    txna ApplicationArgs 1
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    txna ApplicationArgs 2
+    dup
+    len
+    intc_2 // 1
+    ==
+    assert // invalid number of bytes for arc4.bool
+    intc_1 // 0
+    getbit
+    txna ApplicationArgs 3
+    dup
+    len
+    intc_0 // 32
+    ==
+    assert // invalid number of bytes for arc4.uint256
+    callsub setHolder
+    intc_2 // 1
+    return
+
+main_replace_route@29:
     txna ApplicationArgs 1
     dupn 2
     intc_1 // 0
@@ -424,231 +649,6 @@ main_for_header@131:
     dup
     dig 5
     ==
-    assert // invalid tail pointer for (len+(len+uint256[])[2][])
-    dig 1
-    len
-    substring3
-    cover 3
-    pushint 4
-    cover 2
-    intc_1 // 0
-
-main_for_header@133:
-    dup
-    intc_3 // 2
-    <
-    bz main_after_for@135
-    dup
-    intc_3 // 2
-    *
-    dig 6
-    dup
-    uncover 2
-    extract_uint16 // on error: invalid array encoding
-    dup
-    uncover 6
-    dup
-    cover 4
-    ==
-    assert // invalid tail pointer for (len+uint256[])[2]
-    dig 1
-    len
-    substring3
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_0 // 32
-    *
-    intc_3 // 2
-    +
-    +
-    cover 3
-    intc_2 // 1
-    +
-    b main_for_header@133
-
-main_after_for@135:
-    pop
-    uncover 4
-    pop
-    uncover 3
-    uncover 3
-    +
-    cover 2
-    intc_2 // 1
-    +
-    b main_for_header@131
-
-main_after_for@136:
-    popn 2
-    intc_3 // 2
-    +
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>>
-    callsub replaceMixedTree
-    pop
-    intc_2 // 1
-    return
-
-main_replaceFixedLeaf_route@77:
-    txna ApplicationArgs 1
-    dup
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc 6 // 128
-    *
-    intc_3 // 2
-    +
-    dig 1
-    len
-    ==
-    assert // invalid number of bytes for arc4.dynamic_array<arc4.static_array<arc4.static_array<arc4.uint256, 2>, 2>>
-    callsub replaceFixedLeaf
-    pop
-    intc_2 // 1
-    return
-
-main_replaceMixed_route@76:
-    txna ApplicationArgs 1
-    pushint 4
-    intc_1 // 0
-
-main_for_header@141:
-    dup
-    intc_3 // 2
-    <
-    bz main_after_for@146
-    dup
-    intc_3 // 2
-    *
-    dig 3
-    dup
-    uncover 2
-    extract_uint16 // on error: invalid array encoding
-    dup
-    dig 4
-    ==
-    assert // invalid tail pointer for (len+uint256[])[2][2]
-    dig 1
-    len
-    substring3
-    cover 2
-    pushint 4
-    swap
-    intc_1 // 0
-
-main_for_header@143:
-    dup
-    intc_3 // 2
-    <
-    bz main_after_for@145
-    dup
-    intc_3 // 2
-    *
-    dig 5
-    dup
-    uncover 2
-    extract_uint16 // on error: invalid array encoding
-    dup
-    uncover 5
-    dup
-    cover 4
-    ==
-    assert // invalid tail pointer for (len+uint256[])[2]
-    dig 1
-    len
-    substring3
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    intc_0 // 32
-    *
-    intc_3 // 2
-    +
-    +
-    cover 2
-    intc_2 // 1
-    +
-    b main_for_header@143
-
-main_after_for@145:
-    pop
-    uncover 3
-    pop
-    cover 2
-    +
-    swap
-    intc_2 // 1
-    +
-    b main_for_header@141
-
-main_after_for@146:
-    pop
-    swap
-    dup
-    len
-    uncover 2
-    ==
-    assert // invalid number of bytes for arc4.static_array<arc4.static_array<arc4.dynamic_array<arc4.uint256>, 2>, 2>
-    callsub replaceMixed
-    pop
-    intc_2 // 1
-    return
-
-main_setHolder_route@75:
-    txna ApplicationArgs 1
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    txna ApplicationArgs 2
-    dup
-    len
-    intc_2 // 1
-    ==
-    assert // invalid number of bytes for arc4.bool
-    intc_1 // 0
-    getbit
-    txna ApplicationArgs 3
-    dup
-    len
-    intc_0 // 32
-    ==
-    assert // invalid number of bytes for arc4.uint256
-    callsub setHolder
-    intc_2 // 1
-    return
-
-main_replace_route@74:
-    txna ApplicationArgs 1
-    dupn 2
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    dup
-    bury 7
-    intc_3 // 2
-    *
-    swap
-    dup
-    len
-    cover 2
-    extract 2 0
-    intc_1 // 0
-
-main_for_header@151:
-    dup
-    dig 9
-    <
-    bz main_after_for@156
-    dup
-    intc_3 // 2
-    *
-    dig 2
-    dup
-    uncover 2
-    extract_uint16 // on error: invalid array encoding
-    dup
-    dig 5
-    ==
     assert // invalid tail pointer for (len+(len+(len+uint256[])[])[])
     dig 1
     len
@@ -657,7 +657,7 @@ main_for_header@151:
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 10
+    bury 8
     intc_3 // 2
     *
     cover 3
@@ -665,11 +665,11 @@ main_for_header@151:
     swap
     intc_1 // 0
 
-main_for_header@153:
+main_for_header@133:
     dup
-    dig 11
+    dig 9
     <
-    bz main_after_for@155
+    bz main_after_for@135
     dup
     intc_3 // 2
     *
@@ -696,9 +696,9 @@ main_for_header@153:
     cover 4
     intc_2 // 1
     +
-    b main_for_header@153
+    b main_for_header@133
 
-main_after_for@155:
+main_after_for@135:
     pop
     bury 1
     uncover 2
@@ -709,9 +709,9 @@ main_after_for@155:
     cover 2
     intc_2 // 1
     +
-    b main_for_header@151
+    b main_for_header@131
 
-main_after_for@156:
+main_after_for@136:
     popn 2
     intc_3 // 2
     +
@@ -722,7 +722,7 @@ main_after_for@156:
     intc_2 // 1
     return
 
-main_switch_case_19@69:
+main_switch_case_19@24:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -739,7 +739,7 @@ main_switch_case_19@69:
     intc_0 // 32
     extract3
     uncover 2
-    intc 5 // 256
+    intc 4 // 256
     getbit
     bytec_1 // 0x00
     intc_1 // 0
@@ -774,7 +774,7 @@ main_switch_case_19@69:
     intc_2 // 1
     return
 
-main_switch_case_18@68:
+main_switch_case_18@23:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -844,7 +844,7 @@ main_switch_case_18@68:
     intc_2 // 1
     return
 
-main_switch_case_17@67:
+main_switch_case_17@22:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -934,7 +934,7 @@ main_switch_case_17@67:
     intc_2 // 1
     return
 
-main_switch_case_16@66:
+main_switch_case_16@21:
     callsub __evm_npy
     callsub clearAggregates
     bytec_3 // 0x151f7c75
@@ -942,7 +942,7 @@ main_switch_case_16@66:
     intc_2 // 1
     return
 
-main_switch_case_15@65:
+main_switch_case_15@20:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -1004,7 +1004,7 @@ main_switch_case_15@65:
     intc_2 // 1
     return
 
-main_switch_case_14@64:
+main_switch_case_14@19:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -1078,7 +1078,7 @@ main_switch_case_14@64:
     intc_2 // 1
     return
 
-main_switch_case_13@63:
+main_switch_case_13@18:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -1171,7 +1171,7 @@ main_switch_case_13@63:
     intc_2 // 1
     return
 
-main_switch_case_12@62:
+main_switch_case_12@17:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -1231,7 +1231,7 @@ main_switch_case_12@62:
     intc_2 // 1
     return
 
-main_switch_case_11@61:
+main_switch_case_11@16:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -1291,7 +1291,7 @@ main_switch_case_11@61:
     intc_2 // 1
     return
 
-main_switch_case_10@60:
+main_switch_case_10@15:
     callsub __evm_npy
     intc_0 // 32
     bzero
@@ -1341,7 +1341,7 @@ main_switch_case_10@60:
     intc_2 // 1
     return
 
-main_switch_case_9@59:
+main_switch_case_9@14:
     callsub __evm_npy
     callsub popComplex
     bytec_3 // 0x151f7c75
@@ -1349,194 +1349,7 @@ main_switch_case_9@59:
     intc_2 // 1
     return
 
-main_switch_case_8@52:
-    callsub __evm_npy
-    intc_1 // 0
-    callsub __evm_deco
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    dup
-    callsub __evm_deco
-    dup
-    bury 14
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    swap
-    intc_0 // 32
-    +
-    bury 18
-    intc_1 // 0
-
-main_while_top@53:
-    dup
-    dig 14
-    <
-    bz main_after_while@58
-    dup
-    intc_0 // 32
-    *
-    dig 19
-    dup
-    uncover 2
-    +
-    callsub __evm_deco
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    +
-    dup
-    cover 3
-    dup
-    callsub __evm_deco
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    +
-    dup
-    callsub __evm_deco
-    dup
-    bury 16
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    cover 3
-    intc_0 // 32
-    +
-    swap
-    intc_1 // 0
-
-main_while_top@55:
-    dup
-    dig 17
-    <
-    bz main_after_while@57
-    dup
-    intc_0 // 32
-    *
-    dig 3
-    +
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 6
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 4
-    intc_2 // 1
-    +
-    b main_while_top@55
-
-main_after_while@57:
-    pop
-    bury 1
-    uncover 3
-    intc_0 // 32
-    +
-    dup
-    intc_0 // 32
-    +
-    callsub __evm_decw
-    dup
-    bytec_2 // 0x01
-    b<=
-    assert // invalid EVM ABI bool
-    pushint 24
-    extract_uint64
-    intc_1 // 0
-    !=
-    bytec_1 // 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    dig 1
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    uncover 2
-    concat
-    uncover 2
-    pushint 64
-    +
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 2
-    b|
-    concat
-    bytec 28 // 0x0043
-    swap
-    concat
-    uncover 3
-    concat
-    bytec 18 // 0x00010002
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 3
-    cover 2
-    callsub dynamic_array_concat_dynamic_element
-    swap
-    intc_2 // 1
-    +
-    b main_while_top@53
-
-main_after_while@58:
-    pop
-    callsub replaceComplex
-    pop
-    bytec_3 // 0x151f7c75
-    log
-    intc_2 // 1
-    return
-
-main_switch_case_7@48:
+main_switch_case_8@13:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_deco
@@ -1549,7 +1362,7 @@ main_switch_case_7@48:
     callsub __evm_deco
     dup
     cover 2
-    intc 4 // 65535
+    intc 5 // 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
     bytec 4 // 0x0000
@@ -1558,26 +1371,45 @@ main_switch_case_7@48:
     +
     intc_1 // 0
 
-main_while_top@49:
+main_while_top@54:
     dup
     dig 4
     <
-    bz main_after_while@51
+    bz main_after_while@56
     dup
     intc_0 // 32
     *
     dig 2
-    +
-    callsub __evm_decw
     dup
-    len
+    uncover 2
+    +
+    callsub __evm_deco
+    dup
     intc_0 // 32
-    <=
-    assert // overflow
+    %
+    !
+    assert // unaligned EVM ABI offset
+    +
+    dup
+    callsub __evm_deco
+    dup
     intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x0001
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dig 1
+    intc_0 // 32
+    +
+    callsub __evm_decs_96
+    cover 2
+    +
+    callsub __evm_deca_2
+    bytec 28 // 0x0043
+    uncover 2
+    concat
+    swap
+    concat
+    bytec 17 // 0x00010002
     swap
     concat
     dup
@@ -1586,32 +1418,42 @@ main_while_top@49:
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     uncover 4
-    dup
     cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
+    callsub dynamic_array_concat_dynamic_element
     cover 2
     intc_2 // 1
     +
-    b main_while_top@49
+    b main_while_top@54
 
-main_after_while@51:
+main_after_while@56:
     popn 2
+    callsub replaceComplex
+    pop
+    bytec_3 // 0x151f7c75
+    log
+    intc_2 // 1
+    return
+
+main_switch_case_7@12:
+    callsub __evm_npy
+    intc_1 // 0
+    callsub __evm_deco
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
     pushint 64
     callsub __evm_decw
     dup
     bytec_2 // 0x01
     b<=
     assert // invalid EVM ABI bool
+    swap
+    callsub __evm_deca_2
     intc_0 // 32
     callsub __evm_decw
-    swap
+    uncover 2
     pushint 24
     extract_uint64
     intc_1 // 0
@@ -1644,83 +1486,12 @@ main_after_while@51:
     intc_2 // 1
     return
 
-main_switch_case_6@47:
+main_switch_case_6@11:
     callsub __evm_npy
-    intc_0 // 32
-    callsub __evm_decw
-    dup
-    bytec_2 // 0x01
-    b<=
-    assert // invalid EVM ABI bool
-    intc 6 // 128
-    callsub __evm_decw
-    dup
-    bytec_2 // 0x01
-    b<=
-    assert // invalid EVM ABI bool
-    swap
-    pushint 24
-    extract_uint64
     intc_1 // 0
-    !=
-    bytec_1 // 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
-    intc_1 // 0
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    swap
-    dig 1
-    b|
-    uncover 2
-    concat
-    pushint 64
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 2
-    b|
-    concat
-    uncover 2
-    pushint 24
-    extract_uint64
-    intc_1 // 0
-    !=
-    bytec_1 // 0x00
-    intc_1 // 0
-    uncover 2
-    setbit
+    callsub __evm_decs_96
     pushint 96
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    dig 3
-    b|
-    swap
-    concat
-    pushint 160
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    uncover 3
-    b|
-    concat
+    callsub __evm_decs_96
     concat
     callsub replaceHolders
     pop
@@ -1729,7 +1500,7 @@ main_switch_case_6@47:
     intc_2 // 1
     return
 
-main_switch_case_5@43:
+main_switch_case_5@10:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_deco
@@ -1742,7 +1513,7 @@ main_switch_case_5@43:
     callsub __evm_deco
     dup
     cover 2
-    intc 4 // 65535
+    intc 5 // 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
     bytec 4 // 0x0000
@@ -1751,11 +1522,11 @@ main_switch_case_5@43:
     +
     intc_1 // 0
 
-main_while_top@44:
+main_while_top@59:
     dup
     dig 4
     <
-    bz main_after_while@46
+    bz main_after_while@61
     dup
     pushint 192
     *
@@ -1889,7 +1660,7 @@ main_while_top@44:
     swap
     setbit
     concat
-    bytec 7 // 0x0001
+    bytec 24 // 0x0001
     swap
     concat
     dup
@@ -1911,9 +1682,9 @@ main_while_top@44:
     cover 2
     intc_2 // 1
     +
-    b main_while_top@44
+    b main_while_top@59
 
-main_after_while@46:
+main_after_while@61:
     popn 2
     callsub replacePackedLeaf
     pop
@@ -1922,7 +1693,7 @@ main_after_while@46:
     intc_2 // 1
     return
 
-main_switch_case_4@33:
+main_switch_case_4@9:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_deco
@@ -1934,26 +1705,25 @@ main_switch_case_4@33:
     dup
     callsub __evm_deco
     dup
-    bury 8
-    intc 4 // 65535
+    cover 2
+    intc 5 // 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
     bytec 4 // 0x0000
     swap
     intc_0 // 32
     +
-    bury 17
     intc_1 // 0
 
-main_while_top@34:
+main_while_top@64:
     dup
-    dig 8
+    dig 4
     <
-    bz main_after_while@42
+    bz main_after_while@66
     dup
     intc_0 // 32
     *
-    dig 18
+    dig 2
     dup
     uncover 2
     +
@@ -1965,82 +1735,13 @@ main_while_top@34:
     assert // unaligned EVM ABI offset
     +
     dup
-    cover 3
-    dup
     callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
-    +
-    dup
-    callsub __evm_deco
-    dup
-    bury 10
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    dup
-    cover 4
-    swap
-    intc_0 // 32
-    +
-    cover 3
-    intc_1 // 0
-    swap
-    cover 2
-
-main_while_top@36:
-    dup
-    dig 12
-    <
-    bz main_after_while@38
-    dup
-    intc_0 // 32
-    *
-    dig 5
-    +
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 4
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 2
-    intc_2 // 1
-    +
-    b main_while_top@36
-
-main_after_while@38:
-    pop
-    uncover 3
-    pop
-    uncover 4
-    dup
+    dig 1
     intc_0 // 32
     +
     callsub __evm_deco
@@ -2049,83 +1750,27 @@ main_after_while@38:
     %
     !
     assert // unaligned EVM ABI offset
+    dig 2
+    uncover 2
     +
-    dup
-    callsub __evm_deco
-    dup
-    bury 19
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    intc_0 // 32
-    +
-    cover 3
-    intc_1 // 0
-    uncover 5
-    cover 3
-
-main_while_top@39:
-    dup
-    dig 19
-    <
-    bz main_after_while@41
-    dup
-    intc_0 // 32
-    *
-    dig 6
-    +
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 5
-    dup
+    callsub __evm_deca_2
     cover 2
-    intc_1 // 0
-    extract_uint16
     +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 3
-    intc_2 // 1
-    +
-    b main_while_top@39
-
-main_after_while@41:
-    pop
-    uncover 4
-    pop
-    swap
-    dup
+    callsub __evm_deca_2
+    dig 1
     len
     pushint 4
     +
     itob
     extract 6 2
-    bytec 9 // 0x0004
-    swap
-    concat
+    bytec 8 // 0x0004
     swap
     concat
     uncover 2
     concat
-    bytec 18 // 0x00010002
+    swap
+    concat
+    bytec 17 // 0x00010002
     swap
     concat
     dup
@@ -2133,16 +1778,16 @@ main_after_while@41:
     swap
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    uncover 3
+    uncover 4
     cover 2
     callsub dynamic_array_concat_dynamic_element
-    swap
+    cover 2
     intc_2 // 1
     +
-    b main_while_top@34
+    b main_while_top@64
 
-main_after_while@42:
-    pop
+main_after_while@66:
+    popn 2
     callsub replaceMixedTree
     pop
     bytec_3 // 0x151f7c75
@@ -2150,7 +1795,7 @@ main_after_while@42:
     intc_2 // 1
     return
 
-main_switch_case_3@29:
+main_switch_case_3@8:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_deco
@@ -2163,7 +1808,7 @@ main_switch_case_3@29:
     callsub __evm_deco
     dup
     cover 2
-    intc 4 // 65535
+    intc 5 // 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
     bytec 4 // 0x0000
@@ -2172,13 +1817,13 @@ main_switch_case_3@29:
     +
     intc_1 // 0
 
-main_while_top@30:
+main_while_top@69:
     dup
     dig 4
     <
-    bz main_after_while@32
+    bz main_after_while@71
     dup
-    intc 6 // 128
+    pushint 128
     *
     dig 2
     +
@@ -2231,7 +1876,7 @@ main_while_top@30:
     b|
     concat
     concat
-    bytec 7 // 0x0001
+    bytec 24 // 0x0001
     swap
     concat
     dup
@@ -2253,9 +1898,9 @@ main_while_top@30:
     cover 2
     intc_2 // 1
     +
-    b main_while_top@30
+    b main_while_top@69
 
-main_after_while@32:
+main_after_while@71:
     popn 2
     callsub replaceFixedLeaf
     pop
@@ -2264,13 +1909,11 @@ main_after_while@32:
     intc_2 // 1
     return
 
-main_switch_case_2@16:
+main_switch_case_2@7:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_deco
     dup
-    bury 2
-    dup
     intc_0 // 32
     %
     !
@@ -2282,79 +1925,25 @@ main_switch_case_2@16:
     %
     !
     assert // unaligned EVM ABI offset
+    dig 1
     +
-    dupn 2
+    dup
     callsub __evm_deco
     dup
     intc_0 // 32
     %
     !
     assert // unaligned EVM ABI offset
+    dig 1
+    intc_0 // 32
     +
-    dup
     callsub __evm_deco
     dup
-    bury 12
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    dup
-    cover 2
-    swap
     intc_0 // 32
-    +
-    swap
-    intc_1 // 0
-
-main_while_top@17:
-    dup
-    dig 14
-    <
-    bz main_after_while@19
-    dup
-    intc_0 // 32
-    *
+    %
+    !
+    assert // unaligned EVM ABI offset
     dig 3
-    +
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 3
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    swap
-    intc_2 // 1
-    +
-    b main_while_top@17
-
-main_after_while@19:
-    pop
-    bury 1
-    uncover 2
-    dup
     intc_0 // 32
     +
     callsub __evm_deco
@@ -2363,70 +1952,16 @@ main_after_while@19:
     %
     !
     assert // unaligned EVM ABI offset
-    +
-    dup
-    callsub __evm_deco
-    dup
-    bury 12
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    intc_0 // 32
-    +
-    swap
-    intc_1 // 0
-    dig 3
-    cover 2
-
-main_while_top@20:
-    dup
-    dig 13
-    <
-    bz main_after_while@22
-    dup
-    intc_0 // 32
-    *
-    dig 4
-    +
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
     uncover 4
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
     +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 2
-    intc_2 // 1
-    +
-    b main_while_top@20
-
-main_after_while@22:
-    pop
-    uncover 2
-    pop
-    dig 3
     dup
+    callsub __evm_deco
+    dup
+    intc_0 // 32
+    %
+    !
+    assert // unaligned EVM ABI offset
+    dig 1
     intc_0 // 32
     +
     callsub __evm_deco
@@ -2435,174 +1970,47 @@ main_after_while@22:
     %
     !
     assert // unaligned EVM ABI offset
-    +
-    dup
-    cover 4
-    dup
-    callsub __evm_deco
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    +
-    dup
-    callsub __evm_deco
-    dup
-    bury 13
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    intc_0 // 32
-    +
-    cover 2
-    intc_1 // 0
-    dig 4
-    cover 3
-
-main_while_top@23:
-    dup
-    dig 14
-    <
-    bz main_after_while@25
-    dup
-    intc_0 // 32
-    *
     dig 5
-    +
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
     uncover 5
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
     +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 3
-    intc_2 // 1
+    callsub __evm_deca_2
+    uncover 5
+    uncover 5
     +
-    b main_while_top@23
-
-main_after_while@25:
-    pop
-    uncover 3
-    pop
-    uncover 4
-    dup
-    intc_0 // 32
-    +
-    callsub __evm_deco
-    dup
-    intc_0 // 32
-    %
-    !
-    assert // unaligned EVM ABI offset
-    +
-    dup
-    callsub __evm_deco
-    dup
-    cover 5
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    intc_0 // 32
-    +
-    cover 3
-    intc_1 // 0
-    uncover 6
-    cover 4
-
-main_while_top@26:
-    dup
-    dig 7
-    <
-    bz main_after_while@28
-    dup
-    intc_0 // 32
-    *
-    dig 6
-    +
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 6
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 4
-    intc_2 // 1
-    +
-    b main_while_top@26
-
-main_after_while@28:
-    pop
-    dup
+    callsub __evm_deca_2
+    dig 1
     len
     pushint 4
     +
     itob
     extract 6 2
-    bytec 9 // 0x0004
-    swap
-    concat
-    swap
-    concat
-    swap
-    concat
-    swap
-    dup
-    len
-    pushint 4
-    +
-    itob
-    extract 6 2
-    bytec 9 // 0x0004
-    swap
-    concat
+    bytec 8 // 0x0004
     swap
     concat
     uncover 2
+    concat
+    swap
+    concat
+    dig 3
+    uncover 3
+    +
+    callsub __evm_deca_2
+    uncover 3
+    uncover 3
+    +
+    callsub __evm_deca_2
+    dig 1
+    len
+    pushint 4
+    +
+    itob
+    extract 6 2
+    bytec 8 // 0x0004
+    swap
+    concat
+    uncover 2
+    concat
+    swap
     concat
     dig 1
     len
@@ -2610,7 +2018,7 @@ main_after_while@28:
     +
     itob
     extract 6 2
-    bytec 9 // 0x0004
+    bytec 8 // 0x0004
     swap
     concat
     uncover 2
@@ -2624,7 +2032,7 @@ main_after_while@28:
     intc_2 // 1
     return
 
-main_switch_case_1@15:
+main_switch_case_1@6:
     callsub __evm_npy
     intc_0 // 32
     callsub __evm_decw
@@ -2678,26 +2086,26 @@ main_switch_case_0@5:
     dup
     callsub __evm_deco
     dup
-    bury 17
-    intc 4 // 65535
+    bury 7
+    intc 5 // 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
     bytec 4 // 0x0000
     swap
     intc_0 // 32
     +
-    bury 20
+    bury 7
     intc_1 // 0
 
-main_while_top@6:
+main_while_top@74:
     dup
-    dig 17
+    dig 7
     <
-    bz main_after_while@14
+    bz main_after_while@76
     dup
     intc_0 // 32
     *
-    dig 21
+    dig 8
     dup
     uncover 2
     +
@@ -2711,27 +2119,26 @@ main_while_top@6:
     dup
     callsub __evm_deco
     dup
-    bury 18
-    intc 4 // 65535
+    bury 8
+    intc 5 // 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
     bytec 4 // 0x0000
     cover 3
     intc_0 // 32
     +
-    bury 21
+    cover 2
     intc_1 // 0
-    swap
 
-main_while_top@8:
-    dig 1
-    dig 18
+main_while_top@141:
+    dup
+    dig 9
     <
-    bz main_after_while@13
-    dig 1
+    bz main_after_while@143
+    dup
     intc_0 // 32
     *
-    dig 22
+    dig 4
     dup
     uncover 2
     +
@@ -2742,88 +2149,28 @@ main_while_top@8:
     !
     assert // unaligned EVM ABI offset
     +
+    callsub __evm_deca_2
+    bytec 17 // 0x00010002
+    swap
+    concat
     dup
-    callsub __evm_deco
-    dup
-    bury 16
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    cover 5
-    intc_0 // 32
-    +
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 6
+    cover 2
+    callsub dynamic_array_concat_dynamic_element
     cover 4
-    intc_1 // 0
-
-main_while_top@10:
-    dup
-    dig 17
-    <
-    bz main_after_while@12
-    dup
-    intc_0 // 32
-    *
-    dig 6
-    +
-    callsub __evm_decw
-    dup
-    len
-    intc_0 // 32
-    <=
-    assert // overflow
-    intc_0 // 32
-    bzero
-    b|
-    bytec 7 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 8
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 6
     intc_2 // 1
     +
-    b main_while_top@10
+    b main_while_top@141
 
-main_after_while@12:
+main_after_while@143:
     pop
-    uncover 4
+    uncover 2
     pop
-    bytec 18 // 0x00010002
-    uncover 5
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 5
-    cover 2
-    callsub dynamic_array_concat_dynamic_element
-    cover 3
-    swap
-    intc_2 // 1
-    +
-    swap
-    b main_while_top@8
-
-main_after_while@13:
-    bury 1
-    bytec 18 // 0x00010002
+    bytec 17 // 0x00010002
     uncover 3
     concat
     dup
@@ -2837,9 +2184,9 @@ main_after_while@13:
     swap
     intc_2 // 1
     +
-    b main_while_top@6
+    b main_while_top@74
 
-main_after_while@14:
+main_after_while@76:
     pop
     callsub replace
     pop
@@ -3014,7 +2361,7 @@ __storage_read:
     dup
     bytec_0 // ""
     frame_dig -1
-    bytec 19 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 18 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -1
@@ -3091,7 +2438,7 @@ __storage_read_else_body@4:
 __storage_write:
     proto 2 0
     frame_dig -2
-    bytec 19 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 18 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     frame_bury -2
@@ -3792,12 +3139,12 @@ setHolder_ternary_merge@3:
     extract 0 33
     dup
     extract 0 32
-    bytec 14 // 0x0f
+    bytec 13 // 0x0f
     swap
     callsub __storage_write
     intc_0 // 32
     bzero
-    bytec 15 // 0x10
+    bytec 14 // 0x10
     callsub __storage_read
     concat
     dup
@@ -3807,7 +3154,7 @@ setHolder_ternary_merge@3:
     intc_0 // 32
     extract3
     swap
-    intc 5 // 256
+    intc 4 // 256
     getbit
     bytec_1 // 0x00
     intc_1 // 0
@@ -3818,7 +3165,7 @@ setHolder_ternary_merge@3:
     itob
     extract 7 1
     replace2 31
-    bytec 15 // 0x10
+    bytec 14 // 0x10
     swap
     callsub __storage_write
     extract 33 32
@@ -3902,7 +3249,7 @@ replaceMixed_ternary_merge@3:
     uncover 3
     uncover 2
     extract3
-    bytec 10 // 0x03
+    bytec 9 // 0x03
     swap
     intc_2 // 1
     intc_0 // 32
@@ -3916,7 +3263,7 @@ replaceMixed_ternary_merge@3:
     dig 1
     -
     extract3
-    bytec 8 // 0x04
+    bytec 7 // 0x04
     swap
     intc_2 // 1
     intc_0 // 32
@@ -3946,7 +3293,7 @@ replaceFixedLeaf:
 replaceFixedLeaf_ternary_merge@3:
     !
     assert // not payable
-    bytec 20 // 0x06
+    bytec 19 // 0x06
     frame_dig -1
     intc_2 // 1
     intc_0 // 32
@@ -3979,7 +3326,7 @@ replaceMixedTree_ternary_merge@3:
     assert // not payable
     pushint 8
     bzero
-    bytec 11 // 0x05
+    bytec 10 // 0x05
     callsub __storage_read
     b|
     dup
@@ -3993,7 +3340,7 @@ replaceMixedTree_ternary_merge@3:
     dup
     frame_bury 0
     itob
-    bytec 11 // 0x05
+    bytec 10 // 0x05
     swap
     callsub __storage_write
     intc_1 // 0
@@ -4039,7 +3386,7 @@ replaceMixedTree_ternary_merge@8:
     itob
     bytec 5 // 0x02
     b*
-    bytec 21 // 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0
+    bytec 20 // 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0
     b+
     swap
     uncover 3
@@ -4104,7 +3451,7 @@ replaceMixedTree_while_top@10:
     itob
     bytec 5 // 0x02
     b*
-    bytec 21 // 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0
+    bytec 20 // 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0
     b+
     dup
     bytec 4 // 0x0000
@@ -4154,7 +3501,7 @@ replacePackedLeaf_ternary_merge@3:
     assert // not payable
     pushint 8
     bzero
-    bytec 12 // 0x07
+    bytec 11 // 0x07
     callsub __storage_read
     b|
     dup
@@ -4168,7 +3515,7 @@ replacePackedLeaf_ternary_merge@3:
     dup
     frame_bury 1
     itob
-    bytec 12 // 0x07
+    bytec 11 // 0x07
     swap
     callsub __storage_write
     intc_0 // 32
@@ -4185,7 +3532,7 @@ replacePackedLeaf_while_top@4:
     itob
     bytec 5 // 0x02
     b*
-    bytec 22 // 0xa66cc928b5edb82af9bd49922954155ab7b0942694bea4ce44661d9a8736c688
+    bytec 21 // 0xa66cc928b5edb82af9bd49922954155ab7b0942694bea4ce44661d9a8736c688
     b+
     dig 1
     intc_3 // 2
@@ -4408,7 +3755,7 @@ replacePackedLeaf_while_top@7:
     itob
     bytec 5 // 0x02
     b*
-    bytec 22 // 0xa66cc928b5edb82af9bd49922954155ab7b0942694bea4ce44661d9a8736c688
+    bytec 21 // 0xa66cc928b5edb82af9bd49922954155ab7b0942694bea4ce44661d9a8736c688
     b+
     dup
     bytec_0 // 0x
@@ -4450,12 +3797,12 @@ replaceHolders_ternary_merge@3:
     extract 0 33
     dup
     extract 0 32
-    bytec 23 // 0x08
+    bytec 22 // 0x08
     swap
     callsub __storage_write
     intc_0 // 32
     bzero
-    bytec 16 // 0x09
+    bytec 15 // 0x09
     callsub __storage_read
     dig 1
     swap
@@ -4467,7 +3814,7 @@ replaceHolders_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 2
-    intc 5 // 256
+    intc 4 // 256
     getbit
     bytec_1 // 0x00
     intc_1 // 0
@@ -4478,7 +3825,7 @@ replaceHolders_ternary_merge@3:
     itob
     extract 7 1
     replace2 31
-    bytec 16 // 0x09
+    bytec 15 // 0x09
     swap
     callsub __storage_write
     swap
@@ -4492,10 +3839,10 @@ replaceHolders_ternary_merge@3:
     extract 0 33
     dup
     extract 0 32
-    bytec 24 // 0x0b
+    bytec 23 // 0x0b
     swap
     callsub __storage_write
-    bytec 17 // 0x0c
+    bytec 16 // 0x0c
     callsub __storage_read
     uncover 3
     swap
@@ -4507,7 +3854,7 @@ replaceHolders_ternary_merge@3:
     intc_0 // 32
     extract3
     swap
-    intc 5 // 256
+    intc 4 // 256
     getbit
     bytec_1 // 0x00
     intc_1 // 0
@@ -4518,7 +3865,7 @@ replaceHolders_ternary_merge@3:
     itob
     extract 7 1
     replace2 31
-    bytec 17 // 0x0c
+    bytec 16 // 0x0c
     swap
     callsub __storage_write
     extract 33 32
@@ -4553,9 +3900,9 @@ pushComplex_ternary_merge@3:
     bytec 6 // 0x0e
     callsub __storage_read
     dup
-    bytec 8 // 0x04
+    bytec 7 // 0x04
     b*
-    bytec 13 // 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd
+    bytec 12 // 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd
     b+
     bytec_1 // 0x00
     intc_1 // 0
@@ -4615,7 +3962,7 @@ pushComplex_ternary_merge@3:
     intc_0 // 32
     extract3
     uncover 2
-    intc 5 // 256
+    intc 4 // 256
     getbit
     bytec_1 // 0x00
     intc_1 // 0
@@ -4724,9 +4071,9 @@ replaceComplex_while_top@4:
 replaceComplex_ternary_merge@8:
     swap
     itob
-    bytec 8 // 0x04
+    bytec 7 // 0x04
     b*
-    bytec 13 // 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd
+    bytec 12 // 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd
     b+
     swap
     uncover 3
@@ -4780,7 +4127,7 @@ replaceComplex_ternary_merge@8:
     intc_0 // 32
     extract3
     uncover 2
-    intc 5 // 256
+    intc 4 // 256
     getbit
     bytec_1 // 0x00
     intc_1 // 0
@@ -4812,9 +4159,9 @@ replaceComplex_while_top@10:
     bz replaceComplex_after_while@12
     dup
     itob
-    bytec 8 // 0x04
+    bytec 7 // 0x04
     b*
-    bytec 13 // 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd
+    bytec 12 // 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd
     b+
     dup
     bytec 4 // 0x0000
@@ -4856,7 +4203,7 @@ replaceComplex_while_top@10:
     b+
     bytec_0 // 0x
     callsub __storage_write
-    bytec 10 // 0x03
+    bytec 9 // 0x03
     b+
     bytec_0 // 0x
     callsub __storage_write
@@ -4895,9 +4242,9 @@ popComplex_ternary_merge@3:
     bytec_2 // 0x01
     b-
     dup
-    bytec 8 // 0x04
+    bytec 7 // 0x04
     b*
-    bytec 13 // 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd
+    bytec 12 // 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd
     b+
     dup
     bytec 4 // 0x0000
@@ -4939,7 +4286,7 @@ popComplex_ternary_merge@3:
     b+
     bytec_0 // 0x
     callsub __storage_write
-    bytec 10 // 0x03
+    bytec 9 // 0x03
     b+
     bytec_0 // 0x
     callsub __storage_write
@@ -4987,14 +4334,14 @@ mixedSummary_ternary_merge@3:
     +
     itob
     extract 6 2
-    bytec 9 // 0x0004
+    bytec 8 // 0x0004
     swap
     concat
     uncover 2
     concat
     swap
     concat
-    bytec 10 // 0x03
+    bytec 9 // 0x03
     intc_2 // 1
     intc_0 // 32
     dup
@@ -5002,7 +4349,7 @@ mixedSummary_ternary_merge@3:
     dup
     intc_1 // 0
     callsub __evm_dynarr_recursive_read
-    bytec 8 // 0x04
+    bytec 7 // 0x04
     intc_2 // 1
     intc_0 // 32
     dup
@@ -5016,7 +4363,7 @@ mixedSummary_ternary_merge@3:
     +
     itob
     extract 6 2
-    bytec 9 // 0x0004
+    bytec 8 // 0x0004
     swap
     concat
     uncover 2
@@ -5029,7 +4376,7 @@ mixedSummary_ternary_merge@3:
     +
     itob
     extract 6 2
-    bytec 9 // 0x0004
+    bytec 8 // 0x0004
     swap
     concat
     uncover 2
@@ -5115,7 +4462,7 @@ fixedLeafSummary:
 fixedLeafSummary_ternary_merge@3:
     !
     assert // not payable
-    bytec 20 // 0x06
+    bytec 19 // 0x06
     intc_2 // 1
     intc_0 // 32
     dup
@@ -5167,7 +4514,7 @@ mixedTreeSummary_ternary_merge@3:
     assert // not payable
     pushint 8
     bzero
-    bytec 11 // 0x05
+    bytec 10 // 0x05
     callsub __storage_read
     b|
     dup
@@ -5195,7 +4542,7 @@ mixedTreeSummary_while_top@4:
     itob
     bytec 5 // 0x02
     b*
-    bytec 21 // 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0
+    bytec 20 // 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0
     b+
     dup
     intc_2 // 1
@@ -5221,7 +4568,7 @@ mixedTreeSummary_while_top@4:
     +
     itob
     extract 6 2
-    bytec 9 // 0x0004
+    bytec 8 // 0x0004
     swap
     concat
     uncover 2
@@ -5341,7 +4688,7 @@ packedLeafSummary_ternary_merge@3:
     assert // not payable
     pushint 8
     bzero
-    bytec 12 // 0x07
+    bytec 11 // 0x07
     callsub __storage_read
     b|
     dup
@@ -5368,7 +4715,7 @@ packedLeafSummary_while_top@4:
     itob
     bytec 5 // 0x02
     b*
-    bytec 22 // 0xa66cc928b5edb82af9bd49922954155ab7b0942694bea4ce44661d9a8736c688
+    bytec 21 // 0xa66cc928b5edb82af9bd49922954155ab7b0942694bea4ce44661d9a8736c688
     b+
     dup
     bytec_2 // 0x01
@@ -5608,7 +4955,7 @@ holderSummary_ternary_merge@3:
     assert // not payable
     intc_0 // 32
     bzero
-    bytec 23 // 0x08
+    bytec 22 // 0x08
     callsub __storage_read
     dig 1
     swap
@@ -5619,7 +4966,7 @@ holderSummary_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec 16 // 0x09
+    bytec 15 // 0x09
     callsub __storage_read
     dig 2
     swap
@@ -5630,7 +4977,7 @@ holderSummary_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec 24 // 0x0b
+    bytec 23 // 0x0b
     callsub __storage_read
     dig 3
     swap
@@ -5641,7 +4988,7 @@ holderSummary_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec 17 // 0x0c
+    bytec 16 // 0x0c
     callsub __storage_read
     dig 4
     swap
@@ -5706,7 +5053,7 @@ holderSummary_ternary_merge@3:
     dup
     extract 0 32
     swap
-    intc 5 // 256
+    intc 4 // 256
     getbit
     bytec_1 // 0x00
     intc_1 // 0
@@ -5723,7 +5070,7 @@ holderSummary_ternary_merge@3:
     dup
     extract 0 32
     swap
-    intc 5 // 256
+    intc 4 // 256
     getbit
     bytec_1 // 0x00
     intc_1 // 0
@@ -5760,11 +5107,11 @@ complexSummary_ternary_merge@3:
     b>=
     assert // underflow
     swap
-    bytec 19 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 18 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b+
     swap
     b-
-    bytec 19 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 18 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -5775,9 +5122,9 @@ complexSummary_ternary_merge@3:
     dig 1
     b>
     assert // array index out of bounds
-    bytec 8 // 0x04
+    bytec 7 // 0x04
     b*
-    bytec 13 // 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd
+    bytec 12 // 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd
     b+
     bytec 6 // 0x0e
     callsub __storage_read
@@ -5829,7 +5176,7 @@ complexSummary_ternary_merge@3:
     intc_1 // 0
     !=
     uncover 5
-    bytec 10 // 0x03
+    bytec 9 // 0x03
     b+
     callsub __storage_read
     dup
@@ -5947,7 +5294,7 @@ clearAggregates_after_while@9:
     dup
     intc_1 // 0
     callsub __evm_dynarr_write
-    bytec 10 // 0x03
+    bytec 9 // 0x03
     bytec 4 // 0x0000
     intc_0 // 32
     dup
@@ -5955,7 +5302,7 @@ clearAggregates_after_while@9:
     dup
     intc_1 // 0
     callsub __evm_dynarr_write
-    bytec 8 // 0x04
+    bytec 7 // 0x04
     bytec 4 // 0x0000
     intc_0 // 32
     dup
@@ -5963,7 +5310,7 @@ clearAggregates_after_while@9:
     dup
     intc_1 // 0
     callsub __evm_dynarr_write
-    bytec 11 // 0x05
+    bytec 10 // 0x05
     callsub __storage_read
     frame_bury 3
     bytec_0 // 0x
@@ -5976,7 +5323,7 @@ clearAggregates_while_top@10:
     dup
     bytec 5 // 0x02
     b*
-    bytec 21 // 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0
+    bytec 20 // 0x036b6384b5eca791c62761152d0c79bb0604c104a5fb6f4eb0703f3154bb3db0
     b+
     dup
     bytec 4 // 0x0000
@@ -6001,10 +5348,10 @@ clearAggregates_while_top@10:
 
 clearAggregates_after_while@12:
     pop
-    bytec 11 // 0x05
+    bytec 10 // 0x05
     bytec_0 // 0x
     callsub __storage_write
-    bytec 20 // 0x06
+    bytec 19 // 0x06
     bytec 4 // 0x0000
     intc_0 // 32
     dup
@@ -6012,7 +5359,7 @@ clearAggregates_after_while@12:
     pushint 4
     intc_1 // 0
     callsub __evm_dynarr_write
-    bytec 12 // 0x07
+    bytec 11 // 0x07
     callsub __storage_read
     frame_bury 1
     bytec_0 // 0x
@@ -6025,7 +5372,7 @@ clearAggregates_while_top@13:
     dup
     bytec 5 // 0x02
     b*
-    bytec 22 // 0xa66cc928b5edb82af9bd49922954155ab7b0942694bea4ce44661d9a8736c688
+    bytec 21 // 0xa66cc928b5edb82af9bd49922954155ab7b0942694bea4ce44661d9a8736c688
     b+
     dup
     bytec_0 // 0x
@@ -6040,34 +5387,34 @@ clearAggregates_while_top@13:
 
 clearAggregates_after_while@15:
     pop
-    bytec 12 // 0x07
+    bytec 11 // 0x07
     bytec_0 // 0x
     callsub __storage_write
-    bytec 23 // 0x08
+    bytec 22 // 0x08
     bytec_0 // 0x
     callsub __storage_write
-    bytec 16 // 0x09
+    bytec 15 // 0x09
     bytec_0 // 0x
     callsub __storage_write
-    bytec 23 // 0x08
+    bytec 22 // 0x08
     bytec_0 // 0x
     callsub __storage_write
-    bytec 16 // 0x09
+    bytec 15 // 0x09
     bytec_0 // 0x
     callsub __storage_write
     bytec 26 // 0x0a
     bytec_0 // 0x
     callsub __storage_write
-    bytec 24 // 0x0b
+    bytec 23 // 0x0b
     bytec_0 // 0x
     callsub __storage_write
-    bytec 17 // 0x0c
+    bytec 16 // 0x0c
     bytec_0 // 0x
     callsub __storage_write
-    bytec 24 // 0x0b
+    bytec 23 // 0x0b
     bytec_0 // 0x
     callsub __storage_write
-    bytec 17 // 0x0c
+    bytec 16 // 0x0c
     bytec_0 // 0x
     callsub __storage_write
     bytec 27 // 0x0d
@@ -6083,9 +5430,9 @@ clearAggregates_while_top@16:
     b<
     bz clearAggregates_after_while@18
     dup
-    bytec 8 // 0x04
+    bytec 7 // 0x04
     b*
-    bytec 13 // 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd
+    bytec 12 // 0xbb7b4a454dc3493923482f07822329ed19e8244eff582cc204f8554c3620c3fd
     b+
     dup
     bytec 4 // 0x0000
@@ -6127,7 +5474,7 @@ clearAggregates_while_top@16:
     b+
     bytec_0 // 0x
     callsub __storage_write
-    bytec 10 // 0x03
+    bytec 9 // 0x03
     b+
     bytec_0 // 0x
     callsub __storage_write
@@ -6139,16 +5486,16 @@ clearAggregates_after_while@18:
     bytec 6 // 0x0e
     bytec_0 // 0x
     callsub __storage_write
-    bytec 14 // 0x0f
+    bytec 13 // 0x0f
     bytec_0 // 0x
     callsub __storage_write
-    bytec 15 // 0x10
+    bytec 14 // 0x10
     bytec_0 // 0x
     callsub __storage_write
-    bytec 14 // 0x0f
+    bytec 13 // 0x0f
     bytec_0 // 0x
     callsub __storage_write
-    bytec 15 // 0x10
+    bytec 14 // 0x10
     bytec_0 // 0x
     callsub __storage_write
     bytec 25 // 0x11
@@ -6194,7 +5541,7 @@ clearedSummary_ternary_merge@3:
     assert // overflow
     dig 2
     b|
-    bytec 8 // 0x04
+    bytec 7 // 0x04
     callsub __storage_read
     dup
     len
@@ -6203,7 +5550,7 @@ clearedSummary_ternary_merge@3:
     assert // overflow
     dig 3
     b|
-    bytec 11 // 0x05
+    bytec 10 // 0x05
     callsub __storage_read
     dup
     len
@@ -6212,7 +5559,7 @@ clearedSummary_ternary_merge@3:
     assert // overflow
     dig 4
     b|
-    bytec 20 // 0x06
+    bytec 19 // 0x06
     callsub __storage_read
     dup
     len
@@ -6221,7 +5568,7 @@ clearedSummary_ternary_merge@3:
     assert // overflow
     dig 5
     b|
-    bytec 12 // 0x07
+    bytec 11 // 0x07
     callsub __storage_read
     dup
     len
@@ -6239,7 +5586,7 @@ clearedSummary_ternary_merge@3:
     assert // overflow
     dig 7
     b|
-    bytec 14 // 0x0f
+    bytec 13 // 0x0f
     callsub __storage_read
     dup
     len
@@ -6393,7 +5740,7 @@ holder_ternary_merge@3:
     assert // not payable
     intc_0 // 32
     bzero
-    bytec 14 // 0x0f
+    bytec 13 // 0x0f
     callsub __storage_read
     dig 1
     swap
@@ -6404,7 +5751,7 @@ holder_ternary_merge@3:
     -
     intc_0 // 32
     extract3
-    bytec 15 // 0x10
+    bytec 14 // 0x10
     callsub __storage_read
     uncover 2
     swap
@@ -6484,4 +5831,116 @@ __evm_deco:
     assert // EVM ABI offset exceeds uint64
     pushint 24
     extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeEvm.__evm_deca_2(__start: uint64) -> bytes:
+__evm_deca_2:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_deco
+    dup
+    intc 5 // 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    bytec 4 // 0x0000
+    frame_dig -1
+    intc_0 // 32
+    +
+    intc_1 // 0
+
+__evm_deca_2_while_top@1:
+    dup
+    dig 4
+    <
+    bz __evm_deca_2_after_while@3
+    dup
+    intc_0 // 32
+    *
+    dig 2
+    +
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    bytec 24 // 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 4
+    dup
+    cover 2
+    intc_1 // 0
+    extract_uint16
+    +
+    itob
+    extract 6 0
+    replace2 0
+    swap
+    concat
+    cover 2
+    intc_2 // 1
+    +
+    b __evm_deca_2_while_top@1
+
+__evm_deca_2_after_while@3:
+    popn 2
+    swap
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/recursive_shape_audit.sol.RecursiveShapeEvm.__evm_decs_96(__start: uint64) -> bytes:
+__evm_decs_96:
+    proto 1 1
+    frame_dig -1
+    intc_0 // 32
+    +
+    callsub __evm_decw
+    dup
+    bytec_2 // 0x01
+    b<=
+    assert // invalid EVM ABI bool
+    pushint 24
+    extract_uint64
+    intc_1 // 0
+    !=
+    bytec_1 // 0x00
+    intc_1 // 0
+    uncover 2
+    setbit
+    frame_dig -1
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    swap
+    dig 1
+    b|
+    uncover 2
+    concat
+    frame_dig -1
+    pushint 64
+    +
+    callsub __evm_decw
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    uncover 2
+    b|
+    concat
     retsub

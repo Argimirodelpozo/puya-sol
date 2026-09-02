@@ -4,9 +4,8 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol.XchainKit.approval_program() -> uint64:
 main:
     intcblock 32 1 0 20
-    bytecblock 0x151f7c75 0x50726f6772616d098014 0x488101 "bal" "__ctor_pending"
+    bytecblock 0x151f7c75 "__ctor_pending" 0x50726f6772616d098014 0x488101 "bal"
     intc_2 // 0
-    dupn 2
     pushint 4096
     bzero
     dup
@@ -26,7 +25,7 @@ main:
     store 0
     txn ApplicationID
     bnz main_after_if_else@2
-    bytec 4 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_1 // 1
     app_global_put
     intc_1 // 1
@@ -37,10 +36,10 @@ main_after_if_else@2:
     bz main_after_if_else@6
     pushbytes 0xbacc49e3 // method "__postInit()void"
     txna ApplicationArgs 0
-    match main___postInit_route@64
+    match main___postInit_route@49
     intc_2 // 0
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol.XchainKit.__puya_arc4_router__@66:
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol.XchainKit.__puya_arc4_router__@51:
     bz main_after_if_else@6
     intc_1 // 1
     return
@@ -77,10 +76,10 @@ main_if_body@12:
     intc_3 // 20
     ==
     assert // xchain owner claim must be 20 bytes
-    bytec_1 // 0x50726f6772616d098014
+    bytec_2 // 0x50726f6772616d098014
     txna ApplicationArgs 2
     concat
-    bytec_2 // 0x488101
+    bytec_3 // 0x488101
     concat
     sha512_256
     txn Sender
@@ -111,7 +110,7 @@ main_switch_case_3@18:
 main_ternary_merge@24:
     !
     assert // not payable
-    bytec_3 // "bal"
+    bytec 4 // "bal"
     concat
     sha256
     box_get
@@ -154,10 +153,7 @@ main_switch_case_2@17:
     assert // overflow
     intc_0 // 32
     bzero
-    dup
-    cover 2
     b|
-    swap
     txn GroupIndex
     bz main_ternary_false@28
     txn GroupIndex
@@ -168,111 +164,29 @@ main_switch_case_2@17:
 main_ternary_merge@29:
     !
     assert // not payable
-    txn NumAppArgs
-    pushint 3
-    >=
-    bz main_ternary_false@33
-    txna ApplicationArgs 2
-    len
-    intc_3 // 20
-    ==
-    bz main_ternary_false@33
-    bytec_1 // 0x50726f6772616d098014
-    txna ApplicationArgs 2
-    concat
-    bytec_2 // 0x488101
-    concat
-    sha512_256
-    txn Sender
-    ==
-    bz main_ternary_false@33
-    txna ApplicationArgs 2
-    concat
-    dup
-    bury 5
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-
-main_ternary_merge@34:
-    bytec_3 // "bal"
+    callsub __evm_sender
+    bytec 4 // "bal"
     concat
     sha256
+    dup
     box_get
     pushbytes 0x
     cover 2
     select
+    uncover 2
     b+
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    txn NumAppArgs
-    pushint 3
-    >=
-    bz main_ternary_false@38
-    txna ApplicationArgs 2
-    len
-    intc_3 // 20
-    ==
-    bz main_ternary_false@38
-    bytec_1 // 0x50726f6772616d098014
-    txna ApplicationArgs 2
-    concat
-    bytec_2 // 0x488101
-    concat
-    sha512_256
-    txn Sender
-    ==
-    bz main_ternary_false@38
-    dig 3
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-
-main_ternary_merge@39:
-    bytec_3 // "bal"
-    concat
-    sha256
-    dup
+    dig 1
     box_del
     pop
-    swap
     box_put
     bytec_0 // 0x151f7c75
     log
     intc_1 // 1
     return
-
-main_ternary_false@38:
-    dig 2
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    b main_ternary_merge@39
-
-main_ternary_false@33:
-    txn Sender
-    extract 12 20
-    concat
-    dup
-    bury 4
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    b main_ternary_merge@34
 
 main_ternary_false@28:
     intc_2 // 0
@@ -283,44 +197,16 @@ main_switch_case_1@16:
     intc_0 // 32
     bzero
     txn GroupIndex
-    bz main_ternary_false@43
+    bz main_ternary_false@33
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@44:
+main_ternary_merge@34:
     !
     assert // not payable
-    txn NumAppArgs
-    pushint 3
-    >=
-    bz main_ternary_false@48
-    txna ApplicationArgs 2
-    len
-    intc_3 // 20
-    ==
-    bz main_ternary_false@48
-    bytec_1 // 0x50726f6772616d098014
-    txna ApplicationArgs 2
-    concat
-    bytec_2 // 0x488101
-    concat
-    sha512_256
-    txn Sender
-    ==
-    bz main_ternary_false@48
-    dup
-    txna ApplicationArgs 2
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-
-main_ternary_merge@49:
+    callsub __evm_sender
     dup
     len
     intc_3 // 20
@@ -341,23 +227,9 @@ main_ternary_merge@49:
     intc_1 // 1
     return
 
-main_ternary_false@48:
-    txn Sender
-    extract 12 20
-    dig 1
-    swap
-    concat
-    dup
-    len
-    intc_0 // 32
-    -
-    intc_0 // 32
-    extract3
-    b main_ternary_merge@49
-
-main_ternary_false@43:
+main_ternary_false@33:
     intc_2 // 0
-    b main_ternary_merge@44
+    b main_ternary_merge@34
 
 main_switch_case_0@15:
     callsub __evm_npy
@@ -374,13 +246,13 @@ main_switch_case_0@15:
     bzero
     b|
     txn GroupIndex
-    bz main_ternary_false@53
+    bz main_ternary_false@38
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@54:
+main_ternary_merge@39:
     !
     assert // not payable
     dup
@@ -405,21 +277,21 @@ main_ternary_merge@54:
     dup
     bury 5
     ==
-    bz main_ternary_false@57
+    bz main_ternary_false@42
     dup
     extract 12 12
     dig 3
     !=
-    bz main_ternary_false@57
+    bz main_ternary_false@42
     extract 12 20
-    bytec_1 // 0x50726f6772616d098014
+    bytec_2 // 0x50726f6772616d098014
     swap
     concat
-    bytec_2 // 0x488101
+    bytec_3 // 0x488101
     concat
     sha512_256
 
-main_ternary_merge@58:
+main_ternary_merge@43:
     intc_1 // 1
     itxn_field TypeEnum
     itxn_field Receiver
@@ -432,35 +304,35 @@ main_ternary_merge@58:
     intc_1 // 1
     return
 
-main_ternary_false@57:
-    b main_ternary_merge@58
+main_ternary_false@42:
+    b main_ternary_merge@43
 
-main_ternary_false@53:
+main_ternary_false@38:
     intc_2 // 0
-    b main_ternary_merge@54
+    b main_ternary_merge@39
 
-main___postInit_route@64:
+main___postInit_route@49:
     txn OnCompletion
     !
     txn ApplicationID
     &&
     assert
-    bytec 4 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
     txn Sender
     global CreatorAddress
     ==
     assert // __postInit callable only by the app creator
-    bytec 4 // "__ctor_pending"
+    bytec_1 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_3 // "bal"
+    bytec 4 // "bal"
     pushint 2
     box_create
     pop
     intc_1 // 1
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol.XchainKit.__puya_arc4_router__@66
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol.XchainKit.__puya_arc4_router__@51
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol.XchainKit.__evm_npy() -> void:
@@ -510,4 +382,51 @@ __evm_arga:
     bzero
     ==
     assert // invalid EVM ABI address padding
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/xchain_accounts.sol.XchainKit.__evm_sender() -> bytes:
+__evm_sender:
+    txn NumAppArgs
+    pushint 3
+    >=
+    bz __evm_sender_ternary_false@4
+    txna ApplicationArgs 2
+    len
+    intc_3 // 20
+    ==
+    bz __evm_sender_ternary_false@4
+    bytec_2 // 0x50726f6772616d098014
+    txna ApplicationArgs 2
+    concat
+    bytec_3 // 0x488101
+    concat
+    sha512_256
+    txn Sender
+    ==
+    bz __evm_sender_ternary_false@4
+    intc_0 // 32
+    bzero
+    txna ApplicationArgs 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    retsub
+
+__evm_sender_ternary_false@4:
+    intc_0 // 32
+    bzero
+    txn Sender
+    extract 12 20
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
     retsub

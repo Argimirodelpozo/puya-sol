@@ -4,11 +4,11 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.approval_program() -> uint64:
 main:
     intcblock 32 0 1 2 65535 128
-    bytecblock 0x151f7c75 0x 0x80000000000000000000000000000000 0x010000 0x0000 0xffffffffffffffffffffffffffffffff 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x01 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x8000 0x0100000000000000000000000000000000 0x000a 0x0000000000000000000000000000000000000000000000000000000000000040 0x0001 0x0006 0x00010002 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock 0x151f7c75 0x 0x80000000000000000000000000000000 0x010000 0xffffffffffffffffffffffffffffffff 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x0000 0x01 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x8000 0x0100000000000000000000000000000000 0x000a 0x0000000000000000000000000000000000000000000000000000000000000040 0x0006 0x00010002 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     intc_1 // 0
     dup
     bytec_1 // ""
-    dupn 9
+    dupn 6
     pushint 4096
     bzero
     dup
@@ -33,20 +33,20 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@49
+    bnz main_after_if_else@37
     txn NumAppArgs
     intc_3 // 2
     ==
-    bz main_after_if_else@49
+    bz main_after_if_else@37
     pushbytess 0x5c36b186 0x07d122f1 0xd30a0334 0xf507c295 0x2b3e60d0 0xdf718afd 0x70259a12
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@20 main_switch_case_4@39 main_switch_case_5@46 main_switch_case_6@47
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@20 main_switch_case_4@30 main_switch_case_5@34 main_switch_case_6@35
 
-main_after_if_else@49:
+main_after_if_else@37:
     txn NumAppArgs
-    bnz main_after_if_else@52
+    bnz main_after_if_else@40
     txn OnCompletion
-    bnz main_after_if_else@52
+    bnz main_after_if_else@40
     bytec_1 // 0x
     callsub __fallback
     bytec_0 // 0x151f7c75
@@ -56,25 +56,25 @@ main_after_if_else@49:
     intc_2 // 1
     return
 
-main_after_if_else@52:
+main_after_if_else@40:
     txn OnCompletion
     !
     assert
     txn ApplicationID
-    bz main_after_if_else@69
+    bz main_after_if_else@57
     pushbytess 0xbea484fd 0x970b571d 0xd16704dc 0xa4f7a774 0xdc8c76a3 0x54a4a1c6 0xfc1d7490 0xb65fdc3d 0x9509a93a // method "ping()uint256", method "scalars(uint64,bool,byte[3])(uint64,bool,byte[3])", method "signed(uint64,uint128)(uint256,uint256)", method "nested(uint32[][][])uint32[][][]", method "record((uint16,string,uint32[]))(uint16,string,uint32[])", method "codec(uint64,byte[])byte[]", method "arc4Codec(uint64,byte[])(uint64,byte[])", method "senderIdentity(address)(bool,bool,address)", method "__fallback(byte[])byte[]"
     txna ApplicationArgs 0
-    match main_ping_route@58 main_scalars_route@59 main_signed_route@60 main_nested_route@61 main_record_route@62 main_codec_route@63 main_arc4Codec_route@64 main_senderIdentity_route@65 main___fallback_route@66
+    match main_ping_route@46 main_scalars_route@47 main_signed_route@48 main_nested_route@49 main_record_route@50 main_codec_route@51 main_arc4Codec_route@52 main_senderIdentity_route@53 main___fallback_route@54
 
-main_after_if_else@69:
+main_after_if_else@57:
     intc_1 // 0
-    bury 10
+    bury 7
 
-main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@70:
-    dig 9
-    bnz main_after_if_else@55
+main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@58:
+    dig 6
+    bnz main_after_if_else@43
     txn OnCompletion
-    bnz main_after_if_else@55
+    bnz main_after_if_else@43
     txna ApplicationArgs 0
     callsub __fallback
     bytec_0 // 0x151f7c75
@@ -82,13 +82,13 @@ main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/
     concat
     log
     intc_2 // 1
-    bury 10
+    bury 7
 
-main_after_if_else@55:
-    dig 9
+main_after_if_else@43:
+    dig 6
     return
 
-main___fallback_route@66:
+main___fallback_route@54:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
@@ -112,10 +112,10 @@ main___fallback_route@66:
     concat
     log
     intc_2 // 1
-    bury 10
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@70
+    bury 7
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@58
 
-main_senderIdentity_route@65:
+main_senderIdentity_route@53:
     txna ApplicationArgs 1
     dup
     len
@@ -123,13 +123,13 @@ main_senderIdentity_route@65:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txn GroupIndex
-    bz main_ternary_false@75
+    bz main_ternary_false@69
     txn GroupIndex
     intc_2 // 1
     -
     gtxns Amount
 
-main_ternary_merge@76:
+main_ternary_merge@70:
     !
     assert // not payable
     load 0
@@ -141,9 +141,9 @@ main_ternary_merge@76:
     txn Sender
     dig 1
     ==
-    bnz main_bool_true@79
+    bnz main_bool_true@73
     global CallerApplicationID
-    bz main_bool_false@80
+    bz main_bool_false@74
     pushint 24
     bzero
     global CallerApplicationID
@@ -151,12 +151,12 @@ main_ternary_merge@76:
     concat
     dig 1
     ==
-    bz main_bool_false@80
+    bz main_bool_false@74
 
-main_bool_true@79:
+main_bool_true@73:
     intc_2 // 1
 
-main_bool_merge@81:
+main_bool_merge@75:
     swap
     pushbytes 0xffffffffffffffffffffffffffffffffffffffff
     b&
@@ -179,18 +179,18 @@ main_bool_merge@81:
     concat
     log
     intc_2 // 1
-    bury 10
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@70
+    bury 7
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@58
 
-main_bool_false@80:
+main_bool_false@74:
     intc_1 // 0
-    b main_bool_merge@81
+    b main_bool_merge@75
 
-main_ternary_false@75:
+main_ternary_false@69:
     intc_1 // 0
-    b main_ternary_merge@76
+    b main_ternary_merge@70
 
-main_arc4Codec_route@64:
+main_arc4Codec_route@52:
     txna ApplicationArgs 1
     dup
     len
@@ -228,10 +228,10 @@ main_arc4Codec_route@64:
     concat
     log
     intc_2 // 1
-    bury 10
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@70
+    bury 7
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@58
 
-main_codec_route@63:
+main_codec_route@51:
     txna ApplicationArgs 1
     dup
     len
@@ -262,10 +262,10 @@ main_codec_route@63:
     concat
     log
     intc_2 // 1
-    bury 10
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@70
+    bury 7
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@58
 
-main_record_route@62:
+main_record_route@50:
     txna ApplicationArgs 1
     dup
     len
@@ -311,13 +311,13 @@ main_record_route@62:
     concat
     log
     intc_2 // 1
-    bury 10
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@70
+    bury 7
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@58
 
-main_nested_route@61:
+main_nested_route@49:
     txna ApplicationArgs 1
     dup
-    bury 12
+    bury 9
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
@@ -330,18 +330,18 @@ main_nested_route@61:
     len
     bury 3
     extract 2 0
-    bury 13
+    bury 10
     intc_1 // 0
 
-main_for_header@90:
+main_for_header@84:
     dup
     dig 5
     <
-    bz main_after_for@95
+    bz main_after_for@89
     dup
     intc_3 // 2
     *
-    dig 14
+    dig 11
     dup
     uncover 2
     extract_uint16 // on error: invalid array encoding
@@ -364,11 +364,11 @@ main_for_header@90:
     swap
     intc_1 // 0
 
-main_for_header@92:
+main_for_header@86:
     dup
     dig 7
     <
-    bz main_after_for@94
+    bz main_after_for@88
     dup
     intc_3 // 2
     *
@@ -395,9 +395,9 @@ main_for_header@92:
     cover 3
     intc_2 // 1
     +
-    b main_for_header@92
+    b main_for_header@86
 
-main_after_for@94:
+main_after_for@88:
     pop
     bury 1
     swap
@@ -408,16 +408,16 @@ main_after_for@94:
     swap
     intc_2 // 1
     +
-    b main_for_header@90
+    b main_for_header@84
 
-main_after_for@95:
+main_after_for@89:
     pop
     intc_3 // 2
     +
     dig 1
     ==
     assert // invalid number of bytes for arc4.dynamic_array<arc4.dynamic_array<arc4.dynamic_array<arc4.uint32>>>
-    dig 10
+    dig 7
     callsub nested
     pop
     bytec_0 // 0x151f7c75
@@ -425,10 +425,10 @@ main_after_for@95:
     concat
     log
     intc_2 // 1
-    bury 10
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@70
+    bury 7
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@58
 
-main_signed_route@60:
+main_signed_route@48:
     txna ApplicationArgs 1
     dup
     len
@@ -449,10 +449,10 @@ main_signed_route@60:
     concat
     log
     intc_2 // 1
-    bury 10
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@70
+    bury 7
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@58
 
-main_scalars_route@59:
+main_scalars_route@47:
     txna ApplicationArgs 1
     dup
     len
@@ -489,20 +489,20 @@ main_scalars_route@59:
     concat
     log
     intc_2 // 1
-    bury 10
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@70
+    bury 7
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@58
 
-main_ping_route@58:
+main_ping_route@46:
     callsub ping
     bytec_0 // 0x151f7c75
     swap
     concat
     log
     intc_2 // 1
-    bury 10
-    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@70
+    bury 7
+    b main_after_inlined_/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__puya_arc4_router__@58
 
-main_switch_case_6@47:
+main_switch_case_6@35:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_decw
@@ -592,7 +592,7 @@ main_switch_case_6@47:
     intc_2 // 1
     return
 
-main_switch_case_5@46:
+main_switch_case_5@34:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_decw
@@ -661,14 +661,14 @@ main_switch_case_5@46:
     swap
     concat
     concat
-    bytec 6 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    bytec 5 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
     log
     intc_2 // 1
     return
 
-main_switch_case_4@39:
+main_switch_case_4@30:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_deco
@@ -677,16 +677,17 @@ main_switch_case_4@39:
     %
     !
     assert // unaligned EVM ABI offset
+    bytec_1 // 0x
+    swap
     dup
     callsub __evm_decw
     dup
-    cover 2
     extract 0 30
     pushint 30
     bzero
     ==
     assert // invalid EVM ABI unsigned integer padding
-    dup
+    dig 1
     intc_0 // 32
     +
     callsub __evm_deco
@@ -695,12 +696,10 @@ main_switch_case_4@39:
     %
     !
     assert // unaligned EVM ABI offset
-    dig 1
+    dig 2
     +
     dup
     callsub __evm_deco
-    dup
-    cover 4
     dup
     intc 4 // 65535
     <=
@@ -709,13 +708,13 @@ main_switch_case_4@39:
     intc_0 // 32
     +
     dup
-    cover 3
+    dig 2
     +
     txna ApplicationArgs 1
     len
     <=
     assert // EVM ABI decode out of bounds
-    dup
+    dig 3
     pushint 64
     +
     callsub __evm_deco
@@ -724,74 +723,6 @@ main_switch_case_4@39:
     %
     !
     assert // unaligned EVM ABI offset
-    +
-    dup
-    callsub __evm_deco
-    dup
-    bury 9
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    swap
-    intc_0 // 32
-    +
-    intc_1 // 0
-    bury 11
-
-main_while_top@40:
-    dig 10
-    dig 9
-    <
-    bz main_after_while@42
-    dig 10
-    dup
-    intc_0 // 32
-    *
-    dig 2
-    +
-    callsub __evm_decw
-    dup
-    extract 0 28
-    pushint 28
-    bzero
-    ==
-    assert // invalid EVM ABI unsigned integer padding
-    extract 24 8
-    dup
-    bitlen
-    intc_0 // 32
-    <=
-    assert // overflow
-    extract 4 4
-    bytec 13 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 4
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 2
-    intc_2 // 1
-    +
-    bury 11
-    b main_while_top@40
-
-main_after_while@42:
-    pop
-    bytec_1 // 0x
     uncover 3
     extract 24 8
     dup
@@ -801,8 +732,8 @@ main_after_while@42:
     assert // overflow
     extract 6 2
     txna ApplicationArgs 1
+    uncover 3
     uncover 4
-    uncover 5
     extract3
     dup
     len
@@ -810,19 +741,23 @@ main_after_while@42:
     extract 6 2
     swap
     concat
-    swap
-    bytec 14 // 0x0006
+    uncover 3
+    uncover 3
+    +
+    callsub __evm_deca_2
+    uncover 2
+    bytec 13 // 0x0006
     concat
-    dig 1
+    dig 2
     len
     pushint 6
     +
     itob
     extract 6 2
     concat
-    swap
-    concat
     uncover 2
+    concat
+    swap
     concat
     callsub record
     pop
@@ -839,22 +774,19 @@ main_after_while@42:
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    bury 8
+    swap
     intc_1 // 0
-    bury 10
 
-main_while_top@43:
-    dig 9
-    dig 8
+main_while_top@31:
+    dup
+    dig 3
     <
-    bz main_after_while@45
+    bz main_after_while@33
     intc_0 // 32
     bzero
-    dig 1
+    dig 2
     extract 2 0
-    dig 11
-    dup
-    cover 3
+    dig 2
     pushint 4
     *
     extract_uint32
@@ -866,20 +798,19 @@ main_while_top@43:
     -
     intc_0 // 32
     extract3
-    uncover 5
+    uncover 6
     swap
     concat
-    cover 4
+    cover 5
     intc_2 // 1
     +
-    bury 10
-    b main_while_top@43
+    b main_while_top@31
 
-main_after_while@45:
-    pop
+main_after_while@33:
+    popn 2
     intc_0 // 32
     bzero
-    uncover 2
+    uncover 3
     dup
     cover 2
     intc_1 // 0
@@ -901,7 +832,7 @@ main_after_while@45:
     extract_uint16
     uncover 3
     swap
-    uncover 4
+    uncover 5
     substring3
     dup
     intc_1 // 0
@@ -952,7 +883,7 @@ main_after_while@45:
     uncover 2
     swap
     concat
-    dig 7
+    uncover 3
     itob
     uncover 3
     swap
@@ -969,7 +900,7 @@ main_after_while@45:
     swap
     concat
     concat
-    bytec 6 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    bytec 5 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
     log
@@ -985,30 +916,34 @@ main_switch_case_3@20:
     %
     !
     assert // unaligned EVM ABI offset
+    bytec_1 // 0x
+    swap
+    bytec_1 // 0x
+    cover 2
     dup
     callsub __evm_deco
     dup
-    bury 7
+    bury 8
     intc 4 // 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
+    bytec 6 // 0x0000
     swap
     intc_0 // 32
     +
-    bury 10
+    bury 9
     intc_1 // 0
     bury 8
 
-main_while_top@21:
+main_while_top@62:
     dig 7
-    dig 6
+    dig 7
     <
-    bz main_after_while@29
+    bz main_after_while@64
     dig 7
     intc_0 // 32
     *
-    dig 10
+    dig 9
     dup
     uncover 2
     +
@@ -1026,23 +961,24 @@ main_while_top@21:
     intc 4 // 65535
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
+    bytec 6 // 0x0000
     cover 2
     intc_0 // 32
     +
-    bury 11
+    swap
     intc_1 // 0
-    cover 2
+    swap
 
-main_while_top@23:
-    dig 2
-    dig 4
+main_while_top@98:
+    dig 1
+    dig 5
     <
-    bz main_after_while@28
-    dig 2
+    bz main_after_while@100
+    swap
+    dup
     intc_0 // 32
     *
-    dig 12
+    dig 3
     dup
     uncover 2
     +
@@ -1053,45 +989,8 @@ main_while_top@23:
     !
     assert // unaligned EVM ABI offset
     +
-    dup
-    callsub __evm_deco
-    dup
-    cover 5
-    intc 4 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 4 // 0x0000
-    cover 4
-    intc_0 // 32
-    +
-    cover 2
-    intc_1 // 0
-
-main_while_top@25:
-    dup
-    dig 7
-    <
-    bz main_after_while@27
-    dup
-    intc_0 // 32
-    *
-    dig 4
-    +
-    callsub __evm_decw
-    dup
-    extract 0 28
-    pushint 28
-    bzero
-    ==
-    assert // invalid EVM ABI unsigned integer padding
-    extract 24 8
-    dup
-    bitlen
-    intc_0 // 32
-    <=
-    assert // overflow
-    extract 4 4
-    bytec 13 // 0x0001
+    callsub __evm_deca_2
+    bytec 14 // 0x00010002
     swap
     concat
     dup
@@ -1099,52 +998,21 @@ main_while_top@25:
     swap
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
-    uncover 7
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 5
-    intc_2 // 1
-    +
-    b main_while_top@25
-
-main_after_while@27:
-    pop
-    uncover 2
-    pop
-    uncover 4
-    pop
-    bytec 15 // 0x00010002
-    uncover 4
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 3
+    uncover 5
     cover 2
     callsub dynamic_array_concat_dynamic_element
-    swap
-    uncover 2
+    cover 3
     intc_2 // 1
     +
-    cover 2
-    b main_while_top@23
+    swap
+    b main_while_top@98
 
-main_after_while@28:
+main_after_while@100:
+    bury 1
+    bury 1
     uncover 2
     pop
-    uncover 2
-    pop
-    bytec 15 // 0x00010002
+    bytec 14 // 0x00010002
     uncover 2
     concat
     dup
@@ -1157,35 +1025,32 @@ main_after_while@28:
     intc_2 // 1
     +
     bury 8
-    b main_while_top@21
+    b main_while_top@62
 
-main_after_while@29:
-    bytec_1 // 0x
-    dup
-    uncover 2
+main_after_while@64:
     callsub nested
     pop
     dup
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
     dup
-    bury 9
+    bury 8
     intc_1 // 0
-    bury 11
+    bury 9
     intc_0 // 32
     *
 
-main_while_top@30:
-    dig 10
-    dig 9
+main_while_top@21:
+    dig 8
+    dig 8
     <
-    bz main_after_while@38
+    bz main_after_while@29
     bytec_1 // 0x
     cover 3
     bytec_1 // 0x
     cover 5
     dig 1
-    dig 13
+    dig 11
     callsub dynamic_array_read_dynamic_element
     intc_1 // 0
     extract_uint16 // on error: invalid array length header
@@ -1197,15 +1062,15 @@ main_while_top@30:
     *
     swap
 
-main_while_top@32:
+main_while_top@23:
     dig 3
     dig 5
     <
-    bz main_after_while@37
+    bz main_after_while@28
     bytec_1 // 0x
     cover 7
     dig 2
-    dig 17
+    dig 15
     callsub dynamic_array_read_dynamic_element
     dup
     intc_1 // 0
@@ -1236,22 +1101,22 @@ main_while_top@32:
     extract_uint16 // on error: invalid array length header
     cover 4
     intc_1 // 0
-    cover 2
+    cover 4
 
-main_while_top@34:
-    dig 2
+main_while_top@25:
+    dig 4
     dig 6
     <
-    bz main_after_while@36
+    bz main_after_while@27
     intc_0 // 32
     bzero
-    dig 4
-    dig 21
+    dig 3
+    dig 19
     callsub dynamic_array_read_dynamic_element
     dup
     intc_1 // 0
     extract_uint16
-    dig 7
+    dig 6
     >
     assert // index out of bounds
     extract 2 0
@@ -1266,7 +1131,7 @@ main_while_top@34:
     +
     extract3
     extract 2 0
-    uncover 4
+    uncover 6
     dup
     cover 2
     pushint 4
@@ -1288,11 +1153,11 @@ main_while_top@34:
     cover 10
     intc_2 // 1
     +
-    cover 2
-    b main_while_top@34
+    cover 4
+    b main_while_top@25
 
-main_after_while@36:
-    uncover 2
+main_after_while@27:
+    uncover 4
     pop
     uncover 7
     pop
@@ -1337,9 +1202,9 @@ main_after_while@36:
     intc_2 // 1
     +
     cover 3
-    b main_while_top@32
+    b main_while_top@23
 
-main_after_while@37:
+main_after_while@28:
     bury 1
     uncover 2
     pop
@@ -1379,17 +1244,17 @@ main_after_while@37:
     cover 4
     len
     +
-    dig 10
+    dig 8
     intc_2 // 1
     +
-    bury 11
-    b main_while_top@30
+    bury 9
+    b main_while_top@21
 
-main_after_while@38:
+main_after_while@29:
     popn 2
     intc_0 // 32
     bzero
-    dig 7
+    dig 6
     itob
     concat
     dup
@@ -1402,7 +1267,7 @@ main_after_while@38:
     uncover 2
     concat
     concat
-    bytec 6 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
+    bytec 5 // 0x151f7c750000000000000000000000000000000000000000000000000000000000000020
     swap
     concat
     log
@@ -1438,7 +1303,7 @@ main_ternary_merge@10:
     intc 5 // 128
     >=
     bz main_ternary_false@12
-    bytec 5 // 0xffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffff
 
 main_ternary_merge@13:
     ==
@@ -1480,7 +1345,7 @@ main_ternary_merge@13:
     intc 5 // 128
     >=
     bz main_ternary_false@15
-    bytec 16 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 15 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@16:
     swap
@@ -1497,7 +1362,7 @@ main_ternary_merge@16:
     intc 5 // 128
     >=
     bz main_ternary_false@18
-    bytec 16 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 15 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@19:
     uncover 2
@@ -1837,7 +1702,7 @@ signed_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
-    bytec 5 // 0xffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
     bytec_2 // 0x80000000000000000000000000000000
@@ -1959,7 +1824,7 @@ signed_ternary_merge@21:
     b+
     bytec 10 // 0x0100000000000000000000000000000000
     b%
-    bytec 5 // 0xffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
     bytec_2 // 0x80000000000000000000000000000000
@@ -1969,7 +1834,7 @@ signed_ternary_merge@21:
     b+
 
 signed_ternary_merge@24:
-    bytec 5 // 0xffffffffffffffffffffffffffffffff
+    bytec 4 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
     bytec_2 // 0x80000000000000000000000000000000
@@ -2087,7 +1952,7 @@ record_ternary_merge@3:
     uncover 2
     substring3
     uncover 2
-    bytec 14 // 0x0006
+    bytec 13 // 0x0006
     concat
     dig 2
     len
@@ -2312,4 +2177,73 @@ __evm_deco:
     assert // EVM ABI offset exceeds uint64
     pushint 24
     extract_uint64
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_contract_abi.sol.EvmContractAbi.__evm_deca_2(__start: uint64) -> bytes:
+__evm_deca_2:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_deco
+    dup
+    intc 4 // 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    bytec 6 // 0x0000
+    frame_dig -1
+    intc_0 // 32
+    +
+    intc_1 // 0
+
+__evm_deca_2_while_top@1:
+    dup
+    dig 4
+    <
+    bz __evm_deca_2_after_while@3
+    dup
+    intc_0 // 32
+    *
+    dig 2
+    +
+    callsub __evm_decw
+    dup
+    extract 0 28
+    pushint 28
+    bzero
+    ==
+    assert // invalid EVM ABI unsigned integer padding
+    extract 24 8
+    dup
+    bitlen
+    intc_0 // 32
+    <=
+    assert // overflow
+    extract 4 4
+    pushbytes 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 4
+    dup
+    cover 2
+    intc_1 // 0
+    extract_uint16
+    +
+    itob
+    extract 6 0
+    replace2 0
+    swap
+    concat
+    cover 2
+    intc_2 // 1
+    +
+    b __evm_deca_2_while_top@1
+
+__evm_deca_2_after_while@3:
+    popn 2
+    swap
     retsub

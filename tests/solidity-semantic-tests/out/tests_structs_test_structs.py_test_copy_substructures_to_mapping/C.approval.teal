@@ -32,16 +32,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@13
+    bnz main_after_if_else@10
     txn NumAppArgs
     intc_1 // 2
     ==
-    bz main_after_if_else@13
+    bz main_after_if_else@10
     pushbytess 0x841ae8f5 0x7e8bf10f 0x904f60db 0xea340754
     txna ApplicationArgs 0
     match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8
 
-main_after_if_else@13:
+main_after_if_else@10:
     txn OnCompletion
     !
     assert
@@ -49,10 +49,10 @@ main_after_if_else@13:
     assert
     pushbytess 0xbacc49e3 0xb9fa804e 0xc0b107a4 0x4f1f412d 0xe38e8ea9 // method "__postInit()void", method "from_memory()(byte[],uint16[],uint16)", method "from_state()(byte[],uint16[],uint16)", method "from_storage()(byte[],uint16[],uint16)", method "from_calldata((byte[],uint16[],uint16))(byte[],uint16[],uint16)"
     txna ApplicationArgs 0
-    match main___postInit_route@16 main_from_memory_route@17 main_from_state_route@18 main_from_storage_route@19 main_from_calldata_route@20
+    match main___postInit_route@13 main_from_memory_route@14 main_from_state_route@15 main_from_storage_route@16 main_from_calldata_route@17
     err
 
-main_from_calldata_route@20:
+main_from_calldata_route@17:
     txna ApplicationArgs 1
     dup
     len
@@ -100,7 +100,7 @@ main_from_calldata_route@20:
     intc_3 // 1
     return
 
-main_from_storage_route@19:
+main_from_storage_route@16:
     callsub from_storage
     bytec 6 // 0x151f7c75
     swap
@@ -109,7 +109,7 @@ main_from_storage_route@19:
     intc_3 // 1
     return
 
-main_from_state_route@18:
+main_from_state_route@15:
     callsub from_state
     bytec 6 // 0x151f7c75
     swap
@@ -118,7 +118,7 @@ main_from_state_route@18:
     intc_3 // 1
     return
 
-main_from_memory_route@17:
+main_from_memory_route@14:
     callsub from_memory
     bytec 6 // 0x151f7c75
     swap
@@ -127,7 +127,7 @@ main_from_memory_route@17:
     intc_3 // 1
     return
 
-main___postInit_route@16:
+main___postInit_route@13:
     bytec 7 // "__ctor_pending"
     app_global_get
     assert // __postInit already called
@@ -214,7 +214,7 @@ main_switch_case_3@8:
     callsub __evm_npy
     intc_0 // 0
     callsub __evm_deco
-    dupn 2
+    dup
     intc_2 // 32
     %
     !
@@ -231,7 +231,7 @@ main_switch_case_3@8:
     dup
     callsub __evm_deco
     dup
-    cover 4
+    cover 3
     dup
     intc 4 // 65535
     <=
@@ -255,6 +255,19 @@ main_switch_case_3@8:
     %
     !
     assert // unaligned EVM ABI offset
+    dig 1
+    pushint 64
+    +
+    callsub __evm_decw
+    dup
+    cover 4
+    extract 0 30
+    pushint 30
+    bzero
+    dup
+    cover 4
+    ==
+    assert // invalid EVM ABI unsigned integer padding
     +
     dup
     callsub __evm_deco
@@ -264,16 +277,16 @@ main_switch_case_3@8:
     <=
     assert // EVM ABI array exceeds ARC4 uint16 length
     pushbytes 0x0000
-    swap
+    cover 2
     intc_2 // 32
     +
     intc_0 // 0
 
-main_while_top@9:
+main_while_top@32:
     dup
-    dig 4
+    dig 3
     <
-    bz main_after_while@11
+    bz main_after_while@34
     dup
     intc_2 // 32
     *
@@ -282,8 +295,7 @@ main_while_top@9:
     callsub __evm_decw
     dup
     extract 0 30
-    pushint 30
-    bzero
+    dig 6
     ==
     assert // invalid EVM ABI unsigned integer padding
     extract 24 8
@@ -301,7 +313,7 @@ main_while_top@9:
     swap
     intc_0 // 0
     extract_uint16 // on error: invalid array length header
-    uncover 4
+    uncover 5
     dup
     cover 2
     intc_0 // 0
@@ -312,26 +324,16 @@ main_while_top@9:
     replace2 0
     swap
     concat
-    cover 2
+    cover 3
     intc_3 // 1
     +
-    b main_while_top@9
+    b main_while_top@32
 
-main_after_while@11:
-    popn 2
+main_after_while@34:
+    popn 3
     bury 1
-    uncover 2
-    pushint 64
-    +
-    callsub __evm_decw
-    dup
-    extract 0 30
-    pushint 30
-    bzero
-    ==
-    assert // invalid EVM ABI unsigned integer padding
     txna ApplicationArgs 1
-    uncover 3
+    uncover 2
     uncover 4
     extract3
     dup
@@ -340,7 +342,7 @@ main_after_while@11:
     extract 6 2
     swap
     concat
-    swap
+    uncover 2
     extract 24 8
     dup
     bitlen

@@ -3,8 +3,8 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/int128_arr_check.sol.Int128ArrCheck.approval_program() -> uint64:
 main:
-    intcblock 16 0 32 1 128 65535
-    bytecblock 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x151f7c75 0x8000000000000000000000000000000000000000000000000000000000000000 0x0000 0x0001 0x00 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000
+    intcblock 16 0 32 1 128
+    bytecblock 0xffffffffffffffffffffffffffffffff 0x80000000000000000000000000000000 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000 0x151f7c75 0x8000000000000000000000000000000000000000000000000000000000000000 0x00 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
     dup
@@ -29,16 +29,16 @@ main:
 
 main_after_if_else@2:
     txn OnCompletion
-    bnz main_after_if_else@54
+    bnz main_after_if_else@30
     txn NumAppArgs
     pushint 2
     ==
-    bz main_after_if_else@54
+    bz main_after_if_else@30
     pushbytess 0xb7a01e9c 0x85dd6b5e 0xb1ee38ee 0x93a03a96 0xe5a82a76 0xfbfd4202
     txna ApplicationArgs 0
-    match main_switch_case_0@5 main_switch_case_1@12 main_switch_case_2@22 main_switch_case_3@32 main_switch_case_4@39 main_switch_case_5@49
+    match main_switch_case_0@5 main_switch_case_1@12 main_switch_case_2@16 main_switch_case_3@20 main_switch_case_4@21 main_switch_case_5@25
 
-main_after_if_else@54:
+main_after_if_else@30:
     txn OnCompletion
     !
     assert
@@ -46,10 +46,10 @@ main_after_if_else@54:
     assert
     pushbytess 0x1c2364aa 0x369850ad 0xb62151bc 0xb211026d 0x59f9fb30 0x74b1d26b // method "ident(uint128)uint256", method "get0(int128[])uint256", method "eq0(int128[],uint128)bool", method "gt0(int128[])bool", method "sum2(int128[])uint256", method "eqMem(uint128)bool"
     txna ApplicationArgs 0
-    match main_ident_route@57 main_get0_route@58 main_eq0_route@59 main_gt0_route@60 main_sum2_route@61 main_eqMem_route@62
+    match main_ident_route@33 main_get0_route@34 main_eq0_route@35 main_gt0_route@36 main_sum2_route@37 main_eqMem_route@38
     err
 
-main_eqMem_route@62:
+main_eqMem_route@38:
     txna ApplicationArgs 1
     dup
     len
@@ -57,7 +57,7 @@ main_eqMem_route@62:
     ==
     assert // invalid number of bytes for arc4.uint128
     callsub eqMem
-    bytec 7 // 0x00
+    bytec 5 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -68,7 +68,7 @@ main_eqMem_route@62:
     intc_3 // 1
     return
 
-main_sum2_route@61:
+main_sum2_route@37:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
@@ -90,7 +90,7 @@ main_sum2_route@61:
     intc_3 // 1
     return
 
-main_gt0_route@60:
+main_gt0_route@36:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
@@ -105,7 +105,7 @@ main_gt0_route@60:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint128>
     callsub gt0
     pop
-    bytec 7 // 0x00
+    bytec 5 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -116,7 +116,7 @@ main_gt0_route@60:
     intc_3 // 1
     return
 
-main_eq0_route@59:
+main_eq0_route@35:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
@@ -137,7 +137,7 @@ main_eq0_route@59:
     assert // invalid number of bytes for arc4.uint128
     callsub eq0
     pop
-    bytec 7 // 0x00
+    bytec 5 // 0x00
     intc_1 // 0
     uncover 2
     setbit
@@ -148,7 +148,7 @@ main_eq0_route@59:
     intc_3 // 1
     return
 
-main_get0_route@58:
+main_get0_route@34:
     txna ApplicationArgs 1
     dup
     intc_1 // 0
@@ -170,7 +170,7 @@ main_get0_route@58:
     intc_3 // 1
     return
 
-main_ident_route@57:
+main_ident_route@33:
     txna ApplicationArgs 1
     dup
     len
@@ -185,7 +185,7 @@ main_ident_route@57:
     intc_3 // 1
     return
 
-main_switch_case_5@49:
+main_switch_case_5@25:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_decw
@@ -196,10 +196,10 @@ main_switch_case_5@49:
     getbyte
     intc 4 // 128
     >=
-    bz main_ternary_false@51
+    bz main_ternary_false@27
     bytec_0 // 0xffffffffffffffffffffffffffffffff
 
-main_ternary_merge@52:
+main_ternary_merge@28:
     ==
     assert // invalid EVM ABI signed integer padding
     intc_0 // 16
@@ -224,12 +224,12 @@ main_ternary_merge@52:
     intc_3 // 1
     return
 
-main_ternary_false@51:
+main_ternary_false@27:
     intc_0 // 16
     bzero
-    b main_ternary_merge@52
+    b main_ternary_merge@28
 
-main_switch_case_4@39:
+main_switch_case_4@21:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_deco
@@ -238,94 +238,7 @@ main_switch_case_4@39:
     %
     !
     assert // unaligned EVM ABI offset
-    dup
-    callsub __evm_deco
-    dup
-    cover 2
-    intc 5 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 5 // 0x0000
-    swap
-    intc_2 // 32
-    +
-    intc_1 // 0
-
-main_while_top@40:
-    dup
-    dig 4
-    <
-    bz main_after_while@45
-    dup
-    intc_2 // 32
-    *
-    dig 2
-    +
-    callsub __evm_decw
-    dup
-    cover 4
-    dup
-    extract 0 16
-    swap
-    intc_0 // 16
-    getbyte
-    intc 4 // 128
-    >=
-    bz main_ternary_false@43
-    bytec_0 // 0xffffffffffffffffffffffffffffffff
-
-main_ternary_merge@44:
-    ==
-    assert // invalid EVM ABI signed integer padding
-    intc_0 // 16
-    bzero
-    dup
-    uncover 5
-    concat
-    dup
-    len
-    intc_0 // 16
-    -
-    intc_0 // 16
-    extract3
-    dup
-    len
-    intc_0 // 16
-    <=
-    assert // overflow
-    b|
-    bytec 6 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 4
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 2
-    intc_3 // 1
-    +
-    b main_while_top@40
-
-main_ternary_false@43:
-    intc_0 // 16
-    bzero
-    b main_ternary_merge@44
-
-main_after_while@45:
-    popn 2
-    bury 1
+    callsub __evm_deca_0
     callsub sum2
     pop
     dup
@@ -333,10 +246,10 @@ main_after_while@45:
     getbyte
     intc 4 // 128
     >=
-    bz main_ternary_false@47
-    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bz main_ternary_false@23
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-main_ternary_merge@48:
+main_ternary_merge@24:
     swap
     dup
     len
@@ -352,12 +265,12 @@ main_ternary_merge@48:
     intc_3 // 1
     return
 
-main_ternary_false@47:
+main_ternary_false@23:
     intc_2 // 32
     bzero
-    b main_ternary_merge@48
+    b main_ternary_merge@24
 
-main_switch_case_3@32:
+main_switch_case_3@20:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_deco
@@ -366,100 +279,14 @@ main_switch_case_3@32:
     %
     !
     assert // unaligned EVM ABI offset
-    dup
-    callsub __evm_deco
-    dup
-    cover 2
-    intc 5 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 5 // 0x0000
-    swap
-    intc_2 // 32
-    +
-    intc_1 // 0
-
-main_while_top@33:
-    dup
-    dig 4
-    <
-    bz main_after_while@38
-    dup
-    intc_2 // 32
-    *
-    dig 2
-    +
-    callsub __evm_decw
-    dup
-    cover 4
-    dup
-    extract 0 16
-    swap
-    intc_0 // 16
-    getbyte
-    intc 4 // 128
-    >=
-    bz main_ternary_false@36
-    bytec_0 // 0xffffffffffffffffffffffffffffffff
-
-main_ternary_merge@37:
-    ==
-    assert // invalid EVM ABI signed integer padding
-    intc_0 // 16
-    bzero
-    dup
-    uncover 5
-    concat
-    dup
-    len
-    intc_0 // 16
-    -
-    intc_0 // 16
-    extract3
-    dup
-    len
-    intc_0 // 16
-    <=
-    assert // overflow
-    b|
-    bytec 6 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 4
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 2
-    intc_3 // 1
-    +
-    b main_while_top@33
-
-main_ternary_false@36:
-    intc_0 // 16
-    bzero
-    b main_ternary_merge@37
-
-main_after_while@38:
-    popn 2
+    callsub __evm_deca_0
     callsub gt0
     pop
     callsub __evm_ret0
     intc_3 // 1
     return
 
-main_switch_case_2@22:
+main_switch_case_2@16:
     callsub __evm_npy
     intc_1 // 0
     callsub __evm_deco
@@ -468,93 +295,6 @@ main_switch_case_2@22:
     %
     !
     assert // unaligned EVM ABI offset
-    dup
-    callsub __evm_deco
-    dup
-    cover 2
-    intc 5 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 5 // 0x0000
-    cover 2
-    intc_2 // 32
-    +
-    intc_1 // 0
-
-main_while_top@23:
-    dup
-    dig 3
-    <
-    bz main_after_while@28
-    dup
-    intc_2 // 32
-    *
-    dig 2
-    +
-    callsub __evm_decw
-    dup
-    cover 3
-    dup
-    extract 0 16
-    swap
-    intc_0 // 16
-    getbyte
-    intc 4 // 128
-    >=
-    bz main_ternary_false@26
-    bytec_0 // 0xffffffffffffffffffffffffffffffff
-
-main_ternary_merge@27:
-    ==
-    assert // invalid EVM ABI signed integer padding
-    intc_0 // 16
-    bzero
-    dup
-    uncover 4
-    concat
-    dup
-    len
-    intc_0 // 16
-    -
-    intc_0 // 16
-    extract3
-    dup
-    len
-    intc_0 // 16
-    <=
-    assert // overflow
-    b|
-    bytec 6 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 5
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 3
-    intc_3 // 1
-    +
-    b main_while_top@23
-
-main_ternary_false@26:
-    intc_0 // 16
-    bzero
-    b main_ternary_merge@27
-
-main_after_while@28:
-    popn 3
     intc_2 // 32
     callsub __evm_decw
     dupn 2
@@ -564,16 +304,18 @@ main_after_while@28:
     getbyte
     intc 4 // 128
     >=
-    bz main_ternary_false@30
+    bz main_ternary_false@18
     bytec_0 // 0xffffffffffffffffffffffffffffffff
 
-main_ternary_merge@31:
+main_ternary_merge@19:
     ==
     assert // invalid EVM ABI signed integer padding
+    swap
+    callsub __evm_deca_0
     intc_0 // 16
     bzero
     dup
-    uncover 2
+    uncover 3
     concat
     dup
     len
@@ -593,10 +335,10 @@ main_ternary_merge@31:
     intc_3 // 1
     return
 
-main_ternary_false@30:
+main_ternary_false@18:
     intc_0 // 16
     bzero
-    b main_ternary_merge@31
+    b main_ternary_merge@19
 
 main_switch_case_1@12:
     callsub __evm_npy
@@ -607,94 +349,7 @@ main_switch_case_1@12:
     %
     !
     assert // unaligned EVM ABI offset
-    dup
-    callsub __evm_deco
-    dup
-    cover 2
-    intc 5 // 65535
-    <=
-    assert // EVM ABI array exceeds ARC4 uint16 length
-    bytec 5 // 0x0000
-    swap
-    intc_2 // 32
-    +
-    intc_1 // 0
-
-main_while_top@13:
-    dup
-    dig 4
-    <
-    bz main_after_while@18
-    dup
-    intc_2 // 32
-    *
-    dig 2
-    +
-    callsub __evm_decw
-    dup
-    cover 4
-    dup
-    extract 0 16
-    swap
-    intc_0 // 16
-    getbyte
-    intc 4 // 128
-    >=
-    bz main_ternary_false@16
-    bytec_0 // 0xffffffffffffffffffffffffffffffff
-
-main_ternary_merge@17:
-    ==
-    assert // invalid EVM ABI signed integer padding
-    intc_0 // 16
-    bzero
-    dup
-    uncover 5
-    concat
-    dup
-    len
-    intc_0 // 16
-    -
-    intc_0 // 16
-    extract3
-    dup
-    len
-    intc_0 // 16
-    <=
-    assert // overflow
-    b|
-    bytec 6 // 0x0001
-    swap
-    concat
-    dup
-    extract 2 0
-    swap
-    intc_1 // 0
-    extract_uint16 // on error: invalid array length header
-    uncover 4
-    dup
-    cover 2
-    intc_1 // 0
-    extract_uint16
-    +
-    itob
-    extract 6 0
-    replace2 0
-    swap
-    concat
-    cover 2
-    intc_3 // 1
-    +
-    b main_while_top@13
-
-main_ternary_false@16:
-    intc_0 // 16
-    bzero
-    b main_ternary_merge@17
-
-main_after_while@18:
-    popn 2
-    bury 1
+    callsub __evm_deca_0
     callsub get0
     pop
     dup
@@ -702,10 +357,10 @@ main_after_while@18:
     getbyte
     intc 4 // 128
     >=
-    bz main_ternary_false@20
-    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bz main_ternary_false@14
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
-main_ternary_merge@21:
+main_ternary_merge@15:
     swap
     dup
     len
@@ -721,10 +376,10 @@ main_ternary_merge@21:
     intc_3 // 1
     return
 
-main_ternary_false@20:
+main_ternary_false@14:
     intc_2 // 32
     bzero
-    b main_ternary_merge@21
+    b main_ternary_merge@15
 
 main_switch_case_0@5:
     callsub __evm_npy
@@ -767,7 +422,7 @@ main_ternary_merge@8:
     intc 4 // 128
     >=
     bz main_ternary_false@10
-    bytec 8 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec 6 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@11:
     swap
@@ -1113,7 +768,7 @@ sum2_ternary_merge@9:
     dup
     dig 2
     b+
-    bytec 9 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     bytec 4 // 0x8000000000000000000000000000000000000000000000000000000000000000
     b<
@@ -1128,7 +783,7 @@ sum2_bool_true@11:
 sum2_bool_merge@13:
     assert // signed arithmetic overflow
     b+
-    bytec 9 // 0x010000000000000000000000000000000000000000000000000000000000000000
+    bytec 7 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
     len
@@ -1276,4 +931,97 @@ __evm_ret0:
     swap
     concat
     log
+    retsub
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/conversions/contracts/int128_arr_check.sol.Int128ArrCheck.__evm_deca_0(__start: uint64) -> bytes:
+__evm_deca_0:
+    proto 1 1
+    frame_dig -1
+    callsub __evm_deco
+    dup
+    pushint 65535
+    <=
+    assert // EVM ABI array exceeds ARC4 uint16 length
+    pushbytes 0x0000
+    frame_dig -1
+    intc_2 // 32
+    +
+    intc_1 // 0
+
+__evm_deca_0_while_top@1:
+    dup
+    dig 4
+    <
+    bz __evm_deca_0_after_while@6
+    dup
+    intc_2 // 32
+    *
+    dig 2
+    +
+    callsub __evm_decw
+    dup
+    cover 4
+    dup
+    extract 0 16
+    swap
+    intc_0 // 16
+    getbyte
+    intc 4 // 128
+    >=
+    bz __evm_deca_0_ternary_false@4
+    bytec_0 // 0xffffffffffffffffffffffffffffffff
+
+__evm_deca_0_ternary_merge@5:
+    ==
+    assert // invalid EVM ABI signed integer padding
+    intc_0 // 16
+    bzero
+    dup
+    uncover 5
+    concat
+    dup
+    len
+    intc_0 // 16
+    -
+    intc_0 // 16
+    extract3
+    dup
+    len
+    intc_0 // 16
+    <=
+    assert // overflow
+    b|
+    pushbytes 0x0001
+    swap
+    concat
+    dup
+    extract 2 0
+    swap
+    intc_1 // 0
+    extract_uint16 // on error: invalid array length header
+    uncover 4
+    dup
+    cover 2
+    intc_1 // 0
+    extract_uint16
+    +
+    itob
+    extract 6 0
+    replace2 0
+    swap
+    concat
+    cover 2
+    intc_3 // 1
+    +
+    b __evm_deca_0_while_top@1
+
+__evm_deca_0_ternary_false@4:
+    intc_0 // 16
+    bzero
+    b __evm_deca_0_ternary_merge@5
+
+__evm_deca_0_after_while@6:
+    popn 2
+    swap
     retsub

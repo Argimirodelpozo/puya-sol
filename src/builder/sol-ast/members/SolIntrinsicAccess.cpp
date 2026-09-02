@@ -9,6 +9,7 @@
 #include "builder/sol-intrinsics/IntrinsicMapper.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/XchainAccounts.h"
+#include "builder/BuildArtifacts.h"
 #include <algorithm>
 #include <cctype>
 #include <vector>
@@ -25,6 +26,11 @@ namespace
 // argument and later indexing by msg.sender can never hit the same slot for
 // an Algorand user account (whose native sender is 32 bytes).
 // Non-EVM abi: fall through to IntrinsicMapper's standard mapping.
+std::shared_ptr<awst::Expression> buildEvmMsgSenderInline(
+	eb::ContractContext& ctx,
+	builder::TargetProfile::XchainAccounts const& xc,
+	awst::SourceLocation const& loc);
+
 std::shared_ptr<awst::Expression> buildEvmMsgSender(
 	eb::ContractContext& ctx, Context&, std::string const&,
 	awst::SourceLocation const& loc)
@@ -47,6 +53,47 @@ std::shared_ptr<awst::Expression> buildEvmMsgSender(
 	// unclaimed-caller compatibility shim (deploy/creator paths).
 	if (auto const& xc = ctx.typeMapper.profile().xchainAccounts)
 	{
+		// One contract method per contract: the claim check (two app-arg
+		// reads, a sha512_256, a compare) was inlined at EVERY msg.sender use
+		// — 39 copies in CTFExchange.
+		auto& arts = ctx.typeMapper.artifacts();
+		std::string const key = "msg.sender";
+		auto found = arts.evmDecodeStructMethods.find(key);
+		std::string name = found != arts.evmDecodeStructMethods.end()
+			? found->second : std::string();
+		if (name.empty())
+		{
+			name = "__evm_sender";
+			arts.evmDecodeStructMethods[key] = name;
+			awst::ContractMethod method;
+			method.sourceLocation = loc;
+			method.memberName = name;
+			method.returnType = awst::WType::accountType();
+			auto body = awst::makeBlock(loc);
+			body->body.push_back(awst::makeReturnStatement(
+				buildEvmMsgSenderInline(ctx, *xc, loc), loc));
+			method.body = body;
+			arts.pendingEvmDecodeMethods.push_back(std::move(method));
+		}
+		return awst::makeSubroutineCall(
+			awst::InstanceMethodTarget{name}, awst::WType::accountType(), loc);
+	}
+	return projected;
+}
+
+/// The claim-verifying msg.sender expression (xchain profile), inlined
+/// once into the shared __evm_sender method.
+std::shared_ptr<awst::Expression> buildEvmMsgSenderInline(
+	eb::ContractContext& ctx,
+	builder::TargetProfile::XchainAccounts const& xc,
+	awst::SourceLocation const& loc)
+{
+	auto sender = awst::makeTxn(
+		"Sender", awst::WType::accountType(), loc);
+	auto low160 = awst::makeExtractLastN(std::move(sender), 20, loc);
+	std::shared_ptr<awst::Expression> projected = awst::makeAsAccount(
+		awst::makeLeftPadToN(std::move(low160), 32, loc), loc);
+	{
 		auto argCountOk = awst::makeNumericCompare(
 			awst::makeTxn("NumAppArgs", awst::WType::uint64Type(), loc),
 			awst::NumericComparison::Gte,
@@ -61,7 +108,7 @@ std::shared_ptr<awst::Expression> buildEvmMsgSender(
 		auto derivedOk = awst::makeBytesComparison(
 			awst::makeAsBytes(
 				builder::xchain::derivedAccount(
-					*xc, awst::makeAppArg(2, loc), loc), loc),
+					xc, awst::makeAppArg(2, loc), loc), loc),
 			awst::EqualityComparison::Eq,
 			awst::makeAsBytes(
 				awst::makeTxn("Sender", awst::WType::accountType(), loc), loc),
@@ -75,7 +122,6 @@ std::shared_ptr<awst::Expression> buildEvmMsgSender(
 			std::move(isClaim), std::move(claimed), std::move(projected),
 			awst::WType::accountType(), loc);
 	}
-	return projected;
 }
 
 // An explicitly configured EVM chain id is exact for replay. Otherwise use
