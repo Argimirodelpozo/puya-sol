@@ -20,6 +20,12 @@ KNOWN_NOISE_GETTERS = {
                                    # height vs the AVM round can never match
 }
 _NOISE_SIG_RE = re.compile(r"(DOMAIN_?SEPARATOR|chainid|CHAIN_ID)", re.I)
+# Getters whose ARGUMENT is a block height (OZ ERC20Votes / Comp-style
+# checkpoints): each leg answers for its own chain's height timeline, so the
+# pair diverges by construction — classified as probe noise, not a finding.
+_HEIGHT_ARG_SIG_RE = re.compile(
+    r"^(getPast(Votes|TotalSupply)|getPriorVotes|checkpoints|numCheckpoints|"
+    r"getPastVotingPower|clock)\(", re.I)
 
 # Matches replay.py's own drift warning. Measured, not taste: DEGEN replays
 # clean at +938 d and fails near +1500 d, so a year of shift is where a red
@@ -151,7 +157,7 @@ def _height_skew_noise(ev_, av_, wtxn, evm_no, avm_no):
     convention), and the values are height-sized — a tiny counter can never be
     absorbed, so a real off-by-one stays a finding.
     """
-    if wtxn is None or evm_no is None or avm_no is None:
+    if evm_no is None or avm_no is None:
         return False
     # `last_write_txn` is MAP-level; an individual key may have been written a
     # few txns earlier, when the skew was smaller (the AVM gains ~2 rounds per
@@ -165,35 +171,62 @@ def _height_skew_noise(ev_, av_, wtxn, evm_no, avm_no):
         if a_no is None:
             continue
         try:
-            if int(k) <= int(wtxn) + 1:
+            # No tracked write txn (map entries the EVM delta reader cannot
+            # attribute — ERC20Votes `_checkpoints`): accept any OBSERVED
+            # skew. Still a session-specific ~5-digit number a wrong value
+            # cannot hit by accident.
+            if wtxn is None or int(k) <= int(wtxn) + 1:
                 skews.append(int(a_no) - int(e_no))
         except (TypeError, ValueError):
             continue
     if not skews:
         return False
 
+    # Exact (evm_height, avm_height) pairs recorded per txn: a stored pair
+    # that matches one recorded pair (±2 each side, the lands-next-round
+    # convention) IS a height written at that txn — py-evm heights are small
+    # (fresh chain), so no magnitude guard on the EVM side.
+    pairs = []
+    for k, e_no in evm_no.items():
+        a_no = avm_no.get(k)
+        if a_no is not None:
+            try:
+                pairs.append((int(e_no), int(a_no)))
+            except (TypeError, ValueError):
+                pass
+
     def _pair_ok(e, a):
         if e == a:
             return True
-        return (isinstance(e, int) and isinstance(a, int)
-                and not isinstance(e, bool) and not isinstance(a, bool)
-                and min(e, a) > 1000
+        if not (isinstance(e, int) and isinstance(a, int)
+                and not isinstance(e, bool) and not isinstance(a, bool)):
+            return False
+        if any(abs(e - en) <= 2 and abs(a - an) <= 2 for en, an in pairs):
+            return True
+        return (max(e, a) > 1000
                 and any(abs((a - e) - sk) <= 2 for sk in skews))
 
     def flat(v):
         return v[0] if isinstance(v, list) and len(v) == 1 else v
-    e, a = flat(ev_), flat(av_)
-    if isinstance(e, list) and isinstance(a, list) and len(e) == len(a) and e:
-        saw = False
-        for x, y in zip(e, a):
-            if x == y:
-                continue
-            if _pair_ok(x, y):
-                saw = True
-                continue
-            return False
-        return saw
-    return e != a and _pair_ok(e, a)
+
+    def deep(e, a):
+        """(ok, saw_height): every differing leaf is a height pair; nested
+        lists recurse (checkpoint arrays are [[height, value], ...])."""
+        if e == a:
+            return True, False
+        if isinstance(e, list) and isinstance(a, list):
+            if len(e) != len(a) or not e:
+                return False, False
+            saw = False
+            for x, y in zip(e, a):
+                ok, s = deep(x, y)
+                if not ok:
+                    return False, False
+                saw = saw or s
+            return True, saw
+        return _pair_ok(e, a), True
+    ok, saw = deep(flat(ev_), flat(av_))
+    return ok and saw
 
 
 def _dynamic(t: str) -> bool:
@@ -329,6 +362,12 @@ def diff_case(case_dir: Path) -> dict:
         if ev_ is None or av_ is None:
             findings["probe_noise"].append({
                 **where, "note": "probe absent on one leg"})
+        elif (_HEIGHT_ARG_SIG_RE.search(str(spec.get("sig") or ""))
+              and ev_ != av_):
+            findings["probe_noise"].append({
+                **where, "evm": ev_, "avm": av_,
+                "note": "height-parameterized getter — each leg answers for "
+                        "its own chain's block timeline"})
         elif ev_.get("ok") != av_.get("ok"):
             findings["probe_div"].append({**where, "evm": ev_, "avm": av_})
         elif not ev_.get("ok"):

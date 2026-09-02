@@ -224,10 +224,21 @@ def main():
     dump_json(case_dir / "registry.json", reg)
 
     # ── concrete EVM forms + inverse fold ─────────────────────────────────
+    # Phase 3: execute replay txns AS their TRUE historical senders via
+    # py-evm SpoofTransaction (no keys needed). Keys/events/digests then
+    # carry the real identities — matching the AVM leg's xchain owner
+    # claims — and sender-derived state (merkle leaves keccak(sender‖amt))
+    # becomes executable on this leg. CHD_SYNTHETIC_SENDERS=1 restores the
+    # old derived local accounts.
+    import os as _os
+    impersonate = not _os.environ.get("CHD_SYNTHETIC_SENDERS")
     sender_acct = {}                                  # registry idx -> (addr, priv)
     for a, i in reg["senders"].items():
-        acct = Account.from_key(evm_sender_privkey(i))
-        sender_acct[i] = (acct.address, evm_sender_privkey(i))
+        if impersonate:
+            sender_acct[i] = (Web3.to_checksum_address(a), None)
+        else:
+            acct = Account.from_key(evm_sender_privkey(i))
+            sender_acct[i] = (acct.address, evm_sender_privkey(i))
 
     def concrete(marker):                             # marker -> EVM 0x address
         # web3.py REQUIRES checksummed addresses — synthetic ones are built
@@ -669,10 +680,63 @@ def main():
             if sv and isinstance(m, int):
                 owed[m] = owed.get(m, 0) + sv
         for i, (addr, priv) in sender_acct.items():
-            tester.add_account(priv)
+            if priv is not None:
+                tester.add_account(priv)
+            # Impersonated (historical) senders just need gas + owed value.
             w3.eth.send_transaction({"from": a0, "to": addr,
                                      "value": 10**18 + owed.get(i, 0),
                                      "gas": 21000})
+
+        # SpoofTransaction executes a txn AS an arbitrary sender (no key):
+        # build the unsigned txn against the head state, apply, mine. The
+        # mined block inherits the pending timestamp time_travel scheduled.
+        from eth.vm.spoof import SpoofTransaction as _Spoof
+        from eth_keys import keys as _keys
+        _spoof_key = _keys.PrivateKey(b"\x11" * 32)
+
+        class _SenderSpoof(_Spoof):
+            """py-evm spoofs the sender only on UNSIGNED txns, but block
+            application needs make_receipt, which only the signed shape
+            has — borrow it from a dummy-signed twin (it ignores sender)."""
+            def __init__(self, unsigned, sender20):
+                super().__init__(unsigned, from_=sender20)
+                self._twin = unsigned.as_signed_transaction(_spoof_key)
+
+            def __getattr__(self, attr):
+                # spoof target first; the signed twin supplies everything
+                # block-building wants from a signed shape (make_receipt,
+                # encode, ...). The dummy signature is never verified here.
+                if attr == "_twin":
+                    raise AttributeError(attr)
+                try:
+                    return super().__getattr__(attr)
+                except AttributeError:
+                    return getattr(self._twin, attr)
+
+        def spoof_transact(sender_addr, to_addr, data_bytes, value):
+            chain = tester.backend.chain
+            s20 = bytes.fromhex(str(sender_addr)[2:])
+            vm_ = chain.get_vm()
+            tx = vm_.create_unsigned_transaction(
+                nonce=vm_.state.get_nonce(s20),
+                gas_price=10 ** 10, gas=8_000_000,
+                to=bytes.fromhex(str(to_addr)[2:]),
+                value=int(value or 0), data=bytes(data_bytes))
+            _, _receipt, comp = chain.apply_transaction(_SenderSpoof(tx, s20))
+            mined = chain.mine_block()
+            header = getattr(mined, "header", mined)
+            logs = []
+            for addr_b, topics, ldata in comp.get_log_entries():
+                logs.append({
+                    "address": Web3.to_checksum_address(addr_b),
+                    "topics": [t.to_bytes(32, "big") for t in topics],
+                    "data": bytes(ldata),
+                    "logIndex": len(logs), "transactionIndex": 0,
+                    "blockNumber": int(header.block_number),
+                    "blockHash": bytes(32), "transactionHash": bytes(32)})
+            return {"status": 0 if comp.is_error else 1,
+                    "blockNumber": int(header.block_number),
+                    "logs": logs}
 
         _dep_local.clear()
         for d in deps:
@@ -1077,11 +1141,19 @@ def main():
                     continue
                 _trace["txn"] = i
                 try:
-                    txh2 = fn(*args).transact({"from": sender, "gas": 8_000_000,
-                                               "value": c.get("value") or 0})
+                    if impersonate and sender != a0:
+                        rcpt = spoof_transact(
+                            sender, caddr,
+                            bytes.fromhex(
+                                fn(*args)._encode_transaction_data()[2:]),
+                            c.get("value") or 0)
+                    else:
+                        txh2 = fn(*args).transact(
+                            {"from": sender, "gas": 8_000_000,
+                             "value": c.get("value") or 0})
+                        rcpt = w3.eth.get_transaction_receipt(txh2)
                 finally:
                     _trace["txn"] = None
-                rcpt = w3.eth.get_transaction_receipt(txh2)
                 if pin_time:
                     actual_block = w3.eth.get_block(rcpt["blockNumber"])
                     actual_ts = int(actual_block["timestamp"])

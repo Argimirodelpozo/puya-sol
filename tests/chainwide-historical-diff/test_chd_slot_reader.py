@@ -201,8 +201,10 @@ def test_slot_reader_covers_dependency_and_composite_mapping_keys() -> None:
     fns = {"link(address,uint32,bytes32)": {"inputs": [
         {"type": "address"}, {"type": "uint32"}, {"type": "bytes32"},
     ]}}
+    # Address keys live in the 160-bit namespace (bzero12 ++ low-20) — the
+    # compiler's EVM-faithful keccak preimage; the reader derives the same.
     slots = {
-        mapping_slot(dep, 0): (123).to_bytes(32, "big"),
+        mapping_slot(bytes(12) + dep[-20:], 0): (123).to_bytes(32, "big"),
         mapping_slot(composite, 1): local,
     }
 
