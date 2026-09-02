@@ -6,7 +6,6 @@ main:
     intcblock 32 4096 1 0 20480 4064
     bytecblock 0x010000000000000000000000000000000000000000000000000000000000000000 0x20 0x000000000000000000000000000000000000000000000000000000000000aaaa 0x000000000000000000000000000000000000000000000000000000000000bbbb 0x151f7c75 0x0000000000000000000000000000000000000000000000000000000000001111 0x0000000000000000000000000000000000000000000000000000000000003333 0x0000000000000000000000000000000000000000000000000000000000000001 0x151f7c75b10e2d527612073b26eecdfd717e6a320cf44b4afac2b0732d9fcbe2b7fa0cf6
     pushbytes ""
-    dup
     intc_1 // 4096
     bzero
     dup
@@ -194,7 +193,7 @@ main_ternary_merge@28:
     -
     extract_uint64
     dup
-    bury 7
+    bury 6
     dup
     intc_0 // 32
     +
@@ -274,15 +273,21 @@ main_while_top@35:
     dig 3
     <
     bz main_after_while@40
-    dig 6
+    dig 5
     dig 2
     +
     dup
-    bury 7
+    cover 3
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     intc_1 // 4096
     %
     dup
-    cover 3
+    cover 4
     intc_1 // 4096
     swap
     -
@@ -291,7 +296,7 @@ main_while_top@35:
     >=
     bz main_ternary_false@38
     pop
-    dig 6
+    uncover 2
     intc_1 // 4096
     /
     loads
@@ -308,7 +313,7 @@ main_ternary_merge@39:
     b main_while_top@35
 
 main_ternary_false@38:
-    dig 7
+    uncover 3
     intc_1 // 4096
     /
     dup
@@ -408,7 +413,7 @@ main_while_top@44:
     dup
     intc_1 // 4096
     /
-    cover 3
+    cover 4
     intc_1 // 4096
     %
     dup
@@ -421,7 +426,7 @@ main_while_top@44:
     intc 5 // 4064
     <=
     bz main_else_body@47
-    uncover 2
+    uncover 3
     dup
     loads
     uncover 5
@@ -435,7 +440,7 @@ main_after_if_else@48:
     b main_while_top@44
 
 main_else_body@47:
-    uncover 2
+    uncover 3
     dup
     loads
     intc_1 // 4096
@@ -472,12 +477,6 @@ main_else_body@47:
 main_after_while@49:
     pop
     bury 1
-    dig 4
-    intc_0 // 32
-    +
-    intc 4 // 20480
-    <=
-    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     intc_0 // 32
     +
     intc 4 // 20480

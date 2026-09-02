@@ -267,6 +267,16 @@ pushA:
 pushA_ternary_merge@3:
     !
     assert // not payable
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz pushA_after_if_else@5
+    bytec_0 // "data"
+    intc_3 // 2
+    box_create
+    pop
+
+pushA_after_if_else@5:
     pushbytes 0x0001
     frame_dig -1
     concat

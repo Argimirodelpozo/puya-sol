@@ -699,6 +699,16 @@ pushA:
 pushA_ternary_merge@3:
     !
     assert // not payable
+    bytec_2 // "a"
+    box_len
+    bury 1
+    bnz pushA_after_if_else@5
+    bytec_2 // "a"
+    pushint 2
+    box_create
+    pop
+
+pushA_after_if_else@5:
     pushint 16
     bzero
     dup
@@ -886,6 +896,16 @@ pushB:
 pushB_ternary_merge@3:
     !
     assert // not payable
+    bytec_3 // "b"
+    box_len
+    bury 1
+    bnz pushB_after_if_else@5
+    bytec_3 // "b"
+    pushint 2
+    box_create
+    pop
+
+pushB_after_if_else@5:
     intc_2 // 8
     bzero
     frame_dig -1
@@ -1136,6 +1156,16 @@ pushC:
 pushC_ternary_merge@3:
     !
     assert // not payable
+    bytec 4 // "c"
+    box_len
+    bury 1
+    bnz pushC_after_if_else@5
+    bytec 4 // "c"
+    pushint 2
+    box_create
+    pop
+
+pushC_after_if_else@5:
     bytec 6 // 0x0001
     frame_dig -1
     concat
@@ -1282,8 +1312,18 @@ pushD_ternary_merge@3:
     frame_dig -1
     intc 4 // 255
     &
-    dup
     frame_bury -1
+    bytec 5 // "d"
+    box_len
+    bury 1
+    bnz pushD_after_if_else@5
+    bytec 5 // "d"
+    pushint 2
+    box_create
+    pop
+
+pushD_after_if_else@5:
+    frame_dig -1
     itob
     dup
     bitlen

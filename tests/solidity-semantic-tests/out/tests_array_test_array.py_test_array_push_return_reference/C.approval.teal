@@ -184,6 +184,16 @@ test:
 test_ternary_merge@3:
     !
     assert // not payable
+    bytec_0 // "storageArray"
+    box_len
+    bury 1
+    bnz test_after_if_else@5
+    bytec_0 // "storageArray"
+    intc_3 // 2
+    box_create
+    pop
+
+test_after_if_else@5:
     pushbytes 0x0001
     frame_dig -1
     concat

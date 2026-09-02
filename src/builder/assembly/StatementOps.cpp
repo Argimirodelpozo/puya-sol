@@ -157,6 +157,15 @@ void AssemblyBuilder::buildVariableDeclaration(
 		{
 			m_localConstants[name] = 0;
 		}
+		// Full-width twin of the above: a 256-bit literal (a field prime) has no
+		// uint64 entry, and without one every div/mod by that local keeps its
+		// zero-divisor guard. The value and its single-assignment gate both come
+		// from solc's SSAValueTracker; re-key it to the mangled local name.
+		if (auto cv = m_yulConstantValues.find(origName);
+			cv != m_yulConstantValues.end())
+			m_localWideConstants[name] = cv->second;
+		else
+			m_localWideConstants.erase(name);
 		m_localSlotConstants.erase(name); // same shadowing hygiene
 
 		auto target = awst::makeVarExpression(name, awst::WType::biguintType(), makeLoc(var.debugData));

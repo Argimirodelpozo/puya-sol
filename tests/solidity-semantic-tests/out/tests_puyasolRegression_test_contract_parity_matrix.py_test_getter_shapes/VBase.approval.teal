@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/contract_parity_matrix.sol.VBase.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 32 1 2 0
     bytecblock "log_" 0x151f7c75 "__ctor_pending" 0xcd78b354
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@9
     txn NumAppArgs
-    intc_3 // 2
+    intc_2 // 2
     ==
     bz main_after_if_else@9
     pushbytess 0x26121ff0 0xf3d420a0 0x7563f021
@@ -96,13 +96,23 @@ main___postInit_route@12:
     ==
     assert // __postInit callable only by the app creator
     bytec_2 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_0 // "log_"
-    intc_3 // 2
+    intc_2 // 2
     box_create
     pop
     callsub f
+    bytec_0 // "log_"
+    box_len
+    bury 1
+    bnz main_after_if_else@21
+    bytec_0 // "log_"
+    intc_2 // 2
+    box_create
+    pop
+
+main_after_if_else@21:
     dup
     len
     intc_0 // 32
@@ -117,11 +127,11 @@ main___postInit_route@12:
     dup
     extract 2 0
     swap
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     bytec_0 // "log_"
-    intc_2 // 0
-    intc_3 // 2
+    intc_3 // 0
+    intc_2 // 2
     box_extract
     btoi
     bytec_0 // "log_"
@@ -140,16 +150,16 @@ main___postInit_route@12:
     itob
     extract 6 2
     bytec_0 // "log_"
-    intc_2 // 0
+    intc_3 // 0
     uncover 2
     box_replace
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     bytec_0 // "log_"
     swap
-    intc_2 // 0
+    intc_3 // 0
     uncover 3
     box_splice
     intc_1 // 1
@@ -251,7 +261,7 @@ f_after_if_else@6:
     retsub
 
 f_ternary_false@4:
-    intc_2 // 0
+    intc_3 // 0
     b f_ternary_merge@5
 
 
@@ -283,7 +293,7 @@ logAt_ternary_merge@3:
     extract_uint64
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     bytec_0 // "log_"
     swap
@@ -292,7 +302,7 @@ logAt_ternary_merge@3:
     retsub
 
 logAt_ternary_false@2:
-    intc_2 // 0
+    intc_3 // 0
     b logAt_ternary_merge@3
 
 
@@ -311,7 +321,7 @@ logLen_ternary_merge@3:
     bytec_0 // "log_"
     box_len
     pop
-    intc_3 // 2
+    intc_2 // 2
     >=
     bz logLen_ternary_false@5
     bytec_0 // "log_"
@@ -319,7 +329,7 @@ logLen_ternary_merge@3:
     pop
 
 logLen_ternary_merge@6:
-    intc_3 // 2
+    intc_2 // 2
     -
     intc_0 // 32
     /
@@ -330,11 +340,11 @@ logLen_ternary_merge@6:
     retsub
 
 logLen_ternary_false@5:
-    intc_3 // 2
+    intc_2 // 2
     b logLen_ternary_merge@6
 
 logLen_ternary_false@2:
-    intc_2 // 0
+    intc_3 // 0
     b logLen_ternary_merge@3
 
 
@@ -353,5 +363,5 @@ __evm_npy_ternary_merge@3:
     retsub
 
 __evm_npy_ternary_false@2:
-    intc_2 // 0
+    intc_3 // 0
     b __evm_npy_ternary_merge@3

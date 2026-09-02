@@ -370,6 +370,12 @@ main_while_top@41:
     +
     dup
     cover 3
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     intc_1 // 4096
     %
     dup
@@ -1279,6 +1285,12 @@ main_while_top@83:
     +
     dup
     cover 3
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     intc_1 // 4096
     %
     dup
@@ -2265,6 +2277,12 @@ main_while_top@124:
     +
     dup
     cover 3
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     intc_1 // 4096
     %
     dup
@@ -2949,7 +2967,14 @@ main_while_top@141:
     intc_0 // 32
     <
     bz main_after_while@146
+    dupn 2
+    intc_0 // 32
+    +
     dup
+    cover 4
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     intc_1 // 4096
     %
     dup
@@ -2962,30 +2987,25 @@ main_while_top@141:
     >=
     bz main_ternary_false@144
     pop
-    dup
     intc_1 // 4096
     /
     loads
-    uncover 3
+    uncover 2
     intc_0 // 32
     extract3
-    swap
 
 main_ternary_merge@145:
-    cover 2
     concat
     swap
-    intc_0 // 32
-    +
     b main_while_top@141
 
 main_ternary_false@144:
-    dig 1
+    swap
     intc_1 // 4096
     /
     dup
     loads
-    uncover 5
+    uncover 4
     dig 3
     extract3
     swap
@@ -2999,7 +3019,6 @@ main_ternary_false@144:
     swap
     extract3
     concat
-    swap
     b main_ternary_merge@145
 
 main_after_while@146:

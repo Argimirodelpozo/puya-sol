@@ -139,14 +139,16 @@ void AssemblyBuilder::writeMemWordConst(
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDyn(
-	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc)
+	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc,
+	std::vector<std::shared_ptr<awst::Statement>>* _sink)
 {
 	auto off = offsetToUint64(std::move(_offset), _loc);
 	// Materialize once: offset appears in the bounds-assert + slot/sub (~3 refs);
 	// a side-effecting mload(q) would otherwise re-run each time (makeEvalOnce =
 	// OperandPlan primitive; a var/constant offset is duplicated as-is).
 	off = awst::makeEvalOnce(std::move(off), _loc);
-	m_pendingStatements.push_back(memBoundsAssert(scratchLayout(), off, _loc));
+	(_sink ? *_sink : m_pendingStatements).push_back(
+		memBoundsAssert(scratchLayout(), off, _loc));
 	// ONE path for every slot. Slot 0 is plain scratch since the __evm_memory
 	// cache removal, so the old `off < SLOT_SIZE ? slot-0-fast : slow`
 	// conditional selected between two IDENTICAL computations — paying an SE
@@ -1067,6 +1069,9 @@ void AssemblyBuilder::handleReturn(
 		}
 		auto ret = awst::makeReturnStatement(nullptr, _loc);
 		_out.push_back(std::move(ret));
+		// A subroutine return ends the frame: nothing after it can run, and
+		// puya rejects the unreachable trailing statements.
+		m_haltEmitted = true;
 		return;
 	}
 
@@ -1113,6 +1118,7 @@ void AssemblyBuilder::handleReturn(
 		}
 		flushMemoryToScratch(_loc, _out);
 		_out.push_back(awst::makeReturnStatement(std::move(returnValue), _loc));
+		m_haltEmitted = true; // frame ends here (see the void arm)
 		return;
 	}
 
@@ -1165,6 +1171,7 @@ void AssemblyBuilder::handleReturn(
 	// (router or `this.f()` callsub) continue. Plain subroutine return.
 	flushMemoryToScratch(_loc, _out);
 	_out.push_back(awst::makeReturnStatement(std::move(returnValue), _loc));
+	m_haltEmitted = true; // frame ends here (see the void arm)
 }
 
 void AssemblyBuilder::emitArc4ReturnHalt(

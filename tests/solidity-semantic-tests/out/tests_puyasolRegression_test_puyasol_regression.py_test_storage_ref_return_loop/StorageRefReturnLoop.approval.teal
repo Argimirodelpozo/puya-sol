@@ -327,26 +327,18 @@ seed_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "grid"
+    box_len
+    bury 1
+    bnz seed_after_if_else@5
+    bytec_0 // "grid"
+    intc_0 // 2
+    box_create
+    pop
+
+seed_after_if_else@5:
+    bytec_0 // "grid"
     box_get
     assert // box exists
-    bytec_3 // 0x00020000
-    intc_2 // 1
-    callsub dynamic_array_concat_dynamic_element
-    bytec_0 // "grid"
-    box_del
-    pop
-    bytec_0 // "grid"
-    dig 1
-    box_put
-    bytec_3 // 0x00020000
-    intc_2 // 1
-    callsub dynamic_array_concat_dynamic_element
-    bytec_0 // "grid"
-    box_del
-    pop
-    bytec_0 // "grid"
-    dig 1
-    box_put
     bytec_3 // 0x00020000
     intc_2 // 1
     callsub dynamic_array_concat_dynamic_element
@@ -359,25 +351,69 @@ seed_ternary_merge@3:
     bytec_0 // "grid"
     box_len
     bury 1
-    bz seed_ternary_false@5
+    bnz seed_after_if_else@7
+    bytec_0 // "grid"
+    intc_0 // 2
+    box_create
+    pop
+
+seed_after_if_else@7:
+    bytec_0 // "grid"
+    box_get
+    assert // box exists
+    bytec_3 // 0x00020000
+    intc_2 // 1
+    callsub dynamic_array_concat_dynamic_element
+    bytec_0 // "grid"
+    box_del
+    pop
+    bytec_0 // "grid"
+    swap
+    box_put
+    bytec_0 // "grid"
+    box_len
+    bury 1
+    bnz seed_after_if_else@9
+    bytec_0 // "grid"
+    intc_0 // 2
+    box_create
+    pop
+
+seed_after_if_else@9:
+    bytec_0 // "grid"
+    box_get
+    assert // box exists
+    bytec_3 // 0x00020000
+    intc_2 // 1
+    callsub dynamic_array_concat_dynamic_element
+    bytec_0 // "grid"
+    box_del
+    pop
+    bytec_0 // "grid"
+    swap
+    box_put
+    bytec_0 // "grid"
+    box_len
+    bury 1
+    bz seed_ternary_false@11
     bytec_0 // "grid"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-seed_ternary_merge@6:
+seed_ternary_merge@12:
     assert // array index out of bounds
     bytec_0 // "grid"
     box_len
     bury 1
-    bnz seed_after_if_else@8
+    bnz seed_after_if_else@14
     bytec_0 // "grid"
     intc_0 // 2
     box_create
     pop
 
-seed_after_if_else@8:
+seed_after_if_else@14:
     bytec_0 // "grid"
     box_get
     assert // box exists
@@ -421,27 +457,27 @@ seed_after_if_else@8:
     bytec_0 // "grid"
     box_len
     bury 1
-    bz seed_ternary_false@10
+    bz seed_ternary_false@16
     bytec_0 // "grid"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-seed_ternary_merge@11:
+seed_ternary_merge@17:
     intc_2 // 1
     >
     assert // array index out of bounds
     bytec_0 // "grid"
     box_len
     bury 1
-    bnz seed_after_if_else@13
+    bnz seed_after_if_else@19
     bytec_0 // "grid"
     intc_0 // 2
     box_create
     pop
 
-seed_after_if_else@13:
+seed_after_if_else@19:
     bytec_0 // "grid"
     box_get
     assert // box exists
@@ -485,27 +521,27 @@ seed_after_if_else@13:
     bytec_0 // "grid"
     box_len
     bury 1
-    bz seed_ternary_false@15
+    bz seed_ternary_false@21
     bytec_0 // "grid"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-seed_ternary_merge@16:
+seed_ternary_merge@22:
     intc_2 // 1
     >
     assert // array index out of bounds
     bytec_0 // "grid"
     box_len
     bury 1
-    bnz seed_after_if_else@18
+    bnz seed_after_if_else@24
     bytec_0 // "grid"
     intc_0 // 2
     box_create
     pop
 
-seed_after_if_else@18:
+seed_after_if_else@24:
     bytec_0 // "grid"
     box_get
     assert // box exists
@@ -549,27 +585,27 @@ seed_after_if_else@18:
     bytec_0 // "grid"
     box_len
     bury 1
-    bz seed_ternary_false@20
+    bz seed_ternary_false@26
     bytec_0 // "grid"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-seed_ternary_merge@21:
+seed_ternary_merge@27:
     intc_0 // 2
     >
     assert // array index out of bounds
     bytec_0 // "grid"
     box_len
     bury 1
-    bnz seed_after_if_else@23
+    bnz seed_after_if_else@29
     bytec_0 // "grid"
     intc_0 // 2
     box_create
     pop
 
-seed_after_if_else@23:
+seed_after_if_else@29:
     bytec_0 // "grid"
     box_get
     assert // box exists
@@ -612,21 +648,21 @@ seed_after_if_else@23:
     box_put
     retsub
 
-seed_ternary_false@20:
+seed_ternary_false@26:
     intc_1 // 0
-    b seed_ternary_merge@21
+    b seed_ternary_merge@27
 
-seed_ternary_false@15:
+seed_ternary_false@21:
     intc_1 // 0
-    b seed_ternary_merge@16
+    b seed_ternary_merge@22
 
-seed_ternary_false@10:
+seed_ternary_false@16:
     intc_1 // 0
-    b seed_ternary_merge@11
+    b seed_ternary_merge@17
 
-seed_ternary_false@5:
+seed_ternary_false@11:
     intc_1 // 0
-    b seed_ternary_merge@6
+    b seed_ternary_merge@12
 
 seed_ternary_false@2:
     intc_1 // 0

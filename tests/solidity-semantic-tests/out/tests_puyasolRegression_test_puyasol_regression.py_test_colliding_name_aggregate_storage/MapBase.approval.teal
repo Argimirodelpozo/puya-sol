@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/colliding_name_aggregate_storage.sol.MapBase.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x151f7c75 "data" "bal" "__ctor_pending"
+    bytecblock "data" 0x151f7c75 "bal" "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -60,7 +60,7 @@ main_bal_route@21:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     callsub bal
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -75,7 +75,7 @@ main_readBal_route@20:
     ==
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     callsub readBal
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -107,7 +107,7 @@ main_atB_route@18:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub atB
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -116,7 +116,7 @@ main_atB_route@18:
 
 main_lenB_route@17:
     callsub lenB
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -145,7 +145,7 @@ main___postInit_route@15:
     bytec_3 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_1 // "data"
+    bytec_0 // "data"
     intc_3 // 2
     box_create
     pop
@@ -174,7 +174,7 @@ main_switch_case_5@10:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -195,7 +195,7 @@ main_switch_case_4@9:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -217,7 +217,7 @@ main_switch_case_3@8:
     bzero
     b|
     callsub setBal
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -243,7 +243,7 @@ main_switch_case_2@7:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -262,7 +262,7 @@ main_switch_case_1@6:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -282,7 +282,7 @@ main_switch_case_0@5:
     bzero
     b|
     callsub pushB
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     log
     intc_1 // 1
     return
@@ -301,6 +301,16 @@ pushB:
 pushB_ternary_merge@3:
     !
     assert // not payable
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz pushB_after_if_else@5
+    bytec_0 // "data"
+    intc_3 // 2
+    box_create
+    pop
+
+pushB_after_if_else@5:
     pushbytes 0x0001
     frame_dig -1
     concat
@@ -309,19 +319,19 @@ pushB_ternary_merge@3:
     swap
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    bytec_1 // "data"
+    bytec_0 // "data"
     intc_2 // 0
     intc_3 // 2
     box_extract
     btoi
-    bytec_1 // "data"
+    bytec_0 // "data"
     box_len
     pop
     dig 2
     intc_0 // 32
     *
     +
-    bytec_1 // "data"
+    bytec_0 // "data"
     swap
     box_resize
     dup
@@ -329,7 +339,7 @@ pushB_ternary_merge@3:
     +
     itob
     extract 6 2
-    bytec_1 // "data"
+    bytec_0 // "data"
     intc_2 // 0
     uncover 2
     box_replace
@@ -337,7 +347,7 @@ pushB_ternary_merge@3:
     *
     intc_3 // 2
     +
-    bytec_1 // "data"
+    bytec_0 // "data"
     swap
     intc_2 // 0
     uncover 3
@@ -361,13 +371,13 @@ lenB:
 lenB_ternary_merge@3:
     !
     assert // not payable
-    bytec_1 // "data"
+    bytec_0 // "data"
     box_len
     pop
     intc_3 // 2
     >=
     bz lenB_ternary_false@5
-    bytec_1 // "data"
+    bytec_0 // "data"
     box_len
     pop
 
@@ -421,7 +431,7 @@ atB_ternary_merge@3:
     *
     intc_3 // 2
     +
-    bytec_1 // "data"
+    bytec_0 // "data"
     swap
     intc_0 // 32
     box_extract // on error: index out of bounds

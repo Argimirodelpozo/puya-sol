@@ -101,6 +101,16 @@ f_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "x"
+    box_len
+    bury 1
+    bnz f_after_if_else@5
+    bytec_0 // "x"
+    intc_2 // 2
+    box_create
+    pop
+
+f_after_if_else@5:
+    bytec_0 // "x"
     intc_1 // 0
     intc_2 // 2
     box_extract

@@ -146,7 +146,7 @@ set_get_length_ternary_merge@3:
     !
     assert // not payable
 
-set_get_length_while_top@20:
+set_get_length_while_top@24:
     pushint 45010
     global OpcodeBudget
     >
@@ -163,7 +163,7 @@ set_get_length_while_top@20:
     intc_3 // 0
     itxn_field Fee
     itxn_submit
-    b set_get_length_while_top@20
+    b set_get_length_while_top@24
 
 set_get_length_while_top@4:
     bytec_0 // "addressArray"
@@ -184,7 +184,17 @@ set_get_length_ternary_merge@7:
     itob
     frame_dig -1
     b<
-    bz set_get_length_while_top@10
+    bz set_get_length_while_top@12
+    bytec_0 // "addressArray"
+    box_len
+    bury 1
+    bnz set_get_length_after_if_else@10
+    bytec_0 // "addressArray"
+    intc_0 // 2
+    box_create
+    pop
+
+set_get_length_after_if_else@10:
     bytec_0 // "addressArray"
     intc_3 // 0
     intc_0 // 2
@@ -218,18 +228,18 @@ set_get_length_ternary_merge@7:
     box_splice
     b set_get_length_while_top@4
 
-set_get_length_while_top@10:
+set_get_length_while_top@12:
     bytec_0 // "addressArray"
     box_len
     pop
     intc_0 // 2
     >=
-    bz set_get_length_ternary_false@12
+    bz set_get_length_ternary_false@14
     bytec_0 // "addressArray"
     box_len
     pop
 
-set_get_length_ternary_merge@13:
+set_get_length_ternary_merge@15:
     intc_0 // 2
     -
     intc_1 // 32
@@ -237,7 +247,17 @@ set_get_length_ternary_merge@13:
     itob
     frame_dig -1
     b>
-    bz set_get_length_after_while@15
+    bz set_get_length_after_while@19
+    bytec_0 // "addressArray"
+    box_len
+    bury 1
+    bnz set_get_length_after_if_else@18
+    bytec_0 // "addressArray"
+    intc_0 // 2
+    box_create
+    pop
+
+set_get_length_after_if_else@18:
     bytec_0 // "addressArray"
     intc_3 // 0
     intc_0 // 2
@@ -269,20 +289,20 @@ set_get_length_ternary_merge@13:
     bytec_0 // "addressArray"
     swap
     box_resize
-    b set_get_length_while_top@10
+    b set_get_length_while_top@12
 
-set_get_length_after_while@15:
+set_get_length_after_while@19:
     bytec_0 // "addressArray"
     box_len
     pop
     intc_0 // 2
     >=
-    bz set_get_length_ternary_false@17
+    bz set_get_length_ternary_false@21
     bytec_0 // "addressArray"
     box_len
     pop
 
-set_get_length_ternary_merge@18:
+set_get_length_ternary_merge@22:
     intc_0 // 2
     -
     intc_1 // 32
@@ -293,13 +313,13 @@ set_get_length_ternary_merge@18:
     b|
     retsub
 
-set_get_length_ternary_false@17:
+set_get_length_ternary_false@21:
     intc_0 // 2
-    b set_get_length_ternary_merge@18
+    b set_get_length_ternary_merge@22
 
-set_get_length_ternary_false@12:
+set_get_length_ternary_false@14:
     intc_0 // 2
-    b set_get_length_ternary_merge@13
+    b set_get_length_ternary_merge@15
 
 set_get_length_ternary_false@6:
     intc_0 // 2

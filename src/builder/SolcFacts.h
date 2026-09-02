@@ -39,6 +39,10 @@ public:
 		std::set<std::string> reachableFunctions;
 		std::set<std::string> recursiveFunctions;
 		std::set<std::string> assignedVariables;
+		/// Single-assignment locals whose defining expression is a NUMBER
+		/// literal, as a full-width decimal string (solc's SSAValueTracker:
+		/// a reassignment anywhere drops the entry).
+		std::map<std::string, std::string> constantValues;
 		bool usesStorage = false;
 	};
 

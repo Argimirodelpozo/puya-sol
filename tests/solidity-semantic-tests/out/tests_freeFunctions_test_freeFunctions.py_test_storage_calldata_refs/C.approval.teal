@@ -253,6 +253,16 @@ f:
 f_ternary_merge@3:
     !
     assert // not payable
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz f_after_if_else@5
+    bytec_0 // "data"
+    intc_3 // 2
+    box_create
+    pop
+
+f_after_if_else@5:
     bytec 4 // 0x0001
     frame_dig -2
     concat

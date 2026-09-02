@@ -356,7 +356,17 @@ fill_ternary_merge@7:
     pushint 3
     itob
     b<
-    bz fill_while_top@10
+    bz fill_while_top@12
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz fill_after_if_else@10
+    bytec_0 // "data"
+    intc_0 // 2
+    box_create
+    pop
+
+fill_after_if_else@10:
     bytec_0 // "data"
     box_get
     assert // box exists
@@ -371,18 +381,18 @@ fill_ternary_merge@7:
     box_put
     b fill_while_top@4
 
-fill_while_top@10:
+fill_while_top@12:
     bytec_0 // "data"
     box_len
     bury 1
-    bz fill_ternary_false@13
+    bz fill_ternary_false@15
     bytec_0 // "data"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-fill_ternary_merge@14:
+fill_ternary_merge@16:
     intc_0 // 2
     >
     assert // array index out of bounds
@@ -402,31 +412,31 @@ fill_ternary_merge@14:
     pushint 4
     itob
     b<
-    bz fill_while_top@23
+    bz fill_while_top@25
     bytec_0 // "data"
     box_len
     bury 1
-    bz fill_ternary_false@18
+    bz fill_ternary_false@20
     bytec_0 // "data"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-fill_ternary_merge@19:
+fill_ternary_merge@21:
     intc_0 // 2
     >
     assert // array index out of bounds
     bytec_0 // "data"
     box_len
     bury 1
-    bnz fill_after_if_else@21
+    bnz fill_after_if_else@23
     bytec_0 // "data"
     intc_0 // 2
     box_create
     pop
 
-fill_after_if_else@21:
+fill_after_if_else@23:
     bytec_0 // "data"
     box_get
     assert // box exists
@@ -461,24 +471,24 @@ fill_after_if_else@21:
     bytec_0 // "data"
     swap
     box_put
-    b fill_while_top@10
+    b fill_while_top@12
 
-fill_ternary_false@18:
+fill_ternary_false@20:
     intc_1 // 0
-    b fill_ternary_merge@19
+    b fill_ternary_merge@21
 
-fill_while_top@23:
+fill_while_top@25:
     bytec_0 // "data"
     box_len
     bury 1
-    bz fill_ternary_false@26
+    bz fill_ternary_false@28
     bytec_0 // "data"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-fill_ternary_merge@27:
+fill_ternary_merge@29:
     intc_0 // 2
     >
     assert // array index out of bounds
@@ -517,27 +527,27 @@ fill_ternary_merge@27:
     pushint 5
     itob
     b<
-    bnz fill_after_if_else@29
+    bnz fill_after_if_else@31
     bytec_0 // "data"
     box_len
     bury 1
-    bnz fill_ternary_true@36
+    bnz fill_ternary_true@38
     intc_1 // 0
 
-fill_ternary_merge@38:
+fill_ternary_merge@40:
     intc_0 // 2
     >
     assert // array index out of bounds
     bytec_0 // "data"
     box_len
     bury 1
-    bnz fill_after_if_else@40
+    bnz fill_after_if_else@42
     bytec_0 // "data"
     intc_0 // 2
     box_create
     pop
 
-fill_after_if_else@40:
+fill_after_if_else@42:
     bytec_0 // "data"
     intc_3 // 6
     intc_0 // 2
@@ -581,14 +591,14 @@ fill_after_if_else@40:
     bytec_0 // "data"
     box_len
     bury 1
-    bz fill_ternary_false@42
+    bz fill_ternary_false@44
     bytec_0 // "data"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-fill_ternary_merge@43:
+fill_ternary_merge@45:
     intc_0 // 2
     >
     assert // array index out of bounds
@@ -634,43 +644,43 @@ fill_ternary_merge@43:
     box_extract // on error: index out of bounds
     retsub
 
-fill_ternary_false@42:
+fill_ternary_false@44:
     intc_1 // 0
-    b fill_ternary_merge@43
+    b fill_ternary_merge@45
 
-fill_ternary_true@36:
+fill_ternary_true@38:
     bytec_0 // "data"
     box_get
     pop
     intc_1 // 0
     extract_uint16
-    b fill_ternary_merge@38
+    b fill_ternary_merge@40
 
-fill_after_if_else@29:
+fill_after_if_else@31:
     bytec_0 // "data"
     box_len
     bury 1
-    bz fill_ternary_false@31
+    bz fill_ternary_false@33
     bytec_0 // "data"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-fill_ternary_merge@32:
+fill_ternary_merge@34:
     intc_0 // 2
     >
     assert // array index out of bounds
     bytec_0 // "data"
     box_len
     bury 1
-    bnz fill_after_if_else@34
+    bnz fill_after_if_else@36
     bytec_0 // "data"
     intc_0 // 2
     box_create
     pop
 
-fill_after_if_else@34:
+fill_after_if_else@36:
     bytec_0 // "data"
     box_get
     assert // box exists
@@ -751,19 +761,19 @@ fill_after_if_else@34:
     bytec_0 // "data"
     swap
     box_put
-    b fill_while_top@23
+    b fill_while_top@25
 
-fill_ternary_false@31:
+fill_ternary_false@33:
     intc_1 // 0
-    b fill_ternary_merge@32
+    b fill_ternary_merge@34
 
-fill_ternary_false@26:
+fill_ternary_false@28:
     intc_1 // 0
-    b fill_ternary_merge@27
+    b fill_ternary_merge@29
 
-fill_ternary_false@13:
+fill_ternary_false@15:
     intc_1 // 0
-    b fill_ternary_merge@14
+    b fill_ternary_merge@16
 
 fill_ternary_false@6:
     intc_1 // 0

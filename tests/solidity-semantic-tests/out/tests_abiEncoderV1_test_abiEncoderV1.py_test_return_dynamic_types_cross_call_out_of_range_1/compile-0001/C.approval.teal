@@ -177,7 +177,14 @@ dyn_while_top@4:
     dig 3
     <
     bz dyn_after_while@9
+    dupn 2
+    intc_0 // 32
+    +
     dup
+    cover 5
+    pushint 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     intc_3 // 4096
     %
     dup
@@ -190,30 +197,25 @@ dyn_while_top@4:
     >=
     bz dyn_ternary_false@7
     pop
-    dup
     intc_3 // 4096
     /
     loads
-    uncover 3
+    uncover 2
     intc_0 // 32
     extract3
 
 dyn_ternary_merge@8:
-    uncover 2
-    swap
     concat
-    swap
-    intc_0 // 32
-    +
+    uncover 2
     b dyn_while_top@4
 
 dyn_ternary_false@7:
-    dig 1
+    swap
     intc_3 // 4096
     /
     dup
     loads
-    uncover 5
+    uncover 4
     dig 3
     extract3
     swap

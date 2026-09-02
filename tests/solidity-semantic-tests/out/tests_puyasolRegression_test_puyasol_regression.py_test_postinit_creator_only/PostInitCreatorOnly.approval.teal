@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/postinit_creator_only.sol.PostInitCreatorOnly.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x151f7c75 "arr" "__ctor_pending" "owner" 0x0001
+    bytecblock "arr" 0x151f7c75 "__ctor_pending" "owner" 0x0001
     pushint 4096
     bzero
     dup
@@ -60,7 +60,7 @@ main_arr_route@15:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub arr
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -69,7 +69,7 @@ main_arr_route@15:
 
 main_owner_route@14:
     callsub owner
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -78,7 +78,7 @@ main_owner_route@14:
 
 main_len_route@13:
     callsub len
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -87,7 +87,7 @@ main_len_route@13:
 
 main___postInit_route@12:
     txna ApplicationArgs 1
-    dup
+    dupn 2
     len
     intc_0 // 32
     ==
@@ -102,7 +102,7 @@ main___postInit_route@12:
     bytec_2 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_1 // "arr"
+    bytec_0 // "arr"
     intc_3 // 2
     box_create
     pop
@@ -111,20 +111,31 @@ main___postInit_route@12:
     app_global_put
     intc_1 // 1
     itob
+    swap
     bytec 4 // 0x0001
-    dig 2
+    swap
     concat
     dup
     extract 2 0
     swap
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    bytec_1 // "arr"
+    bytec_0 // "arr"
     intc_2 // 0
     uncover 3
     uncover 3
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
+    bytec_0 // "arr"
+    box_len
+    bury 1
+    bnz main_after_if_else@29
+    bytec_0 // "arr"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@29:
     b+
     dup
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
@@ -146,7 +157,7 @@ main___postInit_route@12:
     swap
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    bytec_1 // "arr"
+    bytec_0 // "arr"
     intc_2 // 0
     uncover 3
     uncover 3
@@ -181,7 +192,7 @@ main_switch_case_2@7:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -206,7 +217,7 @@ main_switch_case_1@6:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -225,7 +236,7 @@ main_switch_case_0@5:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -287,13 +298,13 @@ len:
 len_ternary_merge@3:
     !
     assert // not payable
-    bytec_1 // "arr"
+    bytec_0 // "arr"
     box_len
     pop
     intc_3 // 2
     >=
     bz len_ternary_false@5
-    bytec_1 // "arr"
+    bytec_0 // "arr"
     box_len
     pop
 
@@ -368,7 +379,7 @@ arr_ternary_merge@3:
     *
     intc_3 // 2
     +
-    bytec_1 // "arr"
+    bytec_0 // "arr"
     swap
     intc_0 // 32
     box_extract // on error: index out of bounds

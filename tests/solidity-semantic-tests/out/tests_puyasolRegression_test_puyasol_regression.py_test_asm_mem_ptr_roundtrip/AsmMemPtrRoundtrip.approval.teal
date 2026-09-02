@@ -8,7 +8,7 @@ main:
     intc_2 // 0
     dupn 2
     bytec_3 // ""
-    dupn 6
+    dupn 5
     intc_1 // 4096
     bzero
     dup
@@ -89,7 +89,7 @@ main_expectedEncodedCall_route@14:
 main_echoEncodedCall_route@13:
     txna ApplicationArgs 1
     dup
-    bury 11
+    bury 10
     len
     dup
     bury 3
@@ -98,7 +98,7 @@ main_echoEncodedCall_route@13:
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 2
     dup
-    bury 9
+    bury 8
     len
     dup
     bury 2
@@ -107,7 +107,7 @@ main_echoEncodedCall_route@13:
     assert // invalid number of bytes for arc4.static_array<arc4.uint8, 32>
     txna ApplicationArgs 3
     dup
-    bury 10
+    bury 9
     len
     pushint 4
     ==
@@ -252,7 +252,7 @@ main_after_while@37:
     dig 3
     pushint 20
     -
-    dig 12
+    dig 11
     swap
     pushint 20
     extract3
@@ -269,7 +269,7 @@ main_after_while@37:
     dig 4
     pushint 20
     -
-    dig 12
+    dig 11
     swap
     pushint 20
     extract3
@@ -285,7 +285,7 @@ main_after_while@37:
     concat
     pushint 28
     bzero
-    dig 12
+    dig 11
     swap
     concat
     concat
@@ -301,7 +301,7 @@ main_after_while@37:
     pushint 88
     extract_uint64
     dup
-    bury 13
+    bury 12
     dup
     intc_0 // 32
     +
@@ -512,7 +512,7 @@ main_ternary_merge@52:
     pushint 88
     extract_uint64
     dup
-    bury 16
+    bury 15
     dup
     intc_0 // 32
     +
@@ -528,7 +528,7 @@ main_ternary_merge@52:
     intc_1 // 4096
     %
     dup
-    cover 7
+    cover 6
     swap
     itob
     dig 8
@@ -541,7 +541,7 @@ main_ternary_merge@52:
     dig 2
     dup
     loads
-    dig 8
+    dig 7
     uncover 3
     replace3
     stores
@@ -666,7 +666,7 @@ main_after_while@61:
     bzero
     dup
     cover 5
-    dig 15
+    dig 14
     itob
     bytec_2 // 0x20
     b+
@@ -678,8 +678,8 @@ main_after_while@61:
     pushint 8
     -
     extract_uint64
-    bury 13
-    dig 5
+    bury 12
+    dig 6
     bz main_ternary_false@63
     dup
     loads
@@ -692,7 +692,7 @@ main_ternary_merge@64:
     swap
     concat
     cover 4
-    uncover 6
+    uncover 7
     bz main_ternary_false@66
     uncover 7
     pop
@@ -722,15 +722,21 @@ main_while_top@68:
     dig 7
     <
     bz main_after_while@73
-    dig 11
+    dig 10
     dig 3
     +
     dup
-    bury 11
+    cover 4
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     intc_1 // 4096
     %
     dup
-    cover 5
+    cover 6
     intc_1 // 4096
     swap
     -
@@ -739,7 +745,7 @@ main_while_top@68:
     >=
     bz main_ternary_false@71
     pop
-    dig 10
+    uncover 3
     intc_1 // 4096
     /
     loads
@@ -759,7 +765,7 @@ main_ternary_merge@72:
     b main_while_top@68
 
 main_ternary_false@71:
-    dig 11
+    uncover 4
     intc_1 // 4096
     /
     dup
@@ -789,7 +795,7 @@ main_after_while@73:
     extract3
     dup
     cover 5
-    dig 11
+    dig 10
     itob
     bytec_2 // 0x20
     b+
@@ -804,7 +810,7 @@ main_after_while@73:
     -
     extract_uint64
     dup
-    bury 10
+    bury 9
     swap
     len
     dup
@@ -855,7 +861,7 @@ main_while_top@77:
     dig 1
     >
     bz main_after_while@82
-    dig 9
+    dig 8
     dig 1
     dup
     cover 2
@@ -869,7 +875,7 @@ main_while_top@77:
     dup
     intc_1 // 4096
     /
-    cover 4
+    cover 5
     intc_1 // 4096
     %
     dup
@@ -882,7 +888,7 @@ main_while_top@77:
     intc 5 // 4064
     <=
     bz main_else_body@80
-    uncover 3
+    uncover 4
     dup
     loads
     uncover 7
@@ -896,7 +902,7 @@ main_after_if_else@81:
     b main_while_top@77
 
 main_else_body@80:
-    uncover 3
+    uncover 4
     dup
     loads
     intc_1 // 4096
@@ -934,12 +940,6 @@ main_after_while@82:
     pop
     uncover 3
     pop
-    dig 6
-    intc_0 // 32
-    +
-    intc 4 // 20480
-    <=
-    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     swap
     intc_0 // 32
     +
@@ -1120,7 +1120,7 @@ main_else_body@54:
     dup
     loads
     intc_1 // 4096
-    dig 9
+    dig 8
     dup
     cover 2
     -

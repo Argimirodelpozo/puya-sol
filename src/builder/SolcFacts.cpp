@@ -2,6 +2,7 @@
 
 #include <libsolidity/ast/AST.h>
 #include <libsolutil/CommonData.h>
+#include <libsolutil/Exceptions.h>
 #include <libsolutil/Keccak256.h>
 #include <libsolutil/Numeric.h>
 #include <libyul/AST.h>
@@ -10,6 +11,7 @@
 #include <libyul/optimiser/CallGraphGenerator.h>
 #include <libyul/optimiser/NameCollector.h>
 #include <libyul/optimiser/Semantics.h>
+#include <libyul/optimiser/SSAValueTracker.h>
 
 #include <variant>
 #include <vector>
@@ -45,6 +47,30 @@ SolcFacts::YulAnalysis SolcFacts::analyzeYul(
 
 	for (auto const& name: assignedVariableNames(_block))
 		result.assignedVariables.insert(nameString(name));
+
+	// SSAValueTracker asserts each name is declared once ("Source needs to be
+	// disambiguated") — sibling scopes reusing a `let` name are ordinary in
+	// hand-written assembly. The values are an optimisation input, so an
+	// ambiguous block yields none rather than failing the compile.
+	try
+	{
+		SSAValueTracker ssaValues;
+		ssaValues(_block);
+		for (auto const& [name, value]: ssaValues.values())
+		{
+			if (!value)
+				continue;
+			auto const* literal = std::get_if<Literal>(value);
+			if (!literal || literal->kind != LiteralKind::Number)
+				continue;
+			result.constantValues.emplace(
+				nameString(name), literal->value.value().str());
+		}
+	}
+	catch (solidity::util::Exception const&)
+	{
+		result.constantValues.clear();
+	}
 
 	auto graph = CallGraphGenerator::callGraph(_block);
 	std::set<YulName> recursive;

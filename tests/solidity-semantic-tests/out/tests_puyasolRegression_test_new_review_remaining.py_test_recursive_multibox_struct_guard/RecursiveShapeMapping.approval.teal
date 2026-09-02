@@ -604,7 +604,17 @@ seed_ternary_merge@6:
     intc_2 // 0
     itob
     b==
-    bz seed_after_if_else@18
+    bz seed_after_if_else@20
+    bytec_0 // "rows"
+    box_len
+    bury 1
+    bnz seed_after_if_else@9
+    bytec_0 // "rows"
+    intc_0 // 2
+    box_create
+    pop
+
+seed_after_if_else@9:
     bytec_0 // "rows"
     box_get
     assert // box exists
@@ -620,25 +630,25 @@ seed_ternary_merge@6:
     bytec_0 // "rows"
     box_len
     bury 1
-    bz seed_ternary_false@9
+    bz seed_ternary_false@11
     bytec_0 // "rows"
     box_get
     pop
     intc_2 // 0
     extract_uint16
 
-seed_ternary_merge@10:
+seed_ternary_merge@12:
     assert // array index out of bounds
     bytec_0 // "rows"
     box_len
     bury 1
-    bnz seed_after_if_else@12
+    bnz seed_after_if_else@14
     bytec_0 // "rows"
     intc_0 // 2
     box_create
     pop
 
-seed_after_if_else@12:
+seed_after_if_else@14:
     bytec_0 // "rows"
     box_get
     assert // box exists
@@ -659,25 +669,25 @@ seed_after_if_else@12:
     bytec_0 // "rows"
     box_len
     bury 1
-    bz seed_ternary_false@14
+    bz seed_ternary_false@16
     bytec_0 // "rows"
     box_get
     pop
     intc_2 // 0
     extract_uint16
 
-seed_ternary_merge@15:
+seed_ternary_merge@17:
     assert // array index out of bounds
     bytec_0 // "rows"
     box_len
     bury 1
-    bnz seed_after_if_else@17
+    bnz seed_after_if_else@19
     bytec_0 // "rows"
     intc_0 // 2
     box_create
     pop
 
-seed_after_if_else@17:
+seed_after_if_else@19:
     bytec_0 // "rows"
     box_get
     assert // box exists
@@ -696,16 +706,16 @@ seed_after_if_else@17:
     swap
     box_put
 
-seed_after_if_else@18:
+seed_after_if_else@20:
     retsub
 
-seed_ternary_false@14:
+seed_ternary_false@16:
     intc_2 // 0
-    b seed_ternary_merge@15
+    b seed_ternary_merge@17
 
-seed_ternary_false@9:
+seed_ternary_false@11:
     intc_2 // 0
-    b seed_ternary_merge@10
+    b seed_ternary_merge@12
 
 seed_ternary_false@5:
     intc_2 // 0

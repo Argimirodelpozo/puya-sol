@@ -516,6 +516,16 @@ n1_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "a"
+    box_len
+    bury 1
+    bnz n1_after_if_else@5
+    bytec_0 // "a"
+    intc_0 // 2
+    box_create
+    pop
+
+n1_after_if_else@5:
+    bytec_0 // "a"
     box_get
     assert // box exists
     intc_1 // 1
@@ -533,14 +543,14 @@ n1_ternary_merge@3:
     bytec_0 // "a"
     box_len
     bury 1
-    bz n1_ternary_false@5
+    bz n1_ternary_false@7
     bytec_0 // "a"
     box_get
     pop
     intc_2 // 0
     extract_uint16
 
-n1_ternary_merge@6:
+n1_ternary_merge@8:
     itob
     dup
     dig 2
@@ -576,14 +586,14 @@ n1_ternary_merge@6:
     bytec_0 // "a"
     box_len
     bury 1
-    bz n1_ternary_false@8
+    bz n1_ternary_false@10
     bytec_0 // "a"
     box_get
     pop
     intc_2 // 0
     extract_uint16
 
-n1_ternary_merge@9:
+n1_ternary_merge@11:
     swap
     dup
     uncover 2
@@ -669,13 +679,13 @@ n1_ternary_merge@9:
     box_put
     retsub
 
-n1_ternary_false@8:
+n1_ternary_false@10:
     intc_2 // 0
-    b n1_ternary_merge@9
+    b n1_ternary_merge@11
 
-n1_ternary_false@5:
+n1_ternary_false@7:
     intc_2 // 0
-    b n1_ternary_merge@6
+    b n1_ternary_merge@8
 
 n1_ternary_false@2:
     intc_2 // 0
@@ -695,6 +705,16 @@ n2_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "a"
+    box_len
+    bury 1
+    bnz n2_after_if_else@5
+    bytec_0 // "a"
+    intc_0 // 2
+    box_create
+    pop
+
+n2_after_if_else@5:
+    bytec_0 // "a"
     box_get
     assert // box exists
     intc_1 // 1
@@ -712,14 +732,14 @@ n2_ternary_merge@3:
     bytec_0 // "a"
     box_len
     bury 1
-    bz n2_ternary_false@5
+    bz n2_ternary_false@7
     bytec_0 // "a"
     box_get
     pop
     intc_2 // 0
     extract_uint16
 
-n2_ternary_merge@6:
+n2_ternary_merge@8:
     itob
     dup
     dig 2
@@ -751,14 +771,14 @@ n2_ternary_merge@6:
     bytec_0 // "a"
     box_len
     bury 1
-    bz n2_ternary_false@8
+    bz n2_ternary_false@10
     bytec_0 // "a"
     box_get
     pop
     intc_2 // 0
     extract_uint16
 
-n2_ternary_merge@9:
+n2_ternary_merge@11:
     swap
     dup
     uncover 2
@@ -783,13 +803,13 @@ n2_ternary_merge@9:
     box_put
     retsub
 
-n2_ternary_false@8:
+n2_ternary_false@10:
     intc_2 // 0
-    b n2_ternary_merge@9
+    b n2_ternary_merge@11
 
-n2_ternary_false@5:
+n2_ternary_false@7:
     intc_2 // 0
-    b n2_ternary_merge@6
+    b n2_ternary_merge@8
 
 n2_ternary_false@2:
     intc_2 // 0
@@ -966,6 +986,16 @@ p_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "a"
+    box_len
+    bury 1
+    bnz p_after_if_else@5
+    bytec_0 // "a"
+    intc_0 // 2
+    box_create
+    pop
+
+p_after_if_else@5:
+    bytec_0 // "a"
     box_get
     swap
     dup
@@ -983,11 +1013,11 @@ p_ternary_merge@3:
     *
     intc_0 // 2
 
-p_while_top@5:
+p_while_top@7:
     dup
     dig 2
     <=
-    bz p_after_while@7
+    bz p_after_while@9
     dig 2
     dig 1
     extract_uint16
@@ -1001,9 +1031,9 @@ p_while_top@5:
     cover 3
     intc_0 // 2
     +
-    b p_while_top@5
+    b p_while_top@7
 
-p_after_while@7:
+p_after_while@9:
     uncover 2
     extract 2 0
     dup

@@ -152,7 +152,17 @@ createEvent_ternary_merge@7:
     pushint 3
     itob
     b<
-    bz createEvent_after_while@9
+    bz createEvent_after_while@11
+    bytec_0 // "arr"
+    box_len
+    bury 1
+    bnz createEvent_after_if_else@10
+    bytec_0 // "arr"
+    intc_0 // 2
+    box_create
+    pop
+
+createEvent_after_if_else@10:
     bytec_0 // "arr"
     intc_3 // 0
     intc_0 // 2
@@ -186,21 +196,7 @@ createEvent_ternary_merge@7:
     box_splice
     b createEvent_while_top@4
 
-createEvent_after_while@9:
-    bytec_0 // "arr"
-    box_len
-    bury 1
-    bnz createEvent_after_if_else@11
-    bytec_0 // "arr"
-    intc_0 // 2
-    box_create
-    pop
-
-createEvent_after_if_else@11:
-    bytec_0 // "arr"
-    intc_0 // 2
-    frame_dig -1
-    box_replace // on error: index out of bounds
+createEvent_after_while@11:
     bytec_0 // "arr"
     box_len
     bury 1
@@ -211,6 +207,20 @@ createEvent_after_if_else@11:
     pop
 
 createEvent_after_if_else@13:
+    bytec_0 // "arr"
+    intc_0 // 2
+    frame_dig -1
+    box_replace // on error: index out of bounds
+    bytec_0 // "arr"
+    box_len
+    bury 1
+    bnz createEvent_after_if_else@15
+    bytec_0 // "arr"
+    intc_0 // 2
+    box_create
+    pop
+
+createEvent_after_if_else@15:
     intc_2 // 1
     itob
     frame_dig -1
@@ -236,13 +246,13 @@ createEvent_after_if_else@13:
     bytec_0 // "arr"
     box_len
     bury 1
-    bnz createEvent_after_if_else@15
+    bnz createEvent_after_if_else@17
     bytec_0 // "arr"
     intc_0 // 2
     box_create
     pop
 
-createEvent_after_if_else@15:
+createEvent_after_if_else@17:
     intc_0 // 2
     itob
     frame_dig -1

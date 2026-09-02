@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParitySlots.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2 65536 32768 18446744073709486080 48076
-    bytecblock 0x151f7c75 "arr8" 0x010000000000000000000000000000000000000000000000000000000000000000 0x00 "s" "si" "b" 0x04 "a" "c" "__ctor_pending" 0xffff 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b 0xfdb6516b2f3ca28f8a88fa60aa6b338d44347d48b443402d112ba6deaa5b103e 0x60150443273224f5fb8ef96c0b853f945f0b489fd05ea1714dd36041f73c5cd6 "mi"
+    bytecblock 0x151f7c75 "arr8" 0x010000000000000000000000000000000000000000000000000000000000000000 0x00 "si" "s" "b" 0x04 "a" "c" "__ctor_pending" 0xffff 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b 0xfdb6516b2f3ca28f8a88fa60aa6b338d44347d48b443402d112ba6deaa5b103e 0x60150443273224f5fb8ef96c0b853f945f0b489fd05ea1714dd36041f73c5cd6 "mi"
     pushint 4096
     bzero
     dup
@@ -178,7 +178,7 @@ main_shortLongRoundTrip_route@34:
 main_ternary_merge@65:
     !
     assert // not payable
-    bytec 4 // "s"
+    bytec 5 // "s"
     pushbytes "xy"
     app_global_put
     load 0
@@ -192,7 +192,7 @@ main_ternary_merge@65:
     b==
     bz main_bool_false@68
     intc_0 // 0
-    bytec 4 // "s"
+    bytec 5 // "s"
     app_global_get_ex
     pushbytes 0x
     cover 2
@@ -274,13 +274,33 @@ main_signedArrayWord_route@32:
 main_ternary_merge@80:
     !
     assert // not payable
-    bytec 5 // "si"
+    bytec 4 // "si"
+    box_len
+    bury 1
+    bnz main_after_if_else@82
+    bytec 4 // "si"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@82:
+    bytec 4 // "si"
     intc_0 // 0
     bytec 11 // 0xffff
     intc_1 // 1
     intc_3 // 2
     callsub box_dynamic_array_concat_fixed
-    bytec 5 // "si"
+    bytec 4 // "si"
+    box_len
+    bury 1
+    bnz main_after_if_else@84
+    bytec 4 // "si"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@84:
+    bytec 4 // "si"
     intc_0 // 0
     pushbytes 0x0002
     intc_1 // 1
@@ -296,28 +316,10 @@ main_ternary_merge@80:
     pushint 196607
     itob
     b==
-    bz main_bool_false@90
-    bytec 5 // "si"
+    bz main_bool_false@94
+    bytec 4 // "si"
     intc_3 // 2
     dup
-    box_extract // on error: index out of bounds
-    btoi
-    intc 4 // 65536
-    %
-    dup
-    intc 5 // 32768
-    >=
-    bz main_ternary_false@83
-    intc 6 // 18446744073709486080
-    +
-
-main_ternary_merge@84:
-    pushint 18446744073709551615
-    ==
-    bz main_bool_false@90
-    bytec 5 // "si"
-    pushint 4
-    intc_3 // 2
     box_extract // on error: index out of bounds
     btoi
     intc 4 // 65536
@@ -330,13 +332,31 @@ main_ternary_merge@84:
     +
 
 main_ternary_merge@88:
+    pushint 18446744073709551615
+    ==
+    bz main_bool_false@94
+    bytec 4 // "si"
+    pushint 4
+    intc_3 // 2
+    box_extract // on error: index out of bounds
+    btoi
+    intc 4 // 65536
+    %
+    dup
+    intc 5 // 32768
+    >=
+    bz main_ternary_false@91
+    intc 6 // 18446744073709486080
+    +
+
+main_ternary_merge@92:
     intc_3 // 2
     ==
-    bz main_bool_false@90
+    bz main_bool_false@94
     intc_1 // 1
     swap
 
-main_bool_merge@91:
+main_bool_merge@95:
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
@@ -360,16 +380,16 @@ main_bool_merge@91:
     intc_1 // 1
     return
 
-main_bool_false@90:
+main_bool_false@94:
     intc_0 // 0
     swap
-    b main_bool_merge@91
+    b main_bool_merge@95
+
+main_ternary_false@91:
+    b main_ternary_merge@92
 
 main_ternary_false@87:
     b main_ternary_merge@88
-
-main_ternary_false@83:
-    b main_ternary_merge@84
 
 main_ternary_false@79:
     intc_0 // 0
@@ -377,16 +397,16 @@ main_ternary_false@79:
 
 main_longString_route@31:
     txn GroupIndex
-    bz main_ternary_false@95
+    bz main_ternary_false@99
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@96:
+main_ternary_merge@100:
     !
     assert // not payable
-    bytec 4 // "s"
+    bytec 5 // "s"
     pushbytes "0123456789012345678901234567890123456789"
     app_global_put
     load 0
@@ -406,15 +426,15 @@ main_ternary_merge@96:
     pushint 81
     itob
     b==
-    bz main_bool_false@99
+    bz main_bool_false@103
     dig 1
     pushbytes 0x3031323334353637383930313233343536373839303132333435363738393031
     b==
-    bz main_bool_false@99
+    bz main_bool_false@103
     intc_1 // 1
     cover 2
 
-main_bool_merge@100:
+main_bool_merge@104:
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
@@ -452,27 +472,27 @@ main_bool_merge@100:
     intc_1 // 1
     return
 
-main_bool_false@99:
+main_bool_false@103:
     intc_0 // 0
     cover 2
-    b main_bool_merge@100
+    b main_bool_merge@104
 
-main_ternary_false@95:
+main_ternary_false@99:
     intc_0 // 0
-    b main_ternary_merge@96
+    b main_ternary_merge@100
 
 main_shortString_route@30:
     txn GroupIndex
-    bz main_ternary_false@104
+    bz main_ternary_false@108
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@105:
+main_ternary_merge@109:
     !
     assert // not payable
-    bytec 4 // "s"
+    bytec 5 // "s"
     pushbytes "abc"
     app_global_put
     load 0
@@ -508,21 +528,31 @@ main_ternary_merge@105:
     intc_1 // 1
     return
 
-main_ternary_false@104:
+main_ternary_false@108:
     intc_0 // 0
-    b main_ternary_merge@105
+    b main_ternary_merge@109
 
 main_popZeroes_route@29:
     txn GroupIndex
-    bz main_ternary_false@109
+    bz main_ternary_false@113
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@110:
+main_ternary_merge@114:
     !
     assert // not payable
+    bytec_1 // "arr8"
+    box_len
+    bury 1
+    bnz main_after_if_else@116
+    bytec_1 // "arr8"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@116:
     bytec_1 // "arr8"
     intc_0 // 0
     intc_3 // 2
@@ -557,14 +587,14 @@ main_ternary_merge@110:
     bytec_1 // "arr8"
     box_len
     bury 1
-    bz main_ternary_false@112
+    bz main_ternary_false@118
     bytec_1 // "arr8"
     box_len
     pop
     intc_3 // 2
     -
 
-main_ternary_merge@113:
+main_ternary_merge@119:
     itob
     dup
     load 0
@@ -579,16 +609,16 @@ main_ternary_merge@113:
     intc_3 // 2
     itob
     b==
-    bz main_bool_false@116
+    bz main_bool_false@122
     pushint 513
     itob
     dig 1
     b==
-    bz main_bool_false@116
+    bz main_bool_false@122
     intc_1 // 1
     swap
 
-main_bool_merge@117:
+main_bool_merge@123:
     uncover 2
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -627,30 +657,40 @@ main_bool_merge@117:
     intc_1 // 1
     return
 
-main_bool_false@116:
+main_bool_false@122:
     intc_0 // 0
     swap
-    b main_bool_merge@117
+    b main_bool_merge@123
 
-main_ternary_false@112:
+main_ternary_false@118:
     intc_0 // 0
-    b main_ternary_merge@113
+    b main_ternary_merge@119
 
-main_ternary_false@109:
+main_ternary_false@113:
     intc_0 // 0
-    b main_ternary_merge@110
+    b main_ternary_merge@114
 
 main_packedArray_route@28:
     txn GroupIndex
-    bz main_ternary_false@121
+    bz main_ternary_false@127
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@122:
+main_ternary_merge@128:
     !
     assert // not payable
+    bytec_1 // "arr8"
+    box_len
+    bury 1
+    bnz main_after_if_else@130
+    bytec_1 // "arr8"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@130:
     bytec_1 // "arr8"
     intc_0 // 0
     pushbytes 0x01
@@ -658,11 +698,31 @@ main_ternary_merge@122:
     dup
     callsub box_dynamic_array_concat_fixed
     bytec_1 // "arr8"
+    box_len
+    bury 1
+    bnz main_after_if_else@132
+    bytec_1 // "arr8"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@132:
+    bytec_1 // "arr8"
     intc_0 // 0
     pushbytes 0x02
     intc_1 // 1
     dup
     callsub box_dynamic_array_concat_fixed
+    bytec_1 // "arr8"
+    box_len
+    bury 1
+    bnz main_after_if_else@134
+    bytec_1 // "arr8"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@134:
     pushint 3
     itob
     bytec_1 // "arr8"
@@ -676,14 +736,14 @@ main_ternary_merge@122:
     bytec_1 // "arr8"
     box_len
     bury 1
-    bz main_ternary_false@124
+    bz main_ternary_false@136
     bytec_1 // "arr8"
     box_len
     pop
     intc_3 // 2
     -
 
-main_ternary_merge@125:
+main_ternary_merge@137:
     itob
     dup
     load 0
@@ -697,16 +757,16 @@ main_ternary_merge@125:
     store 0
     uncover 3
     b==
-    bz main_bool_false@128
+    bz main_bool_false@140
     pushint 197121
     itob
     dig 1
     b==
-    bz main_bool_false@128
+    bz main_bool_false@140
     intc_1 // 1
     swap
 
-main_bool_merge@129:
+main_bool_merge@141:
     uncover 2
     bytec_2 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
@@ -745,28 +805,28 @@ main_bool_merge@129:
     intc_1 // 1
     return
 
-main_bool_false@128:
+main_bool_false@140:
     intc_0 // 0
     swap
-    b main_bool_merge@129
+    b main_bool_merge@141
 
-main_ternary_false@124:
+main_ternary_false@136:
     intc_0 // 0
-    b main_ternary_merge@125
+    b main_ternary_merge@137
 
-main_ternary_false@121:
+main_ternary_false@127:
     intc_0 // 0
-    b main_ternary_merge@122
+    b main_ternary_merge@128
 
 main_signedKey_route@27:
     txn GroupIndex
-    bz main_ternary_false@133
+    bz main_ternary_false@145
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@134:
+main_ternary_merge@146:
     !
     assert // not payable
     pushint 9
@@ -795,19 +855,19 @@ main_ternary_merge@134:
     intc_1 // 1
     return
 
-main_ternary_false@133:
+main_ternary_false@145:
     intc_0 // 0
-    b main_ternary_merge@134
+    b main_ternary_merge@146
 
 main_stringKey_route@26:
     txn GroupIndex
-    bz main_ternary_false@138
+    bz main_ternary_false@150
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@139:
+main_ternary_merge@151:
     !
     assert // not payable
     pushint 7
@@ -836,19 +896,19 @@ main_ternary_merge@139:
     intc_1 // 1
     return
 
-main_ternary_false@138:
+main_ternary_false@150:
     intc_0 // 0
-    b main_ternary_merge@139
+    b main_ternary_merge@151
 
 main_packedWrite_route@25:
     txn GroupIndex
-    bz main_ternary_false@143
+    bz main_ternary_false@155
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@144:
+main_ternary_merge@156:
     !
     assert // not payable
     bytec 6 // "b"
@@ -864,7 +924,7 @@ main_ternary_merge@144:
     pushint 17900202
     itob
     b==
-    bz main_bool_false@148
+    bz main_bool_false@160
     intc_0 // 0
     bytec 8 // "a"
     app_global_get_ex
@@ -873,18 +933,18 @@ main_ternary_merge@144:
     select
     pushint 170
     ==
-    bz main_bool_false@148
+    bz main_bool_false@160
     intc_0 // 0
     bytec 9 // "c"
     app_global_get_ex
     intc_0 // 0
     cover 2
     select
-    bz main_bool_false@148
+    bz main_bool_false@160
     intc_1 // 1
     swap
 
-main_bool_merge@149:
+main_bool_merge@161:
     bytec 6 // "b"
     intc 7 // 48076
     app_global_put
@@ -911,24 +971,24 @@ main_bool_merge@149:
     intc_1 // 1
     return
 
-main_bool_false@148:
+main_bool_false@160:
     intc_0 // 0
     swap
-    b main_bool_merge@149
+    b main_bool_merge@161
 
-main_ternary_false@143:
+main_ternary_false@155:
     intc_0 // 0
-    b main_ternary_merge@144
+    b main_ternary_merge@156
 
 main_packedWord_route@24:
     txn GroupIndex
-    bz main_ternary_false@153
+    bz main_ternary_false@165
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@154:
+main_ternary_merge@166:
     !
     assert // not payable
     load 0
@@ -965,9 +1025,9 @@ main_ternary_merge@154:
     intc_1 // 1
     return
 
-main_ternary_false@153:
+main_ternary_false@165:
     intc_0 // 0
-    b main_ternary_merge@154
+    b main_ternary_merge@166
 
 main___postInit_route@23:
     bytec 10 // "__ctor_pending"
@@ -992,7 +1052,7 @@ main___postInit_route@23:
     intc_3 // 2
     box_create
     pop
-    bytec 5 // "si"
+    bytec 4 // "si"
     intc_3 // 2
     box_create
     pop
@@ -1005,7 +1065,7 @@ main___postInit_route@23:
     bytec 9 // "c"
     intc_1 // 1
     app_global_put
-    bytec 4 // "s"
+    bytec 5 // "s"
     pushbytes 0x
     app_global_put
     intc_1 // 1
@@ -1308,7 +1368,7 @@ __storage_read:
     pushbytes 0x05
     b==
     bz __storage_read_else_body@2
-    bytec 5 // "si"
+    bytec 4 // "si"
     intc_0 // 0
     intc_3 // 2
     box_extract
@@ -1322,7 +1382,7 @@ __storage_read_else_body@2:
     b==
     bz __storage_read_else_body@4
     intc_0 // 0
-    bytec 4 // "s"
+    bytec 5 // "s"
     app_global_get_ex
     pushbytes 0x
     cover 2
@@ -1622,7 +1682,7 @@ s_ternary_merge@3:
     !
     assert // not payable
     intc_0 // 0
-    bytec 4 // "s"
+    bytec 5 // "s"
     app_global_get_ex
     pushbytes 0x
     cover 2
@@ -1660,7 +1720,7 @@ si_ternary_merge@3:
     *
     intc_3 // 2
     +
-    bytec 5 // "si"
+    bytec 4 // "si"
     swap
     intc_3 // 2
     box_extract // on error: index out of bounds

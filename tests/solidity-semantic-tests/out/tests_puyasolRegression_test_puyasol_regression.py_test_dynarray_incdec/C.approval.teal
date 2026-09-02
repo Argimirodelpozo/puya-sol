@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/dynarray_incdec.sol.C.approval_program() -> uint64:
 main:
     intcblock 1 16 32 8 255
-    bytecblock 0x151f7c75 "a" 0x010000000000000000 "b" "c" 0x01 "__ctor_pending" 0x0001 0xffffffffffffffffffffffffffffffff
+    bytecblock "a" 0x151f7c75 0x010000000000000000 "b" "c" 0x01 "__ctor_pending" 0x0001 0xffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -61,7 +61,7 @@ main_getC_route@37:
     assert // invalid number of bytes for arc4.uint256
     callsub getC
     itob
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -99,7 +99,7 @@ main_getB_route@34:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub getB
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -137,7 +137,7 @@ main_getA_route@31:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub getA
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -163,7 +163,7 @@ main_preIncA_route@29:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub preIncA
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -178,7 +178,7 @@ main_postIncA_route@28:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub postIncA
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -207,7 +207,7 @@ main___postInit_route@26:
     bytec 6 // "__ctor_pending"
     pushint 0
     app_global_put
-    bytec_1 // "a"
+    bytec_0 // "a"
     pushint 2
     box_create
     pop
@@ -244,7 +244,7 @@ main_switch_case_10@21:
     -
     intc_2 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -264,7 +264,7 @@ main_switch_case_9@20:
     bzero
     b|
     callsub incC
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     log
     intc_0 // 1
     return
@@ -282,7 +282,7 @@ main_switch_case_8@19:
     pushint 24
     extract_uint64
     callsub pushC
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     log
     intc_0 // 1
     return
@@ -329,7 +329,7 @@ main_ternary_merge@18:
     -
     swap
     replace3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -353,7 +353,7 @@ main_switch_case_6@14:
     bzero
     b|
     callsub incB
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     log
     intc_0 // 1
     return
@@ -378,7 +378,7 @@ main_ternary_merge@13:
     pushint 24
     extract_uint64
     callsub pushB
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     log
     intc_0 // 1
     return
@@ -409,7 +409,7 @@ main_switch_case_4@9:
     -
     intc_2 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -429,7 +429,7 @@ main_switch_case_3@8:
     bzero
     b|
     callsub decA
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     log
     intc_0 // 1
     return
@@ -455,7 +455,7 @@ main_switch_case_2@7:
     -
     intc_2 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -483,7 +483,7 @@ main_switch_case_1@6:
     -
     intc_2 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -518,7 +518,7 @@ main_switch_case_0@5:
     assert // overflow
     b|
     callsub pushA
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     log
     intc_0 // 1
     return
@@ -579,6 +579,16 @@ pushA:
 pushA_ternary_merge@3:
     !
     assert // not payable
+    bytec_0 // "a"
+    box_len
+    bury 1
+    bnz pushA_after_if_else@5
+    bytec_0 // "a"
+    pushint 2
+    box_create
+    pop
+
+pushA_after_if_else@5:
     intc_1 // 16
     bzero
     dup
@@ -604,7 +614,7 @@ pushA_ternary_merge@3:
     swap
     pushint 0
     extract_uint16 // on error: invalid array length header
-    bytec_1 // "a"
+    bytec_0 // "a"
     pushint 0
     uncover 3
     uncover 3
@@ -648,15 +658,15 @@ postIncA_ternary_merge@3:
     pushint 2
     +
     dup
-    bytec_1 // "a"
+    bytec_0 // "a"
     swap
     intc_1 // 16
     box_extract // on error: index out of bounds
-    bytec_1 // "a"
+    bytec_0 // "a"
     box_len
     bury 1
     bnz postIncA_after_if_else@5
-    bytec_1 // "a"
+    bytec_0 // "a"
     pushint 2
     box_create
     pop
@@ -687,7 +697,7 @@ postIncA_after_if_else@5:
     assert // overflow
     dig 1
     b|
-    bytec_1 // "a"
+    bytec_0 // "a"
     uncover 4
     uncover 2
     box_replace // on error: index out of bounds
@@ -730,11 +740,11 @@ preIncA_ternary_merge@3:
     bytec_2 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    bytec_1 // "a"
+    bytec_0 // "a"
     box_len
     bury 1
     bnz preIncA_after_if_else@5
-    bytec_1 // "a"
+    bytec_0 // "a"
     pushint 2
     box_create
     pop
@@ -755,7 +765,7 @@ preIncA_after_if_else@5:
     *
     pushint 2
     +
-    bytec_1 // "a"
+    bytec_0 // "a"
     dig 1
     intc_1 // 16
     box_extract // on error: index out of bounds
@@ -781,7 +791,7 @@ preIncA_after_if_else@5:
     assert // overflow
     dig 2
     b|
-    bytec_1 // "a"
+    bytec_0 // "a"
     uncover 2
     dig 2
     box_replace // on error: index out of bounds
@@ -838,15 +848,15 @@ decA_ternary_merge@3:
     pushint 2
     +
     dup
-    bytec_1 // "a"
+    bytec_0 // "a"
     swap
     intc_1 // 16
     box_extract // on error: index out of bounds
-    bytec_1 // "a"
+    bytec_0 // "a"
     box_len
     bury 1
     bnz decA_after_if_else@5
-    bytec_1 // "a"
+    bytec_0 // "a"
     pushint 2
     box_create
     pop
@@ -872,7 +882,7 @@ decA_after_if_else@5:
     <=
     assert // overflow
     b|
-    bytec_1 // "a"
+    bytec_0 // "a"
     cover 2
     box_replace // on error: index out of bounds
     retsub
@@ -914,7 +924,7 @@ getA_ternary_merge@3:
     *
     pushint 2
     +
-    bytec_1 // "a"
+    bytec_0 // "a"
     swap
     intc_1 // 16
     box_extract // on error: index out of bounds
@@ -953,6 +963,16 @@ pushB:
 pushB_ternary_merge@3:
     !
     assert // not payable
+    bytec_3 // "b"
+    box_len
+    bury 1
+    bnz pushB_after_if_else@5
+    bytec_3 // "b"
+    pushint 2
+    box_create
+    pop
+
+pushB_after_if_else@5:
     intc_3 // 8
     bzero
     frame_dig -1
@@ -1170,8 +1190,18 @@ pushC_ternary_merge@3:
     frame_dig -1
     intc 4 // 255
     &
-    dup
     frame_bury -1
+    bytec 4 // "c"
+    box_len
+    bury 1
+    bnz pushC_after_if_else@5
+    bytec 4 // "c"
+    pushint 2
+    box_create
+    pop
+
+pushC_after_if_else@5:
+    frame_dig -1
     itob
     dup
     bitlen

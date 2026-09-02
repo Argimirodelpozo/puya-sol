@@ -788,7 +788,17 @@ setLengths_ternary_merge@7:
     itob
     frame_dig -2
     b<
-    bz setLengths_while_top@10
+    bz setLengths_while_top@12
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz setLengths_after_if_else@10
+    bytec_0 // "data"
+    intc_2 // 2
+    box_create
+    pop
+
+setLengths_after_if_else@10:
     bytec_0 // "data"
     intc_3 // 0
     pushbytes 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -797,18 +807,18 @@ setLengths_ternary_merge@7:
     callsub box_dynamic_array_concat_fixed
     b setLengths_while_top@4
 
-setLengths_while_top@10:
+setLengths_while_top@12:
     bytec_1 // "ids"
     box_len
     pop
     intc_2 // 2
     >=
-    bz setLengths_ternary_false@12
+    bz setLengths_ternary_false@14
     bytec_1 // "ids"
     box_len
     pop
 
-setLengths_ternary_merge@13:
+setLengths_ternary_merge@15:
     intc_2 // 2
     -
     intc_0 // 32
@@ -816,21 +826,31 @@ setLengths_ternary_merge@13:
     itob
     frame_dig -1
     b<
-    bz setLengths_after_while@15
+    bz setLengths_after_while@19
+    bytec_1 // "ids"
+    box_len
+    bury 1
+    bnz setLengths_after_if_else@18
+    bytec_1 // "ids"
+    intc_2 // 2
+    box_create
+    pop
+
+setLengths_after_if_else@18:
     bytec_1 // "ids"
     intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     intc_1 // 1
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
-    b setLengths_while_top@10
+    b setLengths_while_top@12
 
-setLengths_after_while@15:
+setLengths_after_while@19:
     retsub
 
-setLengths_ternary_false@12:
+setLengths_ternary_false@14:
     intc_2 // 2
-    b setLengths_ternary_merge@13
+    b setLengths_ternary_merge@15
 
 setLengths_ternary_false@6:
     intc_2 // 2

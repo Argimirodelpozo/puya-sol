@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/contract_parity_matrix.sol.SideEffectArgs.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 2
+    intcblock 32 1 2 0
     bytecblock "log_" 0x151f7c75 "__ctor_pending" "seen" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@9
     txn NumAppArgs
-    intc_3 // 2
+    intc_2 // 2
     ==
     bz main_after_if_else@9
     pushbytess 0xd99aa8e2 0xf3d420a0 0x7563f021
@@ -94,10 +94,10 @@ main___postInit_route@12:
     ==
     assert // __postInit callable only by the app creator
     bytec_2 // "__ctor_pending"
-    intc_2 // 0
+    intc_3 // 0
     app_global_put
     bytec_0 // "log_"
-    intc_3 // 2
+    intc_2 // 2
     box_create
     pop
     bytec_3 // "seen"
@@ -106,7 +106,7 @@ main___postInit_route@12:
     pushint 8
     itob
     callsub __solfn_126
-    intc_3 // 2
+    intc_2 // 2
     itob
     b*
     dup
@@ -202,6 +202,16 @@ main_switch_case_0@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/contract_parity_matrix.sol.SideEffectArgs.__solfn_126(v: bytes) -> bytes:
 __solfn_126:
     proto 1 1
+    bytec_0 // "log_"
+    box_len
+    bury 1
+    bnz __solfn_126_after_if_else@3
+    bytec_0 // "log_"
+    intc_2 // 2
+    box_create
+    pop
+
+__solfn_126_after_if_else@3:
     frame_dig -1
     len
     intc_0 // 32
@@ -217,11 +227,11 @@ __solfn_126:
     dup
     extract 2 0
     swap
-    intc_2 // 0
+    intc_3 // 0
     extract_uint16 // on error: invalid array length header
     bytec_0 // "log_"
-    intc_2 // 0
-    intc_3 // 2
+    intc_3 // 0
+    intc_2 // 2
     box_extract
     btoi
     bytec_0 // "log_"
@@ -240,16 +250,16 @@ __solfn_126:
     itob
     extract 6 2
     bytec_0 // "log_"
-    intc_2 // 0
+    intc_3 // 0
     uncover 2
     box_replace
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     bytec_0 // "log_"
     swap
-    intc_2 // 0
+    intc_3 // 0
     uncover 3
     box_splice
     frame_dig -1
@@ -268,7 +278,7 @@ seen:
 seen_ternary_merge@3:
     !
     assert // not payable
-    intc_2 // 0
+    intc_3 // 0
     bytec_3 // "seen"
     app_global_get_ex
     pushbytes 0x
@@ -285,7 +295,7 @@ seen_ternary_merge@3:
     retsub
 
 seen_ternary_false@2:
-    intc_2 // 0
+    intc_3 // 0
     b seen_ternary_merge@3
 
 
@@ -317,7 +327,7 @@ logAt_ternary_merge@3:
     extract_uint64
     intc_0 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     bytec_0 // "log_"
     swap
@@ -326,7 +336,7 @@ logAt_ternary_merge@3:
     retsub
 
 logAt_ternary_false@2:
-    intc_2 // 0
+    intc_3 // 0
     b logAt_ternary_merge@3
 
 
@@ -345,7 +355,7 @@ logLen_ternary_merge@3:
     bytec_0 // "log_"
     box_len
     pop
-    intc_3 // 2
+    intc_2 // 2
     >=
     bz logLen_ternary_false@5
     bytec_0 // "log_"
@@ -353,7 +363,7 @@ logLen_ternary_merge@3:
     pop
 
 logLen_ternary_merge@6:
-    intc_3 // 2
+    intc_2 // 2
     -
     intc_0 // 32
     /
@@ -364,11 +374,11 @@ logLen_ternary_merge@6:
     retsub
 
 logLen_ternary_false@5:
-    intc_3 // 2
+    intc_2 // 2
     b logLen_ternary_merge@6
 
 logLen_ternary_false@2:
-    intc_2 // 0
+    intc_3 // 0
     b logLen_ternary_merge@3
 
 
@@ -387,5 +397,5 @@ __evm_npy_ternary_merge@3:
     retsub
 
 __evm_npy_ternary_false@2:
-    intc_2 // 0
+    intc_3 // 0
     b __evm_npy_ternary_merge@3

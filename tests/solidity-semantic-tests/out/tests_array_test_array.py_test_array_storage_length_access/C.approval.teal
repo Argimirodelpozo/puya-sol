@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_length_access.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 2 1 0
+    intcblock 2 32 1 0
     bytecblock "storageArray" "__ctor_pending" 0x151f7c75 0x068101
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@7
     txn NumAppArgs
-    intc_1 // 2
+    intc_0 // 2
     ==
     bz main_after_if_else@7
     pushbytes 0x81bc2549
@@ -56,7 +56,7 @@ main_set_get_length_route@11:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub set_get_length
@@ -79,7 +79,7 @@ main___postInit_route@10:
     intc_3 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_1 // 2
+    intc_0 // 2
     box_create
     pop
     intc_2 // 1
@@ -96,18 +96,18 @@ main_switch_case_0@5:
 main_ternary_merge@19:
     !
     assert // not payable
-    intc_0 // 32
+    intc_1 // 32
     bzero
     txna ApplicationArgs 1
     len
-    intc_0 // 32
+    intc_1 // 32
     >=
     assert // EVM ABI decode out of bounds
     txna ApplicationArgs 1
     extract 0 32
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
     dig 1
@@ -116,9 +116,9 @@ main_ternary_merge@19:
     concat
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     -
-    intc_0 // 32
+    intc_1 // 32
     extract3
     bytec_2 // 0x151f7c75
     swap
@@ -146,7 +146,7 @@ set_get_length_ternary_merge@3:
     !
     assert // not payable
 
-set_get_length_while_top@14:
+set_get_length_while_top@16:
     pushint 45010
     global OpcodeBudget
     >
@@ -163,13 +163,13 @@ set_get_length_while_top@14:
     intc_3 // 0
     itxn_field Fee
     itxn_submit
-    b set_get_length_while_top@14
+    b set_get_length_while_top@16
 
 set_get_length_while_top@4:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
     bz set_get_length_ternary_false@6
     bytec_0 // "storageArray"
@@ -177,23 +177,33 @@ set_get_length_while_top@4:
     pop
 
 set_get_length_ternary_merge@7:
-    intc_1 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     frame_dig -1
     b<
-    bz set_get_length_after_while@9
+    bz set_get_length_after_while@11
+    bytec_0 // "storageArray"
+    box_len
+    bury 1
+    bnz set_get_length_after_if_else@10
+    bytec_0 // "storageArray"
+    intc_0 // 2
+    box_create
+    pop
+
+set_get_length_after_if_else@10:
     bytec_0 // "storageArray"
     intc_3 // 0
-    intc_1 // 2
+    intc_0 // 2
     box_extract
     btoi
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_0 // 32
+    intc_1 // 32
     +
     bytec_0 // "storageArray"
     swap
@@ -207,9 +217,9 @@ set_get_length_ternary_merge@7:
     intc_3 // 0
     uncover 2
     box_replace
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_1 // 2
+    intc_0 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -218,34 +228,34 @@ set_get_length_ternary_merge@7:
     box_splice
     b set_get_length_while_top@4
 
-set_get_length_after_while@9:
+set_get_length_after_while@11:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_1 // 2
+    intc_0 // 2
     >=
-    bz set_get_length_ternary_false@11
+    bz set_get_length_ternary_false@13
     bytec_0 // "storageArray"
     box_len
     pop
 
-set_get_length_ternary_merge@12:
-    intc_1 // 2
+set_get_length_ternary_merge@14:
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     retsub
 
-set_get_length_ternary_false@11:
-    intc_1 // 2
-    b set_get_length_ternary_merge@12
+set_get_length_ternary_false@13:
+    intc_0 // 2
+    b set_get_length_ternary_merge@14
 
 set_get_length_ternary_false@6:
-    intc_1 // 2
+    intc_0 // 2
     b set_get_length_ternary_merge@7
 
 set_get_length_ternary_false@2:

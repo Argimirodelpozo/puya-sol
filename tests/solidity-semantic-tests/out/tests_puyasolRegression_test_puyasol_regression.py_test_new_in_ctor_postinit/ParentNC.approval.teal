@@ -307,6 +307,16 @@ main___postInit_route@16:
     bytec 8 // "gotTag"
     swap
     app_global_put
+    bytec_2 // "parr"
+    box_len
+    bury 1
+    bnz main_after_if_else@45
+    bytec_2 // "parr"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@45:
     intc_0 // 0
     bytec_3 // "got"
     app_global_get_ex

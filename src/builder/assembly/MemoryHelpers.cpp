@@ -154,12 +154,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDyn(
 		auto cond = awst::makeNumericCompare(u64v(nm("i")),
 			awst::NumericComparison::Lt, u64v(nm("len")), _loc);
 		auto body = awst::makeBlock(_loc);
+		// The word read's own statements (its bounds assert pins off+i) belong
+		// INSIDE the loop: emitted to the builder's default sink they land after
+		// the loop, referencing an index defined only within it.
+		auto word = readMemWordDyn(
+			awst::makeUInt64BinOp(u64v(nm("off")), O::Add, u64v(nm("i")), _loc),
+			_loc, &body->body);
 		body->body.push_back(awst::makeAssignmentStatement(
 			bytesv(nm("acc")),
-			awst::makeConcat(bytesv(nm("acc")),
-				readMemWordDyn(awst::makeUInt64BinOp(u64v(nm("off")), O::Add,
-					u64v(nm("i")), _loc), _loc),
-				_loc), _loc));
+			awst::makeConcat(bytesv(nm("acc")), std::move(word), _loc), _loc));
 		body->body.push_back(awst::makeAssignmentStatement(
 			u64v(nm("i")),
 			awst::makeUInt64BinOp(u64v(nm("i")), O::Add,

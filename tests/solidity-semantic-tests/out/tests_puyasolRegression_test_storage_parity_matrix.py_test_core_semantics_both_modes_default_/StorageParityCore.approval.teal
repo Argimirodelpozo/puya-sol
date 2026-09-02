@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParityCore.approval_program() -> uint64:
 main:
-    intcblock 0 1 2 32
+    intcblock 2 0 1 32
     bytecblock "arr2" "dst" "src" "arr" 0x151f7c75 0x00 "p1" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000 "st" "p2" "__ctor_pending" 0xc6c6ce37906577350fea343f7b6c0b6bdde33bb40e7c759acc3324a7b13e19a1 0x0000000000000000000000000000000000000000000000000000000000000000 0x000000000000000000000000000000000000000000000000000000000000000000220000 0x0000000000000000000000000000000000000000000000000000000000000063
     pushint 4096
     bzero
@@ -25,16 +25,16 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec 10 // "__ctor_pending"
-    intc_1 // 1
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@12
     txn NumAppArgs
-    intc_2 // 2
+    intc_0 // 2
     ==
     bz main_after_if_else@12
     pushbytess 0x13345f94 0xc174c3c9 0xd8c8ac3c 0x74bb810b 0x3e5a4e0e 0x877c81ba
@@ -55,79 +55,79 @@ main_after_if_else@12:
 main_arrayStorageCopy_route@21:
     callsub arrayStorageCopy
     bytec 5 // 0x00
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_structStorageCopy_route@20:
     callsub structStorageCopy
     bytec 5 // 0x00
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_popThenPushReadsZero_route@19:
     callsub popThenPushReadsZero
     bytec 5 // 0x00
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_pushRefAndDefault_route@18:
     callsub pushRefAndDefault
     bytec 5 // 0x00
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_deleteArrayZeroesElements_route@17:
     callsub deleteArrayZeroesElements
     bytec 5 // 0x00
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_deleteStructKeepsMapping_route@16:
     callsub deleteStructKeepsMapping
     bytec 5 // 0x00
-    intc_0 // 0
+    intc_1 // 0
     uncover 2
     setbit
     bytec 4 // 0x151f7c75
     swap
     concat
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main___postInit_route@15:
@@ -139,22 +139,22 @@ main___postInit_route@15:
     ==
     assert // __postInit callable only by the app creator
     bytec 10 // "__ctor_pending"
-    intc_0 // 0
+    intc_1 // 0
     app_global_put
     bytec_3 // "arr"
-    intc_2 // 2
+    intc_0 // 2
     box_create
     pop
     bytec_0 // "arr2"
-    intc_2 // 2
+    intc_0 // 2
     box_create
     pop
     bytec_2 // "src"
-    intc_2 // 2
+    intc_0 // 2
     box_create
     pop
     bytec_1 // "dst"
-    intc_2 // 2
+    intc_0 // 2
     box_create
     pop
     bytec 6 // "p1"
@@ -163,49 +163,49 @@ main___postInit_route@15:
     bytec 9 // "p2"
     bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_switch_case_5@10:
     callsub __evm_npy
     callsub arrayStorageCopy
     callsub __evm_ret0
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_switch_case_4@9:
     callsub __evm_npy
     callsub structStorageCopy
     callsub __evm_ret0
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_switch_case_3@8:
     callsub __evm_npy
     callsub popThenPushReadsZero
     callsub __evm_ret0
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_switch_case_2@7:
     callsub __evm_npy
     callsub pushRefAndDefault
     callsub __evm_ret0
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_switch_case_1@6:
     callsub __evm_npy
     callsub deleteArrayZeroesElements
     callsub __evm_ret0
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_switch_case_0@5:
     callsub __evm_npy
     callsub deleteStructKeepsMapping
     callsub __evm_ret0
-    intc_1 // 1
+    intc_2 // 1
     return
 
 
@@ -214,10 +214,10 @@ box_dynamic_array_pop_fixed_size:
     proto 3 0
     frame_dig -3
     frame_dig -2
-    intc_2 // 2
+    intc_0 // 2
     box_extract
     btoi
-    intc_1 // 1
+    intc_2 // 1
     -
     dup
     itob
@@ -227,7 +227,7 @@ box_dynamic_array_pop_fixed_size:
     uncover 2
     box_replace
     frame_dig -2
-    intc_2 // 2
+    intc_0 // 2
     +
     swap
     frame_dig -1
@@ -254,7 +254,7 @@ box_dynamic_array_concat_fixed:
     proto 5 0
     frame_dig -5
     frame_dig -4
-    intc_2 // 2
+    intc_0 // 2
     box_extract
     btoi
     frame_dig -5
@@ -277,7 +277,7 @@ box_dynamic_array_concat_fixed:
     uncover 2
     box_replace
     frame_dig -4
-    intc_2 // 2
+    intc_0 // 2
     +
     swap
     frame_dig -1
@@ -285,7 +285,7 @@ box_dynamic_array_concat_fixed:
     +
     frame_dig -5
     swap
-    intc_0 // 0
+    intc_1 // 0
     frame_dig -3
     box_splice
     retsub
@@ -296,7 +296,7 @@ deleteStructKeepsMapping:
     txn GroupIndex
     bz deleteStructKeepsMapping_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -339,36 +339,56 @@ deleteStructKeepsMapping_ternary_merge@3:
     retsub
 
 deleteStructKeepsMapping_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b deleteStructKeepsMapping_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParityCore.deleteArrayZeroesElements() -> uint64:
 deleteArrayZeroesElements:
     proto 0 1
-    intc_0 // 0
+    intc_1 // 0
     txn GroupIndex
     bz deleteArrayZeroesElements_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
 deleteArrayZeroesElements_ternary_merge@3:
     !
     assert // not payable
-    intc_1 // 1
+    bytec_3 // "arr"
+    box_len
+    bury 1
+    bnz deleteArrayZeroesElements_after_if_else@5
+    bytec_3 // "arr"
+    intc_0 // 2
+    box_create
+    pop
+
+deleteArrayZeroesElements_after_if_else@5:
+    intc_2 // 1
     itob
     bytec_3 // "arr"
-    intc_0 // 0
+    intc_1 // 0
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000b
-    intc_1 // 1
+    intc_2 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_3 // "arr"
-    intc_0 // 0
+    box_len
+    bury 1
+    bnz deleteArrayZeroesElements_after_if_else@7
+    bytec_3 // "arr"
+    intc_0 // 2
+    box_create
+    pop
+
+deleteArrayZeroesElements_after_if_else@7:
+    bytec_3 // "arr"
+    intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000016
-    intc_1 // 1
+    intc_2 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_3 // "arr"
@@ -377,68 +397,68 @@ deleteArrayZeroesElements_ternary_merge@3:
     bytec_3 // "arr"
     pushbytes 0x0000
     box_put
-    intc_0 // 0
+    intc_1 // 0
     itob
     frame_bury 0
     bytec_3 // "arr"
-    intc_0 // 0
+    intc_1 // 0
     bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    intc_1 // 1
+    intc_2 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_3 // "arr"
     box_len
     pop
-    intc_2 // 2
+    intc_0 // 2
     >=
-    bz deleteArrayZeroesElements_ternary_false@5
+    bz deleteArrayZeroesElements_ternary_false@11
     bytec_3 // "arr"
     box_len
     pop
 
-deleteArrayZeroesElements_ternary_merge@6:
-    intc_2 // 2
+deleteArrayZeroesElements_ternary_merge@12:
+    intc_0 // 2
     -
     intc_3 // 32
     /
     itob
     b==
-    bz deleteArrayZeroesElements_bool_false@9
+    bz deleteArrayZeroesElements_bool_false@15
     bytec_3 // "arr"
-    intc_2 // 2
+    intc_0 // 2
     intc_3 // 32
     box_extract // on error: index out of bounds
     frame_dig 0
     b==
-    bz deleteArrayZeroesElements_bool_false@9
-    intc_1 // 1
+    bz deleteArrayZeroesElements_bool_false@15
+    intc_2 // 1
 
-deleteArrayZeroesElements_bool_merge@10:
+deleteArrayZeroesElements_bool_merge@16:
     swap
     retsub
 
-deleteArrayZeroesElements_bool_false@9:
-    intc_0 // 0
-    b deleteArrayZeroesElements_bool_merge@10
+deleteArrayZeroesElements_bool_false@15:
+    intc_1 // 0
+    b deleteArrayZeroesElements_bool_merge@16
 
-deleteArrayZeroesElements_ternary_false@5:
-    intc_2 // 2
-    b deleteArrayZeroesElements_ternary_merge@6
+deleteArrayZeroesElements_ternary_false@11:
+    intc_0 // 2
+    b deleteArrayZeroesElements_ternary_merge@12
 
 deleteArrayZeroesElements_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b deleteArrayZeroesElements_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParityCore.pushRefAndDefault() -> uint64:
 pushRefAndDefault:
     proto 0 1
-    intc_0 // 0
+    intc_1 // 0
     dup
     txn GroupIndex
     bz pushRefAndDefault_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -450,7 +470,7 @@ pushRefAndDefault_while_top@4:
     bytec_0 // "arr2"
     box_len
     pop
-    intc_2 // 2
+    intc_0 // 2
     >=
     bz pushRefAndDefault_ternary_false@6
     bytec_0 // "arr2"
@@ -458,93 +478,123 @@ pushRefAndDefault_while_top@4:
     pop
 
 pushRefAndDefault_ternary_merge@7:
-    intc_2 // 2
+    intc_0 // 2
     -
     intc_3 // 32
     /
     itob
-    intc_0 // 0
+    intc_1 // 0
     itob
     dup
     frame_bury 0
     b>
-    bz pushRefAndDefault_after_while@9
+    bz pushRefAndDefault_after_while@11
     bytec_0 // "arr2"
-    intc_0 // 0
+    box_len
+    bury 1
+    bnz pushRefAndDefault_after_if_else@10
+    bytec_0 // "arr2"
+    intc_0 // 2
+    box_create
+    pop
+
+pushRefAndDefault_after_if_else@10:
+    bytec_0 // "arr2"
+    intc_1 // 0
     intc_3 // 32
     callsub box_dynamic_array_pop_fixed_size
     b pushRefAndDefault_while_top@4
 
-pushRefAndDefault_after_while@9:
+pushRefAndDefault_after_while@11:
+    bytec_0 // "arr2"
+    box_len
+    bury 1
+    bnz pushRefAndDefault_after_if_else@13
+    bytec_0 // "arr2"
+    intc_0 // 2
+    box_create
+    pop
+
+pushRefAndDefault_after_if_else@13:
     pushint 7
     itob
     frame_bury 1
     bytec_0 // "arr2"
-    intc_0 // 0
+    intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000007
-    intc_1 // 1
+    intc_2 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "arr2"
-    intc_0 // 0
+    box_len
+    bury 1
+    bnz pushRefAndDefault_after_if_else@15
+    bytec_0 // "arr2"
+    intc_0 // 2
+    box_create
+    pop
+
+pushRefAndDefault_after_if_else@15:
+    bytec_0 // "arr2"
+    intc_1 // 0
     bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    intc_1 // 1
+    intc_2 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "arr2"
     box_len
     pop
-    intc_2 // 2
+    intc_0 // 2
     >=
-    bz pushRefAndDefault_ternary_false@11
+    bz pushRefAndDefault_ternary_false@17
     bytec_0 // "arr2"
     box_len
     pop
 
-pushRefAndDefault_ternary_merge@12:
-    intc_2 // 2
+pushRefAndDefault_ternary_merge@18:
+    intc_0 // 2
     -
     intc_3 // 32
     /
     itob
-    intc_2 // 2
+    intc_0 // 2
     itob
     b==
-    bz pushRefAndDefault_bool_false@16
+    bz pushRefAndDefault_bool_false@22
     bytec_0 // "arr2"
-    intc_2 // 2
+    intc_0 // 2
     intc_3 // 32
     box_extract // on error: index out of bounds
     frame_dig 1
     b==
-    bz pushRefAndDefault_bool_false@16
+    bz pushRefAndDefault_bool_false@22
     bytec_0 // "arr2"
     pushint 34
     intc_3 // 32
     box_extract // on error: index out of bounds
     frame_dig 0
     b==
-    bz pushRefAndDefault_bool_false@16
-    intc_1 // 1
+    bz pushRefAndDefault_bool_false@22
+    intc_2 // 1
 
-pushRefAndDefault_bool_merge@17:
+pushRefAndDefault_bool_merge@23:
     frame_bury 0
     retsub
 
-pushRefAndDefault_bool_false@16:
-    intc_0 // 0
-    b pushRefAndDefault_bool_merge@17
+pushRefAndDefault_bool_false@22:
+    intc_1 // 0
+    b pushRefAndDefault_bool_merge@23
 
-pushRefAndDefault_ternary_false@11:
-    intc_2 // 2
-    b pushRefAndDefault_ternary_merge@12
+pushRefAndDefault_ternary_false@17:
+    intc_0 // 2
+    b pushRefAndDefault_ternary_merge@18
 
 pushRefAndDefault_ternary_false@6:
-    intc_2 // 2
+    intc_0 // 2
     b pushRefAndDefault_ternary_merge@7
 
 pushRefAndDefault_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b pushRefAndDefault_ternary_merge@3
 
 
@@ -553,7 +603,7 @@ popThenPushReadsZero:
     txn GroupIndex
     bz popThenPushReadsZero_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -565,7 +615,7 @@ popThenPushReadsZero_while_top@4:
     bytec_0 // "arr2"
     box_len
     pop
-    intc_2 // 2
+    intc_0 // 2
     >=
     bz popThenPushReadsZero_ternary_false@6
     bytec_0 // "arr2"
@@ -573,65 +623,105 @@ popThenPushReadsZero_while_top@4:
     pop
 
 popThenPushReadsZero_ternary_merge@7:
-    intc_2 // 2
+    intc_0 // 2
     -
     intc_3 // 32
     /
     itob
-    intc_0 // 0
+    intc_1 // 0
     itob
     dup
     cover 2
     b>
-    bz popThenPushReadsZero_after_while@9
+    bz popThenPushReadsZero_after_while@11
     pop
     bytec_0 // "arr2"
-    intc_0 // 0
+    box_len
+    bury 1
+    bnz popThenPushReadsZero_after_if_else@10
+    bytec_0 // "arr2"
+    intc_0 // 2
+    box_create
+    pop
+
+popThenPushReadsZero_after_if_else@10:
+    bytec_0 // "arr2"
+    intc_1 // 0
     intc_3 // 32
     callsub box_dynamic_array_pop_fixed_size
     b popThenPushReadsZero_while_top@4
 
-popThenPushReadsZero_after_while@9:
+popThenPushReadsZero_after_while@11:
     bytec_0 // "arr2"
-    intc_0 // 0
+    box_len
+    bury 1
+    bnz popThenPushReadsZero_after_if_else@13
+    bytec_0 // "arr2"
+    intc_0 // 2
+    box_create
+    pop
+
+popThenPushReadsZero_after_if_else@13:
+    bytec_0 // "arr2"
+    intc_1 // 0
     bytec 14 // 0x0000000000000000000000000000000000000000000000000000000000000063
-    intc_1 // 1
+    intc_2 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "arr2"
-    intc_0 // 0
+    box_len
+    bury 1
+    bnz popThenPushReadsZero_after_if_else@15
+    bytec_0 // "arr2"
+    intc_0 // 2
+    box_create
+    pop
+
+popThenPushReadsZero_after_if_else@15:
+    bytec_0 // "arr2"
+    intc_1 // 0
     intc_3 // 32
     callsub box_dynamic_array_pop_fixed_size
     bytec_0 // "arr2"
-    intc_0 // 0
+    box_len
+    bury 1
+    bnz popThenPushReadsZero_after_if_else@17
+    bytec_0 // "arr2"
+    intc_0 // 2
+    box_create
+    pop
+
+popThenPushReadsZero_after_if_else@17:
+    bytec_0 // "arr2"
+    intc_1 // 0
     bytec 12 // 0x0000000000000000000000000000000000000000000000000000000000000000
-    intc_1 // 1
+    intc_2 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "arr2"
-    intc_2 // 2
+    intc_0 // 2
     intc_3 // 32
     box_extract // on error: index out of bounds
     b==
     retsub
 
 popThenPushReadsZero_ternary_false@6:
-    intc_2 // 2
+    intc_0 // 2
     b popThenPushReadsZero_ternary_merge@7
 
 popThenPushReadsZero_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b popThenPushReadsZero_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParityCore.structStorageCopy() -> uint64:
 structStorageCopy:
     proto 0 1
-    intc_0 // 0
+    intc_1 // 0
     txn GroupIndex
     bz structStorageCopy_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -640,7 +730,7 @@ structStorageCopy_ternary_merge@3:
     assert // not payable
     pushint 3
     itob
-    intc_0 // 0
+    intc_1 // 0
     bytec 6 // "p1"
     app_global_get_ex
     assert // state exists
@@ -660,7 +750,7 @@ structStorageCopy_ternary_merge@3:
     app_global_put
     pushint 9
     itob
-    intc_0 // 0
+    intc_1 // 0
     bytec 6 // "p1"
     app_global_get_ex
     assert // state exists
@@ -669,18 +759,18 @@ structStorageCopy_ternary_merge@3:
     bytec 6 // "p1"
     swap
     app_global_put
-    intc_0 // 0
+    intc_1 // 0
     bytec 9 // "p2"
     app_global_get_ex
     bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    intc_0 // 0
+    intc_1 // 0
     extract_uint64
     pushint 3
     ==
     bz structStorageCopy_bool_false@7
-    intc_0 // 0
+    intc_1 // 0
     bytec 9 // "p2"
     app_global_get_ex
     bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -690,41 +780,41 @@ structStorageCopy_ternary_merge@3:
     frame_dig 0
     b==
     bz structStorageCopy_bool_false@7
-    intc_0 // 0
+    intc_1 // 0
     bytec 6 // "p1"
     app_global_get_ex
     bytec 7 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
     select
-    intc_0 // 0
+    intc_1 // 0
     extract_uint64
     pushint 9
     ==
     bz structStorageCopy_bool_false@7
-    intc_1 // 1
+    intc_2 // 1
 
 structStorageCopy_bool_merge@8:
     swap
     retsub
 
 structStorageCopy_bool_false@7:
-    intc_0 // 0
+    intc_1 // 0
     b structStorageCopy_bool_merge@8
 
 structStorageCopy_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b structStorageCopy_ternary_merge@3
 
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParityCore.arrayStorageCopy() -> uint64:
 arrayStorageCopy:
     proto 0 1
-    intc_0 // 0
+    intc_1 // 0
     dupn 2
     txn GroupIndex
     bz arrayStorageCopy_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -736,7 +826,7 @@ arrayStorageCopy_while_top@4:
     bytec_2 // "src"
     box_len
     pop
-    intc_2 // 2
+    intc_0 // 2
     >=
     bz arrayStorageCopy_ternary_false@6
     bytec_2 // "src"
@@ -744,86 +834,156 @@ arrayStorageCopy_while_top@4:
     pop
 
 arrayStorageCopy_ternary_merge@7:
-    intc_2 // 2
+    intc_0 // 2
     -
     intc_3 // 32
     /
     itob
-    intc_0 // 0
+    intc_1 // 0
     itob
     dup
     cover 2
     b>
-    bz arrayStorageCopy_while_top@10
+    bz arrayStorageCopy_while_top@12
     pop
     bytec_2 // "src"
-    intc_0 // 0
+    box_len
+    bury 1
+    bnz arrayStorageCopy_after_if_else@10
+    bytec_2 // "src"
+    intc_0 // 2
+    box_create
+    pop
+
+arrayStorageCopy_after_if_else@10:
+    bytec_2 // "src"
+    intc_1 // 0
     intc_3 // 32
     callsub box_dynamic_array_pop_fixed_size
     b arrayStorageCopy_while_top@4
 
-arrayStorageCopy_while_top@10:
+arrayStorageCopy_while_top@12:
     bytec_1 // "dst"
     box_len
     pop
-    intc_2 // 2
+    intc_0 // 2
     >=
-    bz arrayStorageCopy_ternary_false@12
+    bz arrayStorageCopy_ternary_false@14
     bytec_1 // "dst"
     box_len
     pop
 
-arrayStorageCopy_ternary_merge@13:
-    intc_2 // 2
+arrayStorageCopy_ternary_merge@15:
+    intc_0 // 2
     -
     intc_3 // 32
     /
     itob
     dig 1
     b>
-    bz arrayStorageCopy_after_while@15
+    bz arrayStorageCopy_after_while@19
     bytec_1 // "dst"
-    intc_0 // 0
+    box_len
+    bury 1
+    bnz arrayStorageCopy_after_if_else@18
+    bytec_1 // "dst"
+    intc_0 // 2
+    box_create
+    pop
+
+arrayStorageCopy_after_if_else@18:
+    bytec_1 // "dst"
+    intc_1 // 0
     intc_3 // 32
     callsub box_dynamic_array_pop_fixed_size
-    b arrayStorageCopy_while_top@10
+    b arrayStorageCopy_while_top@12
 
-arrayStorageCopy_after_while@15:
+arrayStorageCopy_after_while@19:
     pop
-    intc_1 // 1
+    bytec_2 // "src"
+    box_len
+    bury 1
+    bnz arrayStorageCopy_after_if_else@21
+    bytec_2 // "src"
+    intc_0 // 2
+    box_create
+    pop
+
+arrayStorageCopy_after_if_else@21:
+    intc_2 // 1
     itob
     frame_bury 0
     bytec_2 // "src"
-    intc_0 // 0
+    intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
-    intc_1 // 1
+    intc_2 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
-    intc_2 // 2
+    bytec_2 // "src"
+    box_len
+    bury 1
+    bnz arrayStorageCopy_after_if_else@23
+    bytec_2 // "src"
+    intc_0 // 2
+    box_create
+    pop
+
+arrayStorageCopy_after_if_else@23:
+    intc_0 // 2
     itob
     frame_bury 1
     bytec_2 // "src"
-    intc_0 // 0
+    intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
-    intc_1 // 1
+    intc_2 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_1 // "dst"
-    intc_0 // 0
+    box_len
+    bury 1
+    bnz arrayStorageCopy_after_if_else@25
+    bytec_1 // "dst"
+    intc_0 // 2
+    box_create
+    pop
+
+arrayStorageCopy_after_if_else@25:
+    bytec_1 // "dst"
+    intc_1 // 0
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000004d
-    intc_1 // 1
+    intc_2 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_1 // "dst"
-    intc_0 // 0
+    box_len
+    bury 1
+    bnz arrayStorageCopy_after_if_else@27
+    bytec_1 // "dst"
+    intc_0 // 2
+    box_create
+    pop
+
+arrayStorageCopy_after_if_else@27:
+    bytec_1 // "dst"
+    intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000058
-    intc_1 // 1
+    intc_2 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_1 // "dst"
-    intc_0 // 0
+    box_len
+    bury 1
+    bnz arrayStorageCopy_after_if_else@29
+    bytec_1 // "dst"
+    intc_0 // 2
+    box_create
+    pop
+
+arrayStorageCopy_after_if_else@29:
+    bytec_1 // "dst"
+    intc_1 // 0
     bytec 14 // 0x0000000000000000000000000000000000000000000000000000000000000063
-    intc_1 // 1
+    intc_2 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_2 // "src"
@@ -835,95 +995,105 @@ arrayStorageCopy_after_while@15:
     bytec_1 // "dst"
     swap
     box_put
+    bytec_2 // "src"
+    box_len
+    bury 1
+    bnz arrayStorageCopy_after_if_else@31
+    bytec_2 // "src"
+    intc_0 // 2
+    box_create
+    pop
+
+arrayStorageCopy_after_if_else@31:
     pushint 3
     itob
     frame_bury 2
     bytec_2 // "src"
-    intc_0 // 0
+    intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
-    intc_1 // 1
+    intc_2 // 1
     intc_3 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_1 // "dst"
     box_len
     pop
-    intc_2 // 2
+    intc_0 // 2
     >=
-    bz arrayStorageCopy_ternary_false@17
+    bz arrayStorageCopy_ternary_false@33
     bytec_1 // "dst"
     box_len
     pop
 
-arrayStorageCopy_ternary_merge@18:
-    intc_2 // 2
+arrayStorageCopy_ternary_merge@34:
+    intc_0 // 2
     -
     intc_3 // 32
     /
     itob
     frame_dig 1
     b==
-    bz arrayStorageCopy_bool_false@26
+    bz arrayStorageCopy_bool_false@42
     bytec_1 // "dst"
-    intc_2 // 2
+    intc_0 // 2
     intc_3 // 32
     box_extract // on error: index out of bounds
     frame_dig 0
     b==
-    bz arrayStorageCopy_bool_false@26
+    bz arrayStorageCopy_bool_false@42
     bytec_1 // "dst"
     pushint 34
     intc_3 // 32
     box_extract // on error: index out of bounds
     frame_dig 1
     b==
-    bz arrayStorageCopy_bool_false@26
+    bz arrayStorageCopy_bool_false@42
     bytec_2 // "src"
     box_len
     pop
-    intc_2 // 2
+    intc_0 // 2
     >=
-    bz arrayStorageCopy_ternary_false@23
+    bz arrayStorageCopy_ternary_false@39
     bytec_2 // "src"
     box_len
     pop
 
-arrayStorageCopy_ternary_merge@24:
-    intc_2 // 2
+arrayStorageCopy_ternary_merge@40:
+    intc_0 // 2
     -
     intc_3 // 32
     /
     itob
     frame_dig 2
     b==
-    bz arrayStorageCopy_bool_false@26
-    intc_1 // 1
+    bz arrayStorageCopy_bool_false@42
+    intc_2 // 1
 
-arrayStorageCopy_bool_merge@27:
+arrayStorageCopy_bool_merge@43:
     frame_bury 0
     retsub
 
-arrayStorageCopy_bool_false@26:
-    intc_0 // 0
-    b arrayStorageCopy_bool_merge@27
+arrayStorageCopy_bool_false@42:
+    intc_1 // 0
+    b arrayStorageCopy_bool_merge@43
 
-arrayStorageCopy_ternary_false@23:
-    intc_2 // 2
-    b arrayStorageCopy_ternary_merge@24
+arrayStorageCopy_ternary_false@39:
+    intc_0 // 2
+    b arrayStorageCopy_ternary_merge@40
 
-arrayStorageCopy_ternary_false@17:
-    intc_2 // 2
-    b arrayStorageCopy_ternary_merge@18
+arrayStorageCopy_ternary_false@33:
+    intc_0 // 2
+    b arrayStorageCopy_ternary_merge@34
 
-arrayStorageCopy_ternary_false@12:
-    intc_2 // 2
-    b arrayStorageCopy_ternary_merge@13
+arrayStorageCopy_ternary_false@14:
+    intc_0 // 2
+    b arrayStorageCopy_ternary_merge@15
 
 arrayStorageCopy_ternary_false@6:
-    intc_2 // 2
+    intc_0 // 2
     b arrayStorageCopy_ternary_merge@7
 
 arrayStorageCopy_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b arrayStorageCopy_ternary_merge@3
 
 
@@ -932,7 +1102,7 @@ __evm_npy:
     txn GroupIndex
     bz __evm_npy_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -942,7 +1112,7 @@ __evm_npy_ternary_merge@3:
     retsub
 
 __evm_npy_ternary_false@2:
-    intc_0 // 0
+    intc_1 // 0
     b __evm_npy_ternary_merge@3
 
 

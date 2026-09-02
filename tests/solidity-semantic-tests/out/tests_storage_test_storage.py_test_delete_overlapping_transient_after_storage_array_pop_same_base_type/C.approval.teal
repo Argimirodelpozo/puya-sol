@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/delete_overlapping_transient_after_storage_array_pop_same_base_type.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 32 2
+    intcblock 1 0 2 32
     bytecblock "arr" "__ctor_pending" 0x151f7c75 0x 0x0000000000000000000000000000000000000000000000000000000000000000
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@8
     txn NumAppArgs
-    intc_3 // 2
+    intc_2 // 2
     ==
     bz main_after_if_else@8
     pushbytess 0x41af56ee 0xf58e8614
@@ -76,14 +76,14 @@ main_ternary_merge@21:
     bytec_0 // "arr"
     box_len
     pop
-    intc_3 // 2
+    intc_2 // 2
     -
-    intc_2 // 32
+    intc_3 // 32
     /
     bz main_ternary_false@24
     bytec_0 // "arr"
-    intc_3 // 2
-    intc_2 // 32
+    intc_2 // 2
+    intc_3 // 32
     box_extract
 
 main_ternary_merge@25:
@@ -93,10 +93,10 @@ main_ternary_merge@25:
     b%
     dup
     len
-    intc_2 // 32
+    intc_3 // 32
     <=
     assert // overflow
-    intc_2 // 32
+    intc_3 // 32
     bzero
     b|
     bytec_2 // 0x151f7c75
@@ -136,7 +136,7 @@ main___postInit_route@11:
     intc_1 // 0
     app_global_put
     bytec_0 // "arr"
-    intc_3 // 2
+    intc_2 // 2
     box_create
     pop
     pushbytes "t"
@@ -175,14 +175,24 @@ pushArr_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "arr"
+    box_len
+    bury 1
+    bnz pushArr_after_if_else@5
+    bytec_0 // "arr"
+    intc_2 // 2
+    box_create
+    pop
+
+pushArr_after_if_else@5:
+    bytec_0 // "arr"
     intc_1 // 0
-    intc_3 // 2
+    intc_2 // 2
     box_extract
     btoi
     bytec_0 // "arr"
     box_len
     pop
-    intc_2 // 32
+    intc_3 // 32
     +
     bytec_0 // "arr"
     swap
@@ -196,9 +206,9 @@ pushArr_ternary_merge@3:
     intc_1 // 0
     uncover 2
     box_replace
-    intc_2 // 32
+    intc_3 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     bytec_0 // "arr"
     swap
@@ -245,8 +255,18 @@ setAndClear_ternary_merge@3:
 setAndClear_after_if_else@5:
     assert
     bytec_0 // "arr"
+    box_len
+    bury 1
+    bnz setAndClear_after_if_else@7
+    bytec_0 // "arr"
+    intc_2 // 2
+    box_create
+    pop
+
+setAndClear_after_if_else@7:
+    bytec_0 // "arr"
     intc_1 // 0
-    intc_3 // 2
+    intc_2 // 2
     box_extract
     btoi
     intc_0 // 1
@@ -258,19 +278,19 @@ setAndClear_after_if_else@5:
     intc_1 // 0
     uncover 2
     box_replace
-    intc_2 // 32
+    intc_3 // 32
     *
-    intc_3 // 2
+    intc_2 // 2
     +
     bytec_0 // "arr"
     swap
-    intc_2 // 32
+    intc_3 // 32
     bytec_3 // 0x
     box_splice
     bytec_0 // "arr"
     box_len
     pop
-    intc_2 // 32
+    intc_3 // 32
     -
     bytec_0 // "arr"
     swap

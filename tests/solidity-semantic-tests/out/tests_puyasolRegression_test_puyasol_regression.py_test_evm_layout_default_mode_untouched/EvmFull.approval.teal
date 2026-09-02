@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/evm_storage_layout.sol.EvmFull.approval_program() -> uint64:
 main:
     intcblock 32 1 0 16 4294967295 128 65535
-    bytecblock 0x151f7c75 0x "nums" "pos" "packedNums" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "a" 0x010000000000000000000000000000000000000000000000000000000000000000 "tag" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 "fixedArr" "b" "c" "d" "e" "owner" 0x01 "bal" "__ctor_pending" "grid" "poss" "named" "notes" 0x0000000000000000000000000000000000000000000000000000000000000000 0x02 "s:" 0x0001
+    bytecblock 0x151f7c75 "nums" 0x "packedNums" "pos" 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000 "a" 0x010000000000000000000000000000000000000000000000000000000000000000 "tag" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0x010000000000000000 "fixedArr" "b" "c" "d" "e" "owner" 0x01 "bal" "__ctor_pending" "grid" "poss" "named" "notes" 0x0000000000000000000000000000000000000000000000000000000000000000 0x02 "s:" 0x0001
     pushint 4096
     bzero
     dup
@@ -876,11 +876,11 @@ main___postInit_route@56:
     pushint 2
     box_create
     pop
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     pushint 2
     box_create
     pop
-    bytec 4 // "packedNums"
+    bytec_3 // "packedNums"
     pushint 2
     box_create
     pop
@@ -921,7 +921,7 @@ main___postInit_route@56:
     bytec 24 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
     app_global_put
     bytec 8 // "tag"
-    bytec_1 // 0x
+    bytec_2 // 0x
     app_global_put
     bytec 16 // "owner"
     txn Sender
@@ -1991,7 +1991,7 @@ __storage_read:
     intc_2 // 0
     bytec 8 // "tag"
     app_global_get_ex
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     len
@@ -2005,7 +2005,7 @@ __storage_read_else_body@2:
     bz __storage_read_else_body@4
     intc_0 // 32
     bzero
-    bytec_3 // "pos"
+    bytec 4 // "pos"
     box_get
     bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -2022,7 +2022,7 @@ __storage_read_else_body@4:
     bz __storage_read_else_body@6
     intc_0 // 32
     bzero
-    bytec_3 // "pos"
+    bytec 4 // "pos"
     box_get
     bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -2045,7 +2045,7 @@ __storage_read_else_body@6:
     pushbytes 0x06
     b==
     bz __storage_read_else_body@8
-    bytec 4 // "packedNums"
+    bytec_3 // "packedNums"
     intc_2 // 0
     pushint 2
     box_extract
@@ -2058,7 +2058,7 @@ __storage_read_else_body@8:
     pushbytes 0x05
     b==
     bz __storage_read_else_body@10
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     intc_2 // 0
     pushint 2
     box_extract
@@ -2130,7 +2130,7 @@ __storage_read_else_body@12:
 
 __storage_read_else_body@14:
     frame_dig -1
-    bytec_1 // 0x
+    bytec_2 // 0x
     b==
     bz __storage_read_else_body@16
     intc_0 // 32
@@ -2138,7 +2138,7 @@ __storage_read_else_body@14:
     intc_2 // 0
     bytec 6 // "a"
     app_global_get_ex
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     b|
@@ -2190,7 +2190,7 @@ __storage_write:
     -
     intc_0 // 32
     extract3
-    bytec_3 // "pos"
+    bytec 4 // "pos"
     box_get
     bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -2205,7 +2205,7 @@ __storage_write:
     concat
     swap
     concat
-    bytec_3 // "pos"
+    bytec 4 // "pos"
     swap
     box_put
     retsub
@@ -2229,7 +2229,7 @@ __storage_write_else_body@2:
     extract 16 16
     swap
     extract 0 16
-    bytec_3 // "pos"
+    bytec 4 // "pos"
     box_get
     bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -2239,7 +2239,7 @@ __storage_write_else_body@2:
     concat
     swap
     concat
-    bytec_3 // "pos"
+    bytec 4 // "pos"
     swap
     box_put
     retsub
@@ -2269,12 +2269,12 @@ __storage_write_else_body@4:
     *
     pushint 2
     +
-    bytec 4 // "packedNums"
+    bytec_3 // "packedNums"
     swap
     box_resize
     itob
     extract 6 2
-    bytec 4 // "packedNums"
+    bytec_3 // "packedNums"
     intc_2 // 0
     uncover 2
     box_replace
@@ -2305,12 +2305,12 @@ __storage_write_else_body@6:
     *
     pushint 2
     +
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     swap
     box_resize
     itob
     extract 6 2
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     intc_2 // 0
     uncover 2
     box_replace
@@ -2385,7 +2385,7 @@ __storage_write_else_body@10:
 
 __storage_write_else_body@12:
     frame_dig -2
-    bytec_1 // 0x
+    bytec_2 // 0x
     b==
     bz __storage_write_else_body@14
     intc_0 // 32
@@ -2458,7 +2458,7 @@ getA_ternary_merge@3:
     intc_2 // 0
     bytec 6 // "a"
     app_global_get_ex
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -2491,7 +2491,7 @@ bump_ternary_merge@3:
     intc_2 // 0
     bytec 6 // "a"
     app_global_get_ex
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     bytec 17 // 0x01
@@ -2753,7 +2753,7 @@ clearA_ternary_merge@3:
     !
     assert // not payable
     bytec 6 // "a"
-    bytec_1 // 0x
+    bytec_2 // 0x
     app_global_put
     retsub
 
@@ -2810,7 +2810,7 @@ addBal_ternary_merge@3:
     sha256
     dup
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     frame_dig -1
@@ -2848,7 +2848,7 @@ getBal_ternary_merge@3:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -2955,7 +2955,7 @@ getGrid_ternary_merge@3:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -2984,6 +2984,16 @@ pushNum:
 pushNum_ternary_merge@3:
     !
     assert // not payable
+    bytec_1 // "nums"
+    box_len
+    bury 1
+    bnz pushNum_after_if_else@5
+    bytec_1 // "nums"
+    pushint 2
+    box_create
+    pop
+
+pushNum_after_if_else@5:
     bytec 27 // 0x0001
     frame_dig -1
     concat
@@ -2992,7 +3002,7 @@ pushNum_ternary_merge@3:
     swap
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     intc_2 // 0
     uncover 3
     uncover 3
@@ -3017,7 +3027,17 @@ popNum:
 popNum_ternary_merge@3:
     !
     assert // not payable
-    bytec_2 // "nums"
+    bytec_1 // "nums"
+    box_len
+    bury 1
+    bnz popNum_after_if_else@5
+    bytec_1 // "nums"
+    pushint 2
+    box_create
+    pop
+
+popNum_after_if_else@5:
+    bytec_1 // "nums"
     intc_2 // 0
     pushint 2
     box_extract
@@ -3027,7 +3047,7 @@ popNum_ternary_merge@3:
     dup
     itob
     extract 6 2
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     intc_2 // 0
     uncover 2
     box_replace
@@ -3035,17 +3055,17 @@ popNum_ternary_merge@3:
     *
     pushint 2
     +
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     swap
     intc_0 // 32
-    bytec_1 // 0x
+    bytec_2 // 0x
     box_splice
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     box_len
     pop
     intc_0 // 32
     -
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     swap
     box_resize
     retsub
@@ -3085,7 +3105,7 @@ numAt_ternary_merge@3:
     *
     pushint 2
     +
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     swap
     intc_0 // 32
     box_extract // on error: index out of bounds
@@ -3113,11 +3133,11 @@ setNum_ternary_merge@3:
     bytec 10 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     box_len
     bury 1
     bnz setNum_after_if_else@5
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     pushint 2
     box_create
     pop
@@ -3136,7 +3156,7 @@ setNum_after_if_else@5:
     *
     pushint 2
     +
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     swap
     frame_dig -1
     box_replace // on error: index out of bounds
@@ -3159,13 +3179,13 @@ numsLen:
 numsLen_ternary_merge@3:
     !
     assert // not payable
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     box_len
     pop
     pushint 2
     >=
     bz numsLen_ternary_false@5
-    bytec_2 // "nums"
+    bytec_1 // "nums"
     box_len
     pop
 
@@ -3209,8 +3229,18 @@ pushPacked_ternary_merge@3:
     frame_dig -1
     intc 4 // 4294967295
     &
-    dup
     frame_bury -1
+    bytec_3 // "packedNums"
+    box_len
+    bury 1
+    bnz pushPacked_after_if_else@5
+    bytec_3 // "packedNums"
+    pushint 2
+    box_create
+    pop
+
+pushPacked_after_if_else@5:
+    frame_dig -1
     itob
     dup
     bitlen
@@ -3226,7 +3256,7 @@ pushPacked_ternary_merge@3:
     swap
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    bytec 4 // "packedNums"
+    bytec_3 // "packedNums"
     intc_2 // 0
     uncover 3
     uncover 3
@@ -3269,7 +3299,7 @@ packedAt_ternary_merge@3:
     *
     pushint 2
     +
-    bytec 4 // "packedNums"
+    bytec_3 // "packedNums"
     swap
     pushint 4
     box_extract // on error: index out of bounds
@@ -3308,11 +3338,11 @@ setPacked_ternary_merge@3:
     bytec 10 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    bytec 4 // "packedNums"
+    bytec_3 // "packedNums"
     box_len
     bury 1
     bnz setPacked_after_if_else@5
-    bytec 4 // "packedNums"
+    bytec_3 // "packedNums"
     pushint 2
     box_create
     pop
@@ -3334,7 +3364,7 @@ setPacked_after_if_else@5:
     *
     pushint 2
     +
-    bytec 4 // "packedNums"
+    bytec_3 // "packedNums"
     swap
     uncover 2
     box_replace // on error: index out of bounds
@@ -3449,7 +3479,7 @@ setPos:
 setPos_ternary_merge@3:
     !
     assert // not payable
-    bytec_3 // "pos"
+    bytec 4 // "pos"
     box_get
     bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -3494,7 +3524,7 @@ setPos_ternary_merge@3:
     replace2 16
     frame_dig -1
     replace2 32
-    bytec_3 // "pos"
+    bytec 4 // "pos"
     swap
     box_put
     retsub
@@ -3518,7 +3548,7 @@ getPosX_ternary_merge@3:
     assert // not payable
     intc_3 // 16
     bzero
-    bytec_3 // "pos"
+    bytec 4 // "pos"
     box_get
     bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -3558,7 +3588,7 @@ getPosZ:
 getPosZ_ternary_merge@3:
     !
     assert // not payable
-    bytec_3 // "pos"
+    bytec 4 // "pos"
     box_get
     bytec 5 // 0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     cover 2
@@ -3739,7 +3769,7 @@ getNamed_ternary_merge@3:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     dup
@@ -3795,7 +3825,7 @@ getTag_ternary_merge@3:
     intc_2 // 0
     bytec 8 // "tag"
     app_global_get_ex
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     retsub
@@ -3820,7 +3850,7 @@ tagLen_ternary_merge@3:
     intc_2 // 0
     bytec 8 // "tag"
     app_global_get_ex
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     len
@@ -3848,7 +3878,7 @@ clearTag_ternary_merge@3:
     !
     assert // not payable
     bytec 8 // "tag"
-    bytec_1 // 0x
+    bytec_2 // 0x
     app_global_put
     retsub
 
@@ -3922,7 +3952,7 @@ getNote_ternary_merge@3:
     concat
     sha256
     box_get
-    bytec_1 // 0x
+    bytec_2 // 0x
     cover 2
     select
     retsub
@@ -3975,7 +4005,7 @@ __evm_deco:
     callsub __evm_decw
     dup
     extract 0 24
-    bytec_1 // 0x
+    bytec_2 // 0x
     b==
     assert // EVM ABI offset exceeds uint64
     pushint 24

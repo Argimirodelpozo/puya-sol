@@ -622,7 +622,17 @@ seed_ternary_merge@6:
     dup
     cover 2
     b==
-    bz seed_after_if_else@13
+    bz seed_after_if_else@15
+    bytec_0 // "values"
+    box_len
+    bury 1
+    bnz seed_after_if_else@9
+    bytec_0 // "values"
+    intc_0 // 2
+    box_create
+    pop
+
+seed_after_if_else@9:
     bytec_0 // "values"
     box_get
     assert // box exists
@@ -638,25 +648,25 @@ seed_ternary_merge@6:
     bytec_0 // "values"
     box_len
     bury 1
-    bz seed_ternary_false@9
+    bz seed_ternary_false@11
     bytec_0 // "values"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-seed_ternary_merge@10:
+seed_ternary_merge@12:
     assert // array index out of bounds
     bytec_0 // "values"
     box_len
     bury 1
-    bnz seed_after_if_else@12
+    bnz seed_after_if_else@14
     bytec_0 // "values"
     intc_0 // 2
     box_create
     pop
 
-seed_after_if_else@12:
+seed_after_if_else@14:
     bytec_0 // "values"
     box_get
     assert // box exists
@@ -698,22 +708,32 @@ seed_after_if_else@12:
     swap
     box_put
 
-seed_after_if_else@13:
+seed_after_if_else@15:
     bytec_1 // "holders"
     box_len
     bury 1
-    bz seed_ternary_false@15
+    bz seed_ternary_false@17
     bytec_1 // "holders"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-seed_ternary_merge@16:
+seed_ternary_merge@18:
     itob
     dig 1
     b==
-    bz seed_after_if_else@23
+    bz seed_after_if_else@27
+    bytec_1 // "holders"
+    box_len
+    bury 1
+    bnz seed_after_if_else@21
+    bytec_1 // "holders"
+    intc_0 // 2
+    box_create
+    pop
+
+seed_after_if_else@21:
     bytec_1 // "holders"
     box_get
     assert // box exists
@@ -729,25 +749,25 @@ seed_ternary_merge@16:
     bytec_1 // "holders"
     box_len
     bury 1
-    bz seed_ternary_false@19
+    bz seed_ternary_false@23
     bytec_1 // "holders"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-seed_ternary_merge@20:
+seed_ternary_merge@24:
     assert // array index out of bounds
     bytec_1 // "holders"
     box_len
     bury 1
-    bnz seed_after_if_else@22
+    bnz seed_after_if_else@26
     bytec_1 // "holders"
     intc_0 // 2
     box_create
     pop
 
-seed_after_if_else@22:
+seed_after_if_else@26:
     bytec_1 // "holders"
     box_get
     assert // box exists
@@ -789,18 +809,18 @@ seed_after_if_else@22:
     swap
     box_put
 
-seed_after_if_else@23:
+seed_after_if_else@27:
     bytec_3 // "scalarValues"
     box_len
     pop
     intc_0 // 2
     >=
-    bz seed_ternary_false@25
+    bz seed_ternary_false@29
     bytec_3 // "scalarValues"
     box_len
     pop
 
-seed_ternary_merge@26:
+seed_ternary_merge@30:
     intc_0 // 2
     -
     intc_2 // 32
@@ -808,7 +828,17 @@ seed_ternary_merge@26:
     itob
     dig 1
     b==
-    bz seed_after_if_else@28
+    bz seed_after_if_else@34
+    bytec_3 // "scalarValues"
+    box_len
+    bury 1
+    bnz seed_after_if_else@33
+    bytec_3 // "scalarValues"
+    intc_0 // 2
+    box_create
+    pop
+
+seed_after_if_else@33:
     bytec_3 // "scalarValues"
     intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
@@ -816,7 +846,7 @@ seed_ternary_merge@26:
     intc_2 // 32
     callsub box_dynamic_array_concat_fixed
 
-seed_after_if_else@28:
+seed_after_if_else@34:
     bytec_2 // "mixedValues"
     box_get
     bytec 5 // 0x0004000600000000
@@ -837,16 +867,16 @@ seed_after_if_else@28:
     itob
     dig 1
     b==
-    bz seed_after_if_else@32
+    bz seed_after_if_else@38
     bytec_2 // "mixedValues"
     box_len
     bury 1
-    bnz seed_after_if_else@31
+    bnz seed_after_if_else@37
     bytec_2 // "mixedValues"
     bytec 5 // 0x0004000600000000
     box_put
 
-seed_after_if_else@31:
+seed_after_if_else@37:
     bytec_2 // "mixedValues"
     box_get
     assert // box exists
@@ -887,7 +917,7 @@ seed_after_if_else@31:
     swap
     box_put
 
-seed_after_if_else@32:
+seed_after_if_else@38:
     bytec_2 // "mixedValues"
     box_get
     bytec 5 // 0x0004000600000000
@@ -907,16 +937,16 @@ seed_after_if_else@32:
     extract_uint16 // on error: invalid array length header
     itob
     b==
-    bz seed_after_if_else@36
+    bz seed_after_if_else@42
     bytec_2 // "mixedValues"
     box_len
     bury 1
-    bnz seed_after_if_else@35
+    bnz seed_after_if_else@41
     bytec_2 // "mixedValues"
     bytec 5 // 0x0004000600000000
     box_put
 
-seed_after_if_else@35:
+seed_after_if_else@41:
     bytec_2 // "mixedValues"
     box_get
     assert // box exists
@@ -957,24 +987,24 @@ seed_after_if_else@35:
     swap
     box_put
 
-seed_after_if_else@36:
+seed_after_if_else@42:
     retsub
 
-seed_ternary_false@25:
+seed_ternary_false@29:
     intc_0 // 2
-    b seed_ternary_merge@26
+    b seed_ternary_merge@30
 
-seed_ternary_false@19:
+seed_ternary_false@23:
     intc_1 // 0
-    b seed_ternary_merge@20
+    b seed_ternary_merge@24
 
-seed_ternary_false@15:
+seed_ternary_false@17:
     intc_1 // 0
-    b seed_ternary_merge@16
+    b seed_ternary_merge@18
 
-seed_ternary_false@9:
+seed_ternary_false@11:
     intc_1 // 0
-    b seed_ternary_merge@10
+    b seed_ternary_merge@12
 
 seed_ternary_false@5:
     intc_1 // 0
@@ -1347,6 +1377,16 @@ runScalarRef_ternary_merge@3:
     swap
     box_put
     bytec_3 // "scalarValues"
+    box_len
+    bury 1
+    bnz runScalarRef_after_if_else@6
+    bytec_3 // "scalarValues"
+    intc_0 // 2
+    box_create
+    pop
+
+runScalarRef_after_if_else@6:
+    bytec_3 // "scalarValues"
     intc_1 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000268
     intc_3 // 1
@@ -1357,12 +1397,12 @@ runScalarRef_ternary_merge@3:
     pop
     intc_0 // 2
     >=
-    bz runScalarRef_ternary_false@6
+    bz runScalarRef_ternary_false@8
     bytec_3 // "scalarValues"
     box_len
     pop
 
-runScalarRef_ternary_merge@7:
+runScalarRef_ternary_merge@9:
     intc_0 // 2
     -
     intc_2 // 32
@@ -1379,9 +1419,9 @@ runScalarRef_ternary_merge@7:
     box_extract // on error: index out of bounds
     retsub
 
-runScalarRef_ternary_false@6:
+runScalarRef_ternary_false@8:
     intc_0 // 2
-    b runScalarRef_ternary_merge@7
+    b runScalarRef_ternary_merge@9
 
 runScalarRef_ternary_false@2:
     intc_1 // 0

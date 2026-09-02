@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/array_oob_index.sol.ArrayOOB.approval_program() -> uint64:
 main:
     intcblock 32 1 0 8 6400
-    bytecblock 0x151f7c75 "mbArr" 0x010000000000000000 "sArr" "__ctor_pending" "fArr" 0x0000000000000000000000000000000000000000000000000000000000000001
+    bytecblock 0x151f7c75 "mbArr" "sArr" 0x010000000000000000 "__ctor_pending" "fArr" 0x0000000000000000000000000000000000000000000000000000000000000001
     pushint 4096
     bzero
     dup
@@ -168,7 +168,7 @@ main___postInit_route@16:
     bytec 4 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_3 // "sArr"
+    bytec_2 // "sArr"
     pushint 2
     box_create
     pop
@@ -434,26 +434,36 @@ storageOOB:
 storageOOB_ternary_merge@3:
     !
     assert // not payable
-    bytec_3 // "sArr"
+    bytec_2 // "sArr"
     box_del
     pop
-    bytec_3 // "sArr"
+    bytec_2 // "sArr"
     pushbytes 0x0000
     box_put
-    bytec_3 // "sArr"
+    bytec_2 // "sArr"
     intc_2 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
     intc_1 // 1
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
-    bytec_3 // "sArr"
+    bytec_2 // "sArr"
+    box_len
+    bury 1
+    bnz storageOOB_after_if_else@7
+    bytec_2 // "sArr"
+    pushint 2
+    box_create
+    pop
+
+storageOOB_after_if_else@7:
+    bytec_2 // "sArr"
     intc_2 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000008
     intc_1 // 1
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
     frame_dig -1
-    bytec_2 // 0x010000000000000000
+    bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
     intc_3 // 8
@@ -469,7 +479,7 @@ storageOOB_ternary_merge@3:
     *
     pushint 2
     +
-    bytec_3 // "sArr"
+    bytec_2 // "sArr"
     swap
     intc_0 // 32
     box_extract // on error: index out of bounds
@@ -494,7 +504,7 @@ memOOB_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
-    bytec_2 // 0x010000000000000000
+    bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
     intc_3 // 8
@@ -546,7 +556,7 @@ fixedOOB_ternary_merge@3:
     dig 1
     app_global_put
     frame_dig -1
-    bytec_2 // 0x010000000000000000
+    bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
     intc_3 // 8
@@ -583,7 +593,7 @@ memWriteOOB_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
-    bytec_2 // 0x010000000000000000
+    bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
     intc_3 // 8
@@ -639,7 +649,7 @@ mbReadOOB_after_if_else@5:
     bytec 6 // 0x0000000000000000000000000000000000000000000000000000000000000001
     box_replace // on error: index out of bounds
     frame_dig -1
-    bytec_2 // 0x010000000000000000
+    bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
     intc_3 // 8
@@ -678,7 +688,7 @@ mbWriteOOB_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
-    bytec_2 // 0x010000000000000000
+    bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
     bytec_1 // "mbArr"
@@ -731,7 +741,7 @@ inBounds_ternary_merge@3:
     !
     assert // not payable
     frame_dig -1
-    bytec_2 // 0x010000000000000000
+    bytec_3 // 0x010000000000000000
     b<
     assert // array index out of bounds
     intc_3 // 8

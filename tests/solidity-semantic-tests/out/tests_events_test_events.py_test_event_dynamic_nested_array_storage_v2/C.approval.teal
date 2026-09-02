@@ -227,6 +227,16 @@ createEvent_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "arr"
+    box_len
+    bury 1
+    bnz createEvent_after_if_else@5
+    bytec_0 // "arr"
+    intc_0 // 2
+    box_create
+    pop
+
+createEvent_after_if_else@5:
+    bytec_0 // "arr"
     box_get
     assert // box exists
     intc_0 // 2
@@ -242,8 +252,21 @@ createEvent_ternary_merge@3:
     box_del
     pop
     bytec_0 // "arr"
-    dig 1
+    swap
     box_put
+    bytec_0 // "arr"
+    box_len
+    bury 1
+    bnz createEvent_after_if_else@7
+    bytec_0 // "arr"
+    intc_0 // 2
+    box_create
+    pop
+
+createEvent_after_if_else@7:
+    bytec_0 // "arr"
+    box_get
+    assert // box exists
     bytec_3 // 0x0002000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
     intc_1 // 1
     callsub dynamic_array_concat_dynamic_element
@@ -256,25 +279,25 @@ createEvent_ternary_merge@3:
     bytec_0 // "arr"
     box_len
     bury 1
-    bz createEvent_ternary_false@5
+    bz createEvent_ternary_false@9
     bytec_0 // "arr"
     box_get
     pop
     intc_2 // 0
     extract_uint16
 
-createEvent_ternary_merge@6:
+createEvent_ternary_merge@10:
     assert // array index out of bounds
     bytec_0 // "arr"
     box_len
     bury 1
-    bnz createEvent_after_if_else@8
+    bnz createEvent_after_if_else@12
     bytec_0 // "arr"
     intc_0 // 2
     box_create
     pop
 
-createEvent_after_if_else@8:
+createEvent_after_if_else@12:
     bytec_0 // "arr"
     intc_0 // 2
     dup
@@ -303,25 +326,25 @@ createEvent_after_if_else@8:
     bytec_0 // "arr"
     box_len
     bury 1
-    bz createEvent_ternary_false@10
+    bz createEvent_ternary_false@14
     bytec_0 // "arr"
     box_get
     pop
     intc_2 // 0
     extract_uint16
 
-createEvent_ternary_merge@11:
+createEvent_ternary_merge@15:
     assert // array index out of bounds
     bytec_0 // "arr"
     box_len
     bury 1
-    bnz createEvent_after_if_else@13
+    bnz createEvent_after_if_else@17
     bytec_0 // "arr"
     intc_0 // 2
     box_create
     pop
 
-createEvent_after_if_else@13:
+createEvent_after_if_else@17:
     dup
     len
     intc_3 // 32
@@ -363,27 +386,27 @@ createEvent_after_if_else@13:
     bytec_0 // "arr"
     box_len
     bury 1
-    bz createEvent_ternary_false@15
+    bz createEvent_ternary_false@19
     bytec_0 // "arr"
     box_get
     pop
     intc_2 // 0
     extract_uint16
 
-createEvent_ternary_merge@16:
+createEvent_ternary_merge@20:
     intc_1 // 1
     >
     assert // array index out of bounds
     bytec_0 // "arr"
     box_len
     bury 1
-    bnz createEvent_after_if_else@18
+    bnz createEvent_after_if_else@22
     bytec_0 // "arr"
     intc_0 // 2
     box_create
     pop
 
-createEvent_after_if_else@18:
+createEvent_after_if_else@22:
     dup
     len
     intc_3 // 32
@@ -421,27 +444,27 @@ createEvent_after_if_else@18:
     bytec_0 // "arr"
     box_len
     bury 1
-    bz createEvent_ternary_false@20
+    bz createEvent_ternary_false@24
     bytec_0 // "arr"
     box_get
     pop
     intc_2 // 0
     extract_uint16
 
-createEvent_ternary_merge@21:
+createEvent_ternary_merge@25:
     intc_1 // 1
     >
     assert // array index out of bounds
     bytec_0 // "arr"
     box_len
     bury 1
-    bnz createEvent_after_if_else@23
+    bnz createEvent_after_if_else@27
     bytec_0 // "arr"
     intc_0 // 2
     box_create
     pop
 
-createEvent_after_if_else@23:
+createEvent_after_if_else@27:
     dup
     len
     intc_3 // 32
@@ -478,21 +501,21 @@ createEvent_after_if_else@23:
     log
     retsub
 
-createEvent_ternary_false@20:
+createEvent_ternary_false@24:
     intc_2 // 0
-    b createEvent_ternary_merge@21
+    b createEvent_ternary_merge@25
 
-createEvent_ternary_false@15:
+createEvent_ternary_false@19:
     intc_2 // 0
-    b createEvent_ternary_merge@16
+    b createEvent_ternary_merge@20
 
-createEvent_ternary_false@10:
+createEvent_ternary_false@14:
     intc_2 // 0
-    b createEvent_ternary_merge@11
+    b createEvent_ternary_merge@15
 
-createEvent_ternary_false@5:
+createEvent_ternary_false@9:
     intc_2 // 0
-    b createEvent_ternary_merge@6
+    b createEvent_ternary_merge@10
 
 createEvent_ternary_false@2:
     intc_2 // 0

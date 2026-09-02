@@ -88,13 +88,13 @@ main_ternary_false@28:
 
 main_mloadFreshZero_route@15:
     txn GroupIndex
-    bz main_ternary_false@36
+    bz main_ternary_false@34
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@37:
+main_ternary_merge@35:
     !
     assert // not payable
     load 0
@@ -120,28 +120,28 @@ main_ternary_merge@37:
     intc_0 // 1
     return
 
-main_ternary_false@36:
+main_ternary_false@34:
     intc_1 // 0
-    b main_ternary_merge@37
+    b main_ternary_merge@35
 
 main_calldataPastEnd_route@14:
     txn GroupIndex
-    bz main_ternary_false@41
+    bz main_ternary_false@39
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@42:
+main_ternary_merge@40:
     !
     assert // not payable
     load 0
     store 0
     txn NumAppArgs
-    bz main_ternary_false@44
+    bz main_ternary_false@42
     txna ApplicationArgs 0
 
-main_ternary_merge@45:
+main_ternary_merge@43:
     intc_2 // 32
     bzero
     dup2
@@ -167,24 +167,24 @@ main_ternary_merge@45:
     intc_0 // 1
     return
 
-main_ternary_false@44:
+main_ternary_false@42:
     pushint 4
     bzero
-    b main_ternary_merge@45
+    b main_ternary_merge@43
 
-main_ternary_false@41:
+main_ternary_false@39:
     intc_1 // 0
-    b main_ternary_merge@42
+    b main_ternary_merge@40
 
 main_shiftSaturation_route@13:
     txn GroupIndex
-    bz main_ternary_false@52
+    bz main_ternary_false@50
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@53:
+main_ternary_merge@51:
     !
     assert // not payable
     load 0
@@ -196,19 +196,19 @@ main_ternary_merge@53:
     intc_0 // 1
     return
 
-main_ternary_false@52:
+main_ternary_false@50:
     intc_1 // 0
-    b main_ternary_merge@53
+    b main_ternary_merge@51
 
 main_signedCompareBoundary_route@12:
     txn GroupIndex
-    bz main_ternary_false@64
+    bz main_ternary_false@62
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@65:
+main_ternary_merge@63:
     !
     assert // not payable
     load 0
@@ -220,19 +220,19 @@ main_ternary_merge@65:
     intc_0 // 1
     return
 
-main_ternary_false@64:
+main_ternary_false@62:
     intc_1 // 0
-    b main_ternary_merge@65
+    b main_ternary_merge@63
 
 main_signextendCells_route@11:
     txn GroupIndex
-    bz main_ternary_false@73
+    bz main_ternary_false@71
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@74:
+main_ternary_merge@72:
     !
     assert // not payable
     load 0
@@ -244,19 +244,19 @@ main_ternary_merge@74:
     intc_0 // 1
     return
 
-main_ternary_false@73:
+main_ternary_false@71:
     intc_1 // 0
-    b main_ternary_merge@74
+    b main_ternary_merge@72
 
 main_byteCells_route@10:
     txn GroupIndex
-    bz main_ternary_false@92
+    bz main_ternary_false@90
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@93:
+main_ternary_merge@91:
     !
     assert // not payable
     load 0
@@ -268,9 +268,9 @@ main_ternary_merge@93:
     intc_0 // 1
     return
 
-main_ternary_false@92:
+main_ternary_false@90:
     intc_1 // 0
-    b main_ternary_merge@93
+    b main_ternary_merge@91
 
 main_expCells_route@9:
     txna ApplicationArgs 1
@@ -286,13 +286,13 @@ main_expCells_route@9:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@100
+    bz main_ternary_false@98
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@101:
+main_ternary_merge@99:
     !
     assert // not payable
     load 0
@@ -300,17 +300,17 @@ main_ternary_merge@101:
     bytec_2 // 0x01
     swap
 
-main_while_top@102:
+main_while_top@100:
     dup
     bytec_3 // 0x
     b>
-    bz main_after_while@106
+    bz main_after_while@104
     dup
     bytec_2 // 0x01
     b&
     bytec_3 // 0x
     b!=
-    bz main_after_if_else@105
+    bz main_after_if_else@103
     swap
     dig 2
     b*
@@ -318,7 +318,7 @@ main_while_top@102:
     b%
     swap
 
-main_after_if_else@105:
+main_after_if_else@103:
     pushbytes 0x02
     b/
     uncover 2
@@ -327,9 +327,9 @@ main_after_if_else@105:
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     cover 2
-    b main_while_top@102
+    b main_while_top@100
 
-main_after_while@106:
+main_after_while@104:
     pop
     load 0
     store 0
@@ -350,19 +350,19 @@ main_after_while@106:
     intc_0 // 1
     return
 
-main_ternary_false@100:
+main_ternary_false@98:
     intc_1 // 0
-    b main_ternary_merge@101
+    b main_ternary_merge@99
 
 main_sdivRounding_route@8:
     txn GroupIndex
-    bz main_ternary_false@110
+    bz main_ternary_false@108
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@111:
+main_ternary_merge@109:
     !
     assert // not payable
     load 0
@@ -374,19 +374,19 @@ main_ternary_merge@111:
     intc_0 // 1
     return
 
-main_ternary_false@110:
+main_ternary_false@108:
     intc_1 // 0
-    b main_ternary_merge@111
+    b main_ternary_merge@109
 
 main_smodSigns_route@7:
     txn GroupIndex
-    bz main_ternary_false@123
+    bz main_ternary_false@121
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@124:
+main_ternary_merge@122:
     !
     assert // not payable
     load 0
@@ -398,19 +398,19 @@ main_ternary_merge@124:
     intc_0 // 1
     return
 
-main_ternary_false@123:
+main_ternary_false@121:
     intc_1 // 0
-    b main_ternary_merge@124
+    b main_ternary_merge@122
 
 main_sdivMinNegOne_route@6:
     txn GroupIndex
-    bz main_ternary_false@136
+    bz main_ternary_false@134
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@137:
+main_ternary_merge@135:
     !
     assert // not payable
     load 0
@@ -422,19 +422,19 @@ main_ternary_merge@137:
     intc_0 // 1
     return
 
-main_ternary_false@136:
+main_ternary_false@134:
     intc_1 // 0
-    b main_ternary_merge@137
+    b main_ternary_merge@135
 
 main_divmodZero_route@5:
     txn GroupIndex
-    bz main_ternary_false@154
+    bz main_ternary_false@152
     txn GroupIndex
     intc_0 // 1
     -
     gtxns Amount
 
-main_ternary_merge@155:
+main_ternary_merge@153:
     !
     assert // not payable
     load 0
@@ -446,6 +446,6 @@ main_ternary_merge@155:
     intc_0 // 1
     return
 
-main_ternary_false@154:
+main_ternary_false@152:
     intc_1 // 0
-    b main_ternary_merge@155
+    b main_ternary_merge@153

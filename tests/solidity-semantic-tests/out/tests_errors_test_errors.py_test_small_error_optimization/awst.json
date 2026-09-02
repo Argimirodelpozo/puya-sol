@@ -2143,7 +2143,7 @@
                     },
                     "body": [
                       {
-                        "_type": "ExpressionStatement",
+                        "_type": "Block",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
                           "line": 6,
@@ -2152,23 +2152,9 @@
                           "column": null,
                           "end_column": null
                         },
-                        "expr": {
-                          "_type": "ArrayExtend",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
-                            "line": 6,
-                            "end_line": 6,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "void",
-                            "immutable": true
-                          },
-                          "base": {
-                            "_type": "BoxValueExpression",
+                        "body": [
+                          {
+                            "_type": "IfElse",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
                               "line": 6,
@@ -2177,23 +2163,8 @@
                               "column": null,
                               "end_column": null
                             },
-                            "wtype": {
-                              "_type": "ARC4DynamicArray",
-                              "name": "arc4.dynamic_array<arc4.uint8>",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "key": {
-                              "_type": "BytesConstant",
+                            "condition": {
+                              "_type": "Not",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
                                 "line": 6,
@@ -2204,42 +2175,11 @@
                               },
                               "wtype": {
                                 "_type": "WType",
-                                "name": "box_key",
+                                "name": "bool",
                                 "immutable": true
                               },
-                              "value": "cm",
-                              "encoding": "utf8"
-                            },
-                            "exists_assertion_message": null
-                          },
-                          "other": {
-                            "_type": "NewArray",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
-                              "line": 6,
-                              "end_line": 6,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "ARC4DynamicArray",
-                              "name": "arc4.dynamic_array<arc4.uint8>",
-                              "immutable": false,
-                              "element_type": {
-                                "_type": "ARC4UIntN",
-                                "name": "arc4.uint8",
-                                "immutable": true,
-                                "n": 8,
-                                "arc4_alias": null,
-                                "source_location": null
-                              },
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "values": [
-                              {
-                                "_type": "ARC4Encode",
+                              "expr": {
+                                "_type": "TupleItemExpression",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
                                   "line": 6,
@@ -2249,15 +2189,12 @@
                                   "end_column": null
                                 },
                                 "wtype": {
-                                  "_type": "ARC4UIntN",
-                                  "name": "arc4.uint8",
-                                  "immutable": true,
-                                  "n": 8,
-                                  "arc4_alias": null,
-                                  "source_location": null
+                                  "_type": "WType",
+                                  "name": "bool",
+                                  "immutable": true
                                 },
-                                "value": {
-                                  "_type": "UInt64BinaryOperation",
+                                "base": {
+                                  "_type": "IntrinsicCall",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
                                     "line": 6,
@@ -2267,11 +2204,72 @@
                                     "end_column": null
                                   },
                                   "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
+                                    "_type": "WTuple",
+                                    "name": "tuple",
+                                    "immutable": true,
+                                    "types": [
+                                      {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      {
+                                        "_type": "WType",
+                                        "name": "bool",
+                                        "immutable": true
+                                      }
+                                    ],
+                                    "names": null,
+                                    "source_location": null
                                   },
-                                  "left": {
+                                  "op_code": "box_len",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "BytesConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                        "line": 6,
+                                        "end_line": 6,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "box_key",
+                                        "immutable": true
+                                      },
+                                      "value": "cm",
+                                      "encoding": "utf8"
+                                    }
+                                  ]
+                                },
+                                "index": 1
+                              }
+                            },
+                            "if_branch": {
+                              "_type": "Block",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                "line": 6,
+                                "end_line": 6,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "body": [
+                                {
+                                  "_type": "ExpressionStatement",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                    "line": 6,
+                                    "end_line": 6,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "expr": {
                                     "_type": "IntrinsicCall",
                                     "source_location": {
                                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
@@ -2283,13 +2281,187 @@
                                     },
                                     "wtype": {
                                       "_type": "WType",
-                                      "name": "uint64",
+                                      "name": "bool",
                                       "immutable": true
                                     },
-                                    "op_code": "btoi",
+                                    "op_code": "box_create",
                                     "immediates": [],
                                     "stack_args": [
                                       {
+                                        "_type": "BytesConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                          "line": 6,
+                                          "end_line": 6,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "box_key",
+                                          "immutable": true
+                                        },
+                                        "value": "cm",
+                                        "encoding": "utf8"
+                                      },
+                                      {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                          "line": 6,
+                                          "end_line": 6,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 2,
+                                        "teal_alias": null
+                                      }
+                                    ]
+                                  }
+                                }
+                              ],
+                              "label": null,
+                              "comment": null
+                            },
+                            "else_branch": null
+                          },
+                          {
+                            "_type": "ExpressionStatement",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                              "line": 6,
+                              "end_line": 6,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "expr": {
+                              "_type": "ArrayExtend",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                "line": 6,
+                                "end_line": 6,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "void",
+                                "immutable": true
+                              },
+                              "base": {
+                                "_type": "BoxValueExpression",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                  "line": 6,
+                                  "end_line": 6,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4DynamicArray",
+                                  "name": "arc4.dynamic_array<arc4.uint8>",
+                                  "immutable": false,
+                                  "element_type": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint8",
+                                    "immutable": true,
+                                    "n": 8,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "key": {
+                                  "_type": "BytesConstant",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                    "line": 6,
+                                    "end_line": 6,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "box_key",
+                                    "immutable": true
+                                  },
+                                  "value": "cm",
+                                  "encoding": "utf8"
+                                },
+                                "exists_assertion_message": null
+                              },
+                              "other": {
+                                "_type": "NewArray",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                  "line": 6,
+                                  "end_line": 6,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "ARC4DynamicArray",
+                                  "name": "arc4.dynamic_array<arc4.uint8>",
+                                  "immutable": false,
+                                  "element_type": {
+                                    "_type": "ARC4UIntN",
+                                    "name": "arc4.uint8",
+                                    "immutable": true,
+                                    "n": 8,
+                                    "arc4_alias": null,
+                                    "source_location": null
+                                  },
+                                  "arc4_alias": null,
+                                  "source_location": null
+                                },
+                                "values": [
+                                  {
+                                    "_type": "ARC4Encode",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                      "line": 6,
+                                      "end_line": 6,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "ARC4UIntN",
+                                      "name": "arc4.uint8",
+                                      "immutable": true,
+                                      "n": 8,
+                                      "arc4_alias": null,
+                                      "source_location": null
+                                    },
+                                    "value": {
+                                      "_type": "UInt64BinaryOperation",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                        "line": 6,
+                                        "end_line": 6,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "left": {
                                         "_type": "IntrinsicCall",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
@@ -2300,16 +2472,15 @@
                                           "end_column": null
                                         },
                                         "wtype": {
-                                          "_type": "BytesWType",
-                                          "name": "bytes",
-                                          "immutable": true,
-                                          "length": null
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
                                         },
-                                        "op_code": "extract3",
+                                        "op_code": "btoi",
                                         "immediates": [],
                                         "stack_args": [
                                           {
-                                            "_type": "SingleEvaluation",
+                                            "_type": "IntrinsicCall",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
                                               "line": 6,
@@ -2324,26 +2495,26 @@
                                               "immutable": true,
                                               "length": null
                                             },
-                                            "source": {
-                                              "_type": "IntrinsicCall",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
-                                                "line": 6,
-                                                "end_line": 6,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "BytesWType",
-                                                "name": "bytes",
-                                                "immutable": true,
-                                                "length": null
-                                              },
-                                              "op_code": "concat",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
+                                            "op_code": "extract3",
+                                            "immediates": [],
+                                            "stack_args": [
+                                              {
+                                                "_type": "SingleEvaluation",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                                  "line": 6,
+                                                  "end_line": 6,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "BytesWType",
+                                                  "name": "bytes",
+                                                  "immutable": true,
+                                                  "length": null
+                                                },
+                                                "source": {
                                                   "_type": "IntrinsicCall",
                                                   "source_location": {
                                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
@@ -2359,11 +2530,11 @@
                                                     "immutable": true,
                                                     "length": null
                                                   },
-                                                  "op_code": "bzero",
+                                                  "op_code": "concat",
                                                   "immediates": [],
                                                   "stack_args": [
                                                     {
-                                                      "_type": "IntegerConstant",
+                                                      "_type": "IntrinsicCall",
                                                       "source_location": {
                                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
                                                         "line": 6,
@@ -2373,17 +2544,89 @@
                                                         "end_column": null
                                                       },
                                                       "wtype": {
-                                                        "_type": "WType",
-                                                        "name": "uint64",
-                                                        "immutable": true
+                                                        "_type": "BytesWType",
+                                                        "name": "bytes",
+                                                        "immutable": true,
+                                                        "length": null
                                                       },
-                                                      "value": 8,
-                                                      "teal_alias": null
+                                                      "op_code": "bzero",
+                                                      "immediates": [],
+                                                      "stack_args": [
+                                                        {
+                                                          "_type": "IntegerConstant",
+                                                          "source_location": {
+                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                                            "line": 6,
+                                                            "end_line": 6,
+                                                            "comment_lines": 0,
+                                                            "column": null,
+                                                            "end_column": null
+                                                          },
+                                                          "wtype": {
+                                                            "_type": "WType",
+                                                            "name": "uint64",
+                                                            "immutable": true
+                                                          },
+                                                          "value": 8,
+                                                          "teal_alias": null
+                                                        }
+                                                      ]
+                                                    },
+                                                    {
+                                                      "_type": "ReinterpretCast",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                                        "line": 6,
+                                                        "end_line": 6,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "BytesWType",
+                                                        "name": "bytes",
+                                                        "immutable": true,
+                                                        "length": null
+                                                      },
+                                                      "expr": {
+                                                        "_type": "VarExpression",
+                                                        "source_location": {
+                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                                          "line": 6,
+                                                          "end_line": 6,
+                                                          "comment_lines": 0,
+                                                          "column": null,
+                                                          "end_column": null
+                                                        },
+                                                        "wtype": {
+                                                          "_type": "WType",
+                                                          "name": "biguint",
+                                                          "immutable": true
+                                                        },
+                                                        "name": "i__9"
+                                                      }
                                                     }
                                                   ]
                                                 },
-                                                {
-                                                  "_type": "ReinterpretCast",
+                                                "_id": 1048577
+                                              },
+                                              {
+                                                "_type": "UInt64BinaryOperation",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                                  "line": 6,
+                                                  "end_line": 6,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "left": {
+                                                  "_type": "IntrinsicCall",
                                                   "source_location": {
                                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
                                                     "line": 6,
@@ -2393,102 +2636,30 @@
                                                     "end_column": null
                                                   },
                                                   "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
                                                   },
-                                                  "expr": {
-                                                    "_type": "VarExpression",
-                                                    "source_location": {
-                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
-                                                      "line": 6,
-                                                      "end_line": 6,
-                                                      "comment_lines": 0,
-                                                      "column": null,
-                                                      "end_column": null
-                                                    },
-                                                    "wtype": {
-                                                      "_type": "WType",
-                                                      "name": "biguint",
-                                                      "immutable": true
-                                                    },
-                                                    "name": "i__9"
-                                                  }
-                                                }
-                                              ]
-                                            },
-                                            "_id": 1048577
-                                          },
-                                          {
-                                            "_type": "UInt64BinaryOperation",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
-                                              "line": 6,
-                                              "end_line": 6,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "uint64",
-                                              "immutable": true
-                                            },
-                                            "left": {
-                                              "_type": "IntrinsicCall",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
-                                                "line": 6,
-                                                "end_line": 6,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "uint64",
-                                                "immutable": true
-                                              },
-                                              "op_code": "len",
-                                              "immediates": [],
-                                              "stack_args": [
-                                                {
-                                                  "_type": "SingleEvaluation",
-                                                  "source_location": {
-                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
-                                                    "line": 6,
-                                                    "end_line": 6,
-                                                    "comment_lines": 0,
-                                                    "column": null,
-                                                    "end_column": null
-                                                  },
-                                                  "wtype": {
-                                                    "_type": "BytesWType",
-                                                    "name": "bytes",
-                                                    "immutable": true,
-                                                    "length": null
-                                                  },
-                                                  "source": {
-                                                    "_type": "IntrinsicCall",
-                                                    "source_location": {
-                                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
-                                                      "line": 6,
-                                                      "end_line": 6,
-                                                      "comment_lines": 0,
-                                                      "column": null,
-                                                      "end_column": null
-                                                    },
-                                                    "wtype": {
-                                                      "_type": "BytesWType",
-                                                      "name": "bytes",
-                                                      "immutable": true,
-                                                      "length": null
-                                                    },
-                                                    "op_code": "concat",
-                                                    "immediates": [],
-                                                    "stack_args": [
-                                                      {
+                                                  "op_code": "len",
+                                                  "immediates": [],
+                                                  "stack_args": [
+                                                    {
+                                                      "_type": "SingleEvaluation",
+                                                      "source_location": {
+                                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                                        "line": 6,
+                                                        "end_line": 6,
+                                                        "comment_lines": 0,
+                                                        "column": null,
+                                                        "end_column": null
+                                                      },
+                                                      "wtype": {
+                                                        "_type": "BytesWType",
+                                                        "name": "bytes",
+                                                        "immutable": true,
+                                                        "length": null
+                                                      },
+                                                      "source": {
                                                         "_type": "IntrinsicCall",
                                                         "source_location": {
                                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
@@ -2504,11 +2675,11 @@
                                                           "immutable": true,
                                                           "length": null
                                                         },
-                                                        "op_code": "bzero",
+                                                        "op_code": "concat",
                                                         "immediates": [],
                                                         "stack_args": [
                                                           {
-                                                            "_type": "IntegerConstant",
+                                                            "_type": "IntrinsicCall",
                                                             "source_location": {
                                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
                                                               "line": 6,
@@ -2518,122 +2689,145 @@
                                                               "end_column": null
                                                             },
                                                             "wtype": {
-                                                              "_type": "WType",
-                                                              "name": "uint64",
-                                                              "immutable": true
+                                                              "_type": "BytesWType",
+                                                              "name": "bytes",
+                                                              "immutable": true,
+                                                              "length": null
                                                             },
-                                                            "value": 8,
-                                                            "teal_alias": null
+                                                            "op_code": "bzero",
+                                                            "immediates": [],
+                                                            "stack_args": [
+                                                              {
+                                                                "_type": "IntegerConstant",
+                                                                "source_location": {
+                                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                                                  "line": 6,
+                                                                  "end_line": 6,
+                                                                  "comment_lines": 0,
+                                                                  "column": null,
+                                                                  "end_column": null
+                                                                },
+                                                                "wtype": {
+                                                                  "_type": "WType",
+                                                                  "name": "uint64",
+                                                                  "immutable": true
+                                                                },
+                                                                "value": 8,
+                                                                "teal_alias": null
+                                                              }
+                                                            ]
+                                                          },
+                                                          {
+                                                            "_type": "ReinterpretCast",
+                                                            "source_location": {
+                                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                                              "line": 6,
+                                                              "end_line": 6,
+                                                              "comment_lines": 0,
+                                                              "column": null,
+                                                              "end_column": null
+                                                            },
+                                                            "wtype": {
+                                                              "_type": "BytesWType",
+                                                              "name": "bytes",
+                                                              "immutable": true,
+                                                              "length": null
+                                                            },
+                                                            "expr": {
+                                                              "_type": "VarExpression",
+                                                              "source_location": {
+                                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                                                "line": 6,
+                                                                "end_line": 6,
+                                                                "comment_lines": 0,
+                                                                "column": null,
+                                                                "end_column": null
+                                                              },
+                                                              "wtype": {
+                                                                "_type": "WType",
+                                                                "name": "biguint",
+                                                                "immutable": true
+                                                              },
+                                                              "name": "i__9"
+                                                            }
                                                           }
                                                         ]
                                                       },
-                                                      {
-                                                        "_type": "ReinterpretCast",
-                                                        "source_location": {
-                                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
-                                                          "line": 6,
-                                                          "end_line": 6,
-                                                          "comment_lines": 0,
-                                                          "column": null,
-                                                          "end_column": null
-                                                        },
-                                                        "wtype": {
-                                                          "_type": "BytesWType",
-                                                          "name": "bytes",
-                                                          "immutable": true,
-                                                          "length": null
-                                                        },
-                                                        "expr": {
-                                                          "_type": "VarExpression",
-                                                          "source_location": {
-                                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
-                                                            "line": 6,
-                                                            "end_line": 6,
-                                                            "comment_lines": 0,
-                                                            "column": null,
-                                                            "end_column": null
-                                                          },
-                                                          "wtype": {
-                                                            "_type": "WType",
-                                                            "name": "biguint",
-                                                            "immutable": true
-                                                          },
-                                                          "name": "i__9"
-                                                        }
-                                                      }
-                                                    ]
+                                                      "_id": 1048577
+                                                    }
+                                                  ]
+                                                },
+                                                "op": "-",
+                                                "right": {
+                                                  "_type": "IntegerConstant",
+                                                  "source_location": {
+                                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                                    "line": 6,
+                                                    "end_line": 6,
+                                                    "comment_lines": 0,
+                                                    "column": null,
+                                                    "end_column": null
                                                   },
-                                                  "_id": 1048577
+                                                  "wtype": {
+                                                    "_type": "WType",
+                                                    "name": "uint64",
+                                                    "immutable": true
+                                                  },
+                                                  "value": 8,
+                                                  "teal_alias": null
                                                 }
-                                              ]
-                                            },
-                                            "op": "-",
-                                            "right": {
-                                              "_type": "IntegerConstant",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
-                                                "line": 6,
-                                                "end_line": 6,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
                                               },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "uint64",
-                                                "immutable": true
-                                              },
-                                              "value": 8,
-                                              "teal_alias": null
-                                            }
-                                          },
-                                          {
-                                            "_type": "IntegerConstant",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
-                                              "line": 6,
-                                              "end_line": 6,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "WType",
-                                              "name": "uint64",
-                                              "immutable": true
-                                            },
-                                            "value": 8,
-                                            "teal_alias": null
+                                              {
+                                                "_type": "IntegerConstant",
+                                                "source_location": {
+                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                                  "line": 6,
+                                                  "end_line": 6,
+                                                  "comment_lines": 0,
+                                                  "column": null,
+                                                  "end_column": null
+                                                },
+                                                "wtype": {
+                                                  "_type": "WType",
+                                                  "name": "uint64",
+                                                  "immutable": true
+                                                },
+                                                "value": 8,
+                                                "teal_alias": null
+                                              }
+                                            ]
                                           }
                                         ]
+                                      },
+                                      "op": "&",
+                                      "right": {
+                                        "_type": "IntegerConstant",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
+                                          "line": 6,
+                                          "end_line": 6,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "WType",
+                                          "name": "uint64",
+                                          "immutable": true
+                                        },
+                                        "value": 255,
+                                        "teal_alias": null
                                       }
-                                    ]
-                                  },
-                                  "op": "&",
-                                  "right": {
-                                    "_type": "IntegerConstant",
-                                    "source_location": {
-                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/errors/contracts/small_error_optimization.sol",
-                                      "line": 6,
-                                      "end_line": 6,
-                                      "comment_lines": 0,
-                                      "column": null,
-                                      "end_column": null
                                     },
-                                    "wtype": {
-                                      "_type": "WType",
-                                      "name": "uint64",
-                                      "immutable": true
-                                    },
-                                    "value": 255,
-                                    "teal_alias": null
+                                    "error_message": null
                                   }
-                                },
-                                "error_message": null
+                                ]
                               }
-                            ]
+                            }
                           }
-                        }
+                        ],
+                        "label": null,
+                        "comment": null
                       },
                       {
                         "_type": "ExpressionStatement",

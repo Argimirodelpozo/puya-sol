@@ -115,10 +115,13 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_returnType = _returnType;
 	m_locals.clear();
 	m_localConstants.clear();
+	m_localWideConstants.clear();
+	m_yulConstantValues.clear();
 	m_localSlotConstants.clear();
 	m_reassignedLocals.clear();
 	auto const yulFacts = SolcFacts::analyzeYul(_block, _dialect);
 	m_reassignedLocals = yulFacts.assignedVariables;
+	m_yulConstantValues = yulFacts.constantValues;
 	m_calldataParamNames.clear();
 	m_calldataMap.clear();
 	m_asmFunctions.clear();
@@ -759,6 +762,34 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::wrapMod256(
 	return makeBigUIntBinOp(std::move(_expr), awst::BigUIntBinaryOperator::Mod, makeTwoPow256(_loc), _loc);
 }
 
+namespace
+{
+/// Decimal digits, at least one of them non-zero. A non-decimal spelling (an
+/// unconverted 0x literal) is rejected rather than guessed at.
+bool isNonZeroDecimal(std::string const& _v)
+{
+	return !_v.empty()
+		&& _v.find_first_not_of("0123456789") == std::string::npos
+		&& _v.find_first_not_of('0') != std::string::npos;
+}
+} // namespace
+
+bool AssemblyBuilder::divisorIsKnownNonZero(awst::Expression const& _divisor) const
+{
+	// Only m_localWideConstants (let-bound number literals) and literal nodes
+	// qualify. m_localConstants is deliberately NOT consulted: it doubles as the
+	// calldata-param head-offset table, where the recorded number is an offset
+	// and not the local's value.
+	if (auto const* var = dynamic_cast<awst::VarExpression const*>(&_divisor))
+	{
+		auto it = m_localWideConstants.find(var->name);
+		return it != m_localWideConstants.end() && isNonZeroDecimal(it->second);
+	}
+	if (auto const* num = dynamic_cast<awst::IntegerConstant const*>(&_divisor))
+		return isNonZeroDecimal(num->value);
+	return false;
+}
+
 std::shared_ptr<awst::Expression> AssemblyBuilder::safeDivMod(
 	std::shared_ptr<awst::Expression> _left,
 	awst::BigUIntBinaryOperator _op,
@@ -766,6 +797,15 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::safeDivMod(
 	awst::SourceLocation const& _loc
 )
 {
+	// A divisor that is a compile-time non-zero constant cannot hit the AVM
+	// panic, so the guard is pure overhead — and it is not cheap: its ternary
+	// costs three basic blocks, and poseidon's 816 mulmods over one field prime
+	// chained ~2500 of them into a single straight-line body, which puya's SSA
+	// reader walks recursively until Python's stack gives out.
+	if (_right && divisorIsKnownNonZero(*_right))
+		return makeBigUIntBinOp(
+			std::move(_left), _op, ensureBiguint(std::move(_right), _loc), _loc);
+
 	// EVM div/mod by zero returns 0; AVM panics. Emit: right != 0 ? left op right : 0.
 	// Materialize the divisor once — it appears in both the guard and the op;
 	// shared-pointer reuse re-ran non-trivial expressions twice (makeEvalOnce =
@@ -802,6 +842,8 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	// Save state so the outer block can resume after the subroutine is built.
 	auto savedLocals = std::move(m_locals);
 	auto savedConstants = std::move(m_localConstants);
+	auto savedWideConstants = std::move(m_localWideConstants);
+	auto savedYulConstants = std::move(m_yulConstantValues);
 	auto savedCalldataParamNames = std::move(m_calldataParamNames);
 	auto savedUpgraded = std::move(m_upgradedLocals);
 	auto savedParamBitWidths = m_paramBitWidths;
@@ -817,6 +859,8 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 
 	m_locals.clear();
 	m_localConstants.clear();
+	m_localWideConstants.clear();
+	m_yulConstantValues.clear();
 	m_localSlotConstants.clear();
 	m_calldataParamNames.clear();
 	m_upgradedLocals.clear();
@@ -892,6 +936,8 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 
 	m_locals = std::move(savedLocals);
 	m_localConstants = std::move(savedConstants);
+	m_localWideConstants = std::move(savedWideConstants);
+	m_yulConstantValues = std::move(savedYulConstants);
 	m_calldataParamNames = std::move(savedCalldataParamNames);
 	m_upgradedLocals = std::move(savedUpgraded);
 	m_paramBitWidths = std::move(savedParamBitWidths);

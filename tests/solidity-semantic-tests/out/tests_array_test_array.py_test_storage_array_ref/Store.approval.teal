@@ -156,6 +156,16 @@ add:
 add_ternary_merge@3:
     !
     assert // not payable
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz add_after_if_else@5
+    bytec_0 // "data"
+    intc_2 // 2
+    box_create
+    pop
+
+add_after_if_else@5:
     intc_1 // 1
     itob
     bytec_0 // "data"
@@ -194,12 +204,12 @@ add_ternary_merge@3:
     pop
     intc_2 // 2
     >=
-    bz add_ternary_false@5
+    bz add_ternary_false@7
     bytec_0 // "data"
     box_len
     pop
 
-add_ternary_merge@6:
+add_ternary_merge@8:
     intc_2 // 2
     -
     intc_0 // 32
@@ -225,13 +235,13 @@ add_ternary_merge@6:
     bytec_0 // "data"
     box_len
     bury 1
-    bnz add_after_if_else@8
+    bnz add_after_if_else@10
     bytec_0 // "data"
     intc_2 // 2
     box_create
     pop
 
-add_after_if_else@8:
+add_after_if_else@10:
     pushint 8
     bzero
     swap
@@ -251,9 +261,9 @@ add_after_if_else@8:
     box_replace // on error: index out of bounds
     retsub
 
-add_ternary_false@5:
+add_ternary_false@7:
     intc_2 // 2
-    b add_ternary_merge@6
+    b add_ternary_merge@8
 
 add_ternary_false@2:
     intc_3 // 0

@@ -877,9 +877,14 @@ private:
 
 	/// Read a 32-byte word at a DYNAMIC offset; offset < SLOT_SIZE reads slot 0,
 	/// otherwise loads(offset/SLOT_SIZE). Straddles stitch two slots. Returns bytes.
+	/// The bounds assert goes to _sink when given, else to m_pendingStatements —
+	/// a read built INSIDE a loop or branch must sink into that body, or the
+	/// assert (which pins the offset, and with it any loop variable) lands
+	/// outside the scope that defines it.
 	std::shared_ptr<awst::Expression> readMemWordDyn(
 		std::shared_ptr<awst::Expression> _offset,
-		awst::SourceLocation const& _loc
+		awst::SourceLocation const& _loc,
+		std::vector<std::shared_ptr<awst::Statement>>* _sink = nullptr
 	);
 
 	/// Write a 32-byte word at a DYNAMIC offset via `stores(slot, replace3(loads(slot), sub, value))`.
@@ -1235,6 +1240,18 @@ private:
 	/// (Erc1967Lowering::warnEscapedSlotConstants).
 	std::map<std::string, std::string> m_localSlotConstants;
 
+	/// solc's SSAValueTracker view of the current block: single-assignment Yul
+	/// locals bound to a NUMBER literal, ORIGINAL name → full-width decimal.
+	/// m_localConstants is uint64 and silently drops anything wider (poseidon's
+	/// BN254 field prime), which kept every mulmod's divide-by-zero guard alive:
+	/// 816 guards chained ~2500 basic blocks, and puya's SSA reader recursed
+	/// past its stack limit walking them.
+	std::map<std::string, std::string> m_yulConstantValues;
+
+	/// The same values re-keyed to the MANGLED local name the AWST carries
+	/// (inline-expanded frames rename), so a divisor VarExpression resolves.
+	std::map<std::string, std::string> m_localWideConstants;
+
 	/// Yul locals that are the target of ANY `:=` assignment anywhere in the current
 	/// assembly block (incl. nested blocks/loops and user function bodies, by ORIGINAL
 	/// name). Such locals never enter m_localConstants: the fold is flow-insensitive,
@@ -1397,6 +1414,11 @@ private:
 	);
 
 	/// div/mod returning 0 for divisor=0 (EVM semantics; AVM would panic).
+	/// True when a div/mod divisor is a compile-time non-zero constant: the EVM
+	/// zero-divisor guard, and the three basic blocks its ternary costs, are then
+	/// dead weight.
+	bool divisorIsKnownNonZero(awst::Expression const& _divisor) const;
+
 	std::shared_ptr<awst::Expression> safeDivMod(
 		std::shared_ptr<awst::Expression> _left,
 		awst::BigUIntBinaryOperator _op,

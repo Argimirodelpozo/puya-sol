@@ -626,19 +626,21 @@ seed_ternary_merge@3:
     assert // not payable
     pushint 100
     itob
+    dup
     bytec 9 // 0xad1bd99b5efcb3051ddeaa82353511ad4433e96ce61c9ed6de2f9219803b66dd
     box_del
     pop
     bytec 9 // 0xad1bd99b5efcb3051ddeaa82353511ad4433e96ce61c9ed6de2f9219803b66dd
-    dig 1
+    swap
     box_put
     pushint 200
     itob
+    dup
     bytec 10 // 0x36f5a8dae566d23f605c261fe05875e33e7e438776abdd9c2c894806915354f5
     box_del
     pop
     bytec 10 // 0x36f5a8dae566d23f605c261fe05875e33e7e438776abdd9c2c894806915354f5
-    dig 1
+    swap
     box_put
     pushint 111
     itob
@@ -665,6 +667,16 @@ seed_ternary_merge@3:
     swap
     box_put
     bytec_0 // "sarr"
+    box_len
+    bury 1
+    bnz seed_after_if_else@5
+    bytec_0 // "sarr"
+    intc_3 // 2
+    box_create
+    pop
+
+seed_after_if_else@5:
+    bytec_0 // "sarr"
     box_get
     assert // box exists
     bytec 14 // 0x0002002200000000000000000000000000000000000000000000000000000000000000000000
@@ -674,8 +686,21 @@ seed_ternary_merge@3:
     box_del
     pop
     bytec_0 // "sarr"
-    dig 1
+    swap
     box_put
+    bytec_0 // "sarr"
+    box_len
+    bury 1
+    bnz seed_after_if_else@7
+    bytec_0 // "sarr"
+    intc_3 // 2
+    box_create
+    pop
+
+seed_after_if_else@7:
+    bytec_0 // "sarr"
+    box_get
+    assert // box exists
     bytec 14 // 0x0002002200000000000000000000000000000000000000000000000000000000000000000000
     intc_2 // 1
     callsub dynamic_array_concat_dynamic_element
@@ -714,25 +739,25 @@ seed_ternary_merge@3:
     bytec_0 // "sarr"
     box_len
     bury 1
-    bz seed_ternary_false@5
+    bz seed_ternary_false@9
     bytec_0 // "sarr"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-seed_ternary_merge@6:
+seed_ternary_merge@10:
     assert // array index out of bounds
     bytec_0 // "sarr"
     box_len
     bury 1
-    bnz seed_after_if_else@8
+    bnz seed_after_if_else@12
     bytec_0 // "sarr"
     intc_3 // 2
     box_create
     pop
 
-seed_after_if_else@8:
+seed_after_if_else@12:
     bytec_0 // "sarr"
     intc_3 // 2
     dup
@@ -775,27 +800,27 @@ seed_after_if_else@8:
     bytec_0 // "sarr"
     box_len
     bury 1
-    bz seed_ternary_false@10
+    bz seed_ternary_false@14
     bytec_0 // "sarr"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-seed_ternary_merge@11:
+seed_ternary_merge@15:
     intc_2 // 1
     >
     assert // array index out of bounds
     bytec_0 // "sarr"
     box_len
     bury 1
-    bnz seed_after_if_else@13
+    bnz seed_after_if_else@17
     bytec_0 // "sarr"
     intc_3 // 2
     box_create
     pop
 
-seed_after_if_else@13:
+seed_after_if_else@17:
     bytec_0 // "sarr"
     pushint 4
     intc_3 // 2
@@ -841,7 +866,7 @@ seed_after_if_else@13:
     cover 2
     select
     len
-    bz seed_ternary_false@15
+    bz seed_ternary_false@19
     bytec_3 // "aom"
     box_get
     bytec_2 // 0x
@@ -850,7 +875,7 @@ seed_after_if_else@13:
     intc_1 // 0
     extract_uint16
 
-seed_ternary_merge@16:
+seed_ternary_merge@20:
     intc_2 // 1
     +
     itob
@@ -912,17 +937,17 @@ seed_ternary_merge@16:
     box_put
     retsub
 
-seed_ternary_false@15:
+seed_ternary_false@19:
     intc_1 // 0
-    b seed_ternary_merge@16
+    b seed_ternary_merge@20
 
-seed_ternary_false@10:
+seed_ternary_false@14:
     intc_1 // 0
-    b seed_ternary_merge@11
+    b seed_ternary_merge@15
 
-seed_ternary_false@5:
+seed_ternary_false@9:
     intc_1 // 0
-    b seed_ternary_merge@6
+    b seed_ternary_merge@10
 
 seed_ternary_false@2:
     intc_1 // 0

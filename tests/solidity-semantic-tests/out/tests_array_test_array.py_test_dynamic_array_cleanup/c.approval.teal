@@ -135,7 +135,17 @@ fill_while_top@4:
     itob
     dig 1
     b>
-    bz fill_after_while@6
+    bz fill_after_while@8
+    bytec_0 // "dynamic"
+    box_len
+    bury 1
+    bnz fill_after_if_else@7
+    bytec_0 // "dynamic"
+    intc_2 // 2
+    box_create
+    pop
+
+fill_after_if_else@7:
     intc_0 // 1
     itob
     dig 1
@@ -201,7 +211,7 @@ fill_while_top@4:
     assert // overflow
     b fill_while_top@4
 
-fill_after_while@6:
+fill_after_while@8:
     retsub
 
 fill_ternary_false@2:
@@ -242,7 +252,17 @@ halfClear_ternary_merge@7:
     pushint 5
     itob
     b>
-    bz halfClear_after_while@9
+    bz halfClear_after_while@11
+    bytec_0 // "dynamic"
+    box_len
+    bury 1
+    bnz halfClear_after_if_else@10
+    bytec_0 // "dynamic"
+    intc_2 // 2
+    box_create
+    pop
+
+halfClear_after_if_else@10:
     bytec_0 // "dynamic"
     intc_1 // 0
     intc_2 // 2
@@ -276,7 +296,7 @@ halfClear_ternary_merge@7:
     box_resize
     b halfClear_while_top@4
 
-halfClear_after_while@9:
+halfClear_after_while@11:
     retsub
 
 halfClear_ternary_false@6:

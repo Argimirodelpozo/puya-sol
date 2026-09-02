@@ -177,6 +177,16 @@ f:
 f_ternary_merge@3:
     !
     assert // not payable
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz f_after_if_else@5
+    bytec_0 // "data"
+    intc_3 // 2
+    box_create
+    pop
+
+f_after_if_else@5:
     pushint 3
     itob
     bytec_0 // "data"
@@ -215,30 +225,30 @@ f_ternary_merge@3:
     pushint 5
     itob
     b!=
-    bnz f_if_body@5
+    bnz f_if_body@7
     pushint 6
     itob
     frame_dig 0
     b!=
-    bz f_after_if_else@6
+    bz f_after_if_else@8
 
-f_if_body@5:
+f_if_body@7:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
     frame_bury 0
     retsub
 
-f_after_if_else@6:
+f_after_if_else@8:
     bytec_0 // "data"
     intc_3 // 2
     intc_1 // 32
     box_extract // on error: index out of bounds
     b!=
-    bz f_after_if_else@10
+    bz f_after_if_else@12
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
     swap
     retsub
 
-f_after_if_else@10:
+f_after_if_else@12:
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000000
     swap
     retsub

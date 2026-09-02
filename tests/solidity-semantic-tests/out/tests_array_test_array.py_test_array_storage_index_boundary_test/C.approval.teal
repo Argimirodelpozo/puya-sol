@@ -158,7 +158,7 @@ test_boundary_check_ternary_merge@3:
     !
     assert // not payable
 
-test_boundary_check_while_top@17:
+test_boundary_check_while_top@21:
     pushint 45010
     global OpcodeBudget
     >
@@ -175,7 +175,7 @@ test_boundary_check_while_top@17:
     intc_2 // 0
     itxn_field Fee
     itxn_submit
-    b test_boundary_check_while_top@17
+    b test_boundary_check_while_top@21
 
 test_boundary_check_while_top@4:
     bytec_0 // "storageArray"
@@ -196,7 +196,17 @@ test_boundary_check_ternary_merge@7:
     itob
     frame_dig -2
     b<
-    bz test_boundary_check_while_top@10
+    bz test_boundary_check_while_top@12
+    bytec_0 // "storageArray"
+    box_len
+    bury 1
+    bnz test_boundary_check_after_if_else@10
+    bytec_0 // "storageArray"
+    intc_1 // 2
+    box_create
+    pop
+
+test_boundary_check_after_if_else@10:
     bytec_0 // "storageArray"
     intc_2 // 0
     intc_1 // 2
@@ -230,18 +240,18 @@ test_boundary_check_ternary_merge@7:
     box_splice
     b test_boundary_check_while_top@4
 
-test_boundary_check_while_top@10:
+test_boundary_check_while_top@12:
     bytec_0 // "storageArray"
     box_len
     pop
     intc_1 // 2
     >=
-    bz test_boundary_check_ternary_false@12
+    bz test_boundary_check_ternary_false@14
     bytec_0 // "storageArray"
     box_len
     pop
 
-test_boundary_check_ternary_merge@13:
+test_boundary_check_ternary_merge@15:
     intc_1 // 2
     -
     intc_0 // 32
@@ -249,7 +259,17 @@ test_boundary_check_ternary_merge@13:
     itob
     frame_dig -2
     b>
-    bz test_boundary_check_after_while@15
+    bz test_boundary_check_after_while@19
+    bytec_0 // "storageArray"
+    box_len
+    bury 1
+    bnz test_boundary_check_after_if_else@18
+    bytec_0 // "storageArray"
+    intc_1 // 2
+    box_create
+    pop
+
+test_boundary_check_after_if_else@18:
     bytec_0 // "storageArray"
     intc_2 // 0
     intc_1 // 2
@@ -281,9 +301,9 @@ test_boundary_check_ternary_merge@13:
     bytec_0 // "storageArray"
     swap
     box_resize
-    b test_boundary_check_while_top@10
+    b test_boundary_check_while_top@12
 
-test_boundary_check_after_while@15:
+test_boundary_check_after_while@19:
     frame_dig -1
     pushbytes 0x010000000000000000
     b<
@@ -307,9 +327,9 @@ test_boundary_check_after_while@15:
     box_extract // on error: index out of bounds
     retsub
 
-test_boundary_check_ternary_false@12:
+test_boundary_check_ternary_false@14:
     intc_1 // 2
-    b test_boundary_check_ternary_merge@13
+    b test_boundary_check_ternary_merge@15
 
 test_boundary_check_ternary_false@6:
     intc_1 // 2

@@ -141,6 +141,15 @@ std::shared_ptr<awst::Expression> SolArrayMethod::handleBoxArray(
 		? awst::makeBoxValueExpression(std::move(_runtimeKey), arrWType, m_loc)
 		: builder::StorageMapper::makeTopLevelBoxExpr(arrayVarName, arrWType, m_loc);
 
+	// A resize reads the array box first, and a top-level dynamic array's box
+	// is only eagerly created by __postInit — a deploy that defers the ctor
+	// (proxy-runtime replay) never runs it, and the read asserts "box exists".
+	// Same prologue the mapping-entry and chained-field push paths already use.
+	if (_memberName == "push" || _memberName == "pop")
+		if (auto stmt = builder::StorageMapper::makeEnsureRootBoxForWrite(
+				m_ctx.typeMapper, boxExpr, /*isResize=*/true, m_loc))
+			m_ctx.queuePreEffect(std::move(stmt));
+
 	// StateGet wrapper for reads (returns empty array if box missing)
 	auto emptyArr = awst::makeNewArray(arrWType, m_loc);
 

@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/wide_dynamic_array_length.sol.WideDynamicArrayLength.approval_program() -> uint64:
 main:
     intcblock 1 32 0 2 4294967295
-    bytecblock 0x151f7c75 "a" 0x0001 "b" "c" "d" "e" "__ctor_pending"
+    bytecblock 0x151f7c75 "a" "b" "c" "d" "e" 0x0001 "__ctor_pending"
     pushint 4096
     bzero
     dup
@@ -184,19 +184,19 @@ main___postInit_route@20:
     intc_3 // 2
     box_create
     pop
-    bytec_3 // "b"
+    bytec_2 // "b"
     intc_3 // 2
     box_create
     pop
-    bytec 4 // "c"
+    bytec_3 // "c"
     intc_3 // 2
     box_create
     pop
-    bytec 5 // "d"
+    bytec 4 // "d"
     intc_3 // 2
     box_create
     pop
-    bytec 6 // "e"
+    bytec 5 // "e"
     intc_3 // 2
     box_create
     pop
@@ -502,6 +502,16 @@ push:
 push_ternary_merge@3:
     !
     assert // not payable
+    bytec_1 // "a"
+    box_len
+    bury 1
+    bnz push_after_if_else@5
+    bytec_1 // "a"
+    intc_3 // 2
+    box_create
+    pop
+
+push_after_if_else@5:
     pushint 16
     bzero
     dup
@@ -519,7 +529,7 @@ push_ternary_merge@3:
     <=
     assert // overflow
     b|
-    bytec_2 // 0x0001
+    bytec 6 // 0x0001
     swap
     concat
     dup
@@ -653,6 +663,16 @@ pushB:
 pushB_ternary_merge@3:
     !
     assert // not payable
+    bytec_2 // "b"
+    box_len
+    bury 1
+    bnz pushB_after_if_else@5
+    bytec_2 // "b"
+    intc_3 // 2
+    box_create
+    pop
+
+pushB_after_if_else@5:
     pushint 20
     bzero
     dup
@@ -670,7 +690,7 @@ pushB_ternary_merge@3:
     <=
     assert // overflow
     b|
-    bytec_2 // 0x0001
+    bytec 6 // 0x0001
     swap
     concat
     dup
@@ -678,7 +698,7 @@ pushB_ternary_merge@3:
     swap
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    bytec_3 // "b"
+    bytec_2 // "b"
     intc_2 // 0
     uncover 3
     uncover 3
@@ -703,13 +723,13 @@ lenB:
 lenB_ternary_merge@3:
     !
     assert // not payable
-    bytec_3 // "b"
+    bytec_2 // "b"
     box_len
     pop
     intc_3 // 2
     >=
     bz lenB_ternary_false@5
-    bytec_3 // "b"
+    bytec_2 // "b"
     box_len
     pop
 
@@ -753,8 +773,18 @@ pushC_ternary_merge@3:
     frame_dig -1
     intc 4 // 4294967295
     &
-    dup
     frame_bury -1
+    bytec_3 // "c"
+    box_len
+    bury 1
+    bnz pushC_after_if_else@5
+    bytec_3 // "c"
+    intc_3 // 2
+    box_create
+    pop
+
+pushC_after_if_else@5:
+    frame_dig -1
     itob
     dup
     bitlen
@@ -762,7 +792,7 @@ pushC_ternary_merge@3:
     <=
     assert // overflow
     extract 4 4
-    bytec_2 // 0x0001
+    bytec 6 // 0x0001
     swap
     concat
     dup
@@ -770,7 +800,7 @@ pushC_ternary_merge@3:
     swap
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    bytec 4 // "c"
+    bytec_3 // "c"
     intc_2 // 0
     uncover 3
     uncover 3
@@ -795,13 +825,13 @@ lenC:
 lenC_ternary_merge@3:
     !
     assert // not payable
-    bytec 4 // "c"
+    bytec_3 // "c"
     box_len
     pop
     intc_3 // 2
     >=
     bz lenC_ternary_false@5
-    bytec 4 // "c"
+    bytec_3 // "c"
     box_len
     pop
 
@@ -845,8 +875,18 @@ pushD_ternary_merge@3:
     frame_dig -1
     pushint 255
     &
-    dup
     frame_bury -1
+    bytec 4 // "d"
+    box_len
+    bury 1
+    bnz pushD_after_if_else@5
+    bytec 4 // "d"
+    intc_3 // 2
+    box_create
+    pop
+
+pushD_after_if_else@5:
+    frame_dig -1
     itob
     dup
     bitlen
@@ -854,7 +894,7 @@ pushD_ternary_merge@3:
     <=
     assert // overflow
     extract 7 1
-    bytec_2 // 0x0001
+    bytec 6 // 0x0001
     swap
     concat
     dup
@@ -862,7 +902,7 @@ pushD_ternary_merge@3:
     swap
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    bytec 5 // "d"
+    bytec 4 // "d"
     intc_2 // 0
     uncover 3
     uncover 3
@@ -887,13 +927,13 @@ lenD:
 lenD_ternary_merge@3:
     !
     assert // not payable
-    bytec 5 // "d"
+    bytec 4 // "d"
     box_len
     pop
     intc_3 // 2
     >=
     bz lenD_ternary_false@5
-    bytec 5 // "d"
+    bytec 4 // "d"
     box_len
     pop
 
@@ -928,7 +968,17 @@ pushE:
 pushE_ternary_merge@3:
     !
     assert // not payable
-    bytec_2 // 0x0001
+    bytec 5 // "e"
+    box_len
+    bury 1
+    bnz pushE_after_if_else@5
+    bytec 5 // "e"
+    intc_3 // 2
+    box_create
+    pop
+
+pushE_after_if_else@5:
+    bytec 6 // 0x0001
     frame_dig -1
     concat
     dup
@@ -936,7 +986,7 @@ pushE_ternary_merge@3:
     swap
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    bytec 6 // "e"
+    bytec 5 // "e"
     intc_2 // 0
     uncover 3
     uncover 3
@@ -961,13 +1011,13 @@ lenE:
 lenE_ternary_merge@3:
     !
     assert // not payable
-    bytec 6 // "e"
+    bytec 5 // "e"
     box_len
     pop
     intc_3 // 2
     >=
     bz lenE_ternary_false@5
-    bytec 6 // "e"
+    bytec 5 // "e"
     box_len
     pop
 

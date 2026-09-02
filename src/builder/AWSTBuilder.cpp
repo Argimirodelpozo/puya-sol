@@ -99,6 +99,13 @@ std::vector<std::shared_ptr<awst::RootNode>> AWSTBuilder::build(
 	}
 
 	validateRootSubroutines(roots);
+	// Root subroutines (libraries, free functions) need the same dead-code
+	// pass as contract methods: an asm `return()` ending a library body
+	// leaves the synthesized epilogue unreachable, which puya rejects.
+	for (auto& root: roots)
+		if (auto* sub = dynamic_cast<awst::Subroutine*>(root.get()))
+			if (sub->body)
+				awst::removeDeadCode(sub->body->body);
 	return roots;
 }
 

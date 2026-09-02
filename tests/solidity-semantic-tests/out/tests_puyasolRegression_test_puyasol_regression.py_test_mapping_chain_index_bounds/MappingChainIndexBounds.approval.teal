@@ -641,6 +641,16 @@ seed_ternary_merge@6:
     swap
     box_put
     bytec_0 // "sarr"
+    box_len
+    bury 1
+    bnz seed_after_if_else@8
+    bytec_0 // "sarr"
+    intc_3 // 2
+    box_create
+    pop
+
+seed_after_if_else@8:
+    bytec_0 // "sarr"
     box_get
     assert // box exists
     dup
@@ -661,11 +671,11 @@ seed_ternary_merge@6:
     intc_1 // 0
     frame_bury 0
 
-seed_for_header@13:
+seed_for_header@15:
     frame_dig 0
     dig 2
     <
-    bz seed_after_for@15
+    bz seed_after_for@17
     dup
     frame_dig 0
     dup
@@ -682,20 +692,20 @@ seed_for_header@13:
     intc_3 // 2
     +
     frame_bury 0
-    b seed_for_header@13
+    b seed_for_header@15
 
-seed_after_for@15:
+seed_after_for@17:
     dup
     len
     cover 2
     intc_1 // 0
     frame_bury 0
 
-seed_for_header@16:
+seed_for_header@18:
     frame_dig 0
     intc_3 // 2
     <
-    bz seed_after_for@18
+    bz seed_after_for@20
     pushbytes 0x0002002200000000000000000000000000000000000000000000000000000000000000000000
     frame_dig 0
     dup
@@ -712,9 +722,9 @@ seed_for_header@16:
     intc_3 // 2
     +
     frame_bury 0
-    b seed_for_header@16
+    b seed_for_header@18
 
-seed_after_for@18:
+seed_after_for@20:
     swap
     uncover 2
     substring3
@@ -744,25 +754,25 @@ seed_after_for@18:
     bytec_0 // "sarr"
     box_len
     bury 1
-    bz seed_ternary_false@8
+    bz seed_ternary_false@10
     bytec_0 // "sarr"
     box_get
     pop
     intc_1 // 0
     extract_uint16
 
-seed_ternary_merge@9:
+seed_ternary_merge@11:
     assert // array index out of bounds
     bytec_0 // "sarr"
     box_len
     bury 1
-    bnz seed_after_if_else@11
+    bnz seed_after_if_else@13
     bytec_0 // "sarr"
     intc_3 // 2
     box_create
     pop
 
-seed_after_if_else@11:
+seed_after_if_else@13:
     bytec_0 // "sarr"
     intc_3 // 2
     dup
@@ -804,9 +814,9 @@ seed_after_if_else@11:
     box_put
     retsub
 
-seed_ternary_false@8:
+seed_ternary_false@10:
     intc_1 // 0
-    b seed_ternary_merge@9
+    b seed_ternary_merge@11
 
 seed_ternary_false@5:
     intc_1 // 0

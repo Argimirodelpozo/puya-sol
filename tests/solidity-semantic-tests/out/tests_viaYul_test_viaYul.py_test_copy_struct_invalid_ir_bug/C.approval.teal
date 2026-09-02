@@ -194,6 +194,16 @@ f:
 f_ternary_merge@3:
     !
     assert // not payable
+    bytec_0 // "array"
+    box_len
+    bury 1
+    bnz f_after_if_else@5
+    bytec_0 // "array"
+    intc_2 // 2
+    box_create
+    pop
+
+f_after_if_else@5:
     global CurrentApplicationID
     itob
     bytec_1 // method "ext()void"
@@ -213,6 +223,16 @@ f_ternary_merge@3:
     intc_3 // 12
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "array"
+    box_len
+    bury 1
+    bnz f_after_if_else@7
+    bytec_0 // "array"
+    intc_2 // 2
+    box_create
+    pop
+
+f_after_if_else@7:
+    bytec_0 // "array"
     intc_2 // 2
     intc_3 // 12
     box_extract // on error: index out of bounds
@@ -232,28 +252,6 @@ f_ternary_merge@3:
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "array"
     intc_2 // 2
-    intc_3 // 12
-    box_extract // on error: index out of bounds
-    extract 0 12
-    dup
-    intc_0 // 0
-    extract_uint64
-    dup
-    global CurrentApplicationID
-    ==
-    bz f_else_body@5
-    pop
-    extract 8 4
-    bytec_1 // method "ext()void"
-    ==
-    assert // unknown function selector in self-call dispatch
-    intc_1 // 1
-    intc_0 // 0
-    callsub __funcptr_dispatch_ret
-
-f_after_if_else@7:
-    bytec_0 // "array"
-    pushint 14
     intc_3 // 12
     box_extract // on error: index out of bounds
     extract 0 12
@@ -274,6 +272,28 @@ f_after_if_else@7:
     callsub __funcptr_dispatch_ret
 
 f_after_if_else@11:
+    bytec_0 // "array"
+    pushint 14
+    intc_3 // 12
+    box_extract // on error: index out of bounds
+    extract 0 12
+    dup
+    intc_0 // 0
+    extract_uint64
+    dup
+    global CurrentApplicationID
+    ==
+    bz f_else_body@13
+    pop
+    extract 8 4
+    bytec_1 // method "ext()void"
+    ==
+    assert // unknown function selector in self-call dispatch
+    intc_1 // 1
+    intc_0 // 0
+    callsub __funcptr_dispatch_ret
+
+f_after_if_else@15:
     intc_0 // 0
     bytec_2 // "externalCalled"
     app_global_get_ex
@@ -284,13 +304,28 @@ f_after_if_else@11:
     itob
     b==
     dup
-    bnz f_after_if_else@13
+    bnz f_after_if_else@17
     pushbytes 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-f_after_if_else@13:
+f_after_if_else@17:
     assert
     retsub
+
+f_else_body@13:
+    itxn_begin
+    swap
+    extract 8 4
+    pushint 6
+    itxn_field TypeEnum
+    intc_0 // 0
+    itxn_field OnCompletion
+    intc_0 // 0
+    itxn_field Fee
+    itxn_field ApplicationArgs
+    itxn_field ApplicationID
+    itxn_submit
+    b f_after_if_else@15
 
 f_else_body@9:
     itxn_begin
@@ -306,21 +341,6 @@ f_else_body@9:
     itxn_field ApplicationID
     itxn_submit
     b f_after_if_else@11
-
-f_else_body@5:
-    itxn_begin
-    swap
-    extract 8 4
-    pushint 6
-    itxn_field TypeEnum
-    intc_0 // 0
-    itxn_field OnCompletion
-    intc_0 // 0
-    itxn_field Fee
-    itxn_field ApplicationArgs
-    itxn_field ApplicationID
-    itxn_submit
-    b f_after_if_else@7
 
 f_ternary_false@2:
     intc_0 // 0

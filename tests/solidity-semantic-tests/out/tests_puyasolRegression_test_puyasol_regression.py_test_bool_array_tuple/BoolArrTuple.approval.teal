@@ -1082,6 +1082,16 @@ suSwap_ternary_merge@3:
     uncover 3
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
+    bytec_0 // "su"
+    box_len
+    bury 1
+    bnz suSwap_after_if_else@7
+    bytec_0 // "su"
+    pushint 2
+    box_create
+    pop
+
+suSwap_after_if_else@7:
     bytec 5 // 0x0001
     frame_dig -1
     concat
@@ -1160,6 +1170,16 @@ suRot3_ternary_merge@3:
     uncover 3
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
+    bytec_0 // "su"
+    box_len
+    bury 1
+    bnz suRot3_after_if_else@7
+    bytec_0 // "su"
+    pushint 2
+    box_create
+    pop
+
+suRot3_after_if_else@7:
     bytec 5 // 0x0001
     frame_dig -2
     concat
@@ -1174,6 +1194,16 @@ suRot3_ternary_merge@3:
     uncover 3
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
+    bytec_0 // "su"
+    box_len
+    bury 1
+    bnz suRot3_after_if_else@9
+    bytec_0 // "su"
+    pushint 2
+    box_create
+    pop
+
+suRot3_after_if_else@9:
     bytec 5 // 0x0001
     frame_dig -1
     concat
@@ -1264,6 +1294,7 @@ siSwap_ternary_merge@6:
     bz siSwap_ternary_false@8
     bytec 7 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
+    swap
 
 siSwap_ternary_merge@9:
     bytec_3 // "si"
@@ -1275,7 +1306,7 @@ siSwap_ternary_merge@9:
     intc_3 // 16
     bzero
     dupn 2
-    uncover 4
+    uncover 3
     concat
     dup
     len
@@ -1288,7 +1319,6 @@ siSwap_ternary_merge@9:
     intc_3 // 16
     <=
     assert // overflow
-    dig 1
     b|
     bytec 5 // 0x0001
     swap
@@ -1304,7 +1334,17 @@ siSwap_ternary_merge@9:
     uncover 3
     intc_3 // 16
     callsub box_dynamic_array_concat_fixed
-    dup
+    bytec_3 // "si"
+    box_len
+    bury 1
+    bnz siSwap_after_if_else@13
+    bytec_3 // "si"
+    pushint 2
+    box_create
+    pop
+
+siSwap_after_if_else@13:
+    dupn 2
     uncover 3
     concat
     dup
@@ -1342,12 +1382,12 @@ siSwap_ternary_merge@9:
     dup
     bytec 6 // 0x80000000000000000000000000000000
     b>=
-    bz siSwap_ternary_false@11
+    bz siSwap_ternary_false@15
     bytec 7 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
     swap
 
-siSwap_ternary_merge@12:
+siSwap_ternary_merge@16:
     bytec_3 // "si"
     pushint 2
     intc_3 // 16
@@ -1357,11 +1397,11 @@ siSwap_ternary_merge@12:
     dup
     bytec 6 // 0x80000000000000000000000000000000
     b>=
-    bz siSwap_ternary_false@14
+    bz siSwap_ternary_false@18
     bytec 7 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
 
-siSwap_ternary_merge@15:
+siSwap_ternary_merge@19:
     swap
     dup
     uncover 2
@@ -1411,21 +1451,21 @@ siSwap_ternary_merge@15:
     dup
     bytec 6 // 0x80000000000000000000000000000000
     b>=
-    bz siSwap_ternary_false@17
+    bz siSwap_ternary_false@21
     bytec 7 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
 
-siSwap_ternary_merge@18:
+siSwap_ternary_merge@22:
     bytec 4 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
     bytec 6 // 0x80000000000000000000000000000000
     b>=
-    bz siSwap_ternary_false@20
+    bz siSwap_ternary_false@24
     bytec 7 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
 
-siSwap_ternary_merge@21:
+siSwap_ternary_merge@25:
     dup
     len
     intc_0 // 32
@@ -1445,21 +1485,21 @@ siSwap_ternary_merge@21:
     dup
     bytec 6 // 0x80000000000000000000000000000000
     b>=
-    bz siSwap_ternary_false@23
+    bz siSwap_ternary_false@27
     bytec 7 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
 
-siSwap_ternary_merge@24:
+siSwap_ternary_merge@28:
     bytec 4 // 0xffffffffffffffffffffffffffffffff
     b&
     dup
     bytec 6 // 0x80000000000000000000000000000000
     b>=
-    bz siSwap_ternary_false@26
+    bz siSwap_ternary_false@30
     bytec 7 // 0xffffffffffffffffffffffffffffffff00000000000000000000000000000000
     b+
 
-siSwap_ternary_merge@27:
+siSwap_ternary_merge@31:
     dup
     len
     intc_0 // 32
@@ -1469,26 +1509,27 @@ siSwap_ternary_merge@27:
     b|
     retsub
 
-siSwap_ternary_false@26:
-    b siSwap_ternary_merge@27
+siSwap_ternary_false@30:
+    b siSwap_ternary_merge@31
 
-siSwap_ternary_false@23:
-    b siSwap_ternary_merge@24
+siSwap_ternary_false@27:
+    b siSwap_ternary_merge@28
 
-siSwap_ternary_false@20:
-    b siSwap_ternary_merge@21
+siSwap_ternary_false@24:
+    b siSwap_ternary_merge@25
 
-siSwap_ternary_false@17:
-    b siSwap_ternary_merge@18
+siSwap_ternary_false@21:
+    b siSwap_ternary_merge@22
 
-siSwap_ternary_false@14:
-    b siSwap_ternary_merge@15
+siSwap_ternary_false@18:
+    b siSwap_ternary_merge@19
 
-siSwap_ternary_false@11:
+siSwap_ternary_false@15:
     swap
-    b siSwap_ternary_merge@12
+    b siSwap_ternary_merge@16
 
 siSwap_ternary_false@8:
+    swap
     b siSwap_ternary_merge@9
 
 siSwap_ternary_false@5:

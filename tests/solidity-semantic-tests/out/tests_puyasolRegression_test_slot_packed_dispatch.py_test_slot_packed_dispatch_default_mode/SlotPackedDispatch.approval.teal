@@ -1040,8 +1040,18 @@ pushSmall_ternary_merge@3:
     frame_dig -1
     intc 4 // 4294967295
     &
-    dup
     frame_bury -1
+    bytec_1 // "smalls"
+    box_len
+    bury 1
+    bnz pushSmall_after_if_else@5
+    bytec_1 // "smalls"
+    pushint 2
+    box_create
+    pop
+
+pushSmall_after_if_else@5:
+    frame_dig -1
     itob
     dup
     bitlen
@@ -1083,6 +1093,16 @@ pushAddr:
 pushAddr_ternary_merge@3:
     !
     assert // not payable
+    bytec_2 // "addrs"
+    box_len
+    bury 1
+    bnz pushAddr_after_if_else@5
+    bytec_2 // "addrs"
+    pushint 2
+    box_create
+    pop
+
+pushAddr_after_if_else@5:
     bytec 10 // 0x0001
     frame_dig -1
     concat
@@ -1117,6 +1137,16 @@ pushHalf:
 pushHalf_ternary_merge@3:
     !
     assert // not payable
+    bytec_3 // "halves"
+    box_len
+    bury 1
+    bnz pushHalf_after_if_else@5
+    bytec_3 // "halves"
+    pushint 2
+    box_create
+    pop
+
+pushHalf_after_if_else@5:
     intc_3 // 16
     bzero
     dup

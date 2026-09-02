@@ -283,7 +283,17 @@ enlarge_ternary_merge@7:
     itob
     frame_dig -1
     b<
-    bz enlarge_after_while@9
+    bz enlarge_after_while@11
+    bytec_0 // "data"
+    box_len
+    bury 1
+    bnz enlarge_after_if_else@10
+    bytec_0 // "data"
+    intc_2 // 2
+    box_create
+    pop
+
+enlarge_after_if_else@10:
     bytec_0 // "data"
     intc_3 // 0
     intc_2 // 2
@@ -317,18 +327,18 @@ enlarge_ternary_merge@7:
     box_splice
     b enlarge_while_top@4
 
-enlarge_after_while@9:
+enlarge_after_while@11:
     bytec_0 // "data"
     box_len
     pop
     intc_2 // 2
     >=
-    bz enlarge_ternary_false@11
+    bz enlarge_ternary_false@13
     bytec_0 // "data"
     box_len
     pop
 
-enlarge_ternary_merge@12:
+enlarge_ternary_merge@14:
     intc_2 // 2
     -
     intc_0 // 32
@@ -339,9 +349,9 @@ enlarge_ternary_merge@12:
     b|
     retsub
 
-enlarge_ternary_false@11:
+enlarge_ternary_false@13:
     intc_2 // 2
-    b enlarge_ternary_merge@12
+    b enlarge_ternary_merge@14
 
 enlarge_ternary_false@6:
     intc_2 // 2

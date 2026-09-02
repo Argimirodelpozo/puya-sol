@@ -18,6 +18,86 @@ from chd_common import (CASES, EVM_PY, ZERO, dump_json, http_json, load_json,
                         relax_pragma)
 
 
+
+# ── governance-executed admin ops ───────────────────────────────────────────
+# A Timelock/Safe-owned contract receives its admin calls (addRoute, upgrades,
+# parameter changes) as INTERNAL calls the direct txlist never shows, and
+# Blockscout's internal-txn indexes are incomplete for busy targets. The
+# owner's OWN direct txlist carries the wrapper call whose calldata EMBEDS the
+# target + inner calldata — decode it and replay the inner call from the
+# owner's identity (phase-3 impersonation executes any sender).
+def _w(hexdata: str, i: int) -> int:
+    return int(hexdata[64 * i:64 * i + 64], 16)
+
+def _dyn_bytes(hexdata: str, head_off: int) -> str:
+    off = _w(hexdata, head_off) // 32
+    n = _w(hexdata, off)
+    return "0x" + hexdata[64 * (off + 1):64 * (off + 1) + 2 * n]
+
+def decode_governance_call(inp: str, target: str) -> list[tuple[str, int]]:
+    """(inner calldata, value) pairs aimed at `target` inside one wrapper call."""
+    inp = (inp or "0x").removeprefix("0x")
+    if len(inp) < 8:
+        return []
+    sel, body = inp[:8], inp[8:]
+    out = []
+    try:
+        if sel == "134008d3":                      # OZ Timelock execute(address,uint256,bytes,bytes32,bytes32)
+            if ("0x" + body[24:64]).lower() == target:
+                out.append((_dyn_bytes(body, 2), _w(body, 1)))
+        elif sel == "6a761202":                    # Safe execTransaction(address,uint256,bytes,uint8,...)
+            if ("0x" + body[24:64]).lower() == target and _w(body, 3) == 0:   # operation 0 = CALL
+                out.append((_dyn_bytes(body, 2), _w(body, 1)))
+        elif sel == "e38335e5":                    # OZ Timelock executeBatch(address[],uint256[],bytes[],bytes32,bytes32)
+            t_off, v_off, d_off = _w(body, 0) // 32, _w(body, 1) // 32, _w(body, 2) // 32
+            n = _w(body, t_off)
+            for k in range(n):
+                tgt = "0x" + body[64 * (t_off + 1 + k) + 24:64 * (t_off + 2 + k)]
+                if tgt.lower() != target:
+                    continue
+                val = _w(body, v_off + 1 + k)
+                rel = _w(body, d_off + 1 + k) // 32
+                base = d_off + 1 + rel
+                ln = _w(body, base)
+                out.append(("0x" + body[64 * (base + 1):64 * (base + 1) + 2 * ln], val))
+    except (ValueError, IndexError):
+        return []
+    return out
+
+
+def owner_executed_calls(host: str, owner: str, target: str, max_rows: int = 3000) -> list[dict]:
+    """Direct txlist of `owner`, decoded into inner calls to `target`."""
+    rows_out, page = [], 1
+    while len(rows_out) < max_rows:
+        d = http_json(f"https://{host}/api?module=account&action=txlist&address={owner}"
+                      f"&sort=asc&page={page}&offset=1000")
+        rows = d.get("result") or []
+        if not isinstance(rows, list) or not rows:
+            break
+        for t in rows:
+            if (t.get("to") or "").lower() != owner.lower():
+                continue
+            if t.get("isError") != "0":
+                continue
+            for k, (inner, val) in enumerate(decode_governance_call(t.get("input"), target)):
+                rows_out.append({
+                    "hash": f"{t.get('hash')}#gov{k}",
+                    "from": owner.lower(),
+                    "input": inner,
+                    "value": val,
+                    "hist_ok": True,
+                    "ts": int(t.get("timeStamp") or 0),
+                    "block": int(t.get("blockNumber") or 0),
+                    "txindex": int(t.get("transactionIndex") or 0),
+                    "internal": True,
+                    "via_owner": owner.lower(),
+                })
+        if len(rows) < 1000:
+            break
+        page += 1
+        time.sleep(0.4)
+    return rows_out
+
 def _decode_ctor_addresses(abi, ctor_hex):
     """Recursively collect address-typed constructor values.
 
@@ -979,7 +1059,8 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
                parent_hints: list | None = None,
                source_from: str | None = None,
                scan_upgrades: bool = False,
-               creation_override: dict | None = None) -> dict:
+               creation_override: dict | None = None,
+               via_owner: str | None = None) -> dict:
     case_dir = CASES / tag
     addr = address.lower()
 
@@ -1053,6 +1134,72 @@ def fetch_case(host: str, address: str, tag: str, max_txns: int = 300,
             break
         page += 1
         time.sleep(0.4)                                    # be polite
+
+    # 2b. INTERNAL calls to the target. Governance-managed contracts get their
+    # admin ops (RISC Zero router / SP1 gateway `addRoute`, Privacy Pools'
+    # Entrypoint updates) from a Timelock or multisig EXECUTE — an internal
+    # call that never shows in txlist, so the local replay has no routes and
+    # every later verify reverts (0/300 replayed). Merge them into the window
+    # as ordinary txns from the CALLING contract's identity: the EVM leg
+    # impersonates any sender (phase 3) and the AVM leg maps it to a registry
+    # sender account like every other historical address.
+    internal = []
+    try:
+        for ipage in range(1, 4):
+            d = http_json(f"https://{host}/api?module=account&action=txlistinternal"
+                          f"&address={address}&sort=asc&page={ipage}&offset=1000")
+            rows = d.get("result") or []
+            if not isinstance(rows, list) or not rows:
+                break
+            for t in rows:
+                if (t.get("to") or "").lower() != addr:
+                    continue
+                if (t.get("type") or "call") != "call":
+                    continue
+                if (t.get("callType") or "call") not in ("call",):
+                    continue
+                inp = t.get("input") or "0x"
+                if inp in ("0x", ""):
+                    continue
+                internal.append({
+                    "hash": f"{t.get('hash')}#{t.get('traceId') or 'i'}",
+                    "from": (t.get("from") or "").lower(),
+                    "input": inp,
+                    "value": int(t.get("value") or 0),
+                    "hist_ok": t.get("isError") == "0",
+                    "ts": int(t.get("timeStamp") or 0),
+                    "block": int(t.get("blockNumber") or 0),
+                    "txindex": int(t.get("transactionIndex") or 0),
+                    "internal": True,
+                })
+            if len(rows) < 1000:
+                break
+            time.sleep(0.4)
+    except Exception as e:
+        print(f"[fetch] {tag}: txlistinternal unavailable ({str(e)[:60]})", flush=True)
+    if internal:
+        seen = {t["hash"] for t in txns}
+        last_block = max((t["block"] for t in txns), default=0)
+        add = [t for t in internal
+               if t["hash"] not in seen and (not txns or t["block"] <= last_block)]
+        if add:
+            txns = sorted(txns + add,
+                          key=lambda x: (x["block"], x["txindex"], x["hash"]))[:max_txns]
+            print(f"[fetch] {tag}: +{len(add)} internal call(s) to the target merged "
+                  f"into the window (governance-executed admin ops)", flush=True)
+
+    if via_owner:
+        gov = owner_executed_calls(host, via_owner, addr)
+        seen = {t["hash"] for t in txns}
+        last_block = max((t["block"] for t in txns), default=0)
+        add = [t for t in gov if t["hash"] not in seen and (not txns or t["block"] <= last_block)]
+        # An admin op at the window's tail is still needed by nothing inside
+        # it; ones BEFORE the first direct txn are the ones that matter.
+        if add:
+            txns = sorted(txns + add,
+                          key=lambda x: (x["block"], x["txindex"], x["hash"]))[:max_txns]
+        print(f"[fetch] {tag}: --via-owner {via_owner[:10]}… decoded {len(gov)} "
+              f"governance call(s), {len(add)} merged into the window", flush=True)
 
     if creation is None:
         # creation may pre-date the window only if pagination missed it — for
@@ -1415,6 +1562,10 @@ def main():
     if internal:
         argv.remove("--internal")
     stub_deps = "--stub-deps" in argv
+    via_owner = None
+    if "--via-owner" in argv:
+        via_owner = argv[argv.index("--via-owner") + 1].lower()
+        del argv[argv.index("--via-owner"):argv.index("--via-owner") + 2]
     if stub_deps:
         argv.remove("--stub-deps")
     script_deps = "--script-deps" in argv
@@ -1502,7 +1653,7 @@ def main():
                parent_hints=parent_hints,
                source_from=source_from,
                scan_upgrades=scan_upgrades,
-               creation_override=creation_override)
+               creation_override=creation_override, via_owner=via_owner)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_push_empty.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 2 0
+    intcblock 2 32 1 0
     bytecblock "storageArray" "__ctor_pending"
     pushint 4096
     bzero
@@ -25,16 +25,16 @@ main:
     txn ApplicationID
     bnz main_after_if_else@2
     bytec_1 // "__ctor_pending"
-    intc_1 // 1
+    intc_2 // 1
     app_global_put
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@7
     txn NumAppArgs
-    intc_2 // 2
+    intc_0 // 2
     ==
     bz main_after_if_else@7
     pushbytes 0xe931873f
@@ -56,11 +56,11 @@ main_pushEmpty_route@11:
     txna ApplicationArgs 1
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub pushEmpty
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main___postInit_route@10:
@@ -75,17 +75,17 @@ main___postInit_route@10:
     intc_3 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_2 // 2
+    intc_0 // 2
     box_create
     pop
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_switch_case_0@5:
     txn GroupIndex
     bz main_ternary_false@18
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -94,23 +94,23 @@ main_ternary_merge@19:
     assert // not payable
     txna ApplicationArgs 1
     len
-    intc_0 // 32
+    intc_1 // 32
     >=
     assert // EVM ABI decode out of bounds
     txna ApplicationArgs 1
     extract 0 32
     dup
     len
-    intc_0 // 32
+    intc_1 // 32
     <=
     assert // overflow
-    intc_0 // 32
+    intc_1 // 32
     bzero
     b|
     callsub pushEmpty
     pushbytes 0x151f7c75
     log
-    intc_1 // 1
+    intc_2 // 1
     return
 
 main_ternary_false@18:
@@ -124,7 +124,7 @@ pushEmpty:
     txn GroupIndex
     bz pushEmpty_ternary_false@2
     txn GroupIndex
-    intc_1 // 1
+    intc_2 // 1
     -
     gtxns Amount
 
@@ -136,7 +136,7 @@ pushEmpty_while_top@4:
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_2 // 2
+    intc_0 // 2
     >=
     bz pushEmpty_ternary_false@6
     bytec_0 // "storageArray"
@@ -144,29 +144,39 @@ pushEmpty_while_top@4:
     pop
 
 pushEmpty_ternary_merge@7:
-    intc_2 // 2
+    intc_0 // 2
     -
-    intc_0 // 32
+    intc_1 // 32
     /
     itob
     frame_dig -1
     b<
-    bz pushEmpty_after_while@9
+    bz pushEmpty_after_while@11
+    bytec_0 // "storageArray"
+    box_len
+    bury 1
+    bnz pushEmpty_after_if_else@10
+    bytec_0 // "storageArray"
+    intc_0 // 2
+    box_create
+    pop
+
+pushEmpty_after_if_else@10:
     bytec_0 // "storageArray"
     intc_3 // 0
-    intc_2 // 2
+    intc_0 // 2
     box_extract
     btoi
     bytec_0 // "storageArray"
     box_len
     pop
-    intc_0 // 32
+    intc_1 // 32
     +
     bytec_0 // "storageArray"
     swap
     box_resize
     dup
-    intc_1 // 1
+    intc_2 // 1
     +
     itob
     extract 6 2
@@ -174,9 +184,9 @@ pushEmpty_ternary_merge@7:
     intc_3 // 0
     uncover 2
     box_replace
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_2 // 2
+    intc_0 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -185,16 +195,16 @@ pushEmpty_ternary_merge@7:
     box_splice
     b pushEmpty_while_top@4
 
-pushEmpty_after_while@9:
+pushEmpty_after_while@11:
     intc_3 // 0
     itob
     dup
 
-pushEmpty_while_top@10:
+pushEmpty_while_top@12:
     dup
     frame_dig -1
     b<
-    bz pushEmpty_after_while@12
+    bz pushEmpty_after_while@14
     dup
     pushbytes 0x010000000000000000
     b<
@@ -208,13 +218,13 @@ pushEmpty_while_top@10:
     pushint 8
     -
     extract_uint64
-    intc_0 // 32
+    intc_1 // 32
     *
-    intc_2 // 2
+    intc_0 // 2
     +
     bytec_0 // "storageArray"
     swap
-    intc_0 // 32
+    intc_1 // 32
     box_extract // on error: index out of bounds
     dig 2
     b==
@@ -225,13 +235,13 @@ pushEmpty_while_top@10:
     pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     b<=
     assert // overflow
-    b pushEmpty_while_top@10
+    b pushEmpty_while_top@12
 
-pushEmpty_after_while@12:
+pushEmpty_after_while@14:
     retsub
 
 pushEmpty_ternary_false@6:
-    intc_2 // 2
+    intc_0 // 2
     b pushEmpty_ternary_merge@7
 
 pushEmpty_ternary_false@2:

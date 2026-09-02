@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/revertStrings/contracts/invalid_abi_decoding_memory_v1.sol.C.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 4096
+    intcblock 32 1 0 4096 20480
     bytecblock 0x151f7c75 0x
     intc_3 // 4096
     bzero
@@ -222,7 +222,7 @@ dyn_ternary_merge@3:
     dup
     intc_0 // 32
     +
-    pushint 20480
+    intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     dup
@@ -289,6 +289,12 @@ dyn_while_top@7:
     +
     dup
     cover 3
+    dup
+    intc_0 // 32
+    +
+    intc 4 // 20480
+    <=
+    assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
     intc_3 // 4096
     %
     dup

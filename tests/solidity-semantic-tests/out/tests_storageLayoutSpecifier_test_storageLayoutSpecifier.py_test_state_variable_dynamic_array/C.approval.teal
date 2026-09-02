@@ -431,17 +431,47 @@ initA_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "arrayA"
+    box_len
+    bury 1
+    bnz initA_after_if_else@5
+    bytec_0 // "arrayA"
+    intc_2 // 2
+    box_create
+    pop
+
+initA_after_if_else@5:
+    bytec_0 // "arrayA"
     intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000001
     intc_1 // 1
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "arrayA"
+    box_len
+    bury 1
+    bnz initA_after_if_else@7
+    bytec_0 // "arrayA"
+    intc_2 // 2
+    box_create
+    pop
+
+initA_after_if_else@7:
+    bytec_0 // "arrayA"
     intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000002
     intc_1 // 1
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
+    bytec_0 // "arrayA"
+    box_len
+    bury 1
+    bnz initA_after_if_else@9
+    bytec_0 // "arrayA"
+    intc_2 // 2
+    box_create
+    pop
+
+initA_after_if_else@9:
     bytec_0 // "arrayA"
     intc_3 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000003
@@ -561,13 +591,43 @@ clearA_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "arrayA"
-    intc_3 // 0
-    intc_0 // 32
-    callsub box_dynamic_array_pop_fixed_size
+    box_len
+    bury 1
+    bnz clearA_after_if_else@5
+    bytec_0 // "arrayA"
+    intc_2 // 2
+    box_create
+    pop
+
+clearA_after_if_else@5:
     bytec_0 // "arrayA"
     intc_3 // 0
     intc_0 // 32
     callsub box_dynamic_array_pop_fixed_size
+    bytec_0 // "arrayA"
+    box_len
+    bury 1
+    bnz clearA_after_if_else@7
+    bytec_0 // "arrayA"
+    intc_2 // 2
+    box_create
+    pop
+
+clearA_after_if_else@7:
+    bytec_0 // "arrayA"
+    intc_3 // 0
+    intc_0 // 32
+    callsub box_dynamic_array_pop_fixed_size
+    bytec_0 // "arrayA"
+    box_len
+    bury 1
+    bnz clearA_after_if_else@9
+    bytec_0 // "arrayA"
+    intc_2 // 2
+    box_create
+    pop
+
+clearA_after_if_else@9:
     bytec_0 // "arrayA"
     intc_3 // 0
     intc_0 // 32

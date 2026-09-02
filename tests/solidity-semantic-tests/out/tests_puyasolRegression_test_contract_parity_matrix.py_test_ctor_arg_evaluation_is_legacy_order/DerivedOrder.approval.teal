@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/contract_parity_matrix.sol.DerivedOrder.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x151f7c75 "log_" 0x "__ctor_pending" "a" "b" "d" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytecblock "log_" 0x151f7c75 0x "__ctor_pending" "a" "b" "d" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
     pushint 4096
     bzero
     dup
@@ -54,7 +54,7 @@ main_after_if_else@11:
 
 main_logLen_route@19:
     callsub logLen
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -69,7 +69,7 @@ main_logAt_route@18:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub logAt
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -78,7 +78,7 @@ main_logAt_route@18:
 
 main_a_route@17:
     callsub a
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -87,7 +87,7 @@ main_a_route@17:
 
 main_b_route@16:
     callsub b
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -96,7 +96,7 @@ main_b_route@16:
 
 main_d_route@15:
     callsub d
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -114,7 +114,7 @@ main___postInit_route@14:
     bytec_3 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_1 // "log_"
+    bytec_0 // "log_"
     intc_3 // 2
     box_create
     pop
@@ -191,7 +191,7 @@ main_switch_case_4@9:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -224,7 +224,7 @@ main_switch_case_3@8:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -243,7 +243,7 @@ main_switch_case_2@7:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -262,7 +262,7 @@ main_switch_case_1@6:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -281,7 +281,7 @@ main_switch_case_0@5:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -391,6 +391,16 @@ a_ternary_false@2:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/contract_parity_matrix.sol.DerivedOrder.__solfn_16(v: bytes) -> void:
 __solfn_16:
     proto 1 0
+    bytec_0 // "log_"
+    box_len
+    bury 1
+    bnz __solfn_16_after_if_else@2
+    bytec_0 // "log_"
+    intc_3 // 2
+    box_create
+    pop
+
+__solfn_16_after_if_else@2:
     frame_dig -1
     len
     intc_0 // 32
@@ -408,19 +418,19 @@ __solfn_16:
     swap
     intc_2 // 0
     extract_uint16 // on error: invalid array length header
-    bytec_1 // "log_"
+    bytec_0 // "log_"
     intc_2 // 0
     intc_3 // 2
     box_extract
     btoi
-    bytec_1 // "log_"
+    bytec_0 // "log_"
     box_len
     pop
     dig 2
     intc_0 // 32
     *
     +
-    bytec_1 // "log_"
+    bytec_0 // "log_"
     swap
     box_resize
     dup
@@ -428,7 +438,7 @@ __solfn_16:
     +
     itob
     extract 6 2
-    bytec_1 // "log_"
+    bytec_0 // "log_"
     intc_2 // 0
     uncover 2
     box_replace
@@ -436,7 +446,7 @@ __solfn_16:
     *
     intc_3 // 2
     +
-    bytec_1 // "log_"
+    bytec_0 // "log_"
     swap
     intc_2 // 0
     uncover 3
@@ -474,7 +484,7 @@ logAt_ternary_merge@3:
     *
     intc_3 // 2
     +
-    bytec_1 // "log_"
+    bytec_0 // "log_"
     swap
     intc_0 // 32
     box_extract // on error: index out of bounds
@@ -497,13 +507,13 @@ logLen:
 logLen_ternary_merge@3:
     !
     assert // not payable
-    bytec_1 // "log_"
+    bytec_0 // "log_"
     box_len
     pop
     intc_3 // 2
     >=
     bz logLen_ternary_false@5
-    bytec_1 // "log_"
+    bytec_0 // "log_"
     box_len
     pop
 

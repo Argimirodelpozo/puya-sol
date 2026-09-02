@@ -132,17 +132,47 @@ main___postInit_route@13:
     box_create
     pop
     bytec_0 // "arr"
+    box_len
+    bury 1
+    bnz main_after_if_else@31
+    bytec_0 // "arr"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@31:
+    bytec_0 // "arr"
     intc_2 // 0
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000000a
     intc_1 // 1
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
     bytec_0 // "arr"
+    box_len
+    bury 1
+    bnz main_after_if_else@33
+    bytec_0 // "arr"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@33:
+    bytec_0 // "arr"
     intc_2 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000014
     intc_1 // 1
     intc_0 // 32
     callsub box_dynamic_array_concat_fixed
+    bytec_0 // "arr"
+    box_len
+    bury 1
+    bnz main_after_if_else@35
+    bytec_0 // "arr"
+    intc_3 // 2
+    box_create
+    pop
+
+main_after_if_else@35:
     bytec_0 // "arr"
     intc_2 // 0
     pushbytes 0x000000000000000000000000000000000000000000000000000000000000001e

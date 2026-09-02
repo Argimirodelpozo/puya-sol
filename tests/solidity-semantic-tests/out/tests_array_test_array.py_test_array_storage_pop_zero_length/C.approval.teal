@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/array_storage_pop_zero_length.sol.C.approval_program() -> uint64:
 main:
-    intcblock 1 0 2 32
+    intcblock 1 2 0 32
     bytecblock "storageArray" "__ctor_pending"
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@7
     txn NumAppArgs
-    intc_2 // 2
+    intc_1 // 2
     ==
     bz main_after_if_else@7
     pushbytes 0x05f3a546
@@ -66,10 +66,10 @@ main___postInit_route@10:
     ==
     assert // __postInit callable only by the app creator
     bytec_1 // "__ctor_pending"
-    intc_1 // 0
+    intc_2 // 0
     app_global_put
     bytec_0 // "storageArray"
-    intc_2 // 2
+    intc_1 // 2
     box_create
     pop
     intc_0 // 1
@@ -93,7 +93,7 @@ main_ternary_merge@19:
     return
 
 main_ternary_false@18:
-    intc_1 // 0
+    intc_2 // 0
     b main_ternary_merge@19
 
 
@@ -110,8 +110,18 @@ popEmpty_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "storageArray"
-    intc_1 // 0
-    intc_2 // 2
+    box_len
+    bury 1
+    bnz popEmpty_after_if_else@5
+    bytec_0 // "storageArray"
+    intc_1 // 2
+    box_create
+    pop
+
+popEmpty_after_if_else@5:
+    bytec_0 // "storageArray"
+    intc_2 // 0
+    intc_1 // 2
     box_extract
     btoi
     intc_0 // 1
@@ -120,12 +130,12 @@ popEmpty_ternary_merge@3:
     itob
     extract 6 2
     bytec_0 // "storageArray"
-    intc_1 // 0
+    intc_2 // 0
     uncover 2
     box_replace
     intc_3 // 32
     *
-    intc_2 // 2
+    intc_1 // 2
     +
     bytec_0 // "storageArray"
     swap
@@ -143,5 +153,5 @@ popEmpty_ternary_merge@3:
     retsub
 
 popEmpty_ternary_false@2:
-    intc_1 // 0
+    intc_2 // 0
     b popEmpty_ternary_merge@3

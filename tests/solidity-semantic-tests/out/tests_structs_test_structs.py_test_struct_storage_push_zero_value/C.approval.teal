@@ -118,6 +118,16 @@ f_ternary_merge@3:
     !
     assert // not payable
     bytec_0 // "s"
+    box_len
+    bury 1
+    bnz f_after_if_else@5
+    bytec_0 // "s"
+    intc_1 // 2
+    box_create
+    pop
+
+f_after_if_else@5:
+    bytec_0 // "s"
     box_get
     assert // box exists
     dup
@@ -138,11 +148,11 @@ f_ternary_merge@3:
     intc_0 // 0
     frame_bury 0
 
-f_for_header@44:
+f_for_header@46:
     frame_dig 0
     dig 2
     <
-    bz f_after_for@46
+    bz f_after_for@48
     dup
     frame_dig 0
     dup
@@ -159,20 +169,20 @@ f_for_header@44:
     intc_1 // 2
     +
     frame_bury 0
-    b f_for_header@44
+    b f_for_header@46
 
-f_after_for@46:
+f_after_for@48:
     dup
     len
     cover 2
     intc_0 // 0
     frame_bury 0
 
-f_for_header@47:
+f_for_header@49:
     frame_dig 0
     intc_1 // 2
     <
-    bz f_after_for@49
+    bz f_after_for@51
     pushbytes 0x00020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000660000
     frame_dig 0
     dup
@@ -189,9 +199,9 @@ f_for_header@47:
     intc_1 // 2
     +
     frame_bury 0
-    b f_for_header@47
+    b f_for_header@49
 
-f_after_for@49:
+f_after_for@51:
     swap
     uncover 2
     substring3
@@ -207,14 +217,14 @@ f_after_for@49:
     bytec_0 // "s"
     box_len
     bury 1
-    bz f_ternary_false@5
+    bz f_ternary_false@7
     bytec_0 // "s"
     box_get
     pop
     intc_0 // 0
     extract_uint16
 
-f_ternary_merge@6:
+f_ternary_merge@8:
     assert // array index out of bounds
     bytec_0 // "s"
     intc_1 // 2
@@ -233,23 +243,23 @@ f_ternary_merge@6:
     cover 2
     b==
     dup
-    bnz f_after_if_else@8
+    bnz f_after_if_else@10
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-f_after_if_else@8:
+f_after_if_else@10:
     assert
     bytec_0 // "s"
     box_len
     bury 1
-    bz f_ternary_false@10
+    bz f_ternary_false@12
     bytec_0 // "s"
     box_get
     pop
     intc_0 // 0
     extract_uint16
 
-f_ternary_merge@11:
+f_ternary_merge@13:
     assert // array index out of bounds
     bytec_0 // "s"
     intc_1 // 2
@@ -265,23 +275,23 @@ f_ternary_merge@11:
     dig 1
     b==
     dup
-    bnz f_after_if_else@13
+    bnz f_after_if_else@15
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-f_after_if_else@13:
+f_after_if_else@15:
     assert
     bytec_0 // "s"
     box_len
     bury 1
-    bz f_ternary_false@15
+    bz f_ternary_false@17
     bytec_0 // "s"
     box_get
     pop
     intc_0 // 0
     extract_uint16
 
-f_ternary_merge@16:
+f_ternary_merge@18:
     assert // array index out of bounds
     bytec_0 // "s"
     intc_1 // 2
@@ -298,23 +308,23 @@ f_ternary_merge@16:
     dup
     !
     swap
-    bz f_after_if_else@18
+    bz f_after_if_else@20
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-f_after_if_else@18:
+f_after_if_else@20:
     assert
     bytec_0 // "s"
     box_len
     bury 1
-    bz f_ternary_false@20
+    bz f_ternary_false@22
     bytec_0 // "s"
     box_get
     pop
     intc_0 // 0
     extract_uint16
 
-f_ternary_merge@21:
+f_ternary_merge@23:
     assert // array index out of bounds
     bytec_0 // "s"
     intc_1 // 2
@@ -331,23 +341,23 @@ f_ternary_merge@21:
     dig 1
     b==
     dup
-    bnz f_after_if_else@23
+    bnz f_after_if_else@25
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-f_after_if_else@23:
+f_after_if_else@25:
     assert
     bytec_0 // "s"
     box_len
     bury 1
-    bz f_ternary_false@25
+    bz f_ternary_false@27
     bytec_0 // "s"
     box_get
     pop
     intc_0 // 0
     extract_uint16
 
-f_ternary_merge@26:
+f_ternary_merge@28:
     assert // array index out of bounds
     bytec_0 // "s"
     intc_1 // 2
@@ -364,23 +374,23 @@ f_ternary_merge@26:
     dig 1
     b==
     dup
-    bnz f_after_if_else@28
+    bnz f_after_if_else@30
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-f_after_if_else@28:
+f_after_if_else@30:
     assert
     bytec_0 // "s"
     box_len
     bury 1
-    bz f_ternary_false@30
+    bz f_ternary_false@32
     bytec_0 // "s"
     box_get
     pop
     intc_0 // 0
     extract_uint16
 
-f_ternary_merge@31:
+f_ternary_merge@33:
     assert // array index out of bounds
     bytec_0 // "s"
     intc_1 // 2
@@ -397,23 +407,23 @@ f_ternary_merge@31:
     dig 1
     b==
     dup
-    bnz f_after_if_else@33
+    bnz f_after_if_else@35
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-f_after_if_else@33:
+f_after_if_else@35:
     assert
     bytec_0 // "s"
     box_len
     bury 1
-    bz f_ternary_false@35
+    bz f_ternary_false@37
     bytec_0 // "s"
     box_get
     pop
     intc_0 // 0
     extract_uint16
 
-f_ternary_merge@36:
+f_ternary_merge@38:
     assert // array index out of bounds
     bytec_0 // "s"
     intc_1 // 2
@@ -430,11 +440,11 @@ f_ternary_merge@36:
     itob
     b==
     dup
-    bnz f_after_if_else@38
+    bnz f_after_if_else@40
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-f_after_if_else@38:
+f_after_if_else@40:
     assert
     intc_0 // 0
     bytec_3 // "b"
@@ -445,11 +455,11 @@ f_after_if_else@38:
     pushint 23
     ==
     dup
-    bnz f_after_if_else@40
+    bnz f_after_if_else@42
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-f_after_if_else@40:
+f_after_if_else@42:
     assert
     intc_0 // 0
     pushbytes "a"
@@ -460,41 +470,41 @@ f_after_if_else@40:
     pushint 17
     ==
     dup
-    bnz f_after_if_else@42
+    bnz f_after_if_else@44
     bytec_1 // 0x4e487b710000000000000000000000000000000000000000000000000000000000000001
     log
 
-f_after_if_else@42:
+f_after_if_else@44:
     assert
     retsub
 
-f_ternary_false@35:
+f_ternary_false@37:
     intc_0 // 0
-    b f_ternary_merge@36
+    b f_ternary_merge@38
 
-f_ternary_false@30:
+f_ternary_false@32:
     intc_0 // 0
-    b f_ternary_merge@31
+    b f_ternary_merge@33
 
-f_ternary_false@25:
+f_ternary_false@27:
     intc_0 // 0
-    b f_ternary_merge@26
+    b f_ternary_merge@28
 
-f_ternary_false@20:
+f_ternary_false@22:
     intc_0 // 0
-    b f_ternary_merge@21
+    b f_ternary_merge@23
 
-f_ternary_false@15:
+f_ternary_false@17:
     intc_0 // 0
-    b f_ternary_merge@16
+    b f_ternary_merge@18
 
-f_ternary_false@10:
+f_ternary_false@12:
     intc_0 // 0
-    b f_ternary_merge@11
+    b f_ternary_merge@13
 
-f_ternary_false@5:
+f_ternary_false@7:
     intc_0 // 0
-    b f_ternary_merge@6
+    b f_ternary_merge@8
 
 f_ternary_false@2:
     intc_0 // 0

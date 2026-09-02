@@ -58,20 +58,20 @@ main_while_top@10:
     dup
     pushbytes 0x0a
     b<
-    bz main_after_while@15
+    bz main_after_while@14
     dup
     pushbytes 0x02
     b%
     bytec_1 // 0x
     b==
-    bz main_after_if_else@14
+    bz main_after_if_else@13
     bytec_2 // 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     b main_while_top@10
 
-main_after_if_else@14:
+main_after_if_else@13:
     swap
     bytec_2 // 0x01
     b+
@@ -84,7 +84,7 @@ main_after_if_else@14:
     b%
     b main_while_top@10
 
-main_after_while@15:
+main_after_while@14:
     pop
     load 0
     store 0

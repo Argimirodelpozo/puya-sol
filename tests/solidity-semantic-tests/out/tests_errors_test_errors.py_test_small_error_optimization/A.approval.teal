@@ -108,7 +108,17 @@ f_while_top@4:
     itob
     dig 1
     b>
-    bz f_after_while@6
+    bz f_after_while@8
+    bytec_0 // "x"
+    box_len
+    bury 1
+    bnz f_after_if_else@7
+    bytec_0 // "x"
+    intc_2 // 2
+    box_create
+    pop
+
+f_after_if_else@7:
     intc_3 // 8
     bzero
     dig 1
@@ -172,7 +182,7 @@ f_while_top@4:
     assert // overflow
     b f_while_top@4
 
-f_after_while@6:
+f_after_while@8:
     pushbytes 0x34127e13 // method "E()"
     log
     err // E
