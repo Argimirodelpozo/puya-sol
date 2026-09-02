@@ -411,6 +411,7 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 	solidity::frontend::VariableDeclaration const& _var,
 	awst::ContractMethod const& getter,
 	size_t returnTypeCount,
+	awst::Block& body,
 	awst::SourceLocation const& loc)
 {
 	auto const* var = &_var;
@@ -429,6 +430,38 @@ std::shared_ptr<awst::Expression> buildFlatArrayGetterRead(
 	auto idxRef = awst::makeVarExpression(getter.args[0].name, getter.args[0].wtype, loc);
 	auto idx = TypeCoercion::implicitNumericCast(
 		idxRef, awst::WType::uint64Type(), loc);
+
+	// Solidity's generated getter indexes the array, so an out-of-range read is
+	// Panic(0x32). Without this the element decode just reads whatever bytes sit
+	// at that offset and answers (Privacy Pools' associationSets(uint256)
+	// returned values where the EVM reverted); it only appeared to revert when
+	// the offset happened to fall outside the backing box.
+	// Materialise the value once — the length and the index both read it.
+	std::string arrTmp = "__getter_arr_"
+		+ std::to_string(awst::NameGen::next("PublicGetterBuilder.flatArr"));
+	auto arrTmpVar = awst::makeVarExpression(arrTmp, arrWType, loc);
+	body.body.push_back(
+		awst::makeAssignmentStatement(arrTmpVar, std::move(arrayRead), loc));
+	arrayRead = awst::makeVarExpression(arrTmp, arrWType, loc);
+
+	std::shared_ptr<awst::Expression> arrLength;
+	if (arrType->isDynamicallySized())
+		arrLength = awst::makeArrayLength(
+			awst::makeVarExpression(arrTmp, arrWType, loc),
+			awst::WType::uint64Type(), loc);
+	else
+		arrLength = awst::makeIntegerConstant(
+			arrType->length().str(), loc, awst::WType::uint64Type());
+	auto idxCheckRef = awst::makeVarExpression(
+		getter.args[0].name, getter.args[0].wtype, loc);
+	auto idxCheck = TypeCoercion::implicitNumericCast(
+		idxCheckRef, awst::WType::uint64Type(), loc);
+	body.body.push_back(awst::makeExpressionStatement(
+		awst::makeAssert(
+			awst::makeNumericCompare(std::move(idxCheck),
+				awst::NumericComparison::Lt, std::move(arrLength), loc),
+			loc, "array out-of-bounds"),
+		loc));
 
 	auto indexExpr = awst::makeIndexExpression(std::move(arrayRead), std::move(idx), elemARC4, loc);
 
@@ -680,6 +713,39 @@ std::shared_ptr<awst::Expression> buildKeyedGetterRead(
 				getter.args[keyArgCount + i].wtype, loc);
 			auto idx = TypeCoercion::implicitNumericCast(
 				idxRef, awst::WType::uint64Type(), loc);
+
+			// Solidity panics 0x32 on an out-of-range index. Without this the
+			// getter decodes whatever bytes follow the array and returns them
+			// (Privacy Pools' associationSets(uint256) answered where the EVM
+			// reverted). Only the KEY-arg levels above were checked; an index
+			// arg reads inside an already-loaded value and was not.
+			// Materialise the value once — the length and the index both read it.
+			std::string idxTmp = "__idx_bounds_" + std::to_string(
+				awst::NameGen::next("PublicGetterBuilder.idxBounds"));
+			auto idxTmpVar = awst::makeVarExpression(idxTmp, indexed->wtype, loc);
+			body.body.push_back(
+				awst::makeAssignmentStatement(idxTmpVar, std::move(indexed), loc));
+			indexed = awst::makeVarExpression(idxTmp, idxTmpVar->wtype, loc);
+
+			std::shared_ptr<awst::Expression> idxLength;
+			if (at->isDynamicallySized())
+				idxLength = awst::makeArrayLength(
+					awst::makeVarExpression(idxTmp, idxTmpVar->wtype, loc),
+					awst::WType::uint64Type(), loc);
+			else
+				idxLength = awst::makeIntegerConstant(
+					at->length().str(), loc, awst::WType::uint64Type());
+			auto idxCheckRef = awst::makeVarExpression(
+				getter.args[keyArgCount + i].name,
+				getter.args[keyArgCount + i].wtype, loc);
+			auto idxCheck = TypeCoercion::implicitNumericCast(
+				idxCheckRef, awst::WType::uint64Type(), loc);
+			body.body.push_back(awst::makeExpressionStatement(
+				awst::makeAssert(
+					awst::makeNumericCompare(std::move(idxCheck),
+						awst::NumericComparison::Lt, std::move(idxLength), loc),
+					loc, "array out-of-bounds"),
+				loc));
 
 			auto indexExpr = awst::makeIndexExpression(std::move(indexed), std::move(idx), elemARC4, loc);
 			indexed = std::move(indexExpr);
@@ -988,7 +1054,7 @@ void ContractBuilder::buildPublicStateVariableGetters(
 			&& getter.args.size() == 1)
 			readExpr = buildFlatArrayGetterRead(
 				m_typeMapper, m_storageMapper, *var,
-				getter, solReturnTypes.size(), loc);
+				getter, solReturnTypes.size(), *body, loc);
 		else
 			readExpr = buildKeyedGetterRead(
 				m_typeMapper, m_storageMapper, *var,

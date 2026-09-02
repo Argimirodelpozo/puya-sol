@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/postinit_transitive_ctor_args.sol.D.approval_program() -> uint64:
 main:
     intcblock 32 1 0 2
-    bytecblock 0x151f7c75 "arr" 0x "__ctor_pending" "va" "y2"
+    bytecblock "arr" 0x151f7c75 0x "__ctor_pending" "va" "y2"
     pushint 4096
     bzero
     dup
@@ -54,7 +54,7 @@ main_after_if_else@9:
 
 main_va_route@15:
     callsub va
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -63,7 +63,7 @@ main_va_route@15:
 
 main_y2_route@14:
     callsub y2
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -78,7 +78,7 @@ main_arr_route@13:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub arr
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -96,7 +96,7 @@ main___postInit_route@12:
     bytec_3 // "__ctor_pending"
     intc_2 // 0
     app_global_put
-    bytec_1 // "arr"
+    bytec_0 // "arr"
     intc_3 // 2
     box_create
     pop
@@ -114,12 +114,12 @@ main___postInit_route@12:
     bytec 5 // "y2"
     swap
     app_global_put
-    bytec_1 // "arr"
+    bytec_0 // "arr"
     intc_2 // 0
     intc_3 // 2
     box_extract
     btoi
-    bytec_1 // "arr"
+    bytec_0 // "arr"
     pushint 34
     box_resize
     dup
@@ -127,7 +127,7 @@ main___postInit_route@12:
     +
     itob
     extract 6 2
-    bytec_1 // "arr"
+    bytec_0 // "arr"
     intc_2 // 0
     uncover 2
     box_replace
@@ -135,7 +135,7 @@ main___postInit_route@12:
     *
     intc_3 // 2
     +
-    bytec_1 // "arr"
+    bytec_0 // "arr"
     swap
     intc_2 // 0
     pushbytes 0x0000000000000000000000000000000000000000000000000000000000000009
@@ -155,7 +155,7 @@ main_switch_case_2@7:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -174,7 +174,7 @@ main_switch_case_1@6:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -207,7 +207,7 @@ main_switch_case_0@5:
     -
     intc_0 // 32
     extract3
-    bytec_0 // 0x151f7c75
+    bytec_1 // 0x151f7c75
     swap
     concat
     log
@@ -237,11 +237,19 @@ arr_ternary_merge@3:
     pushint 8
     -
     extract_uint64
+    bytec_0 // "arr"
+    intc_2 // 0
+    intc_3 // 2
+    box_extract
+    btoi
+    dig 1
+    >
+    assert // array out-of-bounds
     intc_0 // 32
     *
     intc_3 // 2
     +
-    bytec_1 // "arr"
+    bytec_0 // "arr"
     swap
     intc_0 // 32
     box_extract // on error: index out of bounds

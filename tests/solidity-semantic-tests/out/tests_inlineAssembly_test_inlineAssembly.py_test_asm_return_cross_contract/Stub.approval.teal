@@ -3,10 +3,10 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/inlineAssembly/contracts/asm_return_cross_contract.sol.Stub.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 4096
+    intcblock 32 1 0 8 4096
     bytecblock 0x151f7c75 0x 0x0000000000000000000000000000000000000000000000000000000000000000 0x010000000000000000000000000000000000000000000000000000000000000000 0x010000 "p:" "s:"
     bytec_1 // ""
-    intc_3 // 4096
+    intc 4 // 4096
     bzero
     dup
     store 5
@@ -218,13 +218,13 @@ approve_ternary_merge@3:
     bytec 4 // 0x010000
     b<
     bz approve_else_body@6
-    pushint 8
+    intc_3 // 8
     bzero
     swap
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
     dup
@@ -319,62 +319,30 @@ __fallback_while_top@1:
     dup
     intc_0 // 32
     <
-    bz __fallback_after_while@6
-    dupn 2
+    bz __fallback_after_while@3
+    dup
     intc_0 // 32
     +
     dup
-    cover 4
     pushint 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
-    intc_3 // 4096
-    %
-    dup
-    cover 3
-    intc_3 // 4096
-    swap
-    -
-    dup
-    intc_0 // 32
-    >=
-    bz __fallback_ternary_false@4
-    pop
-    intc_3 // 4096
+    dig 1
+    intc 4 // 4096
     /
     loads
     uncover 2
+    intc 4 // 4096
+    %
     intc_0 // 32
     extract3
-
-__fallback_ternary_merge@5:
+    uncover 2
+    swap
     concat
     swap
     b __fallback_while_top@1
 
-__fallback_ternary_false@4:
-    swap
-    intc_3 // 4096
-    /
-    dup
-    loads
-    uncover 4
-    dig 3
-    extract3
-    swap
-    intc_1 // 1
-    +
-    loads
-    intc_0 // 32
-    uncover 3
-    -
-    intc_2 // 0
-    swap
-    extract3
-    concat
-    b __fallback_ternary_merge@5
-
-__fallback_after_while@6:
+__fallback_after_while@3:
     pop
     extract 0 32
     bytec_0 // 0x151f7c75
@@ -429,13 +397,13 @@ allowance_ternary_merge@3:
     bytec 4 // 0x010000
     b<
     bz allowance_else_body@8
-    pushint 8
+    intc_3 // 8
     bzero
     swap
     concat
     dup
     len
-    pushint 8
+    intc_3 // 8
     -
     extract_uint64
     dup

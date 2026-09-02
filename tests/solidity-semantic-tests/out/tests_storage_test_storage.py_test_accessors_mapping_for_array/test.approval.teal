@@ -322,6 +322,10 @@ data_ternary_merge@3:
     pushint 8
     -
     extract_uint64
+    dup
+    pushint 8
+    <
+    assert // array out-of-bounds
     intc_0 // 32
     *
     intc_0 // 32
@@ -372,6 +376,12 @@ dynamicData_ternary_merge@3:
     pushint 8
     -
     extract_uint64
+    dig 1
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    dig 1
+    >
+    assert // array out-of-bounds
     swap
     extract 2 0
     swap

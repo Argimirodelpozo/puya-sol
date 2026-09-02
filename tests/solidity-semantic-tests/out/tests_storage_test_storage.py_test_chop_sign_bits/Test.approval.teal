@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storage/contracts/chop_sign_bits.sol.Test.approval_program() -> uint64:
 main:
     intcblock 0 1 32 8 128
-    bytecblock 0x151f7c75 0xff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "x" "__ctor_pending" 0x00 "y" 0xffff 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x0002
+    bytecblock 0x151f7c75 0xff "x" 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff "__ctor_pending" 0x00 "y" 0xffff 0x8000 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000 0x0002
     pushint 4096
     bzero
     dup
@@ -153,7 +153,7 @@ main___postInit_route@38:
     bytec 10 // 0x0002
     swap
     concat
-    bytec_3 // "x"
+    bytec_2 // "x"
     swap
     box_put
     pushbytes 0xfb
@@ -229,7 +229,7 @@ main_switch_case_4@30:
     >=
     bz main_ternary_false@32
     bury 1
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@33:
     swap
@@ -282,7 +282,7 @@ main_switch_case_3@26:
     >=
     bz main_ternary_false@28
     bury 1
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@29:
     swap
@@ -340,7 +340,7 @@ main_ternary_merge@22:
     intc 4 // 128
     >=
     bz main_ternary_false@24
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@25:
     swap
@@ -390,7 +390,7 @@ main_while_top@13:
     intc 4 // 128
     >=
     bz main_ternary_false@16
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@17:
     swap
@@ -444,7 +444,7 @@ main_while_top@6:
     intc 4 // 128
     >=
     bz main_ternary_false@9
-    bytec_2 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    bytec_3 // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
 main_ternary_merge@10:
     swap
@@ -536,10 +536,10 @@ f_while_top@4:
 
 f_after_while@6:
     pop
-    bytec_3 // "x"
+    bytec_2 // "x"
     box_del
     pop
-    bytec_3 // "x"
+    bytec_2 // "x"
     dig 1
     box_put
     retsub
@@ -715,11 +715,19 @@ x_ternary_merge@3:
     intc_3 // 8
     -
     extract_uint64
+    bytec_2 // "x"
+    intc_0 // 0
+    pushint 2
+    box_extract
+    btoi
+    dig 1
+    >
+    assert // array out-of-bounds
     pushint 2
     *
     pushint 2
     +
-    bytec_3 // "x"
+    bytec_2 // "x"
     swap
     pushint 2
     box_extract // on error: index out of bounds
@@ -781,6 +789,10 @@ y_ternary_merge@3:
     intc_3 // 8
     -
     extract_uint64
+    dup
+    pushint 2
+    <
+    assert // array out-of-bounds
     pushint 2
     *
     extract_uint16

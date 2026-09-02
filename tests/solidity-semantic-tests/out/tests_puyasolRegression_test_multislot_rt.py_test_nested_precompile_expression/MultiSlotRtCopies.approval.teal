@@ -1291,62 +1291,30 @@ main_while_top@89:
     dup
     intc_0 // 32
     <
-    bz main_after_while@94
-    dupn 2
+    bz main_after_while@91
+    dup
     intc_0 // 32
     +
     dup
-    cover 4
     intc 4 // 20480
     <=
     assert // EVM memory access exceeds the modeled scratch blob (raise --evm-memory-slots)
-    intc_1 // 4096
-    %
-    dup
-    cover 3
-    intc_1 // 4096
-    swap
-    -
-    dup
-    intc_0 // 32
-    >=
-    bz main_ternary_false@92
-    pop
+    dig 1
     intc_1 // 4096
     /
     loads
     uncover 2
+    intc_1 // 4096
+    %
     intc_0 // 32
     extract3
-
-main_ternary_merge@93:
+    uncover 2
+    swap
     concat
     swap
     b main_while_top@89
 
-main_ternary_false@92:
-    swap
-    intc_1 // 4096
-    /
-    dup
-    loads
-    uncover 4
-    dig 3
-    extract3
-    swap
-    intc_3 // 1
-    +
-    loads
-    intc_0 // 32
-    uncover 3
-    -
-    intc_2 // 0
-    swap
-    extract3
-    concat
-    b main_ternary_merge@93
-
-main_after_while@94:
+main_after_while@91:
     pop
     extract 0 32
     dup
@@ -1375,7 +1343,7 @@ main_after_while@94:
     dup
     intc_0 // 32
     >=
-    bz main_ternary_false@96
+    bz main_ternary_false@93
     pop
     intc_1 // 4096
     /
@@ -1384,7 +1352,7 @@ main_after_while@94:
     intc_0 // 32
     extract3
 
-main_ternary_merge@97:
+main_ternary_merge@94:
     intc_0 // 32
     uncover 2
     dup
@@ -1394,12 +1362,12 @@ main_ternary_merge@97:
     concat
     intc_2 // 0
 
-main_while_top@98:
+main_while_top@95:
     dig 1
     len
     dig 1
     >
-    bz main_after_while@103
+    bz main_after_while@100
     intc_3 // 1
     dig 1
     dup
@@ -1426,7 +1394,7 @@ main_while_top@98:
     swap
     intc 5 // 4064
     <=
-    bz main_else_body@101
+    bz main_else_body@98
     uncover 2
     dup
     loads
@@ -1435,12 +1403,12 @@ main_while_top@98:
     replace3
     stores
 
-main_after_if_else@102:
+main_after_if_else@99:
     intc_0 // 32
     +
-    b main_while_top@98
+    b main_while_top@95
 
-main_else_body@101:
+main_else_body@98:
     uncover 2
     dup
     loads
@@ -1473,9 +1441,9 @@ main_else_body@101:
     extract3
     replace2 0
     stores
-    b main_after_if_else@102
+    b main_after_if_else@99
 
-main_after_while@103:
+main_after_while@100:
     load 0
     extract 1 32
     dig 6
@@ -1497,7 +1465,7 @@ main_after_while@103:
     intc_3 // 1
     return
 
-main_ternary_false@96:
+main_ternary_false@93:
     swap
     intc_1 // 4096
     /
@@ -1517,7 +1485,7 @@ main_ternary_false@96:
     swap
     extract3
     concat
-    b main_ternary_merge@97
+    b main_ternary_merge@94
 
 main_ternary_false@87:
     intc_2 // 0

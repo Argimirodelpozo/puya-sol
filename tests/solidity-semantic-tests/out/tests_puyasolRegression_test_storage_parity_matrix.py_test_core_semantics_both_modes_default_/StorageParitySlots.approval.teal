@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/storage_parity_matrix.sol.StorageParitySlots.approval_program() -> uint64:
 main:
     intcblock 0 1 32 2 65536 32768 18446744073709486080 48076
-    bytecblock 0x151f7c75 "arr8" 0x010000000000000000000000000000000000000000000000000000000000000000 0x00 "si" "s" "b" 0x04 "a" "c" "__ctor_pending" 0xffff 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b 0xfdb6516b2f3ca28f8a88fa60aa6b338d44347d48b443402d112ba6deaa5b103e 0x60150443273224f5fb8ef96c0b853f945f0b489fd05ea1714dd36041f73c5cd6 "mi"
+    bytecblock 0x151f7c75 "arr8" 0x010000000000000000000000000000000000000000000000000000000000000000 "si" 0x00 "s" "b" 0x04 "a" "c" "__ctor_pending" 0xffff 0xc2575a0e9e593c00f959f8c92f12db2869c3395a3b0502d05e2516446f71f85b 0xfdb6516b2f3ca28f8a88fa60aa6b338d44347d48b443402d112ba6deaa5b103e 0x60150443273224f5fb8ef96c0b853f945f0b489fd05ea1714dd36041f73c5cd6 "mi"
     pushint 4096
     bzero
     dup
@@ -136,7 +136,7 @@ main_m_route@38:
 
 main_c_route@37:
     callsub c
-    bytec_3 // 0x00
+    bytec 4 // 0x00
     intc_0 // 0
     uncover 2
     setbit
@@ -217,7 +217,7 @@ main_bool_merge@69:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x00
+    bytec 4 // 0x00
     intc_0 // 0
     uncover 3
     setbit
@@ -274,33 +274,33 @@ main_signedArrayWord_route@32:
 main_ternary_merge@80:
     !
     assert // not payable
-    bytec 4 // "si"
+    bytec_3 // "si"
     box_len
     bury 1
     bnz main_after_if_else@82
-    bytec 4 // "si"
+    bytec_3 // "si"
     intc_3 // 2
     box_create
     pop
 
 main_after_if_else@82:
-    bytec 4 // "si"
+    bytec_3 // "si"
     intc_0 // 0
     bytec 11 // 0xffff
     intc_1 // 1
     intc_3 // 2
     callsub box_dynamic_array_concat_fixed
-    bytec 4 // "si"
+    bytec_3 // "si"
     box_len
     bury 1
     bnz main_after_if_else@84
-    bytec 4 // "si"
+    bytec_3 // "si"
     intc_3 // 2
     box_create
     pop
 
 main_after_if_else@84:
-    bytec 4 // "si"
+    bytec_3 // "si"
     intc_0 // 0
     pushbytes 0x0002
     intc_1 // 1
@@ -317,7 +317,7 @@ main_after_if_else@84:
     itob
     b==
     bz main_bool_false@94
-    bytec 4 // "si"
+    bytec_3 // "si"
     intc_3 // 2
     dup
     box_extract // on error: index out of bounds
@@ -335,7 +335,7 @@ main_ternary_merge@88:
     pushint 18446744073709551615
     ==
     bz main_bool_false@94
-    bytec 4 // "si"
+    bytec_3 // "si"
     pushint 4
     intc_3 // 2
     box_extract // on error: index out of bounds
@@ -367,7 +367,7 @@ main_bool_merge@95:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x00
+    bytec 4 // 0x00
     intc_0 // 0
     uncover 3
     setbit
@@ -457,7 +457,7 @@ main_bool_merge@104:
     assert // overflow
     uncover 2
     b|
-    bytec_3 // 0x00
+    bytec 4 // 0x00
     intc_0 // 0
     uncover 4
     setbit
@@ -515,7 +515,7 @@ main_ternary_merge@109:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x00
+    bytec 4 // 0x00
     intc_0 // 0
     uncover 3
     setbit
@@ -642,7 +642,7 @@ main_bool_merge@123:
     assert // overflow
     uncover 2
     b|
-    bytec_3 // 0x00
+    bytec 4 // 0x00
     intc_0 // 0
     uncover 4
     setbit
@@ -790,7 +790,7 @@ main_bool_merge@141:
     assert // overflow
     uncover 2
     b|
-    bytec_3 // 0x00
+    bytec 4 // 0x00
     intc_0 // 0
     uncover 4
     setbit
@@ -844,7 +844,7 @@ main_ternary_merge@146:
     load 0
     store 0
     b==
-    bytec_3 // 0x00
+    bytec 4 // 0x00
     intc_0 // 0
     uncover 2
     setbit
@@ -885,7 +885,7 @@ main_ternary_merge@151:
     load 0
     store 0
     b==
-    bytec_3 // 0x00
+    bytec 4 // 0x00
     intc_0 // 0
     uncover 2
     setbit
@@ -958,7 +958,7 @@ main_bool_merge@161:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x00
+    bytec 4 // 0x00
     intc_0 // 0
     uncover 3
     setbit
@@ -1012,7 +1012,7 @@ main_ternary_merge@166:
     intc_2 // 32
     bzero
     b|
-    bytec_3 // 0x00
+    bytec 4 // 0x00
     intc_0 // 0
     uncover 3
     setbit
@@ -1052,7 +1052,7 @@ main___postInit_route@23:
     intc_3 // 2
     box_create
     pop
-    bytec 4 // "si"
+    bytec_3 // "si"
     intc_3 // 2
     box_create
     pop
@@ -1368,7 +1368,7 @@ __storage_read:
     pushbytes 0x05
     b==
     bz __storage_read_else_body@2
-    bytec 4 // "si"
+    bytec_3 // "si"
     intc_0 // 0
     intc_3 // 2
     box_extract
@@ -1655,6 +1655,14 @@ arr8_ternary_merge@3:
     pushint 8
     -
     extract_uint64
+    bytec_1 // "arr8"
+    intc_0 // 0
+    intc_3 // 2
+    box_extract
+    btoi
+    dig 1
+    >
+    assert // array out-of-bounds
     intc_3 // 2
     +
     bytec_1 // "arr8"
@@ -1716,11 +1724,19 @@ si_ternary_merge@3:
     pushint 8
     -
     extract_uint64
+    bytec_3 // "si"
+    intc_0 // 0
+    intc_3 // 2
+    box_extract
+    btoi
+    dig 1
+    >
+    assert // array out-of-bounds
     intc_3 // 2
     *
     intc_3 // 2
     +
-    bytec 4 // "si"
+    bytec_3 // "si"
     swap
     intc_3 // 2
     box_extract // on error: index out of bounds

@@ -1124,7 +1124,7 @@
                                         }
                                       ]
                                     },
-                                    "_id": 1048581
+                                    "_id": 1048583
                                   },
                                   "op": "%",
                                   "right": {
@@ -1334,7 +1334,7 @@
                                                 }
                                               ]
                                             },
-                                            "_id": 1048581
+                                            "_id": 1048583
                                           }
                                         }
                                       }
@@ -1912,7 +1912,7 @@
                                                                           }
                                                                         ]
                                                                       },
-                                                                      "_id": 1048588
+                                                                      "_id": 1048590
                                                                     }
                                                                   },
                                                                   {
@@ -1990,12 +1990,12 @@
                                                                           }
                                                                         ]
                                                                       },
-                                                                      "_id": 1048589
+                                                                      "_id": 1048591
                                                                     }
                                                                   }
                                                                 ]
                                                               },
-                                                              "_id": 1048590
+                                                              "_id": 1048592
                                                             },
                                                             "index": 0
                                                           },
@@ -2171,7 +2171,7 @@
                                                                           }
                                                                         ]
                                                                       },
-                                                                      "_id": 1048588
+                                                                      "_id": 1048590
                                                                     }
                                                                   },
                                                                   {
@@ -2249,12 +2249,12 @@
                                                                           }
                                                                         ]
                                                                       },
-                                                                      "_id": 1048589
+                                                                      "_id": 1048591
                                                                     }
                                                                   }
                                                                 ]
                                                               },
-                                                              "_id": 1048590
+                                                              "_id": 1048592
                                                             },
                                                             "index": 1
                                                           },
@@ -2268,7 +2268,7 @@
                                               }
                                             ]
                                           },
-                                          "_id": 1048591
+                                          "_id": 1048593
                                         },
                                         {
                                           "_type": "UInt64BinaryOperation",
@@ -2600,7 +2600,7 @@
                                                                                 }
                                                                               ]
                                                                             },
-                                                                            "_id": 1048588
+                                                                            "_id": 1048590
                                                                           }
                                                                         },
                                                                         {
@@ -2678,12 +2678,12 @@
                                                                                 }
                                                                               ]
                                                                             },
-                                                                            "_id": 1048589
+                                                                            "_id": 1048591
                                                                           }
                                                                         }
                                                                       ]
                                                                     },
-                                                                    "_id": 1048590
+                                                                    "_id": 1048592
                                                                   },
                                                                   "index": 0
                                                                 },
@@ -2859,7 +2859,7 @@
                                                                                 }
                                                                               ]
                                                                             },
-                                                                            "_id": 1048588
+                                                                            "_id": 1048590
                                                                           }
                                                                         },
                                                                         {
@@ -2937,12 +2937,12 @@
                                                                                 }
                                                                               ]
                                                                             },
-                                                                            "_id": 1048589
+                                                                            "_id": 1048591
                                                                           }
                                                                         }
                                                                       ]
                                                                     },
-                                                                    "_id": 1048590
+                                                                    "_id": 1048592
                                                                   },
                                                                   "index": 1
                                                                 },
@@ -2956,7 +2956,7 @@
                                                     }
                                                   ]
                                                 },
-                                                "_id": 1048591
+                                                "_id": 1048593
                                               }
                                             ]
                                           },
@@ -4445,7 +4445,7 @@
               }
             },
             {
-              "_type": "ReturnStatement",
+              "_type": "AssignmentStatement",
               "source_location": {
                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
                 "line": 4,
@@ -4454,8 +4454,8 @@
                 "column": null,
                 "end_column": null
               },
-              "value": {
-                "_type": "ARC4Encode",
+              "target": {
+                "_type": "VarExpression",
                 "source_location": {
                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
                   "line": 4,
@@ -4465,15 +4465,63 @@
                   "end_column": null
                 },
                 "wtype": {
-                  "_type": "ARC4UIntN",
-                  "name": "arc4.uint256",
-                  "immutable": true,
-                  "n": 256,
+                  "_type": "ARC4DynamicArray",
+                  "name": "arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>",
+                  "immutable": false,
+                  "element_type": {
+                    "_type": "ARC4DynamicArray",
+                    "name": "arc4.dynamic_array<arc4.uint256>",
+                    "immutable": false,
+                    "element_type": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
                   "arc4_alias": null,
                   "source_location": null
                 },
-                "value": {
-                  "_type": "ARC4Decode",
+                "name": "__idx_bounds_0"
+              },
+              "value": {
+                "_type": "BoxValueExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                  "line": 4,
+                  "end_line": 4,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "ARC4DynamicArray",
+                  "name": "arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>",
+                  "immutable": false,
+                  "element_type": {
+                    "_type": "ARC4DynamicArray",
+                    "name": "arc4.dynamic_array<arc4.uint256>",
+                    "immutable": false,
+                    "element_type": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "arc4_alias": null,
+                  "source_location": null
+                },
+                "key": {
+                  "_type": "BytesConstant",
                   "source_location": {
                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
                     "line": 4,
@@ -4484,11 +4532,57 @@
                   },
                   "wtype": {
                     "_type": "WType",
-                    "name": "biguint",
+                    "name": "box_key",
                     "immutable": true
                   },
-                  "value": {
-                    "_type": "IndexExpression",
+                  "value": "bZu~7X#",
+                  "encoding": "utf8"
+                },
+                "exists_assertion_message": null
+              }
+            },
+            {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                "line": 4,
+                "end_line": 4,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "AssertExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                  "line": 4,
+                  "end_line": 4,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
+                },
+                "condition": {
+                  "_type": "NumericComparisonExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                    "line": 4,
+                    "end_line": 4,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "bool",
+                    "immutable": true
+                  },
+                  "lhs": {
+                    "_type": "IntrinsicCall",
                     "source_location": {
                       "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
                       "line": 4,
@@ -4498,91 +4592,14 @@
                       "end_column": null
                     },
                     "wtype": {
-                      "_type": "ARC4UIntN",
-                      "name": "arc4.uint256",
-                      "immutable": true,
-                      "n": 256,
-                      "arc4_alias": null,
-                      "source_location": null
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
                     },
-                    "base": {
-                      "_type": "IndexExpression",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
-                        "line": 4,
-                        "end_line": 4,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "ARC4DynamicArray",
-                        "name": "arc4.dynamic_array<arc4.uint256>",
-                        "immutable": false,
-                        "element_type": {
-                          "_type": "ARC4UIntN",
-                          "name": "arc4.uint256",
-                          "immutable": true,
-                          "n": 256,
-                          "arc4_alias": null,
-                          "source_location": null
-                        },
-                        "arc4_alias": null,
-                        "source_location": null
-                      },
-                      "base": {
-                        "_type": "BoxValueExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
-                          "line": 4,
-                          "end_line": 4,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
-                        },
-                        "wtype": {
-                          "_type": "ARC4DynamicArray",
-                          "name": "arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>",
-                          "immutable": false,
-                          "element_type": {
-                            "_type": "ARC4DynamicArray",
-                            "name": "arc4.dynamic_array<arc4.uint256>",
-                            "immutable": false,
-                            "element_type": {
-                              "_type": "ARC4UIntN",
-                              "name": "arc4.uint256",
-                              "immutable": true,
-                              "n": 256,
-                              "arc4_alias": null,
-                              "source_location": null
-                            },
-                            "arc4_alias": null,
-                            "source_location": null
-                          },
-                          "arc4_alias": null,
-                          "source_location": null
-                        },
-                        "key": {
-                          "_type": "BytesConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
-                            "line": 4,
-                            "end_line": 4,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "box_key",
-                            "immutable": true
-                          },
-                          "value": "bZu~7X#",
-                          "encoding": "utf8"
-                        },
-                        "exists_assertion_message": null
-                      },
-                      "index": {
+                    "op_code": "btoi",
+                    "immediates": [],
+                    "stack_args": [
+                      {
                         "_type": "IntrinsicCall",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
@@ -4593,14 +4610,522 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "WType",
-                          "name": "uint64",
-                          "immutable": true
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
                         },
-                        "op_code": "btoi",
+                        "op_code": "extract3",
                         "immediates": [],
                         "stack_args": [
                           {
+                            "_type": "SingleEvaluation",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                              "line": 4,
+                              "end_line": 4,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "source": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                "line": 4,
+                                "end_line": 4,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "IntrinsicCall",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                    "line": 4,
+                                    "end_line": 4,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "op_code": "bzero",
+                                  "immediates": [],
+                                  "stack_args": [
+                                    {
+                                      "_type": "IntegerConstant",
+                                      "source_location": {
+                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                        "line": 4,
+                                        "end_line": 4,
+                                        "comment_lines": 0,
+                                        "column": null,
+                                        "end_column": null
+                                      },
+                                      "wtype": {
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
+                                      },
+                                      "value": 8,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                },
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                    "line": 4,
+                                    "end_line": 4,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                      "line": 4,
+                                      "end_line": 4,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "key0"
+                                  }
+                                }
+                              ]
+                            },
+                            "_id": 1048578
+                          },
+                          {
+                            "_type": "UInt64BinaryOperation",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                              "line": 4,
+                              "end_line": 4,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "left": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                "line": 4,
+                                "end_line": 4,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "op_code": "len",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "SingleEvaluation",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                    "line": 4,
+                                    "end_line": 4,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "source": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                      "line": 4,
+                                      "end_line": 4,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "concat",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
+                                        "_type": "IntrinsicCall",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                          "line": 4,
+                                          "end_line": 4,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "op_code": "bzero",
+                                        "immediates": [],
+                                        "stack_args": [
+                                          {
+                                            "_type": "IntegerConstant",
+                                            "source_location": {
+                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                              "line": 4,
+                                              "end_line": 4,
+                                              "comment_lines": 0,
+                                              "column": null,
+                                              "end_column": null
+                                            },
+                                            "wtype": {
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
+                                            },
+                                            "value": 8,
+                                            "teal_alias": null
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                          "line": 4,
+                                          "end_line": 4,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                            "line": 4,
+                                            "end_line": 4,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "name": "key0"
+                                        }
+                                      }
+                                    ]
+                                  },
+                                  "_id": 1048578
+                                }
+                              ]
+                            },
+                            "op": "-",
+                            "right": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                "line": 4,
+                                "end_line": 4,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 8,
+                              "teal_alias": null
+                            }
+                          },
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                              "line": 4,
+                              "end_line": 4,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 8,
+                            "teal_alias": null
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "operator": "<",
+                  "rhs": {
+                    "_type": "ArrayLength",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                      "line": 4,
+                      "end_line": 4,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "array": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                        "line": 4,
+                        "end_line": 4,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "ARC4DynamicArray",
+                        "name": "arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4DynamicArray",
+                          "name": "arc4.dynamic_array<arc4.uint256>",
+                          "immutable": false,
+                          "element_type": {
+                            "_type": "ARC4UIntN",
+                            "name": "arc4.uint256",
+                            "immutable": true,
+                            "n": 256,
+                            "arc4_alias": null,
+                            "source_location": null
+                          },
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "name": "__idx_bounds_0"
+                    }
+                  }
+                },
+                "error_message": "array out-of-bounds",
+                "comment": "array out-of-bounds",
+                "explicit": true
+              }
+            },
+            {
+              "_type": "AssignmentStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                "line": 4,
+                "end_line": 4,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "target": {
+                "_type": "VarExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                  "line": 4,
+                  "end_line": 4,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "ARC4DynamicArray",
+                  "name": "arc4.dynamic_array<arc4.uint256>",
+                  "immutable": false,
+                  "element_type": {
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "arc4_alias": null,
+                  "source_location": null
+                },
+                "name": "__idx_bounds_1"
+              },
+              "value": {
+                "_type": "IndexExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                  "line": 4,
+                  "end_line": 4,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "ARC4DynamicArray",
+                  "name": "arc4.dynamic_array<arc4.uint256>",
+                  "immutable": false,
+                  "element_type": {
+                    "_type": "ARC4UIntN",
+                    "name": "arc4.uint256",
+                    "immutable": true,
+                    "n": 256,
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "arc4_alias": null,
+                  "source_location": null
+                },
+                "base": {
+                  "_type": "VarExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                    "line": 4,
+                    "end_line": 4,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "ARC4DynamicArray",
+                    "name": "arc4.dynamic_array<arc4.dynamic_array<arc4.uint256>>",
+                    "immutable": false,
+                    "element_type": {
+                      "_type": "ARC4DynamicArray",
+                      "name": "arc4.dynamic_array<arc4.uint256>",
+                      "immutable": false,
+                      "element_type": {
+                        "_type": "ARC4UIntN",
+                        "name": "arc4.uint256",
+                        "immutable": true,
+                        "n": 256,
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "arc4_alias": null,
+                    "source_location": null
+                  },
+                  "name": "__idx_bounds_0"
+                },
+                "index": {
+                  "_type": "IntrinsicCall",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                    "line": 4,
+                    "end_line": 4,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "uint64",
+                    "immutable": true
+                  },
+                  "op_code": "btoi",
+                  "immediates": [],
+                  "stack_args": [
+                    {
+                      "_type": "IntrinsicCall",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                        "line": 4,
+                        "end_line": 4,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "BytesWType",
+                        "name": "bytes",
+                        "immutable": true,
+                        "length": null
+                      },
+                      "op_code": "extract3",
+                      "immediates": [],
+                      "stack_args": [
+                        {
+                          "_type": "SingleEvaluation",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                            "line": 4,
+                            "end_line": 4,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "source": {
                             "_type": "IntrinsicCall",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
@@ -4616,7 +5141,117 @@
                               "immutable": true,
                               "length": null
                             },
-                            "op_code": "extract3",
+                            "op_code": "concat",
+                            "immediates": [],
+                            "stack_args": [
+                              {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                  "line": 4,
+                                  "end_line": 4,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "bzero",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "IntegerConstant",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                      "line": 4,
+                                      "end_line": 4,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "uint64",
+                                      "immutable": true
+                                    },
+                                    "value": 8,
+                                    "teal_alias": null
+                                  }
+                                ]
+                              },
+                              {
+                                "_type": "ReinterpretCast",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                  "line": 4,
+                                  "end_line": 4,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "expr": {
+                                  "_type": "VarExpression",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                    "line": 4,
+                                    "end_line": 4,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "WType",
+                                    "name": "biguint",
+                                    "immutable": true
+                                  },
+                                  "name": "key0"
+                                }
+                              }
+                            ]
+                          },
+                          "_id": 1048577
+                        },
+                        {
+                          "_type": "UInt64BinaryOperation",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                            "line": 4,
+                            "end_line": 4,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "left": {
+                            "_type": "IntrinsicCall",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                              "line": 4,
+                              "end_line": 4,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "op_code": "len",
                             "immediates": [],
                             "stack_args": [
                               {
@@ -4730,23 +5365,166 @@
                                   ]
                                 },
                                 "_id": 1048577
+                              }
+                            ]
+                          },
+                          "op": "-",
+                          "right": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                              "line": 4,
+                              "end_line": 4,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 8,
+                            "teal_alias": null
+                          }
+                        },
+                        {
+                          "_type": "IntegerConstant",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                            "line": 4,
+                            "end_line": 4,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "uint64",
+                            "immutable": true
+                          },
+                          "value": 8,
+                          "teal_alias": null
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "_type": "ExpressionStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                "line": 4,
+                "end_line": 4,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "expr": {
+                "_type": "AssertExpression",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                  "line": 4,
+                  "end_line": 4,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "WType",
+                  "name": "void",
+                  "immutable": true
+                },
+                "condition": {
+                  "_type": "NumericComparisonExpression",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                    "line": 4,
+                    "end_line": 4,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "bool",
+                    "immutable": true
+                  },
+                  "lhs": {
+                    "_type": "IntrinsicCall",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                      "line": 4,
+                      "end_line": 4,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "op_code": "btoi",
+                    "immediates": [],
+                    "stack_args": [
+                      {
+                        "_type": "IntrinsicCall",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                          "line": 4,
+                          "end_line": 4,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "BytesWType",
+                          "name": "bytes",
+                          "immutable": true,
+                          "length": null
+                        },
+                        "op_code": "extract3",
+                        "immediates": [],
+                        "stack_args": [
+                          {
+                            "_type": "SingleEvaluation",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                              "line": 4,
+                              "end_line": 4,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "BytesWType",
+                              "name": "bytes",
+                              "immutable": true,
+                              "length": null
+                            },
+                            "source": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                "line": 4,
+                                "end_line": 4,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
                               },
-                              {
-                                "_type": "UInt64BinaryOperation",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
-                                  "line": 4,
-                                  "end_line": 4,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "left": {
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "op_code": "concat",
+                              "immediates": [],
+                              "stack_args": [
+                                {
                                   "_type": "IntrinsicCall",
                                   "source_location": {
                                     "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
@@ -4757,15 +5535,16 @@
                                     "end_column": null
                                   },
                                   "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
                                   },
-                                  "op_code": "len",
+                                  "op_code": "bzero",
                                   "immediates": [],
                                   "stack_args": [
                                     {
-                                      "_type": "SingleEvaluation",
+                                      "_type": "IntegerConstant",
                                       "source_location": {
                                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
                                         "line": 4,
@@ -4775,12 +5554,122 @@
                                         "end_column": null
                                       },
                                       "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
+                                        "_type": "WType",
+                                        "name": "uint64",
+                                        "immutable": true
                                       },
-                                      "source": {
+                                      "value": 8,
+                                      "teal_alias": null
+                                    }
+                                  ]
+                                },
+                                {
+                                  "_type": "ReinterpretCast",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                    "line": 4,
+                                    "end_line": 4,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "expr": {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                      "line": 4,
+                                      "end_line": 4,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "WType",
+                                      "name": "biguint",
+                                      "immutable": true
+                                    },
+                                    "name": "key1"
+                                  }
+                                }
+                              ]
+                            },
+                            "_id": 1048580
+                          },
+                          {
+                            "_type": "UInt64BinaryOperation",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                              "line": 4,
+                              "end_line": 4,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "left": {
+                              "_type": "IntrinsicCall",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                "line": 4,
+                                "end_line": 4,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "op_code": "len",
+                              "immediates": [],
+                              "stack_args": [
+                                {
+                                  "_type": "SingleEvaluation",
+                                  "source_location": {
+                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                    "line": 4,
+                                    "end_line": 4,
+                                    "comment_lines": 0,
+                                    "column": null,
+                                    "end_column": null
+                                  },
+                                  "wtype": {
+                                    "_type": "BytesWType",
+                                    "name": "bytes",
+                                    "immutable": true,
+                                    "length": null
+                                  },
+                                  "source": {
+                                    "_type": "IntrinsicCall",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                      "line": 4,
+                                      "end_line": 4,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "op_code": "concat",
+                                    "immediates": [],
+                                    "stack_args": [
+                                      {
                                         "_type": "IntrinsicCall",
                                         "source_location": {
                                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
@@ -4796,11 +5685,11 @@
                                           "immutable": true,
                                           "length": null
                                         },
-                                        "op_code": "concat",
+                                        "op_code": "bzero",
                                         "immediates": [],
                                         "stack_args": [
                                           {
-                                            "_type": "IntrinsicCall",
+                                            "_type": "IntegerConstant",
                                             "source_location": {
                                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
                                               "line": 4,
@@ -4810,116 +5699,234 @@
                                               "end_column": null
                                             },
                                             "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
+                                              "_type": "WType",
+                                              "name": "uint64",
+                                              "immutable": true
                                             },
-                                            "op_code": "bzero",
-                                            "immediates": [],
-                                            "stack_args": [
-                                              {
-                                                "_type": "IntegerConstant",
-                                                "source_location": {
-                                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
-                                                  "line": 4,
-                                                  "end_line": 4,
-                                                  "comment_lines": 0,
-                                                  "column": null,
-                                                  "end_column": null
-                                                },
-                                                "wtype": {
-                                                  "_type": "WType",
-                                                  "name": "uint64",
-                                                  "immutable": true
-                                                },
-                                                "value": 8,
-                                                "teal_alias": null
-                                              }
-                                            ]
-                                          },
-                                          {
-                                            "_type": "ReinterpretCast",
-                                            "source_location": {
-                                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
-                                              "line": 4,
-                                              "end_line": 4,
-                                              "comment_lines": 0,
-                                              "column": null,
-                                              "end_column": null
-                                            },
-                                            "wtype": {
-                                              "_type": "BytesWType",
-                                              "name": "bytes",
-                                              "immutable": true,
-                                              "length": null
-                                            },
-                                            "expr": {
-                                              "_type": "VarExpression",
-                                              "source_location": {
-                                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
-                                                "line": 4,
-                                                "end_line": 4,
-                                                "comment_lines": 0,
-                                                "column": null,
-                                                "end_column": null
-                                              },
-                                              "wtype": {
-                                                "_type": "WType",
-                                                "name": "biguint",
-                                                "immutable": true
-                                              },
-                                              "name": "key0"
-                                            }
+                                            "value": 8,
+                                            "teal_alias": null
                                           }
                                         ]
                                       },
-                                      "_id": 1048577
-                                    }
-                                  ]
-                                },
-                                "op": "-",
-                                "right": {
-                                  "_type": "IntegerConstant",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
-                                    "line": 4,
-                                    "end_line": 4,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
+                                      {
+                                        "_type": "ReinterpretCast",
+                                        "source_location": {
+                                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                          "line": 4,
+                                          "end_line": 4,
+                                          "comment_lines": 0,
+                                          "column": null,
+                                          "end_column": null
+                                        },
+                                        "wtype": {
+                                          "_type": "BytesWType",
+                                          "name": "bytes",
+                                          "immutable": true,
+                                          "length": null
+                                        },
+                                        "expr": {
+                                          "_type": "VarExpression",
+                                          "source_location": {
+                                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                            "line": 4,
+                                            "end_line": 4,
+                                            "comment_lines": 0,
+                                            "column": null,
+                                            "end_column": null
+                                          },
+                                          "wtype": {
+                                            "_type": "WType",
+                                            "name": "biguint",
+                                            "immutable": true
+                                          },
+                                          "name": "key1"
+                                        }
+                                      }
+                                    ]
                                   },
-                                  "wtype": {
-                                    "_type": "WType",
-                                    "name": "uint64",
-                                    "immutable": true
-                                  },
-                                  "value": 8,
-                                  "teal_alias": null
+                                  "_id": 1048580
                                 }
+                              ]
+                            },
+                            "op": "-",
+                            "right": {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                                "line": 4,
+                                "end_line": 4,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
                               },
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
-                                  "line": 4,
-                                  "end_line": 4,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 8,
-                                "teal_alias": null
-                              }
-                            ]
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 8,
+                              "teal_alias": null
+                            }
+                          },
+                          {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                              "line": 4,
+                              "end_line": 4,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "uint64",
+                              "immutable": true
+                            },
+                            "value": 8,
+                            "teal_alias": null
                           }
                         ]
                       }
+                    ]
+                  },
+                  "operator": "<",
+                  "rhs": {
+                    "_type": "ArrayLength",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                      "line": 4,
+                      "end_line": 4,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "uint64",
+                      "immutable": true
+                    },
+                    "array": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                        "line": 4,
+                        "end_line": 4,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "ARC4DynamicArray",
+                        "name": "arc4.dynamic_array<arc4.uint256>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint256",
+                          "immutable": true,
+                          "n": 256,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "name": "__idx_bounds_1"
+                    }
+                  }
+                },
+                "error_message": "array out-of-bounds",
+                "comment": "array out-of-bounds",
+                "explicit": true
+              }
+            },
+            {
+              "_type": "ReturnStatement",
+              "source_location": {
+                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                "line": 4,
+                "end_line": 4,
+                "comment_lines": 0,
+                "column": null,
+                "end_column": null
+              },
+              "value": {
+                "_type": "ARC4Encode",
+                "source_location": {
+                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                  "line": 4,
+                  "end_line": 4,
+                  "comment_lines": 0,
+                  "column": null,
+                  "end_column": null
+                },
+                "wtype": {
+                  "_type": "ARC4UIntN",
+                  "name": "arc4.uint256",
+                  "immutable": true,
+                  "n": 256,
+                  "arc4_alias": null,
+                  "source_location": null
+                },
+                "value": {
+                  "_type": "ARC4Decode",
+                  "source_location": {
+                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                    "line": 4,
+                    "end_line": 4,
+                    "comment_lines": 0,
+                    "column": null,
+                    "end_column": null
+                  },
+                  "wtype": {
+                    "_type": "WType",
+                    "name": "biguint",
+                    "immutable": true
+                  },
+                  "value": {
+                    "_type": "IndexExpression",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                      "line": 4,
+                      "end_line": 4,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "ARC4UIntN",
+                      "name": "arc4.uint256",
+                      "immutable": true,
+                      "n": 256,
+                      "arc4_alias": null,
+                      "source_location": null
+                    },
+                    "base": {
+                      "_type": "VarExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/array/contracts/nested_calldata_storage2.sol",
+                        "line": 4,
+                        "end_line": 4,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "ARC4DynamicArray",
+                        "name": "arc4.dynamic_array<arc4.uint256>",
+                        "immutable": false,
+                        "element_type": {
+                          "_type": "ARC4UIntN",
+                          "name": "arc4.uint256",
+                          "immutable": true,
+                          "n": 256,
+                          "arc4_alias": null,
+                          "source_location": null
+                        },
+                        "arc4_alias": null,
+                        "source_location": null
+                      },
+                      "name": "__idx_bounds_1"
                     },
                     "index": {
                       "_type": "IntrinsicCall",
@@ -5068,7 +6075,7 @@
                                   }
                                 ]
                               },
-                              "_id": 1048578
+                              "_id": 1048579
                             },
                             {
                               "_type": "UInt64BinaryOperation",
@@ -5213,7 +6220,7 @@
                                         }
                                       ]
                                     },
-                                    "_id": 1048578
+                                    "_id": 1048579
                                   }
                                 ]
                               },
@@ -6061,7 +7068,7 @@
                               }
                             ]
                           },
-                          "_id": 1048579
+                          "_id": 1048581
                         }
                       ]
                     }
@@ -6200,7 +7207,7 @@
                             }
                           ]
                         },
-                        "_id": 1048579
+                        "_id": 1048581
                       }
                     ]
                   }
@@ -6388,7 +7395,7 @@
                             }
                           ]
                         },
-                        "_id": 1048580
+                        "_id": 1048582
                       }
                     ]
                   },
@@ -6522,7 +7529,7 @@
                       }
                     ]
                   },
-                  "_id": 1048580
+                  "_id": 1048582
                 }
               }
             }
@@ -6693,7 +7700,7 @@
                         }
                       ]
                     },
-                    "_id": 1048585
+                    "_id": 1048587
                   },
                   "operator": "<=",
                   "rhs": {
@@ -6869,7 +7876,7 @@
                     }
                   ]
                 },
-                "_id": 1048585
+                "_id": 1048587
               }
             },
             {
@@ -6966,7 +7973,7 @@
                     "teal_alias": null
                   }
                 },
-                "_id": 1048586
+                "_id": 1048588
               }
             },
             {
@@ -7326,7 +8333,7 @@
                                     }
                                   ]
                                 },
-                                "_id": 1048587
+                                "_id": 1048589
                               }
                             },
                             "error_message": null
@@ -7632,7 +8639,7 @@
                         }
                       ]
                     },
-                    "_id": 1048582
+                    "_id": 1048584
                   },
                   "operator": "<=",
                   "rhs": {
@@ -7822,7 +8829,7 @@
                     }
                   ]
                 },
-                "_id": 1048582
+                "_id": 1048584
               }
             },
             {
@@ -7919,7 +8926,7 @@
                     "teal_alias": null
                   }
                 },
-                "_id": 1048583
+                "_id": 1048585
               }
             },
             {
@@ -8221,7 +9228,7 @@
                                 }
                               ]
                             },
-                            "_id": 1048584
+                            "_id": 1048586
                           },
                           "op": "%",
                           "right": {
@@ -8551,7 +9558,7 @@
                                         }
                                       ]
                                     },
-                                    "_id": 1048584
+                                    "_id": 1048586
                                   }
                                 }
                               }

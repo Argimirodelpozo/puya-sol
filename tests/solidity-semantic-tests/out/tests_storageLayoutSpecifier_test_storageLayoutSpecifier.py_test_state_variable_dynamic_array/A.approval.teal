@@ -4,7 +4,7 @@
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/storageLayoutSpecifier/contracts/state_variable_dynamic_array.sol.A.approval_program() -> uint64:
 main:
     intcblock 32 1 2 0
-    bytecblock "__ctor_pending" 0x151f7c75 "arrayA"
+    bytecblock "__ctor_pending" "arrayA" 0x151f7c75
     pushint 4096
     bzero
     dup
@@ -60,7 +60,7 @@ main_arrayA_route@11:
     ==
     assert // invalid number of bytes for arc4.uint256
     callsub arrayA
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -78,7 +78,7 @@ main___postInit_route@10:
     bytec_0 // "__ctor_pending"
     intc_3 // 0
     app_global_put
-    bytec_2 // "arrayA"
+    bytec_1 // "arrayA"
     intc_2 // 2
     box_create
     pop
@@ -120,7 +120,7 @@ main_ternary_merge@19:
     -
     intc_0 // 32
     extract3
-    bytec_1 // 0x151f7c75
+    bytec_2 // 0x151f7c75
     swap
     concat
     log
@@ -154,11 +154,19 @@ arrayA_ternary_merge@3:
     pushint 8
     -
     extract_uint64
+    bytec_1 // "arrayA"
+    intc_3 // 0
+    intc_2 // 2
+    box_extract
+    btoi
+    dig 1
+    >
+    assert // array out-of-bounds
     intc_0 // 32
     *
     intc_2 // 2
     +
-    bytec_2 // "arrayA"
+    bytec_1 // "arrayA"
     swap
     intc_0 // 32
     box_extract // on error: index out of bounds

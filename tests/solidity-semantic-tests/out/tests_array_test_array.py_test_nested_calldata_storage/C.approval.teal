@@ -287,19 +287,10 @@ tmp_i_ternary_merge@3:
     pushint 8
     -
     extract_uint64
-    swap
-    frame_dig -1
-    concat
     dup
-    len
-    pushint 8
-    -
-    extract_uint64
-    dig 1
     intc_3 // 2
     <
-    assert // index access is out of bounds
-    swap
+    assert // array out-of-bounds
     intc_3 // 2
     *
     dig 2
@@ -315,6 +306,21 @@ tmp_i_ternary_merge@3:
     uncover 3
     cover 2
     extract3
+    swap
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    dig 1
+    intc_2 // 0
+    extract_uint16 // on error: invalid array length header
+    dig 1
+    >
+    assert // array out-of-bounds
+    swap
     extract 2 0
     swap
     intc_0 // 32

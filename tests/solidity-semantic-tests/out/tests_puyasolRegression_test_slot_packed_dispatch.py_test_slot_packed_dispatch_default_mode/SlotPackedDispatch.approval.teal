@@ -3,7 +3,7 @@
 
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/slot_packed_dispatch.sol.SlotPackedDispatch.approval_program() -> uint64:
 main:
-    intcblock 32 1 0 16 4294967295
+    intcblock 32 1 0 2 4294967295
     bytecblock 0x151f7c75 "smalls" "addrs" "halves" "peers" 0x010000000000000000 "__ctor_pending" "simple" 0x151f7c750000000000000000000000000000000000000000000000000000000000000020 0x0000000000000000000000000000000000000000000000000000000000000000 0x0001
     pushint 4096
     bzero
@@ -34,7 +34,7 @@ main_after_if_else@2:
     txn OnCompletion
     bnz main_after_if_else@34
     txn NumAppArgs
-    pushint 2
+    intc_3 // 2
     ==
     bz main_after_if_else@34
     pushbytess 0x2710e27c 0xe5b64db9 0x452a8d4a 0x4bdaea29 0x030326ad 0x3458d380 0x8fec5440 0xbc95922e 0xc49b7e51 0x0c96d487 0xcfc843f0 0xe61b132c 0x9e6ebedc 0x65fd1ba2 0xa0fd1c41 0x8343cf66 0xd404f75e 0x371eb669 0x394c049d
@@ -239,7 +239,7 @@ main_pushHalf_route@43:
     txna ApplicationArgs 1
     dup
     len
-    intc_3 // 16
+    pushint 16
     ==
     assert // invalid number of bytes for arc4.uint128
     callsub pushHalf
@@ -344,23 +344,23 @@ main___postInit_route@37:
     intc_2 // 0
     app_global_put
     bytec 4 // "peers"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
     bytec 7 // "simple"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
     bytec_1 // "smalls"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
     bytec_2 // "addrs"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
     bytec_3 // "halves"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
     intc_1 // 1
@@ -587,9 +587,9 @@ main_while_top@20:
     dig 3
     extract 2 0
     dig 2
-    intc_3 // 16
+    pushint 16
     *
-    intc_3 // 16
+    pushint 16
     extract3 // on error: index access is out of bounds
     concat
     dup
@@ -763,7 +763,7 @@ main_switch_case_5@10:
     callsub __evm_decw
     dup
     extract 0 16
-    intc_3 // 16
+    pushint 16
     bzero
     swap
     dig 1
@@ -774,13 +774,13 @@ main_switch_case_5@10:
     concat
     dup
     len
-    intc_3 // 16
+    pushint 16
     -
-    intc_3 // 16
+    pushint 16
     extract3
     dup
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     b|
@@ -877,7 +877,7 @@ box_dynamic_array_concat_fixed:
     proto 5 0
     frame_dig -5
     frame_dig -4
-    pushint 2
+    intc_3 // 2
     box_extract
     btoi
     frame_dig -5
@@ -900,7 +900,7 @@ box_dynamic_array_concat_fixed:
     uncover 2
     box_replace
     frame_dig -4
-    pushint 2
+    intc_3 // 2
     +
     swap
     frame_dig -1
@@ -1046,7 +1046,7 @@ pushSmall_ternary_merge@3:
     bury 1
     bnz pushSmall_after_if_else@5
     bytec_1 // "smalls"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
 
@@ -1098,7 +1098,7 @@ pushAddr_ternary_merge@3:
     bury 1
     bnz pushAddr_after_if_else@5
     bytec_2 // "addrs"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
 
@@ -1142,25 +1142,25 @@ pushHalf_ternary_merge@3:
     bury 1
     bnz pushHalf_after_if_else@5
     bytec_3 // "halves"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
 
 pushHalf_after_if_else@5:
-    intc_3 // 16
+    pushint 16
     bzero
     dup
     frame_dig -1
     concat
     dup
     len
-    intc_3 // 16
+    pushint 16
     -
-    intc_3 // 16
+    pushint 16
     extract3
     dup
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     b|
@@ -1176,7 +1176,7 @@ pushHalf_after_if_else@5:
     intc_2 // 0
     uncover 3
     uncover 3
-    intc_3 // 16
+    pushint 16
     callsub box_dynamic_array_concat_fixed
     retsub
 
@@ -1266,7 +1266,7 @@ smallsLen_ternary_merge@3:
     bytec_1 // "smalls"
     box_len
     pop
-    pushint 2
+    intc_3 // 2
     >=
     bz smallsLen_ternary_false@5
     bytec_1 // "smalls"
@@ -1274,7 +1274,7 @@ smallsLen_ternary_merge@3:
     pop
 
 smallsLen_ternary_merge@6:
-    pushint 2
+    intc_3 // 2
     -
     pushint 4
     /
@@ -1285,7 +1285,7 @@ smallsLen_ternary_merge@6:
     retsub
 
 smallsLen_ternary_false@5:
-    pushint 2
+    intc_3 // 2
     b smallsLen_ternary_merge@6
 
 smallsLen_ternary_false@2:
@@ -1321,7 +1321,7 @@ smallAt_ternary_merge@3:
     extract_uint64
     pushint 4
     *
-    pushint 2
+    intc_3 // 2
     +
     bytec_1 // "smalls"
     swap
@@ -1365,7 +1365,7 @@ addrAt_ternary_merge@3:
     extract_uint64
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     bytec_2 // "addrs"
     swap
@@ -1395,7 +1395,7 @@ halfAt_ternary_merge@3:
     bytec 5 // 0x010000000000000000
     b<
     assert // array index out of bounds
-    intc_3 // 16
+    pushint 16
     bzero
     pushint 8
     bzero
@@ -1406,26 +1406,26 @@ halfAt_ternary_merge@3:
     pushint 8
     -
     extract_uint64
-    intc_3 // 16
+    pushint 16
     *
-    pushint 2
+    intc_3 // 2
     +
     bytec_3 // "halves"
     swap
-    intc_3 // 16
+    pushint 16
     box_extract // on error: index out of bounds
     dig 1
     swap
     concat
     dup
     len
-    intc_3 // 16
+    pushint 16
     -
-    intc_3 // 16
+    pushint 16
     extract3
     dup
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     b|
@@ -1466,7 +1466,7 @@ setSmallAt_ternary_merge@3:
     bury 1
     bnz setSmallAt_after_if_else@5
     bytec_1 // "smalls"
-    pushint 2
+    intc_3 // 2
     box_create
     pop
 
@@ -1485,7 +1485,7 @@ setSmallAt_after_if_else@5:
     extract_uint64
     pushint 4
     *
-    pushint 2
+    intc_3 // 2
     +
     bytec_1 // "smalls"
     swap
@@ -1589,9 +1589,17 @@ smalls_ternary_merge@3:
     pushint 8
     -
     extract_uint64
+    bytec_1 // "smalls"
+    intc_2 // 0
+    intc_3 // 2
+    box_extract
+    btoi
+    dig 1
+    >
+    assert // array out-of-bounds
     pushint 4
     *
-    pushint 2
+    intc_3 // 2
     +
     bytec_1 // "smalls"
     swap
@@ -1627,9 +1635,17 @@ addrs_ternary_merge@3:
     pushint 8
     -
     extract_uint64
+    bytec_2 // "addrs"
+    intc_2 // 0
+    intc_3 // 2
+    box_extract
+    btoi
+    dig 1
+    >
+    assert // array out-of-bounds
     intc_0 // 32
     *
-    pushint 2
+    intc_3 // 2
     +
     bytec_2 // "addrs"
     swap
@@ -1655,8 +1671,6 @@ halves:
 halves_ternary_merge@3:
     !
     assert // not payable
-    intc_3 // 16
-    bzero
     pushint 8
     bzero
     frame_dig -1
@@ -1666,26 +1680,37 @@ halves_ternary_merge@3:
     pushint 8
     -
     extract_uint64
-    intc_3 // 16
+    bytec_3 // "halves"
+    intc_2 // 0
+    intc_3 // 2
+    box_extract
+    btoi
+    dig 1
+    >
+    assert // array out-of-bounds
+    pushint 16
+    bzero
+    swap
+    pushint 16
     *
-    pushint 2
+    intc_3 // 2
     +
     bytec_3 // "halves"
     swap
-    intc_3 // 16
+    pushint 16
     box_extract // on error: index out of bounds
     dig 1
     swap
     concat
     dup
     len
-    intc_3 // 16
+    pushint 16
     -
-    intc_3 // 16
+    pushint 16
     extract3
     dup
     len
-    intc_3 // 16
+    pushint 16
     <=
     assert // overflow
     b|

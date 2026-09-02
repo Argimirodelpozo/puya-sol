@@ -570,6 +570,12 @@ m_ternary_merge@3:
     pushint 8
     -
     extract_uint64
+    dig 1
+    pushint 0
+    extract_uint16 // on error: invalid array length header
+    dig 1
+    >
+    assert // array out-of-bounds
     swap
     extract 2 0
     swap
@@ -627,6 +633,10 @@ n_ternary_merge@3:
     pushint 8
     -
     extract_uint64
+    dup
+    pushint 3
+    <
+    assert // array out-of-bounds
     intc_1 // 64
     *
     intc_1 // 64

@@ -1107,6 +1107,14 @@ rows_ternary_merge@3:
     pushint 8
     -
     extract_uint64
+    bytec_0 // "rows"
+    intc_2 // 0
+    intc_0 // 2
+    box_extract
+    btoi
+    dig 1
+    >
+    assert // array out-of-bounds
     swap
     frame_dig -1
     concat
@@ -1134,7 +1142,7 @@ rows_ternary_merge@3:
     btoi
     dig 2
     >
-    assert // index out of bounds
+    assert // array out-of-bounds
     intc_0 // 2
     +
     intc_0 // 2
