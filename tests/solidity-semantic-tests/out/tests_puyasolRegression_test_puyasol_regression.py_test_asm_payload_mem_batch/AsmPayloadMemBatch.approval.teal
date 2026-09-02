@@ -268,13 +268,13 @@ main_ternary_false@33:
 
 main_mcopyOverlap_route@11:
     txn GroupIndex
-    bz main_ternary_false@41
+    bz main_ternary_false@40
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@42:
+main_ternary_merge@41:
     !
     assert // not payable
     load 0
@@ -367,9 +367,9 @@ main_ternary_merge@42:
     intc_1 // 1
     return
 
-main_ternary_false@41:
+main_ternary_false@40:
     intc_2 // 0
-    b main_ternary_merge@42
+    b main_ternary_merge@41
 
 main_cdcTail_route@10:
     txna ApplicationArgs 1
@@ -384,22 +384,22 @@ main_cdcTail_route@10:
     assert // invalid number of bytes for arc4.dynamic_array<arc4.uint8>
     extract 2 0
     txn GroupIndex
-    bz main_ternary_false@46
+    bz main_ternary_false@45
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@47:
+main_ternary_merge@46:
     !
     assert // not payable
     load 0
     store 0
     txn NumAppArgs
-    bz main_ternary_false@49
+    bz main_ternary_false@48
     txna ApplicationArgs 0
 
-main_ternary_merge@50:
+main_ternary_merge@49:
     pushint 24
     bzero
     swap
@@ -460,11 +460,11 @@ main_ternary_merge@50:
     dup
     uncover 2
     <
-    bz main_ternary_false@53
+    bz main_ternary_false@52
     uncover 2
     pop
 
-main_ternary_merge@54:
+main_ternary_merge@53:
     intc_0 // 32
     extract3
     load 0
@@ -490,38 +490,38 @@ main_ternary_merge@54:
     intc_1 // 1
     return
 
-main_ternary_false@53:
+main_ternary_false@52:
     pop
     swap
-    b main_ternary_merge@54
+    b main_ternary_merge@53
 
-main_ternary_false@49:
+main_ternary_false@48:
     pushint 4
     bzero
-    b main_ternary_merge@50
+    b main_ternary_merge@49
 
-main_ternary_false@46:
+main_ternary_false@45:
     intc_2 // 0
-    b main_ternary_merge@47
+    b main_ternary_merge@46
 
 main_revBare_route@9:
     txn GroupIndex
-    bz main_ternary_false@59
+    bz main_ternary_false@57
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@60:
+main_ternary_merge@58:
     !
     assert // not payable
     load 0
     store 0
     err // revert
 
-main_ternary_false@59:
+main_ternary_false@57:
     intc_2 // 0
-    b main_ternary_merge@60
+    b main_ternary_merge@58
 
 main_revStraddle_route@8:
     txna ApplicationArgs 1
@@ -531,13 +531,13 @@ main_revStraddle_route@8:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@64
+    bz main_ternary_false@62
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@65:
+main_ternary_merge@63:
     !
     assert // not payable
     load 0
@@ -565,17 +565,17 @@ main_ternary_merge@65:
     dup
     pushint 16
     >
-    bnz main_ternary_false@67
+    bnz main_ternary_false@65
     load 0
     pushint 4080
     uncover 2
     extract3
 
-main_ternary_merge@76:
+main_ternary_merge@74:
     log
     err // revert
 
-main_ternary_false@67:
+main_ternary_false@65:
     load 0
     pushints 4080 16
     extract3
@@ -587,11 +587,11 @@ main_ternary_false@67:
     swap
     extract3
     concat
-    b main_ternary_merge@76
+    b main_ternary_merge@74
 
-main_ternary_false@64:
+main_ternary_false@62:
     intc_2 // 0
-    b main_ternary_merge@65
+    b main_ternary_merge@63
 
 main_revDyn_route@7:
     txna ApplicationArgs 1
@@ -601,13 +601,13 @@ main_revDyn_route@7:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@72
+    bz main_ternary_false@70
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@73:
+main_ternary_merge@71:
     !
     assert // not payable
     load 0
@@ -630,14 +630,14 @@ main_ternary_merge@73:
     dup
     intc 4 // 4096
     >
-    bnz main_ternary_false@75
+    bnz main_ternary_false@73
     load 0
     intc_2 // 0
     uncover 2
     extract3
-    b main_ternary_merge@76
+    b main_ternary_merge@74
 
-main_ternary_false@75:
+main_ternary_false@73:
     load 0
     intc_2 // 0
     intc 4 // 4096
@@ -650,11 +650,11 @@ main_ternary_false@75:
     swap
     extract3
     concat
-    b main_ternary_merge@76
+    b main_ternary_merge@74
 
-main_ternary_false@72:
+main_ternary_false@70:
     intc_2 // 0
-    b main_ternary_merge@73
+    b main_ternary_merge@71
 
 main_revWithArg_route@6:
     txna ApplicationArgs 1
@@ -664,13 +664,13 @@ main_revWithArg_route@6:
     ==
     assert // invalid number of bytes for arc4.uint256
     txn GroupIndex
-    bz main_ternary_false@80
+    bz main_ternary_false@78
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@81:
+main_ternary_merge@79:
     !
     assert // not payable
     load 0
@@ -705,19 +705,19 @@ main_ternary_merge@81:
     log
     err // revert
 
-main_ternary_false@80:
+main_ternary_false@78:
     intc_2 // 0
-    b main_ternary_merge@81
+    b main_ternary_merge@79
 
 main_revSelector_route@5:
     txn GroupIndex
-    bz main_ternary_false@87
+    bz main_ternary_false@85
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@88:
+main_ternary_merge@86:
     !
     assert // not payable
     load 0
@@ -734,6 +734,6 @@ main_ternary_merge@88:
     log
     err // revert
 
-main_ternary_false@87:
+main_ternary_false@85:
     intc_2 // 0
-    b main_ternary_merge@88
+    b main_ternary_merge@86

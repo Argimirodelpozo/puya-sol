@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "awst/Node.h"
 #include "builder/ScratchLayout.h"
 #include "builder/SelectorSemantics.h"
@@ -252,16 +254,22 @@ public:
 	/// so it is usable from return-value positions. A stack value is at most
 	/// one AVM element (SLOT_SIZE bytes) and therefore spans at most 2 slots;
 	/// unbounded ranges use readMemRangeDyn's word loop instead.
+	/// _offsetAlignMod32: the caller's proof of the offset's residue (see
+	/// alignmentMod32). Residue 0 with a <=32-byte length means the access
+	/// cannot cross a slot boundary, so the straddle arm is not emitted.
+	/// Absent = assume unaligned, which is always correct, just larger.
 	static std::shared_ptr<awst::Expression> readMemStackRange(
 		ScratchLayout const& _scratch,
 		std::shared_ptr<awst::Expression> _offset,
 		std::shared_ptr<awst::Expression> _length,
-		awst::SourceLocation const& _loc);
+		awst::SourceLocation const& _loc,
+		std::optional<unsigned> _offsetAlignMod32 = std::nullopt);
 
 	static std::shared_ptr<awst::Expression> readMemWordDirect(
 		ScratchLayout const& _scratch,
 		std::shared_ptr<awst::Expression> _offset,
-		awst::SourceLocation const& _loc
+		awst::SourceLocation const& _loc,
+		std::optional<unsigned> _offsetAlignMod32 = std::nullopt
 	);
 
 	/// Read `_byteLen` bytes at a DYNAMIC offset by concatenating successive 32-byte words
@@ -293,7 +301,8 @@ public:
 		std::shared_ptr<awst::Expression> _offset,
 		std::shared_ptr<awst::Expression> _value32,
 		awst::SourceLocation const& _loc,
-		std::vector<std::shared_ptr<awst::Statement>>& _out
+		std::vector<std::shared_ptr<awst::Statement>>& _out,
+		std::optional<unsigned> _offsetAlignMod32 = std::nullopt
 	);
 
 	/// Write exactly one byte at a dynamic EVM-memory offset.  Unlike the word
@@ -1414,6 +1423,18 @@ private:
 	);
 
 	/// div/mod returning 0 for divisor=0 (EVM semantics; AVM would panic).
+	/// Offset's residue mod 32 when provable, else nullopt ("assume unaligned").
+	/// A scratch slot is a multiple of 32, so a 32-byte access at residue r has
+	/// at least 32-r bytes before the slot boundary: residue 0 can never
+	/// straddle, and the second-slot arm is dead code. Sound under 64-bit
+	/// wraparound because 32 divides 2^64. Deliberately has no division or
+	/// right-shift rule — halving an aligned value is not aligned.
+	std::optional<unsigned> alignmentMod32(awst::Expression const& _offset) const;
+
+	/// Yul locals whose bound value is provably 32-aligned (single-assignment
+	/// only, same gate as m_localWideConstants).
+	std::set<std::string> m_alignedLocals;
+
 	/// True when a div/mod divisor is a compile-time non-zero constant: the EVM
 	/// zero-divisor guard, and the three basic blocks its ternary costs, are then
 	/// dead weight.

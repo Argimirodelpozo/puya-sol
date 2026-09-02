@@ -117,6 +117,7 @@ std::vector<std::shared_ptr<awst::Statement>> AssemblyBuilder::buildBlock(
 	m_localConstants.clear();
 	m_localWideConstants.clear();
 	m_yulConstantValues.clear();
+	m_alignedLocals.clear();
 	m_localSlotConstants.clear();
 	m_reassignedLocals.clear();
 	auto const yulFacts = SolcFacts::analyzeYul(_block, _dialect);
@@ -774,6 +775,111 @@ bool isNonZeroDecimal(std::string const& _v)
 }
 } // namespace
 
+namespace
+{
+/// Decimal string mod 32, digit by digit so the value's width never matters.
+std::optional<unsigned> decimalMod32(std::string const& _v)
+{
+	if (_v.empty())
+		return std::nullopt;
+	unsigned r = 0;
+	for (char c: _v)
+	{
+		if (c < '0' || c > '9')
+			return std::nullopt;
+		r = (r * 10 + static_cast<unsigned>(c - '0')) % 32;
+	}
+	return r;
+}
+} // namespace
+
+std::optional<unsigned> AssemblyBuilder::alignmentMod32(
+	awst::Expression const& _offset) const
+{
+	if (auto const* num = dynamic_cast<awst::IntegerConstant const*>(&_offset))
+		return decimalMod32(num->value);
+	if (auto const* se = dynamic_cast<awst::SingleEvaluation const*>(&_offset))
+		return se->source ? alignmentMod32(*se->source) : std::nullopt;
+	if (auto const* rc = dynamic_cast<awst::ReinterpretCast const*>(&_offset))
+		return rc->expr ? alignmentMod32(*rc->expr) : std::nullopt;
+	if (auto const* var = dynamic_cast<awst::VarExpression const*>(&_offset))
+	{
+		if (m_alignedLocals.count(var->name))
+			return 0u;
+		auto it = m_yulConstantValues.find(var->name);
+		if (it != m_yulConstantValues.end())
+			return decimalMod32(it->second);
+		return std::nullopt;
+	}
+	if (auto const* big = dynamic_cast<awst::BigUIntBinaryOperation const*>(&_offset))
+	{
+		// Yul arithmetic is 256-bit, so an offset arrives as biguint ops —
+		// including the mod-2^256 wrap every add/mul carries.
+		if (!big->left || !big->right)
+			return std::nullopt;
+		using B = awst::BigUIntBinaryOperator;
+		auto l = alignmentMod32(*big->left);
+		auto r = alignmentMod32(*big->right);
+		switch (big->op)
+		{
+		case B::Add:
+			if (l && r) return (*l + *r) % 32;
+			return std::nullopt;
+		case B::Sub:
+			if (l && r) return (*l + 32 - *r) % 32;
+			return std::nullopt;
+		case B::Mult:
+			if ((l && *l == 0) || (r && *r == 0)) return 0u;
+			return std::nullopt;
+		case B::Mod:
+			// x mod m keeps x's residue whenever 32 divides m (2^256, 4096).
+			if (r && *r == 0) return l;
+			return std::nullopt;
+		default:
+			return std::nullopt;
+		}
+	}
+	if (auto const* bin = dynamic_cast<awst::UInt64BinaryOperation const*>(&_offset))
+	{
+		if (!bin->left || !bin->right)
+			return std::nullopt;
+		using O = awst::UInt64BinaryOperator;
+		auto l = alignmentMod32(*bin->left);
+		auto r = alignmentMod32(*bin->right);
+		switch (bin->op)
+		{
+		case O::Add:
+			if (l && r) return (*l + *r) % 32;
+			return std::nullopt;
+		case O::Sub:
+			if (l && r) return (*l + 32 - *r) % 32;
+			return std::nullopt;
+		case O::Mult:
+			// One aligned factor is enough: 32 | a implies 32 | a*b.
+			if ((l && *l == 0) || (r && *r == 0)) return 0u;
+			return std::nullopt;
+		case O::Mod:
+			// See the biguint arm: a modulus that is a multiple of 32 keeps
+			// the residue (the slot size itself is 4096).
+			if (r && *r == 0) return l;
+			return std::nullopt;
+		case O::LShift:
+			// Shifting left by 5+ multiplies by a multiple of 32.
+			if (auto const* k = dynamic_cast<awst::IntegerConstant const*>(bin->right.get()))
+			{
+				auto shift = decimalMod32(k->value);
+				if (shift && k->value.size() <= 2 && std::stoi(k->value) >= 5)
+					return 0u;
+			}
+			return std::nullopt;
+		default:
+			// No FloorDiv/RShift rule: halving an aligned value is not aligned.
+			return std::nullopt;
+		}
+	}
+	return std::nullopt;
+}
+
 bool AssemblyBuilder::divisorIsKnownNonZero(awst::Expression const& _divisor) const
 {
 	// Only m_localWideConstants (let-bound number literals) and literal nodes
@@ -844,6 +950,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	auto savedConstants = std::move(m_localConstants);
 	auto savedWideConstants = std::move(m_localWideConstants);
 	auto savedYulConstants = std::move(m_yulConstantValues);
+	auto savedAlignedLocals = std::move(m_alignedLocals);
 	auto savedCalldataParamNames = std::move(m_calldataParamNames);
 	auto savedUpgraded = std::move(m_upgradedLocals);
 	auto savedParamBitWidths = m_paramBitWidths;
@@ -861,6 +968,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	m_localConstants.clear();
 	m_localWideConstants.clear();
 	m_yulConstantValues.clear();
+	m_alignedLocals.clear();
 	m_localSlotConstants.clear();
 	m_calldataParamNames.clear();
 	m_upgradedLocals.clear();
@@ -938,6 +1046,7 @@ void AssemblyBuilder::buildRecursiveYulSubroutine(
 	m_localConstants = std::move(savedConstants);
 	m_localWideConstants = std::move(savedWideConstants);
 	m_yulConstantValues = std::move(savedYulConstants);
+	m_alignedLocals = std::move(savedAlignedLocals);
 	m_calldataParamNames = std::move(savedCalldataParamNames);
 	m_upgradedLocals = std::move(savedUpgraded);
 	m_paramBitWidths = std::move(savedParamBitWidths);

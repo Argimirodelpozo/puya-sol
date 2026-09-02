@@ -142,6 +142,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDyn(
 	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc,
 	std::vector<std::shared_ptr<awst::Statement>>* _sink)
 {
+	auto const align = _offset ? alignmentMod32(*_offset) : std::nullopt;
 	auto off = offsetToUint64(std::move(_offset), _loc);
 	// Materialize once: offset appears in the bounds-assert + slot/sub (~3 refs);
 	// a side-effecting mload(q) would otherwise re-run each time (makeEvalOnce =
@@ -154,7 +155,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDyn(
 	// conditional selected between two IDENTICAL computations — paying an SE
 	// fan-out, a compare, a branch and a duplicated extract on every dynamic
 	// mload. Dyn is now Direct plus the bounds assert + eval-once wrapper.
-	return readMemWordDirect(scratchLayout(), std::move(off), _loc);
+	return readMemWordDirect(scratchLayout(), std::move(off), _loc, align);
 }
 
 void AssemblyBuilder::writeMemWordDyn(
@@ -168,22 +169,37 @@ void AssemblyBuilder::writeMemWordDyn(
 	// assert + slot + sub references.
 	std::string offN = "__mem_dyn_off_" + std::to_string(
 		awst::NameGen::next("MemoryOps.dynamicOffset"));
+	auto const align = _offset ? alignmentMod32(*_offset) : std::nullopt;
+	auto offVal = offsetToUint64(std::move(_offset), _loc);
 	_out.push_back(awst::makeAssignmentStatement(
 		awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
-		offsetToUint64(std::move(_offset), _loc), _loc));
+		std::move(offVal), _loc));
 	writeMemWordDirect(scratchLayout(),
 		awst::makeVarExpression(offN, awst::WType::uint64Type(), _loc),
-		std::move(_value32), _loc, _out);
+		std::move(_value32), _loc, _out, align);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemStackRange(
 	ScratchLayout const& _scratch,
 	std::shared_ptr<awst::Expression> _offset,
 	std::shared_ptr<awst::Expression> _length,
-	awst::SourceLocation const& _loc)
+	awst::SourceLocation const& _loc,
+	std::optional<unsigned> _offsetAlignMod32)
 {
 	using O = awst::UInt64BinaryOperator;
 	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
+	// A read of L bytes at residue r stays inside the slot when L + r <= 32:
+	// SLOT_SIZE is a multiple of 32, so `sub` is at most SLOT_SIZE-32+r and at
+	// least 32-r bytes remain. Proving it drops the straddle arm entirely.
+	std::optional<unsigned> const offAlign = _offsetAlignMod32;
+	std::optional<unsigned> constLen;
+	if (auto const* lenConst = dynamic_cast<awst::IntegerConstant const*>(_length.get()))
+		if (lenConst->value.size() <= 3
+			&& lenConst->value.find_first_not_of("0123456789") == std::string::npos)
+			constLen = static_cast<unsigned>(std::stoi(lenConst->value));
+	bool const provablyInSlot =
+		offAlign && constLen && *constLen + *offAlign <= 32;
+
 	// Both feed the slot/sub math AND both straddle arms — evaluate once.
 	auto off = awst::makeEvalOnce(std::move(_offset), _loc);
 	auto len = awst::makeEvalOnce(std::move(_length), _loc);
@@ -210,6 +226,8 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemStackRange(
 	// runs fine. A stack VALUE is at most one AVM element (SLOT_SIZE bytes),
 	// so it can never span more than two slots.
 	auto inSlot = awst::makeExtract3(loads(0), sub(), len, _loc);
+	if (provablyInSlot)
+		return inSlot;
 	auto straddle = awst::makeConcat(
 		awst::makeExtract3(loads(0), sub(), avail(), _loc),
 		awst::makeExtract3(loads(1), awst::makeIntegerConstant("0", _loc),
@@ -222,10 +240,11 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemStackRange(
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemWordDirect(
 	ScratchLayout const& _scratch,
-	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc)
+	std::shared_ptr<awst::Expression> _offset, awst::SourceLocation const& _loc,
+	std::optional<unsigned> _offsetAlignMod32)
 {
 	return readMemStackRange(_scratch, std::move(_offset),
-		awst::makeIntegerConstant("32", _loc), _loc);
+		awst::makeIntegerConstant("32", _loc), _loc, _offsetAlignMod32);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDirect(
@@ -301,11 +320,13 @@ void AssemblyBuilder::writeMemBytesDirect(
 void AssemblyBuilder::writeMemWordDirect(
 	ScratchLayout const& _scratch,
 	std::shared_ptr<awst::Expression> _offset, std::shared_ptr<awst::Expression> _value32,
-	awst::SourceLocation const& _loc, std::vector<std::shared_ptr<awst::Statement>>& _out)
+	awst::SourceLocation const& _loc, std::vector<std::shared_ptr<awst::Statement>>& _out,
+	std::optional<unsigned> _offsetAlignMod32)
 {
 	using O = awst::UInt64BinaryOperator;
 	int id = awst::NameGen::next("MemoryOps.dynamicStore");
 	auto ss = [&]() { return awst::makeIntegerConstant(static_cast<uint64_t>(SLOT_SIZE), _loc); };
+	bool const writeIsAligned = _offsetAlignMod32 && *_offsetAlignMod32 == 0;
 
 	_out.push_back(memBoundsAssert(_scratch, _offset, _loc));
 
@@ -348,6 +369,14 @@ void AssemblyBuilder::writeMemWordDirect(
 	// arbitrary offsets: mcopy, returndatacopy, precompile output).
 	auto thenBlk = awst::makeBlock(_loc);
 	thenBlk->body.push_back(storeSlot(u64v(slotN), u64v(subN), valR()));
+	// A 32-byte write at a 32-aligned offset has sub <= SLOT_SIZE-32 always,
+	// so the split arm below is unreachable (see readMemStackRange).
+	if (writeIsAligned)
+	{
+		for (auto& st: thenBlk->body)
+			_out.push_back(std::move(st));
+		return;
+	}
 
 	auto elseBlk = awst::makeBlock(_loc);
 	{

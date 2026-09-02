@@ -176,7 +176,7 @@ main_while_top@29:
     dup
     pushbytes 0x03
     b<
-    bz main_after_while@34
+    bz main_after_while@31
     pushint 8
     bzero
     dig 1
@@ -203,20 +203,18 @@ main_while_top@29:
     dup
     intc_3 // 4096
     /
-    cover 2
+    swap
     intc_3 // 4096
     %
-    dup
-    cover 3
     intc_0 // 32
     bzero
-    uncover 2
+    uncover 3
     pushbytes 0x01
     b+
     bytec_0 // 0x010000000000000000000000000000000000000000000000000000000000000000
     b%
     dup
-    cover 3
+    cover 4
     concat
     dup
     len
@@ -224,55 +222,14 @@ main_while_top@29:
     -
     intc_0 // 32
     extract3
-    swap
-    pushint 4064
-    <=
-    bz main_else_body@32
-    uncover 2
-    dup
+    dig 2
     loads
-    uncover 4
-    uncover 3
-    replace3
-    stores
-    b main_while_top@29
-
-main_else_body@32:
-    uncover 2
-    dup
-    loads
-    intc_3 // 4096
-    uncover 5
-    dup
     cover 2
-    -
-    dig 4
-    intc_2 // 0
-    dig 2
-    extract3
-    swap
-    cover 3
     replace3
-    dig 2
-    swap
-    stores
-    swap
-    intc_1 // 1
-    +
-    dup
-    loads
-    intc_0 // 32
-    dig 3
-    -
-    uncover 4
-    uncover 4
-    uncover 2
-    extract3
-    replace2 0
     stores
     b main_while_top@29
 
-main_after_while@34:
+main_after_while@31:
     load 0
     extract 160 32
     load 0
@@ -300,13 +257,13 @@ main_ternary_false@27:
 
 main_reassign_route@5:
     txn GroupIndex
-    bz main_ternary_false@38
+    bz main_ternary_false@35
     txn GroupIndex
     intc_1 // 1
     -
     gtxns Amount
 
-main_ternary_merge@39:
+main_ternary_merge@36:
     !
     assert // not payable
     load 0
@@ -340,6 +297,6 @@ main_ternary_merge@39:
     intc_1 // 1
     return
 
-main_ternary_false@38:
+main_ternary_false@35:
     intc_2 // 0
-    b main_ternary_merge@39
+    b main_ternary_merge@36

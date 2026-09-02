@@ -183,6 +183,15 @@ void AssemblyBuilder::buildVariableDeclaration(
 			value = awst::makeZero(loc, awst::WType::biguintType());
 		}
 
+		// 32-alignment of a single-assignment local, for the memory-slot straddle
+		// proof: `let p := mul(i, 32)` or `add(base, 0x40)` carries forward so
+		// every mload/mstore through p can drop its second-slot arm.
+		if (!m_reassignedLocals.count(origName) && value
+			&& alignmentMod32(*value).value_or(1u) == 0u)
+			m_alignedLocals.insert(name);
+		else
+			m_alignedLocals.erase(name);
+
 		// EIP-1967 slot bound to a single-assignment local: record + fold at
 		// every bare reference (classify() then fires at the sload/sstore
 		// site) and emit NO store — all references fold, and a magic constant

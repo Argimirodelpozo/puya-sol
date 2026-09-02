@@ -142,8 +142,12 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDyn(
 	};
 	auto u64v = [&](std::string const& n) { return shorthand::u64Var(n, _loc); };
 	auto bytesv = [&](std::string const& n) { return shorthand::bytesVar(n, _loc); };
+	auto const baseAlign = _offset ? alignmentMod32(*_offset) : std::nullopt;
+	auto offVal = offsetToUint64(std::move(_offset), _loc);
+	if (baseAlign && *baseAlign == 0)
+		m_alignedLocals.insert(nm("off"));
 	_out.push_back(awst::makeAssignmentStatement(
-		u64v(nm("off")), offsetToUint64(std::move(_offset), _loc), _loc));
+		u64v(nm("off")), std::move(offVal), _loc));
 	_out.push_back(awst::makeAssignmentStatement(
 		u64v(nm("len")), offsetToUint64(std::move(_length), _loc), _loc));
 	_out.push_back(awst::makeAssignmentStatement(
@@ -157,6 +161,10 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::readMemRangeDyn(
 		// The word read's own statements (its bounds assert pins off+i) belong
 		// INSIDE the loop: emitted to the builder's default sink they land after
 		// the loop, referencing an index defined only within it.
+		// `i` starts at 0 and steps by 32, so the loop offset's residue is the
+		// base offset's; register it so each word read can drop its straddle arm.
+		if (baseAlign && *baseAlign == 0)
+			m_alignedLocals.insert(nm("i"));
 		auto word = readMemWordDyn(
 			awst::makeUInt64BinOp(u64v(nm("off")), O::Add, u64v(nm("i")), _loc),
 			_loc, &body->body);
