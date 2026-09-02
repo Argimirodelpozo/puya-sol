@@ -25,10 +25,13 @@ private:
 	/// Build and submit the inner app transaction, return the result.
 	/// _solReturnType is the Solidity result type (single or tuple) — needed to decode signed narrow
 	/// ints, which the callee encodes as a 32-byte uint256 (not the 8-byte uint64 their WType implies).
+	/// Non-null _payTxn prepends a PaymentTxn in the SAME inner group — the
+	/// `{value: V}` leg (callee msg.value = preceding payment's Amount).
 	std::shared_ptr<awst::Expression> submitAndReturn(
 		std::shared_ptr<awst::Expression> _create,
 		awst::WType const* _returnType,
-		solidity::frontend::Type const* _solReturnType = nullptr);
+		solidity::frontend::Type const* _solReturnType = nullptr,
+		std::shared_ptr<awst::Expression> _payTxn = nullptr);
 };
 
 } // namespace puyasol::builder::sol_ast

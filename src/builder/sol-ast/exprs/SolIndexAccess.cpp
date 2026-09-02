@@ -1,5 +1,4 @@
 /// @file SolIndexAccess.cpp
-/// Migrated from IndexAccessBuilder.cpp.
 
 #include "builder/sol-ast/exprs/SolIndexAccess.h"
 #include "builder/sol-ast/EvmSlotLowering.h"

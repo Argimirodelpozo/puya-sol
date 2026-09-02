@@ -52,6 +52,16 @@ indistinguishable from the `bzero24 ++ appId` contract-value convention
   AVM; `address.code` of a KNOWN app resolves via the app id convention.
 - try/catch catch-clauses: unreachable — a failing inner txn aborts the
   whole transaction (success paths are equivalence-tested).
+- `this.f()`: the AVM forbids an app calling itself (no reentrancy), so it
+  lowers to a SUBROUTINE call — inside `f`, `msg.sender` and `msg.value`
+  keep the ORIGINAL transaction's values, where the EVM's real external
+  call would show `msg.sender == address(this)` and the explicitly sent
+  value (default 0). Guarded by test_itxn_parity_matrix (oracle answers
+  pinned in the test header).
+- Reentrancy in general: the AVM rejects any inner call into an app that
+  is already executing (A→B→A aborts), where the EVM allows it. Contracts
+  RELYING on reentrancy cannot be expressed; reentrancy-guarded code is
+  unaffected.
 - Low-level calls (`t.call`/`staticcall`, any calldata incl. empty): submit
   a real inner app call. Two consequences vs the EVM: a REJECTED call
   aborts the whole transaction (`ok == false` is not catchable), and a

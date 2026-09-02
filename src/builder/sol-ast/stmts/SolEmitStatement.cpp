@@ -1,5 +1,4 @@
 /// @file SolEmitStatement.cpp
-/// Migrated from EmitBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolEmitStatement.h"
 #include "builder/sol-eb/ContractContext.h"

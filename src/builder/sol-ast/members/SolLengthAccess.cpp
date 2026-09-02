@@ -1,6 +1,5 @@
 /// @file SolLengthAccess.cpp
 /// array.length, bytes.length, box-backed array length.
-/// Migrated from MemberAccessBuilder.cpp lines 476-555.
 
 #include "builder/sol-ast/members/SolLengthAccess.h"
 #include "builder/AwstShorthand.h"

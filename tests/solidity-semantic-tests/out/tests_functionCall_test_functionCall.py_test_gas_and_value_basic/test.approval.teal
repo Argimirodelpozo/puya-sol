@@ -236,7 +236,20 @@ main_switch_case_0@5:
 // /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/functionCall/contracts/gas_and_value_basic.sol.test.sendAmount(__arc4_amount: bytes) -> bytes:
 sendAmount:
     proto 1 1
+    frame_dig -1
+    pushbytes 0x010000000000000000
+    b<
+    assert // transfer amount exceeds uint64 (AVM amounts are 64-bit)
     itxn_begin
+    pushint 8
+    bzero
+    frame_dig -1
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
     intc_0 // 0
     bytec_1 // "h"
     app_global_get_ex
@@ -245,6 +258,17 @@ sendAmount:
     select
     pushint 24
     extract_uint64
+    dup
+    app_params_get AppAddress
+    pop
+    intc_2 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_0 // 0
+    itxn_field Fee
+    swap
+    itxn_field Amount
+    itxn_next
     intc_3 // 6
     itxn_field TypeEnum
     intc_0 // 0

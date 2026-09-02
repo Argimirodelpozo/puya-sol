@@ -1,5 +1,4 @@
 /// @file SolConditional.cpp
-/// Migrated from ConditionalBuilder.cpp.
 
 #include "builder/sol-ast/exprs/SolConditional.h"
 #include "builder/storage/EvmLayoutMode.h"

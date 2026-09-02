@@ -1,6 +1,5 @@
 /// @file SolSelectorAccess.cpp
 /// Policy-selected function/error/event selector lowering.
-/// Migrated from MemberAccessBuilder.cpp lines 139-360.
 
 #include "builder/sol-ast/members/SolSelectorAccess.h"
 #include "builder/SelectorSemantics.h"

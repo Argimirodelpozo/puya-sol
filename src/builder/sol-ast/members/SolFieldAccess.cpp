@@ -1,6 +1,5 @@
 /// @file SolFieldAccess.cpp
 /// Struct field access (ARC4Struct, WTuple).
-/// Migrated from MemberAccessBuilder.cpp lines 712-754.
 
 #include "builder/sol-ast/members/SolFieldAccess.h"
 #include "builder/sol-types/TypeMapper.h"

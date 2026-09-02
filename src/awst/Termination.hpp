@@ -6,8 +6,7 @@
 ///   - removeDeadCode: strip statements after a guaranteed terminator
 ///
 /// `removeDeadCode` is required for puya backend acceptance (puya 5.8.0+
-/// rejects unreachable code with a compile error). Header-only (folded from
-/// the former .h/.cpp pair).
+/// rejects unreachable code with a compile error).
 
 #include "awst/Node.h"
 

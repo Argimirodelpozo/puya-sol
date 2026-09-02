@@ -1,5 +1,4 @@
 /// @file SolInlineAssembly.cpp
-/// Migrated from InlineAssemblyBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
 #include "builder/SelectorSemantics.h"

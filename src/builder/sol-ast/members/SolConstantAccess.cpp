@@ -1,6 +1,5 @@
 /// @file SolConstantAccess.cpp
 /// Contract/library constant inlining, event member access, contract member names.
-/// Migrated from MemberAccessBuilder.cpp lines 362-380, 557-580.
 
 #include "builder/sol-ast/members/SolConstantAccess.h"
 

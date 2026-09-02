@@ -2820,7 +2820,7 @@
                           "immutable": true
                         },
                         "left": {
-                          "_type": "BooleanBinaryOperation",
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                             "line": 14,
@@ -2834,8 +2834,8 @@
                             "name": "bool",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "NumericComparisonExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 14,
@@ -2846,11 +2846,11 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "bool",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "lhs": {
-                              "_type": "ReinterpretCast",
+                            "expr": {
+                              "_type": "VarExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                                 "line": 14,
@@ -2860,52 +2860,17 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
                               },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                  "line": 14,
-                                  "end_line": 14,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "name": "__ecrecover_r_1"
-                              }
-                            },
-                            "operator": "!=",
-                            "rhs": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 14,
-                                "end_line": 14,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": 0,
-                              "teal_alias": null
+                              "name": "__ecrecover_r_1"
                             }
                           },
-                          "op": "and",
-                          "right": {
-                            "_type": "NumericComparisonExpression",
+                          "operator": "!=",
+                          "rhs": {
+                            "_type": "IntegerConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 14,
@@ -2916,66 +2881,101 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "bool",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "lhs": {
-                              "_type": "ReinterpretCast",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 14,
-                                "end_line": 14,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                  "line": 14,
-                                  "end_line": 14,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "name": "__ecrecover_r_1"
-                              }
-                            },
-                            "operator": "<",
-                            "rhs": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 14,
-                                "end_line": 14,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                              "teal_alias": null
-                            }
+                            "value": 0,
+                            "teal_alias": null
                           }
                         },
                         "op": "and",
                         "right": {
+                          "_type": "NumericComparisonExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                            "line": 14,
+                            "end_line": 14,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          },
+                          "lhs": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 14,
+                              "end_line": 14,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                                "line": 14,
+                                "end_line": 14,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__ecrecover_r_1"
+                            }
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 14,
+                              "end_line": 14,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                            "teal_alias": null
+                          }
+                        }
+                      },
+                      "op": "and",
+                      "right": {
+                        "_type": "BooleanBinaryOperation",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                          "line": 14,
+                          "end_line": 14,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "bool",
+                          "immutable": true
+                        },
+                        "left": {
                           "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
@@ -3043,26 +3043,10 @@
                             "value": 0,
                             "teal_alias": null
                           }
-                        }
-                      },
-                      "op": "and",
-                      "right": {
-                        "_type": "NumericComparisonExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                          "line": 14,
-                          "end_line": 14,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
                         },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "bool",
-                          "immutable": true
-                        },
-                        "lhs": {
-                          "_type": "ReinterpretCast",
+                        "op": "and",
+                        "right": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                             "line": 14,
@@ -3073,11 +3057,11 @@
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "biguint",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "expr": {
-                            "_type": "VarExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 14,
@@ -3087,32 +3071,48 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
                             },
-                            "name": "__ecrecover_s_1"
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                                "line": 14,
+                                "end_line": 14,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__ecrecover_s_1"
+                            }
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 14,
+                              "end_line": 14,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                            "teal_alias": null
                           }
-                        },
-                        "operator": "<",
-                        "rhs": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                            "line": 14,
-                            "end_line": 14,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                          "teal_alias": null
                         }
                       }
                     }
@@ -4885,7 +4885,7 @@
                           "immutable": true
                         },
                         "left": {
-                          "_type": "BooleanBinaryOperation",
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                             "line": 17,
@@ -4899,8 +4899,8 @@
                             "name": "bool",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "NumericComparisonExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 17,
@@ -4911,11 +4911,11 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "bool",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "lhs": {
-                              "_type": "ReinterpretCast",
+                            "expr": {
+                              "_type": "VarExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                                 "line": 17,
@@ -4925,52 +4925,17 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
                               },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                  "line": 17,
-                                  "end_line": 17,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "name": "__ecrecover_r_2"
-                              }
-                            },
-                            "operator": "!=",
-                            "rhs": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 17,
-                                "end_line": 17,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": 0,
-                              "teal_alias": null
+                              "name": "__ecrecover_r_2"
                             }
                           },
-                          "op": "and",
-                          "right": {
-                            "_type": "NumericComparisonExpression",
+                          "operator": "!=",
+                          "rhs": {
+                            "_type": "IntegerConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 17,
@@ -4981,66 +4946,101 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "bool",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "lhs": {
-                              "_type": "ReinterpretCast",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 17,
-                                "end_line": 17,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                  "line": 17,
-                                  "end_line": 17,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "name": "__ecrecover_r_2"
-                              }
-                            },
-                            "operator": "<",
-                            "rhs": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 17,
-                                "end_line": 17,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                              "teal_alias": null
-                            }
+                            "value": 0,
+                            "teal_alias": null
                           }
                         },
                         "op": "and",
                         "right": {
+                          "_type": "NumericComparisonExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                            "line": 17,
+                            "end_line": 17,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          },
+                          "lhs": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 17,
+                              "end_line": 17,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                                "line": 17,
+                                "end_line": 17,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__ecrecover_r_2"
+                            }
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 17,
+                              "end_line": 17,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                            "teal_alias": null
+                          }
+                        }
+                      },
+                      "op": "and",
+                      "right": {
+                        "_type": "BooleanBinaryOperation",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                          "line": 17,
+                          "end_line": 17,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "bool",
+                          "immutable": true
+                        },
+                        "left": {
                           "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
@@ -5108,26 +5108,10 @@
                             "value": 0,
                             "teal_alias": null
                           }
-                        }
-                      },
-                      "op": "and",
-                      "right": {
-                        "_type": "NumericComparisonExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                          "line": 17,
-                          "end_line": 17,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
                         },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "bool",
-                          "immutable": true
-                        },
-                        "lhs": {
-                          "_type": "ReinterpretCast",
+                        "op": "and",
+                        "right": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                             "line": 17,
@@ -5138,11 +5122,11 @@
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "biguint",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "expr": {
-                            "_type": "VarExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 17,
@@ -5152,32 +5136,48 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
                             },
-                            "name": "__ecrecover_s_2"
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                                "line": 17,
+                                "end_line": 17,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__ecrecover_s_2"
+                            }
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 17,
+                              "end_line": 17,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                            "teal_alias": null
                           }
-                        },
-                        "operator": "<",
-                        "rhs": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                            "line": 17,
-                            "end_line": 17,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                          "teal_alias": null
                         }
                       }
                     }
@@ -6877,7 +6877,7 @@
                           "immutable": true
                         },
                         "left": {
-                          "_type": "BooleanBinaryOperation",
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                             "line": 20,
@@ -6891,8 +6891,8 @@
                             "name": "bool",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "NumericComparisonExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 20,
@@ -6903,11 +6903,11 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "bool",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "lhs": {
-                              "_type": "ReinterpretCast",
+                            "expr": {
+                              "_type": "VarExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                                 "line": 20,
@@ -6917,52 +6917,17 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
                               },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                  "line": 20,
-                                  "end_line": 20,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "name": "__ecrecover_r_3"
-                              }
-                            },
-                            "operator": "!=",
-                            "rhs": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 20,
-                                "end_line": 20,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": 0,
-                              "teal_alias": null
+                              "name": "__ecrecover_r_3"
                             }
                           },
-                          "op": "and",
-                          "right": {
-                            "_type": "NumericComparisonExpression",
+                          "operator": "!=",
+                          "rhs": {
+                            "_type": "IntegerConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 20,
@@ -6973,66 +6938,101 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "bool",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "lhs": {
-                              "_type": "ReinterpretCast",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 20,
-                                "end_line": 20,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                  "line": 20,
-                                  "end_line": 20,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "name": "__ecrecover_r_3"
-                              }
-                            },
-                            "operator": "<",
-                            "rhs": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 20,
-                                "end_line": 20,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                              "teal_alias": null
-                            }
+                            "value": 0,
+                            "teal_alias": null
                           }
                         },
                         "op": "and",
                         "right": {
+                          "_type": "NumericComparisonExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                            "line": 20,
+                            "end_line": 20,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          },
+                          "lhs": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 20,
+                              "end_line": 20,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                                "line": 20,
+                                "end_line": 20,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__ecrecover_r_3"
+                            }
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 20,
+                              "end_line": 20,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                            "teal_alias": null
+                          }
+                        }
+                      },
+                      "op": "and",
+                      "right": {
+                        "_type": "BooleanBinaryOperation",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                          "line": 20,
+                          "end_line": 20,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "bool",
+                          "immutable": true
+                        },
+                        "left": {
                           "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
@@ -7100,26 +7100,10 @@
                             "value": 0,
                             "teal_alias": null
                           }
-                        }
-                      },
-                      "op": "and",
-                      "right": {
-                        "_type": "NumericComparisonExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                          "line": 20,
-                          "end_line": 20,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
                         },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "bool",
-                          "immutable": true
-                        },
-                        "lhs": {
-                          "_type": "ReinterpretCast",
+                        "op": "and",
+                        "right": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                             "line": 20,
@@ -7130,11 +7114,11 @@
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "biguint",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "expr": {
-                            "_type": "VarExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 20,
@@ -7144,32 +7128,48 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
                             },
-                            "name": "__ecrecover_s_3"
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                                "line": 20,
+                                "end_line": 20,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__ecrecover_s_3"
+                            }
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 20,
+                              "end_line": 20,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                            "teal_alias": null
                           }
-                        },
-                        "operator": "<",
-                        "rhs": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                            "line": 20,
-                            "end_line": 20,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                          "teal_alias": null
                         }
                       }
                     }
@@ -8690,7 +8690,7 @@
                           "immutable": true
                         },
                         "left": {
-                          "_type": "BooleanBinaryOperation",
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                             "line": 23,
@@ -8704,8 +8704,8 @@
                             "name": "bool",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "NumericComparisonExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 23,
@@ -8716,11 +8716,11 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "bool",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "lhs": {
-                              "_type": "ReinterpretCast",
+                            "expr": {
+                              "_type": "VarExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                                 "line": 23,
@@ -8730,52 +8730,17 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
                               },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                  "line": 23,
-                                  "end_line": 23,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "name": "__ecrecover_r_4"
-                              }
-                            },
-                            "operator": "!=",
-                            "rhs": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 23,
-                                "end_line": 23,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": 0,
-                              "teal_alias": null
+                              "name": "__ecrecover_r_4"
                             }
                           },
-                          "op": "and",
-                          "right": {
-                            "_type": "NumericComparisonExpression",
+                          "operator": "!=",
+                          "rhs": {
+                            "_type": "IntegerConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 23,
@@ -8786,66 +8751,101 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "bool",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "lhs": {
-                              "_type": "ReinterpretCast",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 23,
-                                "end_line": 23,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                  "line": 23,
-                                  "end_line": 23,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "name": "__ecrecover_r_4"
-                              }
-                            },
-                            "operator": "<",
-                            "rhs": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 23,
-                                "end_line": 23,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                              "teal_alias": null
-                            }
+                            "value": 0,
+                            "teal_alias": null
                           }
                         },
                         "op": "and",
                         "right": {
+                          "_type": "NumericComparisonExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                            "line": 23,
+                            "end_line": 23,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          },
+                          "lhs": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 23,
+                              "end_line": 23,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                                "line": 23,
+                                "end_line": 23,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__ecrecover_r_4"
+                            }
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 23,
+                              "end_line": 23,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                            "teal_alias": null
+                          }
+                        }
+                      },
+                      "op": "and",
+                      "right": {
+                        "_type": "BooleanBinaryOperation",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                          "line": 23,
+                          "end_line": 23,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "bool",
+                          "immutable": true
+                        },
+                        "left": {
                           "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
@@ -8913,26 +8913,10 @@
                             "value": 0,
                             "teal_alias": null
                           }
-                        }
-                      },
-                      "op": "and",
-                      "right": {
-                        "_type": "NumericComparisonExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                          "line": 23,
-                          "end_line": 23,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
                         },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "bool",
-                          "immutable": true
-                        },
-                        "lhs": {
-                          "_type": "ReinterpretCast",
+                        "op": "and",
+                        "right": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                             "line": 23,
@@ -8943,11 +8927,11 @@
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "biguint",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "expr": {
-                            "_type": "VarExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 23,
@@ -8957,32 +8941,48 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
                             },
-                            "name": "__ecrecover_s_4"
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                                "line": 23,
+                                "end_line": 23,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__ecrecover_s_4"
+                            }
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 23,
+                              "end_line": 23,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                            "teal_alias": null
                           }
-                        },
-                        "operator": "<",
-                        "rhs": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                            "line": 23,
-                            "end_line": 23,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                          "teal_alias": null
                         }
                       }
                     }
@@ -10503,7 +10503,7 @@
                           "immutable": true
                         },
                         "left": {
-                          "_type": "BooleanBinaryOperation",
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                             "line": 26,
@@ -10517,8 +10517,8 @@
                             "name": "bool",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "NumericComparisonExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 26,
@@ -10529,11 +10529,11 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "bool",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "lhs": {
-                              "_type": "ReinterpretCast",
+                            "expr": {
+                              "_type": "VarExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                                 "line": 26,
@@ -10543,52 +10543,17 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
                               },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                  "line": 26,
-                                  "end_line": 26,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "name": "__ecrecover_r_5"
-                              }
-                            },
-                            "operator": "!=",
-                            "rhs": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 26,
-                                "end_line": 26,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": 0,
-                              "teal_alias": null
+                              "name": "__ecrecover_r_5"
                             }
                           },
-                          "op": "and",
-                          "right": {
-                            "_type": "NumericComparisonExpression",
+                          "operator": "!=",
+                          "rhs": {
+                            "_type": "IntegerConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 26,
@@ -10599,66 +10564,101 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "bool",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "lhs": {
-                              "_type": "ReinterpretCast",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 26,
-                                "end_line": 26,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                  "line": 26,
-                                  "end_line": 26,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "name": "__ecrecover_r_5"
-                              }
-                            },
-                            "operator": "<",
-                            "rhs": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                                "line": 26,
-                                "end_line": 26,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                              "teal_alias": null
-                            }
+                            "value": 0,
+                            "teal_alias": null
                           }
                         },
                         "op": "and",
                         "right": {
+                          "_type": "NumericComparisonExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                            "line": 26,
+                            "end_line": 26,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          },
+                          "lhs": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 26,
+                              "end_line": 26,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                                "line": 26,
+                                "end_line": 26,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__ecrecover_r_5"
+                            }
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 26,
+                              "end_line": 26,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                            "teal_alias": null
+                          }
+                        }
+                      },
+                      "op": "and",
+                      "right": {
+                        "_type": "BooleanBinaryOperation",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                          "line": 26,
+                          "end_line": 26,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "bool",
+                          "immutable": true
+                        },
+                        "left": {
                           "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
@@ -10726,26 +10726,10 @@
                             "value": 0,
                             "teal_alias": null
                           }
-                        }
-                      },
-                      "op": "and",
-                      "right": {
-                        "_type": "NumericComparisonExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                          "line": 26,
-                          "end_line": 26,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
                         },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "bool",
-                          "immutable": true
-                        },
-                        "lhs": {
-                          "_type": "ReinterpretCast",
+                        "op": "and",
+                        "right": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                             "line": 26,
@@ -10756,11 +10740,11 @@
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "biguint",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "expr": {
-                            "_type": "VarExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
                               "line": 26,
@@ -10770,32 +10754,48 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
                             },
-                            "name": "__ecrecover_s_5"
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                                "line": 26,
+                                "end_line": 26,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__ecrecover_s_5"
+                            }
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
+                              "line": 26,
+                              "end_line": 26,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                            "teal_alias": null
                           }
-                        },
-                        "operator": "<",
-                        "rhs": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/ecrecover_invalid_input_zero.sol",
-                            "line": 26,
-                            "end_line": 26,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                          "teal_alias": null
                         }
                       }
                     }

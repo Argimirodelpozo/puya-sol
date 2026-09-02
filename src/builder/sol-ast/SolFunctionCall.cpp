@@ -34,6 +34,7 @@ std::shared_ptr<awst::Expression> SolFunctionCall::extractCallValue()
 
 	auto const& optNames = opts->names();
 	auto optValues = opts->options();
+	std::shared_ptr<awst::Expression> value;
 	for (size_t i = 0; i < optNames.size(); ++i)
 	{
 		if (*optNames[i] == "value" && i < optValues.size())
@@ -41,11 +42,24 @@ std::shared_ptr<awst::Expression> SolFunctionCall::extractCallValue()
 			auto val = buildExpr(*optValues[i]);
 			// {value: X}: assert X fits in uint64 before truncating (a >2^64
 			// value would silently send `X mod 2^64` microAlgos).
-			return TypeCoercion::checkedAmountToUint64(
+			value = TypeCoercion::checkedAmountToUint64(
 				m_ctx.preEffects(), std::move(val), m_loc);
 		}
+		else if (*optNames[i] == "gas" && i < optValues.size())
+		{
+			// The gas AMOUNT has no AVM analogue (opcode budget is pooled),
+			// but solc EVALUATES option expressions — dropping the expression
+			// unevaluated would lose `{gas: f()}` side effects. Evaluate and
+			// discard; effect-free shapes (the common `{gas: 200}` literal,
+			// a bare local) stay unemitted.
+			auto gasExpr = buildExpr(*optValues[i]);
+			if (gasExpr && !awst::isConstantExpression(gasExpr.get())
+				&& !dynamic_cast<awst::VarExpression const*>(gasExpr.get()))
+				m_ctx.preEffects().push_back(awst::makeExpressionStatement(
+					std::move(gasExpr), m_loc));
+		}
 	}
-	return nullptr;
+	return value;
 }
 
 } // namespace puyasol::builder::sol_ast

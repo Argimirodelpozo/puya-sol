@@ -4,7 +4,6 @@
 /// Whole-unit integrity checks for root-level AWST subroutines. Producers emit
 /// helpers on demand; this validates identity and reference invariants without
 /// performing post-build dead-code elimination. Header-only (one consumer;
-/// folded from the former .h/.cpp pair).
 
 #include "awst/Node.h"
 #include "awst/Visit.h"

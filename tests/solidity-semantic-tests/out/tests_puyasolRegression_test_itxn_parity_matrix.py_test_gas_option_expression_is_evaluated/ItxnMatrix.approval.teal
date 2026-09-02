@@ -1,0 +1,781 @@
+#pragma version 12
+#pragma typetrack false
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/itxn_parity_matrix.sol.ItxnMatrix.approval_program() -> uint64:
+main:
+    intcblock 32 1 0 24
+    bytecblock 0x151f7c75 "c" "sideCount" 0x0000000000000000000000000000000000000000000000000000000000000000 "__ctor_pending" 0xaf833c01 0x9bcba2bd TMPL_APPROVAL_ItxnCallee_P1 TMPL_APPROVAL_ItxnCallee_P0 TMPL_CLEAR_ItxnCallee
+    pushint 4096
+    bzero
+    dup
+    store 5
+    dup
+    store 0
+    dup
+    store 1
+    dup
+    store 2
+    dup
+    store 3
+    store 4
+    load 0
+    pushbytes 0x0000000000000000000000000000000000000000000000000000000000000080
+    replace2 64
+    store 0
+    txn ApplicationID
+    bnz main_after_if_else@2
+    bytec 4 // "__ctor_pending"
+    intc_1 // 1
+    app_global_put
+    intc_1 // 1
+    return
+
+main_after_if_else@2:
+    txn OnCompletion
+    bnz main_after_if_else@14
+    txn NumAppArgs
+    pushint 2
+    ==
+    bz main_after_if_else@14
+    pushbytess 0x68110b2f 0xe2179b8e 0x76acfa69 0x82c2f236 0xfd53d157 0x7be07e26 0xc3da42b8 0xd9feb033
+    txna ApplicationArgs 0
+    match main_switch_case_0@5 main_switch_case_1@6 main_switch_case_2@7 main_switch_case_3@8 main_switch_case_4@9 main_switch_case_5@10 main_switch_case_6@11 main_switch_case_7@12
+
+main_after_if_else@14:
+    txn OnCompletion
+    !
+    assert
+    txn ApplicationID
+    assert
+    pushbytes 0xbacc49e3 // method "__postInit()void"
+    bytec 5 // method "bump()uint256"
+    pushbytess 0x7472d20e 0x536fdcd1 0xfbe236b6 0xb81c9af9 0x86089b5c 0xd7fc866d 0x03f8dab9 // method "g()(address,uint256)", method "thisCallSender()(bool,uint256)", method "crossValue()(bool,uint256)", method "gasOptionSideEffect()uint256", method "typedCodeless()uint256", method "c()address", method "sideCount()uint256"
+    txna ApplicationArgs 0
+    match main___postInit_route@17 main_bump_route@18 main_g_route@19 main_thisCallSender_route@20 main_crossValue_route@21 main_gasOptionSideEffect_route@22 main_typedCodeless_route@23 main_c_route@24 main_sideCount_route@25
+    err
+
+main_sideCount_route@25:
+    callsub sideCount
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_c_route@24:
+    callsub c
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_typedCodeless_route@23:
+    callsub typedCodeless
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_gasOptionSideEffect_route@22:
+    callsub gasOptionSideEffect
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_crossValue_route@21:
+    callsub crossValue
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 3
+    setbit
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_thisCallSender_route@20:
+    callsub thisCallSender
+    pushbytes 0x00
+    intc_2 // 0
+    uncover 3
+    setbit
+    swap
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_g_route@19:
+    callsub g
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_bump_route@18:
+    callsub bump
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main___postInit_route@17:
+    bytec 4 // "__ctor_pending"
+    app_global_get
+    assert // __postInit already called
+    txn Sender
+    global CreatorAddress
+    ==
+    assert // __postInit callable only by the app creator
+    bytec 4 // "__ctor_pending"
+    intc_2 // 0
+    app_global_put
+    bytec_1 // "c"
+    bytec_3 // addr AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ
+    app_global_put
+    bytec_2 // "sideCount"
+    pushbytes 0x
+    app_global_put
+    itxn_begin
+    bytec 7 // TMPL_APPROVAL_ItxnCallee_P1
+    bytec 8 // TMPL_APPROVAL_ItxnCallee_P0
+    bytec 9 // TMPL_CLEAR_ItxnCallee
+    pushint 6
+    itxn_field TypeEnum
+    pushint 16
+    itxn_field GlobalNumUint
+    pushint 16
+    itxn_field GlobalNumByteSlice
+    intc_2 // 0
+    itxn_field Fee
+    pushint 3
+    itxn_field ExtraProgramPages
+    itxn_field ClearStateProgram
+    itxn_field ApprovalProgramPages
+    itxn_field ApprovalProgramPages
+    itxn_submit
+    itxn CreatedApplicationID
+    dup
+    app_params_get AppAddress
+    pop
+    itxn_begin
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_2 // 0
+    itxn_field Fee
+    pushint 1000000
+    itxn_field Amount
+    itxn_submit
+    intc_3 // 24
+    bzero
+    swap
+    itob
+    concat
+    bytec_1 // "c"
+    swap
+    app_global_put
+    intc_1 // 1
+    return
+
+main_switch_case_7@12:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub sideCount
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_6@11:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub c
+    dup
+    len
+    pushint 20
+    -
+    pushint 20
+    extract3
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_5@10:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub typedCodeless
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_4@9:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub gasOptionSideEffect
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_3@8:
+    intc_0 // 32
+    bzero
+    callsub crossValue
+    swap
+    itob
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_2@7:
+    intc_0 // 32
+    bzero
+    callsub thisCallSender
+    swap
+    itob
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_1@6:
+    intc_0 // 32
+    bzero
+    callsub g
+    dig 1
+    len
+    pushint 20
+    -
+    uncover 2
+    swap
+    pushint 20
+    extract3
+    dig 2
+    swap
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    cover 2
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    concat
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+main_switch_case_0@5:
+    callsub __evm_npy
+    intc_0 // 32
+    bzero
+    callsub bump
+    concat
+    dup
+    len
+    intc_0 // 32
+    -
+    intc_0 // 32
+    extract3
+    bytec_0 // 0x151f7c75
+    swap
+    concat
+    log
+    intc_1 // 1
+    return
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/itxn_parity_matrix.sol.ItxnMatrix.bump() -> bytes:
+bump:
+    txn NumAppArgs
+    bz bump_after_if_else@6
+    txna ApplicationArgs 0
+    bytec 5 // method "bump()uint256"
+    ==
+    bz bump_after_if_else@6
+    txn GroupIndex
+    bz bump_ternary_false@4
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+bump_ternary_merge@5:
+    !
+    assert // not payable
+
+bump_after_if_else@6:
+    intc_2 // 0
+    bytec_2 // "sideCount"
+    app_global_get_ex
+    pushbytes 0x
+    cover 2
+    select
+    pushbytes 0x01
+    b+
+    dup
+    pushbytes 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+    b<=
+    assert // overflow
+    bytec_2 // "sideCount"
+    swap
+    app_global_put
+    pushbytes 0x00000000000000000000000000000000000000000000000000000000000186a0
+    retsub
+
+bump_ternary_false@4:
+    intc_2 // 0
+    b bump_ternary_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/itxn_parity_matrix.sol.ItxnMatrix.g() -> bytes, bytes:
+g:
+    txn Sender
+    txn GroupIndex
+    bz g_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+g_ternary_merge@3:
+    itob
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+g_ternary_false@2:
+    intc_2 // 0
+    b g_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/itxn_parity_matrix.sol.ItxnMatrix.thisCallSender() -> uint64, bytes:
+thisCallSender:
+    proto 0 2
+    callsub g
+    swap
+    dup
+    cover 2
+    global CurrentApplicationAddress
+    ==
+    bnz thisCallSender_bool_true@3
+    global CurrentApplicationID
+    bz thisCallSender_bool_false@4
+    intc_3 // 24
+    bzero
+    global CurrentApplicationID
+    itob
+    concat
+    frame_dig 0
+    ==
+    bz thisCallSender_bool_false@4
+
+thisCallSender_bool_true@3:
+    intc_1 // 1
+
+thisCallSender_bool_merge@5:
+    swap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    uncover 2
+    retsub
+
+thisCallSender_bool_false@4:
+    intc_2 // 0
+    b thisCallSender_bool_merge@5
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/itxn_parity_matrix.sol.ItxnMatrix.crossValue() -> uint64, bytes:
+crossValue:
+    proto 0 2
+    intc_2 // 0
+    txn GroupIndex
+    bz crossValue_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+crossValue_ternary_merge@3:
+    itob
+    dup
+    pushbytes 0x010000000000000000
+    b<
+    assert // transfer amount exceeds uint64 (AVM amounts are 64-bit)
+    itxn_begin
+    pushint 8
+    bzero
+    swap
+    concat
+    dup
+    len
+    pushint 8
+    -
+    extract_uint64
+    intc_2 // 0
+    bytec_1 // "c"
+    app_global_get_ex
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_3 // 24
+    extract_uint64
+    dup
+    app_params_get AppAddress
+    pop
+    intc_1 // 1
+    itxn_field TypeEnum
+    itxn_field Receiver
+    intc_2 // 0
+    itxn_field Fee
+    swap
+    itxn_field Amount
+    itxn_next
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    pushbytes 0x9d1702e0 // method "whoami()(address,uint256)"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    dup
+    extract 4 32
+    dup
+    cover 2
+    frame_bury 0
+    extract 36 32
+    swap
+    global CurrentApplicationAddress
+    ==
+    bnz crossValue_bool_true@8
+    global CurrentApplicationID
+    bz crossValue_bool_false@9
+    intc_3 // 24
+    bzero
+    global CurrentApplicationID
+    itob
+    concat
+    frame_dig 0
+    ==
+    bz crossValue_bool_false@9
+
+crossValue_bool_true@8:
+    intc_1 // 1
+
+crossValue_bool_merge@10:
+    swap
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    uncover 2
+    retsub
+
+crossValue_bool_false@9:
+    intc_2 // 0
+    b crossValue_bool_merge@10
+
+crossValue_ternary_false@2:
+    intc_2 // 0
+    b crossValue_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/itxn_parity_matrix.sol.ItxnMatrix.gasOptionSideEffect() -> bytes:
+gasOptionSideEffect:
+    txn GroupIndex
+    bz gasOptionSideEffect_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+gasOptionSideEffect_ternary_merge@3:
+    !
+    assert // not payable
+    callsub bump
+    pop
+    itxn_begin
+    intc_2 // 0
+    bytec_1 // "c"
+    app_global_get_ex
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    intc_3 // 24
+    extract_uint64
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    itxn_field ApplicationID
+    bytec 6 // method "five()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    intc_2 // 0
+    bytec_2 // "sideCount"
+    app_global_get_ex
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+gasOptionSideEffect_ternary_false@2:
+    intc_2 // 0
+    b gasOptionSideEffect_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/itxn_parity_matrix.sol.ItxnMatrix.typedCodeless() -> bytes:
+typedCodeless:
+    txn GroupIndex
+    bz typedCodeless_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+typedCodeless_ternary_merge@3:
+    !
+    assert // not payable
+    itxn_begin
+    pushint 6
+    itxn_field TypeEnum
+    intc_2 // 0
+    itxn_field OnCompletion
+    intc_2 // 0
+    itxn_field Fee
+    pushint 39321
+    itxn_field ApplicationID
+    bytec 6 // method "five()uint256"
+    itxn_field ApplicationArgs
+    itxn_submit
+    itxn LastLog
+    extract 4 0
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+typedCodeless_ternary_false@2:
+    intc_2 // 0
+    b typedCodeless_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/itxn_parity_matrix.sol.ItxnMatrix.c() -> bytes:
+c:
+    txn GroupIndex
+    bz c_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+c_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_1 // "c"
+    app_global_get_ex
+    bytec_3 // 0x0000000000000000000000000000000000000000000000000000000000000000
+    cover 2
+    select
+    retsub
+
+c_ternary_false@2:
+    intc_2 // 0
+    b c_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/itxn_parity_matrix.sol.ItxnMatrix.sideCount() -> bytes:
+sideCount:
+    txn GroupIndex
+    bz sideCount_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+sideCount_ternary_merge@3:
+    !
+    assert // not payable
+    intc_2 // 0
+    bytec_2 // "sideCount"
+    app_global_get_ex
+    pushbytes 0x
+    cover 2
+    select
+    dup
+    len
+    intc_0 // 32
+    <=
+    assert // overflow
+    intc_0 // 32
+    bzero
+    b|
+    retsub
+
+sideCount_ternary_false@2:
+    intc_2 // 0
+    b sideCount_ternary_merge@3
+
+
+// /home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/puyasolRegression/contracts/itxn_parity_matrix.sol.ItxnMatrix.__evm_npy() -> void:
+__evm_npy:
+    txn GroupIndex
+    bz __evm_npy_ternary_false@2
+    txn GroupIndex
+    intc_1 // 1
+    -
+    gtxns Amount
+
+__evm_npy_ternary_merge@3:
+    !
+    assert // not payable
+    retsub
+
+__evm_npy_ternary_false@2:
+    intc_2 // 0
+    b __evm_npy_ternary_merge@3

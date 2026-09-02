@@ -1,8 +1,7 @@
 #pragma once
 
 /// @file StoragePlace.hpp
-/// Typed description of an addressable AVM storage root. Header-only (one
-/// consumer; folded from the former .h/.cpp pair).
+/// Typed description of an addressable AVM storage root.
 ///
 /// AWST deliberately uses the same expression hierarchy for reads and writable
 /// state fields.  Builder code must nevertheless distinguish the *place* (the

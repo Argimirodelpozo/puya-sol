@@ -8814,7 +8814,7 @@
                           "immutable": true
                         },
                         "left": {
-                          "_type": "BooleanBinaryOperation",
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
                             "line": 16,
@@ -8828,8 +8828,8 @@
                             "name": "bool",
                             "immutable": true
                           },
-                          "left": {
-                            "_type": "NumericComparisonExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
                               "line": 16,
@@ -8840,11 +8840,11 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "bool",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "lhs": {
-                              "_type": "ReinterpretCast",
+                            "expr": {
+                              "_type": "VarExpression",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
                                 "line": 16,
@@ -8854,52 +8854,17 @@
                                 "end_column": null
                               },
                               "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
                               },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
-                                  "line": 16,
-                                  "end_line": 16,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "name": "__ecrecover_r_1"
-                              }
-                            },
-                            "operator": "!=",
-                            "rhs": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
-                                "line": 16,
-                                "end_line": 16,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": 0,
-                              "teal_alias": null
+                              "name": "__ecrecover_r_1"
                             }
                           },
-                          "op": "and",
-                          "right": {
-                            "_type": "NumericComparisonExpression",
+                          "operator": "!=",
+                          "rhs": {
+                            "_type": "IntegerConstant",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
                               "line": 16,
@@ -8910,66 +8875,101 @@
                             },
                             "wtype": {
                               "_type": "WType",
-                              "name": "bool",
+                              "name": "biguint",
                               "immutable": true
                             },
-                            "lhs": {
-                              "_type": "ReinterpretCast",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
-                                "line": 16,
-                                "end_line": 16,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "expr": {
-                                "_type": "VarExpression",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
-                                  "line": 16,
-                                  "end_line": 16,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "name": "__ecrecover_r_1"
-                              }
-                            },
-                            "operator": "<",
-                            "rhs": {
-                              "_type": "IntegerConstant",
-                              "source_location": {
-                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
-                                "line": 16,
-                                "end_line": 16,
-                                "comment_lines": 0,
-                                "column": null,
-                                "end_column": null
-                              },
-                              "wtype": {
-                                "_type": "WType",
-                                "name": "biguint",
-                                "immutable": true
-                              },
-                              "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                              "teal_alias": null
-                            }
+                            "value": 0,
+                            "teal_alias": null
                           }
                         },
                         "op": "and",
                         "right": {
+                          "_type": "NumericComparisonExpression",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
+                            "line": 16,
+                            "end_line": 16,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "WType",
+                            "name": "bool",
+                            "immutable": true
+                          },
+                          "lhs": {
+                            "_type": "ReinterpretCast",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
+                              "line": 16,
+                              "end_line": 16,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
+                                "line": 16,
+                                "end_line": 16,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__ecrecover_r_1"
+                            }
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
+                              "line": 16,
+                              "end_line": 16,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                            "teal_alias": null
+                          }
+                        }
+                      },
+                      "op": "and",
+                      "right": {
+                        "_type": "BooleanBinaryOperation",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
+                          "line": 16,
+                          "end_line": 16,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "bool",
+                          "immutable": true
+                        },
+                        "left": {
                           "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
@@ -9037,26 +9037,10 @@
                             "value": 0,
                             "teal_alias": null
                           }
-                        }
-                      },
-                      "op": "and",
-                      "right": {
-                        "_type": "NumericComparisonExpression",
-                        "source_location": {
-                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
-                          "line": 16,
-                          "end_line": 16,
-                          "comment_lines": 0,
-                          "column": null,
-                          "end_column": null
                         },
-                        "wtype": {
-                          "_type": "WType",
-                          "name": "bool",
-                          "immutable": true
-                        },
-                        "lhs": {
-                          "_type": "ReinterpretCast",
+                        "op": "and",
+                        "right": {
+                          "_type": "NumericComparisonExpression",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
                             "line": 16,
@@ -9067,11 +9051,11 @@
                           },
                           "wtype": {
                             "_type": "WType",
-                            "name": "biguint",
+                            "name": "bool",
                             "immutable": true
                           },
-                          "expr": {
-                            "_type": "VarExpression",
+                          "lhs": {
+                            "_type": "ReinterpretCast",
                             "source_location": {
                               "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
                               "line": 16,
@@ -9081,32 +9065,48 @@
                               "end_column": null
                             },
                             "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
                             },
-                            "name": "__ecrecover_s_1"
+                            "expr": {
+                              "_type": "VarExpression",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
+                                "line": 16,
+                                "end_line": 16,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "name": "__ecrecover_s_1"
+                            }
+                          },
+                          "operator": "<",
+                          "rhs": {
+                            "_type": "IntegerConstant",
+                            "source_location": {
+                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
+                              "line": 16,
+                              "end_line": 16,
+                              "comment_lines": 0,
+                              "column": null,
+                              "end_column": null
+                            },
+                            "wtype": {
+                              "_type": "WType",
+                              "name": "biguint",
+                              "immutable": true
+                            },
+                            "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                            "teal_alias": null
                           }
-                        },
-                        "operator": "<",
-                        "rhs": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/ecrecover/contracts/failing_ecrecover_invalid_input_proper.sol",
-                            "line": 16,
-                            "end_line": 16,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                          "teal_alias": null
                         }
                       }
                     }

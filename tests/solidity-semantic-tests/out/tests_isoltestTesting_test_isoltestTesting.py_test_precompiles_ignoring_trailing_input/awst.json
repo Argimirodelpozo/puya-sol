@@ -4923,7 +4923,7 @@
                       "immutable": true
                     },
                     "left": {
-                      "_type": "BooleanBinaryOperation",
+                      "_type": "NumericComparisonExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
                         "line": 3,
@@ -4937,8 +4937,8 @@
                         "name": "bool",
                         "immutable": true
                       },
-                      "left": {
-                        "_type": "NumericComparisonExpression",
+                      "lhs": {
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
                           "line": 3,
@@ -4949,11 +4949,11 @@
                         },
                         "wtype": {
                           "_type": "WType",
-                          "name": "bool",
+                          "name": "biguint",
                           "immutable": true
                         },
-                        "lhs": {
-                          "_type": "ReinterpretCast",
+                        "expr": {
+                          "_type": "IntrinsicCall",
                           "source_location": {
                             "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
                             "line": 3,
@@ -4963,31 +4963,32 @@
                             "end_column": null
                           },
                           "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
                           },
-                          "expr": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                              "line": 3,
-                              "end_line": 3,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "op_code": "extract3",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "SingleEvaluation",
+                          "op_code": "extract3",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "SingleEvaluation",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                "line": 3,
+                                "end_line": 3,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "source": {
+                                "_type": "IntrinsicCall",
                                 "source_location": {
                                   "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
                                   "line": 3,
@@ -5002,127 +5003,91 @@
                                   "immutable": true,
                                   "length": null
                                 },
-                                "source": {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                                    "line": 3,
-                                    "end_line": 3,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "VarExpression",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                                        "line": 3,
-                                        "end_line": 3,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "name": "__evmabi_heads_0"
+                                "op_code": "concat",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                      "line": 3,
+                                      "end_line": 3,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
                                     },
-                                    {
-                                      "_type": "VarExpression",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                                        "line": 3,
-                                        "end_line": 3,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "name": "__evmabi_tails_0"
-                                    }
-                                  ]
-                                },
-                                "_id": 1048579
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "name": "__evmabi_heads_0"
+                                  },
+                                  {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                      "line": 3,
+                                      "end_line": 3,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "name": "__evmabi_tails_0"
+                                  }
+                                ]
                               },
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                                  "line": 3,
-                                  "end_line": 3,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 64,
-                                "teal_alias": null
+                              "_id": 1048579
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                "line": 3,
+                                "end_line": 3,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
                               },
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                                  "line": 3,
-                                  "end_line": 3,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 32,
-                                "teal_alias": null
-                              }
-                            ]
-                          }
-                        },
-                        "operator": "!=",
-                        "rhs": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                            "line": 3,
-                            "end_line": 3,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": 0,
-                          "teal_alias": null
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 64,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                "line": 3,
+                                "end_line": 3,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 32,
+                              "teal_alias": null
+                            }
+                          ]
                         }
                       },
-                      "op": "and",
-                      "right": {
-                        "_type": "NumericComparisonExpression",
+                      "operator": "!=",
+                      "rhs": {
+                        "_type": "IntegerConstant",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
                           "line": 3,
@@ -5133,180 +5098,215 @@
                         },
                         "wtype": {
                           "_type": "WType",
-                          "name": "bool",
+                          "name": "biguint",
                           "immutable": true
                         },
-                        "lhs": {
-                          "_type": "ReinterpretCast",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                            "line": 3,
-                            "end_line": 3,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "expr": {
-                            "_type": "IntrinsicCall",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                              "line": 3,
-                              "end_line": 3,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "op_code": "extract3",
-                            "immediates": [],
-                            "stack_args": [
-                              {
-                                "_type": "SingleEvaluation",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                                  "line": 3,
-                                  "end_line": 3,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "BytesWType",
-                                  "name": "bytes",
-                                  "immutable": true,
-                                  "length": null
-                                },
-                                "source": {
-                                  "_type": "IntrinsicCall",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                                    "line": 3,
-                                    "end_line": 3,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "op_code": "concat",
-                                  "immediates": [],
-                                  "stack_args": [
-                                    {
-                                      "_type": "VarExpression",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                                        "line": 3,
-                                        "end_line": 3,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "name": "__evmabi_heads_0"
-                                    },
-                                    {
-                                      "_type": "VarExpression",
-                                      "source_location": {
-                                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                                        "line": 3,
-                                        "end_line": 3,
-                                        "comment_lines": 0,
-                                        "column": null,
-                                        "end_column": null
-                                      },
-                                      "wtype": {
-                                        "_type": "BytesWType",
-                                        "name": "bytes",
-                                        "immutable": true,
-                                        "length": null
-                                      },
-                                      "name": "__evmabi_tails_0"
-                                    }
-                                  ]
-                                },
-                                "_id": 1048579
-                              },
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                                  "line": 3,
-                                  "end_line": 3,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 64,
-                                "teal_alias": null
-                              },
-                              {
-                                "_type": "IntegerConstant",
-                                "source_location": {
-                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                                  "line": 3,
-                                  "end_line": 3,
-                                  "comment_lines": 0,
-                                  "column": null,
-                                  "end_column": null
-                                },
-                                "wtype": {
-                                  "_type": "WType",
-                                  "name": "uint64",
-                                  "immutable": true
-                                },
-                                "value": 32,
-                                "teal_alias": null
-                              }
-                            ]
-                          }
-                        },
-                        "operator": "<",
-                        "rhs": {
-                          "_type": "IntegerConstant",
-                          "source_location": {
-                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                            "line": 3,
-                            "end_line": 3,
-                            "comment_lines": 0,
-                            "column": null,
-                            "end_column": null
-                          },
-                          "wtype": {
-                            "_type": "WType",
-                            "name": "biguint",
-                            "immutable": true
-                          },
-                          "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                          "teal_alias": null
-                        }
+                        "value": 0,
+                        "teal_alias": null
                       }
                     },
                     "op": "and",
                     "right": {
+                      "_type": "NumericComparisonExpression",
+                      "source_location": {
+                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                        "line": 3,
+                        "end_line": 3,
+                        "comment_lines": 0,
+                        "column": null,
+                        "end_column": null
+                      },
+                      "wtype": {
+                        "_type": "WType",
+                        "name": "bool",
+                        "immutable": true
+                      },
+                      "lhs": {
+                        "_type": "ReinterpretCast",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                          "line": 3,
+                          "end_line": 3,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "expr": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                            "line": 3,
+                            "end_line": 3,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "extract3",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "SingleEvaluation",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                "line": 3,
+                                "end_line": 3,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "BytesWType",
+                                "name": "bytes",
+                                "immutable": true,
+                                "length": null
+                              },
+                              "source": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                  "line": 3,
+                                  "end_line": 3,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
+                                },
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "concat",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                      "line": 3,
+                                      "end_line": 3,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "name": "__evmabi_heads_0"
+                                  },
+                                  {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                      "line": 3,
+                                      "end_line": 3,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "name": "__evmabi_tails_0"
+                                  }
+                                ]
+                              },
+                              "_id": 1048579
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                "line": 3,
+                                "end_line": 3,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 64,
+                              "teal_alias": null
+                            },
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                "line": 3,
+                                "end_line": 3,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 32,
+                              "teal_alias": null
+                            }
+                          ]
+                        }
+                      },
+                      "operator": "<",
+                      "rhs": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                          "line": 3,
+                          "end_line": 3,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                        "teal_alias": null
+                      }
+                    }
+                  },
+                  "op": "and",
+                  "right": {
+                    "_type": "BooleanBinaryOperation",
+                    "source_location": {
+                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                      "line": 3,
+                      "end_line": 3,
+                      "comment_lines": 0,
+                      "column": null,
+                      "end_column": null
+                    },
+                    "wtype": {
+                      "_type": "WType",
+                      "name": "bool",
+                      "immutable": true
+                    },
+                    "left": {
                       "_type": "NumericComparisonExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
@@ -5488,26 +5488,10 @@
                         "value": 0,
                         "teal_alias": null
                       }
-                    }
-                  },
-                  "op": "and",
-                  "right": {
-                    "_type": "NumericComparisonExpression",
-                    "source_location": {
-                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                      "line": 3,
-                      "end_line": 3,
-                      "comment_lines": 0,
-                      "column": null,
-                      "end_column": null
                     },
-                    "wtype": {
-                      "_type": "WType",
-                      "name": "bool",
-                      "immutable": true
-                    },
-                    "lhs": {
-                      "_type": "ReinterpretCast",
+                    "op": "and",
+                    "right": {
+                      "_type": "NumericComparisonExpression",
                       "source_location": {
                         "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
                         "line": 3,
@@ -5518,11 +5502,11 @@
                       },
                       "wtype": {
                         "_type": "WType",
-                        "name": "biguint",
+                        "name": "bool",
                         "immutable": true
                       },
-                      "expr": {
-                        "_type": "IntrinsicCall",
+                      "lhs": {
+                        "_type": "ReinterpretCast",
                         "source_location": {
                           "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
                           "line": 3,
@@ -5532,32 +5516,31 @@
                           "end_column": null
                         },
                         "wtype": {
-                          "_type": "BytesWType",
-                          "name": "bytes",
-                          "immutable": true,
-                          "length": null
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
                         },
-                        "op_code": "extract3",
-                        "immediates": [],
-                        "stack_args": [
-                          {
-                            "_type": "SingleEvaluation",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                              "line": 3,
-                              "end_line": 3,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "BytesWType",
-                              "name": "bytes",
-                              "immutable": true,
-                              "length": null
-                            },
-                            "source": {
-                              "_type": "IntrinsicCall",
+                        "expr": {
+                          "_type": "IntrinsicCall",
+                          "source_location": {
+                            "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                            "line": 3,
+                            "end_line": 3,
+                            "comment_lines": 0,
+                            "column": null,
+                            "end_column": null
+                          },
+                          "wtype": {
+                            "_type": "BytesWType",
+                            "name": "bytes",
+                            "immutable": true,
+                            "length": null
+                          },
+                          "op_code": "extract3",
+                          "immediates": [],
+                          "stack_args": [
+                            {
+                              "_type": "SingleEvaluation",
                               "source_location": {
                                 "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
                                 "line": 3,
@@ -5572,106 +5555,123 @@
                                 "immutable": true,
                                 "length": null
                               },
-                              "op_code": "concat",
-                              "immediates": [],
-                              "stack_args": [
-                                {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                                    "line": 3,
-                                    "end_line": 3,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
-                                  },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "name": "__evmabi_heads_0"
+                              "source": {
+                                "_type": "IntrinsicCall",
+                                "source_location": {
+                                  "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                  "line": 3,
+                                  "end_line": 3,
+                                  "comment_lines": 0,
+                                  "column": null,
+                                  "end_column": null
                                 },
-                                {
-                                  "_type": "VarExpression",
-                                  "source_location": {
-                                    "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                                    "line": 3,
-                                    "end_line": 3,
-                                    "comment_lines": 0,
-                                    "column": null,
-                                    "end_column": null
+                                "wtype": {
+                                  "_type": "BytesWType",
+                                  "name": "bytes",
+                                  "immutable": true,
+                                  "length": null
+                                },
+                                "op_code": "concat",
+                                "immediates": [],
+                                "stack_args": [
+                                  {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                      "line": 3,
+                                      "end_line": 3,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "name": "__evmabi_heads_0"
                                   },
-                                  "wtype": {
-                                    "_type": "BytesWType",
-                                    "name": "bytes",
-                                    "immutable": true,
-                                    "length": null
-                                  },
-                                  "name": "__evmabi_tails_0"
-                                }
-                              ]
+                                  {
+                                    "_type": "VarExpression",
+                                    "source_location": {
+                                      "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                      "line": 3,
+                                      "end_line": 3,
+                                      "comment_lines": 0,
+                                      "column": null,
+                                      "end_column": null
+                                    },
+                                    "wtype": {
+                                      "_type": "BytesWType",
+                                      "name": "bytes",
+                                      "immutable": true,
+                                      "length": null
+                                    },
+                                    "name": "__evmabi_tails_0"
+                                  }
+                                ]
+                              },
+                              "_id": 1048579
                             },
-                            "_id": 1048579
-                          },
-                          {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                              "line": 3,
-                              "end_line": 3,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                "line": 3,
+                                "end_line": 3,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 96,
+                              "teal_alias": null
                             },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 96,
-                            "teal_alias": null
-                          },
-                          {
-                            "_type": "IntegerConstant",
-                            "source_location": {
-                              "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                              "line": 3,
-                              "end_line": 3,
-                              "comment_lines": 0,
-                              "column": null,
-                              "end_column": null
-                            },
-                            "wtype": {
-                              "_type": "WType",
-                              "name": "uint64",
-                              "immutable": true
-                            },
-                            "value": 32,
-                            "teal_alias": null
-                          }
-                        ]
+                            {
+                              "_type": "IntegerConstant",
+                              "source_location": {
+                                "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                                "line": 3,
+                                "end_line": 3,
+                                "comment_lines": 0,
+                                "column": null,
+                                "end_column": null
+                              },
+                              "wtype": {
+                                "_type": "WType",
+                                "name": "uint64",
+                                "immutable": true
+                              },
+                              "value": 32,
+                              "teal_alias": null
+                            }
+                          ]
+                        }
+                      },
+                      "operator": "<",
+                      "rhs": {
+                        "_type": "IntegerConstant",
+                        "source_location": {
+                          "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
+                          "line": 3,
+                          "end_line": 3,
+                          "comment_lines": 0,
+                          "column": null,
+                          "end_column": null
+                        },
+                        "wtype": {
+                          "_type": "WType",
+                          "name": "biguint",
+                          "immutable": true
+                        },
+                        "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
+                        "teal_alias": null
                       }
-                    },
-                    "operator": "<",
-                    "rhs": {
-                      "_type": "IntegerConstant",
-                      "source_location": {
-                        "file": "/home/argi/AlgorandFoundation/SideProjects/puya-sol/puya-sol/tests/solidity-semantic-tests/tests/isoltestTesting/contracts/precompiles_ignoring_trailing_input.sol",
-                        "line": 3,
-                        "end_line": 3,
-                        "comment_lines": 0,
-                        "column": null,
-                        "end_column": null
-                      },
-                      "wtype": {
-                        "_type": "WType",
-                        "name": "biguint",
-                        "immutable": true
-                      },
-                      "value": "115792089237316195423570985008687907852837564279074904382605163141518161494337",
-                      "teal_alias": null
                     }
                   }
                 }

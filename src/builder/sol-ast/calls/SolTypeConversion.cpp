@@ -1,6 +1,5 @@
 /// @file SolTypeConversion.cpp
 /// Type conversion calls: uint256(x), address(y), bytes32(z), bool(w), etc.
-/// Migrated from FunctionCallBuilder.cpp lines 117-784.
 
 #include "builder/sol-ast/calls/SolTypeConversion.h"
 #include "builder/sol-types/TypeMapper.h"

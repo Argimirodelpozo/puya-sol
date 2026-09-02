@@ -1,6 +1,5 @@
 /// @file SolExternalCall.cpp
 /// External interface/contract calls via inner app transactions.
-/// Migrated from FunctionCallBuilder.cpp lines 3662-4084.
 
 #include "builder/sol-ast/calls/SolExternalCall.h"
 #include "builder/AwstShorthand.h"
@@ -106,10 +105,13 @@ std::shared_ptr<awst::Expression> SolExternalCall::addressToAppId(
 std::shared_ptr<awst::Expression> SolExternalCall::submitAndReturn(
 	std::shared_ptr<awst::Expression> _create,
 	awst::WType const* _returnType,
-	solidity::frontend::Type const* _solReturnType)
+	solidity::frontend::Type const* _solReturnType,
+	std::shared_ptr<awst::Expression> _payTxn)
 {
 	static awst::WInnerTransaction s_applTxnType(TxnTypeAppl);
 	auto submit = awst::makeSubmitInnerTransaction(&s_applTxnType, m_loc);
+	if (_payTxn)
+		submit->itxns.push_back(std::move(_payTxn));
 	submit->itxns.push_back(std::move(_create));
 
 	// For void returns
@@ -324,6 +326,14 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 		}
 	}
 
+	// {value: V} on a TYPED external call: prepend a PaymentTxn in the same
+	// inner group (the callee's msg.value reads the preceding payment) — the
+	// same convention as the low-level .call{value:} shapes. This ALSO
+	// evaluates a {gas: expr} option for its side effects (the amount itself
+	// has no AVM analogue). Previously this path never read the options and
+	// the value was SILENTLY DROPPED (callee saw msg.value == 0).
+	auto callValue = extractCallValue();
+
 	auto baseTranslated = buildExpr(memberAccess->expression());
 
 	// Build selector. The selected contract profile owns the transport; Solidity
@@ -399,6 +409,25 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	// Convert receiver to app ID
 	auto appId = addressToAppId(std::move(baseTranslated));
 
+	// The {value:} payment pays the called app's ESCROW, derived from the
+	// same app id (a contract-value address paid verbatim lands on a keyless
+	// zero-padded pseudo-account). app_params_get needs the app available —
+	// the same requirement the inner ApplicationCall already imposes.
+	std::shared_ptr<awst::Expression> payTxn;
+	if (callValue)
+	{
+		appId = awst::makeEvalOnce(std::move(appId), m_loc);
+		auto* tupleType = m_ctx.typeMapper.createType<awst::WTuple>(
+			std::vector<awst::WType const*>{
+				awst::WType::bytesType(), awst::WType::boolType()});
+		auto appParams = awst::makeAppParamsGet(
+			"AppAddress", appId, tupleType, m_loc);
+		auto escrow = awst::makeAsAccount(awst::makeTupleItem(
+			std::move(appParams), 0, awst::WType::bytesType(), m_loc), m_loc);
+		payTxn = eb::InnerCallHandlers::buildPaymentTransaction(
+			m_ctx, std::move(escrow), std::move(callValue), m_loc);
+	}
+
 	// Build inner app transaction
 	static awst::WInnerTransactionFields s_applFieldsType(TxnTypeAppl);
 	auto create = awst::makeCreateInnerTransaction(&s_applFieldsType, m_loc);
@@ -409,7 +438,9 @@ std::shared_ptr<awst::Expression> SolExternalCall::toAwst()
 	create->fields["ApplicationArgs"] = std::move(argsTuple);
 
 	auto* retType = m_ctx.typeMapper.map(m_call.annotation().type);
-	return submitAndReturn(std::move(create), retType, m_call.annotation().type);
+	return submitAndReturn(
+		std::move(create), retType, m_call.annotation().type,
+		std::move(payTxn));
 }
 
 } // namespace puyasol::builder::sol_ast

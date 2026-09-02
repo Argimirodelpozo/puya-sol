@@ -1,6 +1,5 @@
 /// @file SolBytesConcat.cpp
 /// bytes.concat(a, b, ...) and string.concat(a, b, ...).
-/// Migrated from FunctionCallBuilder.cpp lines 3270-3321.
 
 #include "builder/sol-ast/calls/SolBytesConcat.h"
 

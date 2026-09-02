@@ -34,30 +34,22 @@ inline std::shared_ptr<awst::Expression> secp256k1RangeCondition(
 	std::function<std::shared_ptr<awst::Expression>()> const& readS,
 	awst::SourceLocation const& loc)
 {
-	auto asBig = [&](std::shared_ptr<awst::Expression> e) {
-		return awst::makeAsBiguint(std::move(e), loc);
+	// operand != 0 && operand < N
+	auto inRange = [&](auto const& read) {
+		auto nonZero = awst::makeNumericCompare(
+			awst::makeAsBiguint(read(), loc), awst::NumericComparison::Ne,
+			awst::makeIntegerConstant("0", loc, awst::WType::biguintType()),
+			loc);
+		auto belowN = awst::makeNumericCompare(
+			awst::makeAsBiguint(read(), loc), awst::NumericComparison::Lt,
+			awst::makeIntegerConstant(
+				secp256k1GroupOrder(), loc, awst::WType::biguintType()),
+			loc);
+		return awst::makeBoolBinOp(std::move(nonZero),
+			awst::BinaryBooleanOperator::And, std::move(belowN), loc);
 	};
-	auto bigN = [&]() {
-		return awst::makeIntegerConstant(
-			secp256k1GroupOrder(), loc, awst::WType::biguintType());
-	};
-	auto bigZero = [&]() {
-		return awst::makeIntegerConstant("0", loc, awst::WType::biguintType());
-	};
-	auto andOp = [&](std::shared_ptr<awst::Expression> a,
-		std::shared_ptr<awst::Expression> b) {
-		return awst::makeBoolBinOp(
-			std::move(a), awst::BinaryBooleanOperator::And, std::move(b), loc);
-	};
-	std::shared_ptr<awst::Expression> cond = awst::makeNumericCompare(
-		asBig(readR()), awst::NumericComparison::Ne, bigZero(), loc);
-	cond = andOp(std::move(cond), awst::makeNumericCompare(
-		asBig(readR()), awst::NumericComparison::Lt, bigN(), loc));
-	cond = andOp(std::move(cond), awst::makeNumericCompare(
-		asBig(readS()), awst::NumericComparison::Ne, bigZero(), loc));
-	cond = andOp(std::move(cond), awst::makeNumericCompare(
-		asBig(readS()), awst::NumericComparison::Lt, bigN(), loc));
-	return cond;
+	return awst::makeBoolBinOp(inRange(readR),
+		awst::BinaryBooleanOperator::And, inRange(readS), loc);
 }
 
 } // namespace puyasol::builder

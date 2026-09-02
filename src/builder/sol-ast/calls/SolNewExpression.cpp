@@ -1,6 +1,5 @@
 /// @file SolNewExpression.cpp
 /// new bytes(N), new T[](N), new Contract(...).
-/// Migrated from FunctionCallBuilder.cpp lines 2144-2304.
 
 #include "builder/sol-ast/calls/SolNewExpression.h"
 #include "builder/BuildArtifacts.h"

@@ -14,8 +14,6 @@ namespace puyasol::builder
 class FunctionSymbolTable
 {
 public:
-	using Entries = std::unordered_map<int64_t, std::string>;
-
 	void clear()
 	{
 		m_entries.clear();
@@ -46,7 +44,7 @@ public:
 	}
 
 private:
-	Entries m_entries;
+	std::unordered_map<int64_t, std::string> m_entries;
 	std::set<int64_t> m_rootSubroutines;
 };
 

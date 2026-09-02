@@ -1,6 +1,5 @@
 /// @file SolMetaTypeAccess.cpp
 /// type(X).max/min/name/interfaceId.
-/// Migrated from MemberAccessBuilder.cpp lines 380-687.
 
 #include "builder/sol-ast/members/SolMetaTypeAccess.h"
 #include "builder/SelectorSemantics.h"

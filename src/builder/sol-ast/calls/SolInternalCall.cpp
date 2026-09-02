@@ -1,6 +1,5 @@
 /// @file SolInternalCall.cpp
 /// Internal function call resolution and SubroutineCallExpression building.
-/// Migrated from FunctionCallBuilder.cpp lines 3324-4390.
 
 #include "builder/sol-ast/calls/SolInternalCall.h"
 #include "builder/sol-types/RefParamPassing.h"

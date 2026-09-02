@@ -1,5 +1,4 @@
 /// @file SolVariableDeclaration.cpp
-/// Migrated from VariableDeclarationBuilder.cpp.
 
 #include "builder/sol-ast/stmts/SolVariableDeclaration.h"
 #include "Logger.h"
