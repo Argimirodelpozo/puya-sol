@@ -200,6 +200,17 @@ std::shared_ptr<awst::Expression> buildBigUIntExp(
 	std::shared_ptr<awst::Expression> _exp,
 	awst::SourceLocation const& _loc)
 {
+	return buildBigUIntExpInto(
+		m_ctx.preEffects(), _isUnchecked, std::move(_base), std::move(_exp), _loc);
+}
+
+std::shared_ptr<awst::Expression> buildBigUIntExpInto(
+	std::vector<std::shared_ptr<awst::Statement>>& _sink,
+	bool _isUnchecked,
+	std::shared_ptr<awst::Expression> _base,
+	std::shared_ptr<awst::Expression> _exp,
+	awst::SourceLocation const& _loc)
+{
 	_base = TypeCoercion::implicitNumericCast(std::move(_base), awst::WType::biguintType(), _loc);
 	_exp = TypeCoercion::implicitNumericCast(std::move(_exp), awst::WType::biguintType(), _loc);
 
@@ -226,9 +237,9 @@ std::shared_ptr<awst::Expression> buildBigUIntExp(
 		return b;
 	};
 
-	m_ctx.preEffects().push_back(makeAssign(resultVar, makeConst("1")));
-	m_ctx.preEffects().push_back(makeAssign(baseVar, std::move(_base)));
-	m_ctx.preEffects().push_back(makeAssign(expVar, std::move(_exp)));
+	_sink.push_back(makeAssign(resultVar, makeConst("1")));
+	_sink.push_back(makeAssign(baseVar, std::move(_base)));
+	_sink.push_back(makeAssign(expVar, std::move(_exp)));
 
 	// while exp > 0:
 	auto loopCond = awst::makeNumericCompare(makeVar(expVar), awst::NumericComparison::Gt, makeConst("0"), _loc);
@@ -269,7 +280,7 @@ std::shared_ptr<awst::Expression> buildBigUIntExp(
 		body->body.push_back(makeAssign(baseVar, std::move(baseSq)));
 	}
 
-	m_ctx.preEffects().push_back(
+	_sink.push_back(
 		awst::makeWhileLoop(std::move(loopCond), std::move(body), _loc));
 
 	return makeVar(resultVar);

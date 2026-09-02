@@ -2,6 +2,7 @@
 /// Arithmetic and comparison operations: add, mul, mod, sub, eq, lt, gt, and, or, not, xor.
 
 #include "builder/assembly/AssemblyBuilder.h"
+#include "builder/sol-eb/BigUIntMathHelpers.h"
 #include "Logger.h"
 
 #include <boost/multiprecision/cpp_int.hpp>
@@ -137,7 +138,7 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleExp(
 	// (the idiomatic Yul use is byte-shifting by a power of a literal, e.g.
 	// `exp(256, 12)` = 2^96 in ENS AddrResolver's asm addr<->bytes). EVM exp
 	// wraps mod 2^256; compute via modular exponentiation to avoid huge
-	// intermediates. Non-constant exponents stay a hard error (no silent 0).
+	// intermediates.
 	auto const* baseC = dynamic_cast<awst::IntegerConstant const*>(_args[0].get());
 	auto const* expC = dynamic_cast<awst::IntegerConstant const*>(_args[1].get());
 	if (baseC && expC)
@@ -157,10 +158,13 @@ std::shared_ptr<awst::Expression> AssemblyBuilder::handleExp(
 		}
 		return awst::makeIntegerConstant(result.str(), _loc, awst::WType::biguintType());
 	}
-	Logger::instance().error(
-		"unsupported Yul builtin `exp` with a non-constant operand: no AVM exp "
-		"opcode exists (only compile-time-constant exponentiation is folded).", _loc);
-	return awst::makeZero(_loc, awst::WType::biguintType());
+	// Runtime operands: square-and-multiply, wrapping mod 2^256 like the EVM
+	// opcode (0**0 = 1 falls out of the loop shape). Same helper the
+	// Solidity-level unchecked `**` uses; the loop lands in the pending
+	// statements the enclosing statement handler drains.
+	return eb::buildBigUIntExpInto(
+		m_pendingStatements, /*_isUnchecked=*/true,
+		ensureBiguint(_args[0], _loc), ensureBiguint(_args[1], _loc), _loc);
 }
 
 std::shared_ptr<awst::Expression> AssemblyBuilder::handleMod(

@@ -69,6 +69,15 @@ std::shared_ptr<awst::Expression> buildBigUIntExp(
 	std::shared_ptr<awst::Expression> _exp,
 	awst::SourceLocation const& _loc);
 
+/// Same, with an explicit statement sink — for callers without a
+/// ContractContext (the Yul `exp` handler's pending-statement list).
+std::shared_ptr<awst::Expression> buildBigUIntExpInto(
+	std::vector<std::shared_ptr<awst::Statement>>& _sink,
+	bool _isUnchecked,
+	std::shared_ptr<awst::Expression> _base,
+	std::shared_ptr<awst::Expression> _exp,
+	awst::SourceLocation const& _loc);
+
 /// `(a + 2^256 - b) % 2^256`. In checked mode also prepends `assert(a >= b)`.
 std::shared_ptr<awst::Expression> buildWrappingSubtract(
 	ContractContext& _ctx,
