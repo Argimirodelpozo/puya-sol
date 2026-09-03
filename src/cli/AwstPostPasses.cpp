@@ -59,8 +59,8 @@ void applyInlineOverrides(AwstRoots& _roots, Options const& _opts)
 				+ " node(s) for inlining");
 	}
 
-	// --force-no-inline-sub: set inlineOpt=false so a single-call sub stays a real
-	// callsub — keeps it as a --fn-split boundary and limits its body to one chunk.
+	// --force-no-inline-sub: set inlineOpt=false so a single-call sub remains a
+	// real callsub instead of being folded into each call site.
 	if (!_opts.forceNoInlineSubs.empty())
 	{
 		std::set<std::string> wanted(

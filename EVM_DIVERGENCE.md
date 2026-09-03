@@ -4,6 +4,19 @@ Deliberate, fail-loud or fail-honest differences between puya-sol's AVM
 lowering and EVM semantics. Test xfail reasons cite this file; entries here
 are POLICY, not bugs.
 
+## Compiler enforcement
+
+Detected non-exact behavior fails compilation by default. A research or
+compatibility build must acknowledge each eligible behavior separately with
+the repeatable `--allow-divergence <name>` option; `puya-sol --help` lists the
+stable names, and there is no catch-all opt-in. Explicitly configured EVM
+environment values are already acknowledged by their configuration options.
+Fundamentally unsupported features remain unconditional compile errors.
+
+The semantic-test harness opts into every listed adaptation because its job is
+to measure and classify EVM/AVM differences. That harness policy does not alter
+the compiler's fail-closed default.
+
 ## Address identity and native value transfer (EVM profile)
 
 The EVM profile (`--contract-abi evm`) gives Solidity one 160-bit address
@@ -17,9 +30,10 @@ namespace is the coordinate system of the differential-replay certification.
 (`bzero12 ++ low20`) is not a spendable AVM identity: nobody holds a key
 for it. Consequently, **native value transfer** (`transfer`/`send`/
 `call{value: ...}`) to a 160-bit identity sends funds to a keyless address,
-unrecoverably. The compiler warns at every such lowering. The EVM profile
-without an account model is a differential/compat instrument, not a
-deployment target.
+unrecoverably. The EVM profile without an account model is a
+differential/compat instrument, not a deployment target. The compiler rejects
+this transfer path unless it is explicitly acknowledged with
+`--allow-divergence native-value-transfer`.
 
 **The xchain account model closes this** (`--xchain-template`, see
 github.com/algorandfoundation/xchain-accounts): each 20-byte EVM identity E
@@ -43,27 +57,34 @@ indistinguishable from the `bzero24 ++ appId` contract-value convention
 
 ## Other standing entries (summaries; see tests' xfail reasons)
 
-- `delegatecall` / Yul `create2` / `selfdestruct` / metamorphic patterns:
-  compile-time hard errors (no AVM analogue; stubbing would silently
-  compute wrong results). Dead (solc-pruned) delegatecall is exempt via
-  the call-graph reachability gate.
+- `delegatecall`: rejected by default because there is no AVM analogue. A
+  research build may acknowledge `--allow-divergence delegatecall`, which
+  preserves a deliberate runtime-failure lowering rather than fabricating
+  foreign execution. Yul `create2`, `selfdestruct`, and metamorphic patterns
+  remain hard errors. Dead (solc-pruned) delegatecall is exempt via the
+  call-graph reachability gate.
 - `address(other).code`, `extcodesize/extcodehash` of arbitrary addresses:
   hard errors — an arbitrary address cannot be dereferenced to code on the
   AVM; `address.code` of a KNOWN app resolves via the app id convention.
-- try/catch catch-clauses: unreachable — a failing inner txn aborts the
-  whole transaction (success paths are equivalence-tested).
+- `address.balance` is denominated in microAlgos, not wei, and requires
+  `--allow-divergence address-balance-units`.
+- try/catch catch-clauses: unreachable — a failing inner txn aborts the whole
+  transaction. Compilation requires `--allow-divergence try-catch` (success
+  paths are equivalence-tested).
 - `this.f()`: the AVM forbids an app calling itself (no reentrancy), so it
   lowers to a SUBROUTINE call — inside `f`, `msg.sender` and `msg.value`
   keep the ORIGINAL transaction's values, where the EVM's real external
   call would show `msg.sender == address(this)` and the explicitly sent
-  value (default 0). Guarded by test_itxn_parity_matrix (oracle answers
-  pinned in the test header).
+  value (default 0). Compilation requires `--allow-divergence self-call`.
+  Guarded by test_itxn_parity_matrix (oracle answers pinned in the test header).
 - Reentrancy in general: the AVM rejects any inner call into an app that
   is already executing (A→B→A aborts), where the EVM allows it. Contracts
   RELYING on reentrancy cannot be expressed; reentrancy-guarded code is
   unaffected.
-- Low-level calls (`t.call`/`staticcall`, any calldata incl. empty): submit
-  a real inner app call. Two consequences vs the EVM: a REJECTED call
+- Low-level calls (`t.call`/`staticcall`, any calldata incl. empty): submit a
+  real inner app call and require `--allow-divergence
+  low-level-call-outcome`; `staticcall` additionally requires
+  `--allow-divergence staticcall`. Two consequences vs the EVM: a REJECTED call
   aborts the whole transaction (`ok == false` is not catchable), and a
   CODELESS target aborts where the EVM silently succeeds with
   `(true, "")` — fabricating that success would let error handling pass

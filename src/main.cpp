@@ -4,6 +4,7 @@
 /// CLI details live in src/cli/ (CliOptions, SourceCompat, CompilerSetup, AwstPostPasses).
 
 #include "Logger.h"
+#include "HexBytes.h"
 #include "builder/AWSTBuilder.h"
 #include "builder/ScratchLayout.h"
 #include "cli/AwstPostPasses.h"
@@ -208,6 +209,7 @@ int main(int _argc, char* _argv[])
 			? std::nullopt : std::optional<std::string>{opts.evmBlockGasLimit},
 		.evmCoinbase = opts.evmCoinbase.empty()
 			? std::nullopt : std::optional<std::string>{opts.evmCoinbase},
+		.allowedEvmDivergences = opts.allowedEvmDivergences,
 		.childProgramsViaBox = opts.childProgramsViaBox,
 		.evmVersionName = evmVer.name(),
 		.scratchLayout = puyasol::builder::ScratchLayout(
@@ -220,27 +222,26 @@ int main(int _argc, char* _argv[])
 	// any decode/placement error must fail the COMPILE, not the funds.
 	if (!opts.xchainTemplateHex.empty())
 	{
-		auto decodeHex = [&](std::string const& hex,
-			char const* what) -> std::vector<uint8_t> {
-			std::string h = hex.rfind("0x", 0) == 0 ? hex.substr(2) : hex;
-			if (h.size() % 2 != 0)
-			{
-				logger.error(std::string(what) + " must be even-length hex");
-				std::exit(2);
-			}
-			std::vector<uint8_t> out;
-			for (size_t i = 0; i < h.size(); i += 2)
-				out.push_back(static_cast<uint8_t>(
-					std::stoul(h.substr(i, 2), nullptr, 16)));
-			return out;
-		};
-		auto tmpl = decodeHex(opts.xchainTemplateHex, "--xchain-template");
-		auto ph = decodeHex(opts.xchainPlaceholderHex, "--xchain-placeholder");
-		if (ph.size() != 20)
+		// Strict decode (puyasol::hexToBytes): a non-hex nibble or an odd
+		// length is an error, never a partially parsed byte, and nothing here
+		// can throw. CliOptions already validated both, so a failure means a
+		// producer bypassed the CLI — still fail the compile, never the funds.
+		auto tmplBytes = puyasol::hexToBytes(opts.xchainTemplateHex);
+		if (!tmplBytes)
 		{
-			logger.error("--xchain-placeholder must be exactly 20 bytes");
+			logger.error("--xchain-template must be an even-length run of hex "
+				"digits (optional 0x prefix)");
 			return 2;
 		}
+		auto phBytes = puyasol::hexToBytes(opts.xchainPlaceholderHex, 20);
+		if (!phBytes)
+		{
+			logger.error("--xchain-placeholder must be exactly 20 bytes "
+				"(40 hex digits, optional 0x prefix)");
+			return 2;
+		}
+		auto const& tmpl = *tmplBytes;
+		auto const& ph = *phBytes;
 		if (opts.contractAbi != "evm")
 		{
 			logger.error("--xchain-template requires --contract-abi evm "
@@ -262,6 +263,12 @@ int main(int _argc, char* _argv[])
 		compiler, sourceFile, opts.opupBudget, opts.ensureBudget,
 		opts.viaYulBehavior, sourceAliases, std::move(targetProfile));
 
+	if (logger.hasErrors())
+	{
+		logger.error("AWST generation failed.");
+		return 1;
+	}
+
 	if (roots.empty())
 	{
 		logger.error("No contracts found");
@@ -270,20 +277,8 @@ int main(int _argc, char* _argv[])
 
 	logger.info("Generated " + std::to_string(roots.size()) + " AWST root node(s)");
 
-	// Option-driven post-AWST passes (order matters; see AwstPostPasses.h).
+	// Option-driven post-AWST passes.
 	applyInlineOverrides(roots, opts);
-	// The experimental splitter (--split-config / --fn-split /
-	// --deploy-pure-helpers) lives on branch `experimental/splitter`,
-	// removed from main pending the redesign (memory: splitter-deprecated).
-	if (!opts.splitConfig.empty() || !opts.forceDelegate.empty()
-		|| !opts.fnSplits.empty() || opts.deployPureHelpers)
-	{
-		logger.error(
-			"the splitter was removed from main pending redesign — "
-			"check out branch `experimental/splitter` for --split-config/"
-			"--fn-split/--deploy-pure-helpers");
-		return 2;
-	}
 
 	// ─── Serialization and output ─────────────────────────────────────────
 

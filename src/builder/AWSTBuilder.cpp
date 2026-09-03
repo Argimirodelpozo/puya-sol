@@ -7,7 +7,9 @@
 #include "awst/Termination.hpp"
 #include "builder/FunctionIdRegistry.h"
 #include "builder/SubroutineRegistry.hpp"
+#include "builder/abi/Arc4Stdlib.h"
 #include "builder/builtin/Ripemd160Builder.h"
+#include "builder/itxn/AsaIntrinsics.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/stmts/SolBlock.h"
@@ -132,6 +134,11 @@ void AWSTBuilder::translateLibraryFunctions(
 			for (auto const* func: contract->definedFunctions())
 			{
 				if (!func->isImplemented())
+					continue;
+				// Compiler-recognised stdlib facades are consumed at their call sites;
+				// their reverting safety-net bodies are not executable subroutines.
+				if (eb::Arc4Stdlib::isFacadeFunction(*func)
+					|| eb::AsaIntrinsics::isBitsBitlenFacade(*func))
 					continue;
 
 				std::string qualifiedName = libraryName + "." + func->name();

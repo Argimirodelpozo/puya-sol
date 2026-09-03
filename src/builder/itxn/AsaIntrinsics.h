@@ -11,13 +11,18 @@
 namespace puyasol::builder::eb
 {
 
-/// Intercepts AVM stdlib calls (tokens/AVM.sol) and maps them to AVM-native
-/// AWST: `asset_holding_get`/`asset_params_get` for reads, `acfg`/`axfer`
-/// inner txns for mutations. Short-circuits before CallResolver so the
-/// library stubs are never translated as regular subroutines.
+/// Intercepts calls to the libraries in `libs/AVM.sol` and maps them to
+/// AVM-native AWST. Short-circuits before CallResolver so fail-fast Solidity
+/// bodies are not used as runtime subroutines.
 class AsaIntrinsics
 {
 public:
+	/// True only for the canonical `Bits.bitlen(uint256)` declaration in
+	/// `libs/AVM.sol`. Its body is a fail-fast Solidity stub; direct calls are
+	/// lowered to the native AVM `bitlen` opcode.
+	static bool isBitsBitlenFacade(
+		solidity::frontend::FunctionDefinition const& _function);
+
 	/// Try to handle `<base>.<member>(...)`; returns built expression iff
 	/// base is an AVM stdlib library and member is a known intrinsic.
 	/// Returns nullopt to fall through to the generic resolver.
@@ -99,6 +104,12 @@ private:
 		awst::SourceLocation const& _loc);
 
 	static std::optional<std::shared_ptr<awst::Expression>> dispatchGlobal(
+		ContractContext& _ctx,
+		std::string const& _method,
+		std::vector<std::shared_ptr<awst::Expression>>& _args,
+		awst::SourceLocation const& _loc);
+
+	static std::optional<std::shared_ptr<awst::Expression>> dispatchBits(
 		ContractContext& _ctx,
 		std::string const& _method,
 		std::vector<std::shared_ptr<awst::Expression>>& _args,

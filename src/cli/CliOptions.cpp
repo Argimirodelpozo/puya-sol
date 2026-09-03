@@ -1,5 +1,9 @@
 #include "cli/CliOptions.h"
+
+#include "HexBytes.h"
 #include "Logger.h"
+#include "builder/EvmFeaturePolicy.h"
+#include "builder/ScratchLayout.h"
 
 #include <boost/filesystem.hpp>
 
@@ -80,6 +84,31 @@ std::string parseUint256Decimal(
 	return normalized;
 }
 
+/// Validate a hex BLOB argument at parse time, where every other hex option is
+/// already checked. --xchain-template/--xchain-placeholder used to be taken
+/// verbatim and decoded later by a lambda that partially parsed "0g" and
+/// aborted the process on "gg" (audit H-06). _expectedBytes 0 = any nonzero
+/// even length. Returns the normalised lowercase digits.
+std::string parseHexBlob(
+	std::string const& _opt, std::string value, size_t _expectedBytes)
+{
+	auto bytes = puyasol::hexToBytes(value, _expectedBytes);
+	if (!bytes)
+	{
+		std::cerr << "Error: " << _opt << " expects "
+			<< (_expectedBytes ? std::to_string(_expectedBytes) + " bytes as "
+					+ std::to_string(_expectedBytes * 2) + " hex digits"
+				: std::string("an even-length run of hex digits"))
+			<< " (optional 0x prefix), got '" << value << "'" << std::endl;
+		std::exit(2);
+	}
+	if (value.starts_with("0x") || value.starts_with("0X"))
+		value.erase(0, 2);
+	for (char& c: value)
+		c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+	return value;
+}
+
 std::string parseAddressHex(std::string const& _opt, std::string value)
 {
 	if (value.starts_with("0x") || value.starts_with("0X"))
@@ -122,7 +151,9 @@ void printUsage(char const* _progName)
 		<< "  --opup-budget <N>      Inject ensure_budget(N) into ALL public methods (OpUp)\n"
 		<< "  --ensure-budget <f:N>  Inject ensure_budget(N) into function f (repeatable)\n"
 		<< "  --optimization-level <N>   Puya optimization level: 0, 1, 2 (default: 2)\n"
-		<< "  --evm-memory-slots <N> Scratch slots for EVM memory, contiguous from slot 0 (default 5 = 20KB,\n                         max 88; UltraHonk needs ~32). Transient/flash reservations follow at N..N+10\n"
+		<< "  --evm-memory-slots <N> Scratch slots for EVM memory, contiguous from slot 0 (default 5 = 20KB,\n"
+		<< "                         max " << builder::ScratchLayout::maxMemorySlots
+		<< "; UltraHonk needs ~32). Transient/flash reservations follow at N..N+10\n"
 		<< "  --evm-layout           FULL EVM data-location semantics: implies both\n"
 		<< "                         --evm-storage-layout and --evm-memory-layout (plus the\n"
 		<< "                         transient space coherent with them). The recommended\n"
@@ -157,48 +188,14 @@ void printUsage(char const* _progName)
 		<< "                         Without it, current OpcodeBudget is used.\n"
 		<< "  --evm-coinbase <addr>  Compile-time 20-byte hex block.coinbase value. Required\n"
 		<< "                         by sources that read coinbase; AVM has no native analog.\n"
-		<< "  --split-config <path>  JSON helper/page config. Supports extract, helpers,\n"
-		<< "                         and delegate arrays. Delegate methods run as code pages\n"
-		<< "                         on the original app and preserve storage/caller context.\n"
-		<< "  --force-delegate <list> Comma-separated externally routable methods to emit\n"
-		<< "                         as state-preserving code pages.\n"
-		<< "  --fn-split <spec>      Slice a subroutine's body into pieces. Repeatable.\n"
-		<< "                         Format: <SubName>:<idx>,<idx>,...:g<N>[:cross]\n"
-		<< "                           SubName  — name of the awst::Subroutine to split\n"
-		<< "                           idx,...  — statement indices where splits occur\n"
-		<< "                           g<N>     — group id; pieces share the suffix _g<N>\n"
-		<< "                           cross    — (optional) pieces live on separate chunks\n"
-		<< "                                       and chain via orch.dispatch_chain (gload-\n"
-		<< "                                       based prologue). Without it, pieces share\n"
-		<< "                                       the same txn frame (load 100).\n"
-		<< "                         Pieces are named <SubName>__piece_<i>_g<N> and append\n"
-		<< "                         to AWST roots. Live variables across split points flow\n"
-		<< "                         through scratch slot 100. With :cross, main.cpp also\n"
-		<< "                         emits chain_groups.json so the deploy harness can\n"
-		<< "                         register the piece chain with orch after deploy.\n"
-		<< "  --pin-to-main <list>   Comma-separated method names that MUST stay on the main\n"
-		<< "                         contract and never be split into a chunk. Use for methods\n"
-		<< "                         that read msg.sender or address(this) (chunks see orch as\n"
-		<< "                         sender / __storage as this). Repeatable.\n"
-		<< "  --deploy-pure-helpers  Lift each pure (Solidity `pure`) Subroutine into its own\n"
-		<< "                         one-method sidecar Contract. Call sites in the rest of\n"
-		<< "                         the contract set are rewritten to inner-txn ApplicationCall\n"
-		<< "                         the helper. The helper's bytecode leaves the calling\n"
-		<< "                         chunks (per-Contract DCE), at the cost of one inner-txn\n"
-		<< "                         per call. Each helper gets a TMPL_PURE_HELPER_<name>_<n>\n"
-		<< "                         _APP_ID template var the deploy harness substitutes.\n"
-		<< "  --pure-helper-split <Sub>:<idx>,...  Slice the lifted pure helper\n"
-		<< "                         into pieces at the given statement indices.\n"
-		<< "                         Each piece becomes its own sidecar Contract,\n"
-		<< "                         called as a chained inner-txn group at use sites.\n"
-		<< "                         Use to fit big helpers into the AVM 16 KiB cap.\n"
+		<< "  --allow-divergence <name>  Explicitly acknowledge one non-EVM lowering. Repeatable.\n"
+		<< "                         Valid names: "
+		<< builder::EvmFeaturePolicy::allowedNames() << "\n"
 		<< "  --force-inline-sub <Name>  Set inlineOpt=true on every Subroutine or\n"
 		<< "                         ContractMethod whose name matches <Name>. Puya inlines\n"
-		<< "                         the body at every call site, so the subroutine itself\n"
-		<< "                         can be DCE'd from chunks. Useful for breaking subroutine-\n"
-		<< "                         reachability closures that bloat FunctionSplitter chunks\n"
-		<< "                         (e.g. inlining a heavy non-pure helper so its body can\n"
-		<< "                         be sliced via --fn-split). Repeatable.\n"
+		<< "                         the body at every call site. Repeatable.\n"
+		<< "  --force-no-inline-sub <Name>  Set inlineOpt=false and retain a real\n"
+		<< "                         subroutine for the matching name. Repeatable.\n"
 		<< "  --help                 Show this help message\n";
 }
 
@@ -256,7 +253,8 @@ Options parseArgs(int _argc, char* _argv[])
 				"--optimization-level", _argv[++i], 0, 2);
 		else if (arg == "--evm-memory-slots" && i + 1 < _argc)
 			opts.evmMemorySlots = parseBoundedInt(
-				"--evm-memory-slots", _argv[++i], 1, 240);
+				"--evm-memory-slots", _argv[++i], 1,
+				builder::ScratchLayout::maxMemorySlots);
 		else if (arg == "--evm-storage-layout")
 			opts.evmStorageLayout = true;
 		else if (arg == "--evm-memory-layout")
@@ -297,163 +295,28 @@ Options parseArgs(int _argc, char* _argv[])
 			opts.evmBlockGasLimit = parseUint256Decimal(arg, _argv[++i]);
 		else if (arg == "--evm-coinbase" && i + 1 < _argc)
 			opts.evmCoinbase = parseAddressHex(arg, _argv[++i]);
+		else if (arg == "--allow-divergence" && i + 1 < _argc)
+		{
+			std::string name = _argv[++i];
+			if (!builder::EvmFeaturePolicy::isAllowName(name))
+			{
+				std::cerr << "Error: --allow-divergence does not recognize '"
+					<< name << "'. Valid names: "
+					<< builder::EvmFeaturePolicy::allowedNames() << std::endl;
+				std::exit(2);
+			}
+			opts.allowedEvmDivergences.insert(std::move(name));
+		}
 		else if (arg == "--xchain-template" && i + 1 < _argc)
-			opts.xchainTemplateHex = _argv[++i];
+			opts.xchainTemplateHex = parseHexBlob(arg, _argv[++i], 0);
 		else if (arg == "--xchain-placeholder" && i + 1 < _argc)
-			opts.xchainPlaceholderHex = _argv[++i];
+			opts.xchainPlaceholderHex = parseHexBlob(arg, _argv[++i], 20);
 		else if (arg == "--child-programs-via-box")
 			opts.childProgramsViaBox = true;
-		else if (arg == "--deploy-pure-helpers")
-			opts.deployPureHelpers = true;
 		else if (arg == "--force-inline-sub" && i + 1 < _argc)
 			opts.forceInlineSubs.push_back(_argv[++i]);
 		else if (arg == "--force-no-inline-sub" && i + 1 < _argc)
 			opts.forceNoInlineSubs.push_back(_argv[++i]);
-		else if (arg == "--pure-helper-split" && i + 1 < _argc)
-		{
-			std::string spec = _argv[++i];
-			auto colon = spec.find(':');
-			if (colon == std::string::npos)
-			{
-				std::cerr << "ERR: --pure-helper-split needs <Sub>:<idx>,...\n";
-				exit(1);
-			}
-			Options::PureHelperSplitSpec ps;
-			ps.subroutineName = spec.substr(0, colon);
-			std::string idxs = spec.substr(colon + 1);
-			size_t p = 0;
-			while (p <= idxs.size())
-			{
-				size_t comma = idxs.find(',', p);
-				size_t end = (comma == std::string::npos) ? idxs.size() : comma;
-				std::string tok = idxs.substr(p, end - p);
-				if (!tok.empty())
-					ps.splitPoints.push_back(
-						parseNumber("--uros-splitter", tok));
-				if (comma == std::string::npos) break;
-				p = comma + 1;
-			}
-			opts.pureHelperSplits.push_back(std::move(ps));
-		}
-		else if (arg == "--fn-split" && i + 1 < _argc)
-		{
-			// Format: <Name>:<idx>,...:g<N>[:cross]. 3 or 4 colon-tokens.
-			// "cross" sets crossChunk (gload-based prologue for separate uros chunks).
-			std::string spec = _argv[++i];
-			std::vector<std::string> toks;
-			{
-				size_t start = 0;
-				while (start <= spec.size())
-				{
-					size_t colon = spec.find(':', start);
-					size_t end = (colon == std::string::npos)
-						? spec.size() : colon;
-					toks.push_back(spec.substr(start, end - start));
-					if (colon == std::string::npos) break;
-					start = colon + 1;
-				}
-			}
-			if (toks.size() < 3 || toks.size() > 4)
-			{
-				std::cerr << "--fn-split: malformed spec '" << spec
-					<< "' — expected <Name>:<idx>,<idx>,...:g<N>[:cross]"
-					<< std::endl;
-				std::exit(1);
-			}
-
-			Options::FnSplitSpec fnSpec;
-			fnSpec.subroutineName = toks[0];
-
-			// Parse comma-separated indices
-			std::string const& idxList = toks[1];
-			size_t start = 0;
-			while (start <= idxList.size())
-			{
-				size_t comma = idxList.find(',', start);
-				size_t end = (comma == std::string::npos)
-					? idxList.size() : comma;
-				std::string tok = idxList.substr(start, end - start);
-				if (!tok.empty())
-					fnSpec.splitPoints.push_back(parseNumber("--fn-split", tok));
-				if (comma == std::string::npos) break;
-				start = comma + 1;
-			}
-
-			// Parse group id (must start with 'g')
-			std::string const& gTok = toks[2];
-			if (gTok.empty() || gTok[0] != 'g')
-			{
-				std::cerr << "--fn-split: group id must start with 'g' "
-					"(got '" << gTok << "')" << std::endl;
-				std::exit(1);
-			}
-			fnSpec.groupId = static_cast<int>(
-				parseNumber("--fn-split group", gTok.substr(1)));
-
-			if (toks.size() == 4)
-			{
-				if (toks[3] != "cross")
-				{
-					std::cerr << "--fn-split: trailing token must be "
-						"literally 'cross' if present (got '"
-						<< toks[3] << "')" << std::endl;
-					std::exit(1);
-				}
-				fnSpec.crossChunk = true;
-			}
-
-			opts.fnSplits.push_back(std::move(fnSpec));
-		}
-		else if (arg == "--pin-to-main" && i + 1 < _argc)
-		{
-			// Comma-separated; repeatable.
-			std::string spec = _argv[++i];
-			size_t start = 0;
-			while (start <= spec.size())
-			{
-				size_t comma = spec.find(',', start);
-				size_t end = (comma == std::string::npos) ? spec.size() : comma;
-				std::string name = spec.substr(start, end - start);
-				while (!name.empty() && std::isspace(static_cast<unsigned char>(name.front())))
-					name.erase(name.begin());
-				while (!name.empty() && std::isspace(static_cast<unsigned char>(name.back())))
-					name.pop_back();
-				if (!name.empty())
-					opts.pinnedToMain.push_back(std::move(name));
-				if (comma == std::string::npos) break;
-				start = comma + 1;
-			}
-		}
-		else if (arg == "--split-config" && i + 1 < _argc)
-		{
-			opts.splitConfig = _argv[++i];
-		}
-		else if (arg == "--force-delegate" && i + 1 < _argc)
-		{
-			std::string spec = _argv[++i];
-			size_t start = 0;
-			while (start <= spec.size())
-			{
-				size_t comma = spec.find(',', start);
-				size_t end = (comma == std::string::npos) ? spec.size() : comma;
-				std::string token = spec.substr(start, end - start);
-				while (!token.empty() && std::isspace(static_cast<unsigned char>(token.front())))
-					token.erase(token.begin());
-				while (!token.empty() && std::isspace(static_cast<unsigned char>(token.back())))
-					token.pop_back();
-				if (!token.empty())
-				{
-					if (token == "__postInit")
-						std::cerr << "warning: --force-delegate refuses '__postInit' "
-							"(constructor; the delegate-update mechanism "
-							"cannot be used during deploy)" << std::endl;
-					else
-						opts.forceDelegate.push_back(token);
-				}
-				if (comma == std::string::npos) break;
-				start = comma + 1;
-			}
-		}
 		else if (arg == "--help")
 		{
 			printUsage(_argv[0]);

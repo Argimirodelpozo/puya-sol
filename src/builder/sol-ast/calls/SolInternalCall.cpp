@@ -15,6 +15,7 @@
 #include "builder/sol-ast/AsmScan.h"
 #include "builder/sol-ast/StorageRefPointer.h"
 #include "builder/itxn/AsaIntrinsics.h"
+#include "builder/abi/Arc4Stdlib.h"
 #include "builder/itxn/CallResolver.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/sol-types/FunctionPointerKind.h"
@@ -1171,9 +1172,14 @@ std::shared_ptr<awst::Expression> SolInternalCall::resolveMemberAccessCall(
 	FunctionDefinition const* resolvedFuncDef = nullptr;
 	bool isUsingForCall = false;
 
-	// AVM stdlib intrinsic intercept: short-circuits library resolution for
-	// `AVM.asaCreate / asaBalance / asaTotalSupply / asaTransfer` so the
-	// stub bodies in tokens/AVM.sol never need to compile.
+	// ARC4's abi.encode envelope must be intercepted before normal argument
+	// lowering; the nested abi.encode supplies Solidity type information only.
+	if (auto arc4Result = eb::Arc4Stdlib::tryHandleCall(
+			m_ctx, _memberAccess, m_call, m_loc))
+		return *arc4Result;
+
+	// AVM stdlib intrinsic intercept: short-circuits library resolution so the
+	// fail-fast bodies in libs/AVM.sol are never used as runtime subroutines.
 	if (auto asaResult = eb::AsaIntrinsics::tryHandleCall(
 			m_ctx, _memberAccess, m_call, m_loc))
 		return *asaResult;

@@ -1,15 +1,169 @@
-cmake_minimum_required(VERSION 3.13)
-project(puya-sol VERSION 0.1.0 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.16)
+project(puya-sol VERSION 0.1.0 LANGUAGES C CXX)
 
 include(CTest)
+include(ExternalProject)
+include(GNUInstallDirs)
+
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+	set(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING
+		"Build type (Debug, Release, RelWithDebInfo, or MinSizeRel)" FORCE)
+	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+		Debug Release RelWithDebInfo MinSizeRel)
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Solidity source and build directories
+# Reuse object files across rebuilds and across branches. Opt-in: this only
+# engages if ccache is on PATH, so the build works unchanged without it.
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+	set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}" CACHE STRING "" FORCE)
+	set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}" CACHE STRING "" FORCE)
+	message(STATUS "ccache enabled: ${CCACHE_PROGRAM}")
+else()
+	message(STATUS "ccache not found — install ccache to enable it")
+endif()
+
+# Solidity is built as a separate top-level CMake project because its CMake
+# modules intentionally use CMAKE_SOURCE_DIR. Keeping its binary tree under the
+# puya-sol binary directory prevents ignored or stale artifacts in the source
+# submodule from being linked accidentally.
 set(SOLIDITY_DIR "${CMAKE_SOURCE_DIR}/solidity")
-set(SOLIDITY_BUILD_DIR "${SOLIDITY_DIR}/build")
+set(SOLIDITY_BUILD_DIR "${CMAKE_BINARY_DIR}/solidity")
+
+include("${CMAKE_SOURCE_DIR}/cmake/VerifySolidityCheckout.cmake")
+puya_sol_verify_solidity_checkout(
+	"${CMAKE_SOURCE_DIR}"
+	"${SOLIDITY_DIR}"
+	SOLIDITY_COMMIT
+)
+message(STATUS "Pinned Solidity revision: ${SOLIDITY_COMMIT}")
+
+# Solidity requires Boost 1.83 or newer. Use normal CMake discovery instead of
+# a developer-specific path. When a root hint is supplied, prevent FindBoost
+# from combining headers from that root with incompatible system libraries.
+set(Boost_NO_BOOST_CMAKE ON CACHE BOOL "Use CMake's FindBoost module")
+set(Boost_NO_WARN_NEW_VERSIONS ON CACHE BOOL
+	"Suppress FindBoost warnings for supported Boost releases")
+set(Boost_USE_STATIC_LIBS ON CACHE BOOL "Link Boost statically")
+if(NOT DEFINED Boost_NO_SYSTEM_PATHS)
+	if((DEFINED BOOST_ROOT AND NOT BOOST_ROOT STREQUAL "")
+		OR (DEFINED Boost_ROOT AND NOT Boost_ROOT STREQUAL "")
+		OR (DEFINED ENV{BOOST_ROOT} AND NOT "$ENV{BOOST_ROOT}" STREQUAL ""))
+		set(Boost_NO_SYSTEM_PATHS ON CACHE BOOL
+			"Only search the explicitly selected Boost root")
+	else()
+		set(Boost_NO_SYSTEM_PATHS OFF CACHE BOOL
+			"Allow normal system Boost discovery")
+	endif()
+endif()
+find_package(Boost 1.83 REQUIRED COMPONENTS
+	filesystem
+	program_options
+	unit_test_framework
+)
+find_package(Threads REQUIRED)
+
+set(SOLIDITY_ARCHIVES
+	"${SOLIDITY_BUILD_DIR}/libsolidity/${CMAKE_STATIC_LIBRARY_PREFIX}solidity${CMAKE_STATIC_LIBRARY_SUFFIX}"
+	"${SOLIDITY_BUILD_DIR}/libyul/${CMAKE_STATIC_LIBRARY_PREFIX}yul${CMAKE_STATIC_LIBRARY_SUFFIX}"
+	"${SOLIDITY_BUILD_DIR}/libevmasm/${CMAKE_STATIC_LIBRARY_PREFIX}evmasm${CMAKE_STATIC_LIBRARY_SUFFIX}"
+	"${SOLIDITY_BUILD_DIR}/liblangutil/${CMAKE_STATIC_LIBRARY_PREFIX}langutil${CMAKE_STATIC_LIBRARY_SUFFIX}"
+	"${SOLIDITY_BUILD_DIR}/libsmtutil/${CMAKE_STATIC_LIBRARY_PREFIX}smtutil${CMAKE_STATIC_LIBRARY_SUFFIX}"
+	"${SOLIDITY_BUILD_DIR}/libsolutil/${CMAKE_STATIC_LIBRARY_PREFIX}solutil${CMAKE_STATIC_LIBRARY_SUFFIX}"
+)
+
+set(SOLIDITY_CMAKE_CACHE_ARGS
+	"-DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}"
+	"-DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}"
+	"-DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}"
+	"-DONLY_BUILD_SOLIDITY_LIBRARIES:BOOL=ON"
+	"-DTESTS:BOOL=OFF"
+	"-DTOOLS:BOOL=OFF"
+	"-DPEDANTIC:BOOL=ON"
+	"-DBoost_NO_BOOST_CMAKE:BOOL=${Boost_NO_BOOST_CMAKE}"
+	"-DBoost_NO_SYSTEM_PATHS:BOOL=${Boost_NO_SYSTEM_PATHS}"
+	"-DBoost_NO_WARN_NEW_VERSIONS:BOOL=${Boost_NO_WARN_NEW_VERSIONS}"
+	"-DBoost_USE_STATIC_LIBS:BOOL=${Boost_USE_STATIC_LIBS}"
+	"-DBoost_INCLUDE_DIR:PATH=${Boost_INCLUDE_DIR}"
+)
+foreach(boost_var IN ITEMS
+	BOOST_ROOT
+	Boost_ROOT
+	Boost_LIBRARY_DIR_DEBUG
+	Boost_LIBRARY_DIR_RELEASE
+	Boost_FILESYSTEM_LIBRARY_DEBUG
+	Boost_FILESYSTEM_LIBRARY_RELEASE
+	Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG
+	Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE
+	Boost_UNIT_TEST_FRAMEWORK_LIBRARY_DEBUG
+	Boost_UNIT_TEST_FRAMEWORK_LIBRARY_RELEASE
+)
+	if(DEFINED ${boost_var} AND NOT "${${boost_var}}" STREQUAL ""
+		AND NOT "${${boost_var}}" MATCHES "NOTFOUND$")
+		list(APPEND SOLIDITY_CMAKE_CACHE_ARGS
+			"-D${boost_var}:PATH=${${boost_var}}")
+	endif()
+endforeach()
+if(CMAKE_C_COMPILER_LAUNCHER)
+	list(APPEND SOLIDITY_CMAKE_CACHE_ARGS
+		"-DCMAKE_C_COMPILER_LAUNCHER:FILEPATH=${CMAKE_C_COMPILER_LAUNCHER}")
+endif()
+if(CMAKE_CXX_COMPILER_LAUNCHER)
+	list(APPEND SOLIDITY_CMAKE_CACHE_ARGS
+		"-DCMAKE_CXX_COMPILER_LAUNCHER:FILEPATH=${CMAKE_CXX_COMPILER_LAUNCHER}")
+endif()
+
+add_custom_target(puya-sol-verify-solidity-checkout
+	COMMAND "${CMAKE_COMMAND}"
+		"-DPUYA_SOL_ROOT_DIR=${CMAKE_SOURCE_DIR}"
+		"-DPUYA_SOL_SOLIDITY_DIR=${SOLIDITY_DIR}"
+		-P "${CMAKE_SOURCE_DIR}/cmake/VerifySolidityCheckout.cmake"
+	COMMENT "Verifying pinned Solidity checkout"
+	VERBATIM
+)
+
+ExternalProject_Add(puya-sol-solidity
+	PREFIX "${CMAKE_BINARY_DIR}/_deps/solidity-subbuild"
+	SOURCE_DIR "${SOLIDITY_DIR}"
+	BINARY_DIR "${SOLIDITY_BUILD_DIR}"
+	DOWNLOAD_COMMAND ""
+	UPDATE_COMMAND ""
+	PATCH_COMMAND ""
+	CMAKE_CACHE_ARGS ${SOLIDITY_CMAKE_CACHE_ARGS}
+	INSTALL_COMMAND ""
+	BUILD_ALWAYS ON
+	BUILD_BYPRODUCTS ${SOLIDITY_ARCHIVES}
+	USES_TERMINAL_CONFIGURE ON
+	USES_TERMINAL_BUILD ON
+)
+add_dependencies(puya-sol-solidity puya-sol-verify-solidity-checkout)
+
+add_custom_target(puya-sol-verify-solidity-build
+	COMMAND "${CMAKE_COMMAND}"
+		"-DPUYA_SOL_SOLIDITY_BUILD_DIR=${SOLIDITY_BUILD_DIR}"
+		"-DPUYA_SOL_SOLIDITY_COMMIT=${SOLIDITY_COMMIT}"
+		"-DPUYA_SOL_STATIC_LIBRARY_PREFIX=${CMAKE_STATIC_LIBRARY_PREFIX}"
+		"-DPUYA_SOL_STATIC_LIBRARY_SUFFIX=${CMAKE_STATIC_LIBRARY_SUFFIX}"
+		-P "${CMAKE_SOURCE_DIR}/cmake/VerifySolidityBuild.cmake"
+	DEPENDS puya-sol-solidity
+	COMMENT "Verifying pinned Solidity build identity"
+	VERBATIM
+)
+
+set(solidity_library_index 0)
+foreach(solidity_library IN ITEMS solidity yul evmasm langutil smtutil solutil)
+	list(GET SOLIDITY_ARCHIVES ${solidity_library_index} solidity_archive)
+	set(solidity_target "puya_sol_${solidity_library}")
+	add_library(${solidity_target} STATIC IMPORTED GLOBAL)
+	set_target_properties(${solidity_target} PROPERTIES
+		IMPORTED_LOCATION "${solidity_archive}"
+	)
+	math(EXPR solidity_library_index "${solidity_library_index} + 1")
+endforeach()
 
 # Include paths
 include_directories(
@@ -23,12 +177,6 @@ include_directories(
 
 # fmt is header-only in solidity
 add_definitions(-DFMT_HEADER_ONLY=1)
-
-# Boost (required by libsolidity)
-set(BOOST_ROOT "$ENV{HOME}/.local/boost-1.83" CACHE PATH "Boost root")
-set(Boost_NO_SYSTEM_PATHS ON)
-set(Boost_NO_BOOST_CMAKE ON)
-find_package(Boost REQUIRED COMPONENTS filesystem)
 include_directories(${Boost_INCLUDE_DIRS})
 
 # Source files
@@ -114,6 +262,7 @@ set(SOURCES
 
 	# Expression builder helpers (sol-eb/)
 	src/builder/abi/AbiSelectorCalldataBuilder.cpp
+	src/builder/abi/Arc4Stdlib.cpp
 	src/builder/sol-eb/BigUIntMathHelpers.cpp
 	src/builder/sol-eb/BinaryOpBuilder.cpp
 	src/builder/sol-eb/ContractContext.cpp
@@ -200,16 +349,25 @@ set(SOURCES
 
 add_executable(puya-sol ${SOURCES})
 
-# Reuse object files across rebuilds and across branches. Opt-in: this only
-# engages if ccache is on PATH, so the build works unchanged without it.
-find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
-	set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}" CACHE STRING "" FORCE)
-	set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}" CACHE STRING "" FORCE)
-	message(STATUS "ccache enabled: ${CCACHE_PROGRAM}")
-else()
-	message(STATUS "ccache not found — `sudo apt install ccache` to enable it")
-endif()
+set(PUYA_SOL_STDLIB_SOURCE "${CMAKE_SOURCE_DIR}/src/libs/AVM.sol")
+set(PUYA_SOL_STDLIB_DESTINATION
+	"${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_DATADIR}/puya-sol/libs/AVM.sol")
+add_custom_command(
+	OUTPUT "${PUYA_SOL_STDLIB_DESTINATION}"
+	COMMAND "${CMAKE_COMMAND}" -E make_directory
+		"${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_DATADIR}/puya-sol/libs"
+	COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+		"${PUYA_SOL_STDLIB_SOURCE}"
+		"${PUYA_SOL_STDLIB_DESTINATION}"
+	DEPENDS "${PUYA_SOL_STDLIB_SOURCE}"
+	COMMENT "Staging puya-sol Solidity standard library"
+	VERBATIM
+)
+add_custom_target(puya-sol-stdlib DEPENDS "${PUYA_SOL_STDLIB_DESTINATION}")
+add_dependencies(puya-sol
+	puya-sol-stdlib
+	puya-sol-verify-solidity-build
+)
 
 # Precompile only what nearly EVERY translation unit already needs.
 #
@@ -234,23 +392,42 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 	target_compile_options(puya-sol PRIVATE -Werror=return-local-addr)
 endif()
 
-# Link solidity static libraries
+# Link the archives produced by the pinned, CMake-managed Solidity build. Keep
+# dependency order from the top-level Solidity target for static linking.
 target_link_libraries(puya-sol
-	${SOLIDITY_BUILD_DIR}/libsolidity/libsolidity.a
-	${SOLIDITY_BUILD_DIR}/libyul/libyul.a
-	${SOLIDITY_BUILD_DIR}/libevmasm/libevmasm.a
-	${SOLIDITY_BUILD_DIR}/liblangutil/liblangutil.a
-	${SOLIDITY_BUILD_DIR}/libsmtutil/libsmtutil.a
-	${SOLIDITY_BUILD_DIR}/libsolutil/libsolutil.a
-	${Boost_LIBRARIES}
-	pthread
+	puya_sol_solidity
+	puya_sol_yul
+	puya_sol_evmasm
+	puya_sol_langutil
+	puya_sol_smtutil
+	puya_sol_solutil
+	Boost::filesystem
+	Threads::Threads
 )
 
-# z3 optional
-find_library(Z3_LIB z3)
-if(Z3_LIB)
-	target_link_libraries(puya-sol ${Z3_LIB})
-endif()
+install(TARGETS puya-sol RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+install(FILES "${PUYA_SOL_STDLIB_SOURCE}"
+	DESTINATION "${CMAKE_INSTALL_DATADIR}/puya-sol/libs")
+
+set(PUYA_SOL_BUILD_MANIFEST "${CMAKE_BINARY_DIR}/puya-sol-build-manifest.txt")
+add_custom_target(puya-sol-build-manifest ALL
+	COMMAND "${CMAKE_COMMAND}"
+		"-DPUYA_SOL_ROOT_DIR=${CMAKE_SOURCE_DIR}"
+		"-DPUYA_SOL_BINARY=$<TARGET_FILE:puya-sol>"
+		"-DPUYA_SOL_OUTPUT=${PUYA_SOL_BUILD_MANIFEST}"
+		"-DPUYA_SOL_SOLIDITY_COMMIT=${SOLIDITY_COMMIT}"
+		"-DPUYA_SOL_STDLIB=${PUYA_SOL_STDLIB_SOURCE}"
+		"-DPUYA_SOL_CXX_COMPILER=${CMAKE_CXX_COMPILER}"
+		"-DPUYA_SOL_BUILD_TYPE=${CMAKE_BUILD_TYPE}"
+		"-DPUYA_SOL_BOOST_VERSION=${Boost_VERSION_STRING}"
+		"-DPUYA_SOL_BOOST_INCLUDE_DIR=${Boost_INCLUDE_DIR}"
+		"-DPUYA_SOL_BOOST_FILESYSTEM_LIBRARY=${Boost_FILESYSTEM_LIBRARY_RELEASE}"
+		-P "${CMAKE_SOURCE_DIR}/cmake/WriteBuildManifest.cmake"
+	DEPENDS puya-sol "${CMAKE_SOURCE_DIR}/cmake/WriteBuildManifest.cmake"
+	BYPRODUCTS "${PUYA_SOL_BUILD_MANIFEST}"
+	COMMENT "Recording build provenance"
+	VERBATIM
+)
 
 if(BUILD_TESTING)
 	add_executable(puya-sol-runner-tests
@@ -267,11 +444,12 @@ if(BUILD_TESTING)
 		src/Logger.cpp
 	)
 	target_include_directories(puya-sol-source-compat-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	add_dependencies(puya-sol-source-compat-tests puya-sol-verify-solidity-build)
 	target_link_libraries(puya-sol-source-compat-tests
-		${SOLIDITY_BUILD_DIR}/liblangutil/liblangutil.a
-		${SOLIDITY_BUILD_DIR}/libsolutil/libsolutil.a
-		${Boost_LIBRARIES}
-		pthread
+		puya_sol_langutil
+		puya_sol_solutil
+		Boost::filesystem
+		Threads::Threads
 	)
 	add_test(NAME puya-sol-source-compat COMMAND puya-sol-source-compat-tests)
 
@@ -287,10 +465,53 @@ if(BUILD_TESTING)
 	)
 	target_include_directories(puya-sol-scratch-layout-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 	add_test(NAME puya-sol-scratch-layout COMMAND puya-sol-scratch-layout-tests)
+	add_test(
+		NAME puya-sol-cli-memory-slots
+		COMMAND ${CMAKE_COMMAND}
+			-DPUYA_SOL=$<TARGET_FILE:puya-sol>
+			-P ${CMAKE_SOURCE_DIR}/tests/cmake/CliMemorySlotsTest.cmake
+	)
+	add_test(
+		NAME puya-sol-cli-divergence-policy
+		COMMAND ${CMAKE_COMMAND}
+			-DPUYA_SOL=$<TARGET_FILE:puya-sol>
+			-DSOURCE_DIR=${CMAKE_SOURCE_DIR}/tests/cli-validation
+			-DOUTPUT_ROOT=${CMAKE_BINARY_DIR}/divergence-policy-test-output
+			-P ${CMAKE_SOURCE_DIR}/tests/cmake/DivergencePolicyTest.cmake
+	)
+	add_test(
+		NAME puya-sol-cli-xchain-validation
+		COMMAND ${CMAKE_COMMAND}
+			-DPUYA_SOL=$<TARGET_FILE:puya-sol>
+			-DSOURCE_FILE=${CMAKE_SOURCE_DIR}/tests/cli-validation/Minimal.sol
+			-DOUTPUT_ROOT=${CMAKE_BINARY_DIR}/xchain-cli-test-output
+			-P ${CMAKE_SOURCE_DIR}/tests/cmake/XchainCliValidationTest.cmake
+	)
+	add_test(
+		NAME puya-sol-cli-removed-options
+		COMMAND ${CMAKE_COMMAND}
+			-DPUYA_SOL=$<TARGET_FILE:puya-sol>
+			-P ${CMAKE_SOURCE_DIR}/tests/cmake/RemovedCliOptionsTest.cmake
+	)
 
 	add_executable(puya-sol-function-symbol-table-tests
 		tests/cpp/FunctionSymbolTableTests.cpp
 	)
 	target_include_directories(puya-sol-function-symbol-table-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
 	add_test(NAME puya-sol-function-symbol-table COMMAND puya-sol-function-symbol-table-tests)
+
+	add_executable(puya-sol-hex-bytes-tests
+		tests/cpp/HexBytesTests.cpp
+	)
+	target_include_directories(puya-sol-hex-bytes-tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
+	add_test(NAME puya-sol-hex-bytes COMMAND puya-sol-hex-bytes-tests)
+
+	add_test(
+		NAME puya-sol-arc4-stdlib
+		COMMAND ${CMAKE_COMMAND}
+			-DPUYA_SOL=$<TARGET_FILE:puya-sol>
+			-DSOURCE_DIR=${CMAKE_SOURCE_DIR}/tests/arc4-stdlib
+			-DOUTPUT_ROOT=${CMAKE_BINARY_DIR}/arc4-stdlib-test-output
+			-P ${CMAKE_SOURCE_DIR}/tests/cmake/Arc4StdlibTest.cmake
+	)
 endif()

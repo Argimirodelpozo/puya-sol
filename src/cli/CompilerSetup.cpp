@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 namespace fs = boost::filesystem;
 
@@ -36,9 +37,13 @@ solidity::frontend::FileReader setupFileReader(
 		fileReader.allowDirectory(nodeModules);
 	}
 
-	// Resolve stdlib roots via /proc/self/exe (no-op on non-procfs platforms):
-	//   <root>/src/  — bundled libraries (`import "libs/AVM.sol"`)
-	//   <root>/WIP/  — example contracts (`import "tokens/AERC20.sol"`)
+	// Resolve stdlib roots via /proc/self/exe (no-op on non-procfs platforms).
+	// CMake stages the supported layout next to a build-tree executable and
+	// installs it one directory above bin/:
+	//   <exe-dir>/share/puya-sol/       — build tree
+	//   <exe-dir>/../share/puya-sol/    — installed tree
+	// Keep the source-tree fallback for existing developer builds and WIP
+	// example imports.
 	try
 	{
 		char execPathBuf[4096];
@@ -46,16 +51,23 @@ solidity::frontend::FileReader setupFileReader(
 		if (len > 0)
 		{
 			execPathBuf[len] = '\0';
-			fs::path root = fs::path(execPathBuf).parent_path().parent_path();
-			// Bundled libraries (libs/AVM.sol etc.)
-			fs::path libsBase = root / "src";
-			if (fs::exists(libsBase / "libs"))
+			fs::path exeDir = fs::path(execPathBuf).parent_path();
+			std::vector<fs::path> libsBases{
+				exeDir / "share" / "puya-sol",
+				exeDir.parent_path() / "share" / "puya-sol",
+				exeDir.parent_path() / "src",
+			};
+			for (auto const& libsBase: libsBases)
 			{
-				fileReader.addIncludePath(libsBase);
-				fileReader.allowDirectory(libsBase);
+				if (fs::exists(libsBase / "libs"))
+				{
+					fileReader.addIncludePath(libsBase);
+					fileReader.allowDirectory(libsBase);
+					break;
+				}
 			}
 			// Example contracts (tokens/, examples/)
-			fs::path stdlibBase = root / "WIP";
+			fs::path stdlibBase = exeDir.parent_path() / "WIP";
 			if (fs::exists(stdlibBase / "tokens"))
 			{
 				fileReader.addIncludePath(stdlibBase);

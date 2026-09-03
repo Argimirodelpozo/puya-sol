@@ -8,6 +8,7 @@
 #include "builder/sol-ast/stmts/SolEmitStatement.h"
 #include "builder/sol-ast/stmts/SolVariableDeclaration.h"
 #include "builder/sol-ast/stmts/SolInlineAssembly.h"
+#include "builder/EvmFeaturePolicy.h"
 #include "builder/sol-eb/ContractContext.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "awst/Clone.h"
@@ -150,11 +151,9 @@ public:
 		// front-run-tolerance idiom is the common shape; its success path
 		// is identical on both VMs).
 		auto loc = locOf(_n);
-		Logger::instance().warning(
-			"try/catch: catch clauses are UNREACHABLE on AVM (a failing "
-			"inner txn aborts the whole txn). Compiling the try call + "
-			"success block; a reached catch path becomes a txn failure.",
-			loc);
+		EvmFeaturePolicy::report(
+			EvmFeature::TryCatch,
+			m_blk.builderCtx().typeMapper.profile(), loc);
 
 		ResultT out;
 		auto call = m_blk.builderCtx().buildExpr(_n.externalCall());

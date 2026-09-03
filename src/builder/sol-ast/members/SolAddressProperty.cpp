@@ -5,6 +5,7 @@
 #include "builder/sol-ast/members/SolAddressProperty.h"
 #include "builder/AwstShorthand.h"
 #include "awst/NameGen.h"
+#include "builder/EvmFeaturePolicy.h"
 #include "builder/sol-types/TypeMapper.h"
 #include "builder/sol-types/TypeCoercion.h"
 #include "Logger.h"
@@ -206,10 +207,8 @@ std::shared_ptr<awst::Expression> buildAddressBalance(
 	awst::SourceLocation const& loc)
 {
 	// address.balance → acct_params_get AcctBalance → uint64 → biguint
-	Logger::instance().warning(
-		"address.balance returns the account balance in microAlgos on AVM, "
-		"not wei. 1 microAlgo = 1e-6 ALGO. This is NOT equivalent to EVM wei "
-		"(1 wei = 1e-18 ETH). Ensure your contract logic accounts for this difference.", loc);
+	EvmFeaturePolicy::report(
+		EvmFeature::AddressBalance, ctx.typeMapper.profile(), loc);
 
 	if (auto contractBalance = tryContractTypedBalance(ctx, node, loc))
 		return contractBalance;

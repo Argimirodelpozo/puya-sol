@@ -3,6 +3,8 @@
 /// Uses FunctionCallKind + FunctionType::Kind for dispatch.
 
 #include "builder/sol-ast/SolExpressionFactory.h"
+#include "builder/abi/Arc4Stdlib.h"
+#include "builder/itxn/AsaIntrinsics.h"
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "builder/itxn/CallResolver.h"
 #include "builder/sol-ast/calls/SolRequireAssert.h"
@@ -29,6 +31,7 @@
 #include "builder/sol-ast/members/SolFieldAccess.h"
 #include "builder/sol-ast/members/SolAddressProperty.h"
 #include "builder/sol-ast/members/SolConstantAccess.h"
+#include "Logger.h"
 
 #include <libsolidity/ast/ASTAnnotations.h>
 
@@ -91,6 +94,24 @@ public:
 
 	std::shared_ptr<awst::Expression> toAwst() override
 	{
+		if (eb::AsaIntrinsics::isBitsBitlenFacade(*m_funcDef))
+		{
+			Logger::instance().error(
+				"Bits.bitlen cannot be used as a function value; call "
+				"Bits.bitlen(value) directly",
+				m_loc);
+			return awst::makeZero(m_loc);
+		}
+		if (eb::Arc4Stdlib::isFacadeFunction(*m_funcDef))
+		{
+			Logger::instance().error(
+				"ARC4." + m_funcDef->name()
+					+ " cannot be used as a function value; use the documented "
+					  "ARC4 type-envelope form directly",
+				m_loc);
+			return awst::makeZero(m_loc);
+		}
+
 		std::string awstName = m_scope.findSuperTarget(m_funcDef->id());
 
 		// Prefer caller's function type: functionType(true) on external-only fns

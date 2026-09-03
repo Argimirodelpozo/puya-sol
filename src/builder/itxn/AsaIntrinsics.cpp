@@ -1,6 +1,6 @@
 /// @file AsaIntrinsics.cpp
-/// AVM stdlib library intercept: turns `AVM.asaCreate / asaBalance /
-/// asaTotalSupply / asaTransfer` calls into ASA-native AWST.
+/// AVM stdlib library intercept: lowers the ordinary Solidity declarations in
+/// `libs/AVM.sol` to AVM-native AWST.
 
 #include "builder/itxn/AsaIntrinsics.h"
 #include "awst/NameGen.h"
@@ -108,13 +108,37 @@ std::shared_ptr<awst::Expression> assetParamFirst(
 
 } // namespace
 
+bool AsaIntrinsics::isBitsBitlenFacade(FunctionDefinition const& _function)
+{
+	auto const* owner = _function.annotation().contract;
+	if (!owner || !owner->isLibrary() || owner->name() != "Bits"
+		|| _function.sourceUnitName() != "libs/AVM.sol"
+		|| _function.name() != "bitlen"
+		|| _function.visibility() != Visibility::Internal
+		|| _function.stateMutability() != StateMutability::Pure
+		|| _function.parameters().size() != 1
+		|| _function.returnParameters().size() != 1)
+		return false;
+	auto isUint256 = [](VariableDeclaration const& _parameter) {
+		auto const* integer = dynamic_cast<IntegerType const*>(_parameter.type());
+		return integer && !integer->isSigned() && integer->numBits() == 256;
+	};
+	return isUint256(*_function.parameters().front())
+		&& isUint256(*_function.returnParameters().front());
+}
+
 std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 	ContractContext& _ctx,
 	MemberAccess const& _memberAccess,
 	FunctionCall const& _call,
 	awst::SourceLocation const& _loc)
 {
-	std::string lib = getAvmStdlibLibraryName(_memberAccess);
+	auto const* function = dynamic_cast<FunctionDefinition const*>(
+		_memberAccess.annotation().referencedDeclaration);
+	bool const isBitsBitlen = function && isBitsBitlenFacade(*function);
+	std::string lib = isBitsBitlen
+		? std::string("Bits")
+		: getAvmStdlibLibraryName(_memberAccess);
 	if (lib.empty())
 		return std::nullopt;
 
@@ -123,6 +147,10 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 	std::vector<std::shared_ptr<awst::Expression>> args;
 	for (auto const& arg: _call.arguments())
 		args.push_back(_ctx.buildExpr(*arg));
+	// `using Bits for uint256; value.bitlen()` supplies the attached value as
+	// the member-access base rather than as an explicit FunctionCall argument.
+	if (isBitsBitlen && args.empty())
+		args.push_back(_ctx.buildExpr(_memberAccess.expression()));
 
 	if (lib == "AVM")
 	{
@@ -145,12 +173,34 @@ std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::tryHandleCall(
 		return dispatchTxn(_ctx, method, args, _loc);
 	else if (lib == "Global")
 		return dispatchGlobal(_ctx, method, args, _loc);
+	else if (lib == "Bits")
+		return dispatchBits(_ctx, method, args, _loc);
 	else if (lib == "Scratch")
 		return dispatchScratch(_ctx, method, args, _loc);
 
 	Logger::instance().warning(
 		"unknown AVM stdlib intrinsic '" + lib + "." + method + "'", _loc);
 	return std::nullopt;
+}
+
+std::optional<std::shared_ptr<awst::Expression>> AsaIntrinsics::dispatchBits(
+	ContractContext& _ctx,
+	std::string const& _method,
+	std::vector<std::shared_ptr<awst::Expression>>& _args,
+	awst::SourceLocation const& _loc)
+{
+	(void)_ctx;
+	if (_method != "bitlen")
+		return std::nullopt;
+	if (_args.size() != 1)
+	{
+		Logger::instance().error("Bits.bitlen expects 1 arg", _loc);
+		return nullptr;
+	}
+	auto bitlen = awst::makeIntrinsicCall(
+		"bitlen", awst::WType::uint64Type(), _loc);
+	bitlen->stackArgs.push_back(std::move(_args.front()));
+	return uint64ToBigUInt(std::move(bitlen), _loc);
 }
 
 // AVM scratch (AVM.sol Scratch): store→stores, loadSelf→loads, load→gloadss.

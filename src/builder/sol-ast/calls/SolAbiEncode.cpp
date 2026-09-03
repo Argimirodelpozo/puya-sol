@@ -7,18 +7,6 @@ namespace puyasol::builder::sol_ast
 std::shared_ptr<awst::Expression> SolAbiEncode::toAwst()
 {
 	using Kind = solidity::frontend::FunctionType::Kind;
-	if (auto const* access = dynamic_cast<solidity::frontend::MemberAccess const*>(
-			&m_call.expression()))
-		if (auto const* magic = dynamic_cast<solidity::frontend::MagicType const*>(
-				access->expression().annotation().type);
-			magic && magic->kind() == solidity::frontend::MagicType::Kind::ARC4)
-		{
-			std::vector<std::shared_ptr<awst::Expression>> values;
-			for (auto const& argument: m_call.arguments())
-				values.push_back(m_ctx.buildExpr(*argument));
-			return eb::AbiEncoderBuilder::arc4EncodeValues(
-				m_ctx, std::move(values), m_loc);
-		}
 	auto const* funcType = dynamic_cast<solidity::frontend::FunctionType const*>(
 		m_call.expression().annotation().type);
 

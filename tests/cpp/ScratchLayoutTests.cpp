@@ -1,6 +1,6 @@
 #include "builder/ScratchLayout.h"
 
-#include <algorithm>
+#include <cstddef>
 #include <iostream>
 #include <stdexcept>
 
@@ -29,20 +29,25 @@ int main()
 		"default reservations are incomplete");
 
 	ScratchLayout extended{7};
-	ok &= require(extended.memoryFirst() == 16 && extended.memoryLast() == 22,
-		"extended memory overlaps fixed ABI scratch slots");
+	ok &= require(extended.memoryFirst() == 0 && extended.memoryLast() == 6,
+		"extended memory is not contiguous from slot zero");
+	ok &= require(extended.transientSlot() == 7
+			&& extended.flashFirst() == 8 && extended.flashLast() == 17,
+		"extended reservations do not immediately follow memory");
 	auto extendedSlots = extended.reservedSlots();
-	ok &= require(std::find(extendedSlots.begin(), extendedSlots.end(), 5)
-			!= extendedSlots.end()
-		&& std::find(extendedSlots.begin(), extendedSlots.end(), 15)
-			!= extendedSlots.end(),
-		"fixed transient/flash reservations are missing");
+	bool contiguous = extendedSlots.size() == 18;
+	for (size_t slot = 0; contiguous && slot < extendedSlots.size(); ++slot)
+		contiguous = extendedSlots[slot] == static_cast<int>(slot);
+	ok &= require(contiguous, "extended reservations are not contiguous");
 
-	ScratchLayout maximum{240};
-	ok &= require(maximum.memoryLast() == ScratchLayout::maxScratchSlot,
-		"maximum CLI layout does not end at the AVM scratch limit");
+	ok &= require(ScratchLayout::maxMemorySlots == 88,
+		"maximum memory-slot policy changed");
+	ScratchLayout maximum{88};
+	ok &= require(maximum.memoryLast() == 87
+			&& maximum.flashLast() == 98,
+		"maximum CLI layout does not preserve its reserved slots");
 
-	for (int invalid: {0, 241})
+	for (int invalid: {0, 89})
 	{
 		bool rejected = false;
 		try { ScratchLayout layout{invalid}; (void)layout; }

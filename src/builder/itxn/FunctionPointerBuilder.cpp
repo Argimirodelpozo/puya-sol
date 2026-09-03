@@ -4,6 +4,7 @@
 
 #include "builder/itxn/FunctionPointerBuilder.h"
 #include "awst/NameGen.h"
+#include "builder/EvmFeaturePolicy.h"
 #include "builder/SelectorSemantics.h"
 #include "builder/SolcFacts.h"
 #include "builder/abi/AbiEncoderBuilder.h"
@@ -248,10 +249,8 @@ std::shared_ptr<awst::Expression> FunctionPointerBuilder::buildFunctionReference
 		}
 		else
 		{
-			Logger::instance().warning(
-				"external function pointer '" + _funcDef->name()
-				+ "': reentrancy is not possible on AVM; self-calls will use "
-				"internal dispatch instead of inner transactions", _loc);
+			EvmFeaturePolicy::report(
+				EvmFeature::SelfCall, _ctx.typeMapper.profile(), _loc);
 
 			// Self-ref: store CurrentApplicationID (not 0) so the pointer survives
 			// crossing contract boundaries. Dispatch site shortcuts to internal dispatch

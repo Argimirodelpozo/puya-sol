@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import {ARC4} from "libs/AVM.sol";
+
 contract EvmContractAbi {
     struct Record {
         uint16 id;
@@ -46,7 +48,10 @@ contract EvmContractAbi {
     function arc4Codec(uint16 x, bytes memory data)
         external pure returns (uint16, bytes memory)
     {
-        return arc4.decode(arc4.encode(x, data), (uint16, bytes));
+        return abi.decode(
+            ARC4.decode(ARC4.encode(abi.encode(x, data))),
+            (uint16, bytes)
+        );
     }
 
     function senderIdentity(address expected)

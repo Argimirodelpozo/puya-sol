@@ -68,6 +68,15 @@ public:
 		std::vector<std::shared_ptr<awst::Expression>> _vals,
 		awst::SourceLocation const& _loc);
 
+	/// ARC4-encode the argument list inside the stdlib
+	/// `ARC4.encode(abi.encode(...))` envelope. Unlike arc4EncodeValues, wire
+	/// integer widths come from the resolved Solidity types (uint16 stays
+	/// arc4.uint16 even though its native AWST backing is uint64).
+	static std::shared_ptr<awst::Expression> arc4EncodeSolidityArgs(
+		ContractContext& _ctx,
+		std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> const& _args,
+		awst::SourceLocation const& _loc);
+
 	/// ARC4-encode a list of call arguments coerced to the callee's DECLARED
 	/// parameter types (NOT the value wtypes): `ConversionPlan` applies the
 	/// Solidity implicit conversion before encoding (single → bare value bytes;
@@ -82,11 +91,12 @@ public:
 		std::vector<solidity::frontend::Type const*> const& _paramTypes,
 		awst::SourceLocation const& _loc);
 
-	/// Explicit `arc4.decode`: deterministic ARC4 validation/decoding with no
-	/// EVM layout sniffing.
+	/// Decode the payload from `abi.decode(ARC4.decode(payload), (T...))` using
+	/// exact Solidity types as the ARC4 wire types.
 	static std::shared_ptr<awst::Expression> decodeArc4(
 		ContractContext& _ctx,
 		solidity::frontend::FunctionCall const& _callNode,
+		solidity::frontend::Expression const& _dataNode,
 		awst::SourceLocation const& _loc);
 
 private:

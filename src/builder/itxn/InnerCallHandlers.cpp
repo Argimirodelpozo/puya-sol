@@ -443,12 +443,8 @@ std::shared_ptr<awst::Expression> InnerCallHandlers::buildPaymentTransaction(
 	if (profile.xchainAccounts)
 		_receiver = xchain::mapPaymentReceiver(profile, std::move(_receiver), _loc);
 	else if (profile.contractAbi == ContractAbi::Evm)
-		Logger::instance().warning(
-			"native value transfer in the EVM profile: a 160-bit identity is a "
-			"keyless padded pseudo-account, so value sent to one is "
-			"unrecoverable. The EVM profile is a differential/compat "
-			"instrument (EVM_DIVERGENCE.md); --xchain-template maps identities "
-			"to spendable xchain LogicSig accounts.", _loc);
+		EvmFeaturePolicy::report(
+			EvmFeature::NativeValueTransfer, profile, _loc);
 
 	static awst::WInnerTransactionFields s_payFieldsType(TxnTypePay);
 
@@ -735,12 +731,8 @@ std::unique_ptr<InstanceBuilder> InnerCallHandlers::emitDirectSelfCall(
 		// AVM rejects self inner-txn calls; rewrite to direct callsub.
 		// Revert isolation differs: reverts propagate instead of
 		// being caught as success=false.
-		Logger::instance().warning(
-			"`address(this).call(abi." + encodeName +
-			"(...))` self-call rewritten to direct `" + fnName +
-			"(...)` invocation. AVM doesn't support self inner-txn "
-			"calls; revert-isolation semantics may differ.",
-			_loc);
+		EvmFeaturePolicy::report(
+			EvmFeature::SelfCall, _ctx.typeMapper.profile(), _loc);
 
 		std::string targetName =
 			CallResolver::resolveMethodName(_ctx, *target);

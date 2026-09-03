@@ -552,14 +552,13 @@ std::unique_ptr<InstanceBuilder> AbiEncoderBuilder::handleDecode(
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeArc4(
 	ContractContext& _ctx,
 	solidity::frontend::FunctionCall const& _callNode,
+	solidity::frontend::Expression const& _dataNode,
 	awst::SourceLocation const& _loc)
 {
-	if (_callNode.arguments().empty())
-		return awst::makeBytesConstant({}, _loc);
 	auto const* targetType = _ctx.typeMapper.map(_callNode.annotation().type);
 	if (!targetType)
 		return awst::makeBytesConstant({}, _loc);
-	auto data = _ctx.buildExpr(*_callNode.arguments()[0]);
+	auto data = _ctx.buildExpr(_dataNode);
 	if (data->wtype != awst::WType::bytesType())
 		data = awst::makeAsBytes(std::move(data), _loc);
 
@@ -570,36 +569,144 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::decodeArc4(
 	{
 		std::vector<awst::WType const*> components;
 		for (auto const* component: tupleType->components())
-			components.push_back(_ctx.typeMapper.mapToARC4Type(
-				_ctx.typeMapper.map(component)));
+		{
+			auto const* wireComponent =
+				_ctx.typeMapper.mapSolTypeToARC4(component);
+			if (!wireComponent)
+			{
+				Logger::instance().error(
+					"type is not representable in ARC4 decoding", _loc);
+				return awst::makeBytesConstant({}, _loc);
+			}
+			components.push_back(wireComponent);
+		}
 		wireType = _ctx.typeMapper.createType<awst::ARC4Tuple>(
 			std::move(components));
 	}
 	else
-		wireType = _ctx.typeMapper.mapToARC4Type(targetType);
+		wireType = _ctx.typeMapper.mapSolTypeToARC4(
+			_callNode.annotation().type);
+	if (!wireType)
+	{
+		Logger::instance().error(
+			"type is not representable in ARC4 decoding", _loc);
+		return awst::makeBytesConstant({}, _loc);
+	}
 	auto wire = awst::makeARC4FromBytes(
 		std::move(data), wireType, _loc, /*validate=*/true);
-	if (wireType == targetType)
+	if (awst::structurallyEquivalent(wireType, targetType))
 		return wire;
 	return awst::makeARC4Decode(std::move(wire), targetType, _loc);
 }
 
-// Shared ARC4 value encoder for explicit `arc4.encode` and compiler-private
-// ARC4 transports. It is a thin wrapper over puya's codec (no EVM head/tail
-// layout): 0 values → empty bytes, 1 → its ARC4 bytes, N → an ARC4 tuple.
+namespace
+{
+
+std::shared_ptr<awst::Expression> arc4EncodeAtWireTypes(
+	ContractContext& _ctx,
+	std::vector<std::shared_ptr<awst::Expression>> _values,
+	std::vector<awst::WType const*> _wireTypes,
+	awst::SourceLocation const& _loc)
+{
+	if (_values.empty())
+		return awst::makeBytesConstant({}, _loc);
+
+	if (_values.size() == 1)
+	{
+		auto value = std::move(_values.front());
+		if (awst::structurallyEquivalent(value->wtype, _wireTypes.front()))
+			return awst::makeAsBytes(std::move(value), _loc);
+		return awst::makeAsBytes(
+			awst::makeARC4Encode(std::move(value), _wireTypes.front(), _loc), _loc);
+	}
+
+	// Puya's tuple codec sees only UIntEncoding(N), not the signed alias. A
+	// negative intN is held as a wider two's-complement native integer and would
+	// therefore look like an overflow when encoded recursively. Pre-encode signed
+	// members so makeARC4Encode can trim them to their declared wire width.
+	for (size_t i = 0; i < _values.size(); ++i)
+		if (auto const* integer =
+				dynamic_cast<awst::ARC4UIntN const*>(_wireTypes[i]);
+			integer && integer->isSigned()
+			&& !awst::structurallyEquivalent(_values[i]->wtype, _wireTypes[i]))
+			_values[i] = awst::makeARC4Encode(
+				std::move(_values[i]), _wireTypes[i], _loc);
+
+	std::vector<awst::WType const*> nativeTypes;
+	nativeTypes.reserve(_values.size());
+	for (auto const& value: _values)
+		nativeTypes.push_back(value->wtype);
+	auto const* nativeTuple = _ctx.typeMapper.createType<awst::WTuple>(
+		std::move(nativeTypes));
+	auto tuple = awst::makeTupleExpression(nativeTuple, _loc);
+	tuple->items = std::move(_values);
+	auto const* wireTuple = _ctx.typeMapper.createType<awst::ARC4Tuple>(
+		std::move(_wireTypes));
+	return awst::makeAsBytes(
+		awst::makeARC4Encode(std::move(tuple), wireTuple, _loc), _loc);
+}
+
+} // namespace
+
+std::shared_ptr<awst::Expression> AbiEncoderBuilder::arc4EncodeSolidityArgs(
+	ContractContext& _ctx,
+	std::vector<solidity::frontend::ASTPointer<solidity::frontend::Expression const>> const& _args,
+	awst::SourceLocation const& _loc)
+{
+	std::vector<std::shared_ptr<awst::Expression>> values;
+	std::vector<awst::WType const*> wireTypes;
+	values.reserve(_args.size());
+	wireTypes.reserve(_args.size());
+	for (auto const& argument: _args)
+	{
+		auto const* sourceType = argument->annotation().type;
+		auto const* concreteType = sourceType;
+		if (concreteType)
+			if (auto const* mobile = concreteType->mobileType())
+				concreteType = mobile;
+		auto const* nativeType = _ctx.typeMapper.map(concreteType);
+		auto const* wireType = _ctx.typeMapper.mapSolTypeToARC4(concreteType);
+		if (!nativeType || !wireType)
+		{
+			Logger::instance().error(
+				"type is not representable in ARC4 encoding", _loc);
+			return awst::makeBytesConstant({}, _loc);
+		}
+
+		auto value = _ctx.buildExpr(*argument);
+		if (value->wtype != nativeType)
+			value = builder::ConversionPlan{
+				sourceType,
+				concreteType,
+				nativeType,
+				builder::ConversionPlan::Context::AbiArgument}.emit(
+					std::move(value), _loc);
+		values.push_back(std::move(value));
+		wireTypes.push_back(wireType);
+	}
+
+	return arc4EncodeAtWireTypes(
+		_ctx, std::move(values), std::move(wireTypes), _loc);
+}
+
+// Shared ARC4 value encoder for compiler-private transports. It is a thin
+// wrapper over puya's codec (no EVM head/tail layout): 0 values → empty bytes,
+// 1 → its ARC4 bytes, N → an ARC4 tuple.
 //
-// ── THE ENCODE-CONVENTION MAP (do not add a fifth copy) ──
-// Four ARC4-encode entry points exist ON PURPOSE, one per width convention:
-//      wrappers): explicit arc4.* and compiler-private payloads — encodes at
-//      the value's BACKING width (uint16 value → arc4.uint64/8B); custom-error
-//      payloads ride arc4EncodeArgsAtParamTypes deliberately.
-//   2. InnerCallHandlers::encodeArgToBytes: ApplicationArgs for real calls —
+// ── THE ENCODE-CONVENTION MAP ──
+// Five ARC4-encode entry points exist ON PURPOSE, one per wire convention:
+//   1. arc4EncodeSolidityArgs: public ARC4 stdlib facade — exact SOLIDITY width
+//      (uint16 value → arc4.uint16/2B).
+//   2. arc4EncodeValues: compiler-private payloads — BACKING width (uint16
+//      value → arc4.uint64/8B); custom-error payloads ride
+//      arc4EncodeArgsAtParamTypes deliberately.
+//   3. InnerCallHandlers::encodeArgToBytes: ApplicationArgs for real calls —
 //      encodes at the callee's DECLARED param type when known (exact biguint
 //      width, pad-to-width, dynamic-bytes header), nullptr → backing width.
-//   3. ReturnRewriter's return-wire encoding: ABI return slots (signed →
+//   4. ReturnRewriter's return-wire encoding: ABI return slots (signed →
 //      sign-extended uint256, unsigned biguint → natural uintN, asm bodies
 //      wrapped mod 2^N). Feeds the method's arc4 return type.
-//   4. SolEmitStatement's event encoding: ARC-28 (biguint-backed ints collapse
+//   5. SolEmitStatement's event encoding: ARC-28 (biguint-backed ints collapse
 //      to uint256 to match puya's event registration).
 // A value encoded under one convention will NOT decode under another — that
 // asymmetry is load-bearing (see custom-error-payload-width / encoding-model).
@@ -609,36 +716,12 @@ std::shared_ptr<awst::Expression> AbiEncoderBuilder::arc4EncodeValues(
 	std::vector<std::shared_ptr<awst::Expression>> _vals,
 	awst::SourceLocation const& _loc)
 {
-	if (_vals.empty())
-		return awst::makeBytesConstant({}, _loc);
-
-	// ARC4 type from the value's own native wtype (a canonical singleton — matches
-	// what abi.decode lands on; native value is already canonical two's-complement,
-	// so no extra sign-extension). Already-ARC4 values just reinterpret to bytes.
-	auto toBytes = [&](std::shared_ptr<awst::Expression> _val)
-		-> std::shared_ptr<awst::Expression>
-	{
-		auto const* arc4T = _ctx.typeMapper.mapToARC4Type(_val->wtype);
-		if (_val->wtype == arc4T)
-			return awst::makeAsBytes(std::move(_val), _loc);
-		return awst::makeAsBytes(awst::makeARC4Encode(std::move(_val), arc4T, _loc), _loc);
-	};
-
-	if (_vals.size() == 1)
-		return toBytes(std::move(_vals[0]));
-
-	std::vector<awst::WType const*> nativeTypes, arc4Types;
+	std::vector<awst::WType const*> arc4Types;
+	arc4Types.reserve(_vals.size());
 	for (auto const& val : _vals)
-	{
-		nativeTypes.push_back(val->wtype);
 		arc4Types.push_back(_ctx.typeMapper.mapToARC4Type(val->wtype));
-	}
-	auto const* wtupleT = _ctx.typeMapper.createType<awst::WTuple>(nativeTypes);
-	auto tupleExpr = awst::makeTupleExpression(wtupleT, _loc);
-	tupleExpr->items = std::move(_vals);
-	auto const* arc4TupleT = _ctx.typeMapper.createType<awst::ARC4Tuple>(arc4Types);
-	auto enc = awst::makeARC4Encode(std::move(tupleExpr), arc4TupleT, _loc);
-	return awst::makeAsBytes(std::move(enc), _loc);
+	return arc4EncodeAtWireTypes(
+		_ctx, std::move(_vals), std::move(arc4Types), _loc);
 }
 
 std::shared_ptr<awst::Expression> AbiEncoderBuilder::arc4EncodeArgsAtParamTypes(

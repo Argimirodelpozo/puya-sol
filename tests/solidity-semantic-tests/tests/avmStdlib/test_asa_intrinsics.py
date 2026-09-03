@@ -32,11 +32,19 @@ def _axfer(harness, sender_addr, sender_sk, asset_id, receiver, amount):
     return transaction.wait_for_confirmation(client, txid, 4)
 
 
+def test_bits_bitlen_intrinsic(harness):
+    """avmStdlib/contracts/asa_kit.sol"""
+    arts = harness.compile("avmStdlib/contracts/asa_kit.sol")
+    app = harness.deploy(arts)
+    for value, expected in ((0, 0), (1, 1), (2, 2), (3, 2), (1 << 255, 256)):
+        result = harness.call(app, "bitLength(uint256)", value)
+        assert not result.reverted, result.fail_message
+        assert as_int(result.abi_return) == expected
+
+
 def test_asa_intrinsics_lifecycle(harness):
     """avmStdlib/contracts/asa_kit.sol"""
-    # AVM.sol compiles wholesale and its Bits.clz needs osaka.
-    arts = harness.compile(
-        "avmStdlib/contracts/asa_kit.sol", evm_version="osaka")
+    arts = harness.compile("avmStdlib/contracts/asa_kit.sol")
     app = harness.deploy(arts, extra_funding_microalgos=1_000_000)
     app_addr = get_application_address(app.app_id)
     fee = {"extra_fee": 4_000}

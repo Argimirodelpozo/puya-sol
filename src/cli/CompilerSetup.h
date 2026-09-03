@@ -20,8 +20,8 @@ namespace puyasol::cli
 
 /// Set up the Solidity FileReader with allowed directories and include
 /// paths: source dir, project root, optional node_modules, the puya-sol
-/// stdlib at `<exe>/../src` + `<exe>/../WIP/`, and any user-specified
-/// --import-path entries.
+/// stdlib in the build/install `share/puya-sol` layout (plus source-tree
+/// fallbacks), and any user-specified --import-path entries.
 solidity::frontend::FileReader setupFileReader(
 	Options const& _opts,
 	boost::filesystem::path const& _sourceDir,

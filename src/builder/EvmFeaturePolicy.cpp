@@ -2,10 +2,40 @@
 
 #include "Logger.h"
 
+#include <array>
 #include <string>
 
 namespace puyasol::builder
 {
+
+namespace
+{
+
+struct AllowableDivergence
+{
+	EvmFeature feature;
+	std::string_view name;
+};
+
+constexpr std::array<AllowableDivergence, 15> allowableDivergences{
+	AllowableDivergence{EvmFeature::BlockChainId, "block-chainid"},
+	AllowableDivergence{EvmFeature::BlockDifficulty, "block-difficulty"},
+	AllowableDivergence{EvmFeature::BlockBaseFee, "block-basefee"},
+	AllowableDivergence{EvmFeature::BlockBlobBaseFee, "block-blobbasefee"},
+	AllowableDivergence{EvmFeature::BlockGasLimit, "block-gaslimit"},
+	AllowableDivergence{EvmFeature::BlockPrevrandao, "block-prevrandao"},
+	AllowableDivergence{EvmFeature::TxGasPrice, "tx-gasprice"},
+	AllowableDivergence{EvmFeature::AddressBalance, "address-balance-units"},
+	AllowableDivergence{EvmFeature::GasLeft, "gasleft"},
+	AllowableDivergence{EvmFeature::StaticCall, "staticcall"},
+	AllowableDivergence{EvmFeature::DelegateCall, "delegatecall"},
+	AllowableDivergence{EvmFeature::LowLevelCallOutcome, "low-level-call-outcome"},
+	AllowableDivergence{EvmFeature::NativeValueTransfer, "native-value-transfer"},
+	AllowableDivergence{EvmFeature::SelfCall, "self-call"},
+	AllowableDivergence{EvmFeature::TryCatch, "try-catch"},
+};
+
+} // namespace
 
 EvmFeatureDecision EvmFeaturePolicy::decide(
 	EvmFeature _feature, TargetProfile const& _profile)
@@ -55,6 +85,9 @@ EvmFeatureDecision EvmFeaturePolicy::decide(
 	case EvmFeature::TxGasPrice:
 		return {F::AvmAdaptation, "tx.gasprice",
 			"uses txn Fee in microAlgos; AVM fees are not per-opcode gas prices"};
+	case EvmFeature::AddressBalance:
+		return {F::AvmAdaptation, "address.balance",
+			"returns microAlgos rather than wei; contract accounting must use AVM units"};
 	case EvmFeature::GasLeft:
 		return {F::AvmAdaptation, "gasleft()",
 			"uses the current AVM OpcodeBudget"};
@@ -75,6 +108,18 @@ EvmFeatureDecision EvmFeaturePolicy::decide(
 		return {F::AvmAdaptation, "low-level call result",
 			"returns true only after a submitted AVM inner transaction succeeds; "
 			"a rejected inner transaction aborts the outer call, so false is not catchable"};
+	case EvmFeature::NativeValueTransfer:
+		return {F::AvmAdaptation, "native value transfer",
+			"sends microAlgos to a keyless padded 160-bit identity unless an "
+			"xchain account template is configured; such funds are unrecoverable"};
+	case EvmFeature::SelfCall:
+		return {F::AvmAdaptation, "external self-call",
+			"uses internal dispatch because AVM forbids app reentrancy; msg.sender, "
+			"msg.value, and revert-isolation behavior differ from EVM"};
+	case EvmFeature::TryCatch:
+		return {F::AvmAdaptation, "try/catch",
+			"drops catch clauses because a failed AVM inner transaction aborts the "
+			"outer transaction and cannot be caught"};
 	case EvmFeature::UnknownLowLevelCall:
 		return {F::HardCompileError, "unresolved low-level call",
 			"the target/calldata cannot be proven to match an AVM application route; "
@@ -98,6 +143,34 @@ EvmFeatureDecision EvmFeaturePolicy::decide(
 		"has no declared AVM lowering policy"};
 }
 
+std::string_view EvmFeaturePolicy::allowName(EvmFeature _feature)
+{
+	for (auto const& candidate: allowableDivergences)
+		if (candidate.feature == _feature)
+			return candidate.name;
+	return {};
+}
+
+bool EvmFeaturePolicy::isAllowName(std::string_view _name)
+{
+	for (auto const& candidate: allowableDivergences)
+		if (candidate.name == _name)
+			return true;
+	return false;
+}
+
+std::string EvmFeaturePolicy::allowedNames()
+{
+	std::string result;
+	for (auto const& candidate: allowableDivergences)
+	{
+		if (!result.empty())
+			result += ", ";
+		result += candidate.name;
+	}
+	return result;
+}
+
 void EvmFeaturePolicy::report(
 	EvmFeature _feature,
 	TargetProfile const& _profile,
@@ -107,19 +180,34 @@ void EvmFeaturePolicy::report(
 	if (decision.fidelity == EvmFeatureFidelity::Exact)
 		return;
 
+	auto const allow = allowName(_feature);
+	bool const needsOptIn = decision.fidelity == EvmFeatureFidelity::AvmAdaptation
+		|| decision.fidelity == EvmFeatureFidelity::HardRuntimeFailure;
+	bool const explicitlyAllowed = needsOptIn && !allow.empty()
+		&& _profile.allowedEvmDivergences.contains(std::string(allow));
+
 	std::string message = "[";
-	switch (decision.fidelity)
+	if (needsOptIn && !explicitlyAllowed)
+		message += "unapproved EVM divergence";
+	else switch (decision.fidelity)
 	{
 	case EvmFeatureFidelity::Exact: break;
-	case EvmFeatureFidelity::AvmAdaptation: message += "AVM adaptation"; break;
+	case EvmFeatureFidelity::AvmAdaptation: message += "allowed AVM adaptation"; break;
 	case EvmFeatureFidelity::ConfiguredEnvironment: message += "configured EVM environment"; break;
 	case EvmFeatureFidelity::HardCompileError: message += "unsupported EVM feature"; break;
-	case EvmFeatureFidelity::HardRuntimeFailure: message += "runtime-unsupported EVM feature"; break;
+	case EvmFeatureFidelity::HardRuntimeFailure: message += "allowed runtime-unsupported EVM feature"; break;
 	}
 	message += ": " + std::string(decision.name) + "] "
 		+ std::string(decision.explanation) + ".";
+	if (needsOptIn && !explicitlyAllowed && !allow.empty())
+		message += " Compilation is fail-closed; pass --allow-divergence "
+			+ std::string(allow) + " to acknowledge this behavior.";
+	else if (explicitlyAllowed)
+		message += " Explicitly enabled by --allow-divergence "
+			+ std::string(allow) + ".";
 
-	if (decision.fidelity == EvmFeatureFidelity::HardCompileError)
+	if (decision.fidelity == EvmFeatureFidelity::HardCompileError
+		|| (needsOptIn && !explicitlyAllowed))
 		Logger::instance().error(message, _loc);
 	else
 		Logger::instance().warning(message, _loc);

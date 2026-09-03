@@ -1,5 +1,7 @@
 #pragma once
 
+#include "HexBytes.h"
+
 #include <cctype>
 #include <cstdint>
 #include <string>
@@ -27,12 +29,16 @@ enum class EvmFeature
 	BlockCoinbase,
 	TxOrigin,
 	TxGasPrice,
+	AddressBalance,
 	GasLeft,
 	BlobHash,
 	BlockHash,
 	StaticCall,
 	DelegateCall,
 	LowLevelCallOutcome,
+	NativeValueTransfer,
+	SelfCall,
+	TryCatch,
 	UnknownLowLevelCall,
 	LibraryAddress,
 	CreationCode,
@@ -62,8 +68,15 @@ public:
 	static EvmFeatureDecision decide(
 		EvmFeature _feature, TargetProfile const& _profile);
 
+	/// Stable CLI token for an adaptation that can be explicitly acknowledged.
+	/// Empty means the feature is not eligible for an opt-in.
+	static std::string_view allowName(EvmFeature _feature);
+	static bool isAllowName(std::string_view _name);
+	static std::string allowedNames();
+
 	/// Emit the centrally-owned diagnostic for a non-exact decision. Exact
-	/// features are intentionally silent.
+	/// features are silent; opt-in-eligible behavior is an error unless its
+	/// allowName() is present in TargetProfile::allowedEvmDivergences.
 	static void report(
 		EvmFeature _feature,
 		TargetProfile const& _profile,
@@ -77,16 +90,15 @@ public:
 /// nibble-decoder copies).
 inline std::vector<uint8_t> decodeEvmCoinbase20(std::string const& _hex)
 {
-	auto nibble = [](char c) -> uint8_t {
-		if (c >= '0' && c <= '9') return static_cast<uint8_t>(c - '0');
-		return static_cast<uint8_t>(std::tolower(
-			static_cast<unsigned char>(c)) - 'a' + 10);
-	};
-	std::vector<uint8_t> bytes(20);
-	for (size_t i = 0; i < bytes.size(); ++i)
-		bytes[i] = static_cast<uint8_t>(
-			(nibble(_hex[2 * i]) << 4) | nibble(_hex[2 * i + 1]));
-	return bytes;
+	// One strict decoder for every hex CLI input (audit H-06). The previous
+	// nibble loop indexed 40 characters without checking the length — an
+	// out-of-bounds read on short input — and mapped a non-hex character to a
+	// garbage nibble. `--evm-coinbase` is validated by CliOptions'
+	// parseAddressHex, so the fallback is unreachable through the CLI; it
+	// exists so a producer that bypasses it cannot read past the string.
+	if (auto bytes = hexToBytes(_hex, 20))
+		return *bytes;
+	return std::vector<uint8_t>(20, 0);
 }
 
 } // namespace puyasol::builder

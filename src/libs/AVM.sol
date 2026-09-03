@@ -18,8 +18,11 @@ pragma solidity ^0.8.20;
 ///   library Txn     — Current-txn field reads (sender, fee, note, etc.)
 ///   library Global  — Global params (current app id/address, group id,
 ///                     opcode budget, latest timestamp)
+///   library Bits    — Native AVM bit-length
+///   library Scratch — Current/group transaction scratch access
 ///   contract LogicSig — marker base: compile this contract to a stateless
 ///                     logic-signature program instead of a stateful app
+///   library ARC4    — Explicit ARC4 value encoding and decoding envelopes
 
 /// @title LogicSig
 /// @dev Inherit this marker to compile a contract as an AVM **logic signature**
@@ -32,6 +35,37 @@ pragma solidity ^0.8.20;
 abstract contract LogicSig {
     modifier logicsig() {
         _;
+    }
+}
+
+/// Explicit ARC4 value codec.
+///
+/// These functions are compiler-recognised envelopes rather than ordinary
+/// runtime calls. The inner `abi.encode` and outer `abi.decode` provide stock
+/// Solidity with the value/type lists while puya-sol emits ARC4 bytes:
+///
+///     bytes memory wire = ARC4.encode(abi.encode(valueA, valueB));
+///     (uint16 a, address b) =
+///         abi.decode(ARC4.decode(wire), (uint16, address));
+///
+/// `abi.encode` does not execute in the first form, and `ARC4.decode` does not
+/// execute in the second. Calling either function in another shape is rejected
+/// by puya-sol. ARC4 integer widths follow the resolved Solidity types, so cast
+/// numeric literals when a particular wire width is required. The reverting
+/// bodies make accidental EVM use fail fast.
+library ARC4 {
+    function encode(bytes memory typeEnvelope)
+        internal pure returns (bytes memory)
+    {
+        typeEnvelope;
+        revert("ARC4.encode: requires puya-sol");
+    }
+
+    function decode(bytes memory data)
+        internal pure returns (bytes memory)
+    {
+        data;
+        revert("ARC4.decode: requires puya-sol");
     }
 }
 
@@ -381,11 +415,9 @@ library Global {
 }
 
 /// @title Bits
-/// @dev Bit-twiddling backed by native AVM opcodes. Unlike the stub libraries
-/// above (which puya-sol intercepts at call-resolution), this is REAL Solidity:
-/// the Yul `clz` builtin lowers to the AVM `bitlen` opcode inside puya-sol, so
-/// no compiler intercept is needed. `clz` is an Osaka EVM builtin, so callers
-/// must compile with `--evm-version osaka`.
+/// @dev Bit-twiddling backed by native AVM opcodes. puya-sol recognises the
+/// resolved stdlib declaration and lowers it directly to AVM `bitlen`; the
+/// fail-fast body keeps this file valid under pre-Osaka Solidity frontends.
 ///
 /// The EVM has no bit-length / count-leading-zeros opcode (pre-Osaka), so EVM
 /// libraries hand-roll most/least-significant-bit with a 256-bit binary search
@@ -394,11 +426,9 @@ library Global {
 library Bits {
     /// Bit length of x: index of the highest set bit + 1, or 0 when x == 0.
     /// msb(x) = bitlen(x) - 1; lsb(x) = bitlen(x & -x) - 1.
-    function bitlen(uint256 x) internal pure returns (uint256 r) {
-        // clz(x) == 256 - bitlen(x); puya-sol emits AVM `bitlen` for clz.
-        assembly ("memory-safe") {
-            r := sub(256, clz(x))
-        }
+    function bitlen(uint256 x) internal pure returns (uint256) {
+        x;
+        revert("Bits.bitlen: requires puya-sol");
     }
 }
 

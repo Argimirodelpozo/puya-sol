@@ -4,6 +4,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -36,6 +37,9 @@ struct TargetProfile
 	std::optional<std::string> evmChainId;
 	std::optional<std::string> evmBlockGasLimit;
 	std::optional<std::string> evmCoinbase;
+	/// Explicit acknowledgements for non-EVM behavior. EvmFeaturePolicy rejects
+	/// every opt-in-eligible adaptation unless its stable CLI name is present.
+	std::set<std::string> allowedEvmDivergences;
 	/// xchain account model (github.com/algorandfoundation/xchain-accounts):
 	/// each 20-byte EVM identity E owns the LogicSig account whose program is
 	/// the pinned template with E spliced at the placeholder —

@@ -1,7 +1,6 @@
 /// @file AwstPostPasses.h
-/// Option-driven post-AWST passes (extracted from main.cpp): inline overrides
-/// and the new-C() deploy-template artifact. The splitter passes (--fn-split,
-/// --deploy-pure-helpers, --split-config) live on branch experimental/splitter.
+/// Option-driven post-AWST work extracted from main.cpp: inline overrides and
+/// the new-C() deploy-template artifact.
 #pragma once
 
 #include "awst/Node.h"

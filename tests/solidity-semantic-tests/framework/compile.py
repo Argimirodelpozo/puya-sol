@@ -225,6 +225,27 @@ _NOOP_PUYA = shutil.which("true") or "/bin/true"
 # Files the frontend writes; everything else in out_dir is a backend artifact.
 _FRONTEND_ONLY_FILES = {"awst.json", "options.json", "puya-sol.log"}
 
+# This research harness intentionally measures documented AVM adaptations as
+# well as exact EVM behavior. The production CLI is fail-closed, so acknowledge
+# each eligible divergence explicitly here rather than weakening its default.
+_RESEARCH_DIVERGENCES = (
+    "block-chainid",
+    "block-difficulty",
+    "block-basefee",
+    "block-blobbasefee",
+    "block-gaslimit",
+    "block-prevrandao",
+    "tx-gasprice",
+    "address-balance-units",
+    "gasleft",
+    "staticcall",
+    "delegatecall",
+    "low-level-call-outcome",
+    "native-value-transfer",
+    "self-call",
+    "try-catch",
+)
+
 
 def _puya_sol_cmd(
     source_path: Path,
@@ -241,6 +262,8 @@ def _puya_sol_cmd(
     """Build the puya-sol argv. `puya_path` selects the backend: the real PUYA
     for a full compile, or a no-op (`true`) to emit AWST only."""
     cmd = [str(COMPILER), "--source", str(source_path)]
+    for divergence in _RESEARCH_DIVERGENCES:
+        cmd += ["--allow-divergence", divergence]
     for extra in all_sources:
         if str(extra) != str(source_path):
             cmd += ["--source", str(extra)]

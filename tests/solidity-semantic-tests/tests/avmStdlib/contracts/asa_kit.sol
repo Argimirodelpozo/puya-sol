@@ -10,6 +10,10 @@ contract AsaKit {
     uint64 public asset;
     uint64 public coldAsset;
 
+    function bitLength(uint256 value) external pure returns (uint256) {
+        return Bits.bitlen(value);
+    }
+
     function create() external returns (uint64) {
         asset = AVM.asaCreate(100000, 2, "Kit Token", "KIT");
         return asset;
