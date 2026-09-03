@@ -922,6 +922,57 @@ def main():
                 f"constructor failed to deploy (status={rc.get('status')}, "
                 f"gasUsed={rc.get('gasUsed')}) — ctor likely calls an external "
                 f"contract; not replayable standalone")
+        # A UUPS/ERC1967 implementation guards its entry points with onlyProxy:
+        # address(this) must differ from __self AND the ERC1967 implementation
+        # slot must point back at __self. A STANDALONE implementation fails
+        # both, so every replayed call reverts with "Function must be called
+        # through delegatecall" (World ID's identity manager: 297/297). Put a
+        # real ERC1967 proxy in front and make it the target — which is what
+        # the chain actually had, so the leg gets more faithful, not less.
+        # Deployed with EMPTY init data: the initializer is already materialised
+        # as a setup call and now runs THROUGH the proxy, writing to proxy
+        # storage exactly as history did.
+        if (case.get("proxy") or {}).get("initializer"):
+            _impl_addr = caddr
+            _psrc = """// SPDX-License-Identifier: MIT
+pragma solidity >=0.7.0 <0.9.0;
+contract ChdErc1967Proxy {
+    constructor(address impl) payable {
+        assembly {
+            sstore(0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc, impl)
+        }
+    }
+    fallback() external payable {
+        assembly {
+            let impl := sload(0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc)
+            calldatacopy(0, 0, calldatasize())
+            let ok := delegatecall(gas(), impl, 0, calldatasize(), 0, 0)
+            returndatacopy(0, 0, returndatasize())
+            switch ok
+            case 0 { revert(0, returndatasize()) }
+            default { return(0, returndatasize()) }
+        }
+    }
+}
+"""
+            _psettings = {"outputSelection": {"*": {"*": ["abi", "evm.bytecode"]}}}
+            if settings.get("evmVersion"):
+                _psettings["evmVersion"] = settings["evmVersion"]
+            _pout = solcx.compile_standard({
+                "language": "Solidity",
+                "sources": {"ChdErc1967Proxy.sol": {"content": _psrc}},
+                "settings": _psettings})
+            _pd = _pout["contracts"]["ChdErc1967Proxy.sol"]["ChdErc1967Proxy"]
+            _P = w3.eth.contract(
+                abi=_pd["abi"], bytecode=_pd["evm"]["bytecode"]["object"])
+            _ptx = _P.constructor(_impl_addr).transact(
+                {"from": a0, "gas": 30_000_000})
+            _prc = w3.eth.get_transaction_receipt(_ptx)
+            if _prc.get("contractAddress"):
+                caddr = _prc["contractAddress"]
+                rc = _prc
+                print(f"[evm] ERC1967 proxy {caddr} -> impl {_impl_addr}")
+
         inst = w3.eth.contract(address=caddr, abi=abi)
         deployment_time = int(
             w3.eth.get_block(rc["blockNumber"])["timestamp"])

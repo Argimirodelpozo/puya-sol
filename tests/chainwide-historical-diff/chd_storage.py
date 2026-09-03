@@ -806,11 +806,25 @@ def build_parameterized_getter_probes(abi: list[dict], calls: list[dict],
     contexts: list[tuple[int, dict[str, list[Any]]]] = []
     pools: dict[str, list[Any]] = {}
     pool_sources: dict[tuple[str, str], int] = {}
+    # Dedup by a SET of keys, not a linear scan: `add` used to re-serialise
+    # every value already in the pool on each insert, so a call carrying big
+    # arrays (a uint256[8] proof plus a batch of identity commitments, which
+    # `collect` recurses into element by element) made the probe builder
+    # quadratic with a json.dumps per comparison — World ID's identity manager
+    # hung there for over an hour. POOL_CAP then bounds the probe count itself:
+    # past a few hundred distinct values per type the probes stop adding
+    # information and just multiply replay time.
+    seen_keys: dict[int, dict[str, set[str]]] = {}
+    POOL_CAP = 256
 
     def add(dst: dict[str, list[Any]], typ: str, value: Any) -> None:
         vals = dst.setdefault(typ, [])
+        keys = seen_keys.setdefault(id(dst), {}).setdefault(typ, set())
         key = _marker_key(value)
-        if all(_marker_key(old) != key for old in vals):
+        if key in keys:
+            return
+        keys.add(key)
+        if len(vals) < POOL_CAP:
             vals.append(value)
 
     def collect(dst: dict[str, list[Any]], value: Any, spec: dict) -> None:
