@@ -18,6 +18,13 @@ KNOWN_NOISE_GETTERS = {
     "getChainId()", "chainId()",
     "clock()",                     # ERC-6372: block.number — EVM leg's local
                                    # height vs the AVM round can never match
+    # UUPS `notDelegated`: proxiableUUID() must NOT be reachable through a
+    # proxy, so the EVM leg (which now runs behind a real ERC1967 proxy)
+    # reverts with UUPSUnauthorizedCallContext. On the AVM there is no
+    # delegatecall — the app IS both proxy and implementation — so the check
+    # has nothing to test and the slot constant is returned. Structural, and
+    # unfixable without modelling a hop that does not exist.
+    "proxiableUUID()",
 }
 _NOISE_SIG_RE = re.compile(r"(DOMAIN_?SEPARATOR|chainid|CHAIN_ID)", re.I)
 # Getters whose ARGUMENT is a block height (OZ ERC20Votes / Comp-style
