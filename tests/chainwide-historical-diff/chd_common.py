@@ -387,7 +387,13 @@ def is_platform_limit(reason: str) -> bool:
             # making external calls (batch airdrop, multicall, sweep) hits a
             # ceiling the EVM doesn't have — a platform limit, never a
             # miscompile, so it must not be able to masquerade as a finding.
-            or "too many inner transactions" in m)
+            or "too many inner transactions" in m
+            # A single ApplicationArgs entry caps at 4096 bytes. A batch method
+            # (World ID's registerIdentities carries 32416 bytes of identity
+            # commitments) exceeds it in ONE argument, which the EVM has no
+            # equivalent of. A transport ceiling, never a miscompile — see
+            # `applicationargs length` in the AVM leg's revert text.
+            or ("applicationargs" in m and "too long" in m))
 
 
 # ── Address registry (pure data; each leg derives its concrete forms) ──────
